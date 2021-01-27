@@ -1,0 +1,7 @@
+# Django
+DJANGO_SETTINGS_MODULE=joanie.settings
+DJANGO_CONFIGURATION=Development
+DJANGO_SECRET_KEY=ThisIsAnExampleKeyForDevPurposeOnly
+
+# Python
+PYTHONPATH=/app/src/backend

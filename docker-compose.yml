@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  postgresql:
+    image: postgres:12
+    env_file:
+      - env.d/development/postgresql
+    ports:
+      - "15432:5432"
+
+  app:
+    build:
+      context: .
+      target: development
+      args:
+        DOCKER_USER: ${DOCKER_USER:-1000}
+    user: ${DOCKER_USER:-1000}
+    image: joanie:development
+    environment:
+      PYLINTHOME: /app/.pylint.d
+    env_file:
+      - env.d/development/common
+      - env.d/development/postgresql
+    ports:
+      - "8060:8000"
+    volumes:
+      - ./src/backend:/app
+      - ./data/static:/data/static
+      - ./data/media:/data/media
+    depends_on:
+      - "postgresql"
+
+  dockerize:
+    image: jwilder/dockerize
+
+  crowdin:
+    image: crowdin/cli:3.5.2
+    volumes:
+      - ".:/app"
+    env_file:
+      - env.d/development/crowdin
+    user: "${DOCKER_USER:-1000}"
+    working_dir: /app
