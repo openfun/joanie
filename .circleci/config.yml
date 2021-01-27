@@ -1,0 +1,356 @@
+# Configuration file anchors
+generate-version-file: &generate-version-file
+  run:
+    name: Create a version.json
+    command: |
+      # Create a version.json à-la-mozilla
+      # https://github.com/mozilla-services/Dockerflow/blob/master/docs/version_object.md
+      printf '{"commit":"%s","version":"%s","source":"https://github.com/%s/%s","build":"%s"}\n' \
+        "$CIRCLE_SHA1" \
+        "$CIRCLE_TAG" \
+        "$CIRCLE_PROJECT_USERNAME" \
+        "$CIRCLE_PROJECT_REPONAME" \
+        "$CIRCLE_BUILD_URL" > src/backend/joanie/version.json
+
+version: 2
+jobs:
+  # Git jobs
+  # Check that the git history is clean and complies with our expectations
+  lint-git:
+    docker:
+      - image: circleci/python:3.8-buster
+    working_directory: ~/joanie
+    steps:
+      - checkout
+      # Make sure the changes don't add a "print" statement to the code base.
+      # We should exclude the ".circleci" folder from the search as the very command that checks
+      # the absence of "print" is including a "print(" itself.
+      - run:
+          name: enforce absence of print statements in code
+          command: |
+            ! git diff origin/main..HEAD -- . ':(exclude).circleci' | grep "print("
+      - run:
+          name: Check absence of fixup commits
+          command: |
+            ! git log | grep 'fixup!'
+      - run:
+          name: Install gitlint
+          command: |
+            pip install --user gitlint
+      - run:
+          name: lint commit messages added to main
+          command: |
+            ~/.local/bin/gitlint --commits origin/main..HEAD
+
+  # Check that the CHANGELOG has been updated in the current branch
+  check-changelog:
+    docker:
+      - image: circleci/buildpack-deps:stretch-scm
+    working_directory: ~/joanie
+    steps:
+      - checkout
+      - run:
+          name: Check that the CHANGELOG has been modified in the current branch
+          command: |
+            git whatchanged --name-only --pretty="" origin..HEAD | grep CHANGELOG
+
+  # Check that the CHANGELOG max line length does not exceed 80 characters
+  lint-changelog:
+    docker:
+      - image: debian:stretch
+    working_directory: ~/joanie
+    steps:
+      - checkout
+      - run:
+          name: Check CHANGELOG max line length
+          command: |
+            # Get the longuest line width (ignoring release links)
+            test $(cat CHANGELOG.md | grep -Ev "^\[.*\]: https://github.com/openfun" | wc -L) -le 80
+
+  # ---- Docker jobs ----
+  # Build the Docker image ready for production
+  build-docker:
+    docker:
+      - image: circleci/buildpack-deps:stretch
+    working_directory: ~/joanie
+    steps:
+      # Checkout repository sources
+      - checkout
+      # Generate a version.json file describing app release
+      - <<: *generate-version-file
+      # Activate docker-in-docker (with layers caching enabled)
+      - setup_remote_docker:
+          docker_layer_caching: true
+      # Each image is tagged with the current git commit sha1 to avoid collisions in parallel builds.
+      - run:
+          name: Build production image
+          command: docker build -t joanie:${CIRCLE_SHA1} --target production .
+      - run:
+          name: Check built image availability
+          command: docker images "joanie:${CIRCLE_SHA1}*"
+
+  # ---- Backend jobs ----
+  # Build backend development environment
+  build-back:
+    docker:
+      - image: circleci/python:3.8-buster
+    working_directory: ~/joanie
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-back-dependencies-{{ .Revision }}
+      - run:
+          name: Install development dependencies
+          command: pip install --user .[dev]
+          working_directory: src/backend
+      - save_cache:
+          paths:
+            - ~/.local
+          key: v1-back-dependencies-{{ .Revision }}
+
+  lint-back:
+    docker:
+      - image: circleci/python:3.8-buster
+    working_directory: ~/joanie/src/backend
+    steps:
+      - checkout:
+          path: ~/joanie
+      - restore_cache:
+          keys:
+            - v1-back-dependencies-{{ .Revision }}
+      - run:
+          name: Lint code with flake8
+          command: ~/.local/bin/flake8 .
+      - run:
+          name: Lint code with isort
+          command: ~/.local/bin/isort --check-only .
+      - run:
+          name: Lint code with black
+          command: ~/.local/bin/black --check .
+      - run:
+          name: Lint code with pylint
+          command: ~/.local/bin/pylint joanie
+      - run:
+          name: Lint code with bandit
+          command: ~/.local/bin/bandit -c .banditrc -qr .
+      - run:
+          name: Type-check code with mypy
+          command: ~/.local/bin/mypy .
+
+  test-back:
+    docker:
+      - image: circleci/python:3.8-buster
+        environment:
+          DJANGO_SETTINGS_MODULE: joanie.settings
+          DJANGO_CONFIGURATION: Test
+          DJANGO_SECRET_KEY: ThisIsAnExampleKeyForTestPurposeOnly
+          PYTHONPATH: /home/circleci/joanie/src/backend
+          DB_HOST: localhost
+          DB_NAME: joanie
+          DB_USER: fun
+          DB_PASSWORD: pass
+          DB_PORT: 5432
+      # services
+      - image: circleci/postgres:12-ram
+        environment:
+          POSTGRES_DB: test_joanie
+          POSTGRES_USER: fun
+          POSTGRES_PASSWORD: pass
+    working_directory: ~/joanie
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-back-dependencies-{{ .Revision }}
+      # While running tests, we need to make the /data directory writable for
+      # the circleci user
+      - run:
+          name: Create writable /data
+          command: |
+            sudo mkdir /data && \
+            sudo chown circleci:circleci /data
+      # Run back-end (Django) test suite
+      #
+      # Nota bene: to run the django test suite, we need to ensure that
+      # Postgresql service is up and ready. To achieve this, we wrap the pytest
+      # command execution with dockerize, a tiny tool installed in the CircleCI
+      # image. In our case, dockerize will wait up to one minute that the database
+      # opened its tcp port (5432).
+      - run:
+          name: Run tests
+          command: |
+            dockerize \
+              -wait tcp://localhost:5432 \
+              -timeout 60s \
+                ~/.local/bin/pytest
+
+  # ---- Packaging jobs ----
+  package-back:
+    docker:
+      - image: circleci/python:3.8-buster
+    working_directory: ~/joanie/src/backend
+    steps:
+      - checkout:
+          path: ~/joanie
+      - run:
+          name: Build python package
+          command: python setup.py sdist bdist_wheel
+      # Persist build packages to the workspace
+      - persist_to_workspace:
+          root: ~/joanie
+          paths:
+            - src/backend/dist
+      # Store packages as artifacts to download/test them
+      - store_artifacts:
+          path: ~/joanie/src/backend/dist
+
+  # ---- DockerHub publication job ----
+  hub:
+    docker:
+      - image: circleci/buildpack-deps:stretch
+    working_directory: ~/joanie
+    steps:
+      # Checkout repository sources
+      - checkout
+      # Generate a version.json file describing app release
+      - <<: *generate-version-file
+      # Activate docker-in-docker (with layers caching enabled)
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Build production image (using cached layers)
+          command: docker build -t joanie:${CIRCLE_SHA1} --target production .
+      - run:
+          name: Check built images availability
+          command: docker images "joanie:${CIRCLE_SHA1}*"
+      # Login to DockerHub to Publish new images
+      #
+      # Nota bene: you'll need to define the following secrets environment vars
+      # in CircleCI interface:
+      #
+      #   - DOCKER_USER
+      #   - DOCKER_PASS
+      - run:
+          name: Login to DockerHub
+          command: echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+      # Tag docker images with the same pattern used in Git (Semantic Versioning)
+      #
+      # Git tag: v1.0.1
+      # Docker tag: 1.0.1(-ci)
+      - run:
+          name: Tag images
+          command: |
+            docker images fundocker/joanie
+            DOCKER_TAG=$([[ -z "$CIRCLE_TAG" ]] && echo $CIRCLE_BRANCH || echo ${CIRCLE_TAG} | sed 's/^v//')
+            RELEASE_TYPE=$([[ -z "$CIRCLE_TAG" ]] && echo "branch" || echo "tag ")
+            # Display either:
+            # - DOCKER_TAG: main (Git branch)
+            # or
+            # - DOCKER_TAG: 1.1.2 (Git tag v1.1.2)
+            echo "DOCKER_TAG: ${DOCKER_TAG} (Git ${RELEASE_TYPE}${CIRCLE_TAG})"
+            docker tag joanie:${CIRCLE_SHA1} fundocker/joanie:${DOCKER_TAG}
+            if [[ -n "$CIRCLE_TAG" ]]; then
+                docker tag joanie:${CIRCLE_SHA1} fundocker/joanie:latest
+            fi
+            docker images | grep -E "^fundocker/joanie\s*(${DOCKER_TAG}.*|latest|main)"
+
+      # Publish images to DockerHub
+      #
+      # Nota bene: logged user (see "Login to DockerHub" step) must have write
+      # permission for the project's repository; this also implies that the
+      # DockerHub repository already exists.
+      - run:
+          name: Publish images
+          command: |
+            DOCKER_TAG=$([[ -z "$CIRCLE_TAG" ]] && echo $CIRCLE_BRANCH || echo ${CIRCLE_TAG} | sed 's/^v//')
+            RELEASE_TYPE=$([[ -z "$CIRCLE_TAG" ]] && echo "branch" || echo "tag ")
+            # Display either:
+            # - DOCKER_TAG: main (Git branch)
+            # or
+            # - DOCKER_TAG: 1.1.2 (Git tag v1.1.2)
+            echo "DOCKER_TAG: ${DOCKER_TAG} (Git ${RELEASE_TYPE}${CIRCLE_TAG})"
+            docker push fundocker/joanie:${DOCKER_TAG}
+            if [[ -n "$CIRCLE_TAG" ]]; then
+              docker push fundocker/joanie:latest
+            fi
+
+workflows:
+  version: 2
+
+  joanie:
+    jobs:
+      # Git jobs
+      #
+      # Check validity of git history
+      - lint-git:
+          filters:
+            tags:
+              only: /.*/
+      # Check CHANGELOG update
+      - check-changelog:
+          filters:
+            branches:
+              ignore: main
+            tags:
+              only: /(?!^v).*/
+      - lint-changelog:
+          filters:
+            branches:
+              ignore: main
+            tags:
+              only: /.*/
+
+      # Docker jobs
+      #
+      # Build images
+      - build-docker:
+          filters:
+            tags:
+              only: /.*/
+
+      # Backend jobs
+      #
+      # Build, lint and test production and development Docker images
+      # (debian-based)
+      - build-back:
+          filters:
+            tags:
+              only: /.*/
+      - lint-back:
+          requires:
+            - build-back
+          filters:
+            tags:
+              only: /.*/
+      - test-back:
+          requires:
+            - build-back
+          filters:
+            tags:
+              only: /.*/
+
+      # Packaging: python
+      #
+      # Build the python package
+      - package-back:
+          requires:
+            - test-back
+          filters:
+            tags:
+              only: /.*/
+
+      # DockerHub publication.
+      #
+      # Publish docker images only if all build, lint and test jobs succeed
+      # and it has been tagged with a tag starting with the letter v or is on
+      # the main branch
+      - hub:
+          requires:
+            - build-docker
+            - test-back
+          filters:
+            branches:
+              only: main
+            tags:
+              only: /^v.*/
