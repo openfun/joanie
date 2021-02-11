@@ -29,6 +29,9 @@ services:
       - ./data/media:/data/media
     depends_on:
       - "postgresql"
+    networks:
+      - default
+      - lms_outside
 
   dockerize:
     image: jwilder/dockerize
@@ -41,3 +44,8 @@ services:
       - env.d/development/crowdin
     user: "${DOCKER_USER:-1000}"
     working_dir: /app
+
+networks:
+  lms_outside:
+    driver: bridge
+    name: "${JOANIE_LMS_NETWORK:-edx_outside}"
