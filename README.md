@@ -49,7 +49,7 @@ Finally, you can see all available commands in our `Makefile` with :
 $ make help
 ```
 
-## Django admin
+### Django admin
 
 You can access the Django admin site at [http://localhost:8060/admin](http://localhost:8060).
 
@@ -58,6 +58,12 @@ You first need to create a superuser account :
 ```bash
 $ make superuser
 ```
+
+## Guides
+
+### Explanation
+
+- [LMS Connection](https://github.com/openfun/joanie/blob/master/docs/explanation/lms-connection.md)
 
 ## Contributing
 

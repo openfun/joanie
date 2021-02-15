@@ -169,6 +169,22 @@ class Base(Configuration):
         "joanie.payment",
     ]
 
+    # Joanie
+    JOANIE_LMS_BACKENDS = [
+        {
+            "API_TOKEN": values.Value(
+                environ_name="EDX_API_TOKEN", environ_prefix=None
+            ),
+            "BACKEND": values.Value(environ_name="EDX_BACKEND", environ_prefix=None),
+            "BASE_URL": values.Value(environ_name="EDX_BASE_URL", environ_prefix=None),
+            "SELECTOR_REGEX": values.Value(
+                r".*", environ_name="EDX_SELECTOR_REGEX", environ_prefix=None
+            ),
+            "COURSE_REGEX": values.Value(
+                r".*", environ_name="EDX_COURSE_REGEX", environ_prefix=None
+            ),
+        }
+    ]
     # Cache
     CACHES = {
         "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
