@@ -1,0 +1,24 @@
+"""
+Base Backend to connect Joanie to a LMS
+"""
+
+
+class BaseLMSBackend:
+    """
+    Base backend to hold all LMS common methods and provide a skeleton for others.
+    """
+
+    def __init__(self, configuration, *args, **kwargs):
+        """Attach configuration to the LMS backend instance."""
+        super().__init__(*args, **kwargs)
+        self.configuration = configuration
+
+    def get_enrollment(self, username, resource_link):
+        raise NotImplementedError(
+            "subclasses of BaseLMSBackend must provide a get_enrollment() method"
+        )
+
+    def set_enrollment(self, username, resource_link):
+        raise NotImplementedError(
+            "subclasses of BaseLMSBackend must provide a set_enrollment() method"
+        )
