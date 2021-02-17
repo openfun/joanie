@@ -17,6 +17,9 @@ import sentry_sdk
 from configurations import Configuration, values
 from sentry_sdk.integrations.django import DjangoIntegration
 
+from django.utils.translation import gettext_lazy as _
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join("/", "data")
@@ -44,6 +47,23 @@ def get_release():
 # Disable pylint error "W0232: Class has no __init__ method", because base Configuration
 # class does not define an __init__ method.
 # pylint: disable = W0232
+
+
+DJANGO_APPS = [
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    # Third party apps
+    "dockerflow.django",
+    "rest_framework",
+    "parler",
+    # Joanie
+    "joanie.core",
+    "joanie.payment",
+]
 
 
 class Base(Configuration):
@@ -154,20 +174,7 @@ class Base(Configuration):
     ]
 
     # Django applications from the highest priority to the lowest
-    INSTALLED_APPS = [
-        "django.contrib.admin",
-        "django.contrib.auth",
-        "django.contrib.contenttypes",
-        "django.contrib.sessions",
-        "django.contrib.messages",
-        "django.contrib.staticfiles",
-        # Third party apps
-        "dockerflow.django",
-        "rest_framework",
-        # Joanie
-        "joanie.core",
-        "joanie.payment",
-    ]
+    INSTALLED_APPS = DJANGO_APPS
 
     # Joanie
     JOANIE_LMS_BACKENDS = [
@@ -189,6 +196,27 @@ class Base(Configuration):
     CACHES = {
         "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
     }
+
+    LANGUAGES = (
+        ('en', _("English")),
+        ('en-us', _("US English")),
+        ('it', _('Italian')),
+        ('nl', _('Dutch')),
+        ('fr', _('French')),
+        ('es', _('Spanish')),
+    )
+    PARLER_DEFAULT_LANGUAGE_CODE = 'en'
+    PARLER_LANGUAGES = {
+        None: (tuple(dict(code=code) for code, _name in LANGUAGES)),
+        'default': {
+            'fallback': 'en',
+            'hide_untranslated': False,
+        }
+    }
+
+    # TODO: get config
+    JWT_PRIVATE_SIGNING_KEY = "ThisIsAnExampleKeyForDevPurposeOnly"
+    JWT_ALGORITHM = "HS256"
 
     # Sentry
     SENTRY_DSN = values.Value(None, environ_name="SENTRY_DSN")
@@ -238,6 +266,8 @@ class Development(Base):
 
     DEBUG = True
     ALLOWED_HOSTS = ["*"]
+    DEV_APPS = ['django_extensions']
+    INSTALLED_APPS = DJANGO_APPS + DEV_APPS
 
 
 class Test(Base):
