@@ -18,8 +18,8 @@ from . import serializers
 class OrdersAccessPermission(permissions.BasePermission):
 
     def has_permission(self, request, view):
-         # TODO: check token is valid
-         return True
+        # TODO: check token is valid
+        return True
 
 
 class CourseProductsAvailableListView(views.APIView):  # FIXME: APIView ?

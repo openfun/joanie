@@ -135,7 +135,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('uid', models.UUIDField(default=uuid.uuid4, unique=True)),
                 ('created_on', models.DateTimeField(default=django.utils.timezone.now, verbose_name='created on')),
-                ('state', models.CharField(choices=[('pending', 'Pending'), ('canceled', 'Canceled'), ('failure', 'Failure'), ('in_progress', 'In progress'), ('finished', 'Finished')], default='pending', max_length=50, verbose_name='type')),
+                ('state', models.CharField(choices=[('pending', 'Pending'), ('canceled', 'Canceled'), ('failed', 'Failed'), ('in_progress', 'In progress'), ('finished', 'Finished')], default='pending', max_length=50, verbose_name='type')),
                 ('course_product', models.ForeignKey(on_delete=django.db.models.deletion.RESTRICT, related_name='orders', to='core.courseproduct', verbose_name='course product')),
                 ('course_runs', models.ManyToManyField(to='core.CourseRun')),
                 ('owner', models.ForeignKey(on_delete=django.db.models.deletion.RESTRICT, related_name='orders', to='core.user', verbose_name='owner')),

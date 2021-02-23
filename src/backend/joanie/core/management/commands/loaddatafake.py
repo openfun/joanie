@@ -1,4 +1,4 @@
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 
 from joanie.core import factories
 from joanie.core import enums
@@ -11,10 +11,7 @@ class Command(BaseCommand):
         # TODO: set language in fr or use english label
         factories.CourseRunFactory(title="Comment assommer un romain")
         factories.CourseRunFactory(title="Comment reconnaître un romain")
-        _fishing_course = factories.CourseRunFactory(title="Apprendre à pêcher")
-        _fishing_rod_course = factories.CourseRunFactory(
-            title="Fabriquer une canne à pêche",
-        )
+        factories.CourseRunFactory(title="Fabriquer une canne à pêche")
         factories.CourseRunFactory(title="Comment soulever une charge")
         hunt_boar = factories.CourseRunFactory(title="Apprendre à pister un sanglier")
         archery = factories.CourseRunFactory(title="Apprendre à tirer à l'arc")

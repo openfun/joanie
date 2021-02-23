@@ -39,7 +39,12 @@ class Product(parler_models.TranslatableModel):
 class CourseProduct(models.Model):
     uid = models.UUIDField(default=uuid.uuid4, unique=True)
     product = models.ForeignKey(Product, verbose_name=_("product"), on_delete=models.PROTECT)
-    course = models.ForeignKey(courses_models.Course, related_name='course_products', verbose_name=_("course"), on_delete=models.PROTECT)
+    course = models.ForeignKey(
+        courses_models.Course,
+        related_name='course_products',
+        verbose_name=_("course"),
+        on_delete=models.PROTECT,
+    )
     course_runs = models.ManyToManyField(courses_models.CourseRun)
     # TODO: check dans le resource_link si le course id correspond bien à tous les courses run
     # TODO: add currency info (settings? allow more than one device?)
@@ -67,7 +72,7 @@ class CourseProduct(models.Model):
         orders = Order.objects.filter(course_product=self, owner=user)
         if (
                 orders.exclude(
-                    state__in=[enums.ORDER_STATE_CANCELED, enums.ORDER_STATE_FAILURE],
+                    state__in=[enums.ORDER_STATE_CANCELED, enums.ORDER_STATE_FAILED],
                 ).exists()
         ):
             raise errors.OrderAlreadyExists("Order already exist")
@@ -86,13 +91,13 @@ class CourseProduct(models.Model):
             if lms is None:
                 enrollment.state = enums.ENROLLMENT_STATE_FAILED
                 enrollment.save()
-                order.state = enums.ORDER_STATE_FAILURE  # TODO: rename _FAILED
+                order.state = enums.ORDER_STATE_FAILED
                 order.save()
                 raise ValueError(f"No LMS configuration found for resource link: {resource_link}")
             # now set enrollment to lms and pass enrollment state to in_progress
             # TODO: uncomment after fix test with DummyBackend
-            #lms_enrollment = lms.set_enrollment(user.username, resource_link)
-            #if lms_enrollment['is_active']:
+            # lms_enrollment = lms.set_enrollment(user.username, resource_link)
+            # if lms_enrollment['is_active']:
             enrollment.state = enums.ENROLLMENT_STATE_IN_PROGRESS
             enrollment.save()
         return order
@@ -111,7 +116,8 @@ class ProductCourseRunPosition(models.Model):
         verbose_name=_("course run"),
         on_delete=models.RESTRICT,
     )
-    # ! check si 2 course run avec même position ils doivent avoir le même course_id dans le resource_link
+    # ! check si 2 course run avec même position ils doivent avoir le même course_id
+    # dans le resource_link
     # (organisation_courseid_sessionid)
     # la validation d'un des deux suffit pour passer au course run suivant ou à la certification
 
@@ -133,8 +139,10 @@ class Order(models.Model):
         on_delete=models.RESTRICT,
     )
     course_runs = models.ManyToManyField(courses_models.CourseRun)
-    # les commandes pourront être passées plus tard par les entreprises il faudra rajouter un champ entreprise/ renommer owner en user ??
-    # est-ce qu'on pointe vers un modèle intermédiaire owner qui peut etre un particulier ou une entreprise ?
+    # les commandes pourront être passées plus tard par les entreprises il faudra rajouter
+    # un champ entreprise/ renommer owner en user ??
+    # est-ce qu'on pointe vers un modèle intermédiaire owner qui peut etre un particulier
+    # ou une entreprise ?
     owner = models.ForeignKey(
         customers_models.User, verbose_name=_("owner"),
         related_name='orders', on_delete=models.RESTRICT,

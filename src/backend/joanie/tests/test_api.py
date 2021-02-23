@@ -20,8 +20,8 @@ class APITestCase(TestCase):
         # TODO: set language in fr or use english label
         factories.CourseRunFactory(title="Comment assommer un romain")
         factories.CourseRunFactory(title="Comment reconnaître un romain")
-        _fishing_course = factories.CourseRunFactory(title="Apprendre à pêcher")
-        _fishing_rod_course = factories.CourseRunFactory(
+        factories.CourseRunFactory(title="Apprendre à pêcher")
+        factories.CourseRunFactory(
             title="Fabriquer une canne à pêche",
         )
         factories.CourseRunFactory(title="Comment soulever une charge")
@@ -192,14 +192,16 @@ class APITestCase(TestCase):
         JOANIE_LMS_BACKENDS=[
             {
                 "API_TOKEN": "a_secure_api_token",
-                "BACKEND": "joanie.lms_handler.backends.openedx.OpenEdXLMSBackend",  # TODO: use dummyBackend
+                # TODO: use dummyBackend
+                "BACKEND": "joanie.lms_handler.backends.openedx.OpenEdXLMSBackend",
                 "BASE_URL": "http://openedx.test",
                 "SELECTOR_REGEX": r".*openedx.test.*",
                 "COURSE_REGEX": r"^.*/courses/(?P<course_id>.*)/course/?$",
             },
             {
                 "API_TOKEN": "a_secure_api_token",
-                "BACKEND": "joanie.lms_handler.backends.base.BaseLMSBackend",  # TODO: use dummyBackend
+                # TODO: use dummyBackend
+                "BACKEND": "joanie.lms_handler.backends.base.BaseLMSBackend",
                 "BASE_URL": "http://moodle.test",
                 "SELECTOR_REGEX": r".*moodle.test.*",
                 "COURSE_REGEX": r"^.*/courses/(?P<course_id>.*)/course/?$",
@@ -225,10 +227,11 @@ class APITestCase(TestCase):
                 self.basics_of_botany.resource_link,
                 self.basics_druidic.resource_link,
                 self.magic_potion.resource_link,
-        ]}
+            ]
+        }
         # TODO: test failure Authorization
         response = self.client.post(
-            f'/api/orders/',
+            '/api/orders/',
             data=data,
             content_type='application/json',
             HTTP_AUTHORIZATION=f'Bearer {token}',
@@ -271,7 +274,7 @@ class APITestCase(TestCase):
 
         # try to enroll again, check error raising
         response = self.client.post(
-            f'/api/orders/',
+            '/api/orders/',
             data=data,
             content_type='application/json',
             HTTP_AUTHORIZATION=f'Bearer {token}',

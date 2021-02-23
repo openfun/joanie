@@ -15,14 +15,14 @@ PRODUCT_TYPE_CHOICES = (
 
 ORDER_STATE_PENDING = 'pending'  # waiting for payment and enrollment
 ORDER_STATE_CANCELED = 'canceled'
-ORDER_STATE_FAILURE = 'failure'
+ORDER_STATE_FAILED = 'failed'
 ORDER_STATE_IN_PROGRESS = 'in_progress'
 ORDER_STATE_FINISHED = 'finished'
 
 ORDER_STATE_CHOICES = (
     (ORDER_STATE_PENDING, _("Pending")),  # default
     (ORDER_STATE_CANCELED, _("Canceled")),
-    (ORDER_STATE_FAILURE, _("Failure")),
+    (ORDER_STATE_FAILED, _("Failed")),
     (ORDER_STATE_IN_PROGRESS, _("In progress")),
     (ORDER_STATE_FINISHED, _("Finished")),
 )
