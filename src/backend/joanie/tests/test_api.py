@@ -192,18 +192,9 @@ class APITestCase(TestCase):
         JOANIE_LMS_BACKENDS=[
             {
                 "API_TOKEN": "a_secure_api_token",
-                # TODO: use dummyBackend
-                "BACKEND": "joanie.lms_handler.backends.openedx.OpenEdXLMSBackend",
+                "BACKEND": "joanie.lms_handler.backends.dummy.DummyLMSBackend",
                 "BASE_URL": "http://openedx.test",
                 "SELECTOR_REGEX": r".*openedx.test.*",
-                "COURSE_REGEX": r"^.*/courses/(?P<course_id>.*)/course/?$",
-            },
-            {
-                "API_TOKEN": "a_secure_api_token",
-                # TODO: use dummyBackend
-                "BACKEND": "joanie.lms_handler.backends.base.BaseLMSBackend",
-                "BASE_URL": "http://moodle.test",
-                "SELECTOR_REGEX": r".*moodle.test.*",
                 "COURSE_REGEX": r"^.*/courses/(?P<course_id>.*)/course/?$",
             },
         ]
@@ -271,7 +262,11 @@ class APITestCase(TestCase):
         )
         self.assertEqual(len(response.data['results'][0]['course_runs']), 3)
         # TODO: test course runs data
-
+        self.assertEqual(models.Enrollment.objects.count(), 3)
+        self.assertEqual(
+            models.Enrollment.objects.filter(state=enums.ENROLLMENT_STATE_IN_PROGRESS).count(),
+            3,
+        )
         # try to enroll again, check error raising
         response = self.client.post(
             '/api/orders/',
@@ -284,4 +279,4 @@ class APITestCase(TestCase):
         self.assertEqual(models.Enrollment.objects.count(), 3)
         self.assertEqual(response.data["errors"], ('Order already exist',))
 
-        # TODO: test with unvalid resource_links/LMS configuration not found
+        # TODO: test with invalid resource_links/LMS configuration not found

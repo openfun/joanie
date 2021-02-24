@@ -95,11 +95,10 @@ class CourseProduct(models.Model):
                 order.save()
                 raise ValueError(f"No LMS configuration found for resource link: {resource_link}")
             # now set enrollment to lms and pass enrollment state to in_progress
-            # TODO: uncomment after fix test with DummyBackend
-            # lms_enrollment = lms.set_enrollment(user.username, resource_link)
-            # if lms_enrollment['is_active']:
-            enrollment.state = enums.ENROLLMENT_STATE_IN_PROGRESS
-            enrollment.save()
+            lms_enrollment = lms.set_enrollment(user.username, resource_link)
+            if lms_enrollment['is_active']:
+                enrollment.state = enums.ENROLLMENT_STATE_IN_PROGRESS
+                enrollment.save()
         return order
 
 
