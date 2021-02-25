@@ -1,3 +1,4 @@
+import logging
 import uuid
 
 from django.db import models
@@ -13,6 +14,9 @@ from . import courses as courses_models
 from . import customers as customers_models
 from .. import enums
 from .. import errors
+
+
+logger = logging.getLogger(__name__)
 
 
 class Product(parler_models.TranslatableModel):
@@ -65,28 +69,20 @@ class CourseProduct(models.Model):
     def __str__(self):
         return f"{self.product} for {self.course}"
 
-    # TODO
-    def cancel_order(self):
-        pass
-        # todo: passer en canceled order et enrollment
-
     def set_order(self, user, resource_links):
         # Check if an order for this CourseProduct already exists,
         # we create an other if only state is canceled
         # if user change his/her mind about course runs selected, the order has to be set to cancel
         # state and an other order has to be created
         orders = Order.objects.filter(course_product=self, owner=user)
-        if (
-                orders.exclude(
-                    state__in=[enums.ORDER_STATE_CANCELED, enums.ORDER_STATE_FAILED],
-                ).exists()
-        ):
+        if orders.exclude(state__in=[enums.ORDER_STATE_CANCELED]).exists():
             raise errors.OrderAlreadyExists("Order already exist")
 
         # first create an order
         order = Order.objects.create(course_product=self, owner=user)
         for resource_link in resource_links:
-            course_run = courses_models.CourseRun.objects.get(resource_link=resource_link)
+            # TODO: check course run available into CourseProduct (+test)
+            course_run = self.course_runs.get(resource_link=resource_link)
             # associate each course run selected to the order
             order.course_runs.add(course_run)
             # then create enrollment for each course run
@@ -94,17 +90,20 @@ class CourseProduct(models.Model):
             # now we can enroll to LMS
             lms = LMSHandler.select_lms(resource_link)
             # if no lms found we set enrollment and order to failure state
+            # this kind of problem is due to a bad setting or a bad resource_link filled,
+            # so we need to log this error to fix it quickly to joanie side
             if lms is None:
-                enrollment.state = enums.ENROLLMENT_STATE_FAILED
-                enrollment.save()
                 order.state = enums.ORDER_STATE_FAILED
                 order.save()
-                raise ValueError(f"No LMS configuration found for resource link: {resource_link}")
-            # now set enrollment to lms and pass enrollment state to in_progress
-            lms_enrollment = lms.set_enrollment(user.username, resource_link)
-            if lms_enrollment['is_active']:
-                enrollment.state = enums.ENROLLMENT_STATE_IN_PROGRESS
+                enrollment.state = enums.ENROLLMENT_STATE_FAILED
                 enrollment.save()
+                logger.error(f"No LMS configuration found for resource link: {resource_link}")
+            # now set enrollment to lms and pass enrollment state to in_progress
+            else:
+                lms_enrollment = lms.set_enrollment(user.username, resource_link)
+                if lms_enrollment['is_active']:
+                    enrollment.state = enums.ENROLLMENT_STATE_IN_PROGRESS
+                    enrollment.save()
         return order
 
 
@@ -136,6 +135,7 @@ class ProductCourseRunPosition(models.Model):
 
 
 class Order(models.Model):
+    # TODO: add field updated_at
     uid = models.UUIDField(default=uuid.uuid4, unique=True)
     course_product = models.ForeignKey(
         CourseProduct,
@@ -175,7 +175,7 @@ class Enrollment(models.Model):
         verbose_name=_("course run"),
         on_delete=models.RESTRICT,
     )
-    order = models.ForeignKey(Order, on_delete=models.RESTRICT)
+    order = models.ForeignKey(Order, related_name='enrollments', on_delete=models.RESTRICT)
     # course run state updated with elastic
     state = models.CharField(
         verbose_name=_("state"),
@@ -190,5 +190,11 @@ class Enrollment(models.Model):
         verbose_name_plural = _("Enrollments")
 
     def __str__(self):
-        return f"Enrollment for course run:{self.course_run} - order" \
-               f"{self.order} [active: {self.is_active}/ state:{self.state}]"
+        return f"[{self.state}] {self.course_run} for {self.order.owner}"
+
+    def get_position(self):
+        return ProductCourseRunPosition.objects.get(
+            course_product=self.order.course_product,
+            course_run=self.course_run,
+        ).position
+

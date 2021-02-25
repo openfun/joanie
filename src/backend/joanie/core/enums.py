@@ -7,8 +7,12 @@ PRODUCT_TYPE_ENROLLMENT = 'enrollment'
 PRODUCT_TYPE_CERTIFICATE = 'certificate'
 
 PRODUCT_TYPE_CHOICES = (
+    # user purchases all (enrollments + credential) from the start
     (PRODUCT_TYPE_CREDENTIAL, _("Credential")),
+    # user is just enrolled in course runs (for free or not)
     (PRODUCT_TYPE_ENROLLMENT, _("Enrollment")),
+    # user is enrolled in course runs for free
+    # finally orchestrator will offer user to pay to get a certificate
     (PRODUCT_TYPE_CERTIFICATE, _("Certificate")),
 )
 
@@ -27,14 +31,14 @@ ORDER_STATE_CHOICES = (
     (ORDER_STATE_FINISHED, _("Finished")),
 )
 
-ENROLLMENT_STATE_PENDING = 'pending'  # default
+ENROLLMENT_STATE_PENDING = 'pending'
 ENROLLMENT_STATE_IN_PROGRESS = 'in_progress'
 ENROLLMENT_STATE_VALIDATED = 'validated'
 ENROLLMENT_STATE_CANCELED = 'canceled'
 ENROLLMENT_STATE_FAILED = 'failed'
 
 ENROLLMENT_STATE_CHOICES = (
-    (ENROLLMENT_STATE_PENDING, _("Pending")),
+    (ENROLLMENT_STATE_PENDING, _("Pending")),  # default
     (ENROLLMENT_STATE_IN_PROGRESS, _("In progress")),
     (ENROLLMENT_STATE_VALIDATED, _("Validated")),
     (ENROLLMENT_STATE_CANCELED, _("Canceled")),

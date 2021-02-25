@@ -1,4 +1,5 @@
 from django.core.management.base import BaseCommand
+from django.utils import translation
 
 from joanie.core import factories
 from joanie.core import enums
@@ -8,130 +9,188 @@ class Command(BaseCommand):
     help = 'create some fake products, courses and course runs'
 
     def handle(self, *args, **options):
-        # TODO: set language in fr or use english label
-        factories.CourseRunFactory(title="Comment assommer un romain")
-        factories.CourseRunFactory(title="Comment reconnaître un romain")
-        factories.CourseRunFactory(title="Fabriquer une canne à pêche")
-        factories.CourseRunFactory(title="Comment soulever une charge")
-        hunt_boar = factories.CourseRunFactory(title="Apprendre à pister un sanglier")
-        archery = factories.CourseRunFactory(title="Apprendre à tirer à l'arc")
-        basics_of_botany = factories.CourseRunFactory(title="Le BABA de la botanique")
-        basics_druidic = factories.CourseRunFactory(title="Le BABA druidique")
-        # TODO: add same course run but with other date
-        magic_potion = factories.CourseRunFactory(
-            title="Comment faire une potion magique",
+        translation.activate('en')
+        # First create a course product to learn how to become a good druid
+        # 1/ some course runs are required to became a good druid
+        OPENEDX_COURSE_RUN_URI = "http://openedx.test/courses/course-v1:edx+%s/course"
+        bases_of_botany_session1 = factories.CourseRunFactory(
+            title="Bases of botany",
+            resource_link=OPENEDX_COURSE_RUN_URI % '000001+BasesOfBotany_Session1',
         )
-
-        # initialize some product
-        druid_credential_product = factories.ProductFactory(
-            type=enums.PRODUCT_TYPE_CREDENTIAL,
-            name="devenir-druide-certifie",
-            title="Devenir druide certifié",
+        bases_of_botany_session2 = factories.CourseRunFactory(
+            title="Bases of botany",
+            resource_link=OPENEDX_COURSE_RUN_URI % '000001+BasesOfBotany_Session2',
         )
+        bases_of_druidism_session1 = factories.CourseRunFactory(
+            title="Bases of druidism",
+            resource_link=OPENEDX_COURSE_RUN_URI % '000002+BasesOfDruidism_Session1',
+        )
+        bases_of_druidism_session2 = factories.CourseRunFactory(
+            title="Bases of druidism",
+            resource_link=OPENEDX_COURSE_RUN_URI % '000002+BasesOfDruidism_Session2',
+        )
+        diy_magic_potion_session1 = factories.CourseRunFactory(
+            title="How to cook a magic potion",
+            resource_link=OPENEDX_COURSE_RUN_URI % '000003+DIYMagicPotion_Session1',
+        )
+        diy_magic_potion_session2 = factories.CourseRunFactory(
+            title="How to cook a magic potion",
+            resource_link=OPENEDX_COURSE_RUN_URI % '000003+DIYMagicPotion_Session2',
+        )
+        # 2/ Create the enrollment Product
         become_druid_product = factories.ProductFactory(
             type=enums.PRODUCT_TYPE_ENROLLMENT,
-            name="devenir-druide",
-            title="Devenir druide",
+            title="Become druid",
         )
-        factories.ProductFactory(
-            type=enums.PRODUCT_TYPE_ENROLLMENT,
-            name="devenir-lanceur-menhir",
-            title="Devenir lanceur de menhir",
-        )
-        become_hunter_product = factories.ProductFactory(
-            type=enums.PRODUCT_TYPE_ENROLLMENT,
-            name="devenir-chasseur-sanglier",
-            title="Devenir chasseur de sanglier",
-        )
-
-        # initialize some organizations
-        orga_druid = factories.OrganizationFactory(title="École des druides")
-        orga_hunting_fishing = factories.OrganizationFactory(title="École chasse et pêche")
-        orga_bodyb = factories.OrganizationFactory(title="École bodybuilding")
-
-        # initilize some courses
+        # 3/ Create the Course of organization "the Druid School"
+        druid_school = factories.OrganizationFactory(title="the Druid School")
         druid_course = factories.CourseFactory(
-            title="Formation druide",
-            organization=orga_druid,
+            title="Druid course",
+            organization=druid_school,
         )
-        factories.CourseFactory(
-            title="Formation assistant druide",
-            organization=orga_druid,
-        )
-        hunting_course = factories.CourseFactory(
-            title="Formation chasseur sanglier",
-            organization=orga_hunting_fishing,
-        )
-        factories.CourseFactory(
-            title="Formation pêcheur",
-            organization=orga_hunting_fishing,
-        )
-        factories.CourseFactory(
-            title="Formation lanceur menhir",
-            organization=orga_bodyb,
-        )
-        factories.CourseFactory(
-            title="Formation assommeur de Romains",
-            organization=orga_bodyb,
-        )
-
-        # Now we link products to courses and add course runs
-        # link two products to druid course
-        # one only enrollment
+        # 4/ now link the Product to the Druid Course
         course_product_druid = factories.CourseProductFactory(
             course=druid_course,
             product=become_druid_product,
         )
-        course_product_druid.course_runs.add(basics_of_botany)
-        course_product_druid.course_runs.add(basics_druidic)
-        course_product_druid.course_runs.add(magic_potion)
-        # one with certification
-        course_product_druid_credential = factories.CourseProductFactory(
-            course=druid_course,
-            product=druid_credential_product,
-            certificate_definition=factories.CertificateDefinitionFactory(title="Druide Certification"),
+        # 5/ add all course runs available for this course product
+        course_product_druid.course_runs.add(bases_of_botany_session1)
+        course_product_druid.course_runs.add(bases_of_druidism_session1)
+        course_product_druid.course_runs.add(diy_magic_potion_session1)
+
+        course_product_druid.course_runs.add(bases_of_botany_session2)
+        course_product_druid.course_runs.add(bases_of_druidism_session2)
+        course_product_druid.course_runs.add(diy_magic_potion_session2)
+
+        # 6/ now define position of each course runs to complete the course
+        # first to do
+        factories.ProductCourseRunPositionFactory(
+            course_run=bases_of_botany_session1,
+            position=1,
+            course_product=course_product_druid,
         )
-        course_product_druid_credential.course_runs.add(basics_of_botany)
-        course_product_druid_credential.course_runs.add(basics_druidic)
-        course_product_druid_credential.course_runs.add(magic_potion)
+        factories.ProductCourseRunPositionFactory(
+            course_run=bases_of_botany_session2,
+            position=1,
+            course_product=course_product_druid,
+        )
+        # second to do
+        factories.ProductCourseRunPositionFactory(
+            course_run=bases_of_druidism_session1,
+            position=2,
+            course_product=course_product_druid,
+        )
+        factories.ProductCourseRunPositionFactory(
+            course_run=bases_of_druidism_session2,
+            position=2,
+            course_product=course_product_druid,
+        )
+        # third to do
+        factories.ProductCourseRunPositionFactory(
+            course_run=diy_magic_potion_session1,
+            position=3,
+            course_product=course_product_druid,
+        )
+        factories.ProductCourseRunPositionFactory(
+            course_run=diy_magic_potion_session2,
+            position=3,
+            course_product=course_product_druid,
+        )
 
-        # TODO: define a course product for fishing
-        # TODO: it possible to have various course run for same thing with various run dates
-        # TODO: products_factories.CourseProductFactory(course=)
+        # Now create a course product to learn how to become a good druid and get a certificate
+        # 1/ Create the credential Product
+        become_certified_druid = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CREDENTIAL,
+            title="Become a certified druid",
+        )
+        # 2/ now link the Product to the Druid Course
+        course_product_certified_druid = factories.CourseProductFactory(
+            course=druid_course,
+            product=become_certified_druid,
+            certificate_definition=factories.CertificateDefinitionFactory(
+                title="Druid Certification",
+            ),
+        )
+        # 3/ add all course runs available for this course product
+        course_product_certified_druid.course_runs.add(bases_of_botany_session1)
+        course_product_certified_druid.course_runs.add(bases_of_druidism_session1)
+        course_product_certified_druid.course_runs.add(diy_magic_potion_session1)
 
-        #
+        course_product_certified_druid.course_runs.add(bases_of_botany_session2)
+        course_product_certified_druid.course_runs.add(bases_of_druidism_session2)
+        course_product_certified_druid.course_runs.add(diy_magic_potion_session2)
+
+        # 4/ now define position of each course runs to complete the course
+        # first to do
+        factories.ProductCourseRunPositionFactory(
+            course_run=bases_of_botany_session1,
+            position=1,
+            course_product=course_product_certified_druid,
+        )
+        factories.ProductCourseRunPositionFactory(
+            course_run=bases_of_botany_session2,
+            position=1,
+            course_product=course_product_certified_druid,
+        )
+        # second to do
+        factories.ProductCourseRunPositionFactory(
+            course_run=bases_of_druidism_session1,
+            position=2,
+            course_product=course_product_certified_druid,
+        )
+        factories.ProductCourseRunPositionFactory(
+            course_run=bases_of_druidism_session2,
+            position=2,
+            course_product=course_product_certified_druid,
+        )
+        # third to do
+        factories.ProductCourseRunPositionFactory(
+            course_run=diy_magic_potion_session1,
+            position=3,
+            course_product=course_product_certified_druid,
+        )
+        factories.ProductCourseRunPositionFactory(
+            course_run=diy_magic_potion_session2,
+            position=3,
+            course_product=course_product_certified_druid,
+        )
+
+        # Now create a course product to learn how hunt boar
+        # 1/ Create course runs needed to course
+        track_boar_session = factories.CourseRunFactory(title="How to track a wild boar")
+        archery_session = factories.CourseRunFactory(title="How to shoot archery")
+
+        # 2/ Create the enrollment Product
+        become_boar_hunter_product = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_ENROLLMENT,
+            title="Become a wild boar hunter",
+        )
+        # 3/ Create the Course of organization "the Druid School"
+        hunting_course = factories.CourseFactory(
+            title="Hunting course",
+            organization=factories.OrganizationFactory(title="the hunting and fishing School"),
+        )
+        # 4/ now link the Product to the hunting course
         course_product_hunting = factories.CourseProductFactory(
             course=hunting_course,
-            product=become_hunter_product,
+            product=become_boar_hunter_product,
         )
-        course_product_hunting.course_runs.add(hunt_boar)
-        course_product_hunting.course_runs.add(archery)
+        # 5/ add all course runs available for this course product
+        course_product_hunting.course_runs.add(track_boar_session)
+        course_product_hunting.course_runs.add(archery_session)
 
-        # add course runs and position inside a course product
+        # 6/ now define position of each course runs to complete the course
+        # first to do
         factories.ProductCourseRunPositionFactory(
-            course_run=basics_druidic, position=1, course_product=course_product_druid,
-        )
-        factories.ProductCourseRunPositionFactory(
-            course_run=basics_of_botany, position=2, course_product=course_product_druid,
-        )
-        factories.ProductCourseRunPositionFactory(
-            course_run=magic_potion, position=3, course_product=course_product_druid,
-        )
-
-        factories.ProductCourseRunPositionFactory(
-            course_run=basics_druidic,
+            course_run=track_boar_session,
             position=1,
-            course_product=course_product_druid_credential,
+            course_product=course_product_hunting,
         )
+        # second to do
         factories.ProductCourseRunPositionFactory(
-            course_run=basics_of_botany,
+            course_run=archery_session,
             position=2,
-            course_product=course_product_druid_credential,
-        )
-        factories.ProductCourseRunPositionFactory(
-            course_run=magic_potion,
-            position=3,
-            course_product=course_product_druid_credential,
+            course_product=course_product_hunting,
         )
 
         self.stdout.write(self.style.SUCCESS('Successfully fun data creation'))

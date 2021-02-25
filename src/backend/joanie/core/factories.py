@@ -117,7 +117,7 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
 
 class ProductFactory(factory.django.DjangoModelFactory):
     title = factory.Sequence(lambda n: "Product %s" % n)
-    name = factory.Sequence(lambda o: slugify(o.title))
+    name = factory.LazyAttribute(lambda o: slugify(o.title))
     call_to_action_label = "let's go!"
 
     class Meta:

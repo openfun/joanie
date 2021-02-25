@@ -52,15 +52,50 @@ class CourseRunSerializer(serializers.ModelSerializer):
         fields = ['resource_link', 'title', 'start', 'end', 'enrollment_start', 'enrollment_end']
 
 
+class EnrollmentSerializer(serializers.ModelSerializer):
+    """
+    """
+    course_run = serializers.CharField(source='course_run.resource_link')
+    order = serializers.CharField(source='order.uid')
+
+    class Meta:
+        model = models.Enrollment
+        fields = ['course_run', 'order', 'state']
+
+
+class OrderEnrollmentSerializer(serializers.ModelSerializer):
+    """
+    """
+    resource_link = serializers.CharField(source='course_run.resource_link')
+    title = serializers.CharField(source='course_run.title')
+    start = serializers.CharField(source='course_run.start')
+    end = serializers.CharField(source='course_run.end')
+    enrollment_start = serializers.CharField(source='course_run.enrollment_start')
+    enrollment_end = serializers.CharField(source='course_run.enrollment_end')
+    enrollment_end = serializers.CharField(source='course_run.enrollment_end')
+    position = serializers.IntegerField(source='get_position')
+
+    class Meta:
+        model = models.Enrollment
+        fields = [
+            'resource_link',
+            'title',
+            'start', 'end',
+            'enrollment_start', 'enrollment_end',
+            'state',
+            'position',
+        ]
+
+
 class OrderSerializer(serializers.ModelSerializer):
     """
-    Oder model serializer
+    Order model serializer
     """
     id = serializers.CharField(source='uid')
-    course_runs = CourseRunSerializer(many=True)
+    enrollments = OrderEnrollmentSerializer(many=True)
     owner = serializers.CharField(source='owner.username')
     product_id = serializers.CharField(source='course_product.uid')
 
     class Meta:
         model = models.Order
-        fields = ['id', 'created_on', 'state', 'owner', 'product_id', 'course_runs']
+        fields = ['id', 'created_on', 'state', 'owner', 'product_id', 'enrollments']

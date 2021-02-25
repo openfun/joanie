@@ -48,5 +48,4 @@ class Certificate(models.Model):
         verbose_name_plural = _("Certificates")
 
     def __str__(self):
-        return f"Certificate: {self.certificate_definition} for {self.order.owner} " \
-               f"[active: {self.is_active}/ state:{self.state}]"
+        return f"Certificate: {self.certificate_definition} for {self.order.owner}"

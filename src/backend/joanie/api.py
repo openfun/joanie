@@ -55,6 +55,7 @@ class OrdersView(generics.ListAPIView):
     def get_user(self):
         # TODO: try except failure decode
         authorization_header = self.request.headers.get("Authorization")
+        # FIXME return failure
         if not authorization_header:
             return Response("Missing authentication.", status=401)
         access_token = authorization_header.split(' ')[1]  # Bearer XXXXX
@@ -87,8 +88,8 @@ class OrdersView(generics.ListAPIView):
         # Now create order and enrollments
         try:
             order = course_product.set_order(user, resource_links)
-        except ValueError as e:
-            return Response(status=400, data={"errors": e.args})
         except errors.OrderAlreadyExists as e:
             return Response(status=403, data={"errors": e.args})
+        except Exception as e:
+            return Response(status=500, data={"errors": e.args})
         return Response(serializers.OrderSerializer(order).data)

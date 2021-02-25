@@ -199,11 +199,7 @@ class Base(Configuration):
 
     LANGUAGES = (
         ('en', _("English")),
-        ('en-us', _("US English")),
-        ('it', _('Italian')),
-        ('nl', _('Dutch')),
         ('fr', _('French')),
-        ('es', _('Spanish')),
     )
     PARLER_DEFAULT_LANGUAGE_CODE = 'en'
     PARLER_LANGUAGES = {

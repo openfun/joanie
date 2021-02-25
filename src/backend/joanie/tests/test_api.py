@@ -3,161 +3,179 @@ import jwt
 from django.conf import settings
 from django.test import TestCase
 from django.test.utils import override_settings
-
+from django.utils import translation
 
 from joanie.core import enums
-
 from joanie.core import factories
-
 from joanie.core import models
+
+
+OPENEDX_COURSE_RUN_URI = "http://openedx.test/courses/course-v1:edx+%s/course"
 
 
 class APITestCase(TestCase):
 
     def setUp(self):
         super().setUp()
-        # initialize some course runs (NB: will be sync from lms)
-        # TODO: set language in fr or use english label
-        factories.CourseRunFactory(title="Comment assommer un romain")
-        factories.CourseRunFactory(title="Comment reconnaître un romain")
-        factories.CourseRunFactory(title="Apprendre à pêcher")
-        factories.CourseRunFactory(
-            title="Fabriquer une canne à pêche",
+        translation.activate('en')
+        # First create a course product to learn how to become a good druid
+        # 1/ some course runs are required to became a good druid
+        self.bases_of_botany_session1 = factories.CourseRunFactory(
+            title="Bases of botany",
+            resource_link=OPENEDX_COURSE_RUN_URI % '000001+BasesOfBotany_Session1',
         )
-        factories.CourseRunFactory(title="Comment soulever une charge")
-        hunt_boar = factories.CourseRunFactory(title="Apprendre à pister un sanglier")
-        archery = factories.CourseRunFactory(title="Apprendre à tirer à l'arc")
-
-        openedx_lms_uri = "http://openedx.test/courses/course-v1:edx+"
-        self.basics_of_botany = factories.CourseRunFactory(
-            title="Le BABA de la botanique",
-            resource_link=f"{openedx_lms_uri}000001+BasicBotany_Session/course",
+        self.bases_of_botany_session2 = factories.CourseRunFactory(
+            title="Bases of botany",
+            resource_link=OPENEDX_COURSE_RUN_URI % '000001+BasesOfBotany_Session2',
         )
-        self.basics_druidic = factories.CourseRunFactory(
-            title="Le BABA druidique",
-            resource_link=f"{openedx_lms_uri}000002+BasicDruidic_Session/course",
+        self.bases_of_druidism_session1 = factories.CourseRunFactory(
+            title="Bases of druidism",
+            resource_link=OPENEDX_COURSE_RUN_URI % '000002+BasesOfDruidism_Session1',
         )
-        # TODO: add same course run but with other run date
-        self.magic_potion = factories.CourseRunFactory(
-            title="Comment faire une potion magique",
-            resource_link=f"{openedx_lms_uri}000003+MagicPotion_Session/course",
+        self.bases_of_druidism_session2 = factories.CourseRunFactory(
+            title="Bases of druidism",
+            resource_link=OPENEDX_COURSE_RUN_URI % '000002+BasesOfDruidism_Session2',
         )
-
-        # initialize some product
-        druid_credential_product = factories.ProductFactory(
-            type=enums.PRODUCT_TYPE_CREDENTIAL,
-            name="devenir-druide-certifie",
-            title="Devenir druide certifié",
+        self.diy_magic_potion_session1 = factories.CourseRunFactory(
+            title="How to cook a magic potion",
+            resource_link=OPENEDX_COURSE_RUN_URI % '000003+DIYMagicPotion_Session1',
         )
+        self.diy_magic_potion_session2 = factories.CourseRunFactory(
+            title="How to cook a magic potion",
+            resource_link=OPENEDX_COURSE_RUN_URI % '000003+DIYMagicPotion_Session2',
+        )
+        # 2/ Create the enrollment Product
         become_druid_product = factories.ProductFactory(
             type=enums.PRODUCT_TYPE_ENROLLMENT,
-            name="devenir-druide",
-            title="Devenir druide",
+            title="Become druid",
         )
-        factories.ProductFactory(
-            type=enums.PRODUCT_TYPE_ENROLLMENT,
-            name="devenir-lanceur-menhir",
-            title="Devenir lanceur de menhir",
-        )
-        become_hunter_product = factories.ProductFactory(
-            type=enums.PRODUCT_TYPE_ENROLLMENT,
-            name="devenir-chasseur-sanglier",
-            title="Devenir chasseur de sanglier",
-        )
-
-        # initialize some organizations
-        orga_druid = factories.OrganizationFactory(title="École des druides")
-        orga_hunting_fishing = factories.OrganizationFactory(title="École chasse et pêche")
-        orga_bodyb = factories.OrganizationFactory(title="École bodybuilding")
-
-        # initilize some courses
+        # 3/ Create the Course of organization "the Druid School"
+        druid_school = factories.OrganizationFactory(title="the Druid School")
         self.druid_course = factories.CourseFactory(
-            title="Formation druide",
-            organization=orga_druid,
+            title="Druid course",
+            organization=druid_school,
         )
-        factories.CourseFactory(
-            title="Formation assistant druide",
-            organization=orga_druid,
-        )
-        hunting_course = factories.CourseFactory(
-            title="Formation chasseur sanglier",
-            organization=orga_hunting_fishing,
-        )
-        factories.CourseFactory(
-            title="Formation pêcheur",
-            organization=orga_hunting_fishing,
-        )
-        factories.CourseFactory(
-            title="Formation lanceur menhir",
-            organization=orga_bodyb,
-        )
-        factories.CourseFactory(
-            title="Formation assommeur de Romains",
-            organization=orga_bodyb,
-        )
-
-        # Now we link products to courses and add course runs
-        # link two products to druid course
-        # one only enrollment
+        # 4/ now link the Product to the Druid Course
         self.course_product_druid = factories.CourseProductFactory(
             course=self.druid_course,
             product=become_druid_product,
         )
-        self.course_product_druid.course_runs.add(self.basics_of_botany)
-        self.course_product_druid.course_runs.add(self.basics_druidic)
-        self.course_product_druid.course_runs.add(self.magic_potion)
-        # one with certification
-        self.course_product_druid_credential = factories.CourseProductFactory(
-            course=self.druid_course,
-            product=druid_credential_product,
-            certificate_definition=factories.CertificateDefinitionFactory(title="Druide Certification"),
-        )
-        self.course_product_druid_credential.course_runs.add(self.basics_of_botany)
-        self.course_product_druid_credential.course_runs.add(self.basics_druidic)
-        self.course_product_druid_credential.course_runs.add(self.magic_potion)
+        # 5/ add all course runs available for this course product
+        self.course_product_druid.course_runs.add(self.bases_of_botany_session1)
+        self.course_product_druid.course_runs.add(self.bases_of_druidism_session1)
+        self.course_product_druid.course_runs.add(self.diy_magic_potion_session1)
 
-        # TODO: define a course product for fishing
-        # TODO: it possible to have various course run for same thing with various run dates
+        self.course_product_druid.course_runs.add(self.bases_of_botany_session2)
+        self.course_product_druid.course_runs.add(self.bases_of_druidism_session2)
+        self.course_product_druid.course_runs.add(self.diy_magic_potion_session2)
 
-        course_product_hunting = factories.CourseProductFactory(
-            course=hunting_course,
-            product=become_hunter_product,
-        )
-        course_product_hunting.course_runs.add(hunt_boar)
-        course_product_hunting.course_runs.add(archery)
-
-        # add course runs and position inside a course product
+        # 6/ now define position of each course runs to complete the course
+        # first to do
         factories.ProductCourseRunPositionFactory(
-            course_run=self.basics_druidic, position=1, course_product=self.course_product_druid,
-        )
-        factories.ProductCourseRunPositionFactory(
-            course_run=self.basics_of_botany, position=2, course_product=self.course_product_druid,
-        )
-        factories.ProductCourseRunPositionFactory(
-            course_run=self.magic_potion, position=3, course_product=self.course_product_druid,
-        )
-
-        factories.ProductCourseRunPositionFactory(
-            course_run=self.basics_druidic,
+            course_run=self.bases_of_botany_session1,
             position=1,
-            course_product=self.course_product_druid_credential,
+            course_product=self.course_product_druid,
         )
         factories.ProductCourseRunPositionFactory(
-            course_run=self.basics_of_botany,
+            course_run=self.bases_of_botany_session2,
+            position=1,
+            course_product=self.course_product_druid,
+        )
+        # second to do
+        factories.ProductCourseRunPositionFactory(
+            course_run=self.bases_of_druidism_session1,
             position=2,
-            course_product=self.course_product_druid_credential,
+            course_product=self.course_product_druid,
         )
         factories.ProductCourseRunPositionFactory(
-            course_run=self.magic_potion,
-            position=3,
-            course_product=self.course_product_druid_credential,
+            course_run=self.bases_of_druidism_session2,
+            position=2,
+            course_product=self.course_product_druid,
         )
+        # third to do
+        factories.ProductCourseRunPositionFactory(
+            course_run=self.diy_magic_potion_session1,
+            position=3,
+            course_product=self.course_product_druid,
+        )
+        factories.ProductCourseRunPositionFactory(
+            course_run=self.diy_magic_potion_session2,
+            position=3,
+            course_product=self.course_product_druid,
+        )
+
+        # Now create a course product to learn how to become a good druid and get a certificate
+        # 1/ Create the credential Product
+        become_certified_druid = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CREDENTIAL,
+            title="Become a certified druid",
+        )
+        # 2/ now link the Product to the Druid Course
+        self.course_product_certified_druid = factories.CourseProductFactory(
+            course=self.druid_course,
+            product=become_certified_druid,
+            certificate_definition=factories.CertificateDefinitionFactory(
+                title="Druid Certification",
+            ),
+        )
+        # 3/ add all course runs available for this course product
+        self.course_product_certified_druid.course_runs.add(self.bases_of_botany_session1)
+        self.course_product_certified_druid.course_runs.add(self.bases_of_druidism_session1)
+        self.course_product_certified_druid.course_runs.add(self.diy_magic_potion_session1)
+
+        self.course_product_certified_druid.course_runs.add(self.bases_of_botany_session2)
+        self.course_product_certified_druid.course_runs.add(self.bases_of_druidism_session2)
+        self.course_product_certified_druid.course_runs.add(self.diy_magic_potion_session2)
+
+        # 6/ now define position of each course runs to complete the course
+        # first to do
+        factories.ProductCourseRunPositionFactory(
+            course_run=self.bases_of_botany_session1,
+            position=1,
+            course_product=self.course_product_certified_druid,
+        )
+        factories.ProductCourseRunPositionFactory(
+            course_run=self.bases_of_botany_session2,
+            position=1,
+            course_product=self.course_product_certified_druid,
+        )
+        # second to do
+        factories.ProductCourseRunPositionFactory(
+            course_run=self.bases_of_druidism_session1,
+            position=2,
+            course_product=self.course_product_certified_druid,
+        )
+        factories.ProductCourseRunPositionFactory(
+            course_run=self.bases_of_druidism_session2,
+            position=2,
+            course_product=self.course_product_certified_druid,
+        )
+        # third to do
+        factories.ProductCourseRunPositionFactory(
+            course_run=self.diy_magic_potion_session1,
+            position=3,
+            course_product=self.course_product_certified_druid,
+        )
+        factories.ProductCourseRunPositionFactory(
+            course_run=self.diy_magic_potion_session2,
+            position=3,
+            course_product=self.course_product_certified_druid,
+        )
+
+    def _get_user_token(self, username):
+        token = jwt.encode(
+            {'username': username},
+            getattr(settings, "JWT_PRIVATE_SIGNING_KEY"),
+            algorithm=getattr(settings, "JWT_ALGORITHM"),
+        )
+        self.assertEqual(len(token.split('.')), 3)
+        return token
 
     def test_get_products_available_for_a_course(self):
         response = self.client.get(f'/api/courses/{self.druid_course.code}/products')
         self.assertEqual(response.status_code, 200)
         # check return all products for druid course:
-        # course_product_druid and course_product_druid_credential
+        # course_product_druid and course_product_certified_druid
         self.assertEqual(response.data[0]['id'], str(self.course_product_druid.uid))
         self.assertEqual(
             response.data[0]['title'],
@@ -166,16 +184,18 @@ class APITestCase(TestCase):
         self.assertEqual(
             response.data[0]['call_to_action'],
             self.course_product_druid.product.call_to_action_label,
-            "let's go!",  # TODO: beurk
+            "let's go!",
         )
-        self.assertEqual(len(response.data[0]['course_runs']), 3)
+        # 2 sessions are available for each course run (2x3)
+        self.assertEqual(len(response.data[0]['course_runs']), 6)
 
-        self.assertEqual(response.data[1]['id'], str(self.course_product_druid_credential.uid))
+        self.assertEqual(response.data[1]['id'], str(self.course_product_certified_druid.uid))
         self.assertEqual(
             response.data[1]['title'],
-            self.course_product_druid_credential.product.title,
+            self.course_product_certified_druid.product.title,
         )
-        self.assertEqual(len(response.data[1]['course_runs']), 3)
+        # 2 sessions are available for each course run (2x3)
+        self.assertEqual(len(response.data[1]['course_runs']), 6)
         # TODO: test course runs data
 
     @override_settings(
@@ -193,23 +213,18 @@ class APITestCase(TestCase):
         # first test passing an order for the druid course to user Panoramix
         # we choose to take the 3 default course runs
         self.assertEqual(models.User.objects.count(), 0)
-        # todo: mock token send by cms
-        username = "panoramix"
-        token = jwt.encode(
-            {'username': username},
-            getattr(settings, "JWT_PRIVATE_SIGNING_KEY"),
-            algorithm=getattr(settings, "JWT_ALGORITHM"),
-        )
-        self.assertEqual(len(token.split('.')), 3)
+
         # pass CourseProduct uid and all resource_links of course runs selected
         data = {
             'id': self.course_product_druid.uid,
             'resource_links': [
-                self.basics_of_botany.resource_link,
-                self.basics_druidic.resource_link,
-                self.magic_potion.resource_link,
+                self.bases_of_botany_session1.resource_link,
+                self.bases_of_druidism_session1.resource_link,
+                self.diy_magic_potion_session2.resource_link,
             ]
         }
+        username = "panoramix"
+        token = self._get_user_token(username)
         # TODO: test failure Authorization
         response = self.client.post(
             '/api/orders/',
@@ -231,7 +246,7 @@ class APITestCase(TestCase):
         self.assertEqual(order_data['id'], str(order.uid))
         self.assertEqual(order_data['owner'], username)
         self.assertEqual(order_data['product_id'], str(self.course_product_druid.uid))
-        self.assertEqual(len(order_data['course_runs']), 3)
+        self.assertEqual(len(order_data['enrollments']), 3)
         # TODO: test course runs data
 
         response = self.client.get(
@@ -250,14 +265,15 @@ class APITestCase(TestCase):
             response.data['results'][0]['product_id'],
             str(self.course_product_druid.uid),
         )
-        self.assertEqual(len(response.data['results'][0]['course_runs']), 3)
-        # TODO: test course runs data
+        self.assertEqual(len(response.data['results'][0]['enrollments']), 3)
+        # TODO: test enrollments data
         self.assertEqual(models.Enrollment.objects.count(), 3)
         self.assertEqual(
             models.Enrollment.objects.filter(state=enums.ENROLLMENT_STATE_IN_PROGRESS).count(),
             3,
         )
-        # try to enroll again, check error raising
+
+        # Try to enroll again, check error raising
         response = self.client.post(
             '/api/orders/',
             data=data,
@@ -265,8 +281,107 @@ class APITestCase(TestCase):
             HTTP_AUTHORIZATION=f'Bearer {token}',
         )
         self.assertEqual(response.status_code, 403)
+        # no more order
         self.assertEqual(models.Order.objects.count(), 1)
+        # no more enrollments
         self.assertEqual(models.Enrollment.objects.count(), 3)
+        # return an error message
         self.assertEqual(response.data["errors"], ('Order already exist',))
 
-        # TODO: test with invalid resource_links/LMS configuration not found
+    @override_settings(
+        JOANIE_LMS_BACKENDS=[
+            {
+                "API_TOKEN": "a_secure_api_token",
+                "BACKEND": "joanie.lms_handler.backends.dummy.DummyLMSBackend",
+                "BASE_URL": "http://openedx.test",
+                "SELECTOR_REGEX": r".*openedx.test.*",
+                "COURSE_REGEX": r"^.*/courses/(?P<course_id>.*)/course/?$",
+            },
+        ]
+    )
+    def test_enroll_to_invalid_course_runs(self):
+        # Try to enroll to a course run with invalid resource_link
+
+        # initialize an invalid course run
+        resource_link_invalid = "http://mysterious.uri/courses/course-v1:000001+Stuff_Session/course"
+        invalid_course_run = factories.CourseRunFactory(
+            title="How to do some stuff?",
+            resource_link=resource_link_invalid,
+        )
+        # add invalid course run to the desired product
+        self.course_product_druid.course_runs.add(invalid_course_run)
+        factories.ProductCourseRunPositionFactory(
+            course_run=invalid_course_run,
+            position=4,
+            course_product=self.course_product_druid,
+        )
+        # TODO: add test course run not available for the course product
+
+        # ask to enroll to the product
+        username = "panoramix"
+        token = self._get_user_token(username)
+        data = {
+            'id': self.course_product_druid.uid,
+            'resource_links': [
+                invalid_course_run.resource_link,
+                self.bases_of_botany_session1.resource_link,
+                self.bases_of_druidism_session1.resource_link,
+                self.diy_magic_potion_session1.resource_link,
+            ]
+        }
+        with self.assertLogs(level='ERROR') as logs:
+            response = self.client.post(
+                '/api/orders/',
+                data=data,
+                content_type='application/json',
+                HTTP_AUTHORIZATION=f'Bearer {token}',
+            )
+            msg_error = f"No LMS configuration found for resource link: {resource_link_invalid}"
+            self.assertIn(msg_error, logs.output[0])
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(models.User.objects.count(), 1)
+        self.assertEqual(models.User.objects.get().username, username)
+
+        # all joanie enrollments were created but with different states
+        # and order state was set to failure
+        order = models.Order.objects.get()
+        self.assertEqual(order.state, enums.ORDER_STATE_FAILED)
+        self.assertEqual(models.Enrollment.objects.count(), 4)
+        self.assertEqual(
+            models.Enrollment.objects.get(course_run__resource_link=resource_link_invalid).state,
+            enums.ENROLLMENT_STATE_FAILED,
+        )
+        self.assertEqual(
+            models.Enrollment.objects.filter(state=enums.ENROLLMENT_STATE_IN_PROGRESS).count(),
+            3,
+        )
+        order_data = response.data
+        self.assertEqual(order_data['id'], str(order.uid))
+        self.assertEqual(order_data['owner'], username)
+        self.assertEqual(order_data['product_id'], str(self.course_product_druid.uid))
+        self.assertEqual(order_data['state'], enums.ORDER_STATE_FAILED)
+        self.assertEqual(len(order_data['enrollments']), 4)
+        self.assertEqual(
+            order_data['enrollments'][0]['resource_link'],
+            resource_link_invalid,
+        )
+        self.assertEqual(
+            order_data['enrollments'][0]['state'],
+            enums.ENROLLMENT_STATE_FAILED,
+        )
+        self.assertEqual(
+            order_data['enrollments'][0]['position'],
+            4,
+        )
+        self.assertEqual(
+            order_data['enrollments'][1]['resource_link'],
+            self.bases_of_botany_session1.resource_link,
+        )
+        self.assertEqual(
+            order_data['enrollments'][1]['state'],
+            enums.ENROLLMENT_STATE_IN_PROGRESS,
+        )
+        self.assertEqual(
+            order_data['enrollments'][1]['position'],
+            1,
+        )

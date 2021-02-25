@@ -22,7 +22,7 @@ class CourseAdmin(TranslatableAdmin):
 
 @admin.register(models.CourseRun)
 class CourseRunAdmin(TranslatableAdmin):  # ReadOnly or not???
-    list_display = ('title', 'resource_link')
+    list_display = ('title', 'resource_link', 'start', 'end')
 
 
 @admin.register(models.Organization)
