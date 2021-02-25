@@ -110,6 +110,7 @@ class APITestCase(TestCase):
         self.course_product_druid_credential = factories.CourseProductFactory(
             course=self.druid_course,
             product=druid_credential_product,
+            certificate_definition=factories.CertificateDefinitionFactory(title="Druide Certification"),
         )
         self.course_product_druid_credential.course_runs.add(self.basics_of_botany)
         self.course_product_druid_credential.course_runs.add(self.basics_druidic)
@@ -118,17 +119,6 @@ class APITestCase(TestCase):
         # TODO: define a course product for fishing
         # TODO: it possible to have various course run for same thing with various run dates
 
-        # create druid certification
-        druid_certification = factories.CertificateDefinitionFactory(
-            title="Druide Certification",
-        )
-        # link druid certification to credential product
-        factories.CourseProductCertificationFactory(
-            certificate_definition=druid_certification,
-            course_product=self.course_product_druid_credential,
-        )
-
-        #
         course_product_hunting = factories.CourseProductFactory(
             course=hunting_course,
             product=become_hunter_product,

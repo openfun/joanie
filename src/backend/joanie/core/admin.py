@@ -10,11 +10,6 @@ class CertificateDefinitionAdmin(TranslatableAdmin):
     list_display = ('name', 'title')
 
 
-@admin.register(models.CourseProductCertification)
-class CourseProductCertificationAdmin(admin.ModelAdmin):
-    list_display = ('course_product', 'certificate_definition')
-
-
 @admin.register(models.Certificate)
 class CertificateAdmin(admin.ModelAdmin):
     list_display = ('certificate_definition', 'order', 'issued_on')

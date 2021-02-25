@@ -32,29 +32,6 @@ class CertificateDefinition(parler_models.TranslatableModel):
         return self.title
 
 
-# TODO: rename CourseProductCertificateDefinition
-class CourseProductCertification(models.Model):
-    course_product = models.ForeignKey(
-        products_models.CourseProduct,
-        verbose_name=_("course product"),
-        on_delete=models.PROTECT,
-    )
-    certificate_definition = models.ForeignKey(
-        CertificateDefinition,
-        verbose_name=_("certificate definition"),
-        on_delete=models.PROTECT,
-    )
-    # NB: add check product types allowed, exclude enrollment type
-
-    class Meta:
-        db_table = "joanie_course_product_certification"
-        verbose_name = _("Course product certification")
-        verbose_name_plural = _("Course product certifications")
-
-    def __str__(self):
-        return f"{self.certificate_definition} for course product {self.course_product}]"
-
-
 class Certificate(models.Model):
     certificate_definition = models.ForeignKey(
         CertificateDefinition,

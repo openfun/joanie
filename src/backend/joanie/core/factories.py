@@ -139,11 +139,3 @@ class ProductCourseRunPositionFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = models.ProductCourseRunPosition
-
-
-class CourseProductCertificationFactory(factory.django.DjangoModelFactory):
-    course_product = factory.SubFactory(CourseProductFactory)
-    certificate_definition = factory.SubFactory(CertificateDefinitionFactory)
-
-    class Meta:
-        model = models.CourseProductCertification

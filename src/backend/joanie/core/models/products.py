@@ -49,6 +49,12 @@ class CourseProduct(models.Model):
     # TODO: check dans le resource_link si le course id correspond bien à tous les courses run
     # TODO: add currency info (settings? allow more than one device?)
     price = models.CharField(verbose_name=_("price"), blank=True, max_length=100)
+    certificate_definition = models.ForeignKey(
+        "core.CertificateDefinition",
+        verbose_name=_("certificate definition"),
+        on_delete=models.PROTECT,
+        blank=True, null=True,
+    )
 
     class Meta:
         db_table = "joanie_course_product"

@@ -89,6 +89,7 @@ class Command(BaseCommand):
         course_product_druid_credential = factories.CourseProductFactory(
             course=druid_course,
             product=druid_credential_product,
+            certificate_definition=factories.CertificateDefinitionFactory(title="Druide Certification"),
         )
         course_product_druid_credential.course_runs.add(basics_of_botany)
         course_product_druid_credential.course_runs.add(basics_druidic)
@@ -97,16 +98,6 @@ class Command(BaseCommand):
         # TODO: define a course product for fishing
         # TODO: it possible to have various course run for same thing with various run dates
         # TODO: products_factories.CourseProductFactory(course=)
-
-        # create druid certification
-        druid_certification = factories.CertificateDefinitionFactory(
-            title="Druide Certification",
-        )
-        # link druid certification to credential product
-        factories.CourseProductCertificationFactory(
-            certificate_definition=druid_certification,
-            course_product=course_product_druid_credential,
-        )
 
         #
         course_product_hunting = factories.CourseProductFactory(
