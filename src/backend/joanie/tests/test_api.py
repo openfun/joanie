@@ -165,14 +165,13 @@ class APITestCase(TestCase):
         )
 
     @staticmethod
-    def _mock_user_token(username):
+    def _mock_user_token(username, expired_at=None):
         issued_at = datetime.utcnow()
-        expired_at = issued_at + timedelta(days=2)
         token = jwt.encode(
             {
                 "email": f"{username}@funmooc.fr",
                 "username": username,
-                "exp": expired_at,
+                "exp": expired_at or issued_at + timedelta(days=2),
                 "iat": issued_at,
             },
             getattr(settings, "JWT_PRIVATE_SIGNING_KEY"),
@@ -250,8 +249,19 @@ class APITestCase(TestCase):
         )
         self.assertEqual(response.status_code, 403)
 
-        # Now try to set order with valid token
         username = "panoramix"
+
+        # Try to set order with expired token
+        token = self._mock_user_token(username, expired_at=datetime.utcnow() - timedelta(days=1))
+        response = self.client.post(
+            '/api/orders/',
+            data=data,
+            content_type='application/json',
+            HTTP_AUTHORIZATION=f'Bearer {token}',
+        )
+        self.assertEqual(response.status_code, 403)
+
+        # Now try to set order with valid token
         token = self._mock_user_token(username)
         response = self.client.post(
             '/api/orders/',
