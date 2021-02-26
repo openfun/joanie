@@ -16,10 +16,20 @@ from . import serializers
 
 
 class OrdersAccessPermission(permissions.BasePermission):
-
     def has_permission(self, request, view):
-        # TODO: check token is valid
-        return True
+        authorization_header = request.headers.get("Authorization")
+        if not authorization_header:
+            return False
+        access_token = authorization_header.split(' ')[1]  # Bearer XXXXX
+        try:
+            claim = jwt.decode(
+                access_token,
+                getattr(settings, 'JWT_PRIVATE_SIGNING_KEY'),
+                getattr(settings, 'JWT_ALGORITHM'),
+            )
+            return all(i in claim for i in ('iat', 'exp'))
+        except Exception as err:
+            return False
 
 
 class CourseProductsAvailableListView(views.APIView):  # FIXME: APIView ?
@@ -50,19 +60,12 @@ class OrdersView(generics.ListAPIView):
     """
     serializer_class = serializers.OrderSerializer
     pagination_class = OrderPagination
-    permissions = [OrdersAccessPermission]
+    permission_classes = [OrdersAccessPermission]
 
     def get_user(self):
-        # TODO: try except failure decode
         authorization_header = self.request.headers.get("Authorization")
-        # FIXME return failure
-        if not authorization_header:
-            return Response("Missing authentication.", status=401)
         access_token = authorization_header.split(' ')[1]  # Bearer XXXXX
 
-        # TODO: return failure if token pourri (decoding failure)
-        # TODO: is_valid mettre dans une permission custom le check token valid
-        # (exp((session de l'utilisateur va périmer)), iat)
         claim = jwt.decode(
             access_token,
             getattr(settings, 'JWT_PRIVATE_SIGNING_KEY'),
