@@ -270,7 +270,7 @@ class Test(Base):
     """Test environment settings"""
 
     CACHES = {
-        "default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
+        "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
     }
 
 

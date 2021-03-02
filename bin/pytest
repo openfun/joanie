@@ -6,4 +6,4 @@ source "$(dirname "${BASH_SOURCE[0]}")/_config.sh"
 # Fix docker vs local path when project sources are mounted as a volume
 params=$(echo $@ | sed "s|src/backend/||g")
 
-_dc_run app pytest "${params}"
+_dc_run -e DJANGO_CONFIGURATION=Test app pytest "${params}"
