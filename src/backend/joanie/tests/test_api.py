@@ -1,3 +1,4 @@
+import arrow
 from datetime import datetime, timedelta
 import jwt
 
@@ -25,10 +26,12 @@ class APITestCase(TestCase):
         self.bases_of_botany_session1 = factories.CourseRunFactory(
             title="Bases of botany",
             resource_link=OPENEDX_COURSE_RUN_URI % '000001+BasesOfBotany_Session1',
+            start=arrow.utcnow().shift(days=-2).datetime,
         )
         self.bases_of_botany_session2 = factories.CourseRunFactory(
             title="Bases of botany",
             resource_link=OPENEDX_COURSE_RUN_URI % '000001+BasesOfBotany_Session2',
+            start=arrow.utcnow().shift(days=10).datetime,
         )
         self.bases_of_druidism_session1 = factories.CourseRunFactory(
             title="Bases of druidism",
@@ -52,10 +55,9 @@ class APITestCase(TestCase):
             title="Become druid",
         )
         # 3/ Create the Course of organization "the Druid School"
-        druid_school = factories.OrganizationFactory(title="the Druid School")
         self.druid_course = factories.CourseFactory(
             title="Druid course",
-            organization=druid_school,
+            organization=factories.OrganizationFactory(title="the Druid School"),
         )
         # 4/ now link the Product to the Druid Course
         self.course_product_druid = factories.CourseProductFactory(
@@ -83,17 +85,6 @@ class APITestCase(TestCase):
             position=1,
             course_product=self.course_product_druid,
         )
-        # second to do
-        factories.ProductCourseRunPositionFactory(
-            course_run=self.bases_of_druidism_session1,
-            position=2,
-            course_product=self.course_product_druid,
-        )
-        factories.ProductCourseRunPositionFactory(
-            course_run=self.bases_of_druidism_session2,
-            position=2,
-            course_product=self.course_product_druid,
-        )
         # third to do
         factories.ProductCourseRunPositionFactory(
             course_run=self.diy_magic_potion_session1,
@@ -103,6 +94,17 @@ class APITestCase(TestCase):
         factories.ProductCourseRunPositionFactory(
             course_run=self.diy_magic_potion_session2,
             position=3,
+            course_product=self.course_product_druid,
+        )
+        # second to do
+        factories.ProductCourseRunPositionFactory(
+            course_run=self.bases_of_druidism_session1,
+            position=2,
+            course_product=self.course_product_druid,
+        )
+        factories.ProductCourseRunPositionFactory(
+            course_run=self.bases_of_druidism_session2,
+            position=2,
             course_product=self.course_product_druid,
         )
 
@@ -164,6 +166,18 @@ class APITestCase(TestCase):
             course_product=self.course_product_certified_druid,
         )
 
+    def _get_order_data(self):
+        # we choose to take the 3 default course runs for the druid course (session1)
+        # so we give the CourseProduct uid and all resource_links of course runs selected
+        return {
+            'id': self.course_product_druid.uid,
+            'resource_links': [
+                self.bases_of_botany_session1.resource_link,
+                self.bases_of_druidism_session1.resource_link,
+                self.diy_magic_potion_session1.resource_link,
+            ]
+        }
+
     @staticmethod
     def _mock_user_token(username, expired_at=None):
         issued_at = datetime.utcnow()
@@ -180,10 +194,10 @@ class APITestCase(TestCase):
         return token
 
     def test_get_products_available_for_a_course(self):
+        # Get all products available for druid course
         response = self.client.get(f'/api/courses/{self.druid_course.code}/products')
         self.assertEqual(response.status_code, 200)
-        # check return all products for druid course:
-        # course_product_druid and course_product_certified_druid
+        # two products are available: course_product_druid and course_product_certified_druid
         self.assertEqual(response.data[0]['id'], str(self.course_product_druid.uid))
         self.assertEqual(
             response.data[0]['title'],
@@ -197,6 +211,18 @@ class APITestCase(TestCase):
         # 2 sessions are available for each course run (2x3)
         self.assertEqual(len(response.data[0]['course_runs']), 6)
 
+        # check ordering by position then start date
+        self.assertEqual(response.data[0]['course_runs'][0]['position'], 1)
+        self.assertEqual(response.data[0]['course_runs'][-1]['position'], 3)
+        # check course run details returned
+        self.assertEqual(
+            response.data[0]['course_runs'][0]['title'],
+            self.bases_of_botany_session1.title,
+        )
+        self.assertEqual(
+            response.data[0]['course_runs'][0]['resource_link'],
+            self.bases_of_botany_session1.resource_link,
+        )
         self.assertEqual(response.data[1]['id'], str(self.course_product_certified_druid.uid))
         self.assertEqual(
             response.data[1]['title'],
@@ -204,7 +230,39 @@ class APITestCase(TestCase):
         )
         # 2 sessions are available for each course run (2x3)
         self.assertEqual(len(response.data[1]['course_runs']), 6)
-        # TODO: test course runs data
+
+    def test_set_order_without_authorization(self):
+        # Try to set order without Authorization
+        response = self.client.post(
+            '/api/orders/',
+            data=self._get_order_data(),
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_set_order_with_bad_token(self):
+        # Try to set order with bad token
+        response = self.client.post(
+            '/api/orders/',
+            data=self._get_order_data(),
+            content_type='application/json',
+            HTTP_AUTHORIZATION=f'Bearer nawak',
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_set_order_with_expired_token(self):
+        # Try to set order with expired token
+        token = self._mock_user_token(
+            "panoramix",
+            expired_at=arrow.utcnow().shift(days=-1).datetime,
+        )
+        response = self.client.post(
+            '/api/orders/',
+            data=self._get_order_data(),
+            content_type='application/json',
+            HTTP_AUTHORIZATION=f'Bearer {token}',
+        )
+        self.assertEqual(response.status_code, 403)
 
     @override_settings(
         JOANIE_LMS_BACKENDS=[
@@ -217,69 +275,30 @@ class APITestCase(TestCase):
             },
         ]
     )
-    def test_set_order_enrollment(self):
-        # Test to set an order for the druid course to a new user Panoramix
+    def test_set_order(self):
+        # Set an order for the druid course to a new user Panoramix
         self.assertEqual(models.User.objects.count(), 0)
-
-        # we choose to take the 3 default course runs for the druid course (session1)
-        # so we give the CourseProduct uid and all resource_links of course runs selected
-        data = {
-            'id': self.course_product_druid.uid,
-            'resource_links': [
-                self.bases_of_botany_session1.resource_link,
-                self.bases_of_druidism_session1.resource_link,
-                self.diy_magic_potion_session2.resource_link,
-            ]
-        }
-
-        # First try to set order without Authorization
-        response = self.client.post(
-            '/api/orders/',
-            data=data,
-            content_type='application/json',
-        )
-        self.assertEqual(response.status_code, 403)
-
-        # Then try to set order with bad token
-        response = self.client.post(
-            '/api/orders/',
-            data=data,
-            content_type='application/json',
-            HTTP_AUTHORIZATION=f'Bearer nawak',
-        )
-        self.assertEqual(response.status_code, 403)
 
         username = "panoramix"
 
-        # Try to set order with expired token
-        token = self._mock_user_token(username, expired_at=datetime.utcnow() - timedelta(days=1))
-        response = self.client.post(
-            '/api/orders/',
-            data=data,
-            content_type='application/json',
-            HTTP_AUTHORIZATION=f'Bearer {token}',
-        )
-        self.assertEqual(response.status_code, 403)
-
-        # Now try to set order with valid token
+        # we call api with a valid token
         token = self._mock_user_token(username)
         response = self.client.post(
             '/api/orders/',
-            data=data,
+            data=self._get_order_data(),
             content_type='application/json',
             HTTP_AUTHORIZATION=f'Bearer {token}',
         )
         self.assertEqual(response.status_code, 200)
         # panoramix was an unknown user, so a new user was created
-        self.assertEqual(models.User.objects.count(), 1)
         self.assertEqual(models.User.objects.get().username, username)
 
-        # an order was created and
+        # an order was created at pending state
         order = models.Order.objects.get()
         self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
-        # the 3 course runs selected was link to the order
+        # the 3 course runs selected was linked to the order
         self.assertEqual(order.course_runs.count(), 3)
-        # 3 enrollments was created for each course run
+        # 3 enrollments was created for each course run at in progress state
         self.assertEqual(models.Enrollment.objects.count(), 3)
         self.assertEqual(
             models.Enrollment.objects.filter(state=enums.ENROLLMENT_STATE_IN_PROGRESS).count(),
@@ -291,36 +310,35 @@ class APITestCase(TestCase):
         self.assertEqual(order_data['owner'], username)
         self.assertEqual(order_data['product_id'], str(self.course_product_druid.uid))
         self.assertEqual(len(order_data['enrollments']), 3)
-        # TODO: test enrollments data
-
-        response = self.client.get(
-            '/api/orders/',
-            HTTP_AUTHORIZATION=f'Bearer {token}',
-        )
-        self.assertEqual(response.status_code, 200)
-        # check pagination
-        self.assertEqual(response.data['count'], 1)
-        self.assertIsNone(response.data['next'])
-        self.assertIsNone(response.data['previous'])
-        # check result return
-        self.assertEqual(response.data['results'][0]['id'], str(order.uid))
-        self.assertEqual(response.data['results'][0]['owner'], username)
         self.assertEqual(
-            response.data['results'][0]['product_id'],
-            str(self.course_product_druid.uid),
+            order_data['enrollments'][0]['position'],
+            1,
         )
-        self.assertEqual(len(response.data['results'][0]['enrollments']), 3)
-        # TODO: test enrollments data
-        self.assertEqual(models.Enrollment.objects.count(), 3)
         self.assertEqual(
-            models.Enrollment.objects.filter(state=enums.ENROLLMENT_STATE_IN_PROGRESS).count(),
+            order_data['enrollments'][0]['resource_link'],
+            self.bases_of_botany_session1.resource_link,
+        )
+        self.assertEqual(
+            order_data['enrollments'][0]['state'],
+            enums.ENROLLMENT_STATE_IN_PROGRESS,
+        )
+        self.assertEqual(
+            order_data['enrollments'][-1]['position'],
             3,
         )
+        self.assertEqual(
+            order_data['enrollments'][-1]['resource_link'],
+            self.diy_magic_potion_session1.resource_link,
+        )
+        self.assertEqual(
+            order_data['enrollments'][-1]['state'],
+            enums.ENROLLMENT_STATE_IN_PROGRESS,
+        )
 
-        # Try to enroll again, check error raising
+        # Now try to enroll again, check error raising
         response = self.client.post(
             '/api/orders/',
-            data=data,
+            data=self._get_order_data(),
             content_type='application/json',
             HTTP_AUTHORIZATION=f'Bearer {token}',
         )
@@ -343,11 +361,82 @@ class APITestCase(TestCase):
             },
         ]
     )
-    def test_enroll_to_invalid_course_runs(self):
+    def test_get_orders(self):
+        username = "panoramix"
+        token = self._mock_user_token(username)
+        self.client.post(
+            '/api/orders/',
+            data=self._get_order_data(),
+            content_type='application/json',
+            HTTP_AUTHORIZATION=f'Bearer {token}',
+        )
+        order = models.Order.objects.get()
+
+        # We want to test GET /api/orders/ return for user
+        response = self.client.get(
+            '/api/orders/',
+            HTTP_AUTHORIZATION=f'Bearer {token}',
+        )
+        self.assertEqual(response.status_code, 200)
+        # check pagination
+        self.assertEqual(response.data['count'], 1)
+        self.assertIsNone(response.data['next'])
+        self.assertIsNone(response.data['previous'])
+        # check results returned
+        self.assertEqual(response.data['results'][0]['id'], str(order.uid))
+        self.assertEqual(response.data['results'][0]['owner'], username)
+        self.assertEqual(
+            response.data['results'][0]['product_id'],
+            str(self.course_product_druid.uid),
+        )
+        self.assertEqual(models.Enrollment.objects.count(), 3)
+        self.assertEqual(
+            models.Enrollment.objects.filter(state=enums.ENROLLMENT_STATE_IN_PROGRESS).count(),
+            3,
+        )
+        order_data = response.data['results'][0]
+        self.assertEqual(len(order_data['enrollments']), 3)
+        self.assertEqual(
+            order_data['enrollments'][0]['position'],
+            1,
+        )
+        self.assertEqual(
+            order_data['enrollments'][0]['resource_link'],
+            self.bases_of_botany_session1.resource_link,
+        )
+        self.assertEqual(
+            order_data['enrollments'][0]['state'],
+            enums.ENROLLMENT_STATE_IN_PROGRESS,
+        )
+        self.assertEqual(
+            order_data['enrollments'][-1]['position'],
+            3,
+        )
+        self.assertEqual(
+            order_data['enrollments'][-1]['resource_link'],
+            self.diy_magic_potion_session1.resource_link,
+        )
+        self.assertEqual(
+            order_data['enrollments'][-1]['state'],
+            enums.ENROLLMENT_STATE_IN_PROGRESS,
+        )
+
+    @override_settings(
+        JOANIE_LMS_BACKENDS=[
+            {
+                "API_TOKEN": "a_secure_api_token",
+                "BACKEND": "joanie.lms_handler.backends.dummy.DummyLMSBackend",
+                "BASE_URL": "http://openedx.test",
+                "SELECTOR_REGEX": r".*openedx.test.*",
+                "COURSE_REGEX": r"^.*/courses/(?P<course_id>.*)/course/?$",
+            },
+        ]
+    )
+    def test_set_order_to_one_invalid_course_run(self):
         # Try to enroll to a course run with invalid resource_link
 
         # initialize an invalid course run
-        resource_link_invalid = "http://mysterious.uri/courses/course-v1:000001+Stuff_Session/course"
+        resource_link_invalid = "http://mysterious.uri/courses/course-v0:001+Stuff_Session/course"
         invalid_course_run = factories.CourseRunFactory(
             title="How to do some stuff?",
             resource_link=resource_link_invalid,
@@ -359,7 +448,6 @@ class APITestCase(TestCase):
             position=4,
             course_product=self.course_product_druid,
         )
-        # TODO: add test course run not available for the course product
 
         # ask to enroll to the product
         username = "panoramix"
@@ -429,3 +517,7 @@ class APITestCase(TestCase):
             order_data['enrollments'][1]['position'],
             1,
         )
+
+    # TODO: add test with course run not available for the course product
+    def test_set_order_to_course_run_not_available_for_the_course_product(self):
+        pass

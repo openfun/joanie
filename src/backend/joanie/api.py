@@ -16,6 +16,7 @@ from . import serializers
 
 
 class OrdersAccessPermission(permissions.BasePermission):
+
     def has_permission(self, request, view):
         authorization_header = request.headers.get("Authorization")
         if not authorization_header:
@@ -28,7 +29,7 @@ class OrdersAccessPermission(permissions.BasePermission):
                 getattr(settings, 'JWT_ALGORITHM'),
             )
             return all(i in claim for i in ('iat', 'exp'))
-        except Exception as err:
+        except:  # TODO: improve
             return False
 
 
@@ -51,7 +52,6 @@ class OrderPagination(pagination.PageNumberPagination):
     page_size = 100
 
 
-# TODO: protect view with permission -> check token is valid!
 class OrdersView(generics.ListAPIView):
     """
     GET /api/orders/ return list of all orders for a user with pagination

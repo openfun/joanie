@@ -15,6 +15,7 @@ class ProductCourseRunPositionSerializer(serializers.ModelSerializer):
     enrollment_start = serializers.CharField(source='course_run.enrollment_start')
     enrollment_end = serializers.CharField(source='course_run.enrollment_end')
 
+    # FIXME: ordering by position
     class Meta:
         model = models.ProductCourseRunPosition
         fields = [
@@ -36,11 +37,15 @@ class CourseProductAvailableSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='uid')
     title = serializers.CharField(source='product.title')
     call_to_action = serializers.CharField(source='product.call_to_action_label')
-    course_runs = ProductCourseRunPositionSerializer(many=True, source='course_runs_positions')
+    course_runs = serializers.SerializerMethodField()
 
     class Meta:
         model = models.CourseProduct
         fields = ['id', 'title', 'call_to_action', 'course_runs']
+
+    def get_course_runs(self, obj):
+        course_runs = obj.course_runs_positions.order_by('position', 'course_run__start')
+        return ProductCourseRunPositionSerializer(course_runs, many=True).data
 
 
 class CourseRunSerializer(serializers.ModelSerializer):
@@ -65,6 +70,7 @@ class EnrollmentSerializer(serializers.ModelSerializer):
 
 class OrderEnrollmentSerializer(serializers.ModelSerializer):
     """
+
     """
     resource_link = serializers.CharField(source='course_run.resource_link')
     title = serializers.CharField(source='course_run.title')
