@@ -10,6 +10,8 @@ and this project adheres to
 
 ### Added
 
+- Implement first models to manage course products, orders,
+  enrollments to course runs and certifications.
 - Add a LMSHandler class to select the right LMS Backend to use according to
   the course run's `resource_link` provided
 - Add a OpenEdX LMS Backend to manage enrollments

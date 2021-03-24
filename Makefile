@@ -185,3 +185,7 @@ clean: ## restore repository state as it was freshly cloned
 help:
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 .PHONY: help
+
+demo-data: ## create fake data for dev purpose
+	@$(MANAGE) loaddatafake
+.PHONY: demo-data

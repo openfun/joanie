@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 import json
 import os
 
+from django.utils.translation import gettext_lazy as _
+
 import sentry_sdk
 from configurations import Configuration, values
 from sentry_sdk.integrations.django import DjangoIntegration
@@ -164,6 +166,7 @@ class Base(Configuration):
         # Third party apps
         "dockerflow.django",
         "rest_framework",
+        "parler",
         # Joanie
         "joanie.core",
         "joanie.payment",
@@ -189,6 +192,42 @@ class Base(Configuration):
     CACHES = {
         "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
     }
+
+    LANGUAGES = (
+        ("en-us", _("English")),
+        ("fr-fr", _("French")),
+    )
+    LOCALE_PATHS = (os.path.join(BASE_DIR, "locale"),)
+    PARLER_DEFAULT_LANGUAGE_CODE = "en-us"
+    PARLER_LANGUAGES = {
+        None: (tuple(dict(code=code) for code, _name in LANGUAGES)),
+        "default": {
+            "fallback": "en-us",
+            "hide_untranslated": False,
+        },
+    }
+    REST_FRAMEWORK = {
+        "DEFAULT_AUTHENTICATION_CLASSES": (
+            "rest_framework_simplejwt.authentication.JWTTokenUserAuthentication",
+        )
+    }
+
+    SIMPLE_JWT = {
+        "ALGORITHM": values.Value("HS256", environ_name="JWT_ALGORITHM"),
+        "SIGNING_KEY": values.Value(
+            "ThisIsAnExampleKeyForDevPurposeOnly",
+            environ_name="JWT_PRIVATE_SIGNING_KEY",
+        ),
+        "AUTH_HEADER_TYPES": ("Bearer",),
+        "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
+        "USER_ID_FIELD": "username",
+        "USER_ID_CLAIM": "username",
+        "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
+    }
+
+    CURRENCY = values.Value(("EUR", "\N{euro sign}"), environ_name="CURRENCY")
+
+    AUTH_USER_MODEL = "core.User"
 
     # Sentry
     SENTRY_DSN = values.Value(None, environ_name="SENTRY_DSN")
