@@ -10,6 +10,8 @@ and this project adheres to
 
 ### Added
 
+- Add routes API to get all products available for a course
+  and get or set orders.
 - Implement first models to manage course products, orders,
   enrollments to course runs and certifications.
 - Add a LMSHandler class to select the right LMS Backend to use according to
