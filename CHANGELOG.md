@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Enable CORS Headers
 - Add routes API to get all products available for a course
   and get or set orders.
 - Implement first models to manage course products, orders,

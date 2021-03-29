@@ -144,6 +144,7 @@ class Base(Configuration):
         "django.contrib.sessions.middleware.SessionMiddleware",
         "django.middleware.locale.LocaleMiddleware",
         "django.middleware.clickjacking.XFrameOptionsMiddleware",
+        "corsheaders.middleware.CorsMiddleware",
         "django.middleware.common.CommonMiddleware",
         "django.middleware.csrf.CsrfViewMiddleware",
         "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -164,6 +165,7 @@ class Base(Configuration):
         "django.contrib.messages",
         "django.contrib.staticfiles",
         # Third party apps
+        "corsheaders",
         "dockerflow.django",
         "rest_framework",
         "parler",
@@ -229,6 +231,11 @@ class Base(Configuration):
 
     AUTH_USER_MODEL = "core.User"
 
+    # CORS headers
+    CORS_ALLOWED_ORIGINS = values.ListValue(
+        [], environ_name="CORS_ALLOWED_ORIGINS", environ_prefix=None
+    )
+
     # Sentry
     SENTRY_DSN = values.Value(None, environ_name="SENTRY_DSN")
 
@@ -275,8 +282,9 @@ class Development(Base):
     We set DEBUG to True and configure the server to respond from all hosts.
     """
 
-    DEBUG = True
     ALLOWED_HOSTS = ["*"]
+    CORS_ALLOW_ALL_ORIGINS = True
+    DEBUG = True
 
 
 class Test(Base):
