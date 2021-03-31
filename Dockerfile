@@ -6,6 +6,12 @@ FROM python:3.8-slim as base
 # Upgrade pip to its latest release to speed up dependencies installation
 RUN python -m pip install --upgrade pip
 
+# Upgrade system packages to install security updates
+RUN apt-get update && \
+  apt-get -y upgrade && \
+  rm -rf /var/lib/apt/lists/*
+
+
 # ---- Back-end builder image ----
 FROM base as back-builder
 
