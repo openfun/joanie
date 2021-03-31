@@ -2,27 +2,26 @@
 Test suite for API
 """
 import json
-from datetime import datetime, timedelta
 
-from django.test import TestCase
 from django.test.utils import override_settings
 from django.utils import translation
 
 import arrow
-from rest_framework_simplejwt.tokens import AccessToken
 
 from joanie.core import enums, factories, models
+
+from .base import BaseAPITestCase
 
 OPENEDX_COURSE_RUN_URI = "http://openedx.test/courses/course-v1:edx+%s/course"
 
 
 # pylint: disable=too-many-instance-attributes,attribute-defined-outside-init
-class APITestCase(TestCase):
-    """Test suite for API"""
+class OrderProductAPITestCase(BaseAPITestCase):
+    """Test suite for API to get course products, get and set order."""
 
     def setUp(self):
         """
-        Create a credible context to test API. Initialize some courses, course runs and products.
+        We are testing in english
         """
         super().setUp()
         translation.activate("en-us")
@@ -135,30 +134,6 @@ class APITestCase(TestCase):
             ],
         }
 
-    @staticmethod
-    def _mock_user_token(username, expires_at=None):
-        """
-        Mock the jwt token used to authenticate a user
-
-        Args:
-            username: str, username to encode
-            expires_at: datetime.datetime, time after which the token should expire.
-
-        Returns:
-            token, the jwt token generated as it should
-        """
-        issued_at = datetime.utcnow()
-        token = AccessToken()
-        token.payload.update(
-            {
-                "email": f"{username}@funmooc.fr",
-                "username": username,
-                "exp": expires_at or issued_at + timedelta(days=2),
-                "iat": issued_at,
-            }
-        )
-        return token
-
     def test_get_products_available_for_a_course(self):
         """
         Just check that we can get all products available for a course.
@@ -257,7 +232,7 @@ class APITestCase(TestCase):
         self._initialize_products_and_courses()
 
         # Try to set order with expired token
-        token = self._mock_user_token(
+        token = self.get_user_token(
             "panoramix",
             expires_at=arrow.utcnow().shift(days=-1).datetime,
         )
@@ -295,7 +270,7 @@ class APITestCase(TestCase):
         username = "panoramix"
 
         # we call api with a valid token
-        token = self._mock_user_token(username)
+        token = self.get_user_token(username)
         with self.assertLogs(level="ERROR") as logs:
             response = self.client.post(
                 "/api/orders/",
@@ -343,7 +318,7 @@ class APITestCase(TestCase):
         username = "panoramix"
 
         # we call api with a valid token
-        token = self._mock_user_token(username)
+        token = self.get_user_token(username)
         response = self.client.post(
             "/api/orders/",
             data=self._get_order_data(),
@@ -452,7 +427,7 @@ class APITestCase(TestCase):
 
         # ask to enroll to the product
         username = "panoramix"
-        token = self._mock_user_token(username)
+        token = self.get_user_token(username)
         data = {
             "id": self.become_botanist_product.uid,
             "resource_links": [
@@ -547,7 +522,7 @@ class APITestCase(TestCase):
 
         # ask to enroll to the product
         username = "panoramix"
-        token = self._mock_user_token(username)
+        token = self.get_user_token(username)
         data = {
             "id": self.become_botanist_product.uid,
             "resource_links": [
@@ -598,7 +573,7 @@ class APITestCase(TestCase):
 
         # ask to enroll to the product
         username = "panoramix"
-        token = self._mock_user_token(username)
+        token = self.get_user_token(username)
         # we try to enroll to two course runs on the same position
         data = {
             "id": self.become_botanist_product.uid,
@@ -667,7 +642,7 @@ class APITestCase(TestCase):
 
         # ask to enroll to the product
         username = "panoramix"
-        token = self._mock_user_token(username)
+        token = self.get_user_token(username)
         data = {
             "id": self.become_botanist_product.uid,
             "resource_links": [
@@ -717,7 +692,7 @@ class APITestCase(TestCase):
     def test_get_orders_with_expired_token(self):
         """Get user's orders not allowed with an expired token"""
         # Try to get orders with expired token
-        token = self._mock_user_token(
+        token = self.get_user_token(
             "panoramix",
             expires_at=arrow.utcnow().shift(days=-1).datetime,
         )
@@ -747,7 +722,7 @@ class APITestCase(TestCase):
         self._initialize_products_and_courses()
 
         username = "panoramix"
-        token = self._mock_user_token(username)
+        token = self.get_user_token(username)
         self.client.post(
             "/api/orders/",
             data=self._get_order_data(),

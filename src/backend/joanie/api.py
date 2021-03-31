@@ -4,7 +4,7 @@ API endpoints
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import get_object_or_404
 
-from rest_framework import generics, pagination, permissions, views
+from rest_framework import generics, pagination, permissions, status, views
 from rest_framework.response import Response
 
 from joanie.core import exceptions, models
@@ -82,3 +82,77 @@ class OrdersView(generics.ListAPIView):
         except ObjectDoesNotExist as err:
             return Response(status=404, data={"errors": err.args})
         return Response(serializers.OrderSerializer(order).data)
+
+
+class AddressView(generics.ListAPIView):
+    """
+    API view allows to get all addresses or create or update a new one for a user.
+
+    GET /api/addresses/
+        Return list of all addresses for a user
+
+    POST /api/addresses/ with expected data:
+        - name: str, address name
+        - address: str
+        - postcode: str
+        - city: str
+        - country: str, country code
+        Return new address just created
+
+    PUT /api/addresses/<address_id>/ with expected data:
+        - name: str, address name
+        - address: str
+        - postcode: str
+        - city: str
+        - country: str, country code
+        Return address just updated
+
+    DELETE /api/addresses/<address_id>/
+        Delete selected address
+    """
+
+    serializer_class = serializers.AddressSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    instance_field = "address_uid"
+
+    def get_queryset(self):
+        """Custom queryset to get user addresses"""
+        user = models.User.objects.get_or_create(username=self.request.user.username)[0]
+        return user.addresses.all()
+
+    def get_instance(self, **kwargs):
+        """Get address instance"""
+        return get_object_or_404(models.Address, uid=kwargs[self.instance_field])
+
+    def put(self, request, **kwargs):
+        """Update address selected with new data"""
+        if self.instance_field and self.instance_field in kwargs:
+            obj = self.get_instance(**kwargs)
+            # User authenticated has to be the address owner
+            if obj.owner.username == self.request.user.username:
+                serializer = self.serializer_class(instance=obj, data=request.data)
+                if not serializer.is_valid():
+                    return Response(
+                        {"errors": serializer.errors},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                serializer.save()
+                return Response({"data": serializer.data})
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    def post(self, request):
+        """Create a new address for user authenticated"""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = models.User.objects.get_or_create(username=self.request.user.username)[0]
+        serializer.save(owner=user)
+        return Response(status=status.HTTP_201_CREATED, data={"data": serializer.data})
+
+    def delete(self, request, **kwargs):
+        """Delete address selected"""
+        obj = self.get_instance(**kwargs)
+        # User authenticated has to be the address owner
+        if obj.owner.username == self.request.user.username:
+            obj.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_400_BAD_REQUEST)

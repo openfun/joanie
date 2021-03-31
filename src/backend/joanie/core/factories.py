@@ -9,6 +9,7 @@ from django.contrib.auth.hashers import make_password
 from django.utils import timezone
 
 import factory
+import factory.fuzzy
 import pytz
 
 from . import enums, models
@@ -181,3 +182,17 @@ class OrderFactory(factory.django.DjangoModelFactory):
             extracted = CourseRunFactory.simple_generate_batch(create, 3)
             self.product.course_runs.set(extracted)
         self.course_runs.set(extracted)
+
+
+class AddressFactory(factory.django.DjangoModelFactory):
+    """A factory to create an user address"""
+
+    class Meta:
+        model = models.Address
+
+    name = factory.fuzzy.FuzzyChoice(["Home", "Office"])
+    address = factory.Faker("street_address")
+    postcode = factory.Faker("postcode")
+    city = factory.Faker("city")
+    country = factory.Faker("country_code")
+    owner = factory.SubFactory(UserFactory)

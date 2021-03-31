@@ -77,3 +77,10 @@ class EnrollmentAdmin(admin.ModelAdmin):
     """Admin class for the Enrollment model"""
 
     list_display = ("order", "course_run", "state")
+
+
+@admin.register(models.Address)
+class AddressAdmin(admin.ModelAdmin):
+    """Admin class for the Address model"""
+
+    list_display = ("name", "address", "city", "country", "owner")

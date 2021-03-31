@@ -101,3 +101,15 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Order
         fields = ["id", "created_on", "state", "owner", "product_id", "enrollments"]
+
+
+class AddressSerializer(serializers.ModelSerializer):
+    """
+    Address model serializer
+    """
+
+    id = serializers.CharField(source="uid", required=False)
+
+    class Meta:
+        model = models.Address
+        fields = ["id", "name", "address", "postcode", "city", "country"]

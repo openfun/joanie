@@ -24,4 +24,6 @@ urlpatterns = [
         "api/courses/<str:code>/products", api.CourseProductsAvailableListView.as_view()
     ),
     path("api/orders/", api.OrdersView.as_view()),
+    path("api/addresses/", api.AddressView.as_view()),
+    path("api/addresses/<str:address_uid>/", api.AddressView.as_view()),
 ]

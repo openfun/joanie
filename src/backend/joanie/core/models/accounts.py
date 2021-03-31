@@ -1,8 +1,13 @@
 """
 Declare and configure the models for the customers part
 """
+import uuid
+
 import django.contrib.auth.models as auth_models
+from django.db import models
 from django.utils.translation import gettext_lazy as _
+
+from django_countries.fields import CountryField
 
 
 class User(auth_models.AbstractUser):
@@ -15,3 +20,28 @@ class User(auth_models.AbstractUser):
 
     def __str__(self):
         return self.username
+
+
+class Address(models.Model):
+    """Address model stores address information (to generate bill after payment)"""
+
+    uid = models.UUIDField(default=uuid.uuid4, unique=True)
+    name = models.CharField(_("name"), max_length=100)
+    address = models.CharField(_("address"), max_length=255)
+    postcode = models.CharField(_("postcode"), max_length=50)
+    city = models.CharField(_("city"), max_length=255)
+    country = CountryField(_("country"))
+    owner = models.ForeignKey(
+        User,
+        verbose_name=_("owner"),
+        related_name="addresses",
+        on_delete=models.CASCADE,
+    )
+
+    class Meta:
+        db_table = "joanie_address"
+        verbose_name = _("Address")
+        verbose_name_plural = _("Addresses")
+
+    def __str__(self):
+        return f"{self.address}, {self.postcode} {self.city}, {self.country}"

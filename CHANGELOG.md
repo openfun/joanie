@@ -10,6 +10,8 @@ and this project adheres to
 
 ### Added
 
+- Implement Address model for billing and add routes API to get, create,
+  update and delete address.
 - Install security updates in project Docker images
 - Enable CORS Headers
 - Add routes API to get all products available for a course
