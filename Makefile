@@ -47,10 +47,19 @@ WAIT_DB              = @$(COMPOSE_RUN) dockerize -wait tcp://$(DB_HOST):$(DB_POR
 
 default: help
 
+data/media:
+	@mkdir -p data/media
+
+data/static:
+	@mkdir -p data/static
+
+
 # -- Project
 
 bootstrap: ## Prepare Docker images for the project
 bootstrap: \
+	data/media \
+	data/static \
   env.d/development/crowdin \
 	build \
 	run \
