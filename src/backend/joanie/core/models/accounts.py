@@ -39,6 +39,7 @@ class Address(models.Model):
         related_name="addresses",
         on_delete=models.CASCADE,
     )
+    main = models.BooleanField(_("main"), default=False)
 
     class Meta:
         db_table = "joanie_address"
@@ -47,3 +48,14 @@ class Address(models.Model):
 
     def __str__(self):
         return f"{self.address}, {self.postcode} {self.city}, {self.country}"
+
+    def save(self, *args, **kwargs):
+        # no more one main=True per Owner
+        main_addresses = self.owner.addresses.filter(main=True)
+        if self.main and main_addresses:
+            main_addresses.update(main=False)
+        super().save(*args, **kwargs)
+
+    def get_full_address(self):
+        """Full address to display"""
+        return f"{self.address}\n{self.postcode} {self.city}\n{self.country.name}"

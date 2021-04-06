@@ -11,6 +11,7 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
+from marion.models import DocumentRequest
 from parler import models as parler_models
 
 from joanie.core.exceptions import EnrollmentError
@@ -42,6 +43,7 @@ class Product(parler_models.TranslatableModel):
     )
     translations = parler_models.TranslatedFields(
         title=models.CharField(_("title"), max_length=255),
+        description=models.CharField(_("description"), max_length=500, blank=True),
         call_to_action=models.CharField(_("call to action"), max_length=255),
     )
     target_courses = models.ManyToManyField(
@@ -52,7 +54,8 @@ class Product(parler_models.TranslatableModel):
         blank=True,
     )
     price = models.DecimalField(
-        _(f"price ({getattr(settings, 'CURRENCY')[1]})"),
+        _(f"price ({getattr(settings, 'JOANIE_CURRENCY')[1]})"),
+        help_text=_("tax exclude"),
         max_digits=9,
         decimal_places=2,
         default=D("0.00"),
@@ -75,7 +78,7 @@ class Product(parler_models.TranslatableModel):
     def __str__(self):
         return (
             f"[{self.type.upper()}] {self.safe_translation_getter('title', any_language=True)} "
-            f"{self.price}{getattr(settings, 'CURRENCY')[1]}"
+            f"{self.price}{getattr(settings, 'JOANIE_CURRENCY')[1]}"
         )
 
     def clean(self):
@@ -154,7 +157,7 @@ class Order(models.Model):
         blank=True,
     )
     price = models.DecimalField(
-        _(f"price ({getattr(settings, 'CURRENCY')[1]})"),
+        _(f"price ({getattr(settings, 'JOANIE_CURRENCY')[1]})"),
         max_digits=9,
         decimal_places=2,
         default=D("0.00"),
@@ -177,6 +180,7 @@ class Order(models.Model):
         default=enums.ORDER_STATE_PENDING,
         max_length=50,
     )
+    invoice_ref = models.CharField(_("invoice reference"), blank=True, max_length=40)
 
     class Meta:
         db_table = "joanie_order"
@@ -224,6 +228,45 @@ class Order(models.Model):
                 OrderCourseRelation.objects.create(
                     order=self, course=relation.course, position=relation.position
                 )
+
+    def generate_invoice(self):
+        """Generate a pdf invoice for an order"""
+
+        vat = D(settings.JOANIE_VAT)
+        net_amount = self.product.price
+        vat_amount = net_amount * vat / 100
+        # create a unique reference for invoice
+        reference = (
+            f"{timezone.now().strftime('%Y%m%d%H%M%S')}-{str(self.uid).split('-')[0]}"
+        )
+        currency = settings.JOANIE_CURRENCY[1]
+        order = {
+            "invoice_id": reference,
+            "customer": {
+                "name": self.owner.get_full_name(),
+                "address": self.owner.addresses.get(main=True).get_full_address(),
+            },
+            "product": {
+                "name": self.product.title,  # pylint: disable=no-member
+                "description": self.product.description,  # pylint: disable=no-member
+            },
+            "price": {
+                "subtotal": net_amount,
+                "total": (net_amount + vat_amount),
+                "vat_amount": vat_amount,
+                "vat": vat,
+                "currency": currency,
+            },
+            "company": settings.JOANIE_INVOICE_COMPANY_CONTEXT,
+        }
+        invoice = DocumentRequest.objects.create(
+            issuer=settings.MARION_INVOICE_DOCUMENT_ISSUER,
+            context_query={"order": order},
+        )
+        # save reference to invoice_ref field
+        self.invoice_ref = reference
+        self.save()
+        return invoice
 
 
 class OrderCourseRelation(models.Model):

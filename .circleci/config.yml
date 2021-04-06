@@ -168,8 +168,8 @@ jobs:
       - run:
           name: Create writable /data
           command: |
-            sudo mkdir /data && \
-            sudo chown circleci:circleci /data
+            sudo mkdir -p /data/media && \
+            sudo chown -R circleci:circleci /data
       # Run back-end (Django) test suite
       #
       # Nota bene: to run the django test suite, we need to ensure that

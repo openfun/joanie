@@ -5,6 +5,10 @@ from decimal import Decimal as D
 
 from django.db import IntegrityError
 from django.test import TestCase
+from django.test.utils import override_settings
+from django.utils import timezone
+
+from marion.models import DocumentRequest
 
 from joanie.core import factories, models
 
@@ -36,3 +40,25 @@ class ProductModelsTestCase(TestCase):
 
         ordered_courses = list(product.target_courses.order_by("product_relations"))
         self.assertEqual(ordered_courses, expected_courses)
+
+    @override_settings(JOANIE_VAT=19.6)
+    def test_generate_invoice(self):
+        """Create an invoice for a product order"""
+
+        address = factories.AddressFactory()
+        user = factories.UserFactory()
+        user.addresses.add(address)
+        course = factories.CourseFactory()
+        product = factories.ProductFactory(courses=[course])
+        order = factories.OrderFactory(product=product, owner=user)
+
+        invoice = order.generate_invoice()
+        self.assertEqual(DocumentRequest.objects.count(), 1)
+        self.assertEqual(invoice.get_document_path().name, f"{invoice.document_id}.pdf")
+        self.assertEqual(
+            invoice.context_query["order"]["customer"]["address"],
+            address.get_full_address(),
+        )
+        order.refresh_from_db()
+        now = timezone.localtime(timezone.now())
+        self.assertTrue(order.invoice_ref.startswith(now.strftime("%Y")))

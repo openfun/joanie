@@ -169,6 +169,8 @@ class Base(Configuration):
         "dockerflow.django",
         "rest_framework",
         "parler",
+        "marion",
+        "howard",
         # Joanie
         "joanie.core",
         "joanie.payment",
@@ -228,7 +230,22 @@ class Base(Configuration):
         "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
     }
 
-    CURRENCY = values.Value(("EUR", "\N{euro sign}"), environ_name="CURRENCY")
+    # Marion
+    MARION_DOCUMENT_ISSUER_CHOICES_CLASS = "howard.defaults.DocumentIssuerChoices"
+    MARION_INVOICE_DOCUMENT_ISSUER = "howard.issuers.InvoiceDocument"
+
+    # Joanie settings
+    JOANIE_CURRENCY = values.Value(
+        ("EUR", "\N{euro sign}"), environ_name="JOANIE_CURRENCY"
+    )
+    JOANIE_VAT = values.Value(20, environ_name="JOANIE_VAT")
+    JOANIE_INVOICE_COMPANY_CONTEXT = values.Value(
+        """
+        10 rue Stine, 75001 Paris
+        RCS Paris XXX XXX XXX - SIRET XXX XXX XXX XXXXX - APE XXXXX
+        VAT Number XXXXXXXXX""",
+        environ_name="JOANIE_INVOICE_COMPANY_CONTEXT",
+    )
 
     AUTH_USER_MODEL = "core.User"
 
