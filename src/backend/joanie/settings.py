@@ -169,6 +169,7 @@ class Base(Configuration):
         "dockerflow.django",
         "rest_framework",
         "parler",
+        "marion",
         # Joanie
         "joanie.core",
         "joanie.payment",
