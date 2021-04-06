@@ -161,6 +161,8 @@ class UserFactory(factory.django.DjangoModelFactory):
     username = factory.Faker("user_name")
     email = factory.Faker("email")
     password = make_password("password")
+    first_name = factory.Faker("first_name")
+    last_name = factory.Faker("last_name")
 
 
 class OrderFactory(factory.django.DjangoModelFactory):
@@ -196,3 +198,4 @@ class AddressFactory(factory.django.DjangoModelFactory):
     city = factory.Faker("city")
     country = factory.Faker("country_code")
     owner = factory.SubFactory(UserFactory)
+    main = True

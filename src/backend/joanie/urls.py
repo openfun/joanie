@@ -13,17 +13,29 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf import settings
+from django.conf.urls import include
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path
 
 from . import api
 
-urlpatterns = [
-    path("admin/", admin.site.urls),
-    path(
-        "api/courses/<str:code>/products", api.CourseProductsAvailableListView.as_view()
-    ),
-    path("api/orders/", api.OrdersView.as_view()),
-    path("api/addresses/", api.AddressView.as_view()),
-    path("api/addresses/<str:address_uid>/", api.AddressView.as_view()),
-]
+urlpatterns = (
+    [
+        path("admin/", admin.site.urls),
+        path(
+            "api/courses/<str:code>/products",
+            api.CourseProductsAvailableListView.as_view(),
+        ),
+        path("api/orders/", api.OrdersView.as_view()),
+        path("api/addresses/", api.AddressView.as_view()),
+        path("api/addresses/<str:address_uid>/", api.AddressView.as_view()),
+        path("api/documents/", include("marion.urls")),
+    ]
+    + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+)
+
+if settings.DEBUG:
+    urlpatterns += [path("__debug__/", include("marion.urls.debug"))]

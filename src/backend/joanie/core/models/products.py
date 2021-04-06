@@ -10,6 +10,7 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
+from marion.models import DocumentRequest
 from parler import models as parler_models
 
 from joanie.lms_handler import LMSHandler
@@ -49,10 +50,13 @@ class Product(parler_models.TranslatableModel):
     course_runs = models.ManyToManyField(
         courses_models.CourseRun, verbose_name=_("course runs")
     )
-    price = models.CharField(
-        _(f"price ({getattr(settings, 'CURRENCY')[1]})"),
+    price = models.DecimalField(
+        _(f"price ({getattr(settings, 'JOANIE_CURRENCY')[1]})"),
+        help_text=_("tax exclude"),
         blank=True,
-        max_length=100,
+        null=True,
+        max_digits=5,
+        decimal_places=2,
     )
     certificate_definition = models.ForeignKey(
         "CertificateDefinition",
@@ -71,7 +75,7 @@ class Product(parler_models.TranslatableModel):
     def __str__(self):
         return (
             f"[{self.type.upper()}] {self.safe_translation_getter('title', any_language=True)}"
-            f" for {self.course} - {self.price}{getattr(settings, 'CURRENCY')[1]}"
+            f" for {self.course} - {self.price}{getattr(settings, 'JOANIE_CURRENCY')[1]}"
         )
 
     def clean(self):
@@ -253,6 +257,7 @@ class Order(models.Model):
         default=enums.ORDER_STATE_PENDING,
         max_length=50,
     )
+    invoice_ref = models.CharField(_("invoice reference"), blank=True, max_length=40)
 
     class Meta:
         db_table = "joanie_order"
@@ -261,6 +266,43 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Order {self.product} for user {self.owner}"
+
+    def generate_invoice(self):
+        """Generate a pdf invoice for an order"""
+
+        vat = settings.JOANIE_VAT
+        net_amount = self.product.price
+        vat_amount = net_amount * vat / 100
+        # create a unique reference for invoice
+        reference = f"{timezone.now().strftime('%Y%m%d')}-{str(self.uid).split('-')[0]}"
+        currency = settings.JOANIE_CURRENCY[1]
+        order = {
+            "invoice_id": reference,
+            "customer": {
+                "name": self.owner.get_full_name(),
+                "address": self.owner.addresses.get(main=True).get_full_address(),
+            },
+            "product": {
+                "name": self.product.title,  # pylint: disable=no-member
+                "description": self.product.course.title,
+            },
+            "price": {
+                "subtotal": net_amount,
+                "total": (net_amount + vat_amount),
+                "vat_amount": vat_amount,
+                "vat": vat,
+                "currency": currency,
+            },
+            "company": settings.JOANIE_INVOICE_COMPANY_CONTEXT,
+        }
+        invoice = DocumentRequest.objects.create(
+            issuer="howard.issuers.invoice.InvoiceDocument",
+            context_query={"order": order},
+        )
+        # save reference to invoice_ref field
+        self.invoice_ref = reference
+        self.save()
+        return invoice
 
 
 class Enrollment(models.Model):

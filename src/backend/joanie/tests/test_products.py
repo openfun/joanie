@@ -5,7 +5,9 @@ import uuid
 
 from django.test import TestCase
 from django.urls import reverse
-from django.utils import translation
+from django.utils import timezone, translation
+
+from marion.models import DocumentRequest
 
 from joanie.core import enums, factories, models
 
@@ -87,3 +89,28 @@ class ProductAdminTestCase(TestCase):
         )
         self.assertRedirects(response, reverse("admin:core_product_changelist"))
         self.assertEqual(models.Product.objects.count(), 2)
+
+
+class ProductTestCase(TestCase):
+    """Test suite for Product"""
+
+    def test_generate_invoice(self):
+        """Create an invoice for a product order"""
+
+        address = factories.AddressFactory()
+        user = factories.UserFactory()
+        user.addresses.add(address)
+        order = factories.OrderFactory(owner=user)
+
+        invoice = order.generate_invoice()
+        self.assertEqual(DocumentRequest.objects.count(), 1)
+        self.assertEqual(
+            invoice.get_document_url().split("/")[-1], f"{invoice.document_id}.pdf"
+        )
+        self.assertEqual(
+            invoice.context_query["order"]["customer"]["address"],
+            address.display(),
+        )
+        order.refresh_from_db()
+        now = timezone.localtime(timezone.now())
+        self.assertTrue(order.invoice_ref.startswith(now.strftime("%Y")))

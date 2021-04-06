@@ -2,6 +2,7 @@
 Test suite for API
 """
 import json
+from decimal import Decimal
 
 from django.test.utils import override_settings
 from django.utils import translation
@@ -84,7 +85,7 @@ class OrderProductAPITestCase(BaseAPITestCase):
             type=enums.PRODUCT_TYPE_ENROLLMENT,
             title="Become botanist",
             course=self.botanist_course,
-            price=100,
+            price=100.00,
         )
         # 4/ add all course runs available for this course product
         self.become_botanist_product.course_runs.set(botanist_course_runs)
@@ -164,9 +165,9 @@ class OrderProductAPITestCase(BaseAPITestCase):
             "let's go!",
         )
         self.assertEqual(
-            int(response.data[1]["price"]),
+            Decimal(response.data[1]["price"]),
             self.become_botanist_product.price,
-            100,
+            100.00,
         )
         # 2 sessions are available for each course run (2x3)
         self.assertEqual(len(response.data[1]["course_runs"]), 6)
