@@ -20,7 +20,7 @@ class CertificateDefinitionAdmin(TranslatableAdmin):
 class CertificateAdmin(admin.ModelAdmin):
     """Admin class for the Certificate model"""
 
-    list_display = ("certificate_definition", "order", "issued_on")
+    list_display = ("order", "issued_on")
 
 
 @admin.register(models.Course)

@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Use marion and howard to generate certificate for an order
 - Use marion and howard to generate invoice for an order
 - Implement Address model for billing and add routes API to get, create,
   update and delete address.

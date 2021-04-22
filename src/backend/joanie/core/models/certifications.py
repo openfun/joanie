@@ -7,8 +7,6 @@ from django.utils.translation import gettext_lazy as _
 
 from parler import models as parler_models
 
-from . import products as products_models
-
 
 class CertificateDefinition(parler_models.TranslatableModel):
     """
@@ -42,14 +40,10 @@ class Certificate(models.Model):
     Certificate represents and records all user certificates issued as part of an order
     """
 
-    certificate_definition = models.ForeignKey(
-        CertificateDefinition,
-        verbose_name=_("certificate definition"),
-        related_name="certificates_issued",
-        on_delete=models.RESTRICT,
-    )
     order = models.OneToOneField(
-        products_models.Order,
+        # disable=all is necessary to avoid an AstroidImportError because of our models structure
+        # Astroid is looking for a module models.py that does not exist
+        "core.Order",  # pylint: disable=all
         verbose_name=_("order"),
         on_delete=models.PROTECT,
     )
@@ -63,4 +57,4 @@ class Certificate(models.Model):
         verbose_name_plural = _("Certificates")
 
     def __str__(self):
-        return f"{self.certificate_definition} for {self.order.owner}"
+        return f"Certificate for {self.order.owner}"

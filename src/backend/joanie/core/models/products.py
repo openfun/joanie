@@ -19,6 +19,7 @@ from joanie.lms_handler import LMSHandler
 
 from .. import enums
 from . import accounts as customers_models
+from . import certifications as certifications_models
 from . import courses as courses_models
 
 logger = logging.getLogger(__name__)
@@ -267,6 +268,33 @@ class Order(models.Model):
         self.invoice_ref = reference
         self.save()
         return invoice
+
+    def generate_certificate(self):
+        """Generate a pdf certificate for the order's owner"""
+        organization = self.course.organization
+        context_query = {
+            "student": {
+                "name": self.owner.get_full_name(),
+            },
+            "course": {
+                "name": self.product.title,  # pylint: disable=no-member
+                "organization": {
+                    "name": organization.title,
+                    "representative": organization.representative,
+                    "signature": organization.signature.path,
+                    "logo": organization.logo.path,
+                },
+            },
+        }
+        document_request = DocumentRequest.objects.create(
+            issuer=self.product.certificate_definition.template,  # pylint: disable=no-member
+            context_query=context_query,
+        )
+        certificate, _ = certifications_models.Certificate.objects.update_or_create(
+            order=self,
+            defaults={"attachment": document_request.get_document_path().name},
+        )
+        return certificate
 
 
 class OrderCourseRelation(models.Model):

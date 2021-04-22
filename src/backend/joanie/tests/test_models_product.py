@@ -62,3 +62,20 @@ class ProductModelsTestCase(TestCase):
         order.refresh_from_db()
         now = timezone.localtime(timezone.now())
         self.assertTrue(order.invoice_ref.startswith(now.strftime("%Y")))
+
+    def test_model_order_generate_certificate(self):
+        """Generate a certificate for a product order"""
+
+        course = factories.CourseFactory()
+        product = factories.ProductFactory(
+            courses=[course],
+            certificate_definition=factories.CertificateDefinitionFactory(),
+        )
+        order = factories.OrderFactory(product=product)
+
+        certificate = order.generate_certificate()
+        self.assertEqual(DocumentRequest.objects.count(), 1)
+        self.assertEqual(
+            certificate.attachment.name,
+            f"{DocumentRequest.objects.get().document_id}.pdf",
+        )

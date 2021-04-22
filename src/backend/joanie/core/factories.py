@@ -39,6 +39,7 @@ class CertificateDefinitionFactory(factory.django.DjangoModelFactory):
 
     title = factory.Sequence(lambda n: "Certificate definition %s" % n)
     name = factory.Sequence(lambda n: "certificate-definition-%s" % n)
+    template = settings.MARION_CERTIFICATE_DOCUMENT_ISSUER
 
 
 class OrganizationFactory(factory.django.DjangoModelFactory):
@@ -49,6 +50,8 @@ class OrganizationFactory(factory.django.DjangoModelFactory):
 
     code = factory.Faker("ean", length=8)
     title = factory.Sequence(lambda n: "Organization %s" % n)
+    signature = factory.django.FileField(filename="signature.png")
+    logo = factory.django.FileField(filename="logo.png")
 
 
 class CourseFactory(factory.django.DjangoModelFactory):

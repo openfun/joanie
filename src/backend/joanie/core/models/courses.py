@@ -20,6 +20,14 @@ class Organization(parler_models.TranslatableModel):
     translations = parler_models.TranslatedFields(
         title=models.CharField(_("title"), max_length=255)
     )
+    representative = models.CharField(
+        _("representative"),
+        help_text=_("representative fullname (to sign certificate for example)"),
+        max_length=100,
+        blank=True,
+    )
+    signature = models.ImageField(_("signature"), blank=True)
+    logo = models.ImageField(_("logo"), blank=True)
 
     class Meta:
         db_table = "joanie_organization"

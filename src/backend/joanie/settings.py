@@ -233,6 +233,7 @@ class Base(Configuration):
     # Marion
     MARION_DOCUMENT_ISSUER_CHOICES_CLASS = "howard.defaults.DocumentIssuerChoices"
     MARION_INVOICE_DOCUMENT_ISSUER = "howard.issuers.InvoiceDocument"
+    MARION_CERTIFICATE_DOCUMENT_ISSUER = "howard.issuers.CertificateDocument"
 
     # Joanie settings
     JOANIE_CURRENCY = values.Value(
