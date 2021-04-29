@@ -41,7 +41,7 @@ Now that your Docker services are up, let's running them :
 $ make run
 ```
 
-You should be able to access to the API overview interface at [http://localhost:8060](http://localhost:8060).
+You should be able to access to the API overview interface at [http://localhost:8071](http://localhost:8071).
 
 Finally, you can see all available commands in our `Makefile` with :
 
@@ -51,7 +51,7 @@ $ make help
 
 ### Django admin
 
-You can access the Django admin site at [http://localhost:8060/admin](http://localhost:8060).
+You can access the Django admin site at [http://localhost:8071/admin](http://localhost:8071).
 
 You first need to create a superuser account :
 
