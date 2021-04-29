@@ -22,7 +22,7 @@ services:
       - env.d/development/common
       - env.d/development/postgresql
     ports:
-      - "8060:8000"
+      - "8071:8000"
     volumes:
       - ./src/backend:/app
       - ./data/static:/data/static
@@ -30,8 +30,10 @@ services:
     depends_on:
       - "postgresql"
     networks:
-      - default
-      - lms_outside
+      default:
+      lms_outside:
+        aliases:
+          - joanie
 
   dockerize:
     image: jwilder/dockerize
