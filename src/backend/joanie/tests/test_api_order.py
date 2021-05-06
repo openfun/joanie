@@ -1,5 +1,5 @@
 """
-Test suite for API
+Test suite for orders API
 """
 import json
 
@@ -12,12 +12,12 @@ from joanie.core import enums, factories, models
 
 from .base import BaseAPITestCase
 
-OPENEDX_COURSE_RUN_URI = "http://openedx.test/courses/course-v1:edx+%s/course"
+OPENEDX_COURSE_RUN_URI = "http://openedx.test/courses/course-v1:edx+001+{:s}/course"
 
 
 # pylint: disable=too-many-instance-attributes,attribute-defined-outside-init
-class OrderProductAPITestCase(BaseAPITestCase):
-    """Test suite for API to get course products, get and set order."""
+class OrderAPITestCase(BaseAPITestCase):
+    """Test suite for API to manipulate orders."""
 
     def setUp(self):
         """
@@ -26,182 +26,119 @@ class OrderProductAPITestCase(BaseAPITestCase):
         super().setUp()
         translation.activate("en-us")
 
-    def _initialize_products_and_courses(self):
-        # First create a course product to learn how to become a botanist
-        # 1/ some course runs are required to became a botanist
-        self.bases_of_botany_run1 = factories.CourseRunFactory(
-            title="Bases of botany",
-            resource_link=OPENEDX_COURSE_RUN_URI % "000001+BasesOfBotany_run1",
-            start=arrow.utcnow().shift(days=-2).datetime,
-        )
-        self.bases_of_botany_run2 = factories.CourseRunFactory(
-            title="Bases of botany",
-            resource_link=OPENEDX_COURSE_RUN_URI % "000001+BasesOfBotany_run2",
-            start=arrow.utcnow().shift(days=10).datetime,
-        )
-        self.how_to_make_a_herbarium_run1 = factories.CourseRunFactory(
-            title="How to make a herbarium",
-            resource_link=OPENEDX_COURSE_RUN_URI % "000002+HowToMakeHerbarium_run1",
-        )
-        self.how_to_make_a_herbarium_run2 = factories.CourseRunFactory(
-            title="How to make a herbarium",
-            resource_link=OPENEDX_COURSE_RUN_URI % "000002+HowToMakeHerbarium_run2",
-        )
-        self.scientific_publication_analysis_run1 = factories.CourseRunFactory(
-            title="Scientific publication analysis",
-            resource_link=OPENEDX_COURSE_RUN_URI
-            % "000003+ScientificPublicationAnalysis_run1",
-        )
-        self.scientific_publication_analysis_run2 = factories.CourseRunFactory(
-            title="Scientific publication analysis",
-            resource_link=OPENEDX_COURSE_RUN_URI
-            % "000003+ScientificPublicationAnalysis_run2",
-        )
-        botanist_course_runs = [
-            self.bases_of_botany_run1,
-            self.bases_of_botany_run2,
-            self.how_to_make_a_herbarium_run1,
-            self.how_to_make_a_herbarium_run2,
-            self.scientific_publication_analysis_run1,
-            self.scientific_publication_analysis_run2,
-        ]
-        botanist_course_runs_position_todo = [
-            (1, self.bases_of_botany_run1),
-            (1, self.bases_of_botany_run2),
-            (2, self.how_to_make_a_herbarium_run1),
-            (2, self.how_to_make_a_herbarium_run2),
-            (3, self.scientific_publication_analysis_run1),
-            (3, self.scientific_publication_analysis_run2),
-        ]
-
-        # 2/ Create the Course of organization "the Botany School"
-        self.botanist_course = factories.CourseFactory(
-            title="botany course",
-            organization=factories.OrganizationFactory(title="the Botany School"),
-        )
-        # 3/ Create the enrollment product for the botany course
-        self.become_botanist_product = factories.ProductFactory(
-            type=enums.PRODUCT_TYPE_ENROLLMENT,
-            title="Become botanist",
-            course=self.botanist_course,
-            price=100,
-        )
-        # 4/ add all course runs available for this course product
-        self.become_botanist_product.course_runs.set(botanist_course_runs)
-
-        # 5/ now define position of each course runs to complete the course
-        for position, course_run in botanist_course_runs_position_todo:
-            factories.ProductCourseRunPositionFactory(
-                product=self.become_botanist_product,
-                position=position,
-                course_run=course_run,
-            )
-
-        # Now create a course product to learn how to become a botanist and get a certificate
-        # 1/ Create the credential Product linked to the botany Course
-        self.become_certified_botanist_product = factories.ProductFactory(
-            type=enums.PRODUCT_TYPE_CREDENTIAL,
-            title="Become a certified botanist",
-            course=self.botanist_course,
-            certificate_definition=factories.CertificateDefinitionFactory(
-                title="Botanist Certification",
-            ),
-        )
-        # 2/ add all course runs available for this course product
-        self.become_certified_botanist_product.course_runs.set(botanist_course_runs)
-
-        # 3/ now define position of each course runs to complete the course
-        for position, course_run in botanist_course_runs_position_todo:
-            factories.ProductCourseRunPositionFactory(
-                product=self.become_certified_botanist_product,
-                position=position,
-                course_run=course_run,
-            )
-
-    def _get_order_data(self):
-        """
-        Return valid data to set an order.
-        It's a selection of course runs for an existing course product
-        """
-        # we choose to take the 3 default course runs for the botany course (run1)
-        # so we give the product uid and all resource_links of course runs selected
-        return {
-            "id": self.become_botanist_product.uid,
-            "resource_links": [
-                self.bases_of_botany_run1.resource_link,
-                self.how_to_make_a_herbarium_run1.resource_link,
-                self.scientific_publication_analysis_run1.resource_link,
-            ],
-        }
-
     def test_get_products_available_for_a_course(self):
         """
         Just check that we can get all products available for a course.
         No authentication or permission is needed.
         """
-        # initialize all objects to allow to get course products
-        self._initialize_products_and_courses()
+        course = factories.CourseFactory()
+        products = factories.ProductFactory.create_batch(2, course=course)
 
-        # Get all products available for botany course
+        # Add 2 course runs for each product
+        relation11, relation12 = factories.ProductCourseRelationFactory.create_batch(
+            2,
+            product=products[0],
+        )
+        relation21, relation22 = factories.ProductCourseRelationFactory.create_batch(
+            2,
+            product=products[1],
+        )
+        # Add a third course run with the same position as the first course run
+        # for each product to test ordering by start date as second criteria
+        factories.ProductCourseRelationFactory(
+            product=products[0], position=relation11.position
+        )
+        factories.ProductCourseRelationFactory(
+            product=products[1], position=relation21.position
+        )
+
+        # Get all products available for the course
         with self.assertNumQueries(
             1  # select course
             + 1  # select product
             + 2  # select course run positions x 2 products
         ):
-            response = self.client.get(
-                f"/api/courses/{self.botanist_course.code}/products"
-            )
+            response = self.client.get(f"/api/courses/{course.code}/products")
         self.assertEqual(response.status_code, 200)
-        # two products are available: become_botanist_product and become_certified_botanist_product
-        self.assertEqual(response.data[1]["id"], str(self.become_botanist_product.uid))
-        self.assertEqual(
-            response.data[1]["title"],
-            self.become_botanist_product.title,
-        )
-        self.assertEqual(
-            response.data[1]["call_to_action"],
-            self.become_botanist_product.call_to_action,
-            "let's go!",
-        )
-        self.assertEqual(
-            int(response.data[1]["price"]),
-            self.become_botanist_product.price,
-            100,
-        )
-        # 2 sessions are available for each course run (2x3)
-        self.assertEqual(len(response.data[1]["course_runs"]), 6)
+        content = json.loads(response.content)
 
-        # check ordering by position then start date
-        self.assertEqual(response.data[1]["course_runs"][0]["position"], 1)
-        self.assertEqual(response.data[1]["course_runs"][-1]["position"], 3)
-        # check course run details returned
-        self.assertEqual(
-            response.data[1]["course_runs"][0]["title"],
-            self.bases_of_botany_run1.title,
-        )
-        self.assertEqual(
-            response.data[1]["course_runs"][0]["resource_link"],
-            self.bases_of_botany_run1.resource_link,
-        )
-        self.assertEqual(
-            response.data[0]["id"], str(self.become_certified_botanist_product.uid)
-        )
-        self.assertEqual(
-            response.data[0]["title"],
-            self.become_certified_botanist_product.title,
-        )
-        # 2 sessions are available for each course run (2x3)
-        self.assertEqual(len(response.data[0]["course_runs"]), 6)
+        # Two products are available
+        self.assertEqual(len(content), 2)
+        for p, product in enumerate(reversed(products)):
+            self.assertEqual(content[p]["id"], str(product.uid))
+            self.assertEqual(
+                content[p]["title"],
+                product.title,
+            )
+            self.assertEqual(
+                content[p]["call_to_action"],
+                product.call_to_action,
+            )
+            self.assertEqual(
+                int(content[p]["price"]),
+                product.price,
+            )
 
-    def test_set_order_without_authorization(self):
+            # 3 sessions are available for each product
+            self.assertEqual(len(content[p]["course_runs"]), 3)
+
+            # check course run details returned
+            for cr in range(3):
+                # check ordering by position then start date
+                if cr > 0:
+                    self.assertLessEqual(
+                        content[p]["course_runs"][cr - 1]["position"],
+                        content[p]["course_runs"][cr]["position"],
+                    )
+                    if (
+                        content[p]["course_runs"][cr - 1]["position"]
+                        == content[p]["course_runs"][cr]["position"]
+                    ):
+                        self.assertLessEqual(
+                            content[p]["course_runs"][cr - 1]["start"],
+                            content[p]["course_runs"][cr]["start"],
+                        )
+
+            self.assertCountEqual(
+                [content[p]["course_runs"][cr]["position"] for cr in range(3)],
+                list(
+                    models.ProductCourseRelation.objects.filter(
+                        product=product
+                    ).values_list("position", flat=True)
+                ),
+            )
+            self.assertCountEqual(
+                [content[p]["course_runs"][cr]["resource_link"] for cr in range(3)],
+                list(
+                    models.CourseRun.objects.filter(
+                        product_relations__product=product
+                    ).values_list("resource_link", flat=True)
+                ),
+            )
+            for field in ["start", "end", "enrollment_start", "enrollment_end"]:
+                self.assertCountEqual(
+                    [content[p]["course_runs"][cr][field][:-6] for cr in range(3)],
+                    [
+                        "{:%Y-%m-%d %H:%M:%S}".format(getattr(cr, field))
+                        for cr in models.CourseRun.objects.filter(
+                            product_relations__product=product
+                        )
+                    ],
+                )
+
+    def test_api_order_post_without_authorization(self):
         """Order creation not allowed without HTTP AUTH"""
-        # initialize all objects to allow to set order
-        self._initialize_products_and_courses()
+        relation = factories.ProductCourseRelationFactory()
 
         # Try to set order without Authorization
         response = self.client.post(
             "/api/orders/",
-            data=self._get_order_data(),
+            data={
+                "id": relation.product.uid,
+                "resource_links": [
+                    relation.course_run.resource_link,
+                ],
+            },
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 401)
@@ -210,15 +147,19 @@ class OrderProductAPITestCase(BaseAPITestCase):
             content, {"detail": "Authentication credentials were not provided."}
         )
 
-    def test_set_order_with_bad_token(self):
+    def test_api_order_post_with_bad_token(self):
         """Order creation not allowed with bad user token"""
-        # initialize all objects to allow to set order
-        self._initialize_products_and_courses()
+        relation = factories.ProductCourseRelationFactory()
 
         # Try to set order with bad token
         response = self.client.post(
             "/api/orders/",
-            data=self._get_order_data(),
+            data={
+                "id": relation.product.uid,
+                "resource_links": [
+                    relation.course_run.resource_link,
+                ],
+            },
             content_type="application/json",
             HTTP_AUTHORIZATION="Bearer nawak",
         )
@@ -226,10 +167,9 @@ class OrderProductAPITestCase(BaseAPITestCase):
         content = json.loads(response.content)
         self.assertEqual(content["code"], "token_not_valid")
 
-    def test_set_order_with_expired_token(self):
+    def test_api_order_post_with_expired_token(self):
         """Order creation not allowed with user token expired"""
-        # initialize all objects to allow to set order
-        self._initialize_products_and_courses()
+        relation = factories.ProductCourseRelationFactory()
 
         # Try to set order with expired token
         token = self.get_user_token(
@@ -238,7 +178,12 @@ class OrderProductAPITestCase(BaseAPITestCase):
         )
         response = self.client.post(
             "/api/orders/",
-            data=self._get_order_data(),
+            data={
+                "id": relation.product.uid,
+                "resource_links": [
+                    relation.course_run.resource_link,
+                ],
+            },
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
@@ -257,29 +202,40 @@ class OrderProductAPITestCase(BaseAPITestCase):
             },
         ]
     )
-    def test_set_order_lms_fail(self):
+    def test_api_order_post_lms_broken_lms(self):
         """
         Test order creation with broken lms
         """
-        # initialize all objects to allow to set order
-        self._initialize_products_and_courses()
+        relation = factories.ProductCourseRelationFactory(
+            course_run__resource_link=OPENEDX_COURSE_RUN_URI.format("001")
+        )
+        factories.ProductCourseRelationFactory(
+            product=relation.product,
+            course_run__resource_link=OPENEDX_COURSE_RUN_URI.format("002"),
+        )
 
-        # Set an order for the botany course to a new user Panoramix
+        # Set an order for the course to a new user Panoramix
         self.assertEqual(models.User.objects.count(), 0)
 
         username = "panoramix"
 
         # we call api with a valid token
         token = self.get_user_token(username)
+
         with self.assertLogs(level="ERROR") as logs:
             response = self.client.post(
                 "/api/orders/",
-                data=self._get_order_data(),
+                data={
+                    "id": relation.product.uid,
+                    "resource_links": [
+                        relation.course_run.resource_link,
+                    ],
+                },
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
-            self.assertIn("Internal server error", logs.output[0])
-            self.assertEqual(response.status_code, 200)
+        self.assertIn("Internal server error", logs.output[0])
+        self.assertEqual(response.status_code, 200)
 
         # panoramix was a unknown user, so a new user was created
         self.assertEqual(models.User.objects.get().username, username)
@@ -287,7 +243,7 @@ class OrderProductAPITestCase(BaseAPITestCase):
         # an order was created at failed state
         order = models.Order.objects.get()
         self.assertEqual(order.state, enums.ORDER_STATE_FAILED)
-        self.assertEqual(order.enrollments.count(), 3)
+        self.assertEqual(order.enrollments.count(), 2)
         self.assertEqual(
             set(order.enrollments.values_list("state", flat=True)),
             {enums.ENROLLMENT_STATE_FAILED},
@@ -304,90 +260,97 @@ class OrderProductAPITestCase(BaseAPITestCase):
             },
         ]
     )
-    def test_set_order(self):
+    def test_api_order_post(self):
         """
         Order creation is allowed with a valid user token given
         and valid data about the product and its course runs selected
         """
-        # initialize all objects to allow to set order
-        self._initialize_products_and_courses()
-
+        course_run1 = factories.CourseRunFactory(
+            resource_link=OPENEDX_COURSE_RUN_URI.format("001")
+        )
+        relation1 = factories.ProductCourseRelationFactory(course=course_run1.course)
+        course_run2 = factories.CourseRunFactory(
+            resource_link=OPENEDX_COURSE_RUN_URI.format("002")
+        )
+        relation2 = factories.ProductCourseRelationFactory(
+            product=relation1.product, course=course_run2.course
+        )
         # Set an order for the botany course to a new user Panoramix
         self.assertEqual(models.User.objects.count(), 0)
 
         username = "panoramix"
 
-        # we call api with a valid token
+        # We call api with a valid token
         token = self.get_user_token(username)
         response = self.client.post(
             "/api/orders/",
-            data=self._get_order_data(),
+            data={
+                "product": relation1.product.uid,
+            },
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
+        content = json.loads(response.content)
+        print(content)
         self.assertEqual(response.status_code, 200)
-        # panoramix was a unknown user, so a new user was created
+        # Panoramix was a unknown user, so a new user was created
         self.assertEqual(models.User.objects.get().username, username)
 
-        # an order was created at pending state
+        # An order was created at pending state
         order = models.Order.objects.get()
         self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
-        # the 3 course runs selected was linked to the order
-        self.assertEqual(order.course_runs.count(), 3)
-        # 3 enrollments was created for each course run at 'in progress' state
-        self.assertEqual(models.Enrollment.objects.count(), 3)
+        # The 2 course runs selected were linked to the order
+        self.assertEqual(order.courses.count(), 2)
+        # An enrollment was created for each course run with a state set to 'in progress'
+        self.assertEqual(models.Enrollment.objects.count(), 2)
         self.assertEqual(
             models.Enrollment.objects.filter(
                 state=enums.ENROLLMENT_STATE_IN_PROGRESS
             ).count(),
-            3,
+            2,
         )
-        # api return details about order just created
-        order_data = response.data
-        self.assertEqual(order_data["id"], str(order.uid))
-        self.assertEqual(order_data["owner"], username)
+        # API return details about order just created
+        self.assertEqual(content["id"], str(order.uid))
+        self.assertEqual(content["owner"], username)
+        self.assertEqual(content["product_id"], str(relation1.product.uid))
+        self.assertEqual(len(content["enrollments"]), 2)
+        self.assertEqual(content["enrollments"][0]["position"], relation1.position)
         self.assertEqual(
-            order_data["product_id"], str(self.become_botanist_product.uid)
-        )
-        self.assertEqual(len(order_data["enrollments"]), 3)
-        self.assertEqual(
-            order_data["enrollments"][0]["position"],
-            1,
+            content["enrollments"][0]["resource_link"],
+            relation1.course_run.resource_link,
         )
         self.assertEqual(
-            order_data["enrollments"][0]["resource_link"],
-            self.bases_of_botany_run1.resource_link,
-        )
-        self.assertEqual(
-            order_data["enrollments"][0]["state"],
+            content["enrollments"][0]["state"],
             enums.ENROLLMENT_STATE_IN_PROGRESS,
         )
+        self.assertEqual(content["enrollments"][1]["position"], relation2.position)
         self.assertEqual(
-            order_data["enrollments"][-1]["position"],
-            3,
+            content["enrollments"][1]["resource_link"],
+            relation2.course_run.resource_link,
         )
         self.assertEqual(
-            order_data["enrollments"][-1]["resource_link"],
-            self.scientific_publication_analysis_run1.resource_link,
-        )
-        self.assertEqual(
-            order_data["enrollments"][-1]["state"],
+            content["enrollments"][1]["state"],
             enums.ENROLLMENT_STATE_IN_PROGRESS,
         )
 
         # Now try to enroll again, check error raising
         response = self.client.post(
             "/api/orders/",
-            data=self._get_order_data(),
+            data={
+                "id": relation1.product.uid,
+                "resource_links": [
+                    relation1.course_run.resource_link,
+                ],
+            },
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 403)
-        # no more order
+        # No additional order
         self.assertEqual(models.Order.objects.count(), 1)
-        # no more enrollments
-        self.assertEqual(models.Enrollment.objects.count(), 3)
-        # return an error message
+        # No additional enrollments
+        self.assertEqual(models.Enrollment.objects.count(), 2)
+        # It should return an error message
         self.assertEqual(response.data["errors"], ("Order already exists",))
 
     @override_settings(
@@ -401,41 +364,27 @@ class OrderProductAPITestCase(BaseAPITestCase):
             },
         ]
     )
-    def test_set_order_to_one_invalid_course_run(self):
+    def test_api_order_post_matched_and_unmatched_course_runs(self):
         """
-        If one of resource_link given is not valid, log error, order was created but in failure,
-        other enrollments were done.
+        If one of resource_link given is not matched by an LMS, we should log an error,
+        and create an order but in failure. The matched enrollment should be set.
         """
-        # initialize all objects to allow to set order
-        self._initialize_products_and_courses()
-
         # initialize an invalid course run
-        resource_link_invalid = (
-            "http://mysterious.uri/courses/course-v0:001+Stuff_run/course"
+        unmatched_link = "http://mysterious.uri/courses/course-v0:001+Stuff_run/course"
+        relation = factories.ProductCourseRelationFactory(
+            course_run__resource_link=unmatched_link
         )
-        invalid_course_run = factories.CourseRunFactory(
-            title="How to do some stuff?",
-            resource_link=resource_link_invalid,
-        )
-        # add invalid course run to the desired product
-        self.become_botanist_product.course_runs.add(invalid_course_run)
-        factories.ProductCourseRunPositionFactory(
-            course_run=invalid_course_run,
-            position=4,
-            product=self.become_botanist_product,
+        # Add a valid course run  to the product
+        relation_valid = factories.ProductCourseRelationFactory(
+            product=relation.product,
+            course_run__resource_link=OPENEDX_COURSE_RUN_URI.format("002"),
         )
 
-        # ask to enroll to the product
+        # Ask to enroll to the product
         username = "panoramix"
         token = self.get_user_token(username)
         data = {
-            "id": self.become_botanist_product.uid,
-            "resource_links": [
-                invalid_course_run.resource_link,
-                self.bases_of_botany_run1.resource_link,
-                self.how_to_make_a_herbarium_run1.resource_link,
-                self.scientific_publication_analysis_run1.resource_link,
-            ],
+            "product": relation.product.uid,
         }
         with self.assertLogs(level="ERROR") as logs:
             response = self.client.post(
@@ -444,22 +393,22 @@ class OrderProductAPITestCase(BaseAPITestCase):
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
-            msg_error = (
-                f"No LMS configuration found for resource link: {resource_link_invalid}"
-            )
-            self.assertIn(msg_error, logs.output[0])
+        msg_error = f"No LMS configuration found for resource link: {unmatched_link}"
+        self.assertIn(msg_error, logs.output[0])
         self.assertEqual(response.status_code, 200)
+        content = json.loads(response.content)
+
         self.assertEqual(models.User.objects.count(), 1)
         self.assertEqual(models.User.objects.get().username, username)
 
-        # all joanie enrollments were created but with different states
+        # All joanie enrollments were created but with different states
         # and order state was set to 'failed'
         order = models.Order.objects.get()
         self.assertEqual(order.state, enums.ORDER_STATE_FAILED)
-        self.assertEqual(models.Enrollment.objects.count(), 4)
+        self.assertEqual(models.Enrollment.objects.count(), 2)
         self.assertEqual(
             models.Enrollment.objects.get(
-                course_run__resource_link=resource_link_invalid
+                course_run__resource_link=unmatched_link
             ).state,
             enums.ENROLLMENT_STATE_FAILED,
         )
@@ -467,91 +416,38 @@ class OrderProductAPITestCase(BaseAPITestCase):
             models.Enrollment.objects.filter(
                 state=enums.ENROLLMENT_STATE_IN_PROGRESS
             ).count(),
-            3,
-        )
-        order_data = response.data
-        self.assertEqual(order_data["id"], str(order.uid))
-        self.assertEqual(order_data["owner"], username)
-        self.assertEqual(
-            order_data["product_id"], str(self.become_botanist_product.uid)
-        )
-        self.assertEqual(order_data["state"], enums.ORDER_STATE_FAILED)
-        self.assertEqual(len(order_data["enrollments"]), 4)
-        self.assertEqual(
-            order_data["enrollments"][3]["resource_link"],
-            resource_link_invalid,
-        )
-        self.assertEqual(
-            order_data["enrollments"][3]["state"],
-            enums.ENROLLMENT_STATE_FAILED,
-        )
-        self.assertEqual(
-            order_data["enrollments"][3]["position"],
-            4,
-        )
-        self.assertEqual(
-            order_data["enrollments"][0]["resource_link"],
-            self.bases_of_botany_run1.resource_link,
-        )
-        self.assertEqual(
-            order_data["enrollments"][0]["state"],
-            enums.ENROLLMENT_STATE_IN_PROGRESS,
-        )
-        self.assertEqual(
-            order_data["enrollments"][0]["position"],
             1,
         )
 
-    @override_settings(
-        JOANIE_LMS_BACKENDS=[
-            {
-                "API_TOKEN": "a_secure_api_token",
-                "BACKEND": "joanie.lms_handler.backends.dummy.DummyLMSBackend",
-                "BASE_URL": "http://openedx.test",
-                "SELECTOR_REGEX": r".*openedx.test.*",
-                "COURSE_REGEX": r"^.*/courses/(?P<course_id>.*)/course/?$",
-            },
-        ]
-    )
-    def test_set_order_with_crazy_set_of_course_runs(self):
-        """
-        If set of resource_links given is not valid, log error, no order and enrollment created.
-        """
-        # initialize all objects to allow to set order
-        self._initialize_products_and_courses()
-
-        # ask to enroll to the product
-        username = "panoramix"
-        token = self.get_user_token(username)
-        data = {
-            "id": self.become_botanist_product.uid,
-            "resource_links": [
-                self.bases_of_botany_run1.resource_link,
-                self.bases_of_botany_run1.resource_link,
-                self.bases_of_botany_run1.resource_link,
-            ],
-        }
-        response = self.client.post(
-            "/api/orders/",
-            data=data,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-        self.assertEqual(response.status_code, 400)
-        content = json.loads(response.content)
+        self.assertEqual(content["id"], str(order.uid))
+        self.assertEqual(content["owner"], username)
+        self.assertEqual(content["product_id"], str(relation.product.uid))
+        self.assertEqual(content["state"], enums.ORDER_STATE_FAILED)
+        self.assertEqual(len(content["enrollments"]), 2)
         self.assertEqual(
-            content,
-            {
-                "errors": [
-                    "3 course runs have to be selected, 1 given",
-                ]
-            },
+            content["enrollments"][0]["resource_link"],
+            unmatched_link,
         )
-        self.assertEqual(models.User.objects.count(), 1)
-        self.assertEqual(models.User.objects.get().username, username)
-
-        self.assertEqual(models.Order.objects.count(), 0)
-        self.assertEqual(models.Enrollment.objects.count(), 0)
+        self.assertEqual(
+            content["enrollments"][0]["state"],
+            enums.ENROLLMENT_STATE_FAILED,
+        )
+        self.assertEqual(
+            content["enrollments"][0]["position"],
+            relation.position,
+        )
+        self.assertEqual(
+            content["enrollments"][1]["resource_link"],
+            relation_valid.course_run.resource_link,
+        )
+        self.assertEqual(
+            content["enrollments"][1]["state"],
+            enums.ENROLLMENT_STATE_IN_PROGRESS,
+        )
+        self.assertEqual(
+            content["enrollments"][1]["position"],
+            relation_valid.position,
+        )
 
     @override_settings(
         JOANIE_LMS_BACKENDS=[
@@ -564,58 +460,73 @@ class OrderProductAPITestCase(BaseAPITestCase):
             },
         ]
     )
-    def test_set_order_with_invalid_set_of_course_runs(self):
+    def test_api_order_post_one_unmatched_course_run(self):
         """
-        If set of resource_links given is not valid, no order and enrollment created.
+        If only one resource_link is given that is not matched by any LMS, we should
+        log an error and create an order but in failure.
         """
-        # initialize all objects to allow to set order
-        self._initialize_products_and_courses()
+        # initialize an invalid course run
+        unmatched_link = "http://mysterious.uri/courses/course-v0:001+Stuff_run/course"
+        relation = factories.ProductCourseRelationFactory(
+            course_run__resource_link=unmatched_link
+        )
 
-        # ask to enroll to the product
+        # Ask to enroll to the product
         username = "panoramix"
         token = self.get_user_token(username)
-        # we try to enroll to two course runs on the same position
         data = {
-            "id": self.become_botanist_product.uid,
-            "resource_links": [
-                self.bases_of_botany_run1.resource_link,
-                self.bases_of_botany_run2.resource_link,
-                self.how_to_make_a_herbarium_run1.resource_link,
-            ],
+            "product": relation.product.uid,
         }
-        response = self.client.post(
-            "/api/orders/",
-            data=data,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-        self.assertEqual(response.status_code, 400)
+        with self.assertLogs(level="ERROR") as logs:
+            response = self.client.post(
+                "/api/orders/",
+                data=data,
+                content_type="application/json",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+        msg_error = f"No LMS configuration found for resource link: {unmatched_link}"
+        self.assertIn(msg_error, logs.output[0])
+        self.assertEqual(response.status_code, 200)
+        content = json.loads(response.content)
+
         self.assertEqual(models.User.objects.count(), 1)
         self.assertEqual(models.User.objects.get().username, username)
 
-        self.assertEqual(models.Order.objects.count(), 0)
-        self.assertEqual(models.Enrollment.objects.count(), 0)
-
-        # Try with the minimal course runs set with two same sessions
-        data = {
-            "id": self.become_botanist_product.uid,
-            "resource_links": [
-                self.bases_of_botany_run1.resource_link,
-                self.bases_of_botany_run2.resource_link,
-                self.how_to_make_a_herbarium_run1.resource_link,
-                self.scientific_publication_analysis_run1.resource_link,
-            ],
-        }
-        response = self.client.post(
-            "/api/orders/",
-            data=data,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
+        # All joanie enrollments were created but with different states
+        # and order state was set to 'failed'
+        order = models.Order.objects.get()
+        self.assertEqual(order.state, enums.ORDER_STATE_FAILED)
+        self.assertEqual(models.Enrollment.objects.count(), 2)
+        self.assertEqual(
+            models.Enrollment.objects.get(
+                course_run__resource_link=unmatched_link
+            ).state,
+            enums.ENROLLMENT_STATE_FAILED,
         )
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            models.Enrollment.objects.filter(
+                state=enums.ENROLLMENT_STATE_IN_PROGRESS
+            ).count(),
+            1,
+        )
 
-        self.assertEqual(models.Order.objects.count(), 0)
-        self.assertEqual(models.Enrollment.objects.count(), 0)
+        self.assertEqual(content["id"], str(order.uid))
+        self.assertEqual(content["owner"], username)
+        self.assertEqual(content["product_id"], str(relation.product.uid))
+        self.assertEqual(content["state"], enums.ORDER_STATE_FAILED)
+        self.assertEqual(len(content["enrollments"]), 1)
+        self.assertEqual(
+            content["enrollments"][0]["resource_link"],
+            unmatched_link,
+        )
+        self.assertEqual(
+            content["enrollments"][0]["state"],
+            enums.ENROLLMENT_STATE_FAILED,
+        )
+        self.assertEqual(
+            content["enrollments"][0]["position"],
+            relation.position,
+        )
 
     @override_settings(
         JOANIE_LMS_BACKENDS=[
@@ -628,43 +539,88 @@ class OrderProductAPITestCase(BaseAPITestCase):
             },
         ]
     )
-    def test_set_order_with_course_run_unavailable_for_product_selected(self):
+    def test_api_order_post_related_and_unrelated_resource_links(self):
         """
-        If set of resource_links given is not valid, log error, no order and enrollment created.
+        If set of resource_links given is not related to the product,
+        no order or enrollment should be created.
         """
-        # initialize all objects to allow to set order
-        self._initialize_products_and_courses()
-
-        # create a course run not available for productb become botanist
-        other_course_run = factories.CourseRunFactory(
-            resource_link=OPENEDX_COURSE_RUN_URI % "000001+HowToDoSomeStuff",
+        relation = factories.ProductCourseRelationFactory()
+        # Add a valid course run  to the product
+        relation_valid = factories.ProductCourseRelationFactory(
+            product=relation.product,
+            course_run__resource_link=OPENEDX_COURSE_RUN_URI.format("002"),
         )
 
-        # ask to enroll to the product
+        # Ask to enroll to the product
         username = "panoramix"
         token = self.get_user_token(username)
         data = {
-            "id": self.become_botanist_product.uid,
-            "resource_links": [
-                self.bases_of_botany_run1.resource_link,
-                self.how_to_make_a_herbarium_run1.resource_link,
-                other_course_run.resource_link,
-            ],
+            "product": relation.product.uid,
         }
-        response = self.client.post(
-            "/api/orders/",
-            data=data,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-        self.assertEqual(response.status_code, 404)
+        with self.assertLogs(level="ERROR") as logs:
+            response = self.client.post(
+                "/api/orders/",
+                data=data,
+                content_type="application/json",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+        msg_error = f"No LMS configuration found for resource link: {unmatched_link}"
+        self.assertIn(msg_error, logs.output[0])
+        self.assertEqual(response.status_code, 200)
+        content = json.loads(response.content)
+
         self.assertEqual(models.User.objects.count(), 1)
         self.assertEqual(models.User.objects.get().username, username)
 
-        self.assertEqual(models.Order.objects.count(), 0)
-        self.assertEqual(models.Enrollment.objects.count(), 0)
+        # All joanie enrollments were created but with different states
+        # and order state was set to 'failed'
+        order = models.Order.objects.get()
+        self.assertEqual(order.state, enums.ORDER_STATE_FAILED)
+        self.assertEqual(models.Enrollment.objects.count(), 2)
+        self.assertEqual(
+            models.Enrollment.objects.get(
+                course_run__resource_link=unmatched_link
+            ).state,
+            enums.ENROLLMENT_STATE_FAILED,
+        )
+        self.assertEqual(
+            models.Enrollment.objects.filter(
+                state=enums.ENROLLMENT_STATE_IN_PROGRESS
+            ).count(),
+            1,
+        )
 
-    def test_get_orders_without_authorization(self):
+        self.assertEqual(content["id"], str(order.uid))
+        self.assertEqual(content["owner"], username)
+        self.assertEqual(content["product_id"], str(relation.product.uid))
+        self.assertEqual(content["state"], enums.ORDER_STATE_FAILED)
+        self.assertEqual(len(content["enrollments"]), 2)
+        self.assertEqual(
+            content["enrollments"][0]["resource_link"],
+            unmatched_link,
+        )
+        self.assertEqual(
+            content["enrollments"][0]["state"],
+            enums.ENROLLMENT_STATE_FAILED,
+        )
+        self.assertEqual(
+            content["enrollments"][0]["position"],
+            relation.position,
+        )
+        self.assertEqual(
+            content["enrollments"][1]["resource_link"],
+            relation_valid.course_run.resource_link,
+        )
+        self.assertEqual(
+            content["enrollments"][1]["state"],
+            enums.ENROLLMENT_STATE_IN_PROGRESS,
+        )
+        self.assertEqual(
+            content["enrollments"][1]["position"],
+            relation_valid.position,
+        )
+
+    def test_api_orders_get_without_authorization(self):
         """Get user's orders is not possible without HTTP AUTH"""
         # Try to get orders without Authorization
         response = self.client.get(
@@ -677,7 +633,7 @@ class OrderProductAPITestCase(BaseAPITestCase):
             content, {"detail": "Authentication credentials were not provided."}
         )
 
-    def test_get_orders_with_bad_token(self):
+    def test_api_orders_get_with_bad_token(self):
         """Get user's orders is not allowed with bad user token"""
         # Try to get orders with bad token
         response = self.client.get(
@@ -689,7 +645,7 @@ class OrderProductAPITestCase(BaseAPITestCase):
         content = json.loads(response.content)
         self.assertEqual(content["code"], "token_not_valid")
 
-    def test_get_orders_with_expired_token(self):
+    def test_api_orders_get_with_expired_token(self):
         """Get user's orders not allowed with an expired token"""
         # Try to get orders with expired token
         token = self.get_user_token(
@@ -716,7 +672,7 @@ class OrderProductAPITestCase(BaseAPITestCase):
             },
         ]
     )
-    def test_get_orders(self):
+    def test_api_orders_get(self):
         """Get orders for a user is allowed with valid user token"""
         # initialize all objects to allow to set order
         self._initialize_products_and_courses()
@@ -748,7 +704,9 @@ class OrderProductAPITestCase(BaseAPITestCase):
             response.data["results"][0]["product_id"],
             str(self.become_botanist_product.uid),
         )
-        self.assertEqual(models.Enrollment.objects.count(), 3)
+        self.assertEqual(
+            models.Enrollment.objects.filter(owner__username="panoramix").count(), 3
+        )
         self.assertEqual(
             models.Enrollment.objects.filter(
                 state=enums.ENROLLMENT_STATE_IN_PROGRESS
@@ -785,12 +743,7 @@ class OrderProductAPITestCase(BaseAPITestCase):
         # Test number of request executed
         # first set order for the certified product now to check number of queries executed
         data = {
-            "id": self.become_certified_botanist_product.uid,
-            "resource_links": [
-                self.bases_of_botany_run2.resource_link,
-                self.how_to_make_a_herbarium_run2.resource_link,
-                self.scientific_publication_analysis_run2.resource_link,
-            ],
+            "product": self.become_certified_botanist_product.uid,
         }
         self.client.post(
             "/api/orders/",

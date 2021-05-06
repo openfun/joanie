@@ -1,5 +1,5 @@
 """
-Test suite for products models
+Test suite for products API
 """
 import uuid
 
@@ -10,8 +10,8 @@ from django.utils import translation
 from joanie.core import enums, factories, models
 
 
-class ProductAdminTestCase(TestCase):
-    """Test suite for Admin Product interface"""
+class ProductAPITestCase(TestCase):
+    """Test suite for API to manipulate products."""
 
     def setUp(self):
         translation.activate("en-us")

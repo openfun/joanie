@@ -1,5 +1,5 @@
 """
-Declare and configure the models for the products part
+Declare and configure the models for the productorder_s part
 """
 import logging
 import uuid
@@ -32,7 +32,9 @@ class Product(parler_models.TranslatableModel):
     """
 
     # uid used by cms to get order and enrollment
-    uid = models.UUIDField(default=uuid.uuid4, unique=True)
+    uid = models.UUIDField(
+        default=uuid.uuid4, unique=True, editable=False, db_index=True
+    )
     type = models.CharField(
         _("type"), choices=enums.PRODUCT_TYPE_CHOICES, max_length=50
     )
@@ -42,12 +44,20 @@ class Product(parler_models.TranslatableModel):
     )
     course = models.ForeignKey(
         courses_models.Course,
-        verbose_name=_("course"),
-        related_name="products",
         on_delete=models.PROTECT,
+        related_name="products",
+        verbose_name=_("course"),
     )
-    course_runs = models.ManyToManyField(
-        courses_models.CourseRun, verbose_name=_("course runs")
+    target_courses = models.ManyToManyField(
+        courses_models.Course,
+        related_name="included_in_products",
+        through="ProductCourseRelation",
+        verbose_name=_("target courses"),
+    )
+    target_course_runs = models.ManyToManyField(
+        courses_models.CourseRun,
+        related_name="included_in_products",
+        verbose_name=_("course runs"),
     )
     price = models.CharField(
         _(f"price ({getattr(settings, 'CURRENCY')[1]})"),
@@ -88,36 +98,24 @@ class Product(parler_models.TranslatableModel):
             )
         super().clean()
 
-    def get_course_runs_available_for_each_position(self):
-        """Get all course runs available for the product grouped by position"""
-        course_runs_available = {}
-        for course_run, position in [
-            (course_run, course_run.positions.get(product=self).position)
-            for course_run in self.course_runs.all()
-        ]:
-            course_runs_available.setdefault(position, set()).add(course_run)
-        return course_runs_available
-
-    def set_order(self, user, resource_links):
+    def set_order(self, user):
         """
-        Create a new order and enrollments to course runs selected for a user.
-        Call lms to enroll user to each course run.
+        Create a new order for a user.
 
         Args:
             user: User, owner of the order
-            resource_links: list, resource_links of all course runs selected for the course product
 
         Returns:
             Order
 
         Raises:
-            OrderAlreadyExists: if an valid order already exists for this product
+            OrderAlreadyExists: if the user already has a valid order for this product
         """
         # For a user, no more than one active order for a product can exist.
         # Check if an order already exists for this product.
         # If an order already exists, we can create another one if only order state is 'canceled'
-        # If user changes his/her mind about course runs selected,
-        # the order has to be set to state 'canceled' and another order has to be created
+        # If user changes his/her mind, the order has to be set to state 'canceled' and another
+        # order has to be created
         if (
             Order.objects.filter(product=self, owner=user)
             .exclude(state__in=[enums.ORDER_STATE_CANCELED])
@@ -125,102 +123,40 @@ class Product(parler_models.TranslatableModel):
         ):
             raise exceptions.OrderAlreadyExists("Order already exists")
 
-        # Check consistently of resource_links set
-        # First prevent unnecessary duplicated enrollments
-        resource_links = set(resource_links)
-        # Get all course runs available for the product grouped by position
-        product_course_runs_available = (
-            self.get_course_runs_available_for_each_position()
-        )
-        # User has to select exactly one course run per necessary step defined (one per position)
-        if len(resource_links) != len(product_course_runs_available):
-            raise exceptions.InvalidCourseRuns(
-                f"{len(product_course_runs_available)} course runs have to be selected, "
-                f"{len(resource_links)} given"
-            )
-        # Make sure user chooses one of course runs for each necessary step (position)
-        # first extract valid course runs selected by user for each necessary step
-        valid_course_runs_selected = {}
-        for resource_link in resource_links:
-            # Course run has to be available for the product
-            # Raise ObjectDoesNotExist if it's not a resource_link of one of course runs
-            # available for the product
-            course_run = self.course_runs.get(resource_link=resource_link)
-            for position, course_runs in product_course_runs_available.items():
-                if course_run in list(course_runs):
-                    valid_course_runs_selected[position] = course_run
-        # We need exactly one course run selected for each necessary step
-        if len(valid_course_runs_selected) != len(product_course_runs_available):
-            raise exceptions.InvalidCourseRuns(
-                f"{len(product_course_runs_available)} course runs have to be selected, "
-                f"{len(valid_course_runs_selected)} given"
-            )
-
-        # So now everything is fine, we can create an order
+        # Everything is fine, we can create an order
         order = Order.objects.create(product=self, owner=user)
-        for position in sorted(valid_course_runs_selected.keys()):
-            # associate each course run selected to the order
-            course_run = valid_course_runs_selected[position]
-            order.course_runs.add(course_run)
-            # then create enrollment for each course run
-            enrollment = Enrollment.objects.create(course_run=course_run, order=order)
-            # now we can enroll user to LMS course run
-            lms = LMSHandler.select_lms(course_run.resource_link)
-            # now try to enroll user to lms course run and change joanie enrollment
-            # state to 'in_progress'
-            try:
-                lms_enrollment = lms.set_enrollment(
-                    user.username, course_run.resource_link
-                )
-                if lms_enrollment["is_active"]:
-                    enrollment.state = enums.ENROLLMENT_STATE_IN_PROGRESS
-                    enrollment.save()
-            except (TypeError, AttributeError):
-                # if no lms found we set enrollment and order to failure state
-                # this issue could be due to a bad setting or a bad resource_link filled,
-                # so we need to log this error to fix it quickly to joanie side
-                if not lms:
-                    logger.error(
-                        "No LMS configuration found for resource link: %s",
-                        course_run.resource_link,
-                    )
-                order.state = enums.ORDER_STATE_FAILED
-                order.save()
-                enrollment.state = enums.ENROLLMENT_STATE_FAILED
-                enrollment.save()
         return order
 
 
-class ProductCourseRunPosition(models.Model):
+class ProductCourseRelation(models.Model):
     """
-    ProductCourseRunPosition model allows to define order of each course runs to follow
+    ProductCourseRelation model allows to define position of each courses to follow
     for a product.
-    Some course runs could have the same position for a product (various sessions for example).
-    Validation of only one of them will be enough to pass to the next course run or certification.
     """
 
+    course = models.ForeignKey(
+        courses_models.Course,
+        verbose_name=_("course"),
+        related_name="product_relations",
+        on_delete=models.RESTRICT,
+    )
     product = models.ForeignKey(
         Product,
         verbose_name=_("product"),
-        related_name="course_runs_positions",
+        related_name="course_relations",
         on_delete=models.CASCADE,
     )
     position = models.PositiveSmallIntegerField(_("position in product"))
-    course_run = models.ForeignKey(
-        courses_models.CourseRun,
-        verbose_name=_("course run"),
-        related_name="positions",
-        on_delete=models.RESTRICT,
-    )
 
     class Meta:
-        db_table = "joanie_product_course_run_position"
-        verbose_name = _("Position of course runs in products")
-        verbose_name_plural = _("Positions of course runs in products")
-        unique_together = ("product", "course_run", "position")
+        db_table = "joanie_product_course_relation"
+        ordering = ("position", "course")
+        unique_together = ("product", "course")
+        verbose_name = _("Course relation to a product with a position")
+        verbose_name_plural = _("Courses relations to products with a position")
 
     def __str__(self):
-        return f"{self.product}: {self.position}/ {self.course_run}]"
+        return f"{self.product}: {self.position}/ {self.course}]"
 
 
 class Order(models.Model):
@@ -229,15 +165,26 @@ class Order(models.Model):
     All course runs to enroll selected are defined here.
     """
 
-    uid = models.UUIDField(default=uuid.uuid4, unique=True)
+    uid = models.UUIDField(
+        default=uuid.uuid4, unique=True, editable=False, db_index=True
+    )
+    title = (models.CharField(_("title"), max_length=255),)
     product = models.ForeignKey(
         Product,
         verbose_name=_("product"),
         related_name="orders",
         on_delete=models.RESTRICT,
     )
-    course_runs = models.ManyToManyField(
-        courses_models.CourseRun, verbose_name=_("course runs")
+    courses = models.ManyToManyField(
+        courses_models.Course,
+        related_name="orders",
+        through="OrderCourseRelation",
+        verbose_name=_("courses"),
+    )
+    price = models.CharField(
+        _(f"price ({getattr(settings, 'CURRENCY')[1]})"),
+        blank=True,
+        max_length=100,
     )
     owner = models.ForeignKey(
         customers_models.User,
@@ -256,11 +203,61 @@ class Order(models.Model):
 
     class Meta:
         db_table = "joanie_order"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["owner", "product"],
+                condition=~models.Q(state=enums.ORDER_STATE_CANCELED),
+                name="unique_owner_product_not_canceled",
+            )
+        ]
         verbose_name = _("Order")
         verbose_name_plural = _("Orders")
 
     def __str__(self):
         return f"Order {self.product} for user {self.owner}"
+
+    def set_enrollments(self):
+        """"Create an enrollment for each course run related to the order."""
+        enrollments = []
+        for course_run in self.course_runs.all():
+            enrollments.append(
+                Enrollment.objects.create(
+                    course_run=course_run, order=self, owner=self.owner
+                )
+            )
+        for enrollment in enrollments:
+            enrollment.set()
+
+
+class OrderCourseRelation(models.Model):
+    """
+    OrderCourseRelation model allows to define position of each courses to follow
+    for an order.
+    """
+
+    course = models.ForeignKey(
+        courses_models.Course,
+        verbose_name=_("course"),
+        related_name="order_relations",
+        on_delete=models.RESTRICT,
+    )
+    order = models.ForeignKey(
+        Order,
+        verbose_name=_("order"),
+        related_name="course_relations",
+        on_delete=models.CASCADE,
+    )
+    position = models.PositiveSmallIntegerField(_("position in order"))
+
+    class Meta:
+        db_table = "joanie_order_course_relation"
+        ordering = ("position", "course")
+        unique_together = ("order", "course")
+        verbose_name = _("Course relation to an order with a position")
+        verbose_name_plural = _("Courses relations to orders with a position")
+
+    def __str__(self):
+        return f"{self.order}: {self.position}/ {self.course}]"
 
 
 class Enrollment(models.Model):
@@ -279,8 +276,18 @@ class Enrollment(models.Model):
         Order,
         verbose_name=_("order"),
         related_name="enrollments",
+        null=True,
+        blank=True,
         on_delete=models.RESTRICT,
     )
+    owner = models.ForeignKey(
+        customers_models.User,
+        verbose_name=_("owner"),
+        related_name="enrollments",
+        on_delete=models.RESTRICT,
+    )
+    created_on = models.DateTimeField(_("created on"), default=timezone.now)
+    updated_on = models.DateTimeField(_("updated on"), auto_now=True)
     # lms enrollment to course run state will be updated with elastic
     state = models.CharField(
         _("state"),
@@ -296,3 +303,29 @@ class Enrollment(models.Model):
 
     def __str__(self):
         return f"[{self.state}] {self.course_run} for {self.order.owner}"
+
+    def set(self):
+        # now we can enroll user to LMS course run
+        lms = LMSHandler.select_lms(self.course_run.resource_link)
+        # now try to enroll user to lms course run and change joanie enrollment
+        # state to 'in_progress'
+        try:
+            lms_enrollment = lms.set_enrollment(
+                self.owner.username, self.course_run.resource_link
+            )
+            if lms_enrollment["is_active"]:
+                self.state = enums.ENROLLMENT_STATE_IN_PROGRESS
+                self.save()
+        except (TypeError, AttributeError):
+            # if no lms found we set enrollment and order to failure state
+            # this issue could be due to a bad setting or a bad resource_link filled,
+            # so we need to log this error to fix it quickly to joanie side
+            if not lms:
+                logger.error(
+                    "No LMS configuration found for resource link: %s",
+                    self.course_run.resource_link,
+                )
+            self.order.state = enums.ORDER_STATE_FAILED
+            self.order.save()
+            self.state = enums.ENROLLMENT_STATE_FAILED
+            self.save()

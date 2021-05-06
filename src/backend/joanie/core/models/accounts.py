@@ -25,7 +25,9 @@ class User(auth_models.AbstractUser):
 class Address(models.Model):
     """Address model stores address information (to generate bill after payment)"""
 
-    uid = models.UUIDField(default=uuid.uuid4, unique=True)
+    uid = models.UUIDField(
+        default=uuid.uuid4, unique=True, editable=False, db_index=True
+    )
     name = models.CharField(_("name"), max_length=100)
     address = models.CharField(_("address"), max_length=255)
     postcode = models.CharField(_("postcode"), max_length=50)
