@@ -1,54 +1,109 @@
 """
 API endpoints
 """
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.shortcuts import get_object_or_404
 
-from rest_framework import generics, pagination, permissions, status, views
+from rest_framework import generics, mixins, pagination, permissions, status, viewsets
+from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework.response import Response
+from rest_framework.views import exception_handler as drf_exception_handler
 
-from joanie.core import exceptions, models
+from joanie.core import models
 
 from . import serializers
 
 
-class CourseProductsAvailableListView(views.APIView):
+def exception_handler(exc, context):
+    """Handle Django ValidationError as an accepted exception.
+
+    For the parameters, see ``exception_handler``
+    This code comes from twidi's gist:
+    https://gist.github.com/twidi/9d55486c36b6a51bdcb05ce3a763e79f
     """
-    For a course, return all products available with its course runs
-    """
+    if isinstance(exc, DjangoValidationError):
+        if hasattr(exc, "message_dict"):
+            detail = exc.message_dict
+        elif hasattr(exc, "message"):
+            detail = exc.message
+        elif hasattr(exc, "messages"):
+            detail = exc.messages
 
-    def get(self, request, code):
-        """Return a list of all products available for a course"""
-        course = get_object_or_404(models.Course, code=code)
-        return Response(serializers.ProductSerializer(course.products, many=True).data)
+        exc = DRFValidationError(detail=detail)
+
+    return drf_exception_handler(exc, context)
 
 
-class OrderPagination(pagination.PageNumberPagination):
-    """Order pagination to display no more than 100 orders per page"""
+class Pagination(pagination.PageNumberPagination):
+    """Pagination to display no more than 100 objects per page sorted by creation date."""
 
     ordering = "-created_on"
     page_size = 100
 
 
-class OrdersView(generics.ListAPIView):
+class CourseViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    """API ViewSet for all interactions with courses."""
+
+    lookup_field = "code"
+    permission_classes = [permissions.AllowAny]
+    queryset = models.Course.objects.all()
+    serializer_class = serializers.CourseSerializer
+
+
+# pylint: disable=too-many-ancestors
+class EnrollmentViewSet(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
+):
+    """API ViewSet for all interactions with enrollments."""
+
+    lookup_field = "uid"
+    pagination_class = Pagination
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = serializers.EnrollmentSerializer
+
+    def get_queryset(self):
+        """Custom queryset to limit to orders owned by the logged-in user."""
+        user = models.User.objects.get_or_create(username=self.request.user.username)[0]
+        return user.enrollments.all().select_related("course_run")
+
+    def perform_create(self, serializer):
+        """Force the enrollment's "owner" field to the logged-in user."""
+        username = self.request.user.username
+        user = models.User.objects.get_or_create(username=username)[0]
+        serializer.save(user=user)
+
+
+# pylint: disable=too-many-ancestors
+class OrderViewSet(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin,
+    viewsets.GenericViewSet,
+):
     """
-    API view allows to get all orders or create a new one with lms enrollments for a user.
+    API view for a user to consult the orders he/she owns or create a new one.
 
     GET /api/orders/
         Return list of all orders for a user with pagination
 
     POST /api/orders/ with expected data:
-        - id: product uid
-        - resource_links: list of resource_links of all course runs selected
+        - course: course code
+        - product: product uid (product must be associated to the course. Otherwise,
+          a 400 error is returned)
         Return new order just created
     """
 
-    serializer_class = serializers.OrderSerializer
-    pagination_class = OrderPagination
+    lookup_field = "uid"
+    pagination_class = Pagination
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = serializers.OrderSerializer
 
     def get_queryset(self):
-        """Custom queryset to get user orders"""
+        """Custom queryset to limit to orders owned by the logged-in user."""
         user = models.User.objects.get_or_create(username=self.request.user.username)[0]
         return (
             user.orders.all()
@@ -56,32 +111,11 @@ class OrdersView(generics.ListAPIView):
             .prefetch_related("enrollments__course_run")
         )
 
-    def post(self, request):
-        """
-        Create an order for a selected product and enrollments for course runs selected
-        then enroll user to course runs on lms
-        """
-        # Get the user for whom the order has to be created
-        user = models.User.objects.get_or_create(username=self.request.user.username)[0]
-        # Validate data given
-        product_uid = request.data.get("id")
-        resource_links = request.data.get("resource_links")
-        if not resource_links:
-            return Response({"resource_links": ["This field is required."]}, status=400)
-        if not product_uid:
-            return Response({"id": ["This field is required."]}, status=400)
-        # Get the ordered product
-        product = get_object_or_404(models.Product, uid=product_uid)
-        # Now create order and enrollments
-        try:
-            order = product.set_order(user, resource_links)
-        except exceptions.OrderAlreadyExists as err:
-            return Response(status=403, data={"errors": err.args})
-        except exceptions.InvalidCourseRuns as err:
-            return Response(status=400, data={"errors": err.args})
-        except ObjectDoesNotExist as err:
-            return Response(status=404, data={"errors": err.args})
-        return Response(serializers.OrderSerializer(order).data)
+    def perform_create(self, serializer):
+        """Force the order's "owner" field to the logged-in user."""
+        username = self.request.user.username
+        owner = models.User.objects.get_or_create(username=username)[0]
+        serializer.save(owner=owner)
 
 
 class AddressView(generics.ListAPIView):

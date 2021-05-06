@@ -55,7 +55,7 @@ class UserAdmin(auth_admin.UserAdmin):
 class ProductAdmin(TranslatableAdmin):
     """Admin class for the Product model"""
 
-    list_display = ("title", "type", "course", "price")
+    list_display = ("title", "type", "price")
 
 
 @admin.register(models.Order)
@@ -65,18 +65,18 @@ class OrderAdmin(admin.ModelAdmin):
     list_display = ("owner", "product", "state")
 
 
-@admin.register(models.ProductCourseRunPosition)
-class ProductCourseRunPositionAdmin(admin.ModelAdmin):
-    """Admin class for the ProductCourseRunPosition model"""
+@admin.register(models.ProductCourseRelation)
+class ProductCourseRelationAdmin(admin.ModelAdmin):
+    """Admin class for the ProductCourseRelation model"""
 
-    list_display = ("product", "course_run", "position")
+    list_display = ("product", "course", "position")
 
 
 @admin.register(models.Enrollment)
 class EnrollmentAdmin(admin.ModelAdmin):
     """Admin class for the Enrollment model"""
 
-    list_display = ("order", "course_run", "state")
+    list_display = ("user", "order", "course_run", "state")
 
 
 @admin.register(models.Address)

@@ -14,16 +14,20 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import include, path
+
+from rest_framework.routers import DefaultRouter
 
 from joanie.core import api
 
+router = DefaultRouter()
+router.register("courses", api.CourseViewSet, basename="courses")
+router.register("enrollments", api.EnrollmentViewSet, basename="enrollments")
+router.register("orders", api.OrderViewSet, basename="orders")
+
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path(
-        "api/courses/<str:code>/products", api.CourseProductsAvailableListView.as_view()
-    ),
-    path("api/orders/", api.OrdersView.as_view()),
     path("api/addresses/", api.AddressView.as_view()),
     path("api/addresses/<str:address_uid>/", api.AddressView.as_view()),
+    path("api/", include(router.urls)),
 ]

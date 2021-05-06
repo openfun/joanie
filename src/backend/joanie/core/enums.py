@@ -21,36 +21,27 @@ PRODUCT_TYPE_CHOICES = (
 ORDER_STATE_PENDING = "pending"  # waiting for payment and enrollment
 ORDER_STATE_CANCELED = "canceled"
 ORDER_STATE_FAILED = "failed"
-ORDER_STATE_IN_PROGRESS = "in_progress"
+ORDER_STATE_PAID = "paid"
 ORDER_STATE_FINISHED = "finished"
 
 ORDER_STATE_CHOICES = (
     (ORDER_STATE_PENDING, _("Pending")),  # default
     (ORDER_STATE_CANCELED, pgettext_lazy("As in: the order is cancelled.", "Canceled")),
     (ORDER_STATE_FAILED, pgettext_lazy("As in: the order is failed.", "Failed")),
-    (ORDER_STATE_IN_PROGRESS, _("In progress")),
+    (ORDER_STATE_PAID, pgettext_lazy("As in: the order is paid.", "Paid")),
     (ORDER_STATE_FINISHED, pgettext_lazy("As in: the order is finished.", "Finished")),
 )
 
-ENROLLMENT_STATE_PENDING = "pending"
-ENROLLMENT_STATE_IN_PROGRESS = "in_progress"
-ENROLLMENT_STATE_VALIDATED = "validated"
-ENROLLMENT_STATE_CANCELED = "canceled"
+ENROLLMENT_STATE_SET = "set"
 ENROLLMENT_STATE_FAILED = "failed"
 
 ENROLLMENT_STATE_CHOICES = (
-    (ENROLLMENT_STATE_PENDING, _("Pending")),  # default
-    (ENROLLMENT_STATE_IN_PROGRESS, _("In progress")),
     (
-        ENROLLMENT_STATE_VALIDATED,
-        pgettext_lazy("As in: the enrollment is validated.", "Validated"),
-    ),
-    (
-        ENROLLMENT_STATE_CANCELED,
-        pgettext_lazy("As in: the enrollment is cancelled.", "Canceled"),
+        ENROLLMENT_STATE_SET,
+        pgettext_lazy("As in: the enrollment was successfully set on the LMS.", "Set"),
     ),
     (
         ENROLLMENT_STATE_FAILED,
-        pgettext_lazy("As in: the enrollment is failed.", "Failed"),
+        pgettext_lazy("As in: the enrollment failed on the LMS.", "Failed"),
     ),
 )

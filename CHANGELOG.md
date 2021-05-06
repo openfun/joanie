@@ -16,10 +16,14 @@ and this project adheres to
 - Enable CORS Headers
 - Add routes API to get all products available for a course
   and get or set orders.
-- Implement first models to manage course products, orders,
+- Implement first models to manage courses, products, orders,
   enrollments to course runs and certifications.
 - Add a LMSHandler class to select the right LMS Backend to use according to
   the course run's `resource_link` provided
 - Add a OpenEdX LMS Backend to manage enrollments
+
+### Changed
+
+- Refactor models to allow enrollment without order
 
 [unreleased]: https://github.com/openfun/joanie

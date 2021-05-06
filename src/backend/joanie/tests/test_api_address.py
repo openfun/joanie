@@ -1,5 +1,5 @@
 """
-Test suite for API
+Test suite for addresses API
 """
 import json
 

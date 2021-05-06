@@ -4,12 +4,20 @@ Common base API test case
 from datetime import datetime, timedelta
 
 from django.test import TestCase
+from django.utils import translation
 
 from rest_framework_simplejwt.tokens import AccessToken
 
 
 class BaseAPITestCase(TestCase):
     """Base API test case"""
+
+    def setUp(self):
+        """
+        We are testing in english
+        """
+        super().setUp()
+        translation.activate("en-us")
 
     @staticmethod
     def get_user_token(username, expires_at=None):

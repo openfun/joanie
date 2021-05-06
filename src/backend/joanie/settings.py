@@ -211,7 +211,8 @@ class Base(Configuration):
     REST_FRAMEWORK = {
         "DEFAULT_AUTHENTICATION_CLASSES": (
             "rest_framework_simplejwt.authentication.JWTTokenUserAuthentication",
-        )
+        ),
+        "EXCEPTION_HANDLER": "joanie.core.api.exception_handler",
     }
 
     SIMPLE_JWT = {

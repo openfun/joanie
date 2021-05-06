@@ -25,10 +25,11 @@ class DummyLMSBackendTestCase(TestCase):
         """Clears the cache before each test"""
         cache.clear()
 
-    def test_backend_dummy_get_enrollment_inactive(self):
+    def test_backend_dummy_get_enrollment_not_set(self):
         """
         If user is not enrolled,
-        get_enrollment should return None
+        get_enrollment should return a fake course run enrollment object
+        marked "inactive".
         """
         resource_link = (
             "http://dummy-lms.test/courses/course-v1:edx+000001+Demo_Course/course"
@@ -40,12 +41,19 @@ class DummyLMSBackendTestCase(TestCase):
 
         # Should return None when user is not enrolled
         enrollment = backend.get_enrollment(username, resource_link)
-        self.assertIsNone(enrollment)
+        self.assertEqual(enrollment["user"], username)
+        self.assertEqual(
+            enrollment["course_details"]["course_id"],
+            "course-v1:edx+000001+Demo_Course",
+        )
+        self.assertFalse(enrollment["is_active"])
 
-    def test_backend_dummy_get_enrollment_active(self):
+    def test_backend_dummy_set_and_get_enrollment(self):
         """
         If user is enrolled,
-        get_enrollment should return a fake course run enrollment.
+        set_enrollment should return True
+        get_enrollment should return a fake course run enrollment object
+        marked "active".
         """
         resource_link = (
             "http://dummy-lms.test/courses/course-v1:edx+000001+Demo_Course/course"
@@ -55,42 +63,22 @@ class DummyLMSBackendTestCase(TestCase):
         backend = LMSHandler.select_lms(resource_link)
         self.assertIsInstance(backend, DummyLMSBackend)
 
-        # Should retrieve enrollment when user is enrolled.
         backend.set_enrollment(username, resource_link, True)
-        enrollment = backend.set_enrollment(username, resource_link, True)
+
+        enrollment = backend.get_enrollment(username, resource_link)
         self.assertEqual(enrollment["user"], username)
         self.assertEqual(
             enrollment["course_details"]["course_id"],
             "course-v1:edx+000001+Demo_Course",
         )
-        self.assertEqual(enrollment["is_active"], True)
+        self.assertTrue(enrollment["is_active"])
 
-    def test_backend_dummy_set_enrollment(self):
-        """
-        On user enrollment
-        set_enrollment should return a new fake enrollment
-        """
-        resource_link = (
-            "http://dummy-lms.test/courses/course-v1:edx+000001+Demo_Course/course"
-        )
-        username = "joanie"
-
-        backend = LMSHandler.select_lms(resource_link)
-        self.assertIsInstance(backend, DummyLMSBackend)
-
-        # Should retrieve enrollment when user is enrolled.
-        enrollment = backend.set_enrollment(username, resource_link, True)
-        self.assertEqual(enrollment["user"], username)
-        self.assertEqual(
-            enrollment["course_details"]["course_id"],
-            "course-v1:edx+000001+Demo_Course",
-        )
-        self.assertEqual(enrollment["is_active"], True)
-
-    def test_backend_dummy_unset_enrollment(self):
+    def test_backend_dummy_set_and_get_unenrollment(self):
         """
         On user unrollment
-        set_enrollment should return None
+        set_enrollment should return True
+        get_enrollment should return a fake course run enrollment object
+        marked "inactive".
         """
         resource_link = (
             "http://dummy-lms.test/courses/course-v1:edx+000001+Demo_Course/course"
@@ -100,14 +88,12 @@ class DummyLMSBackendTestCase(TestCase):
         backend = LMSHandler.select_lms(resource_link)
         self.assertIsInstance(backend, DummyLMSBackend)
 
-        # Should retrieve enrollment when user is enrolled.
-        enrollment = backend.set_enrollment(username, resource_link, True)
+        backend.set_enrollment(username, resource_link, False)
+
+        enrollment = backend.get_enrollment(username, resource_link)
         self.assertEqual(enrollment["user"], username)
         self.assertEqual(
             enrollment["course_details"]["course_id"],
             "course-v1:edx+000001+Demo_Course",
         )
-        self.assertEqual(enrollment["is_active"], True)
-
-        enrollment = backend.set_enrollment(username, resource_link, False)
-        self.assertIsNone(enrollment)
+        self.assertFalse(enrollment["is_active"])
