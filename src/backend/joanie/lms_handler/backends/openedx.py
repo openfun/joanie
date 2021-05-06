@@ -8,6 +8,8 @@ import re
 import requests
 from requests.auth import AuthBase
 
+from joanie.core.exceptions import EnrollmentError
+
 from .base import BaseLMSBackend
 
 logger = logging.getLogger(__name__)
@@ -89,7 +91,7 @@ class OpenEdXLMSBackend(BaseLMSBackend):
         if response.ok:
             data = json.loads(response.content)
             if data["is_active"] == active:
-                return data
+                return
 
         logger.error(response.content)
-        return None
+        raise EnrollmentError()

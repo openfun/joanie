@@ -15,6 +15,20 @@ import pytz
 from . import enums, models
 
 
+class UserFactory(factory.django.DjangoModelFactory):
+    """
+    A factory to create an authenticated user for joanie side
+    (to manage objects on admin interface)
+    """
+
+    class Meta:
+        model = settings.AUTH_USER_MODEL
+
+    username = factory.Faker("user_name")
+    email = factory.Faker("email")
+    password = make_password("password")
+
+
 class CertificateDefinitionFactory(factory.django.DjangoModelFactory):
     """A factory to create a certificate definition"""
 
@@ -45,6 +59,18 @@ class CourseFactory(factory.django.DjangoModelFactory):
     title = factory.Sequence(lambda n: "Course %s" % n)
     organization = factory.SubFactory(OrganizationFactory)
 
+    @factory.post_generation
+    # pylint: disable=unused-argument,no-member
+    def products(self, create, extracted, **kwargs):
+        """
+        Link products to the course after its creation:
+        - link the list of products passed in "extracted" if any
+        """
+        if not extracted:
+            return
+
+        self.products.set(extracted)
+
 
 class CourseRunFactory(factory.django.DjangoModelFactory):
     """
@@ -54,6 +80,7 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.CourseRun
 
+    course = factory.SubFactory(CourseFactory)
     resource_link = factory.Faker("uri")
     title = factory.Sequence(lambda n: "Course run %s" % n)
 
@@ -126,6 +153,18 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
         ).replace(tzinfo=pytz.utc)
 
 
+class EnrollmentFactory(factory.django.DjangoModelFactory):
+    """A factory to create an enrollment"""
+
+    class Meta:
+        model = models.Enrollment
+
+    course_run = factory.SubFactory(CourseRunFactory)
+    user = factory.SubFactory(UserFactory)
+    is_active = factory.fuzzy.FuzzyChoice([True, False])
+    state = factory.fuzzy.FuzzyChoice([s[0] for s in enums.ENROLLMENT_STATE_CHOICES])
+
+
 class ProductFactory(factory.django.DjangoModelFactory):
     """A factory to create a product"""
 
@@ -135,32 +174,42 @@ class ProductFactory(factory.django.DjangoModelFactory):
     type = enums.PRODUCT_TYPE_ENROLLMENT
     title = factory.Faker("bs")
     call_to_action = "let's go!"
-    course = factory.SubFactory(CourseFactory)
-    price = factory.LazyAttribute(lambda _: random.randint(0, 100))  # nosec
+    price = factory.fuzzy.FuzzyDecimal(low=1, high=999, precision=2)
+
+    @factory.post_generation
+    # pylint: disable=unused-argument,no-member
+    def courses(self, create, extracted, **kwargs):
+        """
+        Link courses to the product after its creation:
+        - link the list of courses passed in "extracted" if any
+        - otherwise create a random course and link it
+        """
+        courses = extracted or [CourseFactory()]
+        self.courses.set(courses)
+
+    @factory.post_generation
+    # pylint: disable=unused-argument,no-member
+    def target_courses(self, create, extracted, **kwargs):
+        """
+        Link target courses to the product after its creation:
+        - link the list of courses passed in "extracted" if any
+        """
+        if not extracted:
+            return
+
+        for position, course in enumerate(extracted):
+            ProductCourseRelationFactory(product=self, course=course, position=position)
 
 
-class ProductCourseRunPositionFactory(factory.django.DjangoModelFactory):
-    """A factory to create ProductCourseRunPosition object"""
+class ProductCourseRelationFactory(factory.django.DjangoModelFactory):
+    """A factory to create ProductCourseRelation object"""
 
     class Meta:
-        model = models.ProductCourseRunPosition
+        model = models.ProductCourseRelation
 
     product = factory.SubFactory(ProductFactory)
-    course_run = factory.SubFactory(CourseRunFactory)
-
-
-class UserFactory(factory.django.DjangoModelFactory):
-    """
-    A factory to create an authenticated user for joanie side
-    (to manage objects on admin interface)
-    """
-
-    class Meta:
-        model = settings.AUTH_USER_MODEL
-
-    username = factory.Faker("user_name")
-    email = factory.Faker("email")
-    password = make_password("password")
+    course = factory.SubFactory(CourseFactory)
+    position = factory.fuzzy.FuzzyInteger(0, 1000)
 
 
 class OrderFactory(factory.django.DjangoModelFactory):
@@ -169,19 +218,22 @@ class OrderFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.Order
 
-    product = factory.SubFactory(ProductFactory)
+    product = None
+    course = factory.LazyAttribute(lambda o: o.product.courses.order_by("?").first())
     owner = factory.SubFactory(UserFactory)
+    price = factory.LazyAttribute(lambda o: o.product.price)
+    state = factory.fuzzy.FuzzyChoice([s[0] for s in enums.ORDER_STATE_CHOICES])
 
-    @factory.post_generation
-    # pylint: disable=unused-argument,no-member
-    def course_runs(self, create, extracted, **kwargs):
-        """
-        Create and add some course runs by default if not 'extracted' passed
-        """
-        if not extracted:
-            extracted = CourseRunFactory.simple_generate_batch(create, 3)
-            self.product.course_runs.set(extracted)
-        self.course_runs.set(extracted)
+
+class OrderCourseRelationFactory(factory.django.DjangoModelFactory):
+    """A factory to create OrderCourseRelation object"""
+
+    class Meta:
+        model = models.OrderCourseRelation
+
+    order = factory.SubFactory(OrderFactory)
+    course = factory.SubFactory(CourseFactory)
+    position = factory.fuzzy.FuzzyInteger(0, 1000)
 
 
 class AddressFactory(factory.django.DjangoModelFactory):

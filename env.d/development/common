@@ -12,4 +12,4 @@ EDX_BASE_URL=http://edx:8073
 EDX_SELECTOR_REGEX=^.*/courses/(?P<course_id>.*)/course/?$
 EDX_COURSE_REGEX=^.*/courses/(?P<course_id>.*)/course/?$
 EDX_API_TOKEN=FakeEdXAPIKey
-EDX_BACKEND="joanie.lms_handler.backends.openedx.OpenEdXLMSBackend"
+EDX_BACKEND=joanie.lms_handler.backends.openedx.OpenEdXLMSBackend

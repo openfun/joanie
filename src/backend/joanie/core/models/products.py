@@ -1,8 +1,9 @@
 """
-Declare and configure the models for the products part
+Declare and configure the models for the productorder_s part
 """
 import logging
 import uuid
+from decimal import Decimal as D
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -12,9 +13,10 @@ from django.utils.translation import gettext_lazy as _
 
 from parler import models as parler_models
 
+from joanie.core.exceptions import EnrollmentError
 from joanie.lms_handler import LMSHandler
 
-from .. import enums, exceptions
+from .. import enums
 from . import accounts as customers_models
 from . import courses as courses_models
 
@@ -32,7 +34,9 @@ class Product(parler_models.TranslatableModel):
     """
 
     # uid used by cms to get order and enrollment
-    uid = models.UUIDField(default=uuid.uuid4, unique=True)
+    uid = models.UUIDField(
+        default=uuid.uuid4, unique=True, editable=False, db_index=True
+    )
     type = models.CharField(
         _("type"), choices=enums.PRODUCT_TYPE_CHOICES, max_length=50
     )
@@ -40,19 +44,19 @@ class Product(parler_models.TranslatableModel):
         title=models.CharField(_("title"), max_length=255),
         call_to_action=models.CharField(_("call to action"), max_length=255),
     )
-    course = models.ForeignKey(
+    target_courses = models.ManyToManyField(
         courses_models.Course,
-        verbose_name=_("course"),
-        related_name="products",
-        on_delete=models.PROTECT,
-    )
-    course_runs = models.ManyToManyField(
-        courses_models.CourseRun, verbose_name=_("course runs")
-    )
-    price = models.CharField(
-        _(f"price ({getattr(settings, 'CURRENCY')[1]})"),
+        related_name="targeted_by_products",
+        through="ProductCourseRelation",
+        verbose_name=_("target courses"),
         blank=True,
-        max_length=100,
+    )
+    price = models.DecimalField(
+        _(f"price ({getattr(settings, 'CURRENCY')[1]})"),
+        max_digits=9,
+        decimal_places=2,
+        default=D("0.00"),
+        blank=True,
     )
     certificate_definition = models.ForeignKey(
         "CertificateDefinition",
@@ -66,16 +70,18 @@ class Product(parler_models.TranslatableModel):
         db_table = "joanie_product"
         verbose_name = _("Product")
         verbose_name_plural = _("Products")
-        ordering = ("-pk",)
+        ordering = ("pk",)
 
     def __str__(self):
         return (
-            f"[{self.type.upper()}] {self.safe_translation_getter('title', any_language=True)}"
-            f" for {self.course} - {self.price}{getattr(settings, 'CURRENCY')[1]}"
+            f"[{self.type.upper()}] {self.safe_translation_getter('title', any_language=True)} "
+            f"{self.price}{getattr(settings, 'CURRENCY')[1]}"
         )
 
     def clean(self):
-        # Allow certificate definition only for product with type credential or certificate
+        """
+        Allow certificate definition only for product with type credential or certificate.
+        """
         if (
             self.certificate_definition
             and self.type not in PRODUCT_TYPE_CERTIFICATE_ALLOWED
@@ -88,139 +94,36 @@ class Product(parler_models.TranslatableModel):
             )
         super().clean()
 
-    def get_course_runs_available_for_each_position(self):
-        """Get all course runs available for the product grouped by position"""
-        course_runs_available = {}
-        for course_run, position in [
-            (course_run, course_run.positions.get(product=self).position)
-            for course_run in self.course_runs.all()
-        ]:
-            course_runs_available.setdefault(position, set()).add(course_run)
-        return course_runs_available
 
-    def set_order(self, user, resource_links):
-        """
-        Create a new order and enrollments to course runs selected for a user.
-        Call lms to enroll user to each course run.
-
-        Args:
-            user: User, owner of the order
-            resource_links: list, resource_links of all course runs selected for the course product
-
-        Returns:
-            Order
-
-        Raises:
-            OrderAlreadyExists: if an valid order already exists for this product
-        """
-        # For a user, no more than one active order for a product can exist.
-        # Check if an order already exists for this product.
-        # If an order already exists, we can create another one if only order state is 'canceled'
-        # If user changes his/her mind about course runs selected,
-        # the order has to be set to state 'canceled' and another order has to be created
-        if (
-            Order.objects.filter(product=self, owner=user)
-            .exclude(state__in=[enums.ORDER_STATE_CANCELED])
-            .exists()
-        ):
-            raise exceptions.OrderAlreadyExists("Order already exists")
-
-        # Check consistently of resource_links set
-        # First prevent unnecessary duplicated enrollments
-        resource_links = set(resource_links)
-        # Get all course runs available for the product grouped by position
-        product_course_runs_available = (
-            self.get_course_runs_available_for_each_position()
-        )
-        # User has to select exactly one course run per necessary step defined (one per position)
-        if len(resource_links) != len(product_course_runs_available):
-            raise exceptions.InvalidCourseRuns(
-                f"{len(product_course_runs_available)} course runs have to be selected, "
-                f"{len(resource_links)} given"
-            )
-        # Make sure user chooses one of course runs for each necessary step (position)
-        # first extract valid course runs selected by user for each necessary step
-        valid_course_runs_selected = {}
-        for resource_link in resource_links:
-            # Course run has to be available for the product
-            # Raise ObjectDoesNotExist if it's not a resource_link of one of course runs
-            # available for the product
-            course_run = self.course_runs.get(resource_link=resource_link)
-            for position, course_runs in product_course_runs_available.items():
-                if course_run in list(course_runs):
-                    valid_course_runs_selected[position] = course_run
-        # We need exactly one course run selected for each necessary step
-        if len(valid_course_runs_selected) != len(product_course_runs_available):
-            raise exceptions.InvalidCourseRuns(
-                f"{len(product_course_runs_available)} course runs have to be selected, "
-                f"{len(valid_course_runs_selected)} given"
-            )
-
-        # So now everything is fine, we can create an order
-        order = Order.objects.create(product=self, owner=user)
-        for position in sorted(valid_course_runs_selected.keys()):
-            # associate each course run selected to the order
-            course_run = valid_course_runs_selected[position]
-            order.course_runs.add(course_run)
-            # then create enrollment for each course run
-            enrollment = Enrollment.objects.create(course_run=course_run, order=order)
-            # now we can enroll user to LMS course run
-            lms = LMSHandler.select_lms(course_run.resource_link)
-            # now try to enroll user to lms course run and change joanie enrollment
-            # state to 'in_progress'
-            try:
-                lms_enrollment = lms.set_enrollment(
-                    user.username, course_run.resource_link
-                )
-                if lms_enrollment["is_active"]:
-                    enrollment.state = enums.ENROLLMENT_STATE_IN_PROGRESS
-                    enrollment.save()
-            except (TypeError, AttributeError):
-                # if no lms found we set enrollment and order to failure state
-                # this issue could be due to a bad setting or a bad resource_link filled,
-                # so we need to log this error to fix it quickly to joanie side
-                if not lms:
-                    logger.error(
-                        "No LMS configuration found for resource link: %s",
-                        course_run.resource_link,
-                    )
-                order.state = enums.ORDER_STATE_FAILED
-                order.save()
-                enrollment.state = enums.ENROLLMENT_STATE_FAILED
-                enrollment.save()
-        return order
-
-
-class ProductCourseRunPosition(models.Model):
+class ProductCourseRelation(models.Model):
     """
-    ProductCourseRunPosition model allows to define order of each course runs to follow
+    ProductCourseRelation model allows to define position of each courses to follow
     for a product.
-    Some course runs could have the same position for a product (various sessions for example).
-    Validation of only one of them will be enough to pass to the next course run or certification.
     """
 
+    course = models.ForeignKey(
+        courses_models.Course,
+        verbose_name=_("course"),
+        related_name="product_relations",
+        on_delete=models.RESTRICT,
+    )
     product = models.ForeignKey(
         Product,
         verbose_name=_("product"),
-        related_name="course_runs_positions",
+        related_name="course_relations",
         on_delete=models.CASCADE,
     )
     position = models.PositiveSmallIntegerField(_("position in product"))
-    course_run = models.ForeignKey(
-        courses_models.CourseRun,
-        verbose_name=_("course run"),
-        related_name="positions",
-        on_delete=models.RESTRICT,
-    )
 
     class Meta:
-        db_table = "joanie_product_course_run_position"
-        verbose_name = _("Position of course runs in products")
-        verbose_name_plural = _("Positions of course runs in products")
-        unique_together = ("product", "course_run", "position")
+        db_table = "joanie_product_course_relation"
+        ordering = ("position", "course")
+        unique_together = ("product", "course")
+        verbose_name = _("Course relation to a product with a position")
+        verbose_name_plural = _("Courses relations to products with a position")
 
     def __str__(self):
-        return f"{self.product}: {self.position}/ {self.course_run}]"
+        return f"{self.product}: {self.position}/ {self.course}]"
 
 
 class Order(models.Model):
@@ -229,24 +132,45 @@ class Order(models.Model):
     All course runs to enroll selected are defined here.
     """
 
-    uid = models.UUIDField(default=uuid.uuid4, unique=True)
+    uid = models.UUIDField(
+        default=uuid.uuid4, unique=True, editable=False, db_index=True
+    )
+    course = models.ForeignKey(
+        courses_models.Course,
+        verbose_name=_("course"),
+        on_delete=models.PROTECT,
+    )
     product = models.ForeignKey(
         Product,
         verbose_name=_("product"),
         related_name="orders",
         on_delete=models.RESTRICT,
     )
-    course_runs = models.ManyToManyField(
-        courses_models.CourseRun, verbose_name=_("course runs")
+    target_courses = models.ManyToManyField(
+        courses_models.Course,
+        related_name="orders",
+        through="OrderCourseRelation",
+        verbose_name=_("courses"),
+        blank=True,
     )
+    price = models.DecimalField(
+        _(f"price ({getattr(settings, 'CURRENCY')[1]})"),
+        max_digits=9,
+        decimal_places=2,
+        default=D("0.00"),
+        blank=True,
+    )
+
     owner = models.ForeignKey(
         customers_models.User,
         verbose_name=_("owner"),
         related_name="orders",
         on_delete=models.RESTRICT,
     )
-    created_on = models.DateTimeField(_("created on"), default=timezone.now)
-    updated_on = models.DateTimeField(_("updated on"), auto_now=True)
+    created_on = models.DateTimeField(
+        _("created on"), default=timezone.now, editable=False
+    )
+    updated_on = models.DateTimeField(_("updated on"), auto_now=True, editable=False)
     state = models.CharField(
         _("type"),
         choices=enums.ORDER_STATE_CHOICES,
@@ -256,11 +180,81 @@ class Order(models.Model):
 
     class Meta:
         db_table = "joanie_order"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["course", "owner", "product"],
+                condition=~models.Q(state=enums.ORDER_STATE_CANCELED),
+                name="unique_owner_product_not_canceled",
+            )
+        ]
         verbose_name = _("Order")
         verbose_name_plural = _("Orders")
 
     def __str__(self):
         return f"Order {self.product} for user {self.owner}"
+
+    def clean(self):
+        """Clean instance fields and raise a ValidationError in case of issue."""
+        if (
+            not self.pk
+            and self.course_id
+            and self.product_id
+            and not self.product.courses.filter(id=self.course_id).exists()
+        ):
+            # pylint: disable=no-member
+            message = _(
+                f'The product "{self.product.title}" is not linked to '
+                f'course "{self.course.title}".'
+            )
+            raise ValidationError({"__all__": [message]})
+
+        if not self.pk:
+            self.price = self.product.price
+
+        return super().clean()
+
+    def save(self, *args, **kwargs):
+        """Call full clean before saving instance."""
+        self.full_clean()
+        is_new = not bool(self.pk)
+        super().save(*args, **kwargs)
+
+        if is_new:
+            for relation in ProductCourseRelation.objects.filter(product=self.product):
+                OrderCourseRelation.objects.create(
+                    order=self, course=relation.course, position=relation.position
+                )
+
+
+class OrderCourseRelation(models.Model):
+    """
+    OrderCourseRelation model allows to define position of each courses to follow
+    for an order.
+    """
+
+    course = models.ForeignKey(
+        courses_models.Course,
+        verbose_name=_("course"),
+        related_name="order_relations",
+        on_delete=models.RESTRICT,
+    )
+    order = models.ForeignKey(
+        Order,
+        verbose_name=_("order"),
+        related_name="course_relations",
+        on_delete=models.CASCADE,
+    )
+    position = models.PositiveSmallIntegerField(_("position in order"))
+
+    class Meta:
+        db_table = "joanie_order_course_relation"
+        ordering = ("position", "course")
+        unique_together = ("order", "course")
+        verbose_name = _("Course relation to an order with a position")
+        verbose_name_plural = _("Courses relations to orders with a position")
+
+    def __str__(self):
+        return f"{self.order}: {self.position}/ {self.course}]"
 
 
 class Enrollment(models.Model):
@@ -269,6 +263,9 @@ class Enrollment(models.Model):
     as part of an order
     """
 
+    uid = models.UUIDField(
+        default=uuid.uuid4, unique=True, editable=False, db_index=True
+    )
     course_run = models.ForeignKey(
         courses_models.CourseRun,
         verbose_name=_("course run"),
@@ -279,20 +276,126 @@ class Enrollment(models.Model):
         Order,
         verbose_name=_("order"),
         related_name="enrollments",
+        null=True,
+        blank=True,
         on_delete=models.RESTRICT,
     )
-    # lms enrollment to course run state will be updated with elastic
+    user = models.ForeignKey(
+        customers_models.User,
+        verbose_name=_("user"),
+        related_name="enrollments",
+        on_delete=models.RESTRICT,
+    )
+    created_on = models.DateTimeField(_("created on"), default=timezone.now)
+    updated_on = models.DateTimeField(_("updated on"), auto_now=True)
+    is_active = models.BooleanField(
+        help_text="Tick to enroll the user to the course run.",
+        verbose_name="is active",
+    )
     state = models.CharField(
-        _("state"),
-        choices=enums.ENROLLMENT_STATE_CHOICES,
-        default=enums.ENROLLMENT_STATE_PENDING,
-        max_length=50,
+        _("state"), choices=enums.ENROLLMENT_STATE_CHOICES, max_length=50, blank=True
     )
 
     class Meta:
         db_table = "joanie_enrollment"
+        unique_together = ("course_run", "user")
         verbose_name = _("Enrollment")
         verbose_name_plural = _("Enrollments")
 
     def __str__(self):
-        return f"[{self.state}] {self.course_run} for {self.order.owner}"
+        active = _("active") if self.is_active else _("inactive")
+        return f"[{active}][{self.state}] {self.user} for {self.course_run}"
+
+    def clean(self):
+        """Clean instance fields and raise a ValidationError in case of issue."""
+        if self.order:
+            # The user of the enrollment should be the owner of the order
+            if self.order.owner != self.user:
+                message = _(
+                    f"You are not allowed to enroll on order {self.order.uid!s}."
+                )
+                raise ValidationError({"user": [message]})
+
+            # The course run targeted by the enrollment should also be targeted by the order
+            if not self.order.target_courses.filter(
+                course_runs=self.course_run
+            ).exists():
+                message = _(
+                    f'This order does not contain course run "{self.course_run.resource_link:s}".'
+                )
+                raise ValidationError({"__all__": [message]})
+
+        if self.course_run.course.targeted_by_products.exists():
+            # Forbid creating a free enrollment if an order exists for this course and
+            # the owner has no pending order on it.
+            if not self.order or not (
+                self.order.state == enums.ORDER_STATE_PAID
+                and self.order.target_courses.filter(
+                    course_runs=self.course_run
+                ).exists()
+            ):
+                message = _(
+                    f'Course run "{self.course_run.resource_link:s}" '
+                    "requires a valid order to enroll."
+                )
+                raise ValidationError({"__all__": [message]})
+
+            # Forbid enrolling to 2 course runs related to the same course for a given order
+            check_enrollments_query = self.order.enrollments.filter(
+                course_run__course=self.course_run.course_id, is_active=True
+            )
+            if self.pk:
+                check_enrollments_query = check_enrollments_query.exclude(pk=self.pk)
+            if check_enrollments_query.exists():
+                message = _(
+                    f'User "{self.user.username:s}" is already enrolled '
+                    "to this course for this order."
+                )
+                raise ValidationError({"order": [message]})
+
+        return super().clean()
+
+    def save(self, *args, **kwargs):
+        """Call full clean before saving instance."""
+        self.full_clean()
+        self.set()
+        super().save(*args, **kwargs)
+
+    def state_fail(self, message):
+        """
+        Mark the enrollment and the eventual order to a failed state and log the error.
+        Saving is left to the caller.
+        """
+        logger.error(message)
+
+        if self.order:
+            self.order.state = enums.ORDER_STATE_FAILED
+            self.order.save()
+
+        self.state = enums.ENROLLMENT_STATE_FAILED
+
+    def set(self):
+        """Try setting the state to the LMS. Saving is left to the caller."""
+        # Now we can enroll user to LMS course run
+        link = self.course_run.resource_link
+        lms = LMSHandler.select_lms(link)
+
+        if lms is None:
+            # If no lms found we set enrollment and order to failure state
+            # this issue could be due to a bad setting or a bad resource_link filled,
+            # so we need to log this error to fix it quickly to joanie side
+            link = self.course_run.resource_link
+            self.state_fail(f'No LMS configuration found for course run: "{link:s}".')
+
+        elif (
+            not self.pk
+            or Enrollment.objects.only("is_active").get(pk=self.pk).is_active
+            != self.is_active
+        ):
+            # Try to enroll user to lms course run and update joanie's enrollment state
+            try:
+                lms.set_enrollment(self.user.username, link, self.is_active)
+            except EnrollmentError:
+                self.state_fail(f'Enrollment failed for course run "{link:s}".')
+            else:
+                self.state = enums.ENROLLMENT_STATE_SET

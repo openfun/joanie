@@ -7,6 +7,7 @@ from django.test.utils import override_settings
 
 import responses
 
+from joanie.core.exceptions import EnrollmentError
 from joanie.lms_handler import LMSHandler
 from joanie.lms_handler.backends.openedx import OpenEdXLMSBackend
 
@@ -108,17 +109,15 @@ class OpenEdXLMSBackendTestCase(TestCase):
     def test_backend_openedx_set_enrollment_successfully(self):
         """
         Updating a user's enrollment to a course run should return a boolean
-        corresponding to the new enrollment active status.
-        True: user has been enrolled
-        False: user has been unrolled
+        corresponding to the success of the operation.
         """
         username = "joanie"
         resource_link = (
             "http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course"
         )
         url = "http://openedx.test/api/enrollment/v1/enrollment"
-        enrollment_state = random.choice([True, False])
-        expected_json_response = {"is_active": enrollment_state}
+        requested_state = random.choice([True, False])
+        expected_json_response = {"is_active": requested_state}
 
         responses.add(
             responses.POST,
@@ -130,7 +129,8 @@ class OpenEdXLMSBackendTestCase(TestCase):
         backend = LMSHandler.select_lms(resource_link)
         self.assertIsInstance(backend, OpenEdXLMSBackend)
 
-        enrollment = backend.set_enrollment(username, resource_link, enrollment_state)
+        backend.set_enrollment(username, resource_link, requested_state)
+
         self.assertEqual(len(responses.calls), 1)
         self.assertEqual(responses.calls[0].request.url, url)
         self.assertEqual(
@@ -140,18 +140,62 @@ class OpenEdXLMSBackendTestCase(TestCase):
         self.assertEqual(
             json.loads(responses.calls[0].request.body),
             {
-                "is_active": enrollment_state,
+                "is_active": requested_state,
                 "user": username,
                 "course_details": {"course_id": "course-v1:edx+000001+Demo_Course"},
             },
         )
-        self.assertEqual(enrollment, expected_json_response)
+
+    @responses.activate
+    def test_backend_openedx_set_enrollment_wrong_state(self):
+        """
+        When updating a user's enrollment, the LMS may return a 200 but not
+        with the enrollment status we requested. We should not fall for this.
+        """
+        username = "joanie"
+        resource_link = (
+            "http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course"
+        )
+        url = "http://openedx.test/api/enrollment/v1/enrollment"
+        requested_state = random.choice([True, False])
+
+        # Let the LMS return the wrong state
+        lms_state = not requested_state
+        expected_json_response = {"is_active": lms_state}
+
+        responses.add(
+            responses.POST,
+            url,
+            status=200,
+            json=expected_json_response,
+        )
+
+        backend = LMSHandler.select_lms(resource_link)
+        self.assertIsInstance(backend, OpenEdXLMSBackend)
+
+        with self.assertRaises(EnrollmentError):
+            backend.set_enrollment(username, resource_link, requested_state)
+
+        self.assertEqual(len(responses.calls), 1)
+        self.assertEqual(responses.calls[0].request.url, url)
+        self.assertEqual(
+            responses.calls[0].request.headers["X-Edx-Api-Key"], "a_secure_api_token"
+        )
+
+        self.assertEqual(
+            json.loads(responses.calls[0].request.body),
+            {
+                "is_active": requested_state,
+                "user": username,
+                "course_details": {"course_id": "course-v1:edx+000001+Demo_Course"},
+            },
+        )
 
     @responses.activate
     def test_backend_openedx_set_enrollment_failed(self):
         """
         In the case where update a user's enrollment to a course run failed,
-        it should return None.
+        it should raise an EnrollmentError.
         """
         username = "joanie"
         resource_link = (
@@ -171,7 +215,10 @@ class OpenEdXLMSBackendTestCase(TestCase):
         self.assertIsInstance(backend, OpenEdXLMSBackend)
 
         course_id = backend.extract_course_id(resource_link)
-        enrollment = backend.set_enrollment(username, resource_link, enrollment_state)
+
+        with self.assertRaises(EnrollmentError):
+            backend.set_enrollment(username, resource_link, enrollment_state)
+
         self.assertEqual(len(responses.calls), 1)
         self.assertEqual(responses.calls[0].request.url, url)
         self.assertEqual(
@@ -186,4 +233,3 @@ class OpenEdXLMSBackendTestCase(TestCase):
                 "course_details": {"course_id": course_id},
             },
         )
-        self.assertIsNone(enrollment)

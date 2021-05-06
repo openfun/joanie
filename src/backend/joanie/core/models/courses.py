@@ -5,6 +5,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from parler import models as parler_models
+from url_normalize import url_normalize
 
 
 class Organization(parler_models.TranslatableModel):
@@ -15,7 +16,7 @@ class Organization(parler_models.TranslatableModel):
     It will allow to validate user enrollment to course or not, depending on various criteria.
     """
 
-    code = models.CharField(_("code"), unique=True, max_length=100)
+    code = models.CharField(_("code"), unique=True, db_index=True, max_length=100)
     translations = parler_models.TranslatedFields(
         title=models.CharField(_("title"), max_length=255)
     )
@@ -37,7 +38,9 @@ class Course(parler_models.TranslatableModel):
     A new course created will initialize a cms page.
     """
 
-    code = models.CharField(_("reference to cms page"), max_length=100, unique=True)
+    code = models.CharField(
+        _("reference to cms page"), max_length=100, unique=True, db_index=True
+    )
     translations = parler_models.TranslatedFields(
         title=models.CharField(_("title"), max_length=255)
     )
@@ -46,9 +49,16 @@ class Course(parler_models.TranslatableModel):
         verbose_name=_("organization"),
         on_delete=models.PROTECT,
     )
+    products = models.ManyToManyField(
+        "Product",
+        related_name="courses",
+        verbose_name=_("products"),
+        blank=True,
+    )
 
     class Meta:
         db_table = "joanie_course"
+        ordering = ("code",)
         verbose_name = _("Course")
         verbose_name_plural = _("Courses")
 
@@ -61,6 +71,13 @@ class CourseRun(parler_models.TranslatableModel):
     Course run represents and records the occurrence of a course between a start
     and an end date.
     """
+
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.PROTECT,
+        related_name="course_runs",
+        verbose_name=_("course"),
+    )
 
     # link to lms resource
     resource_link = models.CharField(
@@ -83,6 +100,16 @@ class CourseRun(parler_models.TranslatableModel):
 
     def __str__(self):
         return (
-            f"Run \"{self.safe_translation_getter('title', any_language=True)}\" "
+            f"{self.safe_translation_getter('title', any_language=True)} "
             f"[{self.start:%Y-%m-%d} to {self.end:%Y-%m-%d}]"
         )
+
+    def clean(self):
+        """Normalize the resource_link url."""
+        self.resource_link = url_normalize(self.resource_link)
+        super().clean()
+
+    def save(self, *args, **kwargs):
+        """Call full clean before saving instance."""
+        self.full_clean()
+        super().save(*args, **kwargs)

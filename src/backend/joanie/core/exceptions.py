@@ -3,10 +3,8 @@ Specific exceptions for the core application
 """
 
 
-class OrderAlreadyExists(Exception):
-    """
-    Exception raised when we try to create more than one valid order for the same product and user.
-    """
+class EnrollmentError(Exception):
+    """An exception to raise if an enrollment fails."""
 
 
 class InvalidCourseRuns(Exception):

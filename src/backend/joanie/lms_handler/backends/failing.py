@@ -5,6 +5,8 @@ Failing LMS Backend for tests
 import logging
 import re
 
+from joanie.core.exceptions import EnrollmentError
+
 from .base import BaseLMSBackend
 
 logger = logging.getLogger(__name__)
@@ -25,4 +27,4 @@ class FailingLMSBackend(BaseLMSBackend):
     def set_enrollment(self, username, resource_link):
         """Set enrollment for a user with a course run given its url."""
         logger.error("Internal server error")
-        return None
+        raise EnrollmentError()
