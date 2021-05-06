@@ -64,17 +64,14 @@ class OrdersView(generics.ListAPIView):
         # Get the user for whom the order has to be created
         user = models.User.objects.get_or_create(username=self.request.user.username)[0]
         # Validate data given
-        product_uid = request.data.get("id")
-        resource_links = request.data.get("resource_links")
-        if not resource_links:
-            return Response({"resource_links": ["This field is required."]}, status=400)
-        if not product_uid:
-            return Response({"id": ["This field is required."]}, status=400)
+        product_id = request.data.get("product")
+        if not product_id:
+            return Response({"product_id": ["This field is required."]}, status=400)
         # Get the ordered product
-        product = get_object_or_404(models.Product, uid=product_uid)
+        product = get_object_or_404(models.Product, uid=product_id)
         # Now create order and enrollments
         try:
-            order = product.set_order(user, resource_links)
+            order = product.set_order(user)
         except exceptions.OrderAlreadyExists as err:
             return Response(status=403, data={"errors": err.args})
         except exceptions.InvalidCourseRuns as err:

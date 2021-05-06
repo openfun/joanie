@@ -15,7 +15,7 @@ class Organization(parler_models.TranslatableModel):
     It will allow to validate user enrollment to course or not, depending on various criteria.
     """
 
-    code = models.CharField(_("code"), unique=True, max_length=100)
+    code = models.CharField(_("code"), unique=True, db_index=True, max_length=100)
     translations = parler_models.TranslatedFields(
         title=models.CharField(_("title"), max_length=255)
     )
@@ -37,7 +37,9 @@ class Course(parler_models.TranslatableModel):
     A new course created will initialize a cms page.
     """
 
-    code = models.CharField(_("reference to cms page"), max_length=100, unique=True)
+    code = models.CharField(
+        _("reference to cms page"), max_length=100, unique=True, db_index=True
+    )
     translations = parler_models.TranslatedFields(
         title=models.CharField(_("title"), max_length=255)
     )
@@ -61,6 +63,12 @@ class CourseRun(parler_models.TranslatableModel):
     Course run represents and records the occurrence of a course between a start
     and an end date.
     """
+
+    course = models.ForeignKey(
+        Course,
+        verbose_name=_("course"),
+        on_delete=models.PROTECT,
+    )
 
     # link to lms resource
     resource_link = models.CharField(

@@ -54,6 +54,7 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.CourseRun
 
+    course = factory.SubFactory(CourseFactory)
     resource_link = factory.Faker("uri")
     title = factory.Sequence(lambda n: "Course run %s" % n)
 
@@ -138,15 +139,30 @@ class ProductFactory(factory.django.DjangoModelFactory):
     course = factory.SubFactory(CourseFactory)
     price = factory.LazyAttribute(lambda _: random.randint(0, 100))  # nosec
 
+    @factory.post_generation
+    # pylint: disable=unused-argument,no-member
+    def target_courses(self, create, extracted, **kwargs):
+        """
+        Link target courses to the product after its creation:
+        - link the list of courses passed in "extracted" if any
+        - otherwise, generate a random batch of 3 courses and link them
+        """
+        if not extracted:
+            extracted = CourseFactory.create_batch(3)
 
-class ProductCourseRunPositionFactory(factory.django.DjangoModelFactory):
-    """A factory to create ProductCourseRunPosition object"""
+        for course in extracted:
+            ProductCourseRelationFactory(product=self, course=course)
+
+
+class ProductCourseRelationFactory(factory.django.DjangoModelFactory):
+    """A factory to create ProductCourseRelation object"""
 
     class Meta:
-        model = models.ProductCourseRunPosition
+        model = models.ProductCourseRelation
 
     product = factory.SubFactory(ProductFactory)
-    course_run = factory.SubFactory(CourseRunFactory)
+    course = factory.SubFactory(CourseFactory)
+    position = factory.fuzzy.FuzzyInteger(0, 1000)
 
 
 class UserFactory(factory.django.DjangoModelFactory):
@@ -171,17 +187,33 @@ class OrderFactory(factory.django.DjangoModelFactory):
 
     product = factory.SubFactory(ProductFactory)
     owner = factory.SubFactory(UserFactory)
+    state = factory.fuzzy.FuzzyChoice([s[0] for s in enums.ORDER_STATE_CHOICES])
+
 
     @factory.post_generation
     # pylint: disable=unused-argument,no-member
-    def course_runs(self, create, extracted, **kwargs):
+    def target_courses(self, create, extracted, **kwargs):
         """
-        Create and add some course runs by default if not 'extracted' passed
+        Link courses to the order after its creation:
+        - link the list of courses passed in "extracted" if any
+        - otherwise, link to the courses pointed by the related product
         """
         if not extracted:
-            extracted = CourseRunFactory.simple_generate_batch(create, 3)
-            self.product.course_runs.set(extracted)
-        self.course_runs.set(extracted)
+            extracted = self.product.target_courses.all()
+
+        for course in extracted:
+            OrderCourseRelationFactory(order=self, course=course)
+
+
+class OrderCourseRelationFactory(factory.django.DjangoModelFactory):
+    """A factory to create OrderCourseRelation object"""
+
+    class Meta:
+        model = models.OrderCourseRelation
+
+    order = factory.SubFactory(OrderFactory)
+    course = factory.SubFactory(CourseFactory)
+    position = factory.fuzzy.FuzzyInteger(0, 1000)
 
 
 class AddressFactory(factory.django.DjangoModelFactory):

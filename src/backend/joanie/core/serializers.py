@@ -4,10 +4,10 @@ from rest_framework import serializers
 from joanie.core import models
 
 
-class ProductCourseRunPositionSerializer(serializers.ModelSerializer):
+class ProductCourseRelationRelationSerializer(serializers.ModelSerializer):
     """
-    Serialize all information about each course run inside a product
-    all course run information and course run position for the product
+    Serialize all information about each course inside a product
+    all course information and course position for the product
     """
 
     resource_link = serializers.CharField(source="course_run.resource_link")
@@ -18,7 +18,7 @@ class ProductCourseRunPositionSerializer(serializers.ModelSerializer):
     enrollment_end = serializers.CharField(source="course_run.enrollment_end")
 
     class Meta:
-        model = models.ProductCourseRunPosition
+        model = models.ProductCourseRelation
         fields = [
             "position",
             "resource_link",
@@ -36,22 +36,20 @@ class ProductSerializer(serializers.ModelSerializer):
     """
 
     id = serializers.CharField(source="uid")
-    course_runs = serializers.SerializerMethodField()
+    target_courses = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Product
         fields = ["id", "title", "call_to_action", "course_runs", "price"]
 
     @staticmethod
-    def get_course_runs(obj):
+    def get_courses(obj):
         """
-        Get list of course runs available and its positions for a product.
-        Sort by course run position then start date.
+        Get list of courses available and their positions for a product.
+        Sort by course position then course order.
         """
-        return ProductCourseRunPositionSerializer(
-            obj.course_runs_positions.select_related("course_run").order_by(
-                "position", "course_run__start"
-            ),
+        return ProductCourseRelationSerializer(
+            obj.course_relations.select_related("course"),
             many=True,
         ).data
 
@@ -85,7 +83,9 @@ class CourseRunEnrollmentSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_position(obj):
         """Get position of course run linked for a product"""
-        return obj.course_run.positions.get(product=obj.order.product).position
+        return obj.course_run.course.product_relations.get(
+            product=obj.order.product
+        ).position
 
 
 class OrderSerializer(serializers.ModelSerializer):
