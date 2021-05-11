@@ -91,4 +91,4 @@ CMD python manage.py runserver 0.0.0.0:8000
 FROM core as production
 
 # The default command runs gunicorn WSGI server in joanie's main module
-CMD gunicorn -c /usr/local/etc/gunicorn/joanie.py wsgi:application
+CMD gunicorn -c /usr/local/etc/gunicorn/joanie.py joanie.wsgi:application
