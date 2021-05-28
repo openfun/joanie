@@ -8,9 +8,25 @@ import re
 import requests
 from requests.auth import AuthBase
 
+from backend.joanie.core.enums import ENROLLMENT_STATE_FAILED, ENROLLMENT_STATE_IN_PROGRESS, ENROLLMENT_STATE_VALIDATED
+
 from .base import BaseLMSBackend
 
 logger = logging.getLogger(__name__)
+
+"""
+Passed states:
+downloadable - The certificate is available for download.
+generating   - A request has been made to generate a certificate, but it has not been generated yet.
+
+Not passed states:
+notpassing   - The student was graded but is not passing
+"""
+COURSE_RUN_CERTIFICATE_STATUS_DOWNLOADABLE = "downloadable"
+COURSE_RUN_CERTIFICATE_STATUS_GENERATING = "generating"
+COURSE_RUN_CERTIFICATE_STATUS_NOT_PASSING = "notpassing"
+COURSE_RUN_PASSED_STATUSES = (COURSE_RUN_CERTIFICATE_STATUS_DOWNLOADABLE, COURSE_RUN_CERTIFICATE_STATUS_GENERATING)
+COURSE_RUN_NOT_PASSED_STATUSES = (COURSE_RUN_CERTIFICATE_STATUS_NOT_PASSING)
 
 
 class OpenEdXTokenAuth(AuthBase):
@@ -53,6 +69,14 @@ class OpenEdXLMSBackend(BaseLMSBackend):
         """Instantiate and return an OpenEdX token API client."""
         return TokenAPIClient(self.configuration["API_TOKEN"])
 
+    def _get_enrollment_state(status):
+        if status in COURSE_RUN_NOT_PASSED_STATUSES:
+            return ENROLLMENT_STATE_FAILED
+        elif status in COURSE_RUN_PASSED_STATUSES:
+            return ENROLLMENT_STATE_VALIDATED
+        
+        return ENROLLMENT_STATE_IN_PROGRESS
+
     def extract_course_id(self, resource_link):
         """Extract the LMS course id from the course run url."""
         return re.match(self.configuration["COURSE_REGEX"], resource_link).group(
@@ -91,5 +115,53 @@ class OpenEdXLMSBackend(BaseLMSBackend):
             if data["is_active"] == active:
                 return data
 
+        logger.error(response.content)
+        return None
+
+    def get_progression(self, username, resource_link=None):
+        """
+            Get state of each course runs delivering a certificate
+            to which user is enrolled. This is an easy way to retrieve the progression of an user
+            about a course run.
+
+            Return:
+            [
+                {
+                    "course_key": "course-v1:edX+DemoX+Demo_Course",
+                    "status": 
+                          ENROLLMENT_STATE_IN_PROGRESS
+                        | ENROLLMENT_STATE_VALIDATED
+                        | ENROLLMENT_STATE_FAILED,
+                    "grade": "0.98",
+                }
+            ]
+        """
+        base_url = self.configuration["BASE_URL"]
+
+        # We ensure compatiblity with OpenEdX Dogwood by passing two query parameters
+        # to send the username :
+        # - `query` parameter is for OpenEdX Dogwood
+        # - `user` parameter is for OpenEdX upper than Dogwood
+        response = self.api_client.request(
+            "GET", f"{base_url}/certificates/search?user={username}&query={username}"
+        )
+
+        if response.ok:
+            results = [
+                {
+                    "course_key": result["course_key"],
+                    "grade": result["grade"],
+                    "status": self._get_enrollment_state(result["status"]),
+                }
+                for result
+                in json.loads(response.content) if response.content else []
+            ] 
+
+            if resource_link:
+                course_id = self.extract_course_id(resource_link)
+                results = filter(lambda result: result.get("course_key", "") == course_id, results)
+
+            return results
+        
         logger.error(response.content)
         return None

@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Add `get_progression` to OpenEdX LMS Handler
 - Implement Address model for billing and add routes API to get, create,
   update and delete address.
 - Install security updates in project Docker images
