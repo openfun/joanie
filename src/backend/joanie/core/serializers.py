@@ -1,4 +1,8 @@
 """Serializers for api."""
+
+from django.core import validators
+from django.utils.translation import gettext_lazy as _
+
 from rest_framework import serializers
 
 from joanie.core import models
@@ -162,3 +166,57 @@ class AddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Address
         fields = ["id", "name", "address", "postcode", "city", "country"]
+
+
+class CreditCardModelSerializer(serializers.ModelSerializer):
+    """
+    Credit card model serializer.
+    User can change only name and main fields.
+    """
+
+    id = serializers.ReadOnlyField(source="uid")
+    expiration_date = serializers.ReadOnlyField()
+    last_numbers = serializers.ReadOnlyField()
+
+    class Meta:
+        model = models.CreditCard
+        fields = ["id", "name", "expiration_date", "last_numbers", "main"]
+
+    def to_representation(self, instance):
+        return {
+            "id": instance.uid,
+            "name": instance.name,
+            "expiration_date": instance.expiration_date.strftime("%m/%y"),
+            "last_numbers": instance.last_numbers,
+            "main": instance.main,
+        }
+
+
+class CreditCardSerializer(serializers.Serializer):  # pylint: disable=abstract-method
+    """
+    Credit card serializer to save credit card with payment backend
+    """
+
+    name = serializers.CharField(max_length=50)
+    card_number = serializers.CharField(
+        validators=[
+            validators.RegexValidator(
+                "^[0-9]{16}$", _("Enter a valid value (16 digits)")
+            ),
+        ]
+    )
+    cryptogram = serializers.CharField(
+        validators=[
+            validators.RegexValidator(
+                "^[0-9]{3}$", _("Enter a valid value (3 digits)")
+            ),
+        ]
+    )
+    # expiration date of credit card only gives year and month
+    expiration_date = serializers.CharField(
+        validators=[
+            validators.RegexValidator(
+                "^[0-1][0-9]/[0-9]{2}$", _("Enter a valid value 'month/year'")
+            ),
+        ]
+    )

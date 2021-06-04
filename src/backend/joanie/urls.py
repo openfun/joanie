@@ -32,6 +32,8 @@ urlpatterns = (
         path("admin/", admin.site.urls),
         path("api/addresses/", api.AddressView.as_view()),
         path("api/addresses/<str:address_uid>/", api.AddressView.as_view()),
+        path("api/credit-cards/", api.CreditCardView.as_view()),
+        path("api/credit-cards/<str:credit_card_uid>/", api.CreditCardView.as_view()),
         path("api/", include(router.urls)),
         path("api/documents/", include("marion.urls")),
     ]

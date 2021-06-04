@@ -1,6 +1,8 @@
 """
 Test suite for products models
 """
+import datetime
+import logging
 from decimal import Decimal as D
 
 from django.db import IntegrityError
@@ -10,7 +12,15 @@ from django.utils import timezone
 
 from marion.models import DocumentRequest
 
-from joanie.core import factories, models
+from joanie.core import enums, factories, models
+
+EXPIRATION_YEAR = (timezone.now() + datetime.timedelta(days=730)).year
+CREDIT_CARD_DATA = {
+    "name": "Personal",
+    "card_number": "1111222233334444",
+    "expiration_date": f"01/{EXPIRATION_YEAR}",
+    "cryptogram": "222",
+}
 
 
 class ProductModelsTestCase(TestCase):
@@ -79,3 +89,82 @@ class ProductModelsTestCase(TestCase):
             certificate.attachment.name,
             f"{DocumentRequest.objects.get().document_id}.pdf",
         )
+
+    @override_settings(
+        JOANIE_PAYMENT_BACKEND="joanie.payment.backends.dummy.DummyBackend"
+    )
+    def test_model_order_proceed_to_payment(self):
+        """Proceed to pay an order"""
+
+        course = factories.CourseFactory()
+        product = factories.ProductFactory(
+            courses=[course],
+            certificate_definition=factories.CertificateDefinitionFactory(),
+        )
+        order = factories.OrderFactory(product=product, state=enums.ORDER_STATE_PENDING)
+        user = order.owner
+
+        # try to pay with credit card data
+        with self.assertLogs(logging.getLogger(), level="INFO") as logs:
+            # pay the order
+            order.proceed_to_payment(**CREDIT_CARD_DATA)
+            # payment backend log success message
+            self.assertTrue("succeeded" in logs.output[0])
+            self.assertEqual(len(logs.output), 1)
+            order.refresh_from_db()
+            # order is now in state PAID
+            self.assertEqual(order.state, enums.ORDER_STATE_PAID)
+
+            # try to pay again but nothing happened
+            order.proceed_to_payment(**CREDIT_CARD_DATA)
+            self.assertEqual(len(logs.output), 1)
+
+            # create a new order and now test payment with credit card registration
+            course = factories.CourseFactory()
+            product = factories.ProductFactory(
+                courses=[course],
+                certificate_definition=factories.CertificateDefinitionFactory(),
+            )
+            order = factories.OrderFactory(
+                product=product,
+                state=enums.ORDER_STATE_PENDING,
+                owner=user,
+            )
+            CREDIT_CARD_DATA["save"] = True
+            order.proceed_to_payment(**CREDIT_CARD_DATA)
+            # payment backend log a new success message
+            self.assertTrue("succeeded" in logs.output[1])
+            self.assertTrue(
+                f"Credit card ****{CREDIT_CARD_DATA['card_number'][-4:]} successfully registered"
+                in logs.output[2]
+            )
+            self.assertEqual(len(logs.output), 3)
+            order.refresh_from_db()
+            # order is now in state PAID
+            self.assertEqual(order.state, enums.ORDER_STATE_PAID)
+            # a credit card has been saved in db
+            credit_card = order.owner.creditcards.get()
+            self.assertEqual(
+                credit_card.last_numbers, CREDIT_CARD_DATA.get("card_number")[-4:]
+            )
+            self.assertEqual(
+                credit_card.expiration_date, datetime.date(EXPIRATION_YEAR, 1, 31)
+            )
+
+            # pay an other order with credit card just registered
+            course = factories.CourseFactory()
+            product = factories.ProductFactory(
+                courses=[course],
+                certificate_definition=factories.CertificateDefinitionFactory(),
+            )
+            order = factories.OrderFactory(
+                product=product,
+                state=enums.ORDER_STATE_PENDING,
+                owner=user,
+            )
+            order.proceed_to_payment(id=credit_card.uid)
+            order.refresh_from_db()
+            self.assertEqual(order.state, enums.ORDER_STATE_PAID)
+            self.assertTrue("Oneclick payment" in logs.output[3])
+            self.assertTrue("succeeded" in logs.output[3])
+            self.assertEqual(len(logs.output), 4)

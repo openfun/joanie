@@ -84,3 +84,16 @@ class AddressAdmin(admin.ModelAdmin):
     """Admin class for the Address model"""
 
     list_display = ("name", "address", "postcode", "city", "country", "owner", "main")
+
+
+@admin.register(models.CreditCard)
+class CreditCardAdmin(admin.ModelAdmin):
+    """Admin class for the credit card model"""
+
+    list_display = ("owner", "name", "expiration_date", "numbers", "main")
+    readonly_fields = ("owner", "expiration_date", "last_numbers", "token")
+
+    # pylint: disable=no-self-use
+    def numbers(self, obj):
+        """Nice last numbers display"""
+        return f"****{obj.last_numbers}"

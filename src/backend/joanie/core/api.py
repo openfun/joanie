@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from rest_framework.views import exception_handler as drf_exception_handler
 
 from joanie.core import models
+from joanie.payment import backends
 
 from . import serializers
 
@@ -94,6 +95,19 @@ class OrderViewSet(
         - course: course code
         - product: product uid (product must be associated to the course. Otherwise,
           a 400 error is returned)
+
+        Optional data :
+            - credit_card: dict, contains credit card data
+                name: str, credit card name chosen by user
+                card_number: str, credit card number e.g. 1111222233334444
+                cryptogram: str, credit card cryptogram e.g. 222
+                expiration_date: str, credit card expiration date e.g. '09/21' ('%M%y')
+                save: bool, to register credit card (to a future oneclick payment)
+            }
+            or
+            - credit_card: dict, contains credit card uid to get credit card for oneclick payment
+                id: uid
+
         Return new order just created
     """
 
@@ -112,10 +126,12 @@ class OrderViewSet(
         )
 
     def perform_create(self, serializer):
-        """Force the order's "owner" field to the logged-in user."""
+        """Force the order's "owner" field to the logged-in user and proceed to payment"""
         username = self.request.user.username
         owner = models.User.objects.get_or_create(username=username)[0]
-        serializer.save(owner=owner)
+        order = serializer.save(owner=owner)
+        if order.price and self.request.data.get("credit_card"):
+            order.proceed_to_payment(**self.request.data["credit_card"])
 
 
 class AddressView(generics.ListAPIView):
@@ -189,4 +205,131 @@ class AddressView(generics.ListAPIView):
         if obj.owner.username == self.request.user.username:
             obj.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class CreditCardView(generics.ListAPIView):
+    """
+    API view allows to get all credit cards or update or create a new one for a user.
+
+    GET /api/credit_cards/
+        Return list of all user credit cards saved
+        [
+            {
+                'id': uid,
+                'name': str,
+                'last_numbers': str, four last digits
+                'expiration_date': date, only "month/year" e.g. "09/22"
+                'main': bool,
+            },
+        ]
+
+    POST /api/credit_cards/ allows to register a new credit card with expected data:
+        - name: str, user can name his/her credit card
+        - card_number: str, credit card number e.g. 1111222233334444
+        - cryptogram: str, credit card cryptogram e.g. 222
+        - expiration_date: str, only "month/year" e.g. "09/22" is expected
+        - main: bool,
+
+    PUT /api/credit_cards/<credit_card_uid>/ allows to modify credit card name and main flag
+    with expected data:
+        - name: str,
+        - main: bool,
+
+    DELETE /api/credit_cards/<credit_card_uid>/ allows to remove credit card
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = serializers.CreditCardModelSerializer
+    instance_field = "credit_card_uid"
+
+    def get_instance(self, **kwargs):
+        """Get credit card instance"""
+        return get_object_or_404(models.CreditCard, uid=kwargs[self.instance_field])
+
+    def get_queryset(self):
+        """Custom queryset to get user credit cards"""
+        user = models.User.objects.get_or_create(username=self.request.user.username)[0]
+        return user.creditcards.all()
+
+    def post(self, request):
+        """Register a new credit card to future oneclick payment.
+        Call payment backend, save token returned on credit card object and
+        use uid returned to set uid of credit card object.
+        """
+        serializer = serializers.CreditCardSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                {"errors": serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        user = models.User.objects.get_or_create(username=request.user.username)[0]
+        payment_backend = backends.get_backend()
+        try:
+            uid, token = payment_backend.register_credit_card(
+                request.data.get("card_number"),
+                request.data.get("cryptogram"),
+                request.data.get("expiration_date"),
+            )
+        except backends.PaymentNetworkError as err:
+            return Response(
+                status=status.HTTP_504_GATEWAY_TIMEOUT, data={"errors": err.messages}
+            )
+        except backends.PaymentServiceError as err:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST, data={"errors": err.messages}
+            )
+
+        credit_card = user.creditcards.create(
+            name=request.data.get("name"),
+            uid=uid,
+            token=token,
+            last_numbers=request.data.get("card_number")[-4:],
+            expiration_date=backends.compute_expiration_date(
+                request.data.get("expiration_date")
+            ),
+            main=request.data.get("main"),
+        )
+        serializer = serializers.CreditCardModelSerializer(credit_card)
+        return Response(status=status.HTTP_201_CREATED, data=serializer.data)
+
+    def put(self, request, **kwargs):
+        """Update credit card selected with new data.
+        Only update credit card name and main flag."""
+        if self.instance_field and self.instance_field in kwargs:
+            obj = self.get_instance(**kwargs)
+            # User authenticated has to be the credit card owner
+            if obj.owner.username == request.user.username:
+                serializer = self.serializer_class(obj, data=request.data)
+                if not serializer.is_valid():
+                    return Response(
+                        {"errors": serializer.errors},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                serializer.save()
+                return Response(serializer.data)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, **kwargs):
+        """Delete credit card selected. Call payment backend to unregister credit card."""
+        if self.instance_field and self.instance_field in kwargs:
+            obj = self.get_instance(**kwargs)
+            # User authenticated has to be the credit card owner
+            if obj.owner.username == request.user.username:
+                payment_backend = backends.get_backend()
+                try:
+                    removed = payment_backend.remove_credit_card(obj)
+                except backends.PaymentNetworkError as err:
+                    return Response(
+                        status=status.HTTP_504_GATEWAY_TIMEOUT,
+                        data={"errors": err.messages},
+                    )
+                except backends.PaymentServiceError as err:
+                    return Response(
+                        status=status.HTTP_400_BAD_REQUEST,
+                        data={"errors": err.messages},
+                    )
+                if removed:
+                    obj.delete()
+                    return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_400_BAD_REQUEST)

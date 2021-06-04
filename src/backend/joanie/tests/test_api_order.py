@@ -1,9 +1,14 @@
 """Tests for the Order API."""
+import datetime
 import json
+import logging
 import random
 import uuid
 
-from joanie.core import factories, models
+from django.test import override_settings
+from django.utils import timezone
+
+from joanie.core import enums, factories, models
 
 from .base import BaseAPITestCase
 
@@ -224,6 +229,483 @@ class OrderApiTest(BaseAPITestCase):
                 ],
             },
         )
+
+    @override_settings(
+        JOANIE_PAYMENT_BACKEND="joanie.payment.backends.dummy.DummyBackend"
+    )
+    def test_api_order_create_and_pay_authenticated_success(self):
+        """Any authenticated user should be able to create and pay an order."""
+        target_courses = factories.CourseFactory.create_batch(3)
+        product = factories.ProductFactory(target_courses=target_courses)
+        course = product.courses.first()
+
+        data = {
+            "course": course.code,
+            "product": str(product.uid),
+            "credit_card": {
+                "name": "Personal",
+                "card_number": "1111222233334444",
+                "expiration_date": (
+                    timezone.now() + datetime.timedelta(days=400)
+                ).strftime("%m/%y"),
+                "cryptogram": "222",
+                "save": False,
+            },
+        }
+        token = self.get_user_token("panoramix")
+
+        with self.assertLogs(logging.getLogger(), level="INFO") as logs:
+            response = self.client.post(
+                "/api/orders/",
+                data=data,
+                content_type="application/json",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+            # payment success log
+            self.assertTrue("succeeded" in logs.output[0])
+            self.assertEqual(response.status_code, 201)
+            content = json.loads(response.content)
+
+            # an order has been created with state paid
+            self.assertEqual(models.Order.objects.count(), 1)
+            order = models.Order.objects.get()
+            self.assertEqual(
+                list(order.target_courses.order_by("product_relations")), target_courses
+            )
+            self.assertEqual(order.state, enums.ORDER_STATE_PAID)
+            self.assertEqual(
+                content,
+                {
+                    "id": str(order.uid),
+                    "course": course.code,
+                    "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                    "state": "paid",
+                    "owner": "panoramix",
+                    "price": str(product.price),
+                    "product": str(product.uid),
+                    "enrollments": [],
+                    "target_courses": [
+                        c.code
+                        for c in product.target_courses.order_by("product_relations")
+                    ],
+                },
+            )
+
+    @override_settings(
+        JOANIE_PAYMENT_BACKEND="joanie.payment.backends.dummy.DummyBackend"
+    )
+    def test_api_order_create_and_pay_and_register_credit_card_authenticated_success(
+        self,
+    ):
+        """Any authenticated user should be able to create, pay an order and save credit card."""
+        target_courses = factories.CourseFactory.create_batch(2)
+        product = factories.ProductFactory(target_courses=target_courses)
+        course = product.courses.first()
+
+        data = {
+            "course": course.code,
+            "product": str(product.uid),
+            "credit_card": {
+                "name": "Personal",
+                "card_number": "1111222233334444",
+                "expiration_date": (
+                    timezone.now() + datetime.timedelta(days=400)
+                ).strftime("%m/%y"),
+                "cryptogram": "222",
+                "save": True,
+            },
+        }
+        token = self.get_user_token("panoramix")
+
+        with self.assertLogs(logging.getLogger(), level="INFO") as logs:
+            response = self.client.post(
+                "/api/orders/",
+                data=data,
+                content_type="application/json",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+            self.assertEqual(response.status_code, 201)
+
+            # payment success log
+            self.assertTrue("succeeded" in logs.output[0])
+            # registration credit card success log
+            self.assertTrue("successfully registered" in logs.output[1])
+            # a new credit has been created
+            self.assertEqual(models.CreditCard.objects.count(), 1)
+            # an order with state paid has been created
+            self.assertEqual(models.Order.objects.count(), 1)
+            order = models.Order.objects.get()
+            self.assertEqual(
+                list(order.target_courses.order_by("product_relations")), target_courses
+            )
+            self.assertEqual(order.state, enums.ORDER_STATE_PAID)
+
+            # check content returned
+            self.assertEqual(
+                json.loads(response.content),
+                {
+                    "id": str(order.uid),
+                    "course": course.code,
+                    "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                    "state": "paid",  # order state
+                    "owner": "panoramix",
+                    "price": str(product.price),
+                    "product": str(product.uid),
+                    "enrollments": [],
+                    "target_courses": [
+                        c.code
+                        for c in product.target_courses.order_by("product_relations")
+                    ],
+                },
+            )
+        with self.assertLogs(logging.getLogger(), level="INFO") as logs:
+            # now try to pay an order with credit card just registered
+            target_courses = factories.CourseFactory.create_batch(2)
+            product = factories.ProductFactory(target_courses=target_courses)
+            course = product.courses.first()
+            credit_card = order.owner.creditcards.get()
+
+            data = {
+                "course": course.code,
+                "product": str(product.uid),
+                "credit_card": {
+                    "id": credit_card.uid,
+                },
+            }
+            token = self.get_user_token("panoramix")
+            response = self.client.post(
+                "/api/orders/",
+                data=data,
+                content_type="application/json",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+            self.assertEqual(response.status_code, 201)
+
+            # oneclick payment success log
+            self.assertTrue("Oneclick payment" in logs.output[0])
+            self.assertTrue("succeeded" in logs.output[0])
+
+            # a new order with state paid has been created
+            self.assertEqual(models.Order.objects.count(), 2)
+            order = models.Order.objects.last()
+            self.assertEqual(
+                list(order.target_courses.order_by("product_relations")), target_courses
+            )
+            self.assertEqual(order.state, enums.ORDER_STATE_PAID)
+            self.assertEqual(
+                json.loads(response.content),
+                {
+                    "id": str(order.uid),
+                    "course": course.code,
+                    "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                    "state": "paid",
+                    "owner": "panoramix",
+                    "price": str(product.price),
+                    "product": str(product.uid),
+                    "enrollments": [],
+                    "target_courses": [
+                        c.code
+                        for c in product.target_courses.order_by("product_relations")
+                    ],
+                },
+            )
+
+    @override_settings(
+        JOANIE_PAYMENT_BACKEND="joanie.payment.backends.failing.FailingBackend"
+    )
+    def test_api_order_create_and_pay_failing_service(self):
+        """Any authenticated user should be able to create but not pay an order
+        if case of payment service failure."""
+        target_courses = factories.CourseFactory.create_batch(3)
+        product = factories.ProductFactory(target_courses=target_courses)
+        course = product.courses.first()
+
+        data = {
+            "course": course.code,
+            "product": str(product.uid),
+            "credit_card": {
+                "name": "Personal",
+                "card_number": "1111222233334444",
+                "expiration_date": (
+                    timezone.now() + datetime.timedelta(days=400)
+                ).strftime("%m/%y"),
+                "cryptogram": "222",
+                "save": False,
+            },
+        }
+        token = self.get_user_token("panoramix")
+
+        with self.assertLogs(logging.getLogger(), level="ERROR") as logs:
+            response = self.client.post(
+                "/api/orders/",
+                data=data,
+                content_type="application/json",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+            # payment failure log
+            self.assertTrue("failed" in logs.output[0])
+            self.assertEqual(response.status_code, 201)
+            content = json.loads(response.content)
+
+            # an order has been created but with state payment failed
+            self.assertEqual(models.Order.objects.count(), 1)
+            order = models.Order.objects.get()
+            self.assertEqual(
+                list(order.target_courses.order_by("product_relations")), target_courses
+            )
+            self.assertEqual(order.state, enums.ORDER_STATE_PAYMENT_FAILED)
+            self.assertEqual(
+                content,
+                {
+                    "id": str(order.uid),
+                    "course": course.code,
+                    "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                    "state": "payment_failed",
+                    "owner": "panoramix",
+                    "price": str(product.price),
+                    "product": str(product.uid),
+                    "enrollments": [],
+                    "target_courses": [
+                        c.code
+                        for c in product.target_courses.order_by("product_relations")
+                    ],
+                },
+            )
+
+    @override_settings(
+        JOANIE_PAYMENT_BACKEND="joanie.payment.backends.failing.FailingBackend"
+    )
+    def test_api_order_create_and_pay_and_register_credit_card_failing_service(self):
+        """Any authenticated user should be able to create an order
+        despite payment service failure"""
+        target_courses = factories.CourseFactory.create_batch(2)
+        product = factories.ProductFactory(target_courses=target_courses)
+        course = product.courses.first()
+
+        card_number = "1111222233334444"
+        data = {
+            "course": course.code,
+            "product": str(product.uid),
+            "credit_card": {
+                "name": "Personal",
+                "card_number": card_number,
+                "expiration_date": (
+                    timezone.now() + datetime.timedelta(days=400)
+                ).strftime("%m/%y"),
+                "cryptogram": "222",
+                "save": True,
+            },
+        }
+        token = self.get_user_token("panoramix")
+
+        with self.assertLogs(logging.getLogger(), level="INFO") as logs:
+            response = self.client.post(
+                "/api/orders/",
+                data=data,
+                content_type="application/json",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+            self.assertEqual(response.status_code, 201)
+
+            # payment failing log
+            self.assertTrue("failed" in logs.output[0])
+            # registration credit card failure log
+            self.assertTrue(
+                f"Registration credit card ****{card_number[-4:]} failed"
+                in logs.output[1]
+            )
+            # no credit card has been created
+            self.assertFalse(models.CreditCard.objects.exists())
+            # an order with state payment failed has been created
+            self.assertEqual(models.Order.objects.count(), 1)
+            order = models.Order.objects.get()
+            self.assertEqual(
+                list(order.target_courses.order_by("product_relations")), target_courses
+            )
+            self.assertEqual(order.state, enums.ORDER_STATE_PAYMENT_FAILED)
+
+            # check content returned
+            self.assertEqual(
+                json.loads(response.content),
+                {
+                    "id": str(order.uid),
+                    "course": course.code,
+                    "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                    "state": "payment_failed",  # order state
+                    "owner": "panoramix",
+                    "price": str(product.price),
+                    "product": str(product.uid),
+                    "enrollments": [],
+                    "target_courses": [
+                        c.code
+                        for c in product.target_courses.order_by("product_relations")
+                    ],
+                },
+            )
+
+    @override_settings(
+        JOANIE_PAYMENT_BACKEND="joanie.payment.backends.dummy.DummyBackend"
+    )
+    def test_api_order_create_and_pay_with_bad_credit_card_data(self):
+        """Any authenticated user should be able to create and pay an order
+        but user has to give full credit card data to pay"""
+        token = self.get_user_token("panoramix")
+
+        target_courses = factories.CourseFactory.create_batch(3)
+        product = factories.ProductFactory(target_courses=target_courses)
+        course = product.courses.first()
+
+        # send data with missing values for credit card
+        data = {
+            "course": course.code,
+            "product": str(product.uid),
+            "credit_card": {
+                "name": "Personal",
+                "expiration_date": (
+                    timezone.now() + datetime.timedelta(days=400)
+                ).strftime("%m/%y"),
+                "save": False,
+            },
+        }
+
+        response = self.client.post(
+            "/api/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, 201)
+        content = json.loads(response.content)
+
+        # an order has been created but with pending state
+        self.assertEqual(models.Order.objects.count(), 1)
+        order = models.Order.objects.get()
+        self.assertEqual(
+            list(order.target_courses.order_by("product_relations")), target_courses
+        )
+        self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
+        self.assertEqual(
+            content,
+            {
+                "id": str(order.uid),
+                "course": course.code,
+                "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                "state": "pending",
+                "owner": "panoramix",
+                "price": str(product.price),
+                "product": str(product.uid),
+                "enrollments": [],
+                "target_courses": [
+                    c.code for c in product.target_courses.order_by("product_relations")
+                ],
+            },
+        )
+
+        # now with bad credit card uid
+        target_courses = factories.CourseFactory.create_batch(3)
+        product = factories.ProductFactory(target_courses=target_courses)
+        course = product.courses.first()
+
+        data = {
+            "course": course.code,
+            "product": str(product.uid),
+            "credit_card": {
+                "id": "nawak",
+            },
+        }
+
+        with self.assertLogs(logging.getLogger(), level="ERROR") as logs:
+            response = self.client.post(
+                "/api/orders/",
+                data=data,
+                content_type="application/json",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+            # payment failure log
+            self.assertTrue("failed" in logs.output[0])
+            self.assertEqual(response.status_code, 201)
+            content = json.loads(response.content)
+
+            # an other order has been created but with payment_failed state
+            self.assertEqual(models.Order.objects.count(), 2)
+            order = models.Order.objects.last()
+            self.assertEqual(
+                list(order.target_courses.order_by("product_relations")), target_courses
+            )
+            self.assertEqual(order.state, enums.ORDER_STATE_PAYMENT_FAILED)
+            self.assertEqual(
+                content,
+                {
+                    "id": str(order.uid),
+                    "course": course.code,
+                    "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                    "state": "payment_failed",
+                    "owner": "panoramix",
+                    "price": str(product.price),
+                    "product": str(product.uid),
+                    "enrollments": [],
+                    "target_courses": [
+                        c.code
+                        for c in product.target_courses.order_by("product_relations")
+                    ],
+                },
+            )
+
+            # now try to paid with credit card of an other user
+            target_courses = factories.CourseFactory.create_batch(3)
+            product = factories.ProductFactory(target_courses=target_courses)
+            course = product.courses.first()
+            not_owned_credit_card = factories.CreditCardFactory()
+            data = {
+                "course": course.code,
+                "product": str(product.uid),
+                "credit_card": {
+                    "id": not_owned_credit_card.uid,
+                },
+            }
+
+            with self.assertLogs(logging.getLogger(), level="ERROR") as logs:
+                response = self.client.post(
+                    "/api/orders/",
+                    data=data,
+                    content_type="application/json",
+                    HTTP_AUTHORIZATION=f"Bearer {token}",
+                )
+
+                # payment failure log
+                self.assertTrue("not found" in logs.output[0])
+                self.assertEqual(response.status_code, 201)
+                content = json.loads(response.content)
+
+                # an other order has been created but with state payment_failed
+                self.assertEqual(models.Order.objects.count(), 3)
+                order = models.Order.objects.last()
+                self.assertEqual(
+                    list(order.target_courses.order_by("product_relations")),
+                    target_courses,
+                )
+                self.assertEqual(order.state, enums.ORDER_STATE_PAYMENT_FAILED)
+                self.assertEqual(
+                    content,
+                    {
+                        "id": str(order.uid),
+                        "course": course.code,
+                        "created_on": order.created_on.strftime(
+                            "%Y-%m-%dT%H:%M:%S.%fZ"
+                        ),
+                        "state": "payment_failed",
+                        "owner": "panoramix",
+                        "price": str(product.price),
+                        "product": str(product.uid),
+                        "enrollments": [],
+                        "target_courses": [
+                            c.code
+                            for c in product.target_courses.order_by(
+                                "product_relations"
+                            )
+                        ],
+                    },
+                )
 
     def test_api_order_create_authenticated_invalid_product(self):
         """The course and product passed in payload to create an order should match."""

@@ -237,7 +237,12 @@ class Base(Configuration):
 
     # Joanie settings
     JOANIE_CURRENCY = values.Value(
-        ("EUR", "\N{euro sign}"), environ_name="JOANIE_CURRENCY"
+        (
+            "EUR",
+            "\N{euro sign}",
+            "978",  # ISO 4217
+        ),
+        environ_name="JOANIE_CURRENCY",
     )
     JOANIE_VAT = values.Value(20, environ_name="JOANIE_VAT")
     JOANIE_INVOICE_COMPANY_CONTEXT = values.Value(
@@ -247,6 +252,20 @@ class Base(Configuration):
         VAT Number XXXXXXXXX""",
         environ_name="JOANIE_INVOICE_COMPANY_CONTEXT",
     )
+
+    # Joanie payment backend
+    JOANIE_PAYMENT_BACKEND = values.Value(
+        environ_name="JOANIE_PAYMENT_BACKEND", environ_prefix=None
+    )
+    # Paybox bank url to call
+    PAYBOX_BANK_URL = values.Value(environ_name="PAYBOX_BANK_URL", environ_prefix=None)
+    # Paybox account and subscription data:
+    # Paybox site number from verifone
+    PAYBOX_SITE = values.Value(environ_name="PAYBOX_SITE", environ_prefix=None)
+    # Paybox range from merchant's bank
+    PAYBOX_RANGE = values.Value(environ_name="PAYBOX_RANGE", environ_prefix=None)
+    # Paybox backoffice password
+    PAYBOX_KEY = values.Value(environ_name="PAYBOX_KEY", environ_prefix=None)
 
     AUTH_USER_MODEL = "core.User"
 

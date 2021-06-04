@@ -242,7 +242,7 @@ class OrderCourseRelationFactory(factory.django.DjangoModelFactory):
 
 
 class AddressFactory(factory.django.DjangoModelFactory):
-    """A factory to create an user address"""
+    """A factory to create a user address"""
 
     class Meta:
         model = models.Address
@@ -254,3 +254,23 @@ class AddressFactory(factory.django.DjangoModelFactory):
     country = factory.Faker("country_code")
     owner = factory.SubFactory(UserFactory)
     main = True
+
+
+class CreditCardFactory(factory.django.DjangoModelFactory):
+    """A factory to create a user credit card"""
+
+    class Meta:
+        model = models.CreditCard
+
+    name = factory.fuzzy.FuzzyChoice(["Personal", "Professional"])
+    token = factory.fuzzy.FuzzyText(length=11)
+    expiration_date = factory.fuzzy.FuzzyDate(
+        datetime.date(timezone.now()) + timedelta(days=60),
+        datetime.date(timezone.now()) + timedelta(days=600),
+    )
+    owner = factory.SubFactory(UserFactory)
+
+    @factory.lazy_attribute
+    def last_numbers(self):  # pylint: disable=no-self-use
+        """Generate random 4 last credit card numbers"""
+        return "".join([str(random.randint(0, 9)) for _ in range(4)])  # nosec

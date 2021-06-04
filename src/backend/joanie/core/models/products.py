@@ -16,6 +16,7 @@ from parler import models as parler_models
 
 from joanie.core.exceptions import EnrollmentError
 from joanie.lms_handler import LMSHandler
+from joanie.payment import backends
 
 from .. import enums
 from . import accounts as customers_models
@@ -295,6 +296,81 @@ class Order(models.Model):
             defaults={"attachment": document_request.get_document_path().name},
         )
         return certificate
+
+    def proceed_to_payment(self, **kwargs):
+        """Pay order with credit card data or with a registered card.
+        Allow to save credit card for future payments.
+
+        Args:
+            kwargs: dict, contains credit card data
+                name: str, credit card name chosen by user
+                card_number: str, credit card number e.g. 1111222233334444
+                cryptogram: str, credit card cryptogram e.g. 222
+                expiration_date: str, credit card expiration date e.g. '09/21' ('%M%y')
+                save: bool, to register credit card (to a future oneclick payment)
+              or
+                id: uid, credit card uid to get credit card for oneclick payment
+        """
+        paid = False
+        if self.price and self.state != enums.ORDER_STATE_PAID:
+            payment_backend = backends.get_backend()
+            credit_card_uid = kwargs.get("id")
+            card_number = kwargs.get("card_number")
+            cryptogram = kwargs.get("cryptogram")
+            expiration_date = kwargs.get("expiration_date")
+            try:
+                if credit_card_uid:
+                    # one click payment, pay order with credit card already registered
+                    credit_card = self.owner.creditcards.get(uid=credit_card_uid)
+                    paid = payment_backend.request_oneclick_payment(
+                        credit_card,
+                        self.price,
+                        self.uid,
+                    )
+                elif card_number and cryptogram and expiration_date:
+                    # pay with credit card data
+                    paid = payment_backend.request_payment(
+                        card_number,
+                        cryptogram,
+                        expiration_date,
+                        self.price,
+                        self.uid,
+                    )
+            except (customers_models.CreditCard.DoesNotExist, ValidationError):
+                self.state = enums.ORDER_STATE_PAYMENT_FAILED
+                logger.error(
+                    "Payment %s failed with error: 'credit card with uid %s not found'"
+                    " for order %s",
+                    f"{self.price}{settings.JOANIE_CURRENCY[0]}",
+                    credit_card_uid,
+                    self.uid,
+                )
+            except (backends.PaymentNetworkError, backends.PaymentServiceError):
+                self.state = enums.ORDER_STATE_PAYMENT_FAILED
+            if paid:
+                self.state = enums.ORDER_STATE_PAID
+            self.save()
+
+            if kwargs.get("save"):
+                # user wants to save his/her credit card
+                try:
+                    uid, token = payment_backend.register_credit_card(
+                        card_number,
+                        cryptogram,
+                        expiration_date,
+                    )
+                except (backends.PaymentNetworkError, backends.PaymentServiceError):
+                    pass
+                else:
+                    self.owner.creditcards.create(
+                        name=kwargs.get("name"),
+                        uid=uid,
+                        token=token,
+                        last_numbers=card_number[-4:],
+                        expiration_date=backends.compute_expiration_date(
+                            expiration_date
+                        ),
+                    )
 
 
 class OrderCourseRelation(models.Model):

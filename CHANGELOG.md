@@ -10,6 +10,9 @@ and this project adheres to
 
 ### Added
 
+- Implement Paybox payment backend to pay order,
+  allow to save credit card to oneclick payment,
+  add new routes API to manage user credit cards.
 - Use marion and howard to generate certificate for an order
 - Use marion and howard to generate invoice for an order
 - Implement Address model for billing and add routes API to get, create,
