@@ -33,6 +33,7 @@ and this project adheres to
 
 ### Changed
 
+- Update CourseSerializer to bind order and enrollment related to the user
 - Use a ViewSet to create address api
 - Rename the "name" field to "title" (avoid confusion with new "fullname" field)
 - Rename "main" field to "is_main" as our naming convention for boolean fields

@@ -1,19 +1,185 @@
 """Serializers for api."""
+
+from django.conf import settings
+from django.core.cache import cache
+
 from rest_framework import serializers
 
-from joanie.core import models
+from joanie.core import enums, models
+
+
+class CertificationDefinitionSerializer(serializers.ModelSerializer):
+    """
+    Serialize information about a certificate definition
+    """
+
+    description = serializers.CharField(allow_blank=True, allow_null=True)
+
+    class Meta:
+        model = models.CertificateDefinition
+        fields = ["description", "name", "title"]
+
+
+class OrganizationSerializer(serializers.ModelSerializer):
+    """
+    Serialize all non-sensitive information about an organization
+    """
+
+    class Meta:
+        model = models.Organization
+        fields = ["code", "title"]
+
+
+class TargetCourseSerializer(serializers.ModelSerializer):
+    """
+    Serialize all information about a target course.
+    """
+
+    course_runs = serializers.SerializerMethodField(read_only=True)
+    organization = OrganizationSerializer(read_only=True)
+    position = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = models.Course
+        fields = [
+            "code",
+            "course_runs",
+            "organization",
+            "position",
+            "title",
+        ]
+
+    def get_position(self, target_course):
+        """
+        Retrieve the position of the course related to its product_relation
+        """
+        product = self.context.get("product", None)
+        return (
+            target_course.product_relations.only("position")
+            .get(product=product)
+            .position
+        )
+
+    @staticmethod
+    def get_course_runs(target_course):
+        """
+        Return related course runs ordered by start date asc
+        """
+        return CourseRunSerializer(
+            target_course.course_runs.order_by("start"), many=True
+        ).data
 
 
 class ProductSerializer(serializers.ModelSerializer):
     """
-    Product serializer including list of course runs with its positions
+    Product serializer including
+        - certificate information if there is
+        - targeted courses with its course runs
+            - If user is authenticated, we try to retrieve enrollment related
+              to each course run.
+        - order if user is authenticated
     """
 
     id = serializers.CharField(source="uid", read_only=True)
+    certificate = CertificationDefinitionSerializer(
+        read_only=True, source="certificate_definition"
+    )
+    currency = serializers.SerializerMethodField()
+    price = serializers.DecimalField(
+        max_digits=9,
+        decimal_places=2,
+        coerce_to_string=False,
+        min_value=0,
+    )
+    target_courses = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Product
-        fields = ["id", "title", "call_to_action", "price"]
+        fields = [
+            "call_to_action",
+            "certificate",
+            "currency",
+            "id",
+            "price",
+            "target_courses",
+            "title",
+            "type",
+        ]
+
+    def get_target_courses(self, product):
+        """
+        For the current product, retrieve its related courses.
+        """
+
+        context = self.context.copy()
+        context.update({"product": product})
+
+        return TargetCourseSerializer(
+            instance=models.Course.objects.filter(
+                product_relations__product=product
+            ).order_by("product_relations__position"),
+            many=True,
+            context=context,
+        ).data
+
+    def get_currency(self, _):  # pylint: disable=no-self-use
+        """
+        Return currency code and symbol
+        to allow frontend to format properly price
+        """
+        (code, symbol) = settings.JOANIE_CURRENCY[:2]
+        return {"code": code, "symbol": symbol}
+
+
+class CourseRunEnrollmentSerializer(serializers.ModelSerializer):
+    """
+    Enrollment for course run serializer
+    """
+
+    id = serializers.CharField(source="uid", read_only=True, required=False)
+    resource_link = serializers.CharField(source="course_run.resource_link")
+    title = serializers.CharField(source="course_run.title")
+    start = serializers.DateTimeField(source="course_run.start")
+    end = serializers.DateTimeField(source="course_run.end")
+    enrollment_start = serializers.DateTimeField(source="course_run.enrollment_start")
+    enrollment_end = serializers.DateTimeField(source="course_run.enrollment_end")
+
+    class Meta:
+        model = models.Enrollment
+        fields = [
+            "id",
+            "is_active",
+            "resource_link",
+            "title",
+            "start",
+            "end",
+            "enrollment_start",
+            "enrollment_end",
+            "state",
+        ]
+
+
+class OrderLiteSerializer(serializers.ModelSerializer):
+    """
+    Minimal Order model serializer
+    """
+
+    id = serializers.CharField(source="uid", read_only=True)
+    price = serializers.DecimalField(
+        max_digits=9,
+        decimal_places=2,
+        coerce_to_string=False,
+        min_value=0,
+        read_only=True,
+    )
+    enrollments = CourseRunEnrollmentSerializer(
+        many=True, read_only=True, required=False
+    )
+    product = serializers.SlugRelatedField(read_only=True, slug_field="uid")
+
+    class Meta:
+        model = models.Order
+        fields = ["id", "created_on", "price", "enrollments", "product", "state"]
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -21,8 +187,8 @@ class CourseSerializer(serializers.ModelSerializer):
     Serialize all information about a course.
     """
 
-    organization = serializers.CharField(source="organization.code", read_only=True)
-    products = serializers.SlugRelatedField(many=True, read_only=True, slug_field="uid")
+    organization = OrganizationSerializer(read_only=True)
+    products = ProductSerializer(read_only=True, many=True)
 
     class Meta:
         model = models.Course
@@ -33,39 +199,69 @@ class CourseSerializer(serializers.ModelSerializer):
             "products",
         ]
 
+    def get_orders(self, instance):
+        """
+        If an user is authenticated, retrieves its orders related to the serializer Course instance
+        else return None
+        """
+        try:
+            username = self.context["username"]
+            orders = (
+                models.Order.objects.filter(
+                    owner__username=username,
+                    course=instance,
+                    state__in=[
+                        enums.ORDER_STATE_FAILED,
+                        enums.ORDER_STATE_FINISHED,
+                        enums.ORDER_STATE_PAID,
+                        enums.ORDER_STATE_PENDING,
+                    ],
+                )
+                .select_related("product")
+                .prefetch_related("enrollments__course_run")
+            )
 
-class CourseRunEnrollmentSerializer(serializers.ModelSerializer):
-    """
-    Enrollment for course run serializer
-    """
+            return OrderLiteSerializer(orders, many=True).data
+        except KeyError:
+            return None
 
-    resource_link = serializers.CharField(source="course_run.resource_link")
-    title = serializers.CharField(source="course_run.title")
-    start = serializers.CharField(source="course_run.start")
-    end = serializers.CharField(source="course_run.end")
-    enrollment_start = serializers.CharField(source="course_run.enrollment_start")
-    enrollment_end = serializers.CharField(source="course_run.enrollment_end")
-    position = serializers.SerializerMethodField()
+    def to_representation(self, instance):
+        """
+        Cache the serializer representation that does not vary from user to user
+        then, if user is authenticated, add private information to the representation
+        """
+        cache_key = instance.get_cache_key()
+        representation = cache.get(cache_key)
+
+        if representation is None:
+            representation = super().to_representation(instance)
+            cache.set(
+                cache_key,
+                representation,
+                settings.JOANIE_ANONYMOUS_COURSE_SERIALIZER_CACHE_TTL,
+            )
+
+        representation["orders"] = self.get_orders(instance)
+
+        return representation
+
+
+class CourseRunSerializer(serializers.ModelSerializer):
+    """
+    Serialize all information about a course run
+    """
 
     class Meta:
-        model = models.Enrollment
+        model = models.CourseRun
         fields = [
-            "resource_link",
-            "title",
-            "start",
             "end",
-            "enrollment_start",
             "enrollment_end",
-            "state",
-            "position",
+            "enrollment_start",
+            "id",
+            "resource_link",
+            "start",
+            "title",
         ]
-
-    @staticmethod
-    def get_position(obj):
-        """Get position of course run linked for a product"""
-        return obj.course_run.course.product_relations.get(
-            product=obj.order.product
-        ).position
 
 
 class EnrollmentSerializer(serializers.ModelSerializer):
@@ -74,7 +270,7 @@ class EnrollmentSerializer(serializers.ModelSerializer):
     """
 
     id = serializers.CharField(source="uid", read_only=True, required=False)
-    user = serializers.CharField(source="user.username", read_only=True, required=False)
+    user = serializers.CharField(source="user.username", required=False)
     course_run = serializers.SlugRelatedField(
         queryset=models.CourseRun.objects.all(), slug_field="resource_link"
     )
@@ -109,6 +305,14 @@ class OrderSerializer(serializers.ModelSerializer):
     course = serializers.SlugRelatedField(
         queryset=models.Course.objects.all(), slug_field="code"
     )
+    price = serializers.DecimalField(
+        max_digits=9,
+        decimal_places=2,
+        coerce_to_string=False,
+        min_value=0,
+        required=False,
+        read_only=True,
+    )
     product = serializers.SlugRelatedField(
         queryset=models.Product.objects.all(), slug_field="uid"
     )
@@ -120,10 +324,10 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Order
         fields = [
-            "id",
             "course",
             "created_on",
             "enrollments",
+            "id",
             "owner",
             "price",
             "product",
@@ -133,7 +337,6 @@ class OrderSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "created_on",
             "state",
-            "price",
         ]
 
     @staticmethod
