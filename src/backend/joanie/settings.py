@@ -197,6 +197,8 @@ class Base(Configuration):
         "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
     }
 
+    JOANIE_ANONYMOUS_COURSE_SERIALIZER_CACHE_TTL = 3600  # 1 hour
+
     LANGUAGES = (
         ("en-us", _("English")),
         ("fr-fr", _("French")),

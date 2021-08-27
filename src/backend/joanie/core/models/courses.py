@@ -3,6 +3,7 @@ Declare and configure the models for the courses part
 """
 from django.db import models
 from django.utils.functional import lazy
+from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
 from parler import models as parler_models
@@ -75,6 +76,14 @@ class Course(parler_models.TranslatableModel):
 
     def __str__(self):
         return self.safe_translation_getter("title", any_language=True)
+
+    def get_cache_key(self, language=None):
+        """
+        Return a course cache key related to its code and the current language
+        language can be forced by through the language argument.
+        """
+        current_language = language or get_language()
+        return f"course-{self.code}-{current_language}"
 
     def clean(self):
         """

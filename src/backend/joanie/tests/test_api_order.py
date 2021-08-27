@@ -58,7 +58,7 @@ class OrderApiTest(BaseAPITestCase):
                         "enrollments": [],
                         "id": str(order.uid),
                         "owner": order.owner.username,
-                        "price": str(product.price),
+                        "price": float(product.price),
                         "product": str(order.product.uid),
                         "state": order.state,
                         "target_courses": [],
@@ -92,7 +92,7 @@ class OrderApiTest(BaseAPITestCase):
                         ),
                         "enrollments": [],
                         "owner": other_order.owner.username,
-                        "price": str(other_order.price),
+                        "price": float(other_order.price),
                         "product": str(other_order.product.uid),
                         "state": other_order.state,
                         "target_courses": [],
@@ -138,7 +138,7 @@ class OrderApiTest(BaseAPITestCase):
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "state": order.state,
                 "owner": owner.username,
-                "price": str(product.price),
+                "price": float(product.price),
                 "product": str(product.uid),
                 "enrollments": [],
                 "target_courses": [
@@ -216,7 +216,7 @@ class OrderApiTest(BaseAPITestCase):
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "state": "pending",
                 "owner": "panoramix",
-                "price": str(product.price),
+                "price": float(product.price),
                 "product": str(product.uid),
                 "enrollments": [],
                 "target_courses": [
@@ -337,10 +337,10 @@ class OrderApiTest(BaseAPITestCase):
         self.assertEqual(
             list(data.keys()),
             [
-                "id",
                 "course",
                 "created_on",
                 "enrollments",
+                "id",
                 "owner",
                 "price",
                 "product",

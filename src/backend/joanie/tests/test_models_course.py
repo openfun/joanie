@@ -3,6 +3,7 @@ Test suite for order models
 """
 from django.core.exceptions import ValidationError
 from django.test import TestCase
+from django.utils import translation
 
 from joanie.core import factories, models
 
@@ -32,3 +33,18 @@ class CourseRunModelsTestCase(TestCase):
         self.assertEqual(
             models.Course.objects.filter(code="THE-UNIQUE-CODE").count(), 1
         )
+
+    def test_models_course_get_cache_key(self):
+        """
+        The `get_cache_key` method should return a key related to the
+        code and the active language
+        """
+        course = factories.CourseFactory(code="00001")
+        self.assertEqual(course.get_cache_key(), "course-00001-en-us")
+
+        # - Switch to french
+        with translation.override("fr-fr"):
+            self.assertEqual(course.get_cache_key(), "course-00001-fr-fr")
+
+        # - Force language
+        self.assertEqual(course.get_cache_key("de-de"), "course-00001-de-de")

@@ -44,8 +44,20 @@ class CourseViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
 
     lookup_field = "code"
     permission_classes = [permissions.AllowAny]
-    queryset = models.Course.objects.all()
+    queryset = models.Course.objects.select_related("organization").all()
     serializer_class = serializers.CourseSerializer
+
+    def get_serializer_context(self):
+        """
+        Provide username to the authenticated user (if one is authenticated)
+        to the `CourseSerializer`
+        """
+        context = super().get_serializer_context()
+
+        if self.request.user.username:
+            context.update({"username": self.request.user.username})
+
+        return context
 
 
 # pylint: disable=too-many-ancestors
