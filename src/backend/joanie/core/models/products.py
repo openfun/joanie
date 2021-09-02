@@ -238,7 +238,9 @@ class Order(models.Model):
         vat_amount = net_amount * vat / 100
         # create a unique reference for invoice
         reference = (
-            f"{timezone.now().strftime('%Y%m%d%H%M%S')}-{str(self.uid).split('-')[0]}"
+            f"{timezone.now().strftime('%Y%m%d%H%M%S')}"
+            "-"
+            f"{str(self.uid).split('-', maxsplit=1)[0]}"
         )
         currency = settings.JOANIE_CURRENCY[1]
         order = {
