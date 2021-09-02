@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Add stub dependencies required by mypy
 - Add .gitlint configuration file
 - Use marion and howard to generate certificate for an order
 - Use marion and howard to generate invoice for an order
