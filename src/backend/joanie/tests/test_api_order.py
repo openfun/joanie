@@ -3,7 +3,7 @@ import json
 import random
 import uuid
 
-from joanie.core import factories, models
+from joanie.core import enums, factories, models
 
 from .base import BaseAPITestCase
 
@@ -208,6 +208,64 @@ class OrderApiTest(BaseAPITestCase):
         self.assertEqual(
             list(order.target_courses.order_by("product_relations")), target_courses
         )
+        self.assertEqual(
+            content,
+            {
+                "id": str(order.uid),
+                "course": course.code,
+                "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                "state": "pending",
+                "owner": "panoramix",
+                "price": float(product.price),
+                "product": str(product.uid),
+                "enrollments": [],
+                "target_courses": [
+                    c.code for c in product.target_courses.order_by("product_relations")
+                ],
+            },
+        )
+
+    def test_api_order_create_has_read_only_fields(self):
+        """
+        If an authenticated user tries to create an order with more fields than
+        "product" and "course", it should not be allowed to override these fields.
+        """
+        target_courses = factories.CourseFactory.create_batch(2)
+        product = factories.ProductFactory(target_courses=target_courses)
+        course = product.courses.first()
+        self.assertEqual(
+            list(product.target_courses.order_by("product_relations")), target_courses
+        )
+
+        data = {
+            "course": course.code,
+            "product": str(product.uid),
+            "id": uuid.uuid4(),
+            "price": 0.00,
+            "state": enums.ORDER_STATE_FINISHED,
+        }
+        token = self.get_user_token("panoramix")
+
+        response = self.client.post(
+            "/api/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        # - Order has been successfully created and read_only_fields
+        #   has been ignored.
+        self.assertEqual(response.status_code, 201)
+        content = json.loads(response.content)
+
+        self.assertEqual(models.Order.objects.count(), 1)
+        order = models.Order.objects.get()
+
+        self.assertEqual(
+            list(order.target_courses.order_by("product_relations")), target_courses
+        )
+
+        # - id, price and state has not been set according to data values
         self.assertEqual(
             content,
             {

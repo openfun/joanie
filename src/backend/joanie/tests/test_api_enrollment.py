@@ -552,6 +552,55 @@ class EnrollmentApiTest(BaseAPITestCase):
             {"__all__": [f'Course run "{link:s}" requires a valid order to enroll.']},
         )
 
+    @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
+    def test_api_enrollment_create_has_read_only_fields(self, mock_set):
+        """
+        When user creates an enrollment, it should not be allowed
+        to set "id", "state" fields
+        """
+        resource_link = (
+            "http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course"
+        )
+        is_active = random.choice([True, False])
+        mock_set.return_value = is_active
+
+        course_run = factories.CourseRunFactory(resource_link=resource_link)
+        data = {
+            "course_run": resource_link,
+            "id": uuid.uuid4(),
+            "is_active": is_active,
+            "state": enums.ENROLLMENT_STATE_FAILED,
+        }
+        token = self.get_user_token("panoramix")
+
+        response = self.client.post(
+            "/api/enrollments/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+            content_type="application/json",
+            data=data,
+        )
+        self.assertEqual(response.status_code, 201)
+        content = json.loads(response.content)
+
+        self.assertEqual(models.Enrollment.objects.count(), 1)
+        mock_set.assert_called_once_with("panoramix", resource_link, is_active)
+        enrollment = models.Enrollment.objects.get()
+
+        # - Enrollment uid has been generated and state has been set according
+        #   to LMSHandler.set_enrollment response
+        self.assertNotEqual(enrollment.uid, data["id"])
+        self.assertEqual(
+            content,
+            {
+                "id": str(enrollment.uid),
+                "course_run": course_run.resource_link,
+                "order": None,
+                "user": "panoramix",
+                "is_active": is_active,
+                "state": "set",
+            },
+        )
+
     def test_api_enrollment_delete_anonymous(self):
         """Anonymous users should not be able to delete an enrollment."""
         enrollment = factories.EnrollmentFactory()

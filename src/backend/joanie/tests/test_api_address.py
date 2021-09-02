@@ -2,6 +2,7 @@
 Test suite for addresses API
 """
 import json
+import uuid
 
 import arrow
 
@@ -366,6 +367,47 @@ class AddressAPITestCase(BaseAPITestCase):
         self.assertEqual(address.title, payload["title"])
         self.assertEqual(address.owner, owner)
         self.assertEqual(address.city, payload["city"])
+
+    def test_api_address_create_update_id_field_is_read_only(self):
+        """
+        When user creates/updates an address,
+        it should not be allowed to set the "id" field
+        """
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+        address = factories.AddressFactory.build()
+        # - Add an id field to the request body
+        payload = get_payload(address)
+        payload["id"] = uuid.uuid4()
+
+        response = self.client.post(
+            "/api/addresses/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+            data=payload,
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 201)
+
+        # new address has been successfully created but with a generated uid
+        address = models.Address.objects.get()
+        self.assertEqual(address.title, payload["title"])
+        self.assertNotEqual(address.uid, payload["id"])
+
+        payload["id"] = uuid.uuid4()
+        payload["title"] = "Work"
+
+        response = self.client.put(
+            f"/api/addresses/{address.uid}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+            data=payload,
+            content_type="application/json",
+        )
+
+        # address has been successfully updated but its uid not
+        address = models.Address.objects.get()
+        self.assertEqual(address.title, "Work")
+        self.assertNotEqual(address.uid, payload["id"])
 
     def test_api_address_delete_without_authorization(self):
         """Delete address is not allowed without authorization"""
