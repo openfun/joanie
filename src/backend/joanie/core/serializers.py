@@ -13,11 +13,12 @@ class CertificationDefinitionSerializer(serializers.ModelSerializer):
     Serialize information about a certificate definition
     """
 
-    description = serializers.CharField(allow_blank=True, allow_null=True)
+    description = serializers.CharField(read_only=True)
 
     class Meta:
         model = models.CertificateDefinition
         fields = ["description", "name", "title"]
+        read_only_fields = ["description", "name", "title"]
 
 
 class OrganizationSerializer(serializers.ModelSerializer):
@@ -28,6 +29,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Organization
         fields = ["code", "title"]
+        read_only_fields = ["code", "title"]
 
 
 class TargetCourseSerializer(serializers.ModelSerializer):
@@ -42,6 +44,13 @@ class TargetCourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Course
         fields = [
+            "code",
+            "course_runs",
+            "organization",
+            "position",
+            "title",
+        ]
+        read_only_fields = [
             "code",
             "course_runs",
             "organization",
@@ -80,22 +89,33 @@ class ProductSerializer(serializers.ModelSerializer):
         - order if user is authenticated
     """
 
-    id = serializers.CharField(source="uid", read_only=True)
+    id = serializers.CharField(read_only=True, source="uid")
     certificate = CertificationDefinitionSerializer(
         read_only=True, source="certificate_definition"
     )
-    currency = serializers.SerializerMethodField()
+    currency = serializers.SerializerMethodField(read_only=True)
     price = serializers.DecimalField(
-        max_digits=9,
-        decimal_places=2,
         coerce_to_string=False,
+        decimal_places=2,
+        max_digits=9,
         min_value=0,
+        read_only=True,
     )
-    target_courses = serializers.SerializerMethodField()
+    target_courses = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = models.Product
         fields = [
+            "call_to_action",
+            "certificate",
+            "currency",
+            "id",
+            "price",
+            "target_courses",
+            "title",
+            "type",
+        ]
+        read_only_fields = [
             "call_to_action",
             "certificate",
             "currency",
@@ -137,16 +157,33 @@ class CourseRunEnrollmentSerializer(serializers.ModelSerializer):
     """
 
     id = serializers.CharField(source="uid", read_only=True, required=False)
-    resource_link = serializers.CharField(source="course_run.resource_link")
-    title = serializers.CharField(source="course_run.title")
-    start = serializers.DateTimeField(source="course_run.start")
-    end = serializers.DateTimeField(source="course_run.end")
-    enrollment_start = serializers.DateTimeField(source="course_run.enrollment_start")
-    enrollment_end = serializers.DateTimeField(source="course_run.enrollment_end")
+    resource_link = serializers.CharField(
+        read_only=True, source="course_run.resource_link"
+    )
+    title = serializers.CharField(read_only=True, source="course_run.title")
+    start = serializers.DateTimeField(read_only=True, source="course_run.start")
+    end = serializers.DateTimeField(read_only=True, source="course_run.end")
+    enrollment_start = serializers.DateTimeField(
+        read_only=True, source="course_run.enrollment_start"
+    )
+    enrollment_end = serializers.DateTimeField(
+        read_only=True, source="course_run.enrollment_end"
+    )
 
     class Meta:
         model = models.Enrollment
         fields = [
+            "id",
+            "is_active",
+            "resource_link",
+            "title",
+            "start",
+            "end",
+            "enrollment_start",
+            "enrollment_end",
+            "state",
+        ]
+        read_only_fields = [
             "id",
             "is_active",
             "resource_link",
@@ -164,11 +201,11 @@ class OrderLiteSerializer(serializers.ModelSerializer):
     Minimal Order model serializer
     """
 
-    id = serializers.CharField(source="uid", read_only=True)
+    id = serializers.CharField(read_only=True, source="uid")
     price = serializers.DecimalField(
-        max_digits=9,
-        decimal_places=2,
         coerce_to_string=False,
+        decimal_places=2,
+        max_digits=9,
         min_value=0,
         read_only=True,
     )
@@ -179,7 +216,22 @@ class OrderLiteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Order
-        fields = ["id", "created_on", "price", "enrollments", "product", "state"]
+        fields = [
+            "id",
+            "created_on",
+            "price",
+            "enrollments",
+            "product",
+            "state",
+        ]
+        read_only_fields = [
+            "id",
+            "created_on",
+            "price",
+            "enrollments",
+            "product",
+            "state",
+        ]
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -188,11 +240,17 @@ class CourseSerializer(serializers.ModelSerializer):
     """
 
     organization = OrganizationSerializer(read_only=True)
-    products = ProductSerializer(read_only=True, many=True)
+    products = ProductSerializer(many=True, read_only=True)
 
     class Meta:
         model = models.Course
         fields = [
+            "code",
+            "organization",
+            "title",
+            "products",
+        ]
+        read_only_fields = [
             "code",
             "organization",
             "title",
@@ -262,6 +320,15 @@ class CourseRunSerializer(serializers.ModelSerializer):
             "start",
             "title",
         ]
+        read_only_fields = [
+            "end",
+            "enrollment_end",
+            "enrollment_start",
+            "id",
+            "resource_link",
+            "start",
+            "title",
+        ]
 
 
 class EnrollmentSerializer(serializers.ModelSerializer):
@@ -270,7 +337,7 @@ class EnrollmentSerializer(serializers.ModelSerializer):
     """
 
     id = serializers.CharField(source="uid", read_only=True, required=False)
-    user = serializers.CharField(source="user.username", required=False)
+    user = serializers.CharField(source="user.username", read_only=True, required=False)
     course_run = serializers.SlugRelatedField(
         queryset=models.CourseRun.objects.all(), slug_field="resource_link"
     )
@@ -281,7 +348,7 @@ class EnrollmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Enrollment
         fields = ["id", "user", "course_run", "order", "is_active", "state"]
-        read_only_fields = ["state"]
+        read_only_fields = ["id", "user", "state"]
 
     def update(self, instance, validated_data):
         """
@@ -306,12 +373,12 @@ class OrderSerializer(serializers.ModelSerializer):
         queryset=models.Course.objects.all(), slug_field="code"
     )
     price = serializers.DecimalField(
-        max_digits=9,
-        decimal_places=2,
         coerce_to_string=False,
+        decimal_places=2,
+        max_digits=9,
         min_value=0,
-        required=False,
         read_only=True,
+        required=False,
     )
     product = serializers.SlugRelatedField(
         queryset=models.Product.objects.all(), slug_field="uid"
@@ -336,7 +403,12 @@ class OrderSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "created_on",
+            "enrollments",
+            "id",
+            "owner",
+            "price",
             "state",
+            "target_courses",
         ]
 
     @staticmethod
@@ -360,7 +432,7 @@ class AddressSerializer(serializers.ModelSerializer):
     Address model serializer
     """
 
-    id = serializers.CharField(source="uid", required=False)
+    id = serializers.CharField(source="uid", read_only=True, required=False)
 
     class Meta:
         model = models.Address
@@ -373,4 +445,7 @@ class AddressSerializer(serializers.ModelSerializer):
             "is_main",
             "postcode",
             "title",
+        ]
+        read_only_fields = [
+            "id",
         ]
