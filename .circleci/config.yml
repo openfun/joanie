@@ -18,7 +18,7 @@ jobs:
   # Check that the git history is clean and complies with our expectations
   lint-git:
     docker:
-      - image: circleci/python:3.8-buster
+      - image: circleci/python:3.8-bullseye
     working_directory: ~/joanie
     steps:
       - checkout
@@ -93,7 +93,7 @@ jobs:
   # Build backend development environment
   build-back:
     docker:
-      - image: circleci/python:3.8-buster
+      - image: circleci/python:3.8-bullseye
     working_directory: ~/joanie
     steps:
       - checkout
@@ -111,7 +111,7 @@ jobs:
 
   lint-back:
     docker:
-      - image: circleci/python:3.8-buster
+      - image: circleci/python:3.8-bullseye
     working_directory: ~/joanie/src/backend
     steps:
       - checkout:
@@ -140,7 +140,7 @@ jobs:
 
   test-back:
     docker:
-      - image: circleci/python:3.8-buster
+      - image: circleci/python:3.8-bullseye
         environment:
           DJANGO_SETTINGS_MODULE: joanie.settings
           DJANGO_CONFIGURATION: Test
@@ -188,7 +188,7 @@ jobs:
   # ---- Packaging jobs ----
   package-back:
     docker:
-      - image: circleci/python:3.8-buster
+      - image: circleci/python:3.8-bullseye
     working_directory: ~/joanie/src/backend
     steps:
       - checkout:
