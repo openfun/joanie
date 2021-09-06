@@ -179,7 +179,7 @@ class CourseApiTest(BaseAPITestCase):
 
         # Check that nothing was modified
         self.assertEqual(models.Course.objects.count(), 1)
-        self.assertTrue(models.Course.objects.filter(code="initial_code").exists())
+        self.assertTrue(models.Course.objects.filter(code="INITIAL_CODE").exists())
 
     def test_api_course_update_detail_authenticated(self):
         """Authenticated users should be allowed to retrieve a course."""
@@ -218,4 +218,4 @@ class CourseApiTest(BaseAPITestCase):
 
         # Check that nothing was modified
         self.assertEqual(models.Course.objects.count(), 1)
-        self.assertTrue(models.Course.objects.filter(code="initial_code").exists())
+        self.assertTrue(models.Course.objects.filter(code="INITIAL_CODE").exists())

@@ -28,6 +28,7 @@ and this project adheres to
 
 ### Changed
 
+- Normalize course codes and ensure their uniqueness
 - Refactor models to allow enrollment without order
 
 [unreleased]: https://github.com/openfun/joanie
