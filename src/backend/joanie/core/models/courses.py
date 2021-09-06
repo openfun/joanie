@@ -2,12 +2,16 @@
 Declare and configure the models for the courses part
 """
 from django.db import models
+from django.utils.functional import lazy
 from django.utils.translation import gettext_lazy as _
 
 from parler import models as parler_models
 from url_normalize import url_normalize
 
 from joanie.core import utils
+from joanie.core.enums import ALL_LANGUAGES
+from joanie.core.fields.multiselect import MultiSelectField
+
 
 class Organization(parler_models.TranslatableModel):
     """
@@ -112,6 +116,15 @@ class CourseRun(parler_models.TranslatableModel):
     # enrollment allowed period
     enrollment_start = models.DateTimeField(_("enrollment date"), blank=True, null=True)
     enrollment_end = models.DateTimeField(_("enrollment end"), blank=True, null=True)
+    languages = MultiSelectField(
+        max_choices=50,
+        max_length=255,  # MySQL does not allow max_length > 255
+        # Language choices are made lazy so that we can override them in our tests.
+        # When set directly, they are evaluated too early and can't be changed with the
+        # "override_settings" utility.
+        choices=lazy(lambda: ALL_LANGUAGES, tuple)(),
+        help_text=_("The list of languages in which the course content is available."),
+    )
 
     class Meta:
         db_table = "joanie_course_run"

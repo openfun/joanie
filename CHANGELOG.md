@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Add a "languages" field to the course run model
 - Add stub dependencies required by mypy
 - Add .gitlint configuration file
 - Use marion and howard to generate certificate for an order
