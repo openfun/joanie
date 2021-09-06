@@ -21,6 +21,16 @@ class CourseRunModelsTestCase(TestCase):
             course_run.resource_link, "https://www.example.com/Capitalized-Path"
         )
 
+    def test_models_course_run_dates_not_required(self):
+        """
+        Course run dates are not required.
+        """
+        course_run = factories.CourseRunFactory(
+            start=None, end=None, enrollment_start=None, enrollment_end=None
+        )
+        for field in ["start", "end", "enrollment_start", "enrollment_end"]:
+            self.assertIsNone(getattr(course_run, field))
+
     def test_models_course_run_unique(self):
         """The resource link field should be unique."""
         course_run = factories.CourseRunFactory()
