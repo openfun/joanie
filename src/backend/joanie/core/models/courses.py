@@ -102,9 +102,7 @@ class CourseRun(parler_models.TranslatableModel):
     )
 
     # link to lms resource
-    resource_link = models.CharField(
-        _("resource link"), max_length=200, blank=True, null=True
-    )
+    resource_link = models.CharField(_("resource link"), max_length=200, unique=True)
     translations = parler_models.TranslatedFields(
         title=models.CharField(_("title"), max_length=255)
     )

@@ -28,6 +28,7 @@ and this project adheres to
 
 ### Changed
 
+- Make the "resource_link" field unique and required for course runs
 - Normalize course codes and ensure their uniqueness
 - Refactor models to allow enrollment without order
 
