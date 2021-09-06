@@ -1,4 +1,5 @@
 """Tests for the Enrollment API."""
+import itertools
 import json
 import random
 import uuid
@@ -605,26 +606,28 @@ class EnrollmentApiTest(BaseAPITestCase):
         enrollment.
         """
         resource_link = (
-            "http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course"
+            "http://openedx.test/courses/course-v1:edx+{id:05d}+Demo_Course/course"
         )
         # Try setting state starting from any state and going to any state
-        for old_state, _name in enums.ENROLLMENT_STATE_CHOICES:
-            for new_state, _new_name in enums.ENROLLMENT_STATE_CHOICES:
-                enrollment = factories.EnrollmentFactory(
-                    course_run__resource_link=resource_link, state=old_state
-                )
+        for i, (old_state, new_state) in enumerate(
+            itertools.product(enums.ENROLLMENT_STATE_CHOICES, repeat=2)
+        ):
+            enrollment = factories.EnrollmentFactory(
+                course_run__resource_link=resource_link.format(id=i),
+                state=old_state[0],
+            )
 
-                response = self.client.patch(
-                    "/api/enrollments/{!s}/".format(enrollment.uid),
-                    data={"state": new_state},
-                    content_type="application/json",
-                )
-                self.assertEqual(response.status_code, 401)
-                content = json.loads(response.content)
+            response = self.client.patch(
+                "/api/enrollments/{!s}/".format(enrollment.uid),
+                data={"state": new_state[0]},
+                content_type="application/json",
+            )
+            self.assertEqual(response.status_code, 401)
+            content = json.loads(response.content)
 
-                self.assertEqual(
-                    content, {"detail": "Authentication credentials were not provided."}
-                )
+            self.assertEqual(
+                content, {"detail": "Authentication credentials were not provided."}
+            )
 
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
     def test_api_enrollment_update_detail_state_not_owner(self, _mock_set):
@@ -636,27 +639,30 @@ class EnrollmentApiTest(BaseAPITestCase):
             is_staff=random.choice([True, False]),
             is_superuser=random.choice([True, False]),
         )
+        token = self.get_user_token(user.username)
         resource_link = (
-            "http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course"
+            "http://openedx.test/courses/course-v1:edx+{id:05d}+Demo_Course/course"
         )
+
         # Try setting "is_active" starting from any value of the field
-        for is_active_old in [True, False]:
-            for is_active_new in [True, False]:
-                enrollment = factories.EnrollmentFactory(
-                    course_run__resource_link=resource_link, is_active=is_active_old
-                )
-                token = self.get_user_token(user.username)
+        for i, (is_active_old, is_active_new) in enumerate(
+            itertools.product([True, False], repeat=2)
+        ):
+            enrollment = factories.EnrollmentFactory(
+                course_run__resource_link=resource_link.format(id=i),
+                is_active=is_active_old,
+            )
 
-                response = self.client.patch(
-                    "/api/enrollments/{!s}/".format(enrollment.uid),
-                    data={"is_active": is_active_new},
-                    content_type="application/json",
-                    HTTP_AUTHORIZATION=f"Bearer {token}",
-                )
-                self.assertEqual(response.status_code, 404)
-                content = json.loads(response.content)
+            response = self.client.patch(
+                "/api/enrollments/{!s}/".format(enrollment.uid),
+                data={"is_active": is_active_new},
+                content_type="application/json",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+            self.assertEqual(response.status_code, 404)
+            content = json.loads(response.content)
 
-                self.assertEqual(content, {"detail": "Not found."})
+            self.assertEqual(content, {"detail": "Not found."})
 
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment", return_value=True)
     def test_api_enrollment_update_detail_is_active_owner(self, _mock_set):
@@ -664,36 +670,38 @@ class EnrollmentApiTest(BaseAPITestCase):
         The user should be able to update the "is_active" field on his/her enrollments.
         """
         resource_link = (
-            "http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course"
+            "http://openedx.test/courses/course-v1:edx+{id:05d}+Demo_Course/course"
         )
         # Try setting "is_active" starting from any value of the field
-        for is_active_old in [True, False]:
-            for is_active_new in [True, False]:
-                enrollment = factories.EnrollmentFactory(
-                    course_run__resource_link=resource_link, is_active=is_active_old
-                )
-                token = self.get_user_token(enrollment.user.username)
+        for i, (is_active_old, is_active_new) in enumerate(
+            itertools.product([True, False], repeat=2)
+        ):
+            enrollment = factories.EnrollmentFactory(
+                course_run__resource_link=resource_link.format(id=i),
+                is_active=is_active_old,
+            )
+            token = self.get_user_token(enrollment.user.username)
 
-                response = self.client.patch(
-                    "/api/enrollments/{!s}/".format(enrollment.uid),
-                    data={"is_active": is_active_new},
-                    content_type="application/json",
-                    HTTP_AUTHORIZATION=f"Bearer {token}",
-                )
-                self.assertEqual(response.status_code, 200)
-                content = json.loads(response.content)
+            response = self.client.patch(
+                "/api/enrollments/{!s}/".format(enrollment.uid),
+                data={"is_active": is_active_new},
+                content_type="application/json",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+            self.assertEqual(response.status_code, 200)
+            content = json.loads(response.content)
 
-                self.assertEqual(
-                    content,
-                    {
-                        "id": str(enrollment.uid),
-                        "user": enrollment.user.username,
-                        "course_run": enrollment.course_run.resource_link,
-                        "order": None,
-                        "is_active": is_active_new,
-                        "state": "set",
-                    },
-                )
+            self.assertEqual(
+                content,
+                {
+                    "id": str(enrollment.uid),
+                    "user": enrollment.user.username,
+                    "course_run": enrollment.course_run.resource_link,
+                    "order": None,
+                    "is_active": is_active_new,
+                    "state": "set",
+                },
+            )
 
     # pylint: disable=too-many-locals
     def _check_api_enrollment_update_detail(self, enrollment, user, http_code):
