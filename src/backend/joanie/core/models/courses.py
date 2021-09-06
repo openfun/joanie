@@ -7,6 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from parler import models as parler_models
 from url_normalize import url_normalize
 
+from joanie.core import utils
 
 class Organization(parler_models.TranslatableModel):
     """
@@ -46,9 +47,7 @@ class Course(parler_models.TranslatableModel):
     A new course created will initialize a cms page.
     """
 
-    code = models.CharField(
-        _("reference to cms page"), max_length=100, unique=True, db_index=True
-    )
+    code = models.CharField(_("code"), max_length=100, unique=True, db_index=True)
     translations = parler_models.TranslatedFields(
         title=models.CharField(_("title"), max_length=255)
     )
@@ -72,6 +71,21 @@ class Course(parler_models.TranslatableModel):
 
     def __str__(self):
         return self.safe_translation_getter("title", any_language=True)
+
+    def clean(self):
+        """
+        We normalize the code with slugify for better uniqueness
+        """
+        # Normalize the code by slugifying and capitalizing it
+        self.code = utils.normalize_code(self.code)
+        return super().clean()
+
+    def save(self, *args, **kwargs):
+        """
+        Enforce validation each time an instance is saved
+        """
+        self.full_clean()
+        super().save(*args, **kwargs)
 
 
 class CourseRun(parler_models.TranslatableModel):
