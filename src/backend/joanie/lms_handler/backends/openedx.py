@@ -9,10 +9,25 @@ import requests
 from requests.auth import AuthBase
 
 from joanie.core.exceptions import EnrollmentError
+from joanie.lms_handler.serializers import SyncCourseRunSerializer
 
 from .base import BaseLMSBackend
 
 logger = logging.getLogger(__name__)
+
+
+def split_course_key(key):
+    """Split an OpenEdX course key by organization, course and course run codes.
+
+    We first try splitting the key as a version 1 key (course-v1:org+course+run)
+    and fallback the old version (org/course/run).
+    """
+    if key.startswith("course-v1:"):
+        organization, course, run = key[10:].split("+")
+    else:
+        organization, course, run = key.split("/")
+
+    return organization, course, run
 
 
 class OpenEdXTokenAuth(AuthBase):
@@ -95,3 +110,21 @@ class OpenEdXLMSBackend(BaseLMSBackend):
 
         logger.error(response.content)
         raise EnrollmentError()
+
+    def extract_course_number(self, data):
+        """Extract the LMS course number from data dictionary."""
+        course_id = self.extract_course_id(data.get("resource_link"))
+        return split_course_key(course_id)[1]
+
+    def clean_course_run_data(self, data):
+        """Remove course run's protected fields to the data dictionnary."""
+        return {
+            key: value
+            for (key, value) in data.items()
+            if key not in self.configuration.get("COURSE_RUN_SYNC_NO_UPDATE_FIELDS", [])
+        }
+
+    @staticmethod
+    def get_course_run_serializer(data, partial=False):
+        """Prepare data and return a bound serializer."""
+        return SyncCourseRunSerializer(data=data, partial=partial)

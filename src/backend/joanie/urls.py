@@ -21,6 +21,7 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from joanie.core import api
+from joanie.lms_handler.urls import urlpatterns as lms_urlpatterns
 
 router = DefaultRouter()
 router.register("courses", api.CourseViewSet, basename="courses")
@@ -32,7 +33,7 @@ urlpatterns = (
         path("admin/", admin.site.urls),
         path("api/addresses/", api.AddressView.as_view()),
         path("api/addresses/<str:address_uid>/", api.AddressView.as_view()),
-        path("api/", include(router.urls)),
+        path("api/", include([*router.urls, *lms_urlpatterns])),
         path("api/documents/", include("marion.urls")),
     ]
     + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

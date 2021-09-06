@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Add a web hook endpoint to synchronize course runs from a LMS
 - Add a "languages" field to the course run model
 - Add stub dependencies required by mypy
 - Add .gitlint configuration file
