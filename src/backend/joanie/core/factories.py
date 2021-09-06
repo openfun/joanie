@@ -89,6 +89,19 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
     resource_link = factory.Faker("uri")
     title = factory.Sequence(lambda n: "Course run %s" % n)
 
+    # pylint: disable=no-self-use
+    @factory.lazy_attribute
+    def languages(self):
+        """
+        Compute a random set of languages from the complete list of Django supported languages.
+        """
+        return [
+            language[0]
+            for language in random.sample(
+                enums.ALL_LANGUAGES, random.randint(1, 5)  # nosec
+            )
+        ]
+
     @factory.lazy_attribute
     def start(self):  # pylint: disable=no-self-use
         """
