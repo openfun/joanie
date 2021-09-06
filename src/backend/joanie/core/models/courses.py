@@ -107,11 +107,11 @@ class CourseRun(parler_models.TranslatableModel):
         title=models.CharField(_("title"), max_length=255)
     )
     # availability period
-    start = models.DateTimeField(_("course start"))
-    end = models.DateTimeField(_("course end"))
+    start = models.DateTimeField(_("course start"), blank=True, null=True)
+    end = models.DateTimeField(_("course end"), blank=True, null=True)
     # enrollment allowed period
-    enrollment_start = models.DateTimeField(_("enrollment date"), null=True)
-    enrollment_end = models.DateTimeField(_("enrollment end"), null=True)
+    enrollment_start = models.DateTimeField(_("enrollment date"), blank=True, null=True)
+    enrollment_end = models.DateTimeField(_("enrollment end"), blank=True, null=True)
 
     class Meta:
         db_table = "joanie_course_run"
