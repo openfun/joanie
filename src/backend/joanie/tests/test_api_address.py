@@ -9,19 +9,26 @@ from joanie.core import factories, models
 
 from .base import BaseAPITestCase
 
-ADDRESS_DATA = {
-    "name": "Home",
-    "address": "10 rue Stine",
-    "postcode": "75001",
-    "city": "Paris",
-    "country": "FR",
-}
+
+def get_payload(address):
+    """
+    According to an Address object, return a valid payload required by
+    create/update address api routes.
+    """
+    return {
+        "address": address.address,
+        "city": address.city,
+        "country": str(address.country),
+        "fullname": address.fullname,
+        "title": address.title,
+        "postcode": address.postcode,
+    }
 
 
 class AddressAPITestCase(BaseAPITestCase):
     """Manage user address API test case"""
 
-    def test_get_addresses_without_authorization(self):
+    def test_api_address_get_addresses_without_authorization(self):
         """Get user addresses not allowed without HTTP AUTH"""
         # Try to get addresses without Authorization
         response = self.client.get("/api/addresses/")
@@ -31,7 +38,7 @@ class AddressAPITestCase(BaseAPITestCase):
             content, {"detail": "Authentication credentials were not provided."}
         )
 
-    def test_get_addresses_with_bad_token(self):
+    def test_api_address_get_addresses_with_bad_token(self):
         """Get user addresses not allowed with bad user token"""
         # Try to get addresses with bad token
         response = self.client.get(
@@ -42,7 +49,7 @@ class AddressAPITestCase(BaseAPITestCase):
         content = json.loads(response.content)
         self.assertEqual(content["code"], "token_not_valid")
 
-    def test_get_addresses_with_expired_token(self):
+    def test_api_address_get_addresses_with_expired_token(self):
         """Get user addresses not allowed with user token expired"""
         # Try to get addresses with expired token
         token = self.get_user_token(
@@ -58,7 +65,7 @@ class AddressAPITestCase(BaseAPITestCase):
         content = json.loads(response.content)
         self.assertEqual(content["code"], "token_not_valid")
 
-    def test_get_addresses_for_new_user(self):
+    def test_api_address_get_addresses_for_new_user(self):
         """If we try to get addresses for a user not in db, we create a new user first"""
         username = "panoramix"
         token = self.get_user_token(username)
@@ -70,12 +77,12 @@ class AddressAPITestCase(BaseAPITestCase):
         self.assertEqual(len(addresses_data), 0)
         self.assertEqual(models.User.objects.get(username=username).username, username)
 
-    def test_get_addresses(self):
+    def test_api_address_get_addresses(self):
         """Get addresses for a user in db with two addresses linked to him"""
         user = factories.UserFactory()
         token = self.get_user_token(user.username)
-        address1 = factories.AddressFactory.create(owner=user, name="Office")
-        address2 = factories.AddressFactory.create(owner=user, name="Home")
+        address1 = factories.AddressFactory.create(owner=user, title="Office")
+        address2 = factories.AddressFactory.create(owner=user, title="Home")
         response = self.client.get(
             "/api/addresses/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
@@ -83,19 +90,21 @@ class AddressAPITestCase(BaseAPITestCase):
 
         addresses_data = response.data
         self.assertEqual(len(addresses_data), 2)
-        self.assertEqual(addresses_data[0]["name"], "Office")
+        self.assertEqual(addresses_data[0]["title"], "Office")
         self.assertEqual(addresses_data[0]["fullname"], address1.fullname)
         self.assertEqual(addresses_data[0]["id"], str(address1.uid))
-        self.assertEqual(addresses_data[1]["name"], "Home")
+        self.assertEqual(addresses_data[1]["title"], "Home")
         self.assertEqual(addresses_data[1]["fullname"], address2.fullname)
         self.assertEqual(addresses_data[1]["id"], str(address2.uid))
 
-    def test_create_address_without_authorization(self):
+    def test_api_address_create_without_authorization(self):
         """Create/update user addresses not allowed without HTTP AUTH"""
         # Try to create address without Authorization
+        address = factories.AddressFactory.build()
+
         response = self.client.post(
             "/api/addresses/",
-            data=ADDRESS_DATA,
+            data=get_payload(address),
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 401)
@@ -104,53 +113,61 @@ class AddressAPITestCase(BaseAPITestCase):
             content, {"detail": "Authentication credentials were not provided."}
         )
 
-    def test_update_address_without_authorization(self):
+    def test_api_address_update_without_authorization(self):
         """Update user addresses not allowed without HTTP AUTH"""
         # Try to update address without Authorization
         user = factories.UserFactory()
-        address = factories.AddressFactory.create(owner=user)
+        address = factories.AddressFactory(owner=user)
+        new_address = factories.AddressFactory.build()
+
         response = self.client.put(
             f"/api/addresses/{address.uid}",
-            data=ADDRESS_DATA,
+            data=get_payload(new_address),
             follow=True,
             content_type="application/json",
         )
-        self.assertEqual(response.status_code, 401)
         content = json.loads(response.content)
+
+        self.assertEqual(response.status_code, 401)
         self.assertEqual(
             content, {"detail": "Authentication credentials were not provided."}
         )
 
-    def test_create_address_with_bad_token(self):
+    def test_api_address_create_with_bad_token(self):
         """Create addresses not allowed with bad user token"""
         # Try to create addresses with bad token
+        address = factories.AddressFactory.build()
+
         response = self.client.post(
             "/api/addresses/",
             HTTP_AUTHORIZATION="Bearer nawak",
-            data=ADDRESS_DATA,
+            data=get_payload(address),
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 401)
         content = json.loads(response.content)
         self.assertEqual(content["code"], "token_not_valid")
 
-    def test_update_address_with_bad_token(self):
+    def test_api_address_update_with_bad_token(self):
         """Update addresses not allowed with bad user token"""
         # Try to update addresses with bad token
         user = factories.UserFactory()
         address = factories.AddressFactory.create(owner=user)
+        new_address = factories.AddressFactory.build()
+
         response = self.client.put(
             f"/api/addresses/{address.uid}",
             HTTP_AUTHORIZATION="Bearer nawak",
-            data=ADDRESS_DATA,
+            data=get_payload(new_address),
             follow=True,
             content_type="application/json",
         )
-        self.assertEqual(response.status_code, 401)
         content = json.loads(response.content)
+
+        self.assertEqual(response.status_code, 401)
         self.assertEqual(content["code"], "token_not_valid")
 
-    def test_create_address_with_expired_token(self):
+    def test_api_address_create_with_expired_token(self):
         """Create user addresses not allowed with user token expired"""
         # Try to create addresses with expired token
         user = factories.UserFactory()
@@ -158,17 +175,20 @@ class AddressAPITestCase(BaseAPITestCase):
             user.username,
             expires_at=arrow.utcnow().shift(days=-1).datetime,
         )
+        address = factories.AddressFactory.build()
+
         response = self.client.post(
             "/api/addresses/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
-            data=ADDRESS_DATA,
+            data=get_payload(address),
             content_type="application/json",
         )
-        self.assertEqual(response.status_code, 401)
         content = json.loads(response.content)
+
+        self.assertEqual(response.status_code, 401)
         self.assertEqual(content["code"], "token_not_valid")
 
-    def test_update_address_with_expired_token(self):
+    def test_api_address_update_with_expired_token(self):
         """Update user addresses not allowed with user token expired"""
         # Try to update addresses with expired token
         user = factories.UserFactory()
@@ -177,111 +197,127 @@ class AddressAPITestCase(BaseAPITestCase):
             expires_at=arrow.utcnow().shift(days=-1).datetime,
         )
         address = factories.AddressFactory.create(owner=user)
+        new_address = factories.AddressFactory.build()
+
         response = self.client.put(
             f"/api/addresses/{address.uid}",
             HTTP_AUTHORIZATION=f"Bearer {token}",
-            data=ADDRESS_DATA,
+            data=get_payload(new_address),
             follow=True,
             content_type="application/json",
         )
-        self.assertEqual(response.status_code, 401)
         content = json.loads(response.content)
+
+        self.assertEqual(response.status_code, 401)
         self.assertEqual(content["code"], "token_not_valid")
 
-    def test_create_address_with_bad_data(self):
+    def test_api_address_create_with_bad_payload(self):
         """Create user addresses with valid token but bad data"""
         username = "panoramix"
         token = self.get_user_token(username)
-        bad_data = ADDRESS_DATA.copy()
-        bad_data["country"] = "FRANCE"
+        address = factories.AddressFactory.build()
+        bad_payload = get_payload(address).copy()
+        bad_payload["country"] = "FRANCE"
+
         response = self.client.post(
             "/api/addresses/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
-            data=bad_data,
+            data=bad_payload,
         )
-        self.assertEqual(response.status_code, 400)
         content = json.loads(response.content)
+
+        self.assertEqual(response.status_code, 400)
         self.assertEqual(content, {"country": ['"FRANCE" is not a valid choice.']})
         self.assertFalse(models.User.objects.exists())
 
-        del bad_data["name"]
-        bad_data["country"] = "FR"
+        del bad_payload["title"]
+        bad_payload["country"] = "FR"
         response = self.client.post(
             "/api/addresses/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
-            data=bad_data,
+            data=bad_payload,
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 400)
         content = json.loads(response.content)
-        self.assertEqual(content, {"name": ["This field is required."]})
+        self.assertEqual(content, {"title": ["This field is required."]})
 
-    def test_update_address_with_bad_data(self):
+    def test_api_address_update_with_bad_payload(self):
         """Update user addresses with valid token but bad data"""
         user = factories.UserFactory()
         token = self.get_user_token(user.username)
         address = factories.AddressFactory.create(owner=user)
+        new_address = factories.AddressFactory.build()
+        payload = get_payload(new_address)
 
         # check bad request returned if address_id is missing
         response = self.client.put(
             "/api/addresses/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
-            data=ADDRESS_DATA,
+            data=payload,
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 400)
 
-        bad_data = ADDRESS_DATA.copy()
-        bad_data["country"] = "FRANCE"
+        bad_payload = payload.copy()
+        bad_payload["country"] = "FRANCE"
+
         response = self.client.put(
             f"/api/addresses/{address.uid}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
-            data=bad_data,
+            data=bad_payload,
             content_type="application/json",
         )
-        self.assertEqual(response.status_code, 400)
         content = json.loads(response.content)
+
+        self.assertEqual(response.status_code, 400)
         self.assertEqual(
             content, {"errors": {"country": ['"FRANCE" is not a valid choice.']}}
         )
 
-        del bad_data["name"]
-        bad_data["country"] = "FR"
+        del bad_payload["title"]
+        bad_payload["country"] = "FR"
         response = self.client.put(
             f"/api/addresses/{address.uid}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
-            data=bad_data,
+            data=bad_payload,
             content_type="application/json",
         )
-        self.assertEqual(response.status_code, 400)
         content = json.loads(response.content)
-        self.assertEqual(content, {"errors": {"name": ["This field is required."]}})
 
-    def test_update_address_with_bad_user(self):
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(content, {"errors": {"title": ["This field is required."]}})
+
+    def test_api_address_update_with_bad_user(self):
         """User token has to match with owner of address to update"""
         # create an address for a user
         address = factories.AddressFactory()
+        new_address = factories.AddressFactory.build()
         # now use a token for an other user to update address
         token = self.get_user_token("panoramix")
         response = self.client.put(
             f"/api/addresses/{address.uid}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
-            data=ADDRESS_DATA,
+            data=get_payload(new_address),
             content_type="application/json",
         )
+
         self.assertEqual(response.status_code, 400)
 
-    def test_create_update_address(self):
+    def test_api_address_create_update(self):
         """Create/update user addresses with valid token and data"""
         username = "panoramix"
         token = self.get_user_token(username)
+        address = factories.AddressFactory.build()
+        payload = get_payload(address)
 
         response = self.client.post(
             "/api/addresses/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
-            data=ADDRESS_DATA,
+            data=payload,
             content_type="application/json",
         )
+
         self.assertEqual(response.status_code, 201)
 
         # panoramix was a unknown user, so a new user was created
@@ -291,34 +327,33 @@ class AddressAPITestCase(BaseAPITestCase):
         # new address was created for user panoramix
         address = models.Address.objects.get()
         self.assertEqual(address.owner, owner)
-        self.assertEqual(address.city, "Paris")
+        self.assertEqual(address.city, payload["city"])
 
         # finally update address
-        data = ADDRESS_DATA.copy()
-        data["name"] = "Office"
+        payload["title"] = "Office"
         response = self.client.put(
             f"/api/addresses/{address.uid}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
-            data=data,
+            data=payload,
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(models.Address.objects.count(), 1)
         address = models.Address.objects.get()
-        self.assertEqual(address.name, "Office")
+        self.assertEqual(address.title, payload["title"])
         self.assertEqual(address.owner, owner)
-        self.assertEqual(address.city, "Paris")
+        self.assertEqual(address.city, payload["city"])
 
-    def test_delete_without_authorization(self):
+    def test_api_address_delete_without_authorization(self):
         """Delete address is not allowed without authorization"""
         user = factories.UserFactory()
-        address = factories.AddressFactory.create(owner=user, name="Office")
+        address = factories.AddressFactory.create(owner=user, title="Office")
         response = self.client.delete(
             f"/api/addresses/{address.uid}/",
         )
         self.assertEqual(response.status_code, 401)
 
-    def test_delete_with_bad_authorization(self):
+    def test_api_address_delete_with_bad_authorization(self):
         """Delete address is not allowed with bad authorization"""
         user = factories.UserFactory()
         address = factories.AddressFactory.create(owner=user)
@@ -328,7 +363,7 @@ class AddressAPITestCase(BaseAPITestCase):
         )
         self.assertEqual(response.status_code, 401)
 
-    def test_delete_with_expired_token(self):
+    def test_api_address_delete_with_expired_token(self):
         """Delete address is not allowed with expired token"""
         user = factories.UserFactory()
         token = self.get_user_token(
@@ -342,7 +377,7 @@ class AddressAPITestCase(BaseAPITestCase):
         )
         self.assertEqual(response.status_code, 401)
 
-    def test_delete_address_with_bad_user(self):
+    def test_api_address_delete_with_bad_user(self):
         """User token has to match with owner of address to delete"""
         # create an address for a user
         address = factories.AddressFactory()
@@ -354,7 +389,7 @@ class AddressAPITestCase(BaseAPITestCase):
         )
         self.assertEqual(response.status_code, 400)
 
-    def test_delete_address(self):
+    def test_api_address_delete(self):
         """Delete address is allowed with valid token"""
         user = factories.UserFactory()
         token = self.get_user_token(user.username)
