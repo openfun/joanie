@@ -260,10 +260,11 @@ class AddressFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.Address
 
-    name = factory.fuzzy.FuzzyChoice(["Home", "Office"])
+    title = factory.fuzzy.FuzzyChoice(["Home", "Office"])
     address = factory.Faker("street_address")
     postcode = factory.Faker("postcode")
     city = factory.Faker("city")
     country = factory.Faker("country_code")
+    fullname = factory.Faker("name")
     owner = factory.SubFactory(UserFactory)
     main = True

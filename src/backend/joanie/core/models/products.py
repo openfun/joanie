@@ -6,7 +6,7 @@ import uuid
 from decimal import Decimal as D
 
 from django.conf import settings
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -243,11 +243,24 @@ class Order(models.Model):
             f"{str(self.uid).split('-', maxsplit=1)[0]}"
         )
         currency = settings.JOANIE_CURRENCY[1]
+
+        # pylint: disable = fixme
+        # TODO: It is currently weird to use the main address to generate the invoice.
+        # Instead, we should use the billing address provided during the payment.
+        try:
+            main_address = self.owner.addresses.get(is_main=True)
+        except ObjectDoesNotExist as error:
+            self.state = enums.ORDER_STATE_FAILED
+            self.save()
+            raise ValueError(
+                _("A billing address is missing, invoice cannot be generated.")
+            ) from error
+
         order = {
             "invoice_id": reference,
             "customer": {
-                "name": self.owner.get_full_name(),
-                "address": self.owner.addresses.get(main=True).get_full_address(),
+                "name": main_address.fullname,
+                "address": main_address.get_full_address(),
             },
             "product": {
                 "name": self.product.title,  # pylint: disable=no-member

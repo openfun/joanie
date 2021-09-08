@@ -83,4 +83,13 @@ class EnrollmentAdmin(admin.ModelAdmin):
 class AddressAdmin(admin.ModelAdmin):
     """Admin class for the Address model"""
 
-    list_display = ("name", "address", "postcode", "city", "country", "owner", "main")
+    list_display = (
+        "title",
+        "fullname",
+        "address",
+        "postcode",
+        "city",
+        "country",
+        "owner",
+        "main",
+    )
