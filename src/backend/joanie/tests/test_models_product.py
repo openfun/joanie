@@ -10,7 +10,7 @@ from django.utils import timezone
 
 from marion.models import DocumentRequest
 
-from joanie.core import factories, models
+from joanie.core import enums, factories, models
 
 
 class ProductModelsTestCase(TestCase):
@@ -62,6 +62,25 @@ class ProductModelsTestCase(TestCase):
         order.refresh_from_db()
         now = timezone.localtime(timezone.now())
         self.assertTrue(order.invoice_ref.startswith(now.strftime("%Y")))
+
+    @override_settings(JOANIE_VAT=19.6)
+    def test_generate_invoice_without_address(self):
+        """
+        Create an invoice for a product order should raise an error if owner
+        does not have a main address.
+        """
+
+        user = factories.UserFactory()
+        course = factories.CourseFactory()
+        product = factories.ProductFactory(courses=[course])
+        order = factories.OrderFactory(product=product, owner=user)
+
+        with self.assertRaises(ValueError):
+            order.generate_invoice()
+
+        order.refresh_from_db()
+        self.assertEqual(order.invoice_ref, "")
+        self.assertEqual(order.state, enums.ORDER_STATE_FAILED)
 
     def test_model_order_generate_certificate(self):
         """Generate a certificate for a product order"""

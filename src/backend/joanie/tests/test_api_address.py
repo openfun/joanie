@@ -84,8 +84,10 @@ class AddressAPITestCase(BaseAPITestCase):
         addresses_data = response.data
         self.assertEqual(len(addresses_data), 2)
         self.assertEqual(addresses_data[0]["name"], "Office")
+        self.assertEqual(addresses_data[0]["fullname"], address1.fullname)
         self.assertEqual(addresses_data[0]["id"], str(address1.uid))
         self.assertEqual(addresses_data[1]["name"], "Home")
+        self.assertEqual(addresses_data[1]["fullname"], address2.fullname)
         self.assertEqual(addresses_data[1]["id"], str(address2.uid))
 
     def test_create_address_without_authorization(self):

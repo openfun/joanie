@@ -126,19 +126,23 @@ class AddressView(generics.ListAPIView):
         Return list of all addresses for a user
 
     POST /api/addresses/ with expected data:
-        - name: str, address name
         - address: str
-        - postcode: str
         - city: str
         - country: str, country code
+        - fullname: str, recipient fullname
+        - main?: bool, if True set address as main
+        - postcode: str
+        - title: str, address title
         Return new address just created
 
     PUT /api/addresses/<address_id>/ with expected data:
-        - name: str, address name
         - address: str
-        - postcode: str
         - city: str
         - country: str, country code
+        - fullname: str, recipient fullname
+        - main?: bool, if True set address as main
+        - postcode: str
+        - title: str, address title
         Return address just updated
 
     DELETE /api/addresses/<address_id>/

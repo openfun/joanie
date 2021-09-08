@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Add fullname field to address model
 - Add a web hook endpoint to synchronize course runs from a LMS
 - Add a "languages" field to the course run model
 - Add stub dependencies required by mypy
@@ -30,6 +31,7 @@ and this project adheres to
 
 ### Changed
 
+- Rename the "name" field to "title" (avoid confusion with new "fullname" field)
 - Pin base Docker image to `python8-slim-bullseye`
 - Make course run dates not required
 - Make the "resource_link" field unique and required for course runs
