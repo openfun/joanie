@@ -30,6 +30,7 @@ and this project adheres to
 
 ### Changed
 
+- Pin base Docker image to `python8-slim-bullseye`
 - Make course run dates not required
 - Make the "resource_link" field unique and required for course runs
 - Normalize course codes and ensure their uniqueness
