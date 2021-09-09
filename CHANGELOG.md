@@ -10,6 +10,8 @@ and this project adheres to
 
 ### Added
 
+- Add unique constraint to owner address field to allow only one main address
+  per user
 - Add fullname field to address model
 - Add a web hook endpoint to synchronize course runs from a LMS
 - Add a "languages" field to the course run model

@@ -46,6 +46,13 @@ class Address(models.Model):
         db_table = "joanie_address"
         verbose_name = _("Address")
         verbose_name_plural = _("Addresses")
+        constraints = [
+            models.UniqueConstraint(
+                condition=models.Q(main=True),
+                fields=["owner"],
+                name="unique_main_address_per_user",
+            )
+        ]
 
     def __str__(self):
         return f"{self.address}, {self.postcode} {self.city}, {self.country}"
