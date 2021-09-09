@@ -25,6 +25,7 @@ def get_payload(address):
     }
 
 
+# pylint: disable=too-many-public-methods
 class AddressAPITestCase(BaseAPITestCase):
     """Manage user address API test case"""
 
@@ -303,6 +304,30 @@ class AddressAPITestCase(BaseAPITestCase):
         )
 
         self.assertEqual(response.status_code, 400)
+
+    def test_api_address_update_to_demote_address(self):
+        """
+        User should not be able to demote its main address
+        """
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+        address = factories.AddressFactory(owner=user, is_main=True)
+
+        payload = get_payload(address)
+        payload["is_main"] = False
+
+        response = self.client.put(
+            f"/api/addresses/{address.uid}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+            content_type="application/json",
+            data=payload,
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            json.loads(response.content),
+            {"__all__": ["Demote a main address is forbidden"]},
+        )
 
     def test_api_address_create_update(self):
         """Create/update user addresses with valid token and data"""
