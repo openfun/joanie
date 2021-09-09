@@ -4,6 +4,7 @@ Declare and configure the models for the customers part
 import uuid
 
 import django.contrib.auth.models as auth_models
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -57,11 +58,26 @@ class Address(models.Model):
     def __str__(self):
         return f"{self.address}, {self.postcode} {self.city}, {self.country}"
 
+    def clean(self):
+        """
+        First if this is the user's first address, we enforce is_main to True.
+        Else if we are promoting an address as main, we demote the existing main address
+        Finally prevent to demote the main address directly.
+        """
+        if not self.owner.addresses.exists():
+            self.is_main = True
+        elif self.is_main is True:
+            self.owner.addresses.filter(is_main=True).update(is_main=False)
+        elif self.pk and self.is_main is False:
+            raise ValidationError(_("Demote a main address is forbidden"))
+
+        return super().clean()
+
     def save(self, *args, **kwargs):
-        # no more one main=True per Owner
-        main_addresses = self.owner.addresses.filter(is_main=True)
-        if self.is_main and main_addresses:
-            main_addresses.update(is_main=False)
+        """
+        Enforce validation each time an instance is saved
+        """
+        self.full_clean()
         super().save(*args, **kwargs)
 
     def get_full_address(self):
