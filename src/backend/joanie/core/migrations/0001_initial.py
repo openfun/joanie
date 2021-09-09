@@ -966,7 +966,7 @@ class Migration(migrations.Migration):
                     "fullname",
                     models.CharField(max_length=255, verbose_name="full name"),
                 ),
-                ("main", models.BooleanField(default=False, verbose_name="main")),
+                ("is_main", models.BooleanField(default=False, verbose_name="main")),
                 (
                     "owner",
                     models.ForeignKey(
@@ -1100,7 +1100,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="address",
             constraint=models.UniqueConstraint(
-                condition=models.Q(("main", True)),
+                condition=models.Q(("is_main", True)),
                 fields=("owner",),
                 name="unique_main_address_per_user",
             ),

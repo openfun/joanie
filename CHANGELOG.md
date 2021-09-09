@@ -34,6 +34,7 @@ and this project adheres to
 ### Changed
 
 - Rename the "name" field to "title" (avoid confusion with new "fullname" field)
+- Rename "main" field to "is_main" as our naming convention for boolean fields
 - Pin base Docker image to `python8-slim-bullseye`
 - Make course run dates not required
 - Make the "resource_link" field unique and required for course runs

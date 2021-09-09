@@ -90,6 +90,6 @@ class AddressAdmin(admin.ModelAdmin):
         "postcode",
         "city",
         "country",
+        "is_main",
         "owner",
-        "main",
     )
