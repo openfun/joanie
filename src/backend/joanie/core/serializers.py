@@ -161,4 +161,13 @@ class AddressSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Address
-        fields = ["id", "title", "fullname", "address", "postcode", "city", "country"]
+        fields = [
+            "address",
+            "city",
+            "country",
+            "fullname",
+            "id",
+            "is_main",
+            "postcode",
+            "title",
+        ]

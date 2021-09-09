@@ -130,7 +130,7 @@ class AddressView(generics.ListAPIView):
         - city: str
         - country: str, country code
         - fullname: str, recipient fullname
-        - main?: bool, if True set address as main
+        - is_main?: bool, if True set address as main
         - postcode: str
         - title: str, address title
         Return new address just created
@@ -140,7 +140,7 @@ class AddressView(generics.ListAPIView):
         - city: str
         - country: str, country code
         - fullname: str, recipient fullname
-        - main?: bool, if True set address as main
+        - is_main?: bool, if True set address as main
         - postcode: str
         - title: str, address title
         Return address just updated

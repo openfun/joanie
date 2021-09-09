@@ -40,7 +40,7 @@ class Address(models.Model):
         related_name="addresses",
         on_delete=models.CASCADE,
     )
-    main = models.BooleanField(_("main"), default=False)
+    is_main = models.BooleanField(_("main"), default=False)
 
     class Meta:
         db_table = "joanie_address"
@@ -48,7 +48,7 @@ class Address(models.Model):
         verbose_name_plural = _("Addresses")
         constraints = [
             models.UniqueConstraint(
-                condition=models.Q(main=True),
+                condition=models.Q(is_main=True),
                 fields=["owner"],
                 name="unique_main_address_per_user",
             )
@@ -59,9 +59,9 @@ class Address(models.Model):
 
     def save(self, *args, **kwargs):
         # no more one main=True per Owner
-        main_addresses = self.owner.addresses.filter(main=True)
-        if self.main and main_addresses:
-            main_addresses.update(main=False)
+        main_addresses = self.owner.addresses.filter(is_main=True)
+        if self.is_main and main_addresses:
+            main_addresses.update(is_main=False)
         super().save(*args, **kwargs)
 
     def get_full_address(self):

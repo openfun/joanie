@@ -267,4 +267,3 @@ class AddressFactory(factory.django.DjangoModelFactory):
     country = factory.Faker("country_code")
     fullname = factory.Faker("name")
     owner = factory.SubFactory(UserFactory)
-    main = True
