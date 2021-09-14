@@ -24,6 +24,7 @@ from joanie.core import api
 from joanie.lms_handler.urls import urlpatterns as lms_urlpatterns
 
 router = DefaultRouter()
+router.register("addresses", api.AddressViewSet, basename="addresses")
 router.register("courses", api.CourseViewSet, basename="courses")
 router.register("enrollments", api.EnrollmentViewSet, basename="enrollments")
 router.register("orders", api.OrderViewSet, basename="orders")
@@ -31,8 +32,6 @@ router.register("orders", api.OrderViewSet, basename="orders")
 urlpatterns = (
     [
         path("admin/", admin.site.urls),
-        path("api/addresses/", api.AddressView.as_view()),
-        path("api/addresses/<str:address_uid>/", api.AddressView.as_view()),
         path("api/", include([*router.urls, *lms_urlpatterns])),
         path("api/documents/", include("marion.urls")),
     ]

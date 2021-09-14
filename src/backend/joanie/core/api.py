@@ -2,11 +2,9 @@
 API endpoints
 """
 from django.core.exceptions import ValidationError as DjangoValidationError
-from django.shortcuts import get_object_or_404
 
-from rest_framework import generics, mixins, pagination, permissions, status, viewsets
+from rest_framework import mixins, pagination, permissions, viewsets
 from rest_framework.exceptions import ValidationError as DRFValidationError
-from rest_framework.response import Response
 from rest_framework.views import exception_handler as drf_exception_handler
 
 from joanie.core import models
@@ -118,7 +116,14 @@ class OrderViewSet(
         serializer.save(owner=owner)
 
 
-class AddressView(generics.ListAPIView):
+class AddressViewSet(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
     """
     API view allows to get all addresses or create or update a new one for a user.
 
@@ -149,48 +154,16 @@ class AddressView(generics.ListAPIView):
         Delete selected address
     """
 
+    lookup_field = "uid"
     serializer_class = serializers.AddressSerializer
     permission_classes = [permissions.IsAuthenticated]
-    instance_field = "address_uid"
 
     def get_queryset(self):
         """Custom queryset to get user addresses"""
         user = models.User.objects.get_or_create(username=self.request.user.username)[0]
         return user.addresses.all()
 
-    def get_instance(self, **kwargs):
-        """Get address instance"""
-        return get_object_or_404(models.Address, uid=kwargs[self.instance_field])
-
-    def put(self, request, **kwargs):
-        """Update address selected with new data"""
-        if self.instance_field and self.instance_field in kwargs:
-            obj = self.get_instance(**kwargs)
-            # User authenticated has to be the address owner
-            if obj.owner.username == self.request.user.username:
-                serializer = self.serializer_class(instance=obj, data=request.data)
-                if not serializer.is_valid():
-                    return Response(
-                        {"errors": serializer.errors},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-                serializer.save()
-                return Response({"data": serializer.data})
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-
-    def post(self, request):
+    def perform_create(self, serializer):
         """Create a new address for user authenticated"""
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
         user = models.User.objects.get_or_create(username=self.request.user.username)[0]
         serializer.save(owner=user)
-        return Response(status=status.HTTP_201_CREATED, data={"data": serializer.data})
-
-    def delete(self, request, **kwargs):
-        """Delete address selected"""
-        obj = self.get_instance(**kwargs)
-        # User authenticated has to be the address owner
-        if obj.owner.username == self.request.user.username:
-            obj.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
