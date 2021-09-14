@@ -251,14 +251,14 @@ class AddressAPITestCase(BaseAPITestCase):
         new_address = factories.AddressFactory.build()
         payload = get_payload(new_address)
 
-        # check bad request returned if address_id is missing
+        # Put request without address uid should not be allowed
         response = self.client.put(
             "/api/addresses/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             data=payload,
             content_type="application/json",
         )
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 405)
 
         bad_payload = payload.copy()
         bad_payload["country"] = "FRANCE"
@@ -272,9 +272,7 @@ class AddressAPITestCase(BaseAPITestCase):
         content = json.loads(response.content)
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(
-            content, {"errors": {"country": ['"FRANCE" is not a valid choice.']}}
-        )
+        self.assertEqual(content, {"country": ['"FRANCE" is not a valid choice.']})
 
         del bad_payload["title"]
         bad_payload["country"] = "FR"
@@ -287,7 +285,7 @@ class AddressAPITestCase(BaseAPITestCase):
         content = json.loads(response.content)
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(content, {"errors": {"title": ["This field is required."]}})
+        self.assertEqual(content, {"title": ["This field is required."]})
 
     def test_api_address_update_with_bad_user(self):
         """User token has to match with owner of address to update"""
@@ -303,7 +301,7 @@ class AddressAPITestCase(BaseAPITestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 404)
 
     def test_api_address_update_to_demote_address(self):
         """
@@ -412,7 +410,7 @@ class AddressAPITestCase(BaseAPITestCase):
             f"/api/addresses/{address.uid}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 404)
 
     def test_api_address_delete(self):
         """Delete address is allowed with valid token"""
