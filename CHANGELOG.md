@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Add collected static files to the production Docker image
 - Install django-money to manage currencies
 - Improve course and product admin change views
 - Add ngrok to serve Joanie on a public address for development purpose

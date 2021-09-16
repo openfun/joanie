@@ -11,26 +11,50 @@ RUN apt-get update && \
   apt-get -y upgrade && \
   rm -rf /var/lib/apt/lists/*
 
-
 # ---- Back-end builder image ----
 FROM base as back-builder
 
 WORKDIR /builder
 
 # Copy required python dependencies
-COPY src/backend /builder
+COPY ./src/backend /builder
 
 RUN mkdir /install && \
   pip install --prefix=/install .
 
-# ---- Core application image ----
-FROM base as core
+# ---- static link collector ----
+FROM base as link-collector
+ARG JOANIE_STATIC_ROOT=/data/static
 
-ENV PYTHONUNBUFFERED=1
+# Install rdfind
+RUN apt-get update && \
+    apt-get install -y \
+    rdfind && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy installed python dependencies
+COPY --from=back-builder /install /usr/local
+
+# Copy joanie application (see .dockerignore)
+COPY ./src/backend /app/
 
 WORKDIR /app
 
-# Install gettext
+# collectstatic
+RUN DJANGO_CONFIGURATION=Build python manage.py collectstatic --noinput
+
+# Replace duplicated file by a symlink to decrease the overall size of the
+# final image
+RUN rdfind -makesymlinks true -followsymlinks true -makeresultsfile false ${JOANIE_STATIC_ROOT}
+
+# ---- Core application image ----
+FROM base as core
+
+ARG JOANIE_STATIC_ROOT=/data/static
+
+ENV PYTHONUNBUFFERED=1
+
+# Install required system libs
 RUN apt-get update && \
     apt-get install -y \
       gettext \
@@ -45,22 +69,21 @@ RUN apt-get update && \
 # Copy installed python dependencies
 COPY --from=back-builder /install /usr/local
 
-# Copy runtime-required files
+# Copy application
 COPY ./src/backend /app/
-COPY ./docker/files/usr/local/bin/entrypoint /usr/local/bin/entrypoint
 
-# Gunicorn
-RUN mkdir -p /usr/local/etc/gunicorn
-COPY docker/files/usr/local/etc/gunicorn/joanie.py /usr/local/etc/gunicorn/joanie.py
+# Copy entrypoint
+COPY ./docker/files/usr/local/bin/entrypoint /usr/local/bin/entrypoint
 
 # Give the "root" group the same permissions as the "root" user on /etc/passwd
 # to allow a user belonging to the root group to add new users; typically the
 # docker user (see entrypoint).
 RUN chmod g=u /etc/passwd
 
-# Un-privileged user running the application
-ARG DOCKER_USER
-USER ${DOCKER_USER}
+# Copy statics
+COPY --from=link-collector ${JOANIE_STATIC_ROOT} ${JOANIE_STATIC_ROOT}
+
+WORKDIR /app
 
 # We wrap commands run in this container by the following entrypoint that
 # creates a user on-the-fly with the container user ID (see USER) and root group
@@ -72,9 +95,6 @@ FROM core as development
 
 # Switch back to the root user to install development dependencies
 USER root:root
-
-# Copy all sources, not only runtime-required files
-COPY ./src/backend /app/
 
 # Uninstall joanie and re-install it in editable mode along with development
 # dependencies
@@ -95,6 +115,14 @@ CMD python manage.py runserver 0.0.0.0:8000
 
 # ---- Production image ----
 FROM core as production
+
+# Gunicorn
+RUN mkdir -p /usr/local/etc/gunicorn
+COPY docker/files/usr/local/etc/gunicorn/joanie.py /usr/local/etc/gunicorn/joanie.py
+
+# Un-privileged user running the application
+ARG DOCKER_USER
+USER ${DOCKER_USER}
 
 # The default command runs gunicorn WSGI server in joanie's main module
 CMD gunicorn -c /usr/local/etc/gunicorn/joanie.py joanie.wsgi:application
