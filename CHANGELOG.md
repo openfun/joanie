@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Serve static files with `whitenoise` third party app
 - Add collected static files to the production Docker image
 - Install django-money to manage currencies
 - Improve course and product admin change views

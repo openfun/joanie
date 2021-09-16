@@ -29,15 +29,15 @@ router.register("courses", api.CourseViewSet, basename="courses")
 router.register("enrollments", api.EnrollmentViewSet, basename="enrollments")
 router.register("orders", api.OrderViewSet, basename="orders")
 
-urlpatterns = (
-    [
-        path("admin/", admin.site.urls),
-        path("api/", include([*router.urls, *lms_urlpatterns])),
-        path("api/documents/", include("marion.urls")),
-    ]
-    + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-)
+urlpatterns = [
+    path("admin/", admin.site.urls),
+    path("api/", include([*router.urls, *lms_urlpatterns])),
+    path("api/documents/", include("marion.urls")),
+]
 
 if settings.DEBUG:
-    urlpatterns += [path("__debug__/", include("marion.urls.debug"))]
+    urlpatterns = (
+        urlpatterns
+        + [path("__debug__/", include("marion.urls.debug"))]
+        + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    )
