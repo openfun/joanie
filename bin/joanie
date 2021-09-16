@@ -5,4 +5,4 @@ source "$(dirname "${BASH_SOURCE[0]}")/_config.sh"
 
 _docker_compose up -d postgresql
 _dc_run dockerize dockerize -wait tcp://postgresql:5432 -timeout 60s
-_dc_run --service-ports app
+_dc_run --service-ports app-dev

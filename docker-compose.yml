@@ -8,7 +8,7 @@ services:
     ports:
       - "15432:5432"
 
-  app:
+  app-dev:
     build:
       context: .
       target: development
@@ -17,7 +17,8 @@ services:
     user: ${DOCKER_USER:-1000}
     image: joanie:development
     environment:
-      PYLINTHOME: /app/.pylint.d
+      - PYLINTHOME=/app/.pylint.d
+      - DJANGO_CONFIGURATION=Development
     env_file:
       - env.d/development/common
       - env.d/development/postgresql
@@ -25,15 +26,42 @@ services:
       - "8071:8000"
     volumes:
       - ./src/backend:/app
-      - ./data/static:/data/static
       - ./data/media:/data/media
     depends_on:
       - "postgresql"
+
+  app:
+    build:
+      context: .
+      target: production
+      args:
+        DOCKER_USER: ${DOCKER_USER:-1000}
+    user: ${DOCKER_USER:-1000}
+    image: joanie:production
+    environment:
+      - DJANGO_CONFIGURATION=ContinuousIntegration
+    env_file:
+      - env.d/development/common
+      - env.d/development/postgresql
+    volumes:
+      - ./data/media:/data/media
+    depends_on:
+      - postgresql
     networks:
       default:
       lms_outside:
         aliases:
           - joanie
+
+  nginx:
+    image: nginx:1.13
+    ports:
+      - "8081:8081"
+    volumes:
+      - ./docker/files/etc/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./data/media:/data/media:ro
+    depends_on:
+      - app
 
   dockerize:
     image: jwilder/dockerize
