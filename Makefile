@@ -35,10 +35,10 @@ DOCKER_GID           = $(shell id -g)
 DOCKER_USER          = $(DOCKER_UID):$(DOCKER_GID)
 COMPOSE              = DOCKER_USER=$(DOCKER_USER) docker-compose
 COMPOSE_RUN          = $(COMPOSE) run --rm
-COMPOSE_RUN_APP      = $(COMPOSE_RUN) app
+COMPOSE_RUN_APP      = $(COMPOSE_RUN) app-dev
 COMPOSE_RUN_CROWDIN  = $(COMPOSE_RUN) crowdin crowdin
 COMPOSE_TEST_RUN     = $(COMPOSE_RUN)
-COMPOSE_TEST_RUN_APP = $(COMPOSE_TEST_RUN) app
+COMPOSE_TEST_RUN_APP = $(COMPOSE_TEST_RUN) app-dev
 MANAGE               = $(COMPOSE_RUN_APP) python manage.py
 WAIT_DB              = @$(COMPOSE_RUN) dockerize -wait tcp://$(DB_HOST):$(DB_PORT) -timeout 60s
 
@@ -68,20 +68,21 @@ bootstrap: \
 .PHONY: bootstrap
 
 # -- Docker/compose
-build: ## build the app container
-	@$(COMPOSE) build app
+build: ## build the app-dev container
+	@$(COMPOSE) build app-dev
 .PHONY: build
 
 down: ## stop and remove containers, networks, images, and volumes
 	@$(COMPOSE) down
 .PHONY: down
 
-logs: ## display app logs (follow mode)
-	@$(COMPOSE) logs -f app
+logs: ## display app-dev logs (follow mode)
+	@$(COMPOSE) logs -f app-dev
 .PHONY: logs
 
-run: ## start the development server using Docker
-	@$(COMPOSE) up -d
+run: ## start the wsgi (production) and development server
+	@$(COMPOSE) up -d nginx
+	@$(COMPOSE) up -d app-dev
 	@echo "Wait for postgresql to be up..."
 	@$(WAIT_DB)
 .PHONY: run

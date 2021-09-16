@@ -68,7 +68,7 @@ class Base(Configuration):
     * DB_USER
     """
 
-    DEBUG = True
+    DEBUG = False
 
     # Security
     ALLOWED_HOSTS = values.ListValue([])
