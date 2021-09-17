@@ -1,0 +1,3 @@
+provider "openstack" {
+  alias = "ovh"
+}
