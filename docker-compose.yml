@@ -81,6 +81,22 @@ services:
     ports:
       - 4040:4040
 
+  terraform-state:
+    image: hashicorp/terraform:1.0.7
+    environment:
+      - TF_WORKSPACE=${PROJECT:-} # avoid env conflict in local state
+    user: ${DOCKER_USER:-1000}
+    working_dir: /app
+    volumes:
+      - ./src/terraform/create_state_bucket:/app
+
+  terraform:
+    image: hashicorp/terraform:1.0.7
+    user: ${DOCKER_USER:-1000}
+    working_dir: /app
+    volumes:
+      - ./src/terraform:/app
+
 networks:
   lms_outside:
     driver: bridge

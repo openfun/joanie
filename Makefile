@@ -60,7 +60,7 @@ bootstrap: ## Prepare Docker images for the project
 bootstrap: \
 	data/media \
 	data/static \
-  env.d/development/crowdin \
+	env.d/development/crowdin \
 	build \
 	run \
 	migrate \
