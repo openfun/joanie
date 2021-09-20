@@ -108,7 +108,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         """Anonymous users should not be allowed to retrieve an enrollment."""
         enrollment = factories.EnrollmentFactory()
 
-        response = self.client.get("/api/enrollments/{!s}/".format(enrollment.uid))
+        response = self.client.get(f"/api/enrollments/{enrollment.uid}/")
         self.assertEqual(response.status_code, 401)
 
         content = json.loads(response.content)
@@ -131,7 +131,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         response = self.client.get(
-            "/api/enrollments/{!s}/".format(enrollment.uid),
+            f"/api/enrollments/{enrollment.uid}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 200)
@@ -155,7 +155,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         token = self.get_user_token("panoramix")
 
         response = self.client.get(
-            "/api/enrollments/{!s}/".format(enrollment.uid),
+            f"/api/enrollments/{enrollment.uid}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 404)
@@ -605,7 +605,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         """Anonymous users should not be able to delete an enrollment."""
         enrollment = factories.EnrollmentFactory()
 
-        response = self.client.delete("/api/enrollments/{!s}/".format(enrollment.id))
+        response = self.client.delete(f"/api/enrollments/{enrollment.id}/")
 
         self.assertEqual(response.status_code, 401)
 
@@ -630,8 +630,8 @@ class EnrollmentApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         response = self.client.delete(
-            "/api/enrollments/{!s}/".format(enrollment.uid),
-            HTTP_AUTHORIZATION="Bearer {!s}".format(token),
+            f"/api/enrollments/{enrollment.uid}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 405)
         self.assertEqual(models.Enrollment.objects.count(), 1)
@@ -642,8 +642,8 @@ class EnrollmentApiTest(BaseAPITestCase):
         token = self.get_user_token(enrollment.user.username)
 
         response = self.client.delete(
-            "/api/enrollments/{!s}/".format(enrollment.uid),
-            HTTP_AUTHORIZATION="Bearer {!s}".format(token),
+            f"/api/enrollments/{enrollment.uid}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 405)
         self.assertEqual(models.Enrollment.objects.count(), 1)
@@ -667,7 +667,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             )
 
             response = self.client.patch(
-                "/api/enrollments/{!s}/".format(enrollment.uid),
+                f"/api/enrollments/{enrollment.uid}/",
                 data={"state": new_state[0]},
                 content_type="application/json",
             )
@@ -703,7 +703,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             )
 
             response = self.client.patch(
-                "/api/enrollments/{!s}/".format(enrollment.uid),
+                f"/api/enrollments/{enrollment.uid}/",
                 data={"is_active": is_active_new},
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -732,7 +732,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             token = self.get_user_token(enrollment.user.username)
 
             response = self.client.patch(
-                "/api/enrollments/{!s}/".format(enrollment.uid),
+                f"/api/enrollments/{enrollment.uid}/",
                 data={"is_active": is_active_new},
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -758,7 +758,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         user_token = self.get_user_token(enrollment.user.username)
 
         response = self.client.get(
-            "/api/enrollments/{!s}/".format(enrollment.uid),
+            f"/api/enrollments/{enrollment.uid}/",
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {user_token}",
         )
@@ -786,7 +786,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         )
 
         response = self.client.patch(
-            "/api/enrollments/{!s}/".format(enrollment.uid),
+            f"/api/enrollments/{enrollment.uid}/",
             data=new_data,
             content_type="application/json",
             **headers,
@@ -796,7 +796,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         # Check that nothing was modified
         self.assertEqual(models.Enrollment.objects.count(), 1)
         response = self.client.get(
-            "/api/enrollments/{!s}/".format(enrollment.uid),
+            f"/api/enrollments/{enrollment.uid}/",
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {user_token}",
         )
