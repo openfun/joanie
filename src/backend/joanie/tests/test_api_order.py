@@ -106,7 +106,7 @@ class OrderApiTest(BaseAPITestCase):
         product = factories.ProductFactory()
         order = factories.OrderFactory(product=product)
 
-        response = self.client.get("/api/orders/{!s}/".format(order.uid))
+        response = self.client.get(f"/api/orders/{order.uid}/")
         self.assertEqual(response.status_code, 401)
 
         content = json.loads(response.content)
@@ -124,7 +124,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.get_user_token(owner.username)
 
         response = self.client.get(
-            "/api/orders/{!s}/".format(order.uid),
+            f"/api/orders/{order.uid}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 200)
@@ -154,7 +154,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.get_user_token("panoramix")
 
         response = self.client.get(
-            "/api/orders/{!s}/".format(order.uid),
+            f"/api/orders/{order.uid}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 404)
@@ -318,7 +318,7 @@ class OrderApiTest(BaseAPITestCase):
         product = factories.ProductFactory()
         order = factories.OrderFactory(product=product)
 
-        response = self.client.delete("/api/orders/{!s}/".format(order.id))
+        response = self.client.delete(f"/api/orders/{order.uid}/")
 
         self.assertEqual(response.status_code, 401)
 
@@ -344,8 +344,8 @@ class OrderApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         response = self.client.delete(
-            "/api/orders/{!s}/".format(order.id),
-            HTTP_AUTHORIZATION="Bearer {!s}".format(token),
+            f"/api/orders/{order.uid}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 405)
         self.assertEqual(models.Order.objects.count(), 1)
@@ -357,8 +357,8 @@ class OrderApiTest(BaseAPITestCase):
         token = self.get_user_token(order.owner.username)
 
         response = self.client.delete(
-            "/api/orders/{!s}/".format(order.id),
-            HTTP_AUTHORIZATION="Bearer {!s}".format(token),
+            f"/api/orders/{order.uid}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 405)
         self.assertEqual(models.Order.objects.count(), 1)
@@ -369,7 +369,7 @@ class OrderApiTest(BaseAPITestCase):
         owner_token = self.get_user_token(order.owner.username)
 
         response = self.client.get(
-            "/api/orders/{!s}/".format(order.uid),
+            f"/api/orders/{order.uid}/",
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {owner_token}",
         )
@@ -384,7 +384,7 @@ class OrderApiTest(BaseAPITestCase):
         other_owner_token = self.get_user_token(other_owner.username)
 
         other_response = self.client.get(
-            "/api/orders/{!s}/".format(other_order.uid),
+            f"/api/orders/{other_order.uid}/",
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {other_owner_token}",
         )
@@ -417,7 +417,7 @@ class OrderApiTest(BaseAPITestCase):
             # With full object
             data[field] = other_data[field]
             response = self.client.put(
-                "/api/orders/{!s}/".format(order.uid),
+                f"/api/orders/{order.uid}/",
                 data=data,
                 content_type="application/json",
                 **headers,
@@ -426,7 +426,7 @@ class OrderApiTest(BaseAPITestCase):
 
             # With partial object
             response = self.client.patch(
-                "/api/orders/{!s}/".format(order.uid),
+                f"/api/orders/{order.uid}/",
                 data={field: other_data[field]},
                 content_type="application/json",
                 **headers,
@@ -436,7 +436,7 @@ class OrderApiTest(BaseAPITestCase):
             # Check that nothing was modified
             self.assertEqual(models.Order.objects.count(), 2)
             response = self.client.get(
-                "/api/orders/{!s}/".format(order.uid),
+                f"/api/orders/{order.uid}/",
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {owner_token}",
             )

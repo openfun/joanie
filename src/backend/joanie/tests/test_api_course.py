@@ -86,7 +86,7 @@ class CourseApiTest(BaseAPITestCase):
                     )
 
         with self.assertNumQueries(11):
-            response = self.client.get("/api/courses/{!s}/".format(course.code))
+            response = self.client.get(f"/api/courses/{course.code}/")
 
         content = json.loads(response.content)
         expected = {
@@ -158,13 +158,13 @@ class CourseApiTest(BaseAPITestCase):
         # - An other request should get the cached response
         with self.assertNumQueries(1):
             response = self.client.get(
-                "/api/courses/{!s}/".format(course.code),
+                f"/api/courses/{course.code}/",
             )
 
         # - But cache should rely on the current language
         with self.assertNumQueries(20):
             response = self.client.get(
-                "/api/courses/{!s}/".format(course.code),
+                f"/api/courses/{course.code}/",
                 HTTP_ACCEPT_LANGUAGE="fr-fr",
             )
 
@@ -261,7 +261,7 @@ class CourseApiTest(BaseAPITestCase):
 
         with self.assertNumQueries(23):
             response = self.client.get(
-                "/api/courses/{!s}/".format(course.code),
+                f"/api/courses/{course.code}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
@@ -367,7 +367,7 @@ class CourseApiTest(BaseAPITestCase):
         # Course information should has been cached, but orders not.
         with self.assertNumQueries(4):
             response = self.client.get(
-                "/api/courses/{!s}/".format(course.code),
+                f"/api/courses/{course.code}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
@@ -409,7 +409,7 @@ class CourseApiTest(BaseAPITestCase):
         )
 
         response = self.client.get(
-            "/api/courses/{!s}/".format(course.code),
+            f"/api/courses/{course.code}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -469,7 +469,7 @@ class CourseApiTest(BaseAPITestCase):
         """Anonymous users should not be able to delete a course."""
         course = factories.CourseFactory()
 
-        response = self.client.delete("/api/courses/{!s}/".format(course.id))
+        response = self.client.delete(f"/api/courses/{course.id}/")
 
         self.assertEqual(response.status_code, 405)
         self.assertEqual(models.Course.objects.count(), 1)
@@ -480,8 +480,8 @@ class CourseApiTest(BaseAPITestCase):
         token = self.get_user_token("panoramix")
 
         response = self.client.delete(
-            "/api/courses/{!s}/".format(course.id),
-            HTTP_AUTHORIZATION="Bearer {!s}".format(token),
+            f"/api/courses/{course.id}/",
+            fHTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 405)
         self.assertEqual(models.Course.objects.count(), 1)
@@ -491,14 +491,14 @@ class CourseApiTest(BaseAPITestCase):
         course = factories.CourseFactory(code="initial_code")
 
         response = self.client.get(
-            "/api/courses/{!s}/".format(course.code),
+            f"/api/courses/{course.code}/",
         )
         data = json.loads(response.content)
         data["code"] = "modified_code"
 
         # With POST method
         response = self.client.post(
-            "/api/courses/{!s}/".format(course.code),
+            f"/api/courses/{course.code}/",
             content_type="application/json",
             data=data,
         )
@@ -509,7 +509,7 @@ class CourseApiTest(BaseAPITestCase):
 
         # With PUT method
         response = self.client.put(
-            "/api/courses/{!s}/".format(course.code),
+            f"/api/courses/{course.code}/",
             content_type="application/json",
             data=data,
         )
@@ -528,14 +528,14 @@ class CourseApiTest(BaseAPITestCase):
         token = self.get_user_token("panoramix")
 
         response = self.client.get(
-            "/api/courses/{!s}/".format(course.code),
+            f"/api/courses/{course.code}/",
         )
         data = json.loads(response.content)
         data["code"] = "modified_code"
 
         # With POST method
         response = self.client.post(
-            "/api/courses/{!s}/".format(course.code),
+            f"/api/courses/{course.code}/",
             data=data,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -547,7 +547,7 @@ class CourseApiTest(BaseAPITestCase):
 
         # With PUT method
         response = self.client.put(
-            "/api/courses/{!s}/".format(course.code),
+            f"/api/courses/{course.code}/",
             data=data,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",

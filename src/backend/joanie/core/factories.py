@@ -37,8 +37,8 @@ class CertificateDefinitionFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.CertificateDefinition
 
-    title = factory.Sequence(lambda n: "Certificate definition %s" % n)
-    name = factory.Sequence(lambda n: "certificate-definition-%s" % n)
+    title = factory.Sequence(lambda n: f"Certificate definition {n}")
+    name = factory.Sequence(lambda n: f"certificate-definition-{n}")
     template = settings.MARION_CERTIFICATE_DOCUMENT_ISSUER
 
 
@@ -49,7 +49,7 @@ class OrganizationFactory(factory.django.DjangoModelFactory):
         model = models.Organization
 
     code = factory.Faker("ean", length=8)
-    title = factory.Sequence(lambda n: "Organization %s" % n)
+    title = factory.Sequence(lambda n: f"Organization {n}")
     signature = factory.django.FileField(filename="signature.png")
     logo = factory.django.FileField(filename="logo.png")
 
@@ -61,7 +61,7 @@ class CourseFactory(factory.django.DjangoModelFactory):
         model = models.Course
 
     code = factory.Faker("ean", length=8)
-    title = factory.Sequence(lambda n: "Course %s" % n)
+    title = factory.Sequence(lambda n: f"Course {n}")
     organization = factory.SubFactory(OrganizationFactory)
 
     @factory.post_generation
@@ -87,7 +87,7 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
 
     course = factory.SubFactory(CourseFactory)
     resource_link = factory.Faker("uri")
-    title = factory.Sequence(lambda n: "Course run %s" % n)
+    title = factory.Sequence(lambda n: f"Course run {n}")
 
     # pylint: disable=no-self-use
     @factory.lazy_attribute

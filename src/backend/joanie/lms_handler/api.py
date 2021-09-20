@@ -42,7 +42,7 @@ def course_runs_sync(request):
 
     signature_is_valid = any(
         authorization_header
-        == "SIG-HMAC-SHA256 {:s}".format(
+        == "SIG-HMAC-SHA256 {:s}".format(  # pylint: disable = consider-using-f-string
             hmac.new(
                 secret.encode("utf-8"),
                 msg=msg.encode("utf-8"),
