@@ -21,6 +21,7 @@ class DummyLMSBackend(BaseLMSBackend):
         return f"dummy_lms_backend_enrollment_{username:s}_{course_id:s}"
 
     def extract_course_id(self, resource_link):
+        """Extract course id from resource_link through COURSE_REGEX settings"""
         return re.match(self.configuration["COURSE_REGEX"], resource_link).group(
             "course_id"
         )
