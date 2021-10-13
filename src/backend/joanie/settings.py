@@ -306,6 +306,7 @@ class Development(Base):
     ALLOWED_HOSTS = ["*"]
     CORS_ALLOW_ALL_ORIGINS = True
     DEBUG = True
+    NGROK_ENDPOINT = values.Value(None, "NGROK_ENDPOINT", environ_prefix=None)
 
 
 class Test(Base):
