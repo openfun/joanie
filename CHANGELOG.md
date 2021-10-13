@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Add ngrok to serve Joanie on a public address for development purpose
 - Add unique constraint to owner address field to allow only one main address
   per user
 - Add fullname field to address model

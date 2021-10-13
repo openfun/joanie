@@ -47,6 +47,12 @@ services:
     user: "${DOCKER_USER:-1000}"
     working_dir: /app
 
+  ngrok:
+    image: wernight/ngrok
+    command: ngrok http app:8000
+    ports:
+      - 4040:4040
+
 networks:
   lms_outside:
     driver: bridge

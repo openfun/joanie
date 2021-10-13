@@ -198,3 +198,11 @@ help:
 demo-data: ## create fake data for dev purpose
 	@$(MANAGE) loaddatafake
 .PHONY: demo-data
+
+ngrok: ## Run a proxy through ngrok
+ngrok:
+	@$(COMPOSE) stop ngrok
+	@$(COMPOSE) up -d ngrok
+	@echo "Joanie is accessible on : "
+	@bin/get_ngrok_url
+.PHONE: ngrok
