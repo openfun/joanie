@@ -14,11 +14,13 @@ class BaseLMSBackend:
         self.configuration = configuration
 
     def get_enrollment(self, username, resource_link):
+        """Retrieve an enrollment according to a username and a resource_link."""
         raise NotImplementedError(
             "subclasses of BaseLMSBackend must provide a get_enrollment() method"
         )
 
-    def set_enrollment(self, username, resource_link):
+    def set_enrollment(self, username, resource_link, active=True):
+        """Activate/deactivate an enrollment according to a username and a resource_link."""
         raise NotImplementedError(
             "subclasses of BaseLMSBackend must provide a set_enrollment() method"
         )

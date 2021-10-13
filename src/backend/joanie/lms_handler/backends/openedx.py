@@ -65,6 +65,8 @@ class TokenAPIClient(requests.Session):
 
 
 class OpenEdXLMSBackend(BaseLMSBackend):
+    """LMS backend for Joanie tested with Open EdX Dogwood, Hawthorn and Ironwood."""
+
     @property
     def api_client(self):
         """Instantiate and return an OpenEdX token API client."""
