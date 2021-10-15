@@ -211,7 +211,7 @@ class Base(Configuration):
     PARLER_LANGUAGES = {
         None: (tuple(dict(code=code) for code, _name in LANGUAGES)),
         "default": {
-            "fallback": "en-us",
+            "fallbacks": ["en-us"],
             "hide_untranslated": False,
         },
     }
@@ -260,6 +260,23 @@ class Base(Configuration):
     )
 
     AUTH_USER_MODEL = "core.User"
+
+    # Payment
+    JOANIE_PAYMENT_BACKEND = {
+        "backend": values.Value(
+            "joanie.payment.backends.payplug.PayplugBackend",
+            environ_name="JOANIE_PAYMENT_BACKEND",
+            environ_prefix=None,
+        ),
+        "configuration": {
+            "secret_key": values.Value(
+                "", environ_name="PAYPLUG_SECRET_KEY", environ_prefix=None
+            ),
+            "public_key": values.Value(
+                "", environ_name="PAYPLUG_PUBLIC_KEY", environ_prefix=None
+            ),
+        },
+    }
 
     # CORS headers
     CORS_ALLOWED_ORIGINS = values.ListValue(
@@ -334,6 +351,20 @@ class Development(Base):
 
 class Test(Base):
     """Test environment settings"""
+
+    JOANIE_LMS_BACKENDS = [
+        {
+            "API_TOKEN": "FakeEdXAPIKey",
+            "BACKEND": "joanie.lms_handler.backends.dummy.DummyLMSBackend",
+            "BASE_URL": "http://localhost:8073",
+            "SELECTOR_REGEX": r"^.*/courses/(?P<course_id>.*)/course/?",
+            "COURSE_REGEX": r"^.*/courses/(?P<course_id>.*)/course/?$",
+        }
+    ]
+
+    JOANIE_PAYMENT_BACKEND = {
+        "backend": "joanie.payment.backends.dummy.DummyPaymentBackend",
+    }
 
 
 class ContinuousIntegration(Test):

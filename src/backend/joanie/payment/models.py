@@ -10,6 +10,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Q
+from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
@@ -25,6 +26,7 @@ from joanie.core.models import Order
 from joanie.core.utils import merge_dict
 
 from . import enums as payment_enums
+from . import get_payment_backend
 
 User = get_user_model()
 
@@ -438,3 +440,16 @@ class CreditCard(models.Model):
         """Enforce validation each time an instance is saved."""
         self.full_clean()
         super().save(*args, **kwargs)
+
+
+@receiver(models.signals.post_delete, sender=CreditCard)
+# pylint: disable=unused-argument
+def credit_card_post_delete_receiver(sender, instance, *args, **kwargs):
+    """
+    Post delete receiver method for credit card model.
+
+    Each time we delete a credit card from database,
+    we have also to delete it from the payment provider
+    """
+    payment_backend = get_payment_backend()
+    payment_backend.delete_credit_card(instance)

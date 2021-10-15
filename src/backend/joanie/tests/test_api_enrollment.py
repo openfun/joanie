@@ -306,7 +306,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             },
         )
         mock_logger.assert_called_once_with(
-            'No LMS configuration found for course run: "http://unknown.com/".'
+            'No LMS configuration found for course run: "%s".', "http://unknown.com/"
         )
 
     @mock.patch.object(Logger, "error")
@@ -355,7 +355,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             },
         )
         mock_logger.assert_called_once_with(
-            f'Enrollment failed for course run "{resource_link:s}".'
+            'Enrollment failed for course run "%s".', resource_link
         )
 
     def test_api_enrollment_create_authenticated_missing_is_active(self):

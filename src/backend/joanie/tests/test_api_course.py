@@ -261,7 +261,7 @@ class CourseApiTest(BaseAPITestCase):
                         user=user, course_run=course_run, order=order, is_active=True
                     )
 
-        with self.assertNumQueries(23):
+        with self.assertNumQueries(25):
             response = self.client.get(
                 f"/api/courses/{course.code}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -279,9 +279,10 @@ class CourseApiTest(BaseAPITestCase):
                 {
                     "id": str(order.uid),
                     "created_on": order.created_on.isoformat().replace("+00:00", "Z"),
-                    "amount": float(order.amount.amount),
-                    "amount_currency": str(order.amount.currency),
+                    "total": float(order.total.amount),
+                    "total_currency": str(order.total.currency),
                     "state": order.state,
+                    "main_invoice": order.main_invoice.reference,
                     "product": str(order.product.uid),
                     "enrollments": [
                         {
