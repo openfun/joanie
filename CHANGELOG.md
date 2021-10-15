@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Add Invoice and Transaction models for accounting purposes
 - Add credit card model and related api to retrieve, update, delete it
 - Serve static files with `whitenoise` third party app
 - Add collected static files to the production Docker image

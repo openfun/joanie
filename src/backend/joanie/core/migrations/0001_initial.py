@@ -434,12 +434,6 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "invoice_ref",
-                    models.CharField(
-                        blank=True, max_length=40, verbose_name="invoice reference"
-                    ),
-                ),
-                (
                     "course",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.PROTECT,

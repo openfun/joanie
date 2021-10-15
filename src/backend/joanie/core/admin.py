@@ -118,8 +118,23 @@ class ProductAdmin(TranslatableAdmin):
 class OrderAdmin(admin.ModelAdmin):
     """Admin class for the Order model"""
 
-    list_display = ("owner", "product", "state")
-    readonly_fields = ("total",)
+    list_display = ("uid", "owner", "product", "state")
+    readonly_fields = (
+        "total",
+        "invoice",
+    )
+
+    def invoice(self, obj):  # pylint: disable=no-self-use
+        """Retrieve the root invoice related to the order."""
+        invoice = obj.invoices.get(parent__isnull=True)
+
+        return format_html(
+            (
+                f"<a href='{reverse('admin:payment_invoice_change', args=(invoice.id,), )}'>"
+                f"{str(invoice)}"
+                "</a>"
+            )
+        )
 
 
 @admin.register(models.Enrollment)
