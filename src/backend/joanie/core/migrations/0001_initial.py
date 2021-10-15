@@ -553,7 +553,7 @@ class Migration(migrations.Migration):
                         blank=True,
                         decimal_places=2,
                         default=Decimal("0.00"),
-                        help_text="tax exclude",
+                        help_text="tax included",
                         max_digits=9,
                         validators=[djmoney.models.validators.MinMoneyValidator(0)],
                         verbose_name="price",
