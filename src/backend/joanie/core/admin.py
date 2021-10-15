@@ -119,7 +119,7 @@ class OrderAdmin(admin.ModelAdmin):
     """Admin class for the Order model"""
 
     list_display = ("owner", "product", "state")
-    readonly_fields = ("price",)
+    readonly_fields = ("total",)
 
 
 @admin.register(models.Enrollment)

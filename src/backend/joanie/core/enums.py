@@ -32,14 +32,17 @@ PRODUCT_TYPE_CHOICES = (
 ORDER_STATE_PENDING = "pending"  # waiting for payment and enrollment
 ORDER_STATE_CANCELED = "canceled"
 ORDER_STATE_FAILED = "failed"
-ORDER_STATE_PAID = "paid"
+ORDER_STATE_VALIDATED = "validated"
 ORDER_STATE_FINISHED = "finished"
 
 ORDER_STATE_CHOICES = (
     (ORDER_STATE_PENDING, _("Pending")),  # default
     (ORDER_STATE_CANCELED, pgettext_lazy("As in: the order is cancelled.", "Canceled")),
     (ORDER_STATE_FAILED, pgettext_lazy("As in: the order is failed.", "Failed")),
-    (ORDER_STATE_PAID, pgettext_lazy("As in: the order is paid.", "Paid")),
+    (
+        ORDER_STATE_VALIDATED,
+        pgettext_lazy("As in: the order is validated.", "Validated"),
+    ),
     (ORDER_STATE_FINISHED, pgettext_lazy("As in: the order is finished.", "Finished")),
 )
 
