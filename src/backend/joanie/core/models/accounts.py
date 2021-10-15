@@ -69,7 +69,11 @@ class Address(models.Model):
             self.is_main = True
         elif self.is_main is True:
             self.owner.addresses.filter(is_main=True).update(is_main=False)
-        elif self.pk and self.is_main is False:
+        elif (
+            self.pk
+            and self.is_main is False
+            and self.owner.addresses.filter(is_main=True, pk=self.pk).exists()
+        ):
             raise ValidationError(_("Demote a main address is forbidden"))
 
         return super().clean()
