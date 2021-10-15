@@ -2,13 +2,21 @@
 API endpoints
 """
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import IntegrityError, transaction
+from django.http import HttpResponse
 
 from rest_framework import mixins, pagination, permissions, viewsets
+from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError as DRFValidationError
+from rest_framework.response import Response
 from rest_framework.views import exception_handler as drf_exception_handler
 
 from joanie.core import models
+from joanie.core.enums import ORDER_STATE_PENDING
+from joanie.payment import get_payment_backend
+from joanie.payment.models import Invoice
 
+from ..payment.models import CreditCard
 from . import serializers
 
 
@@ -126,6 +134,125 @@ class OrderViewSet(
         username = self.request.user.username
         owner = models.User.objects.get_or_create(username=username)[0]
         serializer.save(owner=owner)
+
+    @transaction.atomic
+    def create(self, request, *args, **kwargs):
+        """Try to create an order and a related payment if the payment is fee."""
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+
+        product = serializer.validated_data.get("product")
+        course = serializer.validated_data.get("course")
+        billing_address = serializer.initial_data.get("billing_address")
+
+        # If product is not free, we have to create a payment.
+        # To create one, a billing address is mandatory
+        if product.price.amount > 0 and not billing_address:
+            return Response({"billing_address": "This field is required."}, status=400)
+
+        # - Validate data then create an order
+        try:
+            self.perform_create(serializer)
+        except (DRFValidationError, IntegrityError):
+            return Response(
+                (
+                    f"Cannot create order related to the product {product.uid} "
+                    f"and course {course.code}"
+                ),
+                status=400,
+            )
+
+        # Once order has been created, if product is not free, create a payment
+        if product.price.amount > 0:
+            order = serializer.instance
+            payment_backend = get_payment_backend()
+            credit_card_id = serializer.initial_data.get("credit_card_id")
+
+            if credit_card_id:
+                try:
+                    credit_card = CreditCard.objects.get(
+                        owner=order.owner, uid=credit_card_id
+                    )
+                    payment_info = payment_backend.create_one_click_payment(
+                        request=request,
+                        order=order,
+                        billing_address=billing_address,
+                        credit_card_token=credit_card.token,
+                    )
+                    return Response(
+                        {**serializer.data, "payment_info": payment_info}, status=201
+                    )
+                except (CreditCard.DoesNotExist, NotImplementedError):
+                    pass
+            else:
+                payment_info = payment_backend.create_payment(
+                    request=request, order=order, billing_address=billing_address
+                )
+
+            # Return the fresh new order with payment_info
+            return Response(
+                {**serializer.data, "payment_info": payment_info}, status=201
+            )
+
+        # Else return the fresh new order
+        return Response(serializer.data, status=201)
+
+    @action(detail=True, methods=["POST"])
+    def abort(self, request, uid=None):  # pylint: disable=no-self-use
+        """Abort a pending order and the related payment if there is one."""
+        username = request.user.username
+        payment_id = request.data.get("payment_id")
+
+        try:
+            order = models.Order.objects.get(uid=uid, owner__username=username)
+        except models.Order.DoesNotExist:
+            return Response(
+                f'No order found with id "{uid}" owned by {username}.', status=404
+            )
+
+        if order.state != ORDER_STATE_PENDING:
+            return Response("Cannot abort a not pending order.", status=403)
+
+        if payment_id:
+            payment_backend = get_payment_backend()
+            payment_backend.abort_payment(payment_id)
+
+        order.cancel()
+
+        return Response(status=204)
+
+    @action(detail=True, methods=["GET"])
+    def invoice(self, request, uid=None):  # pylint: disable=no-self-use
+        """
+        Retrieve an invoice through its reference if it is related to the order instance
+        and owned by the authenticated user.
+        """
+        invoice_reference = request.query_params.get("reference")
+
+        if invoice_reference is None:
+            return Response({"reference": "This parameter is required."}, status=400)
+
+        try:
+            invoice = Invoice.objects.get(
+                reference=invoice_reference,
+                order__uid=uid,
+                order__owner__username=request.user.username,
+            )
+        except Invoice.DoesNotExist:
+            return Response(
+                f"No invoice found for order {uid} with reference {invoice_reference}.",
+                status=404,
+            )
+
+        response = HttpResponse(
+            invoice.document, content_type="application/pdf", status=200
+        )
+        response[
+            "Content-Disposition"
+        ] = f"attachment; filename={invoice.reference}.pdf;"
+
+        return response
 
 
 class AddressViewSet(

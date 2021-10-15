@@ -253,10 +253,9 @@ class OrderFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.Order
 
-    product = None
+    product = factory.SubFactory(ProductFactory)
     course = factory.LazyAttribute(lambda o: o.product.courses.order_by("?").first())
     owner = factory.SubFactory(UserFactory)
-    price = factory.LazyAttribute(lambda o: o.product.price)
     state = factory.fuzzy.FuzzyChoice([s[0] for s in enums.ORDER_STATE_CHOICES])
 
 

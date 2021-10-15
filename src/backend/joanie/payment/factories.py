@@ -72,3 +72,16 @@ class TransactionFactory(factory.django.DjangoModelFactory):
         """
         amount = D(random.randrange(self.invoice.total.amount * 100)) / 100  # nosec
         return Money(amount, self.invoice.total.currency)
+
+
+class BillingAddressDictFactory(factory.DictFactory):
+    """
+    Return a billing address dictionnary
+    """
+
+    address = factory.Faker("street_address")
+    city = factory.Faker("city")
+    country = factory.Faker("country_code")
+    first_name = factory.Faker("first_name")
+    last_name = factory.Faker("last_name")
+    postcode = factory.Faker("postcode")

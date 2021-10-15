@@ -2,14 +2,32 @@
 import json
 import random
 import uuid
+from io import BytesIO
+from unittest import mock
+
+from django.core.cache import cache
+
+from djmoney.money import Money
+from pdfminer.high_level import extract_text as pdf_extract_text
 
 from joanie.core import enums, factories, models
+from joanie.payment.backends.dummy import DummyPaymentBackend
+from joanie.payment.exceptions import CreatePaymentFailed
+from joanie.payment.factories import (
+    BillingAddressDictFactory,
+    CreditCardFactory,
+    InvoiceFactory,
+)
 
 from .base import BaseAPITestCase
 
 
 class OrderApiTest(BaseAPITestCase):
     """Test the API of the Order object."""
+
+    def setUp(self):
+        """Clear cache after each tests"""
+        cache.clear()
 
     def test_api_order_read_list_anonymous(self):
         """It should not be possible to retrieve the list of orders for anonymous users."""
@@ -61,6 +79,7 @@ class OrderApiTest(BaseAPITestCase):
                         "total": float(product.price.amount),
                         "total_currency": str(product.price.currency),
                         "product": str(order.product.uid),
+                        "main_invoice": None,
                         "state": order.state,
                         "target_courses": [],
                     }
@@ -92,6 +111,7 @@ class OrderApiTest(BaseAPITestCase):
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
                         "enrollments": [],
+                        "main_invoice": None,
                         "owner": other_order.owner.username,
                         "total": float(other_order.total.amount),
                         "total_currency": str(other_order.total.currency),
@@ -139,6 +159,7 @@ class OrderApiTest(BaseAPITestCase):
                 "course": order.course.code,
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "state": order.state,
+                "main_invoice": None,
                 "owner": owner.username,
                 "total": float(product.price.amount),
                 "total_currency": str(product.price.currency),
@@ -185,7 +206,9 @@ class OrderApiTest(BaseAPITestCase):
     def test_api_order_create_authenticated_success(self):
         """Any authenticated user should be able to create an order."""
         target_courses = factories.CourseFactory.create_batch(2)
-        product = factories.ProductFactory(target_courses=target_courses)
+        product = factories.ProductFactory(
+            target_courses=target_courses, price=Money("0.00")
+        )
         course = product.courses.first()
         self.assertEqual(
             list(product.target_courses.order_by("product_relations")), target_courses
@@ -217,7 +240,8 @@ class OrderApiTest(BaseAPITestCase):
                 "id": str(order.uid),
                 "course": course.code,
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                "state": "pending",
+                "state": "validated",
+                "main_invoice": None,
                 "owner": "panoramix",
                 "total": float(product.price.amount),
                 "total_currency": str(product.price.currency),
@@ -235,7 +259,9 @@ class OrderApiTest(BaseAPITestCase):
         "product" and "course", it should not be allowed to override these fields.
         """
         target_courses = factories.CourseFactory.create_batch(2)
-        product = factories.ProductFactory(target_courses=target_courses)
+        product = factories.ProductFactory(
+            target_courses=target_courses, price=Money(0.00)
+        )
         course = product.courses.first()
         self.assertEqual(
             list(product.target_courses.order_by("product_relations")), target_courses
@@ -276,7 +302,8 @@ class OrderApiTest(BaseAPITestCase):
                 "id": str(order.uid),
                 "course": course.code,
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                "state": "pending",
+                "state": "validated",
+                "main_invoice": None,
                 "owner": "panoramix",
                 "total": float(product.price.amount),
                 "total_currency": str(product.price.currency),
@@ -290,7 +317,7 @@ class OrderApiTest(BaseAPITestCase):
 
     def test_api_order_create_authenticated_invalid_product(self):
         """The course and product passed in payload to create an order should match."""
-        product = factories.ProductFactory(title="balançoire")
+        product = factories.ProductFactory(title="balançoire", price=Money("0.00"))
         course = factories.CourseFactory(title="mathématiques")
 
         data = {
@@ -317,6 +344,252 @@ class OrderApiTest(BaseAPITestCase):
                 ]
             },
         )
+
+    def test_api_order_create_authenticated_missing_product_then_course(self):
+        """The payload must contain at least a product uid and a course code."""
+        token = self.get_user_token("panoramix")
+
+        response = self.client.post(
+            "/api/orders/",
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, 400)
+        content = json.loads(response.content)
+
+        self.assertFalse(models.Order.objects.exists())
+        self.assertEqual(
+            content,
+            {
+                "course": ["This field is required."],
+                "product": ["This field is required."],
+            },
+        )
+
+    def test_api_order_create_once(self):
+        """
+        If a user tries to create a new order while he has already a not canceled order
+        for the couple product - course, a bad request response should be returned.
+        """
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+        course = factories.CourseFactory()
+        product = factories.ProductFactory(courses=[course], price=Money("0.00"))
+
+        # User already owns an order for this product and course
+        order = factories.OrderFactory(owner=user, course=course, product=product)
+
+        data = {"product": str(product.uid), "course": course.code}
+
+        response = self.client.post(
+            "/api/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            json.loads(response.content),
+            (
+                f"Cannot create order related to the product {product.uid} "
+                f"and course {course.code}"
+            ),
+        )
+
+        # But if we cancel the first order, user should be able to create a new order
+        order.cancel()
+
+        response = self.client.post(
+            "/api/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 201)
+
+    def test_api_order_create_payment_requires_billing_address(self):
+        """
+        To create an order related to a fee product, a payment is created. In order
+        to create it, user should provide a billing address. If this information is
+        missing, api should return a Bad request.
+        """
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+        course = factories.CourseFactory()
+        product = factories.ProductFactory(target_courses=[course])
+
+        data = {"product": str(product.uid), "course": course.code}
+
+        response = self.client.post(
+            "/api/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertFalse(models.Order.objects.exists())
+        self.assertEqual(response.status_code, 400)
+        content = json.loads(response.content)
+        self.assertEqual(content, {"billing_address": "This field is required."})
+
+    @mock.patch.object(
+        DummyPaymentBackend,
+        "create_payment",
+        side_effect=DummyPaymentBackend().create_payment,
+    )
+    def test_api_order_create_payment(self, mock_create_payment):
+        """
+        Create an order to a fee product should create a payment at the same time and
+        bind payment information into the response.
+        """
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+        course = factories.CourseFactory()
+        product = factories.ProductFactory(courses=[course])
+        billing_address = BillingAddressDictFactory()
+
+        data = {
+            "product": str(product.uid),
+            "course": course.code,
+            "billing_address": billing_address,
+        }
+
+        response = self.client.post(
+            "/api/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(models.Order.objects.count(), 1)
+        order = models.Order.objects.get(product=product, course=course, owner=user)
+        self.assertEqual(response.status_code, 201)
+        content = json.loads(response.content)
+
+        mock_create_payment.assert_called_once()
+
+        self.assertEqual(
+            content,
+            {
+                "id": str(order.uid),
+                "course": course.code,
+                "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                "state": "pending",
+                "main_invoice": None,
+                "owner": user.username,
+                "total": float(product.price.amount),
+                "total_currency": str(product.price.currency),
+                "product": str(product.uid),
+                "enrollments": [],
+                "target_courses": [
+                    c.code for c in product.target_courses.order_by("product_relations")
+                ],
+                "payment_info": {
+                    "payment_id": f"pay_{order.uid}",
+                    "provider": "dummy",
+                    "url": "http://testserver/api/payments/notifications",
+                },
+            },
+        )
+
+    @mock.patch.object(
+        DummyPaymentBackend,
+        "create_one_click_payment",
+        side_effect=DummyPaymentBackend().create_one_click_payment,
+    )
+    def test_api_order_create_payment_with_registered_credit_card(
+        self, mock_create_one_click_payment
+    ):
+        """
+        Create an order to a fee product should create a payment. If user provides
+        a credit card id, a one click payment should be triggered and within response
+        payment information should contain `is_paid` property.
+        """
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+        course = factories.CourseFactory()
+        product = factories.ProductFactory(courses=[course])
+        credit_card = CreditCardFactory(owner=user)
+        billing_address = BillingAddressDictFactory()
+
+        data = {
+            "product": str(product.uid),
+            "course": course.code,
+            "billing_address": billing_address,
+            "credit_card_id": str(credit_card.uid),
+        }
+
+        response = self.client.post(
+            "/api/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(models.Order.objects.count(), 1)
+        order = models.Order.objects.get(product=product, course=course, owner=user)
+        self.assertEqual(response.status_code, 201)
+        content = json.loads(response.content)
+
+        mock_create_one_click_payment.assert_called_once()
+
+        self.assertEqual(
+            content,
+            {
+                "id": str(order.uid),
+                "course": course.code,
+                "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                "state": "pending",
+                "main_invoice": None,
+                "owner": user.username,
+                "total": float(product.price.amount),
+                "total_currency": str(product.price.currency),
+                "product": str(product.uid),
+                "enrollments": [],
+                "target_courses": [
+                    c.code for c in product.target_courses.order_by("product_relations")
+                ],
+                "payment_info": {
+                    "payment_id": f"pay_{order.uid}",
+                    "provider": "dummy",
+                    "url": "http://testserver/api/payments/notifications",
+                    "is_paid": True,
+                },
+            },
+        )
+
+    @mock.patch.object(DummyPaymentBackend, "create_payment")
+    def test_api_order_create_payment_failed(self, mock_create_payment):
+        """
+        If payment creation failed, any order should be created.
+        """
+        mock_create_payment.side_effect = CreatePaymentFailed("Unreachable endpoint")
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+        course = factories.CourseFactory()
+        product = factories.ProductFactory(courses=[course])
+        billing_address = BillingAddressDictFactory()
+
+        data = {
+            "product": str(product.uid),
+            "course": course.code,
+            "billing_address": billing_address,
+        }
+
+        response = self.client.post(
+            "/api/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(models.Order.objects.count(), 0)
+        self.assertEqual(response.status_code, 400)
+        content = json.loads(response.content)
+
+        self.assertEqual(content, {"detail": "Unreachable endpoint"})
 
     def test_api_order_delete_anonymous(self):
         """Anonymous users should not be able to delete an order."""
@@ -404,6 +677,7 @@ class OrderApiTest(BaseAPITestCase):
                 "created_on",
                 "enrollments",
                 "id",
+                "main_invoice",
                 "owner",
                 "total",
                 "total_currency",
@@ -471,3 +745,209 @@ class OrderApiTest(BaseAPITestCase):
         product = factories.ProductFactory(target_courses=target_courses)
         order = factories.OrderFactory(owner=owner, product=product)
         self._check_api_order_update_detail(order, owner, 405)
+
+    def test_api_order_get_invoice_anonymous(self):
+        """An anonymous user should not be allowed to retrieve an invoice."""
+        invoice = InvoiceFactory()
+
+        response = self.client.get(
+            f"/api/orders/{invoice.order.uid}/invoice/?reference={invoice.reference}",
+        )
+
+        self.assertEqual(response.status_code, 401)
+        content = json.loads(response.content)
+
+        self.assertEqual(
+            content, {"detail": "Authentication credentials were not provided."}
+        )
+
+    def test_api_order_get_invoice_authenticated_user_with_no_reference(self):
+        """
+        If an authenticated user tries to retrieve order's invoice without reference
+        parameter, it should return a bad request response.
+        """
+        invoice = InvoiceFactory()
+        token = self.get_user_token(invoice.order.owner.username)
+
+        response = self.client.get(
+            f"/api/orders/{invoice.order.uid}/invoice/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        content = json.loads(response.content)
+        self.assertEqual(content, {"reference": "This parameter is required."})
+
+    def test_api_order_get_invoice_not_linked_to_order(self):
+        """
+        An authenticated user should not be allowed to retrieve an invoice not linked
+        to the current order
+        """
+        user = factories.UserFactory()
+        order = factories.OrderFactory()
+        invoice = InvoiceFactory()
+        token = self.get_user_token(user.username)
+
+        response = self.client.get(
+            f"/api/orders/{order.uid}/invoice/?reference={invoice.reference}",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 404)
+        content = json.loads(response.content)
+        self.assertEqual(
+            content,
+            f"No invoice found for order {order.uid} with reference {invoice.reference}.",
+        )
+
+    def test_api_order_get_invoice_authenticated_user_not_owner(self):
+        """
+        An authenticated user should not be allowed to retrieve
+        an invoice not owned by himself
+        """
+        user = factories.UserFactory()
+        invoice = InvoiceFactory()
+        token = self.get_user_token(user.username)
+
+        response = self.client.get(
+            f"/api/orders/{invoice.order.uid}/invoice/?reference={invoice.reference}",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 404)
+        content = json.loads(response.content)
+        self.assertEqual(
+            content,
+            f"No invoice found for order {invoice.order.uid} with reference {invoice.reference}.",
+        )
+
+    def test_api_order_get_invoice_authenticated_owner(self):
+        """
+        An authenticated user which owns the related order should be able to retrieve
+        a related invoice through its reference
+        """
+        invoice = InvoiceFactory()
+        token = self.get_user_token(invoice.order.owner.username)
+
+        response = self.client.get(
+            f"/api/orders/{invoice.order.uid}/invoice/?reference={invoice.reference}",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers["Content-Type"], "application/pdf")
+        self.assertEqual(
+            response.headers["Content-Disposition"],
+            f"attachment; filename={invoice.reference}.pdf;",
+        )
+
+        document_text = pdf_extract_text(BytesIO(response.content)).replace("\n", "")
+        self.assertRegex(document_text, r"INVOICE")
+
+    def test_api_order_abort_anonymous(self):
+        """An anonymous user should not be allowed to abort an order"""
+        order = factories.OrderFactory()
+
+        response = self.client.post(f"/api/orders/{order.uid}/abort/")
+
+        content = json.loads(response.content)
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(
+            content, {"detail": "Authentication credentials were not provided."}
+        )
+
+    def test_api_order_abort_authenticated_user_not_owner(self):
+        """
+        An authenticated user which is not the owner of the order should not be
+        allowed to abort the order.
+        """
+        user = factories.UserFactory()
+        order = factories.OrderFactory()
+
+        token = self.get_user_token(user.username)
+        response = self.client.post(
+            f"/api/orders/{order.uid}/abort/", HTTP_AUTHORIZATION=f"Bearer {token}"
+        )
+
+        content = json.loads(response.content)
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(
+            content, f'No order found with id "{order.uid}" owned by {user.username}.'
+        )
+
+    def test_api_order_abort_not_pending(self):
+        """
+        An authenticated user which is the owner of the order should not be able
+        to abort the order if it is not pending.
+        """
+        user = factories.UserFactory()
+        product = factories.ProductFactory(price=Money("0.00"))
+        order = factories.OrderFactory(owner=user, product=product)
+
+        token = self.get_user_token(user.username)
+        response = self.client.post(
+            f"/api/orders/{order.uid}/abort/", HTTP_AUTHORIZATION=f"Bearer {token}"
+        )
+
+        content = json.loads(response.content)
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(content, "Cannot abort a not pending order.")
+
+    @mock.patch.object(
+        DummyPaymentBackend,
+        "abort_payment",
+        side_effect=DummyPaymentBackend().abort_payment,
+    )
+    def test_api_order_abort(self, mock_abort_payment):
+        """
+        An authenticated user which is the owner of the order should be able to abort
+        the order if it is pending and abort the related payment if a payment_id is
+        provided.
+        """
+        user = factories.UserFactory()
+        course = factories.CourseFactory()
+        product = factories.ProductFactory(courses=[course])
+        billing_address = BillingAddressDictFactory()
+
+        # - Create an order and its related payment
+        token = self.get_user_token(user.username)
+        data = {
+            "product": str(product.uid),
+            "course": course.code,
+            "billing_address": billing_address,
+        }
+        response = self.client.post(
+            "/api/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        content = json.loads(response.content)
+        order = models.Order.objects.get(uid=content["id"])
+        payment_id = content["payment_info"]["payment_id"]
+
+        # - A pending order should have been created...
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
+
+        # - ... with a payment
+        self.assertIsNotNone(cache.get(payment_id))
+
+        # - User asks to abort the order
+        response = self.client.post(
+            f"/api/orders/{order.uid}/abort/",
+            data={"payment_id": payment_id},
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 204)
+
+        # - Order should have been canceled ...
+        order.refresh_from_db()
+        self.assertEqual(order.is_canceled, True)
+
+        # - and its related payment should have been aborted.
+        mock_abort_payment.assert_called_once_with(payment_id)
+        self.assertIsNone(cache.get(payment_id))

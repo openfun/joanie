@@ -9,3 +9,7 @@ from . import api
 
 router = DefaultRouter()
 router.register("credit-cards", api.CreditCardViewSet, basename="credit-cards")
+
+urlpatterns = router.urls + [
+    re_path(r"payments/notifications/?$", api.webhook, name="payment_webhook"),
+]
