@@ -5,14 +5,12 @@ from decimal import Decimal as D
 
 from django.db import IntegrityError
 from django.test import TestCase
-from django.test.utils import override_settings
-from django.utils import timezone
 
 from djmoney.money import Money
 from marion.models import DocumentRequest
 from moneyed import EUR
 
-from joanie.core import enums, factories, models
+from joanie.core import factories, models
 
 
 class ProductModelsTestCase(TestCase):
@@ -48,47 +46,6 @@ class ProductModelsTestCase(TestCase):
 
         ordered_courses = list(product.target_courses.order_by("product_relations"))
         self.assertEqual(ordered_courses, expected_courses)
-
-    @override_settings(JOANIE_VAT=19.6)
-    def test_generate_invoice(self):
-        """Create an invoice for a product order"""
-
-        address = factories.AddressFactory()
-        user = factories.UserFactory()
-        user.addresses.add(address)
-        course = factories.CourseFactory()
-        product = factories.ProductFactory(courses=[course])
-        order = factories.OrderFactory(product=product, owner=user)
-
-        invoice = order.generate_invoice()
-        self.assertEqual(DocumentRequest.objects.count(), 1)
-        self.assertEqual(invoice.get_document_path().name, f"{invoice.document_id}.pdf")
-        self.assertEqual(
-            invoice.context_query["order"]["customer"]["address"],
-            address.full_address,
-        )
-        order.refresh_from_db()
-        now = timezone.localtime(timezone.now())
-        self.assertTrue(order.invoice_ref.startswith(now.strftime("%Y")))
-
-    @override_settings(JOANIE_VAT=19.6)
-    def test_generate_invoice_without_address(self):
-        """
-        Create an invoice for a product order should raise an error if owner
-        does not have a main address.
-        """
-
-        user = factories.UserFactory()
-        course = factories.CourseFactory()
-        product = factories.ProductFactory(courses=[course])
-        order = factories.OrderFactory(product=product, owner=user)
-
-        with self.assertRaises(ValueError):
-            order.generate_invoice()
-
-        order.refresh_from_db()
-        self.assertEqual(order.invoice_ref, "")
-        self.assertEqual(order.state, enums.ORDER_STATE_FAILED)
 
     def test_model_order_generate_certificate(self):
         """Generate a certificate for a product order"""
