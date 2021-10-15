@@ -164,8 +164,8 @@ class Order(models.Model):
         verbose_name=_("courses"),
         blank=True,
     )
-    price = MoneyField(
-        _("price"),
+    total = MoneyField(
+        _("total"),
         editable=False,
         max_digits=9,
         decimal_places=2,
@@ -225,7 +225,7 @@ class Order(models.Model):
             raise ValidationError({"__all__": [message]})
 
         if not self.pk:
-            self.price = self.product.price
+            self.total = self.product.price
 
         return super().clean()
 
@@ -437,7 +437,7 @@ class Enrollment(models.Model):
             # Forbid creating a free enrollment if an order exists for this course and
             # the owner has no pending order on it.
             if not self.order or not (
-                self.order.state == enums.ORDER_STATE_PAID
+                self.order.state == enums.ORDER_STATE_VALIDATED
                 and self.order.target_courses.filter(
                     course_runs=self.course_run
                 ).exists()

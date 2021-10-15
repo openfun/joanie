@@ -124,7 +124,9 @@ class EnrollmentApiTest(BaseAPITestCase):
         product = factories.ProductFactory(
             target_courses=[cr.course for cr in target_course_runs]
         )
-        order = factories.OrderFactory(owner=user, product=product, state="paid")
+        order = factories.OrderFactory(
+            owner=user, product=product, state=enums.ORDER_STATE_VALIDATED
+        )
         enrollment = factories.EnrollmentFactory(
             course_run=target_course_runs[0], user=user, order=order
         )
@@ -233,7 +235,9 @@ class EnrollmentApiTest(BaseAPITestCase):
             resource_link="http://openedx.test/courses/course-v1:edx+000002+Demo_Course/course",
         )
         product = factories.ProductFactory(target_courses=[target_course])
-        order = factories.OrderFactory(owner=user, product=product, state="paid")
+        order = factories.OrderFactory(
+            owner=user, product=product, state=enums.ORDER_STATE_VALIDATED
+        )
 
         # Create a pre-existing enrollment and try to enroll to this course's second course run
         factories.EnrollmentFactory(
@@ -381,7 +385,7 @@ class EnrollmentApiTest(BaseAPITestCase):
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
     def test_api_enrollment_create_authenticated_matching_valid_order(self, mock_set):
         """
-        While creating an enrollment, a paid order may be specified as long as
+        While creating an enrollment, a validated order may be specified as long as
         the owner is the logged-in user and the course run matches one of
         the order's target courses.
         """
@@ -396,7 +400,9 @@ class EnrollmentApiTest(BaseAPITestCase):
         product = factories.ProductFactory(
             target_courses=[course_run.course, other_course_run.course]
         )
-        order = factories.OrderFactory(product=product, state="paid")
+        order = factories.OrderFactory(
+            product=product, state=enums.ORDER_STATE_VALIDATED
+        )
         data = {"course_run": resource_link, "order": order.uid, "is_active": is_active}
         token = self.get_user_token(order.owner.username)
 
@@ -490,10 +496,10 @@ class EnrollmentApiTest(BaseAPITestCase):
         )
         self.assertFalse(models.Enrollment.objects.exists())
 
-    def test_api_enrollment_create_authenticated_matching_unpaid_order(self):
+    def test_api_enrollment_create_authenticated_matching_unvalidated_order(self):
         """
         It should not be allowed to create an enrollment with an order that is
-        not paid for a course linked to a product.
+        not validated for a course linked to a product.
         """
         target_course_runs = factories.CourseRunFactory.create_batch(2)
         product = factories.ProductFactory(
@@ -767,7 +773,9 @@ class EnrollmentApiTest(BaseAPITestCase):
         # Get alternative values to try to modify our enrollment
         other_user = factories.UserFactory(is_superuser=random.choice([True, False]))
         other_order = factories.OrderFactory(
-            owner=other_user, product=enrollment.order.product, state="paid"
+            owner=other_user,
+            product=enrollment.order.product,
+            state=enums.ORDER_STATE_VALIDATED,
         )
 
         # Try modifying the enrollment on each field with our alternative data
@@ -816,7 +824,9 @@ class EnrollmentApiTest(BaseAPITestCase):
             resource_link="http://openedx.test/courses/course-v1:edx+000002+Demo_Course/course",
         )
         product = factories.ProductFactory(target_courses=[target_course])
-        order = factories.OrderFactory(product=product, state="paid")
+        order = factories.OrderFactory(
+            product=product, state=enums.ORDER_STATE_VALIDATED
+        )
         enrollment = factories.EnrollmentFactory(
             course_run=course_run1, user=order.owner, order=order
         )
@@ -836,7 +846,9 @@ class EnrollmentApiTest(BaseAPITestCase):
             resource_link="http://openedx.test/courses/course-v1:edx+000002+Demo_Course/course",
         )
         product = factories.ProductFactory(target_courses=[target_course])
-        order = factories.OrderFactory(product=product, state="paid")
+        order = factories.OrderFactory(
+            product=product, state=enums.ORDER_STATE_VALIDATED
+        )
         enrollment = factories.EnrollmentFactory(
             course_run=course_run1, user=order.owner, order=order
         )
@@ -856,7 +868,9 @@ class EnrollmentApiTest(BaseAPITestCase):
             resource_link="http://openedx.test/courses/course-v1:edx+000002+Demo_Course/course",
         )
         product = factories.ProductFactory(target_courses=[target_course])
-        order = factories.OrderFactory(owner=user, product=product, state="paid")
+        order = factories.OrderFactory(
+            owner=user, product=product, state=enums.ORDER_STATE_VALIDATED
+        )
         enrollment = factories.EnrollmentFactory(
             course_run=course_run1, user=user, order=order
         )

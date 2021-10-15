@@ -75,7 +75,7 @@ class CourseApiTest(BaseAPITestCase):
                     owner=user,
                     course=course,
                     product=product,
-                    state=enums.ORDER_STATE_PAID,
+                    state=enums.ORDER_STATE_VALIDATED,
                 )
 
                 if should_enroll:
@@ -206,7 +206,10 @@ class CourseApiTest(BaseAPITestCase):
         # User has purchased each product and he is enrolled to the related course run
         # - Product 1
         order1 = factories.OrderFactory(
-            owner=user, product=product1, state=enums.ORDER_STATE_PAID, course=course
+            owner=user,
+            product=product1,
+            state=enums.ORDER_STATE_VALIDATED,
+            course=course,
         )
         # - Enrollment to course run 11
         factories.EnrollmentFactory(
@@ -218,7 +221,10 @@ class CourseApiTest(BaseAPITestCase):
         )
         # - Product 2
         order2 = factories.OrderFactory(
-            owner=user, product=product2, state=enums.ORDER_STATE_PAID, course=course
+            owner=user,
+            product=product2,
+            state=enums.ORDER_STATE_VALIDATED,
+            course=course,
         )
         # - Enrollment to course run 21
         factories.EnrollmentFactory(
@@ -242,7 +248,7 @@ class CourseApiTest(BaseAPITestCase):
                     owner=user,
                     course=course,
                     product=product,
-                    state=enums.ORDER_STATE_PAID,
+                    state=enums.ORDER_STATE_VALIDATED,
                 )
 
                 if should_enroll:
@@ -273,8 +279,8 @@ class CourseApiTest(BaseAPITestCase):
                 {
                     "id": str(order.uid),
                     "created_on": order.created_on.isoformat().replace("+00:00", "Z"),
-                    "price": float(order.price.amount),
-                    "price_currency": str(order.price.currency),
+                    "amount": float(order.amount.amount),
+                    "amount_currency": str(order.amount.currency),
                     "state": order.state,
                     "product": str(order.product.uid),
                     "enrollments": [
@@ -391,7 +397,7 @@ class CourseApiTest(BaseAPITestCase):
 
         # - User purchases the product
         order = factories.OrderFactory(
-            owner=user, product=product, state=enums.ORDER_STATE_PAID
+            owner=user, product=product, state=enums.ORDER_STATE_VALIDATED
         )
         # - Then enrolls to a course run
         factories.EnrollmentFactory(

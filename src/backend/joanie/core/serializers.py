@@ -194,7 +194,7 @@ class OrderLiteSerializer(serializers.ModelSerializer):
     """
 
     id = serializers.CharField(read_only=True, source="uid")
-    price = MoneyField(
+    total = MoneyField(
         coerce_to_string=False,
         decimal_places=2,
         max_digits=9,
@@ -211,8 +211,8 @@ class OrderLiteSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "created_on",
-            "price",
-            "price_currency",
+            "total",
+            "total_currency",
             "enrollments",
             "product",
             "state",
@@ -220,8 +220,8 @@ class OrderLiteSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "id",
             "created_on",
-            "price",
-            "price_currency",
+            "total",
+            "total_currency",
             "enrollments",
             "product",
             "state",
@@ -265,7 +265,7 @@ class CourseSerializer(serializers.ModelSerializer):
                     state__in=[
                         enums.ORDER_STATE_FAILED,
                         enums.ORDER_STATE_FINISHED,
-                        enums.ORDER_STATE_PAID,
+                        enums.ORDER_STATE_VALIDATED,
                         enums.ORDER_STATE_PENDING,
                     ],
                 )
@@ -366,7 +366,7 @@ class OrderSerializer(serializers.ModelSerializer):
     course = serializers.SlugRelatedField(
         queryset=models.Course.objects.all(), slug_field="code"
     )
-    price = MoneyField(
+    total = MoneyField(
         coerce_to_string=False,
         decimal_places=2,
         max_digits=9,
@@ -390,8 +390,8 @@ class OrderSerializer(serializers.ModelSerializer):
             "enrollments",
             "id",
             "owner",
-            "price",
-            "price_currency",
+            "total",
+            "total_currency",
             "product",
             "state",
             "target_courses",
@@ -401,8 +401,8 @@ class OrderSerializer(serializers.ModelSerializer):
             "enrollments",
             "id",
             "owner",
-            "price",
-            "price_currency",
+            "total",
+            "total_currency",
             "state",
             "target_courses",
         ]
