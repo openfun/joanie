@@ -2,6 +2,7 @@
 
 from django.conf import settings
 from django.core.cache import cache
+from django.db.models import Q
 
 from djmoney.contrib.django_rest_framework import MoneyField
 from rest_framework import serializers
@@ -205,12 +206,14 @@ class OrderLiteSerializer(serializers.ModelSerializer):
         many=True, read_only=True, required=False
     )
     product = serializers.SlugRelatedField(read_only=True, slug_field="uid")
+    main_invoice = serializers.SlugRelatedField(read_only=True, slug_field="reference")
 
     class Meta:
         model = models.Order
         fields = [
             "id",
             "created_on",
+            "main_invoice",
             "total",
             "total_currency",
             "enrollments",
@@ -220,6 +223,7 @@ class OrderLiteSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "id",
             "created_on",
+            "main_invoice",
             "total",
             "total_currency",
             "enrollments",
@@ -253,20 +257,20 @@ class CourseSerializer(serializers.ModelSerializer):
 
     def get_orders(self, instance):
         """
-        If an user is authenticated, retrieves its orders related to the serializer Course instance
-        else return None
+        If a user is authenticated, retrieves its orders related to the serializer
+        Course instance else return None
         """
         try:
             username = self.context["username"]
             orders = (
                 models.Order.objects.filter(
+                    Q(total=0) | Q(invoices__isnull=False),
                     owner__username=username,
                     course=instance,
                     state__in=[
                         enums.ORDER_STATE_FAILED,
                         enums.ORDER_STATE_FINISHED,
                         enums.ORDER_STATE_VALIDATED,
-                        enums.ORDER_STATE_PENDING,
                     ],
                 )
                 .select_related("product")
@@ -381,6 +385,7 @@ class OrderSerializer(serializers.ModelSerializer):
         many=True, read_only=True, required=False
     )
     target_courses = serializers.SerializerMethodField(read_only=True)
+    main_invoice = serializers.SlugRelatedField(read_only=True, slug_field="reference")
 
     class Meta:
         model = models.Order
@@ -389,6 +394,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "created_on",
             "enrollments",
             "id",
+            "main_invoice",
             "owner",
             "total",
             "total_currency",
@@ -400,6 +406,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "created_on",
             "enrollments",
             "id",
+            "main_invoice",
             "owner",
             "total",
             "total_currency",

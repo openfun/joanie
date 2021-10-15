@@ -9,9 +9,9 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import models
 from django.utils import timezone
+from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
-from babel.numbers import get_currency_symbol
 from djmoney.models.fields import MoneyField
 from djmoney.models.validators import MinMoneyValidator
 from marion.models import DocumentRequest
@@ -192,7 +192,6 @@ class Order(models.Model):
         default=enums.ORDER_STATE_PENDING,
         max_length=50,
     )
-    invoice_ref = models.CharField(_("invoice reference"), blank=True, max_length=40)
 
     class Meta:
         db_table = "joanie_order"
@@ -208,6 +207,17 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Order {self.product} for user {self.owner}"
+
+    @cached_property
+    def main_invoice(self):
+        """
+        Return main order's invoice.
+        It corresponds to the only invoice related to the order without parent.
+        """
+        try:
+            return self.invoices.get(parent__isnull=True)
+        except ObjectDoesNotExist:
+            return None
 
     def clean(self):
         """Clean instance fields and raise a ValidationError in case of issue."""
@@ -236,75 +246,53 @@ class Order(models.Model):
         super().save(*args, **kwargs)
 
         if is_new:
+            # - Generate order course relation
             for relation in ProductCourseRelation.objects.filter(product=self.product):
                 OrderCourseRelation.objects.create(
                     order=self, course=relation.course, position=relation.position
                 )
 
-    def generate_invoice(self):
-        """Generate a pdf invoice for an order"""
+            self.validate()
 
-        vat = D(settings.JOANIE_VAT)
-        net_amount = self.product.price.amount  # pylint: disable=no-member
-        vat_amount = net_amount * vat / 100
-        # create a unique reference for invoice
-        reference = (
-            f"{timezone.now().strftime('%Y%m%d%H%M%S')}"
-            "-"
-            f"{str(self.uid).split('-', maxsplit=1)[0]}"
-        )
-        currency = get_currency_symbol(
-            self.product.price.currency.code  # pylint: disable=no-member
-        )
+    def validate(self):
+        """
+        Automatically enroll user to courses with only one course run.
+        """
+        if self.state == enums.ORDER_STATE_VALIDATED:
+            # Enroll user to course run that are the only one course run of the course
+            courses = self.target_courses.annotate(
+                course_runs_count=models.Count("course_runs")
+            ).filter(course_runs_count=1)
+            course_runs = courses_models.CourseRun.objects.filter(course__in=courses)
 
-        # pylint: disable = fixme
-        # TODO: It is currently weird to use the main address to generate the invoice.
-        # Instead, we should use the billing address provided during the payment.
-        try:
-            main_address = self.owner.addresses.get(is_main=True)
-        except ObjectDoesNotExist as error:
-            self.state = enums.ORDER_STATE_FAILED
-            self.save()
-            raise ValueError(
-                _("A billing address is missing, invoice cannot be generated.")
-            ) from error
+            for course_run in course_runs:
+                try:
+                    enrollment = self.enrollments.get(course_run=course_run)
+                except Enrollment.DoesNotExist:
+                    Enrollment.objects.create(
+                        order=self,
+                        course_run=course_run,
+                        is_active=True,
+                        user=self.owner,
+                    )
+                else:
+                    if enrollment.is_active is False:
+                        enrollment.is_active = True
+                        enrollment.save()
 
-        context = {
-            "metadata": {
-                "reference": reference,
-                "type": "invoice",
-                "issued_on": timezone.now(),
-            },
-            "order": {
-                "customer": {
-                    "name": main_address.full_name,
-                    "address": main_address.full_address,
-                },
-                "seller": {
-                    "address": settings.JOANIE_INVOICE_SELLER_ADDRESS,
-                },
-                "product": {
-                    "name": self.product.title,  # pylint: disable=no-member
-                    "description": self.product.description,  # pylint: disable=no-member
-                },
-                "amount": {
-                    "subtotal": net_amount,
-                    "total": (net_amount + vat_amount),
-                    "vat_amount": vat_amount,
-                    "vat": vat,
-                    "currency": currency,
-                },
-                "company": settings.JOANIE_INVOICE_COMPANY_CONTEXT,
-            },
-        }
-        invoice = DocumentRequest.objects.create(
-            issuer=settings.MARION_INVOICE_DOCUMENT_ISSUER,
-            context_query=context,
-        )
-        # save reference to invoice_ref field
-        self.invoice_ref = reference
+    def cancel(self):
+        """
+        Mark order instance as "canceled" then unroll user to all active
+        course runs related to the order.
+        """
+        # Unroll user to all active enrollment related to the order
+        enrollments = self.enrollments.filter(is_active=True)
+        for enrollment in enrollments:
+            enrollment.is_active = False
+            enrollment.save()
+
+        self.state = enums.ORDER_STATE_CANCELED
         self.save()
-        return invoice
 
     def generate_certificate(self):
         """Generate a pdf certificate for the order's owner"""
@@ -469,19 +457,6 @@ class Enrollment(models.Model):
         self.set()
         super().save(*args, **kwargs)
 
-    def state_fail(self, message):
-        """
-        Mark the enrollment and the eventual order to a failed state and log the error.
-        Saving is left to the caller.
-        """
-        logger.error(message)
-
-        if self.order:
-            self.order.state = enums.ORDER_STATE_FAILED
-            self.order.save()
-
-        self.state = enums.ENROLLMENT_STATE_FAILED
-
     def set(self):
         """Try setting the state to the LMS. Saving is left to the caller."""
         # Now we can enroll user to LMS course run
@@ -492,9 +467,8 @@ class Enrollment(models.Model):
             # If no lms found we set enrollment and order to failure state
             # this issue could be due to a bad setting or a bad resource_link filled,
             # so we need to log this error to fix it quickly to joanie side
-            link = self.course_run.resource_link
-            self.state_fail(f'No LMS configuration found for course run: "{link:s}".')
-
+            logger.error('No LMS configuration found for course run: "%s".', link)
+            self.state = enums.ENROLLMENT_STATE_FAILED
         elif (
             not self.pk
             or Enrollment.objects.only("is_active").get(pk=self.pk).is_active
@@ -504,6 +478,7 @@ class Enrollment(models.Model):
             try:
                 lms.set_enrollment(self.user.username, link, self.is_active)
             except EnrollmentError:
-                self.state_fail(f'Enrollment failed for course run "{link:s}".')
+                logger.error('Enrollment failed for course run "%s".', link)
+                self.state = enums.ENROLLMENT_STATE_FAILED
             else:
                 self.state = enums.ENROLLMENT_STATE_SET
