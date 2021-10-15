@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Add credit card model and related api to retrieve, update, delete it
 - Serve static files with `whitenoise` third party app
 - Add collected static files to the production Docker image
 - Install django-money to manage currencies

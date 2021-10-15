@@ -22,6 +22,7 @@ from rest_framework.routers import DefaultRouter
 
 from joanie.core import api
 from joanie.lms_handler.urls import urlpatterns as lms_urlpatterns
+from joanie.payment.urls import urlpatterns as payment_urlpatterns
 
 router = DefaultRouter()
 router.register("addresses", api.AddressViewSet, basename="addresses")
@@ -31,7 +32,7 @@ router.register("orders", api.OrderViewSet, basename="orders")
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/", include([*router.urls, *lms_urlpatterns])),
+    path("api/", include([*router.urls, *lms_urlpatterns, *payment_urlpatterns])),
     path("api/documents/", include("marion.urls")),
 ]
 
