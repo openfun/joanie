@@ -60,7 +60,7 @@ class Product(parler_models.TranslatableModel):
     price = MoneyField(
         _("price"),
         max_digits=9,
-        help_text=_("tax exclude"),
+        help_text=_("tax included"),
         decimal_places=2,
         default=D("0.00"),
         default_currency=settings.DEFAULT_CURRENCY,
