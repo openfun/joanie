@@ -34,6 +34,7 @@ and this project adheres to
 
 ### Changed
 
+- Split address fullname field into first_name and last_name fields
 - Update CourseSerializer to bind order and enrollment related to the user
 - Use a ViewSet to create address api
 - Rename the "name" field to "title" (avoid confusion with new "fullname" field)

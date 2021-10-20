@@ -146,7 +146,8 @@ class AddressViewSet(
         - address: str
         - city: str
         - country: str, country code
-        - fullname: str, recipient fullname
+        - first_name: str, recipient first name
+        - last_name: str, recipient last name
         - is_main?: bool, if True set address as main
         - postcode: str
         - title: str, address title
@@ -156,7 +157,8 @@ class AddressViewSet(
         - address: str
         - city: str
         - country: str, country code
-        - fullname: str, recipient fullname
+        - first_name: str, recipient first name
+        - last_name: str, recipient last name
         - is_main?: bool, if True set address as main
         - postcode: str
         - title: str, address title

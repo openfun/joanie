@@ -20,7 +20,8 @@ def get_payload(address):
         "address": address.address,
         "city": address.city,
         "country": str(address.country),
-        "fullname": address.fullname,
+        "first_name": address.first_name,
+        "last_name": address.last_name,
         "title": address.title,
         "postcode": address.postcode,
     }
@@ -93,10 +94,12 @@ class AddressAPITestCase(BaseAPITestCase):
         addresses_data = response.data
         self.assertEqual(len(addresses_data), 2)
         self.assertEqual(addresses_data[0]["title"], "Office")
-        self.assertEqual(addresses_data[0]["fullname"], address1.fullname)
+        self.assertEqual(addresses_data[0]["first_name"], address1.first_name)
+        self.assertEqual(addresses_data[0]["last_name"], address1.last_name)
         self.assertEqual(addresses_data[0]["id"], str(address1.uid))
         self.assertEqual(addresses_data[1]["title"], "Home")
-        self.assertEqual(addresses_data[1]["fullname"], address2.fullname)
+        self.assertEqual(addresses_data[1]["first_name"], address2.first_name)
+        self.assertEqual(addresses_data[1]["last_name"], address2.last_name)
         self.assertEqual(addresses_data[1]["id"], str(address2.uid))
 
     def test_api_address_create_without_authorization(self):

@@ -34,7 +34,8 @@ class Address(models.Model):
     postcode = models.CharField(_("postcode"), max_length=50)
     city = models.CharField(_("city"), max_length=255)
     country = CountryField(_("country"))
-    fullname = models.CharField(_("full name"), max_length=255)
+    first_name = models.CharField(_("first name"), max_length=255)
+    last_name = models.CharField(_("last name"), max_length=255)
     owner = models.ForeignKey(
         User,
         verbose_name=_("owner"),
@@ -80,6 +81,10 @@ class Address(models.Model):
         self.full_clean()
         super().save(*args, **kwargs)
 
+    @property
+    def full_name(self):
+        """Recipient fullname"""
+        return f"{self.first_name} {self.last_name}"
     def get_full_address(self):
         """Full address to display"""
         return f"{self.address}\n{self.postcode} {self.city}\n{self.country.name}"

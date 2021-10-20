@@ -85,7 +85,7 @@ class AddressAdmin(admin.ModelAdmin):
 
     list_display = (
         "title",
-        "fullname",
+        "full_name",
         "address",
         "postcode",
         "city",

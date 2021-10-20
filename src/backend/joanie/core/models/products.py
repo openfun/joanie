@@ -259,8 +259,7 @@ class Order(models.Model):
         order = {
             "invoice_id": reference,
             "customer": {
-                "name": main_address.fullname,
-                "address": main_address.get_full_address(),
+                "name": main_address.full_name,
             },
             "product": {
                 "name": self.product.title,  # pylint: disable=no-member
