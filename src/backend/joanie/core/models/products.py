@@ -260,6 +260,7 @@ class Order(models.Model):
             "invoice_id": reference,
             "customer": {
                 "name": main_address.full_name,
+                "address": main_address.full_address,
             },
             "product": {
                 "name": self.product.title,  # pylint: disable=no-member

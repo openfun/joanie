@@ -75,3 +75,14 @@ class AddressTestCase(TestCase):
         address = factories.AddressFactory()
         self.assertEqual(address.full_name, f"{address.first_name} {address.last_name}")
 
+    def test_model_address_full_address_property(self):
+        """
+        address.full_address should return
+        address formatted into a human readable format
+        """
+        address = factories.AddressFactory()
+
+        self.assertEqual(
+            address.full_address,
+            f"{address.address}\n{address.postcode} {address.city}\n{address.country.name}",
+        )
