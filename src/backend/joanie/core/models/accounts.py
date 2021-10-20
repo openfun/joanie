@@ -85,6 +85,8 @@ class Address(models.Model):
     def full_name(self):
         """Recipient fullname"""
         return f"{self.first_name} {self.last_name}"
-    def get_full_address(self):
+
+    @property
+    def full_address(self):
         """Full address to display"""
         return f"{self.address}\n{self.postcode} {self.city}\n{self.country.name}"

@@ -57,7 +57,7 @@ class ProductModelsTestCase(TestCase):
         self.assertEqual(invoice.get_document_path().name, f"{invoice.document_id}.pdf")
         self.assertEqual(
             invoice.context_query["order"]["customer"]["address"],
-            address.get_full_address(),
+            address.full_address,
         )
         order.refresh_from_db()
         now = timezone.localtime(timezone.now())
