@@ -67,3 +67,11 @@ class AddressTestCase(TestCase):
         with self.assertRaises(ValidationError):
             address.is_main = False
             address.save()
+
+    def test_model_address_full_name_property(self):
+        """
+        address.full_name should concatenate first_name and last_name
+        """
+        address = factories.AddressFactory()
+        self.assertEqual(address.full_name, f"{address.first_name} {address.last_name}")
+

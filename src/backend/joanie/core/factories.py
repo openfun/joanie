@@ -265,5 +265,6 @@ class AddressFactory(factory.django.DjangoModelFactory):
     postcode = factory.Faker("postcode")
     city = factory.Faker("city")
     country = factory.Faker("country_code")
-    fullname = factory.Faker("name")
+    first_name = factory.Faker("first_name")
+    last_name = factory.Faker("last_name")
     owner = factory.SubFactory(UserFactory)
