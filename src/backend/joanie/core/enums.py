@@ -29,11 +29,10 @@ PRODUCT_TYPE_CHOICES = (
     (PRODUCT_TYPE_CERTIFICATE, _("Certificate")),
 )
 
-ORDER_STATE_PENDING = "pending"  # waiting for payment and enrollment
-ORDER_STATE_CANCELED = "canceled"
-ORDER_STATE_FAILED = "failed"
-ORDER_STATE_VALIDATED = "validated"
-ORDER_STATE_FINISHED = "finished"
+ORDER_STATE_PENDING = "pending"  # waiting for payment
+ORDER_STATE_CANCELED = "canceled"  #  has been canceled
+ORDER_STATE_FAILED = "failed"  #  payment failed
+ORDER_STATE_VALIDATED = "validated"  # is free or has an invoice linked
 
 ORDER_STATE_CHOICES = (
     (ORDER_STATE_PENDING, _("Pending")),  # default
@@ -43,11 +42,11 @@ ORDER_STATE_CHOICES = (
         ORDER_STATE_VALIDATED,
         pgettext_lazy("As in: the order is validated.", "Validated"),
     ),
-    (ORDER_STATE_FINISHED, pgettext_lazy("As in: the order is finished.", "Finished")),
 )
 
 ENROLLMENT_STATE_SET = "set"
 ENROLLMENT_STATE_FAILED = "failed"
+ENROLLMENT_STATE_PASSED = "passed"
 
 ENROLLMENT_STATE_CHOICES = (
     (

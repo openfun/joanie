@@ -186,19 +186,14 @@ class Order(models.Model):
         _("created on"), default=timezone.now, editable=False
     )
     updated_on = models.DateTimeField(_("updated on"), auto_now=True, editable=False)
-    state = models.CharField(
-        _("type"),
-        choices=enums.ORDER_STATE_CHOICES,
-        default=enums.ORDER_STATE_PENDING,
-        max_length=50,
-    )
+    is_canceled = models.BooleanField(_("is canceled"), default=False, editable=False)
 
     class Meta:
         db_table = "joanie_order"
         constraints = [
             models.UniqueConstraint(
                 fields=["course", "owner", "product"],
-                condition=~models.Q(state=enums.ORDER_STATE_CANCELED),
+                condition=models.Q(is_canceled=False),
                 name="unique_owner_product_not_canceled",
             )
         ]
@@ -207,6 +202,25 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Order {self.product} for user {self.owner}"
+
+    @property
+    def state(self):
+        """
+        Return order state.
+        If order has been explicitly canceled, return canceled state.
+        Then if order is free or has a related invoice, return validated state
+        Otherwise return pending state.
+        """
+        if self.is_canceled is True:
+            return enums.ORDER_STATE_CANCELED
+
+        if (
+            self.total.amount == 0  # pylint: disable=no-member
+            or self.invoices.count() > 0
+        ):
+            return enums.ORDER_STATE_VALIDATED
+
+        return enums.ORDER_STATE_PENDING
 
     @cached_property
     def main_invoice(self):
@@ -291,7 +305,7 @@ class Order(models.Model):
             enrollment.is_active = False
             enrollment.save()
 
-        self.state = enums.ORDER_STATE_CANCELED
+        self.is_canceled = True
         self.save()
 
     def generate_certificate(self):

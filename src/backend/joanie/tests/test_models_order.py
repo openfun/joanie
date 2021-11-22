@@ -1,8 +1,6 @@
 """
 Test suite for order models
 """
-import random
-
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.test import TestCase
@@ -24,20 +22,13 @@ class OrderModelsTestCase(TestCase):
         """
         course = factories.CourseFactory()
         product = factories.ProductFactory(courses=[course])
-
-        uncanceled_choices = [
-            s[0] for s in enums.ORDER_STATE_CHOICES if s[0] != "canceled"
-        ]
-        order = factories.OrderFactory(
-            state=random.choice(uncanceled_choices), product=product
-        )
+        order = factories.OrderFactory(product=product)
 
         with self.assertRaises(IntegrityError):
             factories.OrderFactory(
                 owner=order.owner,
                 product=product,
                 course=course,
-                state=random.choice(uncanceled_choices),
             )
 
     @staticmethod
@@ -48,7 +39,7 @@ class OrderModelsTestCase(TestCase):
         """
         course = factories.CourseFactory()
         product = factories.ProductFactory(courses=[course])
-        order = factories.OrderFactory(product=product, state="canceled")
+        order = factories.OrderFactory(product=product, is_canceled=True)
 
         factories.OrderFactory(owner=order.owner, product=product, course=order.course)
 
@@ -82,6 +73,38 @@ class OrderModelsTestCase(TestCase):
         order = factories.OrderFactory(product=product)
         order.course = factories.CourseFactory()
         order.save()
+
+    def test_models_order_state_property(self):
+        """
+        Order state property is dynamically computed from `is_canceled` state and related invoice.
+        """
+        course = factories.CourseFactory()
+        product = factories.ProductFactory(title="Traçabilité", courses=[course])
+        order = factories.OrderFactory(product=product, is_canceled=False)
+
+        # 1 - By default, an order is `pending``
+        self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
+
+        # 2 - When an invoice is linked to the order, its state is `validated`
+        InvoiceFactory(order=order, total=order.total)
+        self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
+
+        # 3 - When order is canceled, its state is `canceled`
+        order.is_canceled = True
+        order.save()
+        self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
+
+    def test_models_order_state_property_validated_when_free(self):
+        """
+        When an order relies on a free product, its state should be validated
+        without any invoice.
+        """
+        courses = factories.CourseFactory.create_batch(2)
+        # Create a free product
+        product = factories.ProductFactory(courses=courses, price=0)
+        order = factories.OrderFactory(product=product, is_canceled=False)
+
+        self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
 
     def test_models_order_validate(self):
         """

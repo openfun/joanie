@@ -7,7 +7,7 @@ from django.db.models import Q
 from djmoney.contrib.django_rest_framework import MoneyField
 from rest_framework import serializers
 
-from joanie.core import enums, models
+from joanie.core import models
 
 
 class CertificationDefinitionSerializer(serializers.ModelSerializer):
@@ -267,11 +267,7 @@ class CourseSerializer(serializers.ModelSerializer):
                     Q(total=0) | Q(invoices__isnull=False),
                     owner__username=username,
                     course=instance,
-                    state__in=[
-                        enums.ORDER_STATE_FAILED,
-                        enums.ORDER_STATE_FINISHED,
-                        enums.ORDER_STATE_VALIDATED,
-                    ],
+                    is_canceled=False,
                 )
                 .select_related("product")
                 .prefetch_related("enrollments__course_run")
