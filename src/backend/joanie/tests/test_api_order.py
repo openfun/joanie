@@ -272,7 +272,6 @@ class OrderApiTest(BaseAPITestCase):
             "product": str(product.uid),
             "id": uuid.uuid4(),
             "amount": 0.00,
-            "state": enums.ORDER_STATE_FINISHED,
         }
         token = self.get_user_token("panoramix")
 

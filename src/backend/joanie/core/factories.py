@@ -256,7 +256,6 @@ class OrderFactory(factory.django.DjangoModelFactory):
     product = factory.SubFactory(ProductFactory)
     course = factory.LazyAttribute(lambda o: o.product.courses.order_by("?").first())
     owner = factory.SubFactory(UserFactory)
-    state = factory.fuzzy.FuzzyChoice([s[0] for s in enums.ORDER_STATE_CHOICES])
 
 
 class OrderCourseRelationFactory(factory.django.DjangoModelFactory):

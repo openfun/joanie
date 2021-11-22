@@ -13,7 +13,6 @@ from djmoney.money import Money
 from parler.utils.context import switch_language
 from pdfminer.high_level import extract_text as pdf_extract_text
 
-from joanie.core import enums as core_enums
 from joanie.core.factories import OrderFactory, ProductFactory
 from joanie.payment.factories import InvoiceFactory, TransactionFactory
 from joanie.payment.models import Invoice
