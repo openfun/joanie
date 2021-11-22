@@ -119,10 +119,14 @@ class OrderAdmin(admin.ModelAdmin):
     """Admin class for the Order model"""
 
     list_display = ("uid", "owner", "product", "state")
-    readonly_fields = (
-        "total",
-        "invoice",
-    )
+    readonly_fields = ("total", "invoice")
+    actions = ["cancel"]
+
+    @admin.action(description=_("Cancel selected orders"))
+    def cancel(self, request, queryset):  # pylint: disable=no-self-use
+        """Cancel orders"""
+        for order in queryset:
+            order.cancel()
 
     def invoice(self, obj):  # pylint: disable=no-self-use
         """Retrieve the root invoice related to the order."""

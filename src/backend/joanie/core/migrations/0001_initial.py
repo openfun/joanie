@@ -419,18 +419,9 @@ class Migration(migrations.Migration):
                     models.DateTimeField(auto_now=True, verbose_name="updated on"),
                 ),
                 (
-                    "state",
-                    models.CharField(
-                        choices=[
-                            ("pending", "Pending"),
-                            ("canceled", "Canceled"),
-                            ("failed", "Failed"),
-                            ("validated", "Validated"),
-                            ("finished", "Finished"),
-                        ],
-                        default="pending",
-                        max_length=50,
-                        verbose_name="type",
+                    "is_canceled",
+                    models.BooleanField(
+                        default=False, editable=False, verbose_name="is canceled"
                     ),
                 ),
                 (
@@ -1097,7 +1088,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="order",
             constraint=models.UniqueConstraint(
-                condition=models.Q(("state", "canceled"), _negated=True),
+                condition=models.Q(("is_canceled", False)),
                 fields=("course", "owner", "product"),
                 name="unique_owner_product_not_canceled",
             ),

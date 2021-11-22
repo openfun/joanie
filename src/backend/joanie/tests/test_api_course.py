@@ -5,6 +5,7 @@ import random
 from django.test import override_settings
 
 from joanie.core import enums, factories, models
+from joanie.payment.factories import InvoiceFactory
 
 from .base import BaseAPITestCase
 
@@ -50,7 +51,7 @@ class CourseApiTest(BaseAPITestCase):
                 "COURSE_REGEX": r"(?P<course_id>.*)",
                 "SELECTOR_REGEX": r".*",
             }
-        ]
+        ],
     )
     def test_api_course_read_detail_anonymous(self):
         """
@@ -65,18 +66,21 @@ class CourseApiTest(BaseAPITestCase):
 
         # - Create a set of random users which possibly purchase the product
         # then enroll to one of its course run.
+        product_purchased = False
         for _ in range(random.randrange(1, 5)):
             user = factories.UserFactory()
             should_purchase = random.choice([True, False])
             should_enroll = random.choice([True, False])
 
             if should_purchase:
+                product_purchased = True
                 order = factories.OrderFactory(
                     owner=user,
                     course=course,
                     product=product,
-                    state=enums.ORDER_STATE_VALIDATED,
                 )
+                # Create an invoice to mark order has validated
+                InvoiceFactory(order=order, total=order.total)
 
                 if should_enroll:
                     course_run = random.choice(target_course_runs)
@@ -153,13 +157,19 @@ class CourseApiTest(BaseAPITestCase):
 
         # - An other request should get the cached response
         with self.assertNumQueries(1):
-            response = self.client.get(
+            self.client.get(
                 f"/api/courses/{course.code}/",
             )
 
         # - But cache should rely on the current language
-        with self.assertNumQueries(20):
-            response = self.client.get(
+
+        # As django parler caches its queries, we have to adapt the number of
+        # queries expected according to an invoice has been created or not.
+        # Because if an invoice has been created, product translation has been
+        # cached.
+        expected_num_queries = 19 if product_purchased else 20
+        with self.assertNumQueries(expected_num_queries):
+            self.client.get(
                 f"/api/courses/{course.code}/",
                 HTTP_ACCEPT_LANGUAGE="fr-fr",
             )
@@ -208,9 +218,11 @@ class CourseApiTest(BaseAPITestCase):
         order1 = factories.OrderFactory(
             owner=user,
             product=product1,
-            state=enums.ORDER_STATE_VALIDATED,
             course=course,
         )
+        # - Create an invoice related to the order to mark it as validated
+        InvoiceFactory(order=order1, total=order1.total)
+
         # - Enrollment to course run 11
         factories.EnrollmentFactory(
             user=user, course_run=target_course_run11, order=order1, is_active=True
@@ -223,9 +235,10 @@ class CourseApiTest(BaseAPITestCase):
         order2 = factories.OrderFactory(
             owner=user,
             product=product2,
-            state=enums.ORDER_STATE_VALIDATED,
             course=course,
         )
+        # - Create an invoice related to the order to mark it as validated
+        InvoiceFactory(order=order2, total=order2.total)
         # - Enrollment to course run 21
         factories.EnrollmentFactory(
             user=user, course_run=target_course_run21, order=order2, is_active=True
@@ -248,8 +261,9 @@ class CourseApiTest(BaseAPITestCase):
                     owner=user,
                     course=course,
                     product=product,
-                    state=enums.ORDER_STATE_VALIDATED,
                 )
+                # - Create an invoice related to the order to mark it as validated
+                InvoiceFactory(order=order, total=order.total)
 
                 if should_enroll:
                     course_run = random.choice(
@@ -261,7 +275,7 @@ class CourseApiTest(BaseAPITestCase):
                         user=user, course_run=course_run, order=order, is_active=True
                     )
 
-        with self.assertNumQueries(25):
+        with self.assertNumQueries(27):
             response = self.client.get(
                 f"/api/courses/{course.code}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -365,12 +379,70 @@ class CourseApiTest(BaseAPITestCase):
         self.assertEqual(content, expected)
 
         # - When user is authenticated, response should be partially cached.
-        # Course information should has been cached, but orders not.
-        with self.assertNumQueries(4):
+        # Course information should have been cached, but orders not.
+        with self.assertNumQueries(8):
+            self.client.get(
+                f"/api/courses/{course.code}/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+    def test_api_course_read_detail_orders(self):
+        """
+        When user purchased products, if related orders are validated they should
+        be embedded in the response.
+        """
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+        course = factories.CourseFactory()
+
+        # - User owned a free product
+        product_free = factories.ProductFactory(courses=[course], price="0.00")
+        order_free = factories.OrderFactory(
+            owner=user, product=product_free, course=course
+        )
+
+        # - He also purchased a product
+        product_paid = factories.ProductFactory(courses=[course])
+        order_paid = factories.OrderFactory(
+            owner=user, product=product_paid, course=course
+        )
+        InvoiceFactory(order=order_paid, total=order_paid.total)
+
+        # - Furthermore it has a pending order
+        product_pending = factories.ProductFactory(courses=[course])
+        order_pending = factories.OrderFactory(
+            owner=user, product=product_pending, course=course
+        )
+
+        # - And a canceled order
+        product_canceled = factories.ProductFactory(courses=[course])
+        order_canceled = factories.OrderFactory(
+            course=course, owner=user, product=product_canceled, is_canceled=True
+        )
+
+        self.assertEqual(order_free.state, enums.ORDER_STATE_VALIDATED)
+        self.assertEqual(order_paid.state, enums.ORDER_STATE_VALIDATED)
+        self.assertEqual(order_pending.state, enums.ORDER_STATE_PENDING)
+        self.assertEqual(order_canceled.state, enums.ORDER_STATE_CANCELED)
+
+        # - Retrieve course information
+        with self.assertNumQueries(11):
             response = self.client.get(
                 f"/api/courses/{course.code}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
+
+        self.assertEqual(response.status_code, 200)
+
+        content = json.loads(response.content)
+        self.assertEqual(len(content["products"]), 4)
+
+        # - Response should only contain the two validated orders
+        self.assertEqual(len(content["orders"]), 2)
+        self.assertContains(response, str(order_free.uid))
+        self.assertContains(response, str(order_paid.uid))
+        self.assertNotContains(response, str(order_pending.uid))
+        self.assertNotContains(response, str(order_canceled.uid))
 
     @override_settings(
         JOANIE_LMS_BACKENDS=[
@@ -397,9 +469,9 @@ class CourseApiTest(BaseAPITestCase):
         product = factories.ProductFactory(courses=[course], target_courses=[tc1, tc2])
 
         # - User purchases the product
-        order = factories.OrderFactory(
-            owner=user, product=product, state=enums.ORDER_STATE_VALIDATED
-        )
+        order = factories.OrderFactory(owner=user, product=product)
+        # - Create invoice related to the order to mark it as validated
+        InvoiceFactory(order=order, total=order.total)
         # - Then enrolls to a course run
         factories.EnrollmentFactory(
             course_run=cr1,
