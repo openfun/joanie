@@ -72,6 +72,7 @@ $ make superuser
 ### Explanation
 
 - [LMS Connection](https://github.com/openfun/joanie/blob/master/docs/explanation/lms-connection.md)
+- [Payment backends](https://github.com/openfun/joanie/blob/master/docs/explanation/payment-backend.md)
 
 ## Contributing
 
