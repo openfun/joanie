@@ -239,15 +239,22 @@ class Base(Configuration):
 
     # Joanie settings
     JOANIE_CURRENCY = values.Value(
-        ("EUR", "\N{euro sign}"), environ_name="JOANIE_CURRENCY"
+        ("EUR", "\N{euro sign}"), environ_name="JOANIE_CURRENCY", environ_prefix=None
     )
-    JOANIE_VAT = values.Value(20, environ_name="JOANIE_VAT")
+    JOANIE_VAT = values.Value(20, environ_name="JOANIE_VAT", environ_prefix=None)
+    JOANIE_INVOICE_SELLER_ADDRESS = values.Value(
+        """France Université Numérique
+        10 Rue Stine,
+        75001 Paris, FR""",
+        environ_name="JOANIE_INVOICE_SELLER_ADDRESS",
+        environ_prefix=None,
+    )
     JOANIE_INVOICE_COMPANY_CONTEXT = values.Value(
-        """
-        10 rue Stine, 75001 Paris
+        """10 rue Stine, 75001 Paris
         RCS Paris XXX XXX XXX - SIRET XXX XXX XXX XXXXX - APE XXXXX
         VAT Number XXXXXXXXX""",
         environ_name="JOANIE_INVOICE_COMPANY_CONTEXT",
+        environ_prefix=None,
     )
 
     AUTH_USER_MODEL = "core.User"
