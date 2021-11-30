@@ -256,28 +256,37 @@ class Order(models.Model):
                 _("A billing address is missing, invoice cannot be generated.")
             ) from error
 
-        order = {
-            "invoice_id": reference,
-            "customer": {
-                "name": main_address.full_name,
-                "address": main_address.full_address,
+        context = {
+            "metadata": {
+                "reference": reference,
+                "type": "invoice",
+                "issued_on": timezone.now(),
             },
-            "product": {
-                "name": self.product.title,  # pylint: disable=no-member
-                "description": self.product.description,  # pylint: disable=no-member
+            "order": {
+                "customer": {
+                    "name": main_address.full_name,
+                    "address": main_address.full_address,
+                },
+                "seller": {
+                    "address": settings.JOANIE_INVOICE_SELLER_ADDRESS,
+                },
+                "product": {
+                    "name": self.product.title,  # pylint: disable=no-member
+                    "description": self.product.description,  # pylint: disable=no-member
+                },
+                "amount": {
+                    "subtotal": net_amount,
+                    "total": (net_amount + vat_amount),
+                    "vat_amount": vat_amount,
+                    "vat": vat,
+                    "currency": currency,
+                },
+                "company": settings.JOANIE_INVOICE_COMPANY_CONTEXT,
             },
-            "price": {
-                "subtotal": net_amount,
-                "total": (net_amount + vat_amount),
-                "vat_amount": vat_amount,
-                "vat": vat,
-                "currency": currency,
-            },
-            "company": settings.JOANIE_INVOICE_COMPANY_CONTEXT,
         }
         invoice = DocumentRequest.objects.create(
             issuer=settings.MARION_INVOICE_DOCUMENT_ISSUER,
-            context_query={"order": order},
+            context_query=context,
         )
         # save reference to invoice_ref field
         self.invoice_ref = reference
