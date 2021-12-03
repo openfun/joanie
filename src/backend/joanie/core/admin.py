@@ -3,7 +3,11 @@ Core application admin
 """
 from django.contrib import admin
 from django.contrib.auth import admin as auth_admin
+from django.urls import reverse
+from django.utils.html import format_html
+from django.utils.translation import gettext_lazy as _
 
+from adminsortable2.admin import SortableInlineAdminMixin
 from parler.admin import TranslatableAdmin
 
 from . import models
@@ -27,7 +31,20 @@ class CertificateAdmin(admin.ModelAdmin):
 class CourseAdmin(TranslatableAdmin):
     """Admin class for the Course model"""
 
-    list_display = ("title", "organization")
+    list_display = ("code", "title", "organization")
+    filter_vertical = ("products",)
+    fieldsets = (
+        (_("Main information"), {"fields": ("code", "title", "organization")}),
+        (
+            _("Related products"),
+            {
+                "description": _(
+                    "Select products that will be available through this course."
+                ),
+                "fields": ("products",),
+            },
+        ),
+    )
 
 
 @admin.register(models.CourseRun)
@@ -51,11 +68,50 @@ class UserAdmin(auth_admin.UserAdmin):
     list_display = ("username",)
 
 
+class ProductCourseRelationInline(SortableInlineAdminMixin, admin.TabularInline):
+    """Admin class for the ProductCourseRelation model"""
+
+    model = models.Product.target_courses.through
+    extra = 0
+
+
 @admin.register(models.Product)
 class ProductAdmin(TranslatableAdmin):
     """Admin class for the Product model"""
 
     list_display = ("title", "type", "price")
+    fields = (
+        "type",
+        "title",
+        "description",
+        "call_to_action",
+        "price",
+        "certificate_definition",
+        "related_courses",
+    )
+
+    inlines = (ProductCourseRelationInline,)
+    readonly_fields = ("related_courses",)
+
+    @admin.display(description="Related courses")
+    def related_courses(self, obj):  # pylint: disable=no-self-use
+        """
+        Retrieve courses related to the product
+        """
+        related_courses = obj.courses.all()
+        if related_courses:
+            items = [
+                (
+                    "<li>"
+                    f"<a href='{reverse('admin:core_course_change', args=(course.id,),)}'>"
+                    f"{course.code} | {course.title}"
+                    "</a>"
+                    "</li>"
+                )
+                for course in obj.courses.all()
+            ]
+            return format_html(f"<ul style='margin: 0'>{''.join(items)}</ul>")
+        return "-"
 
 
 @admin.register(models.Order)
@@ -63,13 +119,6 @@ class OrderAdmin(admin.ModelAdmin):
     """Admin class for the Order model"""
 
     list_display = ("owner", "product", "state")
-
-
-@admin.register(models.ProductCourseRelation)
-class ProductCourseRelationAdmin(admin.ModelAdmin):
-    """Admin class for the ProductCourseRelation model"""
-
-    list_display = ("product", "course", "position")
 
 
 @admin.register(models.Enrollment)
