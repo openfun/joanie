@@ -11,6 +11,9 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
+from babel.numbers import get_currency_symbol
+from djmoney.models.fields import MoneyField
+from djmoney.models.validators import MinMoneyValidator
 from marion.models import DocumentRequest
 from parler import models as parler_models
 
@@ -54,13 +57,17 @@ class Product(parler_models.TranslatableModel):
         verbose_name=_("target courses"),
         blank=True,
     )
-    price = models.DecimalField(
-        _(f"price ({getattr(settings, 'JOANIE_CURRENCY')[1]})"),
-        help_text=_("tax exclude"),
+    price = MoneyField(
+        _("price"),
         max_digits=9,
+        help_text=_("tax exclude"),
         decimal_places=2,
         default=D("0.00"),
+        default_currency=settings.DEFAULT_CURRENCY,
         blank=True,
+        validators=[
+            MinMoneyValidator(0),
+        ],
     )
     certificate_definition = models.ForeignKey(
         "CertificateDefinition",
@@ -79,7 +86,7 @@ class Product(parler_models.TranslatableModel):
     def __str__(self):
         return (
             f"[{self.type.upper()}] {self.safe_translation_getter('title', any_language=True)} "
-            f"{self.price}{getattr(settings, 'JOANIE_CURRENCY')[1]}"
+            f"{self.price}"
         )
 
     def clean(self):
@@ -157,14 +164,18 @@ class Order(models.Model):
         verbose_name=_("courses"),
         blank=True,
     )
-    price = models.DecimalField(
-        _(f"price ({getattr(settings, 'JOANIE_CURRENCY')[1]})"),
+    price = MoneyField(
+        _("price"),
+        editable=False,
         max_digits=9,
         decimal_places=2,
         default=D("0.00"),
+        default_currency=settings.DEFAULT_CURRENCY,
         blank=True,
+        validators=[
+            MinMoneyValidator(0),
+        ],
     )
-
     owner = models.ForeignKey(
         customers_models.User,
         verbose_name=_("owner"),
@@ -234,7 +245,7 @@ class Order(models.Model):
         """Generate a pdf invoice for an order"""
 
         vat = D(settings.JOANIE_VAT)
-        net_amount = self.product.price
+        net_amount = self.product.price.amount  # pylint: disable=no-member
         vat_amount = net_amount * vat / 100
         # create a unique reference for invoice
         reference = (
@@ -242,7 +253,9 @@ class Order(models.Model):
             "-"
             f"{str(self.uid).split('-', maxsplit=1)[0]}"
         )
-        currency = settings.JOANIE_CURRENCY[1]
+        currency = get_currency_symbol(
+            self.product.price.currency.code  # pylint: disable=no-member
+        )
 
         # pylint: disable = fixme
         # TODO: It is currently weird to use the main address to generate the invoice.

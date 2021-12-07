@@ -11,6 +11,8 @@ from django.utils import timezone
 import factory
 import factory.fuzzy
 import pytz
+from djmoney.money import Money
+from faker import Faker
 
 from . import enums, models
 
@@ -192,7 +194,18 @@ class ProductFactory(factory.django.DjangoModelFactory):
     type = enums.PRODUCT_TYPE_ENROLLMENT
     title = factory.Faker("bs")
     call_to_action = "let's go!"
-    price = factory.fuzzy.FuzzyDecimal(low=1, high=999, precision=2)
+
+    @factory.lazy_attribute
+    # pylint: disable=no-self-use
+    def price(self):
+        """
+        Return a Money object with a random amount and a random currency from
+        the list of currencies supported by the application.
+        """
+        return Money(
+            amount=Faker().pydecimal(left_digits=3, right_digits=2, min_value=0),
+            currency=random.choice(settings.CURRENCIES),  # nosec
+        )
 
     @factory.post_generation
     # pylint: disable=unused-argument,no-member

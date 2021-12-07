@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Install django-money to manage currencies
 - Improve course and product admin change views
 - Add ngrok to serve Joanie on a public address for development purpose
 - Add unique constraint to owner address field to allow only one main address

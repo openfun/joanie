@@ -2,7 +2,6 @@
 import json
 import random
 
-from django.conf import settings
 from django.test import override_settings
 
 from joanie.core import enums, factories, models
@@ -101,12 +100,9 @@ class CourseApiTest(BaseAPITestCase):
                 {
                     "call_to_action": product.call_to_action,
                     "certificate": None,
-                    "currency": {
-                        "code": settings.JOANIE_CURRENCY[0],
-                        "symbol": settings.JOANIE_CURRENCY[1],
-                    },
                     "id": str(product.uid),
-                    "price": float(product.price),
+                    "price": float(product.price.amount),
+                    "price_currency": str(product.price.currency),
                     "target_courses": [
                         {
                             "code": target_course.code,
@@ -277,7 +273,8 @@ class CourseApiTest(BaseAPITestCase):
                 {
                     "id": str(order.uid),
                     "created_on": order.created_on.isoformat().replace("+00:00", "Z"),
-                    "price": float(order.price),
+                    "price": float(order.price.amount),
+                    "price_currency": str(order.price.currency),
                     "state": order.state,
                     "product": str(order.product.uid),
                     "enrollments": [
@@ -309,12 +306,9 @@ class CourseApiTest(BaseAPITestCase):
                 {
                     "call_to_action": product.call_to_action,
                     "certificate": None,
-                    "currency": {
-                        "code": settings.JOANIE_CURRENCY[0],
-                        "symbol": settings.JOANIE_CURRENCY[1],
-                    },
                     "id": str(product.uid),
-                    "price": float(product.price),
+                    "price": float(product.price.amount),
+                    "price_currency": str(product.price.currency),
                     "target_courses": [
                         {
                             "code": target_course.code,

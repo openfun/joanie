@@ -8,7 +8,9 @@ from django.test import TestCase
 from django.test.utils import override_settings
 from django.utils import timezone
 
+from djmoney.money import Money
 from marion.models import DocumentRequest
+from moneyed import EUR
 
 from joanie.core import enums, factories, models
 
@@ -17,9 +19,15 @@ class ProductModelsTestCase(TestCase):
     """Test suite for the Product model."""
 
     def test_models_product_price_format(self):
-        """The price field should be a decimal with 2 digits (money)."""
+        """
+        The price field should be a money object with an amount property
+        which is a Decimal and a currency property which is a
+        Currency object.
+        """
         product = factories.ProductFactory(price=23)
-        self.assertEqual(product.price, D("23.00"))
+        self.assertEqual(product.price, Money("23.00", "EUR"))
+        self.assertEqual(product.price.amount, D("23.00"))
+        self.assertEqual(product.price.currency, EUR)
 
     def test_models_product_course_runs_unique(self):
         """A product can only be linked once to a given course run."""
