@@ -168,6 +168,7 @@ class Base(Configuration):
         "adminsortable2",
         "corsheaders",
         "dockerflow.django",
+        "djmoney",
         "rest_framework",
         "parler",
         "marion",
@@ -238,10 +239,11 @@ class Base(Configuration):
     MARION_INVOICE_DOCUMENT_ISSUER = "howard.issuers.InvoiceDocument"
     MARION_CERTIFICATE_DOCUMENT_ISSUER = "howard.issuers.CertificateDocument"
 
+    # Django Money
+    DEFAULT_CURRENCY = "EUR"
+    CURRENCIES = (DEFAULT_CURRENCY,)
+
     # Joanie settings
-    JOANIE_CURRENCY = values.Value(
-        ("EUR", "\N{euro sign}"), environ_name="JOANIE_CURRENCY", environ_prefix=None
-    )
     JOANIE_VAT = values.Value(20, environ_name="JOANIE_VAT", environ_prefix=None)
     JOANIE_INVOICE_SELLER_ADDRESS = values.Value(
         """France Université Numérique

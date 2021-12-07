@@ -3,6 +3,7 @@
 from django.conf import settings
 from django.core.cache import cache
 
+from djmoney.contrib.django_rest_framework import MoneyField
 from rest_framework import serializers
 
 from joanie.core import enums, models
@@ -93,8 +94,7 @@ class ProductSerializer(serializers.ModelSerializer):
     certificate = CertificationDefinitionSerializer(
         read_only=True, source="certificate_definition"
     )
-    currency = serializers.SerializerMethodField(read_only=True)
-    price = serializers.DecimalField(
+    price = MoneyField(
         coerce_to_string=False,
         decimal_places=2,
         max_digits=9,
@@ -108,9 +108,9 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = [
             "call_to_action",
             "certificate",
-            "currency",
             "id",
             "price",
+            "price_currency",
             "target_courses",
             "title",
             "type",
@@ -118,9 +118,9 @@ class ProductSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "call_to_action",
             "certificate",
-            "currency",
             "id",
             "price",
+            "price_currency",
             "target_courses",
             "title",
             "type",
@@ -141,14 +141,6 @@ class ProductSerializer(serializers.ModelSerializer):
             many=True,
             context=context,
         ).data
-
-    def get_currency(self, _):  # pylint: disable=no-self-use
-        """
-        Return currency code and symbol
-        to allow frontend to format properly price
-        """
-        (code, symbol) = settings.JOANIE_CURRENCY[:2]
-        return {"code": code, "symbol": symbol}
 
 
 class CourseRunEnrollmentSerializer(serializers.ModelSerializer):
@@ -202,7 +194,7 @@ class OrderLiteSerializer(serializers.ModelSerializer):
     """
 
     id = serializers.CharField(read_only=True, source="uid")
-    price = serializers.DecimalField(
+    price = MoneyField(
         coerce_to_string=False,
         decimal_places=2,
         max_digits=9,
@@ -220,6 +212,7 @@ class OrderLiteSerializer(serializers.ModelSerializer):
             "id",
             "created_on",
             "price",
+            "price_currency",
             "enrollments",
             "product",
             "state",
@@ -228,6 +221,7 @@ class OrderLiteSerializer(serializers.ModelSerializer):
             "id",
             "created_on",
             "price",
+            "price_currency",
             "enrollments",
             "product",
             "state",
@@ -372,7 +366,7 @@ class OrderSerializer(serializers.ModelSerializer):
     course = serializers.SlugRelatedField(
         queryset=models.Course.objects.all(), slug_field="code"
     )
-    price = serializers.DecimalField(
+    price = MoneyField(
         coerce_to_string=False,
         decimal_places=2,
         max_digits=9,
@@ -397,6 +391,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "id",
             "owner",
             "price",
+            "price_currency",
             "product",
             "state",
             "target_courses",
@@ -407,6 +402,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "id",
             "owner",
             "price",
+            "price_currency",
             "state",
             "target_courses",
         ]
