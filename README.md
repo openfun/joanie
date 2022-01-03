@@ -49,6 +49,14 @@ Finally, you can see all available commands in our `Makefile` with :
 $ make help
 ```
 
+If you're preparing for production, it is recommended to host media files in an object storage.
+We've cooked [Terraform scripts](https://www.terraform.io/) and a [documentation](docs/media.md)
+to make it easy if, like us, you are planning to use [Swift](https://docs.openstack.org/swift). Read more about it: docs/media.md.
+
+If you're planning to use AWS S3 or another object storage service, please let us know by opening
+an [issue](https://github.com/openfun/joanie/issues) or even better a
+[pull request](https://github.com/openfun/joanie/pulls) to add it to the project.
+
 ### Django admin
 
 You can access the Django admin site at [http://localhost:8071/admin](http://localhost:8071).
