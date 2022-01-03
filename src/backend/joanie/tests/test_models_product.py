@@ -102,6 +102,19 @@ class ProductModelsTestCase(TestCase):
 
         certificate = order.generate_certificate()
         self.assertEqual(DocumentRequest.objects.count(), 1)
+        document_request = DocumentRequest.objects.get()
+        blue_square_base64 = (
+            "data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgY"
+            "PgPAAEDAQAIicLsAAAAAElFTkSuQmCC"
+        )
+        self.assertEqual(
+            document_request.context["course"]["organization"]["logo"],
+            blue_square_base64,
+        )
+        self.assertEqual(
+            document_request.context["course"]["organization"]["signature"],
+            blue_square_base64,
+        )
         self.assertEqual(
             certificate.attachment.name,
             f"{DocumentRequest.objects.get().document_id}.pdf",

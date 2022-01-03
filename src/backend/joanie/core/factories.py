@@ -52,8 +52,12 @@ class OrganizationFactory(factory.django.DjangoModelFactory):
 
     code = factory.Faker("ean", length=8)
     title = factory.Sequence(lambda n: f"Organization {n}")
-    signature = factory.django.FileField(filename="signature.png")
-    logo = factory.django.FileField(filename="logo.png")
+    signature = factory.django.ImageField(
+        filename="signature.png", format="png", width=1, height=1
+    )
+    logo = factory.django.ImageField(
+        filename="logo.png", format="png", width=1, height=1
+    )
 
 
 class CourseFactory(factory.django.DjangoModelFactory):

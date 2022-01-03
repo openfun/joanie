@@ -20,7 +20,7 @@ from parler import models as parler_models
 from joanie.core.exceptions import EnrollmentError
 from joanie.lms_handler import LMSHandler
 
-from .. import enums
+from .. import enums, utils
 from . import accounts as customers_models
 from . import certifications as certifications_models
 from . import courses as courses_models
@@ -318,8 +318,8 @@ class Order(models.Model):
                 "organization": {
                     "name": organization.title,
                     "representative": organization.representative,
-                    "signature": organization.signature.path,
-                    "logo": organization.logo.path,
+                    "signature": utils.image_to_base64(organization.signature),
+                    "logo": utils.image_to_base64(organization.logo),
                 },
             },
         }
