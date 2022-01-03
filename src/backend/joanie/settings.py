@@ -387,6 +387,14 @@ class Production(Base):
     # Privacy
     SECURE_REFERRER_POLICY = "same-origin"
 
+    # Media
+    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+    AWS_S3_ENDPOINT_URL = values.Value()
+    AWS_S3_ACCESS_KEY_ID = values.Value()
+    AWS_S3_SECRET_ACCESS_KEY = values.Value()
+    AWS_STORAGE_BUCKET_NAME = values.Value("tf-default-joanie-media-storage")
+    AWS_S3_REGION_NAME = values.Value()
+
 
 class Feature(Production):
     """
