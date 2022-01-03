@@ -272,27 +272,36 @@ class Order(models.Model):
         """
         Automatically enroll user to courses with only one course run.
         """
-        if self.state == enums.ORDER_STATE_VALIDATED:
-            # Enroll user to course run that are the only one course run of the course
-            courses = self.target_courses.annotate(
-                course_runs_count=models.Count("course_runs")
-            ).filter(course_runs_count=1)
-            course_runs = courses_models.CourseRun.objects.filter(course__in=courses)
+        if self.state != enums.ORDER_STATE_VALIDATED:
+            return
 
-            for course_run in course_runs:
-                try:
-                    enrollment = self.enrollments.get(course_run=course_run)
-                except Enrollment.DoesNotExist:
-                    Enrollment.objects.create(
-                        order=self,
-                        course_run=course_run,
-                        is_active=True,
-                        user=self.owner,
-                    )
-                else:
-                    if enrollment.is_active is False:
-                        enrollment.is_active = True
-                        enrollment.save()
+        # Enroll user to course run that are the only one course run of the course
+        courses_with_one_course_run = self.target_courses.annotate(
+            course_runs_count=models.Count("course_runs")
+        ).filter(
+            models.Q(course_runs__enrollment_end__gt=timezone.now())
+            | models.Q(course_runs__enrollment_end__isnull=True),
+            course_runs__enrollment_start__lte=timezone.now(),
+            course_runs_count=1,
+        )
+
+        for course in courses_with_one_course_run:
+            course_run = course.course_runs.first()
+            try:
+                enrollment = self.enrollments.get(course_run=course_run).only(
+                    "is_active"
+                )
+            except Enrollment.DoesNotExist:
+                Enrollment.objects.create(
+                    order=self,
+                    course_run=course_run,
+                    is_active=True,
+                    user=self.owner,
+                )
+            else:
+                if enrollment.is_active is False:
+                    enrollment.is_active = True
+                    enrollment.save()
 
     def cancel(self):
         """
@@ -418,6 +427,13 @@ class Enrollment(models.Model):
 
     def clean(self):
         """Clean instance fields and raise a ValidationError in case of issue."""
+        # The related course run must be opened for enrollment
+        if self.course_run.state["priority"] > courses_models.CourseState.ARCHIVED_OPEN:
+            message = _(
+                "You are not allowed to enroll to a course run not opened for enrollment."
+            )
+            raise ValidationError({"__all__": [message]})
+
         if self.order:
             # The user of the enrollment should be the owner of the order
             if self.order.owner != self.user:

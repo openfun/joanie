@@ -31,7 +31,7 @@ class CertificateAdmin(admin.ModelAdmin):
 class CourseAdmin(TranslatableAdmin):
     """Admin class for the Course model"""
 
-    list_display = ("code", "title", "organization")
+    list_display = ("code", "title", "organization", "state")
     filter_vertical = ("products",)
     fieldsets = (
         (_("Main information"), {"fields": ("code", "title", "organization")}),
@@ -51,7 +51,7 @@ class CourseAdmin(TranslatableAdmin):
 class CourseRunAdmin(TranslatableAdmin):
     """Admin class for the CourseRun model"""
 
-    list_display = ("title", "resource_link", "start", "end")
+    list_display = ("title", "resource_link", "start", "end", "state")
 
 
 @admin.register(models.Organization)

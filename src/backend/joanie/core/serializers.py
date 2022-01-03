@@ -313,6 +313,7 @@ class CourseRunSerializer(serializers.ModelSerializer):
             "resource_link",
             "start",
             "title",
+            "state",
         ]
         read_only_fields = [
             "end",
@@ -322,6 +323,7 @@ class CourseRunSerializer(serializers.ModelSerializer):
             "resource_link",
             "start",
             "title",
+            "state",
         ]
 
 
