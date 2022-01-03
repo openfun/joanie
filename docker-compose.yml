@@ -56,7 +56,7 @@ services:
   nginx:
     image: nginx:1.13
     ports:
-      - "8081:8081"
+      - "8082:8082"
     volumes:
       - ./docker/files/etc/nginx/conf.d:/etc/nginx/conf.d:ro
       - ./data/media:/data/media:ro
