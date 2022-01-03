@@ -3,12 +3,15 @@ import itertools
 import json
 import random
 import uuid
+from datetime import timedelta
 from logging import Logger
 from unittest import mock
 
 from django.test.utils import override_settings
+from django.utils import timezone
 
 from joanie.core import enums, exceptions, factories, models
+from joanie.core.factories import CourseRunFactory
 from joanie.lms_handler.backends.openedx import OpenEdXLMSBackend
 from joanie.payment.factories import InvoiceFactory
 
@@ -29,9 +32,49 @@ from .base import BaseAPITestCase
 class EnrollmentApiTest(BaseAPITestCase):
     """Test the API of the Enrollment object."""
 
+    def setUp(self):
+        super().setUp()
+        self.now = timezone.now()
+
+    def create_opened_course_run(self, count=1, **kwargs):
+        """Create course runs opened for enrollment."""
+        if count > 1:
+            return CourseRunFactory.create_batch(
+                count,
+                start=self.now - timedelta(hours=1),
+                end=self.now + timedelta(hours=2),
+                enrollment_end=self.now + timedelta(hours=1),
+                **kwargs,
+            )
+
+        return CourseRunFactory(
+            start=self.now - timedelta(hours=1),
+            end=self.now + timedelta(hours=2),
+            enrollment_end=self.now + timedelta(hours=1),
+            **kwargs,
+        )
+
+    def create_closed_course_run(self, count=1, **kwargs):
+        """Create course runs closed for enrollment."""
+        if count > 1:
+            return CourseRunFactory.create_batch(
+                count,
+                start=self.now - timedelta(hours=1),
+                end=self.now + timedelta(hours=1),
+                enrollment_end=self.now,
+                **kwargs,
+            )
+
+        return CourseRunFactory(
+            start=self.now - timedelta(hours=1),
+            end=self.now + timedelta(hours=1),
+            enrollment_end=self.now,
+            **kwargs,
+        )
+
     def test_api_enrollment_read_list_anonymous(self):
         """It should not be possible to retrieve the list of enrollments for anonymous users."""
-        factories.EnrollmentFactory()
+        factories.EnrollmentFactory(course_run=self.create_opened_course_run())
 
         response = self.client.get(
             "/api/enrollments/",
@@ -45,7 +88,9 @@ class EnrollmentApiTest(BaseAPITestCase):
 
     def test_api_enrollment_read_list_authenticated(self):
         """Authenticated users retrieving the list of enrollments should only see theirs."""
-        enrollment, other_enrollment = factories.EnrollmentFactory.create_batch(2)
+        enrollment, other_enrollment = factories.EnrollmentFactory.create_batch(
+            2, course_run=self.create_opened_course_run()
+        )
 
         # The user can see his/her enrollment
         token = self.get_user_token(enrollment.user.username)
@@ -107,7 +152,9 @@ class EnrollmentApiTest(BaseAPITestCase):
 
     def test_api_enrollment_read_detail_anonymous(self):
         """Anonymous users should not be allowed to retrieve an enrollment."""
-        enrollment = factories.EnrollmentFactory()
+        enrollment = factories.EnrollmentFactory(
+            course_run=self.create_opened_course_run(),
+        )
 
         response = self.client.get(f"/api/enrollments/{enrollment.uid}/")
         self.assertEqual(response.status_code, 401)
@@ -121,7 +168,7 @@ class EnrollmentApiTest(BaseAPITestCase):
     def test_api_enrollment_read_detail_authenticated_owner(self):
         """Authenticated users should be allowed to retrieve an enrollment they own."""
         user = factories.UserFactory()
-        target_course_runs = factories.CourseRunFactory.create_batch(2)
+        target_course_runs = self.create_opened_course_run(2)
         product = factories.ProductFactory(
             target_courses=[cr.course for cr in target_course_runs]
         )
@@ -154,7 +201,9 @@ class EnrollmentApiTest(BaseAPITestCase):
 
     def test_api_enrollment_read_detail_authenticated_not_owner(self):
         """Authenticated users should not be able to retrieve an enrollment they don't own."""
-        enrollment = factories.EnrollmentFactory()
+        enrollment = factories.EnrollmentFactory(
+            course_run=self.create_opened_course_run()
+        )
         token = self.get_user_token("panoramix")
 
         response = self.client.get(
@@ -168,7 +217,7 @@ class EnrollmentApiTest(BaseAPITestCase):
 
     def test_api_enrollment_create_anonymous(self):
         """Anonymous users should not be able to create an enrollment."""
-        course_run = factories.CourseRunFactory()
+        course_run = self.create_opened_course_run()
         data = {
             "course_run": course_run.resource_link,
         }
@@ -191,7 +240,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         is_active = random.choice([True, False])
         mock_set.return_value = is_active
 
-        course_run = factories.CourseRunFactory(resource_link=resource_link)
+        course_run = self.create_opened_course_run(resource_link=resource_link)
         data = {"course_run": resource_link, "is_active": is_active}
         token = self.get_user_token("panoramix")
 
@@ -227,11 +276,11 @@ class EnrollmentApiTest(BaseAPITestCase):
         """
         user = factories.UserFactory()
         target_course = factories.CourseFactory()
-        course_run1 = factories.CourseRunFactory(
+        course_run1 = self.create_opened_course_run(
             course=target_course,
             resource_link="http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course",
         )
-        course_run2 = factories.CourseRunFactory(
+        course_run2 = self.create_opened_course_run(
             course=target_course,
             resource_link="http://openedx.test/courses/course-v1:edx+000002+Demo_Course/course",
         )
@@ -279,7 +328,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         is_active = random.choice([True, False])
         mock_set.return_value = is_active
 
-        course_run = factories.CourseRunFactory(resource_link="http://unknown.com/")
+        course_run = self.create_opened_course_run(resource_link="http://unknown.com/")
         data = {"course_run": course_run.resource_link, "is_active": is_active}
         token = self.get_user_token("panoramix")
 
@@ -328,7 +377,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         is_active = random.choice([True, False])
         mock_set.side_effect = enrollment_error
 
-        course_run = factories.CourseRunFactory(resource_link=resource_link)
+        course_run = self.create_opened_course_run(resource_link=resource_link)
         data = {"course_run": course_run.resource_link, "is_active": is_active}
         token = self.get_user_token("panoramix")
 
@@ -364,7 +413,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         An authenticated user trying to enroll via the API, should get a 400 error
         if the "is_active" field is missing.
         """
-        course_run = factories.CourseRunFactory()
+        course_run = self.create_opened_course_run()
         data = {"course_run": course_run.resource_link}
         token = self.get_user_token("panoramix")
 
@@ -396,8 +445,8 @@ class EnrollmentApiTest(BaseAPITestCase):
         is_active = random.choice([True, False])
         mock_set.return_value = is_active
 
-        course_run = factories.CourseRunFactory(resource_link=resource_link)
-        other_course_run = factories.CourseRunFactory()
+        course_run = self.create_opened_course_run(resource_link=resource_link)
+        other_course_run = self.create_opened_course_run()
         product = factories.ProductFactory(
             target_courses=[course_run.course, other_course_run.course]
         )
@@ -437,7 +486,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         An authenticated user should not be allowed to create an enrollment linked
         to an order that he/she does not own.
         """
-        target_course_runs = factories.CourseRunFactory.create_batch(2)
+        target_course_runs = self.create_opened_course_run(2)
         product = factories.ProductFactory(
             target_courses=[cr.course for cr in target_course_runs]
         )
@@ -470,12 +519,12 @@ class EnrollmentApiTest(BaseAPITestCase):
         to an order that is not linked to a course related to the course run targeted
         by the enrollment.
         """
-        target_course_runs = factories.CourseRunFactory.create_batch(2)
+        target_course_runs = self.create_opened_course_run(2)
         product = factories.ProductFactory(
             target_courses=[cr.course for cr in target_course_runs]
         )
         order = factories.OrderFactory(product=product)
-        resource_link = factories.CourseRunFactory().resource_link
+        resource_link = self.create_opened_course_run().resource_link
         data = {"course_run": resource_link, "order": order.uid, "is_active": True}
         token = self.get_user_token(order.owner.username)
 
@@ -503,7 +552,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         It should not be allowed to create an enrollment with an order that is
         not validated for a course linked to a product.
         """
-        target_course_runs = factories.CourseRunFactory.create_batch(2)
+        target_course_runs = self.create_opened_course_run(2)
         product = factories.ProductFactory(
             target_courses=[cr.course for cr in target_course_runs]
         )
@@ -538,7 +587,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         It should not be allowed to create an enrollment without an order for a course
         linked to a product.
         """
-        target_course_runs = factories.CourseRunFactory.create_batch(2)
+        target_course_runs = self.create_opened_course_run(2)
         factories.ProductFactory(
             target_courses=[cr.course for cr in target_course_runs]
         )
@@ -572,7 +621,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         is_active = random.choice([True, False])
         mock_set.return_value = is_active
 
-        course_run = factories.CourseRunFactory(resource_link=resource_link)
+        course_run = self.create_opened_course_run(resource_link=resource_link)
         data = {
             "course_run": resource_link,
             "id": uuid.uuid4(),
@@ -611,7 +660,9 @@ class EnrollmentApiTest(BaseAPITestCase):
 
     def test_api_enrollment_delete_anonymous(self):
         """Anonymous users should not be able to delete an enrollment."""
-        enrollment = factories.EnrollmentFactory()
+        enrollment = factories.EnrollmentFactory(
+            course_run=self.create_opened_course_run()
+        )
 
         response = self.client.delete(f"/api/enrollments/{enrollment.id}/")
 
@@ -628,9 +679,11 @@ class EnrollmentApiTest(BaseAPITestCase):
     def test_api_enrollment_delete_authenticated(self):
         """
         Authenticated users should not be able to delete any enrollment
-        whether or not he/she is staff or even superuser.
+        whether he/she is staff or even superuser.
         """
-        enrollment = factories.EnrollmentFactory()
+        enrollment = factories.EnrollmentFactory(
+            course_run=self.create_opened_course_run()
+        )
         user = factories.UserFactory(
             is_staff=random.choice([True, False]),
             is_superuser=random.choice([True, False]),
@@ -646,7 +699,9 @@ class EnrollmentApiTest(BaseAPITestCase):
 
     def test_api_enrollment_delete_owner(self):
         """A user should not be allowed to delete his/her enrollments."""
-        enrollment = factories.EnrollmentFactory()
+        enrollment = factories.EnrollmentFactory(
+            course_run=self.create_opened_course_run()
+        )
         token = self.get_user_token(enrollment.user.username)
 
         response = self.client.delete(
@@ -670,7 +725,9 @@ class EnrollmentApiTest(BaseAPITestCase):
             itertools.product(enums.ENROLLMENT_STATE_CHOICES, repeat=2)
         ):
             enrollment = factories.EnrollmentFactory(
-                course_run__resource_link=resource_link.format(id=i),
+                course_run=self.create_opened_course_run(
+                    resource_link=resource_link.format(id=i)
+                ),
                 state=old_state[0],
             )
 
@@ -706,7 +763,9 @@ class EnrollmentApiTest(BaseAPITestCase):
             itertools.product([True, False], repeat=2)
         ):
             enrollment = factories.EnrollmentFactory(
-                course_run__resource_link=resource_link.format(id=i),
+                course_run=self.create_opened_course_run(
+                    resource_link=resource_link.format(id=i)
+                ),
                 is_active=is_active_old,
             )
 
@@ -734,7 +793,9 @@ class EnrollmentApiTest(BaseAPITestCase):
             itertools.product([True, False], repeat=2)
         ):
             enrollment = factories.EnrollmentFactory(
-                course_run__resource_link=resource_link.format(id=i),
+                course_run=self.create_opened_course_run(
+                    resource_link=resource_link.format(id=i)
+                ),
                 is_active=is_active_old,
             )
             token = self.get_user_token(enrollment.user.username)
@@ -759,6 +820,36 @@ class EnrollmentApiTest(BaseAPITestCase):
                     "state": "set",
                 },
             )
+
+    def test_api_enrollment_create_for_closed_course_run(self):
+        """An authenticated user should not be allowed to enroll to a closed course run."""
+        user = factories.UserFactory()
+        token = self.get_user_token(username=user.username)
+        target_course = factories.CourseFactory()
+        course_run = self.create_closed_course_run(
+            course=target_course,
+            resource_link="http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course",
+        )
+
+        data = {"course_run": course_run.resource_link, "is_active": True}
+
+        response = self.client.post(
+            "/api/enrollments/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, 400)
+        content = json.loads(response.content)
+
+        self.assertEqual(
+            content,
+            {
+                "__all__": [
+                    "You are not allowed to enroll to a course run not opened for enrollment."
+                ]
+            },
+        )
 
     # pylint: disable=too-many-locals
     def _check_api_enrollment_update_detail(self, enrollment, user, http_code):
@@ -817,11 +908,11 @@ class EnrollmentApiTest(BaseAPITestCase):
     def test_api_enrollment_update_detail_anonymous(self, _mock_set):
         """An anonymous user should not be allowed to update any enrollment."""
         target_course = factories.CourseFactory()
-        course_run1 = factories.CourseRunFactory(
+        course_run1 = self.create_opened_course_run(
             course=target_course,
             resource_link="http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course",
         )
-        factories.CourseRunFactory(
+        self.create_opened_course_run(
             course=target_course,
             resource_link="http://openedx.test/courses/course-v1:edx+000002+Demo_Course/course",
         )
@@ -839,11 +930,11 @@ class EnrollmentApiTest(BaseAPITestCase):
         """A superuser should not be allowed to update any enrollment."""
         user = factories.UserFactory(is_superuser=True, is_staff=True)
         target_course = factories.CourseFactory()
-        course_run1 = factories.CourseRunFactory(
+        course_run1 = self.create_opened_course_run(
             course=target_course,
             resource_link="http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course",
         )
-        factories.CourseRunFactory(
+        self.create_opened_course_run(
             course=target_course,
             resource_link="http://openedx.test/courses/course-v1:edx+000002+Demo_Course/course",
         )
@@ -861,11 +952,11 @@ class EnrollmentApiTest(BaseAPITestCase):
         """An authenticated user should not be allowed to update his/her enrollment."""
         user = factories.UserFactory()
         target_course = factories.CourseFactory()
-        course_run1 = factories.CourseRunFactory(
+        course_run1 = self.create_opened_course_run(
             course=target_course,
             resource_link="http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course",
         )
-        factories.CourseRunFactory(
+        self.create_opened_course_run(
             course=target_course,
             resource_link="http://openedx.test/courses/course-v1:edx+000002+Demo_Course/course",
         )

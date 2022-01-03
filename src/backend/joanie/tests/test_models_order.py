@@ -1,9 +1,12 @@
 """
 Test suite for order models
 """
+from datetime import timedelta
+
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.test import TestCase
+from django.utils import timezone
 
 from moneyed import Money
 
@@ -115,7 +118,12 @@ class OrderModelsTestCase(TestCase):
         [course, target_course] = factories.CourseFactory.create_batch(2)
 
         # - Link only one course run to target_course
-        factories.CourseRunFactory(course=target_course)
+        factories.CourseRunFactory(
+            course=target_course,
+            start=timezone.now() - timedelta(hours=1),
+            end=timezone.now() + timedelta(hours=2),
+            enrollment_end=timezone.now() + timedelta(hours=1),
+        )
 
         product = factories.ProductFactory(
             courses=[course], target_courses=[target_course]
@@ -132,18 +140,26 @@ class OrderModelsTestCase(TestCase):
         self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
 
         # - Validate the order should automatically enroll user to course run
-        order.validate()
+        with self.assertNumQueries(15):
+            order.validate()
+
         self.assertEqual(Enrollment.objects.count(), 1)
 
     def test_models_order_cancel(self):
         """
-        Order has a cancel method which is in charge to unenroll owner to all active
+        Order has a cancel method which is in charge to unroll owner to all active
         related enrollments and switch the `is_canceled` property to True.
         """
         owner = factories.UserFactory()
         [course, target_course] = factories.CourseFactory.create_batch(2)
 
-        cr1 = factories.CourseRunFactory.create_batch(2, course=target_course)[0]
+        cr1 = factories.CourseRunFactory.create_batch(
+            2,
+            course=target_course,
+            start=timezone.now() - timedelta(hours=1),
+            end=timezone.now() + timedelta(hours=2),
+            enrollment_end=timezone.now() + timedelta(hours=1),
+        )[0]
 
         product = factories.ProductFactory(
             courses=[course], target_courses=[target_course], price=Money("0.00")

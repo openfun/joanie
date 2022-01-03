@@ -1,8 +1,10 @@
 """Tests for the Course API."""
 import json
 import random
+from datetime import timedelta
 
 from django.test import override_settings
+from django.utils import timezone
 
 from joanie.core import enums, factories, models
 from joanie.payment.factories import InvoiceFactory
@@ -58,7 +60,12 @@ class CourseApiTest(BaseAPITestCase):
         Anonymous users should be allowed to retrieve a course
         with a minimal db access
         """
-        target_course_runs = factories.CourseRunFactory.create_batch(2)
+        target_course_runs = factories.CourseRunFactory.create_batch(
+            2,
+            start=timezone.now() - timedelta(hours=1),
+            end=timezone.now() + timedelta(hours=2),
+            enrollment_end=timezone.now() + timedelta(hours=1),
+        )
         product = factories.ProductFactory.create(
             target_courses=[course_run.course for course_run in target_course_runs],
         )
@@ -119,6 +126,16 @@ class CourseApiTest(BaseAPITestCase):
                                     "id": course_run.id,
                                     "title": course_run.title,
                                     "resource_link": course_run.resource_link,
+                                    "state": {
+                                        "priority": course_run.state["priority"],
+                                        "datetime": course_run.state["datetime"]
+                                        .isoformat()
+                                        .replace("+00:00", "Z"),
+                                        "call_to_action": course_run.state[
+                                            "call_to_action"
+                                        ],
+                                        "text": course_run.state["text"],
+                                    },
                                     "start": course_run.start.isoformat().replace(
                                         "+00:00", "Z"
                                     ),
@@ -191,16 +208,28 @@ class CourseApiTest(BaseAPITestCase):
         with its related order and enrollment bound.
         """
         target_course_run11 = factories.CourseRunFactory(
-            resource_link="http://lms.test/courses/course-v1:edx+000011+Demo_Course/course"
+            resource_link="http://lms.test/courses/course-v1:edx+000011+Demo_Course/course",
+            start=timezone.now() - timedelta(hours=1),
+            end=timezone.now() + timedelta(hours=2),
+            enrollment_end=timezone.now() + timedelta(hours=1),
         )
         target_course_run12 = factories.CourseRunFactory(
-            resource_link="http://lms.test/courses/course-v1:edx+000012+Demo_Course/course"
+            resource_link="http://lms.test/courses/course-v1:edx+000012+Demo_Course/course",
+            start=timezone.now() - timedelta(hours=1),
+            end=timezone.now() + timedelta(hours=2),
+            enrollment_end=timezone.now() + timedelta(hours=1),
         )
         target_course_run21 = factories.CourseRunFactory(
-            resource_link="http://lms.test/courses/course-v1:edx+000021+Demo_Course/course"
+            resource_link="http://lms.test/courses/course-v1:edx+000021+Demo_Course/course",
+            start=timezone.now() - timedelta(hours=1),
+            end=timezone.now() + timedelta(hours=2),
+            enrollment_end=timezone.now() + timedelta(hours=1),
         )
         target_course_run22 = factories.CourseRunFactory(
-            resource_link="http://lms.test/courses/course-v1:edx+000022+Demo_Course/course"
+            resource_link="http://lms.test/courses/course-v1:edx+000022+Demo_Course/course",
+            start=timezone.now() - timedelta(hours=1),
+            end=timezone.now() + timedelta(hours=2),
+            enrollment_end=timezone.now() + timedelta(hours=1),
         )
 
         product1 = factories.ProductFactory(
@@ -342,6 +371,16 @@ class CourseApiTest(BaseAPITestCase):
                                     "id": course_run.id,
                                     "title": course_run.title,
                                     "resource_link": course_run.resource_link,
+                                    "state": {
+                                        "priority": course_run.state["priority"],
+                                        "datetime": course_run.state["datetime"]
+                                        .isoformat()
+                                        .replace("+00:00", "Z"),
+                                        "call_to_action": course_run.state[
+                                            "call_to_action"
+                                        ],
+                                        "text": course_run.state["text"],
+                                    },
                                     "start": course_run.start.isoformat().replace(
                                         "+00:00", "Z"
                                     ),
@@ -464,7 +503,13 @@ class CourseApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.get_user_token(user.username)
         course, tc1, tc2 = factories.CourseFactory.create_batch(3)
-        cr1 = factories.CourseRunFactory.create_batch(5, course=tc1)[1]
+        cr1 = factories.CourseRunFactory.create_batch(
+            5,
+            course=tc1,
+            start=timezone.now() - timedelta(hours=1),
+            end=timezone.now() + timedelta(hours=2),
+            enrollment_end=timezone.now() + timedelta(hours=1),
+        )[1]
 
         product = factories.ProductFactory(courses=[course], target_courses=[tc1, tc2])
 
