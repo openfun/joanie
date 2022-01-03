@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Add a computed "state" to Course and CourseRun models
 - Add Payplug payment backend and related API routes
 - Add Invoice and Transaction models for accounting purposes
 - Add credit card model and related api to retrieve, update, delete it
