@@ -26,10 +26,11 @@ RUN mkdir /install && \
 FROM base as link-collector
 ARG JOANIE_STATIC_ROOT=/data/static
 
-# Install rdfind
+# Install libpangocairo & rdfind
 RUN apt-get update && \
     apt-get install -y \
-    rdfind && \
+      libpangocairo-1.0-0 \
+      rdfind && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy installed python dependencies
