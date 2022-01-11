@@ -145,6 +145,7 @@ jobs:
           DJANGO_SETTINGS_MODULE: joanie.settings
           DJANGO_CONFIGURATION: Test
           DJANGO_SECRET_KEY: ThisIsAnExampleKeyForTestPurposeOnly
+          DJANGO_JWT_PRIVATE_SIGNING_KEY: ThisIsAnExampleKeyForDevPurposeOnly
           PYTHONPATH: /home/circleci/joanie/src/backend
           DB_HOST: localhost
           DB_NAME: joanie

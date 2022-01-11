@@ -13,3 +13,6 @@ EDX_SELECTOR_REGEX=^.*/courses/(?P<course_id>.*)/course/?$
 EDX_COURSE_REGEX=^.*/courses/(?P<course_id>.*)/course/?$
 EDX_API_TOKEN=FakeEdXAPIKey
 EDX_BACKEND=joanie.lms_handler.backends.openedx.OpenEdXLMSBackend
+
+#JWT
+DJANGO_JWT_PRIVATE_SIGNING_KEY=ThisIsAnExampleKeyForDevPurposeOnly

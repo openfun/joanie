@@ -41,7 +41,8 @@ COPY ./src/backend /app/
 WORKDIR /app
 
 # collectstatic
-RUN DJANGO_CONFIGURATION=Build python manage.py collectstatic --noinput
+RUN DJANGO_CONFIGURATION=Build DJANGO_JWT_PRIVATE_SIGNING_KEY=Dummy \
+    python manage.py collectstatic --noinput
 
 # Replace duplicated file by a symlink to decrease the overall size of the
 # final image

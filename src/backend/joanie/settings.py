@@ -224,8 +224,7 @@ class Base(Configuration):
 
     SIMPLE_JWT = {
         "ALGORITHM": values.Value("HS256", environ_name="JWT_ALGORITHM"),
-        "SIGNING_KEY": values.Value(
-            "ThisIsAnExampleKeyForDevPurposeOnly",
+        "SIGNING_KEY": values.SecretValue(
             environ_name="JWT_PRIVATE_SIGNING_KEY",
         ),
         "AUTH_HEADER_TYPES": ("Bearer",),
