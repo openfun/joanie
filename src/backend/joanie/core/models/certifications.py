@@ -1,11 +1,18 @@
 """
 Declare and configure the models for the certifications part
 """
+import uuid
+
+from django.conf import settings
 from django.db import models
-from django.utils import timezone
+from django.utils.module_loading import import_string
+from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
 from parler import models as parler_models
+from parler.utils import get_language_settings
+
+from joanie.core.utils import image_to_base64, merge_dict
 
 
 class CertificateDefinition(parler_models.TranslatableModel):
@@ -40,6 +47,9 @@ class Certificate(models.Model):
     Certificate represents and records all user certificates issued as part of an order
     """
 
+    uid = models.UUIDField(
+        default=uuid.uuid4, unique=True, editable=False, db_index=True
+    )
     order = models.OneToOneField(
         # disable=all is necessary to avoid an AstroidImportError because of our models structure
         # Astroid is looking for a module models.py that does not exist
@@ -47,9 +57,12 @@ class Certificate(models.Model):
         verbose_name=_("order"),
         on_delete=models.PROTECT,
     )
-    # attachment pdf will be generated with marion from certificate definition
-    attachment = models.FileField(_("attachment"))
-    issued_on = models.DateTimeField(_("issued on date"), default=timezone.now)
+    issued_on = models.DateTimeField(_("issued on date"), auto_now=True, editable=False)
+    localized_context = models.JSONField(
+        _("context"),
+        help_text=_("Localized data that needs to be frozen on certificate creation"),
+        editable=False,
+    )
 
     class Meta:
         db_table = "joanie_certificate"
@@ -57,4 +70,82 @@ class Certificate(models.Model):
         verbose_name_plural = _("Certificates")
 
     def __str__(self):
-        return f"Certificate for {self.order.owner}"
+        return f"{self.order.owner}'s certificate for course {self.order.course}"
+
+    @property
+    def document(self):
+        """
+        Get the document related to the certificate instance.
+        """
+        certificate_definition = self.order.product.certificate_definition
+        document_issuer = import_string(certificate_definition.template)
+        context = self.get_document_context()
+        document = document_issuer(identifier=self.uid, context_query=context)
+        return document.create(persist=False)
+
+    def _set_localized_context(self):
+        """
+        Update or create the certificate context for all languages.
+
+        Saving is left to the caller.
+        """
+        context = {}
+        related_product = self.order.product
+        organization = self.order.course.organization
+
+        for language, __ in settings.LANGUAGES:
+            context[language] = {
+                "course": {
+                    "name": related_product.safe_translation_getter(
+                        "title", language_code=language
+                    ),
+                    "organization": {
+                        "name": organization.safe_translation_getter(
+                            "title", language_code=language
+                        ),
+                    },
+                }
+            }
+
+        self.localized_context = context
+
+    def get_document_context(self, language_code=None):
+        """
+        Build the certificate document context for the given language.
+        If no language_code is provided, we use the active language.
+        """
+
+        language_settings = get_language_settings(language_code or get_language())
+        organization = self.order.course.organization
+        owner = self.order.owner
+
+        base_context = {
+            "creation_date": self.issued_on.isoformat(),
+            "student": {
+                "name": owner.get_full_name() or owner.username,
+            },
+            "course": {
+                "organization": {
+                    "representative": organization.representative,
+                    "signature": image_to_base64(organization.signature),
+                    "logo": image_to_base64(organization.logo),
+                },
+            },
+        }
+
+        try:
+            localized_context = self.localized_context[language_settings["code"]]
+        except KeyError:
+            # - Otherwise use the first entry of the localized context
+            localized_context = list(self.localized_context.values())[0]
+
+        return merge_dict(base_context, localized_context)
+
+    def save(self, *args, **kwargs):
+        """On creation, create a context for each active languages"""
+        is_new = self.pk is None
+
+        if is_new:
+            self._set_localized_context()
+
+        super().save(*args, **kwargs)

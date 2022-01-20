@@ -308,3 +308,52 @@ class AddressViewSet(
         """Create a new address for user authenticated"""
         user = models.User.objects.get_or_create(username=self.request.user.username)[0]
         serializer.save(owner=user)
+
+
+class CertificateViewSet(
+    mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet
+):
+    """
+    API views to get all certificates for a user
+
+    GET /api/certificates/:certificate_uid
+        Return list of all certificates for a user or one certificate if an uid is
+        provided.
+
+    GET /api/certificates/:certificate_uid/download
+        Return the certificate document in PDF format.
+    """
+
+    lookup_field = "uid"
+    serializer_class = serializers.CertificateSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        Custom queryset to get user certificates
+        """
+        user = models.User.objects.get_or_create(username=self.request.user.username)[0]
+        return models.Certificate.objects.filter(order__owner=user)
+
+    @action(detail=True, methods=["GET"])
+    def download(self, request, uid=None):  # pylint: disable=no-self-use
+        """
+        Retrieve a certificate through its uid if it is owned by the authenticated user.
+        """
+        try:
+            certificate = models.Certificate.objects.get(
+                uid=uid,
+                order__owner__username=request.user.username,
+            )
+        except models.Certificate.DoesNotExist:
+            return Response(
+                {"detail": f"No certificate found with uid {uid}."}, status=404
+            )
+
+        response = HttpResponse(
+            certificate.document, content_type="application/pdf", status=200
+        )
+
+        response["Content-Disposition"] = f"attachment; filename={uid}.pdf;"
+
+        return response
