@@ -457,3 +457,16 @@ class AddressSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "id",
         ]
+
+
+class CertificateSerializer(serializers.ModelSerializer):
+    """
+    Certificate model serializer
+    """
+
+    id = serializers.CharField(source="uid", read_only=True, required=False)
+
+    class Meta:
+        model = models.Certificate
+        fields = ["id"]
+        read_only_fields = ["id"]

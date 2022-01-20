@@ -7,10 +7,10 @@ from django.db import IntegrityError
 from django.test import TestCase
 
 from djmoney.money import Money
-from marion.models import DocumentRequest
 from moneyed import EUR
 
 from joanie.core import factories, models
+from joanie.core.enums import PRODUCT_TYPE_CERTIFICATE
 
 
 class ProductModelsTestCase(TestCase):
@@ -47,32 +47,30 @@ class ProductModelsTestCase(TestCase):
         ordered_courses = list(product.target_courses.order_by("product_relations"))
         self.assertEqual(ordered_courses, expected_courses)
 
-    def test_model_order_generate_certificate(self):
+    def test_model_order_create_certificate(self):
         """Generate a certificate for a product order"""
 
         course = factories.CourseFactory()
         product = factories.ProductFactory(
             courses=[course],
+            type=PRODUCT_TYPE_CERTIFICATE,
             certificate_definition=factories.CertificateDefinitionFactory(),
         )
         order = factories.OrderFactory(product=product)
 
-        certificate = order.generate_certificate()
-        self.assertEqual(DocumentRequest.objects.count(), 1)
-        document_request = DocumentRequest.objects.get()
+        order.create_certificate()
+        self.assertEqual(models.Certificate.objects.count(), 1)
+        certificate = models.Certificate.objects.first()
+        document_context = certificate.get_document_context()
         blue_square_base64 = (
             "data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgY"
             "PgPAAEDAQAIicLsAAAAAElFTkSuQmCC"
         )
         self.assertEqual(
-            document_request.context["course"]["organization"]["logo"],
+            document_context["course"]["organization"]["logo"],
             blue_square_base64,
         )
         self.assertEqual(
-            document_request.context["course"]["organization"]["signature"],
+            document_context["course"]["organization"]["signature"],
             blue_square_base64,
-        )
-        self.assertEqual(
-            certificate.attachment.name,
-            f"{DocumentRequest.objects.get().document_id}.pdf",
         )

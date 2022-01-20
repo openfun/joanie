@@ -8,7 +8,6 @@ from django.conf import settings
 from django.contrib.auth.hashers import make_password
 from django.utils import timezone
 
-import factory
 import factory.fuzzy
 import pytz
 from djmoney.money import Money
@@ -283,3 +282,12 @@ class AddressFactory(factory.django.DjangoModelFactory):
     first_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")
     owner = factory.SubFactory(UserFactory)
+
+
+class CertificateFactory(factory.django.DjangoModelFactory):
+    """A factory to create a certificate"""
+
+    class Meta:
+        model = models.Certificate
+
+    order = factory.SubFactory(OrderFactory)

@@ -14,15 +14,14 @@ from django.utils.translation import gettext_lazy as _
 
 from djmoney.models.fields import MoneyField
 from djmoney.models.validators import MinMoneyValidator
-from marion.models import DocumentRequest
 from parler import models as parler_models
 
 from joanie.core.exceptions import EnrollmentError
+from joanie.core.models.certifications import Certificate
 from joanie.lms_handler import LMSHandler
 
-from .. import enums, utils
+from .. import enums
 from . import accounts as customers_models
-from . import certifications as certifications_models
 from . import courses as courses_models
 
 logger = logging.getLogger(__name__)
@@ -322,32 +321,33 @@ class Order(models.Model):
         self.is_canceled = True
         self.save()
 
-    def generate_certificate(self):
-        """Generate a pdf certificate for the order's owner"""
-        organization = self.course.organization
-        context_query = {
-            "student": {
-                "name": self.owner.get_full_name(),
-            },
-            "course": {
-                "name": self.product.title,  # pylint: disable=no-member
-                "organization": {
-                    "name": organization.title,
-                    "representative": organization.representative,
-                    "signature": utils.image_to_base64(organization.signature),
-                    "logo": utils.image_to_base64(organization.logo),
-                },
-            },
-        }
-        document_request = DocumentRequest.objects.create(
-            issuer=self.product.certificate_definition.template,  # pylint: disable=no-member
-            context_query=context_query,
-        )
-        certificate, _ = certifications_models.Certificate.objects.update_or_create(
-            order=self,
-            defaults={"attachment": document_request.get_document_path().name},
-        )
-        return certificate
+    def create_certificate(self):
+        """
+        Create a certificate if the related product type is certifying and if one
+        has not been already created.
+        """
+        if self.product.type not in PRODUCT_TYPE_CERTIFICATE_ALLOWED:
+            raise ValidationError(
+                _(
+                    (
+                        "Try to generate a certificate for "
+                        f"a non-certifying product ({self.product})."
+                    )
+                )
+            )
+
+        if Certificate.objects.filter(order=self).exists():
+            raise ValidationError(
+                _(
+                    (
+                        "A certificate has been already issued for "  # pylint: disable=no-member
+                        f"the order {self.uid} "
+                        f"on {self.certificate.issued_on}."
+                    )
+                )
+            )
+
+        Certificate.objects.create(order=self)
 
 
 class OrderCourseRelation(models.Model):
