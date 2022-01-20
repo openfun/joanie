@@ -28,7 +28,12 @@ services:
       - ./src/backend:/app
       - ./data/media:/data/media
     depends_on:
-      - "postgresql"
+      - postgresql
+    networks:
+      default:
+      lms_outside:
+        aliases:
+          - joanie
 
   app:
     build:
@@ -77,7 +82,7 @@ services:
 
   ngrok:
     image: wernight/ngrok
-    command: ngrok http app:8000
+    command: ngrok http app-dev:8000
     ports:
       - 4040:4040
 
