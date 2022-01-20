@@ -97,3 +97,59 @@ class DummyLMSBackendTestCase(TestCase):
             "course-v1:edx+000001+Demo_Course",
         )
         self.assertFalse(enrollment["is_active"])
+
+    def test_backend_dummy_get_grades(self):
+        """It should return a blank grade dictionary"""
+        username = "joanie"
+        resource_link = (
+            "http://dummy-lms.test/courses/course-v1:edx+000001+Demo_Course/course"
+        )
+
+        backend = LMSHandler.select_lms(resource_link)
+        self.assertIsInstance(backend, DummyLMSBackend)
+
+        grade_summary = backend.get_grades(username, resource_link)
+
+        # - grade summary should contain 6 properties
+        self.assertEqual(len(grade_summary), 6)
+
+        # - a boolean `passed`
+        self.assertEqual(grade_summary["passed"], False)
+
+        # - a string `grade`
+        self.assertEqual(grade_summary["grade"], None)
+
+        # - a float `percent`
+        self.assertEqual(grade_summary["percent"], 0.0)
+
+        # - a dict `totaled_scores`
+        self.assertEqual(
+            grade_summary["totaled_scores"],
+            {"Final Exam": [[0.0, 1.0, True, "First section", None]]},
+        )
+
+        # - a list `grade_breakdown`
+        self.assertEqual(
+            grade_summary["grade_breakdown"],
+            [
+                {
+                    "category": "Final Exam",
+                    "percent": 0.0,
+                    "detail": "Final Exam = 0.00% of a possible 0.00%",
+                }
+            ],
+        )
+
+        # - a list `section_breakdown`
+        self.assertEqual(
+            grade_summary["section_breakdown"],
+            [
+                {
+                    "category": "Final Exam",
+                    "prominent": True,
+                    "percent": 0.0,
+                    "detail": "Final Exam = 0%",
+                    "label": "FE",
+                }
+            ],
+        )

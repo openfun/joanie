@@ -5,7 +5,7 @@ Failing LMS Backend for tests
 import logging
 import re
 
-from joanie.core.exceptions import EnrollmentError
+from joanie.core.exceptions import EnrollmentError, GradeError
 
 from .base import BaseLMSBackend
 
@@ -29,3 +29,8 @@ class FailingLMSBackend(BaseLMSBackend):
         """Set enrollment for a user with a course run given its url."""
         logger.error("Internal server error")
         raise EnrollmentError()
+
+    def get_grades(self, username, resource_link):
+        """Get user's grades for a course run given its url."""
+        logger.error("Internal server error")
+        raise GradeError()
