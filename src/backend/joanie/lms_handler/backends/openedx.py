@@ -8,7 +8,7 @@ import re
 import requests
 from requests.auth import AuthBase
 
-from joanie.core.exceptions import EnrollmentError
+from joanie.core.exceptions import EnrollmentError, GradeError
 from joanie.lms_handler.serializers import SyncCourseRunSerializer
 
 from .base import BaseLMSBackend
@@ -113,13 +113,26 @@ class OpenEdXLMSBackend(BaseLMSBackend):
         logger.error(response.content)
         raise EnrollmentError()
 
+    def get_grades(self, username, resource_link):
+        """Get user's grades for a course run given its url."""
+        base_url = self.configuration["BASE_URL"]
+        course_id = self.extract_course_id(resource_link)
+        url = f"{base_url}/fun/api/grades/{course_id}/{username}"
+        response = self.api_client.request("GET", url)
+
+        if response.ok:
+            return json.loads(response.content)
+
+        logger.error(response.content)
+        raise GradeError()
+
     def extract_course_number(self, data):
         """Extract the LMS course number from data dictionary."""
         course_id = self.extract_course_id(data.get("resource_link"))
         return split_course_key(course_id)[1]
 
     def clean_course_run_data(self, data):
-        """Remove course run's protected fields to the data dictionnary."""
+        """Remove course run's protected fields to the data dictionary."""
         return {
             key: value
             for (key, value) in data.items()

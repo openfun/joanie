@@ -24,3 +24,9 @@ class BaseLMSBackend:
         raise NotImplementedError(
             "subclasses of BaseLMSBackend must provide a set_enrollment() method"
         )
+
+    def get_grades(self, username, resource_link):
+        """Get user's grades for a course run given its url."""
+        raise NotImplementedError(
+            "subclasses of BaseLMSBackend must provide a get_grades() method"
+        )

@@ -7,7 +7,7 @@ from django.test.utils import override_settings
 
 import responses
 
-from joanie.core.exceptions import EnrollmentError
+from joanie.core.exceptions import EnrollmentError, GradeError
 from joanie.lms_handler import LMSHandler
 from joanie.lms_handler.backends.openedx import OpenEdXLMSBackend
 
@@ -232,4 +232,61 @@ class OpenEdXLMSBackendTestCase(TestCase):
                 "user": username,
                 "course_details": {"course_id": course_id},
             },
+        )
+
+    @responses.activate
+    def test_backend_openedx_get_grades_successfully(self):
+        """
+        When get user's grades for a course run, it should return grade details without
+        any data transformation
+        """
+        username = "joanie"
+        course_id = "course-v1:edx+000001+Demo_Course"
+        resource_link = f"http://openedx.test/courses/{course_id}/course"
+        url = f"http://openedx.test/fun/api/grades/{course_id}/{username}"
+        grade_state = random.choice([True, False])
+        expected_response = {
+            "passed": grade_state,
+            "grade": "Pass" if grade_state else "Fail",
+            "percent": 1.0 if grade_state else 0.0,
+        }
+
+        responses.add(responses.GET, url, status=200, json=expected_response)
+
+        backend = LMSHandler.select_lms(resource_link)
+        self.assertIsInstance(backend, OpenEdXLMSBackend)
+
+        grade_summary = backend.get_grades(username, resource_link)
+
+        self.assertEqual(len(responses.calls), 1)
+        self.assertEqual(responses.calls[0].request.url, url)
+        self.assertEqual(
+            responses.calls[0].request.headers["X-Edx-Api-Key"], "a_secure_api_token"
+        )
+
+        self.assertEqual(grade_summary, expected_response)
+
+    @responses.activate
+    def test_backend_openedx_get_grades_failed(self):
+        """
+        When get user's grades for a course run failed,
+        it should raise a GradeError
+        """
+        username = "joanie"
+        course_id = "course-v1:edx+000001+Demo_Course"
+        resource_link = f"http://openedx.test/courses/{course_id}/course"
+        url = f"http://openedx.test/fun/api/grades/{course_id}/{username}"
+
+        responses.add(responses.GET, url, status=500)
+
+        backend = LMSHandler.select_lms(resource_link)
+        self.assertIsInstance(backend, OpenEdXLMSBackend)
+
+        with self.assertRaises(GradeError):
+            backend.get_grades(username, resource_link)
+
+        self.assertEqual(len(responses.calls), 1)
+        self.assertEqual(responses.calls[0].request.url, url)
+        self.assertEqual(
+            responses.calls[0].request.headers["X-Edx-Api-Key"], "a_secure_api_token"
         )
