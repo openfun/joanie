@@ -125,6 +125,11 @@ class ProductCourseRelation(models.Model):
         on_delete=models.CASCADE,
     )
     position = models.PositiveSmallIntegerField(_("position in product"))
+    is_graded = models.BooleanField(
+        _("take into account for certification"),
+        help_text=_("Take into account the course grade for certification."),
+        default=True,
+    )
 
     class Meta:
         db_table = "joanie_product_course_relation"
@@ -364,6 +369,11 @@ class OrderCourseRelation(models.Model):
         on_delete=models.CASCADE,
     )
     position = models.PositiveSmallIntegerField(_("position in order"))
+    is_graded = models.BooleanField(
+        _("take into account for certification"),
+        help_text=_("Take into account the course grade for certification."),
+        default=True,
+    )
 
     class Meta:
         db_table = "joanie_order_course_relation"
