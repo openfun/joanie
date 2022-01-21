@@ -156,6 +156,9 @@ class CourseApiTest(BaseAPITestCase):
                             "position": target_course.product_relations.get(
                                 product=product
                             ).position,
+                            "is_graded": target_course.product_relations.get(
+                                product=product
+                            ).is_graded,
                             "title": target_course.title,
                         }
                         for target_course in product.target_courses.all().order_by(
@@ -401,6 +404,9 @@ class CourseApiTest(BaseAPITestCase):
                             "position": target_course.product_relations.get(
                                 product=product
                             ).position,
+                            "is_graded": target_course.product_relations.get(
+                                product=product
+                            ).is_graded,
                             "title": target_course.title,
                         }
                         for target_course in product.target_courses.all().order_by(

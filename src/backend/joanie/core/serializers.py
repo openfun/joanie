@@ -42,12 +42,14 @@ class TargetCourseSerializer(serializers.ModelSerializer):
     course_runs = serializers.SerializerMethodField(read_only=True)
     organization = OrganizationSerializer(read_only=True)
     position = serializers.SerializerMethodField(read_only=True)
+    is_graded = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = models.Course
         fields = [
             "code",
             "course_runs",
+            "is_graded",
             "organization",
             "position",
             "title",
@@ -55,6 +57,7 @@ class TargetCourseSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "code",
             "course_runs",
+            "is_graded",
             "organization",
             "position",
             "title",
@@ -65,11 +68,14 @@ class TargetCourseSerializer(serializers.ModelSerializer):
         Retrieve the position of the course related to its product_relation
         """
         product = self.context.get("product", None)
-        return (
-            target_course.product_relations.only("position")
-            .get(product=product)
-            .position
-        )
+        return target_course.product_relations.get(product=product).position
+
+    def get_is_graded(self, target_course):
+        """
+        Retrieve the `is_graded` state of the course related to its product_relation
+        """
+        product = self.context.get("product", None)
+        return target_course.product_relations.get(product=product).is_graded
 
     @staticmethod
     def get_course_runs(target_course):
