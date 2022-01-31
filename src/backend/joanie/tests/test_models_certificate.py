@@ -65,7 +65,7 @@ class CertificateModelTestCase(TestCase):
     def test_models_certificate_document(self):
         """
         Certificate document property should generate a document
-        into the active language.
+        in the active language.
         """
         organization = OrganizationFactory(
             title="University X", representative="Joanie Cunningham"

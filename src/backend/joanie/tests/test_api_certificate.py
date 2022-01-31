@@ -34,7 +34,7 @@ class CertificateApiTest(BaseAPITestCase):
     def test_api_certificate_read_list_authenticated(self):
         """
         When an authenticated user retrieves the list of certificates,
-        it should return only theirs.
+        it should return only his/hers.
         """
         CertificateFactory.create_batch(5)
         user = UserFactory()
@@ -54,7 +54,7 @@ class CertificateApiTest(BaseAPITestCase):
 
     def test_api_certificate_read_anonymous(self):
         """
-        An anonymous user should be not able to retrieve a certificate
+        An anonymous user should not be able to retrieve a certificate
         """
         certificate = CertificateFactory()
 
@@ -69,7 +69,8 @@ class CertificateApiTest(BaseAPITestCase):
 
     def test_api_certificate_read_authenticated(self):
         """
-        An authenticated user should be able to retrieve a certificate only if it owns.
+        An authenticated user should only be able to retrieve a certificate
+        only if he/she owns it.
         """
         not_owned_certificate = CertificateFactory()
         user = UserFactory()
@@ -117,7 +118,8 @@ class CertificateApiTest(BaseAPITestCase):
 
     def test_api_certificate_download_authenticated(self):
         """
-        An authenticated user should be able to download a certificate only if it owns.
+        An authenticated user should be able to download a certificate
+        only he/she owns it.
         """
         not_owned_certificate = CertificateFactory()
         user = UserFactory()
@@ -166,7 +168,7 @@ class CertificateApiTest(BaseAPITestCase):
 
     def test_api_certificate_create(self):
         """
-        Create a certificate should be not allowed even if user is admin
+        Create a certificate should not be allowed even if user is admin
         """
         user = UserFactory(is_staff=True, is_superuser=True)
         token = self.get_user_token(user.username)
@@ -182,7 +184,7 @@ class CertificateApiTest(BaseAPITestCase):
 
     def test_api_certificate_update(self):
         """
-        Update a certificate should be not allowed even if user is admin
+        Update a certificate should not be allowed even if user is admin
         """
         user = UserFactory(is_staff=True, is_superuser=True)
         token = self.get_user_token(user.username)
@@ -199,7 +201,7 @@ class CertificateApiTest(BaseAPITestCase):
 
     def test_api_certificate_delete(self):
         """
-        Delete a certificate should be not allowed even if user is admin
+        Delete a certificate should not be allowed even if user is admin
         """
         user = UserFactory(is_staff=True, is_superuser=True)
         token = self.get_user_token(user.username)
