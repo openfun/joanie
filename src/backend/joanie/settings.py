@@ -97,6 +97,7 @@ class Base(Configuration):
             "PORT": values.Value(5432, environ_name="DB_PORT", environ_prefix=None),
         }
     }
+    DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
     # Static files (CSS, JavaScript, Images)
     STATIC_URL = "/static/"
@@ -369,7 +370,7 @@ class Test(Base):
 
 class ContinuousIntegration(Test):
     """
-    Continous Integration environment settings
+    Continuous Integration environment settings
 
     nota bene: it should inherit from the Test environment.
     """
@@ -386,20 +387,11 @@ class Production(Base):
 
     # Security
     ALLOWED_HOSTS = values.ListValue(None)
-    CSRF_COOKIE_SECURE = True
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
-    SESSION_COOKIE_SECURE = True
-
-    # For static files in production, we want to use a backend that includes a hash in
-    # the filename, that is calculated from the file content, so that browsers always
-    # get the updated version of each file.
-    STATICFILES_STORAGE = values.Value(
-        "whitenoise.storage.CompressedManifestStaticFilesStorage"
-    )
 
     # SECURE_PROXY_SSL_HEADER allows to fix the scheme in Django's HttpRequest
-    # object when you application is behind a reverse proxy.
+    # object when your application is behind a reverse proxy.
     #
     # Keep this SECURE_PROXY_SSL_HEADER configuration only if :
     # - your Django app is behind a proxy.
@@ -412,6 +404,13 @@ class Production(Base):
     # Modern browsers require to have the `secure` attribute on cookies with `Samesite=none`
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
+
+    # For static files in production, we want to use a backend that includes a hash in
+    # the filename, that is calculated from the file content, so that browsers always
+    # get the updated version of each file.
+    STATICFILES_STORAGE = values.Value(
+        "whitenoise.storage.CompressedManifestStaticFilesStorage"
+    )
 
     # Privacy
     SECURE_REFERRER_POLICY = "same-origin"
