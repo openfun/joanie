@@ -326,11 +326,10 @@ class Base(Configuration):
 class Build(Base):
     """Settings used when the application is built.
 
-    This environment should not be used to run the application. Just to build it with non blocking
+    This environment should not be used to run the application. Just to build it with non-blocking
     settings.
     """
 
-    ALLOWED_HOSTS = None
     SECRET_KEY = values.Value("DummyKey")
     STATICFILES_STORAGE = values.Value(
         "whitenoise.storage.CompressedManifestStaticFilesStorage"

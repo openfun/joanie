@@ -10,7 +10,6 @@
         "setup-cfg"
       ],
       "matchPackageNames": [
-        "django",
         "PyJWT"
       ]
     }
