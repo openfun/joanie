@@ -22,7 +22,7 @@ from joanie.lms_handler.serializers import SyncCourseRunSerializer
             "JS_COURSE_REGEX": r"^.*/courses/(?<course_id>.*)/course/?$",
         }
     ],
-    TIME_ZONE="utc",
+    TIME_ZONE="UTC",
 )
 class SyncCourseRunApiTestCase(TestCase):
     """Test calls to sync a course run via API endpoint."""
@@ -201,7 +201,7 @@ class SyncCourseRunApiTestCase(TestCase):
         serializer = SyncCourseRunSerializer(instance=course_run)
         self.assertEqual(serializer.data, data)
 
-    @override_settings(TIME_ZONE="utc")
+    @override_settings(TIME_ZONE="UTC")
     def test_api_course_run_sync_create_partial_required(self):
         """
         If the submitted data is not related to an existing course run and some required fields
@@ -228,7 +228,7 @@ class SyncCourseRunApiTestCase(TestCase):
         )
         self.assertEqual(CourseRun.objects.count(), 0)
 
-    @override_settings(TIME_ZONE="utc")
+    @override_settings(TIME_ZONE="UTC")
     def test_api_course_run_sync_create_partial_not_required(self):
         """
         If the submitted data is not related to an existing course run and some optional fields
@@ -259,7 +259,7 @@ class SyncCourseRunApiTestCase(TestCase):
         data.update({"start": None, "end": None, "enrollment_start": None})
         self.assertEqual(serializer.data, data)
 
-    @override_settings(TIME_ZONE="utc")
+    @override_settings(TIME_ZONE="UTC")
     def test_api_course_run_sync_existing_published(self):
         """
         If a course run exists for this resource link, it should be updated.
@@ -295,7 +295,7 @@ class SyncCourseRunApiTestCase(TestCase):
         serializer = SyncCourseRunSerializer(instance=course_run)
         self.assertEqual(serializer.data, data)
 
-    @override_settings(TIME_ZONE="utc")
+    @override_settings(TIME_ZONE="UTC")
     def test_api_course_run_sync_existing_partial(self):
         """
         If a course run exists for this resource link, it can be partially updated and the other
@@ -331,7 +331,7 @@ class SyncCourseRunApiTestCase(TestCase):
             self.assertEqual(serializer.data[field], origin_data[field])
 
     @override_settings(
-        TIME_ZONE="utc",
+        TIME_ZONE="UTC",
         JOANIE_LMS_BACKENDS=[
             {
                 "BASE_URL": "http://localhost:8073",
