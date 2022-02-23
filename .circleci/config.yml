@@ -170,6 +170,7 @@ jobs:
           name: Create writable /data
           command: |
             sudo mkdir -p /data/media && \
+            sudo mkdir -p /data/static && \
             sudo chown -R circleci:circleci /data
       # Run back-end (Django) test suite
       #
