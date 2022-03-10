@@ -80,12 +80,20 @@ class DummyPaymentBackendTestCase(TestCase):
 
     @mock.patch.object(
         DummyPaymentBackend,
+        "handle_notification",
+        side_effect=DummyPaymentBackend().handle_notification,
+    )
+    @mock.patch.object(
+        DummyPaymentBackend,
         "create_payment",
         side_effect=DummyPaymentBackend().create_payment,
     )
-    def test_payment_backend_dummy_create_one_click_payment(self, mock_create_payment):
+    def test_payment_backend_dummy_create_one_click_payment(
+        self, mock_create_payment, mock_handle_notification
+    ):
         """
-        Dummy backend `one_click_payment` is simply a proxy of `create_payment` method.
+        Dummy backend `one_click_payment` calls the `create_payment` method then immediately
+        trigger the `handle_notification` with payment info to validate the order.
         It returns payment information with `is_paid` property sets to True to simulate
         that a one click payment has succeeded.
         """
@@ -122,6 +130,8 @@ class DummyPaymentBackendTestCase(TestCase):
                 "metadata": {"order_uid": str(order.uid)},
             },
         )
+
+        mock_handle_notification.assert_called_once()
 
     def test_payment_backend_dummy_handle_notification_unknown_resource(self):
         """
