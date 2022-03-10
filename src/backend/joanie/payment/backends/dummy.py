@@ -1,9 +1,13 @@
 """Dummy Payment Backend"""
+import json
 import logging
 from decimal import Decimal as D
 
 from django.core.cache import cache
+from django.urls import reverse
 from django.utils import timezone
+
+from rest_framework.test import APIRequestFactory
 
 from joanie.core.models import Order
 from joanie.payment import exceptions
@@ -136,6 +140,19 @@ class DummyPaymentBackend(BasePaymentBackend):
         Call create_payment method and bind a `is_paid` property to payment information.
         """
         payment_info = self.create_payment(request, order, billing_address)
+        notification_request = APIRequestFactory().post(
+            reverse("payment_webhook"),
+            data={
+                "id": payment_info["payment_id"],
+                "type": "payment",
+                "state": "success",
+            },
+            format="json",
+        )
+        notification_request.data = json.loads(
+            notification_request.body.decode("utf-8")
+        )
+        self.handle_notification(notification_request)
 
         return {
             **payment_info,
