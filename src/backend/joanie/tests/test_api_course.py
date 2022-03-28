@@ -208,7 +208,7 @@ class CourseApiTest(BaseAPITestCase):
     def test_api_course_read_detail_authenticated(self):
         """
         Authenticated users should be allowed to retrieve a course
-        with its related order and enrollment bound.
+        with its related order, enrollments and certificate bound.
         """
         target_course_run11 = factories.CourseRunFactory(
             resource_link="http://lms.test/courses/course-v1:edx+000011+Demo_Course/course",
@@ -280,6 +280,9 @@ class CourseApiTest(BaseAPITestCase):
             user=user, course_run=target_course_run22, order=order2, is_active=True
         )
 
+        # - Create a certificate
+        certificate = factories.CertificateFactory(order=order2)
+
         # - Create a set of random users which possibly purchase one of the products
         # then enroll to one of its course run.
         for _ in range(random.randrange(1, 5)):
@@ -307,7 +310,7 @@ class CourseApiTest(BaseAPITestCase):
                         user=user, course_run=course_run, order=order, is_active=True
                     )
 
-        with self.assertNumQueries(27):
+        with self.assertNumQueries(29):
             response = self.client.get(
                 f"/api/courses/{course.code}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -324,6 +327,9 @@ class CourseApiTest(BaseAPITestCase):
             "orders": [
                 {
                     "id": str(order.uid),
+                    "certificate": str(certificate.uid)
+                    if order.uid == order2.uid
+                    else None,
                     "created_on": order.created_on.isoformat().replace("+00:00", "Z"),
                     "total": float(order.total.amount),
                     "total_currency": str(order.total.currency),
@@ -425,7 +431,7 @@ class CourseApiTest(BaseAPITestCase):
 
         # - When user is authenticated, response should be partially cached.
         # Course information should have been cached, but orders not.
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(10):
             self.client.get(
                 f"/api/courses/{course.code}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -471,7 +477,7 @@ class CourseApiTest(BaseAPITestCase):
         self.assertEqual(order_canceled.state, enums.ORDER_STATE_CANCELED)
 
         # - Retrieve course information
-        with self.assertNumQueries(11):
+        with self.assertNumQueries(13):
             response = self.client.get(
                 f"/api/courses/{course.code}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",

@@ -44,6 +44,7 @@ and this project adheres to
 
 ### Changed
 
+- Update Order serializers to bind certificate
 - Order `state` is now a computed property
 - Split address fullname field into first_name and last_name fields
 - Update CourseSerializer to bind order and enrollment related to the user

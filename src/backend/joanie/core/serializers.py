@@ -213,11 +213,13 @@ class OrderLiteSerializer(serializers.ModelSerializer):
     )
     product = serializers.SlugRelatedField(read_only=True, slug_field="uid")
     main_invoice = serializers.SlugRelatedField(read_only=True, slug_field="reference")
+    certificate = serializers.SlugRelatedField(read_only=True, slug_field="uid")
 
     class Meta:
         model = models.Order
         fields = [
             "id",
+            "certificate",
             "created_on",
             "main_invoice",
             "total",
@@ -228,6 +230,7 @@ class OrderLiteSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "id",
+            "certificate",
             "created_on",
             "main_invoice",
             "total",
@@ -390,12 +393,14 @@ class OrderSerializer(serializers.ModelSerializer):
     )
     target_courses = serializers.SerializerMethodField(read_only=True)
     main_invoice = serializers.SlugRelatedField(read_only=True, slug_field="reference")
+    certificate = serializers.SlugRelatedField(read_only=True, slug_field="uid")
 
     class Meta:
         model = models.Order
         fields = [
             "course",
             "created_on",
+            "certificate",
             "enrollments",
             "id",
             "main_invoice",
@@ -407,6 +412,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "target_courses",
         ]
         read_only_fields = [
+            "certificate",
             "created_on",
             "enrollments",
             "id",
