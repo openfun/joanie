@@ -6,6 +6,7 @@ import uuid
 from decimal import Decimal as D
 
 from django.conf import settings
+from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import models
 from django.utils import timezone
@@ -16,7 +17,7 @@ from djmoney.models.fields import MoneyField
 from djmoney.models.validators import MinMoneyValidator
 from parler import models as parler_models
 
-from joanie.core.exceptions import EnrollmentError
+from joanie.core.exceptions import EnrollmentError, GradeError
 from joanie.core.models.certifications import Certificate
 from joanie.lms_handler import LMSHandler
 
@@ -25,10 +26,6 @@ from . import accounts as customers_models
 from . import courses as courses_models
 
 logger = logging.getLogger(__name__)
-PRODUCT_TYPE_CERTIFICATE_ALLOWED = [
-    enums.PRODUCT_TYPE_CERTIFICATE,
-    enums.PRODUCT_TYPE_CREDENTIAL,
-]
 
 
 class Product(parler_models.TranslatableModel):
@@ -94,12 +91,12 @@ class Product(parler_models.TranslatableModel):
         """
         if (
             self.certificate_definition
-            and self.type not in PRODUCT_TYPE_CERTIFICATE_ALLOWED
+            and self.type not in enums.PRODUCT_TYPE_CERTIFICATE_ALLOWED
         ):
             raise ValidationError(
                 _(
                     f"Certificate definition is only allowed for product kinds: "
-                    f"{', '.join(PRODUCT_TYPE_CERTIFICATE_ALLOWED)}"
+                    f"{', '.join(enums.PRODUCT_TYPE_CERTIFICATE_ALLOWED)}"
                 )
             )
         super().clean()
@@ -138,7 +135,7 @@ class ProductCourseRelation(models.Model):
         verbose_name_plural = _("Courses relations to products with a position")
 
     def __str__(self):
-        return f"{self.product}: {self.position}/ {self.course}]"
+        return f"{self.product}: {self.position} / {self.course}"
 
 
 class Order(models.Model):
@@ -267,7 +264,10 @@ class Order(models.Model):
             # - Generate order course relation
             for relation in ProductCourseRelation.objects.filter(product=self.product):
                 OrderCourseRelation.objects.create(
-                    order=self, course=relation.course, position=relation.position
+                    order=self,
+                    course=relation.course,
+                    position=relation.position,
+                    is_graded=relation.is_graded,
                 )
 
             self.validate()
@@ -326,7 +326,7 @@ class Order(models.Model):
         Create a certificate if the related product type is certifying and if one
         has not been already created.
         """
-        if self.product.type not in PRODUCT_TYPE_CERTIFICATE_ALLOWED:
+        if self.product.type not in enums.PRODUCT_TYPE_CERTIFICATE_ALLOWED:
             raise ValidationError(
                 _(
                     (
@@ -383,7 +383,7 @@ class OrderCourseRelation(models.Model):
         verbose_name_plural = _("Courses relations to orders with a position")
 
     def __str__(self):
-        return f"{self.order}: {self.position}/ {self.course}]"
+        return f"{self.order}: {self.position} / {self.course}"
 
 
 class Enrollment(models.Model):
@@ -434,6 +434,47 @@ class Enrollment(models.Model):
     def __str__(self):
         active = _("active") if self.is_active else _("inactive")
         return f"[{active}][{self.state}] {self.user} for {self.course_run}"
+
+    @property
+    def grade_cache_key(self):
+        """The cache key used to store enrollment's grade."""
+        return f"grade_{self.uid}"
+
+    @property
+    def is_passed(self):
+        """Get enrollment grade then return the `passed` property value or False"""
+        grade = self.get_grade()
+
+        return grade["passed"] if grade else False
+
+    def get_grade(self):
+        """Retrieve the grade from the related LMS then store result in cache."""
+        grade = cache.get(self.grade_cache_key)
+
+        if grade is None:
+            lms = LMSHandler.select_lms(self.course_run.resource_link)
+
+            if lms is None:
+                logger.error(
+                    "Course run %s has no related lms.",
+                    self.course_run.id,
+                )
+            else:
+                try:
+                    grade = lms.get_grades(
+                        username=self.user.username,
+                        resource_link=self.course_run.resource_link,
+                    )
+                except GradeError:
+                    pass
+                else:
+                    cache.set(
+                        self.grade_cache_key,
+                        grade,
+                        settings.JOANIE_ENROLLMENT_GRADE_CACHE_TTL,
+                    )
+
+        return grade
 
     def clean(self):
         """Clean instance fields and raise a ValidationError in case of issue."""

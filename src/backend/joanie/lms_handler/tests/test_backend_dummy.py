@@ -114,18 +114,18 @@ class DummyLMSBackendTestCase(TestCase):
         self.assertEqual(len(grade_summary), 6)
 
         # - a boolean `passed`
-        self.assertEqual(grade_summary["passed"], False)
+        self.assertEqual(grade_summary["passed"], True)
 
         # - a string `grade`
-        self.assertEqual(grade_summary["grade"], None)
+        self.assertEqual(grade_summary["grade"], "A")
 
         # - a float `percent`
-        self.assertEqual(grade_summary["percent"], 0.0)
+        self.assertEqual(grade_summary["percent"], 1.0)
 
         # - a dict `totaled_scores`
         self.assertEqual(
             grade_summary["totaled_scores"],
-            {"Final Exam": [[0.0, 1.0, True, "First section", None]]},
+            {"Final Exam": [[1.0, 1.0, True, "First section", None]]},
         )
 
         # - a list `grade_breakdown`
@@ -134,8 +134,8 @@ class DummyLMSBackendTestCase(TestCase):
             [
                 {
                     "category": "Final Exam",
-                    "percent": 0.0,
-                    "detail": "Final Exam = 0.00% of a possible 0.00%",
+                    "percent": 1.0,
+                    "detail": "Final Exam = 100.00% of a possible 100.00%",
                 }
             ],
         )
@@ -147,8 +147,8 @@ class DummyLMSBackendTestCase(TestCase):
                 {
                     "category": "Final Exam",
                     "prominent": True,
-                    "percent": 0.0,
-                    "detail": "Final Exam = 0%",
+                    "percent": 1.0,
+                    "detail": "Final Exam = 100%",
                     "label": "FE",
                 }
             ],
