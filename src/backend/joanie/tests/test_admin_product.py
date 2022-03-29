@@ -243,7 +243,7 @@ class ProductAdminTestCase(BaseAPITestCase):
         """
         Product admin view should display a read only field "related courses"
         in charge of listing related courses with a link to the course admin
-        change view.
+        change view
         """
 
         # Create courses
