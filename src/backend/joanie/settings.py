@@ -167,6 +167,7 @@ class Base(Configuration):
         "django.contrib.messages",
         "django.contrib.staticfiles",
         # Third party apps
+        "django_object_actions",
         "adminsortable2",
         "corsheaders",
         "dockerflow.django",
