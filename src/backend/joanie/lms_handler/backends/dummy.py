@@ -81,28 +81,28 @@ class DummyLMSBackend(BaseLMSBackend):
         Get a fake user's grade for a course run given its resource_link.
 
         The return dict looks like a grade summary of a course run which has only one
-        graded exercice called "Final Exam" which have a grade of 0.0.
+        graded exercice called "Final Exam" which have a grade of 1.0.
         """
         return {
-            "passed": False,
-            "grade": None,
-            "percent": 0.0,
+            "passed": True,
+            "grade": "A",
+            "percent": 1.0,
             "totaled_scores": {
-                "Final Exam": [[0.0, 1.0, True, "First section", None]],
+                "Final Exam": [[1.0, 1.0, True, "First section", None]],
             },
             "grade_breakdown": [
                 {
                     "category": "Final Exam",
-                    "percent": 0.0,
-                    "detail": "Final Exam = 0.00% of a possible 0.00%",
+                    "percent": 1.0,
+                    "detail": "Final Exam = 100.00% of a possible 100.00%",
                 }
             ],
             "section_breakdown": [
                 {
                     "category": "Final Exam",
                     "prominent": True,
-                    "percent": 0.0,
-                    "detail": "Final Exam = 0%",
+                    "percent": 1.0,
+                    "detail": "Final Exam = 100%",
                     "label": "FE",
                 },
             ],

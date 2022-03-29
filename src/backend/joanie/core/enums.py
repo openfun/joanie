@@ -29,6 +29,11 @@ PRODUCT_TYPE_CHOICES = (
     (PRODUCT_TYPE_CERTIFICATE, _("Certificate")),
 )
 
+PRODUCT_TYPE_CERTIFICATE_ALLOWED = [
+    PRODUCT_TYPE_CERTIFICATE,
+    PRODUCT_TYPE_CREDENTIAL,
+]
+
 ORDER_STATE_PENDING = "pending"  # waiting for payment
 ORDER_STATE_CANCELED = "canceled"  #  has been canceled
 ORDER_STATE_FAILED = "failed"  #  payment failed

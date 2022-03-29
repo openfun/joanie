@@ -202,6 +202,7 @@ class Base(Configuration):
     }
 
     JOANIE_ANONYMOUS_COURSE_SERIALIZER_CACHE_TTL = 3600  # 1 hour
+    JOANIE_ENROLLMENT_GRADE_CACHE_TTL = 600  # 10 minutes
 
     LANGUAGES = (
         ("en-us", _("English")),
@@ -357,14 +358,16 @@ class Test(Base):
             "API_TOKEN": "FakeEdXAPIKey",
             "BACKEND": "joanie.lms_handler.backends.dummy.DummyLMSBackend",
             "BASE_URL": "http://localhost:8073",
-            "SELECTOR_REGEX": r"^.*/courses/(?P<course_id>.*)/course/?",
-            "COURSE_REGEX": r"^.*/courses/(?P<course_id>.*)/course/?$",
+            "SELECTOR_REGEX": r"^(?P<course_id>.*)$",
+            "COURSE_REGEX": r"^(?P<course_id>.*)$",
         }
     ]
 
     JOANIE_PAYMENT_BACKEND = {
         "backend": "joanie.payment.backends.dummy.DummyPaymentBackend",
     }
+
+    JOANIE_ENROLLMENT_GRADE_CACHE_TTL = 0
 
 
 class ContinuousIntegration(Test):
