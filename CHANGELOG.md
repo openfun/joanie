@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Add custom actions into admin to generate certificates
 - Add a management command to generate certificate for eligible orders
 - Add `is_passed` cached property to enrollment model
 - Add an api endpoint to retrieve and download certificates

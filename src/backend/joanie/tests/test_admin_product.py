@@ -5,12 +5,14 @@ import random
 import uuid
 from unittest import mock
 
+from django.contrib.messages import get_messages
 from django.urls import reverse
 
 import lxml.html
 
 from joanie.core import factories, models
 
+from ..core import enums
 from .base import BaseAPITestCase
 
 
@@ -282,6 +284,96 @@ class ProductAdminTestCase(BaseAPITestCase):
         self.assertEqual(
             links[1].attrib["href"],
             reverse("admin:core_course_change", args=(course_1.pk,)),
+        )
+
+    def test_admin_product_should_allow_to_generate_certificate_for_related_course(
+        self,
+    ):
+        """
+        Product admin view should display a link to generate certificates for
+        the couple course - product next to each related course item. This link is
+        displayed only for certifying products.
+        """
+
+        # Create a course
+        course = factories.CourseFactory()
+
+        # Create a product
+        product = factories.ProductFactory(
+            courses=[course], type=enums.PRODUCT_TYPE_CREDENTIAL
+        )
+
+        # Login a user with all permission to manage products in django admin
+        user = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=user.username, password="password")
+
+        # Now we go to the product admin change view
+        response = self.client.get(
+            reverse("admin:core_product_change", args=(product.pk,)),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, product.title)
+
+        # - Check there are links to go to related courses admin change view
+        html = lxml.html.fromstring(response.content)
+        related_courses_field = html.cssselect(".field-related_courses")[0]
+
+        # - The related course should be displayed
+        related_course = related_courses_field.cssselect("li")
+        self.assertEqual(len(related_course), 1)
+        # - And it should contain two links
+        links = related_course[0].cssselect("a")
+        self.assertEqual(len(links), 2)
+        # - 1st a link to go to the related course change view
+        self.assertEqual(links[0].text_content(), f"{course.code} | {course.title}")
+        self.assertEqual(
+            links[0].attrib["href"],
+            reverse("admin:core_course_change", args=(course.pk,)),
+        )
+
+        # - 2nd a link to generate certificate for the course - product couple
+        self.assertEqual(links[1].text_content(), "Generate certificates")
+        self.assertEqual(
+            links[1].attrib["href"],
+            reverse(
+                "admin:generate_certificates",
+                kwargs={"product_id": product.id, "course_code": course.code},
+            ),
+        )
+
+    @mock.patch("joanie.core.helpers.generate_certificates_for_orders", return_value=0)
+    def test_admin_product_generate_certificate_for_course(
+        self, mock_generate_certificates
+    ):
+        """
+        Product Admin should contain an endpoint which triggers the
+        `create_certificates` management command with product and course as options.
+        """
+        user = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=user.username, password="password")
+
+        course = factories.CourseFactory()
+        product = factories.ProductFactory(courses=[course])
+
+        response = self.client.get(
+            reverse(
+                "admin:generate_certificates",
+                kwargs={"course_code": course.code, "product_id": product.id},
+            ),
+        )
+
+        # - Generate certificates command should have been called
+        mock_generate_certificates.assert_called_once()
+
+        # Check the presence of a confirmation message
+        messages = list(get_messages(response.wsgi_request))
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(str(messages[0]), "No certificates have been generated.")
+
+        # - User should be redirected to the product change view
+        self.assertRedirects(
+            response, reverse("admin:core_product_change", args=(product.id,))
         )
 
     @mock.patch.object(models.Order, "cancel")
