@@ -180,10 +180,10 @@ class ProductAdminTestCase(BaseAPITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, product.title)
 
-        #  - Check that there is a sortable product course relation section
+        # - Check that there is a sortable product course relation section
         html = lxml.html.fromstring(response.content)
 
-        sortable_section = html.cssselect(".inline-group.sortable")[0]
+        sortable_section = html.cssselect(".sortable")[0]
         self.assertIsNotNone(sortable_section)
 
         section_title = sortable_section.cssselect("h2")[0]
