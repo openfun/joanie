@@ -272,14 +272,34 @@ class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
 
     list_display = ("uid", "owner", "product", "state")
     readonly_fields = ("state", "total", "invoice", "certificate")
-    change_actions = (ACTION_NAME_GENERATE_CERTIFICATES,)
+    change_actions = (
+        ACTION_NAME_GENERATE_CERTIFICATES,
+        ACTION_NAME_CANCEL,
+    )
     actions = (ACTION_NAME_CANCEL, ACTION_NAME_GENERATE_CERTIFICATES)
 
-    @admin.action(description=_("Cancel selected orders"))
+    def get_change_actions(self, request, object_id, form_url):
+        """
+        Remove the cancel action from list of actions
+        if the order instance is already canceled
+        """
+        actions = super().get_change_actions(request, object_id, form_url)
+        actions = list(actions)
+
+        if self.model.objects.filter(pk=object_id, is_canceled=True).exists():
+            actions.remove(ACTION_NAME_CANCEL)
+        if self.model.objects.filter(pk=object_id, certificate__isnull=False).exists():
+            actions.remove(ACTION_NAME_GENERATE_CERTIFICATES)
+
+        return actions
+
+    @takes_instance_or_queryset
     def cancel(self, request, queryset):  # pylint: disable=no-self-use
         """Cancel orders"""
         for order in queryset:
             order.cancel()
+
+    cancel.short_description = _("Cancel selected order")
 
     @takes_instance_or_queryset
     def generate_certificates(self, request, queryset):  # pylint: disable=no-self-use
