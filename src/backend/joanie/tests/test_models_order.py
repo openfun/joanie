@@ -2,6 +2,7 @@
 Test suite for order models
 """
 from datetime import timedelta
+from unittest import mock
 
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
@@ -12,6 +13,7 @@ from moneyed import Money
 
 from joanie.core import enums, factories
 from joanie.core.models import Enrollment
+from joanie.lms_handler.backends.dummy import DummyLMSBackend
 from joanie.payment.factories import InvoiceFactory
 
 
@@ -145,7 +147,8 @@ class OrderModelsTestCase(TestCase):
 
         self.assertEqual(Enrollment.objects.count(), 1)
 
-    def test_models_order_cancel(self):
+    @mock.patch.object(DummyLMSBackend, "set_enrollment")
+    def test_models_order_cancel(self, _mock_set_enrollment):
         """
         Order has a cancel method which is in charge to unroll owner to all active
         related enrollments and switch the `is_canceled` property to True.
@@ -175,9 +178,16 @@ class OrderModelsTestCase(TestCase):
         )
         self.assertEqual(Enrollment.objects.count(), 1)
         self.assertEqual(Enrollment.objects.filter(is_active=True).count(), 1)
+        _mock_set_enrollment.assert_called_once_with(
+            order.owner.username, cr1.resource_link, True
+        )
 
-        # - When order is canceled, user should be unenrolled to related enrollments
+        # - When order is canceled, user should be unenrolled to the related enrollments
+        #   then enrollments should be deleted
+        _mock_set_enrollment.reset_mock()
         order.cancel()
         self.assertEqual(order.is_canceled, True)
-        self.assertEqual(Enrollment.objects.count(), 1)
-        self.assertEqual(Enrollment.objects.filter(is_active=False).count(), 1)
+        self.assertEqual(Enrollment.objects.filter(order=order).count(), 0)
+        _mock_set_enrollment.assert_called_once_with(
+            order.owner.username, cr1.resource_link, False
+        )

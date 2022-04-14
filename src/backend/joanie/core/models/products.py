@@ -312,11 +312,14 @@ class Order(models.Model):
         Mark order instance as "canceled" then unroll user to all active
         course runs related to the order.
         """
-        # Unroll user to all active enrollment related to the order
+        # Unenroll user to all active enrollment related to the order
         enrollments = self.enrollments.filter(is_active=True)
         for enrollment in enrollments:
             enrollment.is_active = False
-            enrollment.save()
+            enrollment.set()
+
+        # Then delete enrollments
+        enrollments.delete()
 
         self.is_canceled = True
         self.save()
