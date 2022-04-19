@@ -187,6 +187,18 @@ class EnrollmentFactory(factory.django.DjangoModelFactory):
     is_active = factory.fuzzy.FuzzyChoice([True, False])
     state = factory.fuzzy.FuzzyChoice([s[0] for s in enums.ENROLLMENT_STATE_CHOICES])
 
+    @factory.post_generation
+    # pylint: disable=unused-argument,no-member
+    def orders(self, create, extracted, **kwargs):
+        """
+        Link orders to the enrollment after its creation:
+        - link the list of orders passed in "extracted" if any
+        """
+        if not extracted:
+            return
+
+        self.orders.set(extracted)
+
 
 class ProductFactory(factory.django.DjangoModelFactory):
     """A factory to create a product"""

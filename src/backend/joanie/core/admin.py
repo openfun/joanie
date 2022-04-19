@@ -106,7 +106,15 @@ class CourseAdmin(DjangoObjectActions, TranslatableAdmin):
 class CourseRunAdmin(TranslatableAdmin):
     """Admin class for the CourseRun model"""
 
-    list_display = ("title", "resource_link", "start", "end", "state", "is_gradable")
+    list_display = (
+        "course",
+        "title",
+        "resource_link",
+        "start",
+        "end",
+        "state",
+        "is_gradable",
+    )
     actions = ("mark_as_gradable",)
 
     @admin.action(description=_("Mark course run as gradable"))
@@ -288,6 +296,7 @@ class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
 
         if self.model.objects.filter(pk=object_id, is_canceled=True).exists():
             actions.remove(ACTION_NAME_CANCEL)
+            actions.remove(ACTION_NAME_GENERATE_CERTIFICATES)
         if self.model.objects.filter(pk=object_id, certificate__isnull=False).exists():
             actions.remove(ACTION_NAME_GENERATE_CERTIFICATES)
 
@@ -299,7 +308,7 @@ class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
         for order in queryset:
             order.cancel()
 
-    cancel.short_description = _("Cancel selected order")
+    cancel.short_description = _("Cancel selected orders")
 
     @takes_instance_or_queryset
     def generate_certificates(self, request, queryset):  # pylint: disable=no-self-use
@@ -327,7 +336,7 @@ class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
 class EnrollmentAdmin(admin.ModelAdmin):
     """Admin class for the Enrollment model"""
 
-    list_display = ("user", "order", "course_run", "state")
+    list_display = ("user", "course_run", "state", "is_active")
 
 
 @admin.register(models.Address)

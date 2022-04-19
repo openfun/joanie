@@ -8,7 +8,8 @@ from decimal import Decimal as D
 from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
-from django.db import models
+from django.db import models, transaction
+from django.db.models.signals import m2m_changed
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
@@ -272,6 +273,7 @@ class Order(models.Model):
 
             self.validate()
 
+    @transaction.atomic
     def validate(self):
         """
         Automatically enroll user to courses with only one course run.
@@ -292,20 +294,23 @@ class Order(models.Model):
         for course in courses_with_one_course_run:
             course_run = course.course_runs.first()
             try:
-                enrollment = self.enrollments.get(course_run=course_run).only(
-                    "is_active"
-                )
+                enrollment = Enrollment.objects.get(
+                    user=self.owner, course_run=course_run
+                ).only("is_active", "orders")
             except Enrollment.DoesNotExist:
-                Enrollment.objects.create(
-                    order=self,
-                    course_run=course_run,
-                    is_active=True,
-                    user=self.owner,
+                self.enrollments.add(  # pylint: disable=no-member
+                    Enrollment.objects.create(
+                        course_run=course_run,
+                        user=self.owner,
+                        is_active=True,
+                    )
                 )
             else:
                 if enrollment.is_active is False:
                     enrollment.is_active = True
                     enrollment.save()
+                if self not in enrollment.orders:
+                    self.enrollments.add(enrollment)  # pylint: disable=no-member
 
     def cancel(self):
         """
@@ -401,13 +406,11 @@ class Enrollment(models.Model):
         related_name="enrollments",
         on_delete=models.RESTRICT,
     )
-    order = models.ForeignKey(
+    orders = models.ManyToManyField(
         Order,
-        verbose_name=_("order"),
+        verbose_name=_("orders"),
         related_name="enrollments",
-        null=True,
         blank=True,
-        on_delete=models.RESTRICT,
     )
     user = models.ForeignKey(
         customers_models.User,
@@ -485,50 +488,24 @@ class Enrollment(models.Model):
             )
             raise ValidationError({"__all__": [message]})
 
-        if self.order:
-            # The user of the enrollment should be the owner of the order
-            if self.order.owner != self.user:
-                message = _(
-                    f"You are not allowed to enroll on order {self.order.uid!s}."
-                )
-                raise ValidationError({"user": [message]})
-
-            # The course run targeted by the enrollment should also be targeted by the order
-            if not self.order.target_courses.filter(
-                course_runs=self.course_run
-            ).exists():
-                message = _(
-                    f'This order does not contain course run "{self.course_run.resource_link:s}".'
-                )
-                raise ValidationError({"__all__": [message]})
-
         if self.course_run.course.targeted_by_products.exists():
             # Forbid creating a free enrollment if an order exists for this course and
             # the owner has no pending order on it.
-            if not self.order or not (
-                self.order.state == enums.ORDER_STATE_VALIDATED
-                and self.order.target_courses.filter(
-                    course_runs=self.course_run
-                ).exists()
-            ):
+            validated_user_orders = [
+                order
+                for order in Order.objects.filter(
+                    is_canceled=False,
+                    owner=self.user,
+                    target_courses__course_runs=self.course_run,
+                )
+                if order.state == enums.ORDER_STATE_VALIDATED
+            ]
+            if len(validated_user_orders) == 0:
                 message = _(
                     f'Course run "{self.course_run.resource_link:s}" '
                     "requires a valid order to enroll."
                 )
                 raise ValidationError({"__all__": [message]})
-
-            # Forbid enrolling to 2 course runs related to the same course for a given order
-            check_enrollments_query = self.order.enrollments.filter(
-                course_run__course=self.course_run.course_id, is_active=True
-            )
-            if self.pk:
-                check_enrollments_query = check_enrollments_query.exclude(pk=self.pk)
-            if check_enrollments_query.exists():
-                message = _(
-                    f'User "{self.user.username:s}" is already enrolled '
-                    "to this course for this order."
-                )
-                raise ValidationError({"order": [message]})
 
         return super().clean()
 
@@ -563,3 +540,74 @@ class Enrollment(models.Model):
                 self.state = enums.ENROLLMENT_STATE_FAILED
             else:
                 self.state = enums.ENROLLMENT_STATE_SET
+
+
+def on_enrollment_orders_linked(action, instance, pk_set, **kwargs):
+    """Process some checks before link orders to an enrollment."""
+    if action != "pre_add":
+        return
+
+    def is_order_owner(enrollment, order):
+        """Check if the enrollment's user is the owner of the order"""
+        if order.owner != enrollment.user:
+            return False
+        return True
+
+    def does_enrollment_rely_on_order_target_course(enrollment, order):
+        """
+        Check if the course run targeted by the enrollment is also targeted by the order
+        """
+        if not order.target_courses.filter(course_runs=enrollment.course_run).exists():
+            return False
+
+        return True
+
+    def check_enrollments(enrollment, order):
+        check_enrollments_query = order.enrollments.filter(
+            course_run__course=enrollment.course_run.course_id,
+            is_active=True,
+        ).exclude(pk=enrollment.pk)
+
+        if check_enrollments_query.exists():
+            return True
+
+        return False
+
+    if isinstance(instance, Order):
+        enrollments = Enrollment.objects.filter(pk__in=pk_set)
+        order_set = {instance.pk}
+    else:
+        enrollments = [instance]
+        order_set = pk_set
+
+    for enrollment in enrollments:
+        for order in Order.objects.filter(pk__in=order_set):
+            # - Enrollment should rely on a course targeted by the order
+            if not does_enrollment_rely_on_order_target_course(enrollment, order):
+                message = _(
+                    f'This order does not contain course run "{enrollment.course_run.resource_link:s}".'  # noqa pylint: disable=line-too-long
+                )
+                raise ValidationError({"__all__": [message]})
+
+            # - Order owner should be the enrollment user
+            if not is_order_owner(enrollment, order):
+                message = _(f"You are not allowed to enroll on order {order.uid!s}.")
+                raise ValidationError({"user": [message]})
+
+            # - Order should be validated
+            if order.state != enums.ORDER_STATE_VALIDATED:
+                message = _(
+                    "You are not allowed to enroll on order which is not validated."
+                )
+                raise ValidationError({"user": [message]})
+
+            # Forbid enrolling to 2 course runs related to the same course for a given order
+            if check_enrollments(enrollment, order):
+                message = _(
+                    f'User "{enrollment.user.username:s}" is already enrolled '
+                    "to this course for this order."
+                )
+                raise ValidationError({"orders": [message]})
+
+
+m2m_changed.connect(on_enrollment_orders_linked, sender=Enrollment.orders.through)

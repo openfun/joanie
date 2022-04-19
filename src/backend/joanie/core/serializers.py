@@ -346,14 +346,33 @@ class EnrollmentSerializer(serializers.ModelSerializer):
     course_run = serializers.SlugRelatedField(
         queryset=models.CourseRun.objects.all(), slug_field="resource_link"
     )
-    order = serializers.SlugRelatedField(
-        queryset=models.Order.objects.all(), slug_field="uid", required=False
+    orders = serializers.SlugRelatedField(
+        queryset=models.Order.objects.all(), slug_field="uid", required=False, many=True
     )
 
     class Meta:
         model = models.Enrollment
-        fields = ["id", "user", "course_run", "order", "is_active", "state"]
+        fields = ["id", "user", "course_run", "orders", "is_active", "state"]
         read_only_fields = ["id", "user", "state"]
+
+    def create(self, validated_data):
+        """
+        Check if enrollment for the couple user/course run does not already exist.
+        If it exists, we update the related enrollment otherwise we create a new one.
+        """
+        try:
+            enrollment = models.Enrollment.objects.get(
+                user=validated_data["user"], course_run=validated_data["course_run"]
+            )
+            orders = validated_data.get("orders")
+            if orders is not None:
+                enrollment.orders.add(*orders)
+            validated_data.pop("orders", None)
+            return super().update(enrollment, validated_data)
+        except models.Enrollment.DoesNotExist:
+            pass
+
+        return super().create(validated_data)
 
     def update(self, instance, validated_data):
         """
@@ -361,7 +380,7 @@ class EnrollmentSerializer(serializers.ModelSerializer):
         The "failed" state can only be set by the LMSHandler.
         """
         validated_data.pop("course_run", None)
-        validated_data.pop("order", None)
+        validated_data.pop("orders", None)
         return super().update(instance, validated_data)
 
 

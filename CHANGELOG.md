@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Allow an enrollment to be linked to several orders
 - Add custom actions into admin to generate certificates
 - Add a management command to generate certificate for eligible orders
 - Add `is_passed` cached property to enrollment model

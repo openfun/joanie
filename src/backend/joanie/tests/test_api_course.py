@@ -92,7 +92,7 @@ class CourseApiTest(BaseAPITestCase):
                 if should_enroll:
                     course_run = random.choice(target_course_runs)
                     factories.EnrollmentFactory(
-                        user=user, course_run=course_run, order=order, is_active=True
+                        user=user, course_run=course_run, orders=[order], is_active=True
                     )
 
         with self.assertNumQueries(11):
@@ -257,11 +257,11 @@ class CourseApiTest(BaseAPITestCase):
 
         # - Enrollment to course run 11
         factories.EnrollmentFactory(
-            user=user, course_run=target_course_run11, order=order1, is_active=True
+            user=user, course_run=target_course_run11, orders=[order1], is_active=True
         )
         # - Enrollment to course run 12
         factories.EnrollmentFactory(
-            user=user, course_run=target_course_run12, order=order1, is_active=True
+            user=user, course_run=target_course_run12, orders=[order1], is_active=True
         )
         # - Product 2
         order2 = factories.OrderFactory(
@@ -273,11 +273,11 @@ class CourseApiTest(BaseAPITestCase):
         InvoiceFactory(order=order2, total=order2.total)
         # - Enrollment to course run 21
         factories.EnrollmentFactory(
-            user=user, course_run=target_course_run21, order=order2, is_active=True
+            user=user, course_run=target_course_run21, orders=[order2], is_active=True
         )
         # - Enrollment to course run 22
         factories.EnrollmentFactory(
-            user=user, course_run=target_course_run22, order=order2, is_active=True
+            user=user, course_run=target_course_run22, orders=[order2], is_active=True
         )
 
         # - Create a certificate
@@ -307,7 +307,7 @@ class CourseApiTest(BaseAPITestCase):
                         )
                     )
                     factories.EnrollmentFactory(
-                        user=user, course_run=course_run, order=order, is_active=True
+                        user=user, course_run=course_run, orders=[order], is_active=True
                     )
 
         with self.assertNumQueries(29):
@@ -533,7 +533,7 @@ class CourseApiTest(BaseAPITestCase):
         factories.EnrollmentFactory(
             course_run=cr1,
             user=user,
-            order=order,
+            orders=[order],
             is_active=True,
             state=enums.ENROLLMENT_STATE_SET,
         )
