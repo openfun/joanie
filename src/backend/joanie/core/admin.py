@@ -14,10 +14,9 @@ from adminsortable2.admin import SortableAdminBase, SortableInlineAdminMixin
 from django_object_actions import DjangoObjectActions, takes_instance_or_queryset
 from parler.admin import TranslatableAdmin
 
-from joanie.core import helpers
+from joanie.core import helpers, models
 from joanie.core.enums import PRODUCT_TYPE_CERTIFICATE_ALLOWED
-
-from . import models
+from joanie.core.forms import CourseRunAdminForm, ProductCourseRelationAdminForm
 
 ACTION_NAME_GENERATE_CERTIFICATES = "generate_certificates"
 ACTION_NAME_CANCEL = "cancel"
@@ -75,7 +74,7 @@ class CourseAdmin(DjangoObjectActions, TranslatableAdmin):
     actions = (ACTION_NAME_GENERATE_CERTIFICATES,)
     change_actions = (ACTION_NAME_GENERATE_CERTIFICATES,)
     list_display = ("code", "title", "organization", "state")
-    filter_vertical = ("products",)
+    filter_horizontal = ("products",)
     fieldsets = (
         (_("Main information"), {"fields": ("code", "title", "organization")}),
         (
@@ -106,6 +105,7 @@ class CourseAdmin(DjangoObjectActions, TranslatableAdmin):
 class CourseRunAdmin(TranslatableAdmin):
     """Admin class for the CourseRun model"""
 
+    form = CourseRunAdminForm
     list_display = ("title", "resource_link", "start", "end", "state", "is_gradable")
     actions = ("mark_as_gradable",)
 
@@ -132,7 +132,9 @@ class UserAdmin(auth_admin.UserAdmin):
 class ProductCourseRelationInline(SortableInlineAdminMixin, admin.TabularInline):
     """Admin class for the ProductCourseRelation model"""
 
+    form = ProductCourseRelationAdminForm
     model = models.Product.target_courses.through
+    filter_horizontal = ["course_runs"]
     extra = 0
 
 
