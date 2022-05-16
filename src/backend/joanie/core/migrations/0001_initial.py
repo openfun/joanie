@@ -356,6 +356,14 @@ class Migration(migrations.Migration):
                     models.BooleanField(default=False, verbose_name="is gradable"),
                 ),
                 (
+                    "is_listed",
+                    models.BooleanField(
+                        default=True,
+                        help_text="If checked the course run will be listed from the list of course runs available for enrollment on the related course page.",
+                        verbose_name="is listed",
+                    ),
+                ),
+                (
                     "course",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.PROTECT,
