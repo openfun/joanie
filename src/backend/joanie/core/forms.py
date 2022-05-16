@@ -2,6 +2,7 @@
 Core application forms declaration
 """
 from django import forms
+from django.contrib.admin import widgets
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
@@ -17,12 +18,13 @@ class ProductCourseRelationAdminForm(forms.ModelForm):
     their which relies on the course instance.
     """
 
-    # course_runs = forms.ModelMultipleChoiceField(
-    #     queryset=models.CourseRun.objects.none(),
-    #     widget=widgets.FilteredSelectMultiple(
-    #         models.CourseRun._meta.verbose_name_plural, is_stacked=False
-    #     ),
-    # )
+    course_runs = forms.ModelMultipleChoiceField(
+        queryset=models.CourseRun.objects.none(),
+        widget=widgets.FilteredSelectMultiple(
+            models.CourseRun._meta.verbose_name_plural, is_stacked=False
+        ),
+        required=False,
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -40,7 +42,7 @@ class CourseRunAdminForm(forms.ModelForm):
     The admin form for the CourseRun model.
 
     It implements a clean_course method to prevent integrity error. In fact update
-    course run has to be forbid if the course run is joined to a product or an order.
+    course_run has to be forbid if the course run is joined to a product or an order.
     """
 
     def clean_course(self):

@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Add `is_listed` boolean field to course run model
 - Add custom actions into admin to generate certificates
 - Add a management command to generate certificate for eligible orders
 - Add `is_passed` cached property to enrollment model

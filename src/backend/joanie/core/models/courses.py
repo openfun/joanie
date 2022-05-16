@@ -268,6 +268,14 @@ class CourseRun(parler_models.TranslatableModel):
         help_text=_("The list of languages in which the course content is available."),
     )
     is_gradable = models.BooleanField(_("is gradable"), default=False)
+    is_listed = models.BooleanField(
+        _("is listed"),
+        default=True,
+        help_text=_(
+            "If checked the course run will be listed from the list of course runs "
+            "available for enrollment on the related course page."
+        ),
+    )
 
     class Meta:
         db_table = "joanie_course_run"

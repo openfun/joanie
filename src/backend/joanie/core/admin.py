@@ -134,7 +134,6 @@ class ProductCourseRelationInline(SortableInlineAdminMixin, admin.TabularInline)
 
     form = ProductCourseRelationAdminForm
     model = models.Product.target_courses.through
-    filter_horizontal = ["course_runs"]
     extra = 0
 
 
