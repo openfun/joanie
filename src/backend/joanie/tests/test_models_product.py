@@ -3,7 +3,8 @@ Test suite for products models
 """
 from decimal import Decimal as D
 
-from django.db import IntegrityError
+from django.core.exceptions import ValidationError
+from django.db import IntegrityError, transaction
 from django.test import TestCase
 
 from djmoney.money import Money
@@ -74,3 +75,32 @@ class ProductModelsTestCase(TestCase):
             document_context["course"]["organization"]["signature"],
             blue_square_base64,
         )
+
+    def test_models_product_course_runs_relation_course_runs(self):
+        """
+        It's possible to restrict a course to use some course runs but if course runs
+        linked does not rely on the relation course, a ValidationError should be raised.
+        """
+        course = factories.CourseFactory(
+            course_runs=factories.CourseRunFactory.create_batch(1)
+        )
+        product = factories.ProductFactory(target_courses=[course])
+        course_relation = product.course_relations.get(course=course)
+
+        course_run = factories.CourseRunFactory.create_batch(1)
+
+        with self.assertRaises(ValidationError) as context:
+            with transaction.atomic():
+                course_relation.course_runs.set(course_run)
+
+        self.assertEqual(
+            str(context.exception),
+            "{'course_runs': ['Course runs to link does not relies on the relation course.']}",
+        )
+
+        self.assertEqual(course_relation.course_runs.count(), 0)
+
+        with transaction.atomic():
+            course_relation.course_runs.set(course.course_runs.all())
+
+        self.assertEqual(course_relation.course_runs.count(), 1)
