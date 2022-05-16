@@ -117,7 +117,7 @@ class Migration(migrations.Migration):
                         help_text="The groups this user belongs to. A user will get all permissions granted to each of their groups.",
                         related_name="user_set",
                         related_query_name="user",
-                        to="auth.group",
+                        to="auth.Group",
                         verbose_name="groups",
                     ),
                 ),
@@ -128,7 +128,7 @@ class Migration(migrations.Migration):
                         help_text="Specific permissions for this user.",
                         related_name="user_set",
                         related_query_name="user",
-                        to="auth.permission",
+                        to="auth.Permission",
                         verbose_name="user permissions",
                     ),
                 ),
@@ -604,6 +604,15 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
+                    "course_runs",
+                    models.ManyToManyField(
+                        blank=True,
+                        related_name="product_relations",
+                        to="core.courserun",
+                        verbose_name="course runs",
+                    ),
+                ),
+                (
                     "product",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
@@ -628,7 +637,7 @@ class Migration(migrations.Migration):
                 blank=True,
                 related_name="targeted_by_products",
                 through="core.ProductCourseRelation",
-                to="core.course",
+                to="core.Course",
                 verbose_name="target courses",
             ),
         ),
@@ -666,6 +675,15 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
+                    "course_runs",
+                    models.ManyToManyField(
+                        blank=True,
+                        related_name="order_relations",
+                        to="core.courserun",
+                        verbose_name="course runs",
+                    ),
+                ),
+                (
                     "order",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
@@ -700,7 +718,7 @@ class Migration(migrations.Migration):
                 blank=True,
                 related_name="orders",
                 through="core.OrderCourseRelation",
-                to="core.course",
+                to="core.Course",
                 verbose_name="courses",
             ),
         ),
@@ -877,7 +895,7 @@ class Migration(migrations.Migration):
             field=models.ManyToManyField(
                 blank=True,
                 related_name="courses",
-                to="core.product",
+                to="core.Product",
                 verbose_name="products",
             ),
         ),

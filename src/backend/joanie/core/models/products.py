@@ -9,6 +9,7 @@ from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import models
+from django.db.models.signals import m2m_changed
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
@@ -120,6 +121,12 @@ class ProductCourseRelation(models.Model):
         related_name="course_relations",
         on_delete=models.CASCADE,
     )
+    course_runs = models.ManyToManyField(
+        courses_models.CourseRun,
+        verbose_name=_("course runs"),
+        related_name="product_relations",
+        blank=True,
+    )
     position = models.PositiveSmallIntegerField(_("position in product"))
     is_graded = models.BooleanField(
         _("take into account for certification"),
@@ -136,6 +143,43 @@ class ProductCourseRelation(models.Model):
 
     def __str__(self):
         return f"{self.product}: {self.position} / {self.course}"
+
+
+def on_add_course_runs_to_product_course_relation(action, instance, pk_set, **kwargs):
+    """
+    Signal triggered when course runs are added to a product course relation.
+    Some checks are processed before course runs are linked to product course relation.
+    """
+    if action != "pre_add":
+        return
+
+    if isinstance(instance, ProductCourseRelation):
+        relations = [instance]
+        course_runs_set = pk_set
+    else:
+        relations = ProductCourseRelation.objects.filter(pk__in=pk_set).select_related(
+            "course__course_runs"
+        )
+        course_runs_set = {instance.pk}
+
+    for relation in relations:
+        # Check that course runs relies on the relation course
+        if relation.course.course_runs.filter(pk__in=course_runs_set).count() != len(
+            course_runs_set
+        ):
+            raise ValidationError(
+                {
+                    "course_runs": [
+                        "Course runs to link does not relies on the relation course."
+                    ]
+                }
+            )
+
+
+m2m_changed.connect(
+    on_add_course_runs_to_product_course_relation,
+    sender=ProductCourseRelation.course_runs.through,
+)
 
 
 class Order(models.Model):
@@ -266,6 +310,7 @@ class Order(models.Model):
             for relation in ProductCourseRelation.objects.filter(product=self.product):
                 OrderCourseRelation.objects.create(
                     order=self,
+                    course_runs=relation.course_runs,
                     course=relation.course,
                     position=relation.position,
                     is_graded=relation.is_graded,
@@ -362,6 +407,12 @@ class OrderCourseRelation(models.Model):
         verbose_name=_("course"),
         related_name="order_relations",
         on_delete=models.RESTRICT,
+    )
+    course_runs = models.ManyToManyField(
+        courses_models.CourseRun,
+        verbose_name=_("course runs"),
+        related_name="order_relations",
+        blank=True,
     )
     order = models.ForeignKey(
         Order,

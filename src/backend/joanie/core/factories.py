@@ -81,6 +81,18 @@ class CourseFactory(factory.django.DjangoModelFactory):
 
         self.products.set(extracted)
 
+    @factory.post_generation
+    # pylint: disable=unused-argument,no-member
+    def course_runs(self, create, extracted, **kwargs):
+        """
+        Link course_runs to the course after its creation:
+        - link the list of course_runs passed in "extracted" if any
+        """
+        if not extracted:
+            return
+
+        self.course_runs.set(extracted)
+
 
 class CourseRunFactory(factory.django.DjangoModelFactory):
     """
@@ -244,6 +256,17 @@ class ProductCourseRelationFactory(factory.django.DjangoModelFactory):
     product = factory.SubFactory(ProductFactory)
     course = factory.SubFactory(CourseFactory)
     position = factory.fuzzy.FuzzyInteger(0, 1000)
+
+    @factory.post_generation
+    # pylint: disable=unused-argument,no-member
+    def course_runs(self, create, extracted, **kwargs):
+        """
+        Link course runs to the product relation after its creation
+        """
+        if not extracted:
+            return
+
+        self.course_runs.set(extracted)
 
 
 class OrderFactory(factory.django.DjangoModelFactory):

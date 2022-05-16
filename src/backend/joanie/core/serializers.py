@@ -77,14 +77,17 @@ class TargetCourseSerializer(serializers.ModelSerializer):
         product = self.context.get("product", None)
         return target_course.product_relations.get(product=product).is_graded
 
-    @staticmethod
-    def get_course_runs(target_course):
+    def get_course_runs(self, target_course):
         """
         Return related course runs ordered by start date asc
         """
-        return CourseRunSerializer(
-            target_course.course_runs.order_by("start"), many=True
-        ).data
+        product = self.context.get("product", None)
+        course_runs = target_course.product_relations.get(product=product).course_runs
+
+        if course_runs.count == 0:
+            course_runs = target_course.course_runs
+
+        return CourseRunSerializer(course_runs.order_by("start"), many=True).data
 
 
 class ProductSerializer(serializers.ModelSerializer):
