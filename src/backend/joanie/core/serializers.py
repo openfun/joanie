@@ -63,31 +63,44 @@ class TargetCourseSerializer(serializers.ModelSerializer):
             "title",
         ]
 
+    @property
+    def context_product(self):
+        """
+        Retrieve the product provided in context. If no product is provided, it raises
+        a ValidationError.
+        """
+        try:
+            return self.context["product"]
+        except KeyError as exception:
+            raise serializers.ValidationError(
+                'TargetCourseSerializer context must contain a "product" property.'
+            ) from exception
+
     def get_position(self, target_course):
         """
         Retrieve the position of the course related to its product_relation
         """
-        product = self.context.get("product", None)
-        return target_course.product_relations.get(product=product).position
+        return target_course.product_relations.get(
+            product=self.context_product
+        ).position
 
     def get_is_graded(self, target_course):
         """
         Retrieve the `is_graded` state of the course related to its product_relation
         """
-        product = self.context.get("product", None)
-        return target_course.product_relations.get(product=product).is_graded
+        return target_course.product_relations.get(
+            product=self.context_product
+        ).is_graded
 
     def get_course_runs(self, target_course):
         """
         Return related course runs ordered by start date asc
         """
-        product = self.context.get("product", None)
-        course_runs = target_course.product_relations.get(product=product).course_runs
+        course_runs = self.context_product.target_course_runs.filter(
+            course=target_course
+        ).order_by("start")
 
-        if course_runs.count == 0:
-            course_runs = target_course.course_runs
-
-        return CourseRunSerializer(course_runs.order_by("start"), many=True).data
+        return CourseRunSerializer(course_runs, many=True).data
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -211,9 +224,7 @@ class OrderLiteSerializer(serializers.ModelSerializer):
         min_value=0,
         read_only=True,
     )
-    enrollments = CourseRunEnrollmentSerializer(
-        many=True, read_only=True, required=False
-    )
+    enrollments = serializers.SerializerMethodField(read_only=True)
     product = serializers.SlugRelatedField(read_only=True, slug_field="uid")
     main_proforma_invoice = serializers.SlugRelatedField(
         read_only=True, slug_field="reference"
@@ -244,6 +255,16 @@ class OrderLiteSerializer(serializers.ModelSerializer):
             "product",
             "state",
         ]
+
+    def get_enrollments(self, order):
+        """
+        For the current order, retrieve its related enrollments.
+        """
+        return CourseRunEnrollmentSerializer(
+            instance=order.get_enrollments(),
+            many=True,
+            context=self.context,
+        ).data
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -276,16 +297,12 @@ class CourseSerializer(serializers.ModelSerializer):
         """
         try:
             username = self.context["username"]
-            orders = (
-                models.Order.objects.filter(
-                    Q(total=0) | Q(proforma_invoices__isnull=False),
-                    owner__username=username,
-                    course=instance,
-                    is_canceled=False,
-                )
-                .select_related("product")
-                .prefetch_related("enrollments__course_run")
-            )
+            orders = models.Order.objects.filter(
+                Q(total=0) | Q(proforma_invoices__isnull=False),
+                owner__username=username,
+                course=instance,
+                is_canceled=False,
+            ).select_related("product")
 
             return OrderLiteSerializer(orders, many=True).data
         except KeyError:
@@ -351,13 +368,10 @@ class EnrollmentSerializer(serializers.ModelSerializer):
     course_run = serializers.SlugRelatedField(
         queryset=models.CourseRun.objects.all(), slug_field="resource_link"
     )
-    order = serializers.SlugRelatedField(
-        queryset=models.Order.objects.all(), slug_field="uid", required=False
-    )
 
     class Meta:
         model = models.Enrollment
-        fields = ["id", "user", "course_run", "order", "is_active", "state"]
+        fields = ["id", "user", "course_run", "is_active", "state"]
         read_only_fields = ["id", "user", "state"]
 
     def update(self, instance, validated_data):
@@ -366,7 +380,6 @@ class EnrollmentSerializer(serializers.ModelSerializer):
         The "failed" state can only be set by the LMSHandler.
         """
         validated_data.pop("course_run", None)
-        validated_data.pop("order", None)
         return super().update(instance, validated_data)
 
 
@@ -393,9 +406,7 @@ class OrderSerializer(serializers.ModelSerializer):
     product = serializers.SlugRelatedField(
         queryset=models.Product.objects.all(), slug_field="uid"
     )
-    enrollments = CourseRunEnrollmentSerializer(
-        many=True, read_only=True, required=False
-    )
+    enrollments = serializers.SerializerMethodField(read_only=True)
     target_courses = serializers.SerializerMethodField(read_only=True)
     main_proforma_invoice = serializers.SlugRelatedField(
         read_only=True, slug_field="reference"
@@ -439,6 +450,16 @@ class OrderSerializer(serializers.ModelSerializer):
             .order_by("order_relations__position")
             .values_list("code", flat=True)
         )
+
+    def get_enrollments(self, order):
+        """
+        For the current order, retrieve its related enrollments.
+        """
+        return CourseRunEnrollmentSerializer(
+            instance=order.get_enrollments(),
+            many=True,
+            context=self.context,
+        ).data
 
     def update(self, instance, validated_data):
         """Make the "course" and "product" fields read_only only on update."""

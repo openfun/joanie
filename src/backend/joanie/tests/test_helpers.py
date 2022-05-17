@@ -122,10 +122,17 @@ class HelpersTestCase(TestCase):
             is_gradable=True,
             start=timezone.now() - timedelta(hours=1),
         )
+
+        cr_2 = factories.CourseRunFactory(
+            enrollment_end=timezone.now() + timedelta(hours=1),
+            enrollment_start=timezone.now() - timedelta(hours=1),
+            is_gradable=True,
+            start=timezone.now() - timedelta(hours=1),
+        )
         product = factories.ProductFactory(
             price="0.00",
             type=enums.PRODUCT_TYPE_CREDENTIAL,
-            target_courses=[course_run.course],
+            target_courses=[course_run.course, cr_2.course],
         )
         course = factories.CourseFactory(products=[product])
         order = factories.OrderFactory(product=product, course=course)

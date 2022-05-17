@@ -388,3 +388,29 @@ class CourseRunModelsTestCase(TestCase):
                 "datetime": None,
             },
         )
+
+    def test_models_course_run_validation_on_update(self):
+        """
+        When the course field of a course run instance is updated,
+        a ValidationError should be raised it the course run instance relies on
+        product/order relation.
+        """
+        course_run = factories.CourseRunFactory()
+        product = factories.ProductFactory(target_courses=[course_run.course])
+
+        # - Link course run to the product course relation
+        relation = product.course_relations.first()
+        relation.course_runs.add(course_run)
+
+        # - Try to update the course of the course run
+        course_run.course = factories.CourseFactory()
+        with self.assertRaises(ValidationError) as context:
+            course_run.save()
+
+        self.assertEqual(
+            str(context.exception),
+            (
+                "{'__all__': ['This course run relies on a product relation. "
+                "So you cannot modify its course.']}"
+            ),
+        )

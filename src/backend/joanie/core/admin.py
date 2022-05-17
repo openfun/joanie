@@ -16,7 +16,7 @@ from parler.admin import TranslatableAdmin
 
 from joanie.core import helpers, models
 from joanie.core.enums import PRODUCT_TYPE_CERTIFICATE_ALLOWED
-from joanie.core.forms import CourseRunAdminForm, ProductCourseRelationAdminForm
+from joanie.core.forms import ProductCourseRelationAdminForm
 
 ACTION_NAME_GENERATE_CERTIFICATES = "generate_certificates"
 ACTION_NAME_CANCEL = "cancel"
@@ -105,7 +105,6 @@ class CourseAdmin(DjangoObjectActions, TranslatableAdmin):
 class CourseRunAdmin(TranslatableAdmin):
     """Admin class for the CourseRun model"""
 
-    form = CourseRunAdminForm
     list_display = ("title", "resource_link", "start", "end", "state", "is_gradable")
     actions = ("mark_as_gradable",)
 
@@ -310,7 +309,7 @@ class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
 class EnrollmentAdmin(admin.ModelAdmin):
     """Admin class for the Enrollment model"""
 
-    list_display = ("user", "order", "course_run", "state")
+    list_display = ("user", "course_run", "state")
 
 
 @admin.register(models.Address)

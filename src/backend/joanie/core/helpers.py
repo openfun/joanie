@@ -28,29 +28,15 @@ def generate_certificate_for_order(order):
     if graded_courses_count == 0:
         return 0
 
-    course_runs = models.CourseRun.objects.filter(
-        course__in=graded_courses,
-        is_gradable=True,
-        start__lte=timezone.now(),
-    )
-
     # Retrieve all enrollments in one query. Since these enrollments rely on
     # order course runs, the count will always be pretty small.
-    enrollments = order.enrollments.filter(
-        course_run__in=course_runs, is_active=True
+    course_enrollments = models.Enrollment.objects.filter(
+        course_run__course__in=graded_courses,
+        course_run__is_gradable=True,
+        course_run__start__lte=timezone.now(),
+        is_active=True,
+        user=order.owner,
     ).select_related("user", "course_run")
-
-    # Cross graded courses and enrollments to check there is an active enrollment
-    # for each graded course, if not it is useless to go further
-    course_enrollments = []
-    for course in graded_courses:
-        course_course_runs = course.course_runs.all()
-        for enrollment in enrollments:
-            # Check if the enrollment relies on course by crossing
-            # all course runs implied
-            if enrollment.course_run in course_course_runs:
-                course_enrollments.append(enrollment)
-                break
 
     # If we do not have one enrollment per graded course, there is no need to
     # continue, we are sure that order is not eligible for certification.

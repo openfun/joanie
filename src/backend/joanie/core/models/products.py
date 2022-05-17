@@ -9,6 +9,7 @@ from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import models
+from django.db.models import Q
 from django.db.models.signals import m2m_changed
 from django.utils import timezone
 from django.utils.functional import cached_property
@@ -86,6 +87,35 @@ class Product(parler_models.TranslatableModel):
             f"{self.price}"
         )
 
+    @property
+    def target_course_runs(self):
+        """
+        Retrieve all course runs related to the product instance.
+
+        Returns:
+
+            - all course runs related to target courses for which the product/course
+              relation does not specify a list of eligible course runs (see course_runs
+              field on the ProductCourseRelation model)
+
+            - only the course runs specified on the product/course relation for target
+              courses on which a list of eligible course runs was specified on the
+              product/course relation.
+
+        """
+        course_relations_with_course_runs = self.course_relations.filter(
+            course_runs__isnull=False
+        ).only("pk")
+
+        return courses_models.CourseRun.objects.filter(
+            Q(product_relations__in=course_relations_with_course_runs)
+            | Q(
+                course__in=self.target_courses.exclude(
+                    product_relations__in=course_relations_with_course_runs
+                )
+            )
+        )
+
     def clean(self):
         """
         Allow certificate definition only for product with type credential or certificate.
@@ -148,11 +178,14 @@ class ProductCourseRelation(models.Model):
 def on_add_course_runs_to_product_course_relation(action, instance, pk_set, **kwargs):
     """
     Signal triggered when course runs are added to a product course relation.
-    Some checks are processed before course runs are linked to product course relation.
+    Some checks are processed before course runs are linked to product course relation :
+        1. Check that course runs linked are related to the relation course
     """
     if action != "pre_add":
         return
 
+    # Instance can be a `ProductCourseRelation` or a `CourseRun`. In the case instance
+    # is a CourseRun, we have to retrieve manually product course relations instances.
     if isinstance(instance, ProductCourseRelation):
         relations = [instance]
         course_runs_set = pk_set
@@ -163,14 +196,17 @@ def on_add_course_runs_to_product_course_relation(action, instance, pk_set, **kw
         course_runs_set = {instance.pk}
 
     for relation in relations:
-        # Check that course runs relies on the relation course
+        # Check that all involved course runs rely on the relation course
         if relation.course.course_runs.filter(pk__in=course_runs_set).count() != len(
             course_runs_set
         ):
             raise ValidationError(
                 {
                     "course_runs": [
-                        "Course runs to link does not relies on the relation course."
+                        (
+                            "Limiting a course to targeted course runs can only be done"
+                            " for course runs already belonging to this course."
+                        )
                     ]
                 }
             )
@@ -267,6 +303,34 @@ class Order(models.Model):
 
         return enums.ORDER_STATE_PENDING
 
+    @property
+    def target_course_runs(self):
+        """
+        Retrieve all course runs related to the order instance.
+
+        Returns:
+
+            - all course runs related to target courses for which the product/course
+              relation does not specify a list of eligible course runs (see course_runs
+              field on the ProductCourseRelation model)
+
+            - only the course runs specified on the product/course relation for target
+              courses on which a list of eligible course runs was specified on the
+              product/course relation.
+        """
+        course_relations_with_course_runs = self.course_relations.filter(
+            course_runs__isnull=False
+        ).only("pk")
+
+        return courses_models.CourseRun.objects.filter(
+            Q(order_relations__in=course_relations_with_course_runs)
+            | Q(
+                course__in=self.target_courses.exclude(
+                    order_relations__in=course_relations_with_course_runs
+                )
+            )
+        )
+
     @cached_property
     def main_proforma_invoice(self):
         """
@@ -308,13 +372,13 @@ class Order(models.Model):
         if is_new:
             # - Generate order course relation
             for relation in ProductCourseRelation.objects.filter(product=self.product):
-                OrderCourseRelation.objects.create(
+                order_relation = OrderCourseRelation.objects.create(
                     order=self,
-                    course_runs=relation.course_runs,
                     course=relation.course,
                     position=relation.position,
                     is_graded=relation.is_graded,
                 )
+                order_relation.course_runs.set(relation.course_runs.all())
 
             self.validate()
 
@@ -338,12 +402,11 @@ class Order(models.Model):
         for course in courses_with_one_course_run:
             course_run = course.course_runs.first()
             try:
-                enrollment = self.enrollments.get(course_run=course_run).only(
-                    "is_active"
-                )
+                enrollment = Enrollment.objects.get(
+                    course_run=course_run, user=self.owner
+                ).only("is_active")
             except Enrollment.DoesNotExist:
                 Enrollment.objects.create(
-                    order=self,
                     course_run=course_run,
                     is_active=True,
                     user=self.owner,
@@ -353,16 +416,47 @@ class Order(models.Model):
                     enrollment.is_active = True
                     enrollment.save()
 
+    def get_enrollments(self, is_active=None):
+        """
+        Retrieve owner's enrollments related to the order courses.
+        """
+        filters = {
+            "course_run__course__in": self.target_courses.all(),
+            "user": self.owner,
+        }
+        if is_active is not None:
+            filters.update({"is_active": is_active})
+
+        return Enrollment.objects.filter(**filters)
+
     def cancel(self):
         """
-        Mark order instance as "canceled" then unroll user to all active
-        course runs related to the order.
+        Mark order instance as "canceled".
+
+        Then unenroll user from all active course runs related to the order instance.
+        There are two cases where user will not be unenrolled :
+            - When `course_run.is_listed` is True, that means
+              this course run is available for free.
+            - The course run is targeted by another product
+              also owned by the order owner.
         """
         # Unroll user to all active enrollment related to the order
-        enrollments = self.enrollments.filter(is_active=True)
+        enrollments = self.get_enrollments(is_active=True).select_related("course_run")
+
         for enrollment in enrollments:
-            enrollment.is_active = False
-            enrollment.save()
+            # If course run is not available for free
+            if not enrollment.course_run.is_listed:
+                # If order owner does not own another product which contains the course run
+                owns_other_products = (
+                    enrollment.course_run.course.targeted_by_products.filter(
+                        orders__in=self.owner.orders.filter(is_canceled=False)
+                    )
+                    .exclude(pk=self.product.pk)
+                    .exists()
+                )
+                if not owns_other_products:
+                    enrollment.is_active = False
+                    enrollment.save()
 
         self.is_canceled = True
         self.save()
@@ -453,14 +547,6 @@ class Enrollment(models.Model):
         related_name="enrollments",
         on_delete=models.RESTRICT,
     )
-    order = models.ForeignKey(
-        Order,
-        verbose_name=_("order"),
-        related_name="enrollments",
-        null=True,
-        blank=True,
-        on_delete=models.RESTRICT,
-    )
     user = models.ForeignKey(
         customers_models.User,
         verbose_name=_("user"),
@@ -537,50 +623,49 @@ class Enrollment(models.Model):
             )
             raise ValidationError({"__all__": [message]})
 
-        if self.order:
-            # The user of the enrollment should be the owner of the order
-            if self.order.owner != self.user:
-                message = _(
-                    f"You are not allowed to enroll on order {self.order.uid!s}."
-                )
-                raise ValidationError({"user": [message]})
-
-            # The course run targeted by the enrollment should also be targeted by the order
-            if not self.order.target_courses.filter(
-                course_runs=self.course_run
-            ).exists():
-                message = _(
-                    f'This order does not contain course run "{self.course_run.resource_link:s}".'
-                )
-                raise ValidationError({"__all__": [message]})
-
-        if self.course_run.course.targeted_by_products.exists():
-            # Forbid creating a free enrollment if an order exists for this course and
-            # the owner has no pending order on it.
-            if not self.order or not (
-                self.order.state == enums.ORDER_STATE_VALIDATED
-                and self.order.target_courses.filter(
-                    course_runs=self.course_run
-                ).exists()
-            ):
-                message = _(
-                    f'Course run "{self.course_run.resource_link:s}" '
-                    "requires a valid order to enroll."
-                )
-                raise ValidationError({"__all__": [message]})
-
-            # Forbid enrolling to 2 course runs related to the same course for a given order
-            check_enrollments_query = self.order.enrollments.filter(
-                course_run__course=self.course_run.course_id, is_active=True
+        # The user should not be enrolled in another opened course run of the same course.
+        if (
+            self.pk is None
+            and self.user.enrollments.filter(
+                course_run__course=self.course_run.course,
+                course_run__end__gte=timezone.now(),
+                is_active=True,
+            ).exists()
+        ):
+            message = _(
+                "You are already enrolled to an opened course run "
+                f'for the course "{self.course_run.course.title}".'
             )
-            if self.pk:
-                check_enrollments_query = check_enrollments_query.exclude(pk=self.pk)
-            if check_enrollments_query.exists():
-                message = _(
-                    f'User "{self.user.username:s}" is already enrolled '
-                    "to this course for this order."
-                )
-                raise ValidationError({"order": [message]})
+            raise ValidationError({"user": [message]})
+
+        # Forbid creating a free enrollment if the related course run is not listed and
+        # if the course relies on a product and the owner doesn't purchase it.
+        if not self.course_run.is_listed:
+            if self.course_run.course.targeted_by_products.exists():
+                validated_user_orders = [
+                    order
+                    for order in Order.objects.filter(
+                        (
+                            models.Q(
+                                course_relations__course_runs__isnull=True,
+                                target_courses__course_runs=self.course_run,
+                            )
+                            | models.Q(course_relations__course_runs=self.course_run)
+                        ),
+                        is_canceled=False,
+                        owner=self.user,
+                    )
+                    if order.state == enums.ORDER_STATE_VALIDATED
+                ]
+                if len(validated_user_orders) == 0:
+                    message = _(
+                        f'Course run "{self.course_run.resource_link:s}" '
+                        "requires a valid order to enroll."
+                    )
+                    raise ValidationError({"__all__": [message]})
+            else:
+                message = _("You are not allowed to enroll to a course run not listed.")
+                raise ValidationError({"__all__": [message]})
 
         return super().clean()
 
