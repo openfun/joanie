@@ -48,6 +48,7 @@ and this project adheres to
 
 ### Changed
 
+- Refactor links between enrollment and order models
 - Rename Invoice model into ProformaInvoice
 - Update Order serializers to bind certificate
 - Order `state` is now a computed property

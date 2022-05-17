@@ -141,7 +141,7 @@ class OrderModelsTestCase(TestCase):
         self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
 
         # - Validate the order should automatically enroll user to course run
-        with self.assertNumQueries(15):
+        with self.assertNumQueries(10):
             order.validate()
 
         self.assertEqual(Enrollment.objects.count(), 1)
@@ -149,7 +149,84 @@ class OrderModelsTestCase(TestCase):
     def test_models_order_cancel(self):
         """
         Order has a cancel method which is in charge to unroll owner to all active
-        related enrollments and switch the `is_canceled` property to True.
+        related enrollments if related course is not listed
+        then switch the `is_canceled` property to True.
+        """
+        owner = factories.UserFactory()
+        [course, target_course] = factories.CourseFactory.create_batch(2)
+
+        cr1 = factories.CourseRunFactory.create_batch(
+            2,
+            course=target_course,
+            start=timezone.now() - timedelta(hours=1),
+            end=timezone.now() + timedelta(hours=2),
+            enrollment_end=timezone.now() + timedelta(hours=1),
+            is_listed=False,
+        )[0]
+
+        product = factories.ProductFactory(
+            courses=[course], target_courses=[target_course], price=Money("0.00")
+        )
+        order = factories.OrderFactory(owner=owner, product=product, course=course)
+
+        # - As target_course has several course runs, user should not be enrolled automatically
+        self.assertEqual(Enrollment.objects.count(), 0)
+
+        # - User enroll to the cr1
+        factories.EnrollmentFactory(course_run=cr1, user=owner, is_active=True)
+        self.assertEqual(Enrollment.objects.count(), 1)
+        self.assertEqual(Enrollment.objects.filter(is_active=True).count(), 1)
+
+        # - When order is canceled, user should be unenrolled to related enrollments
+        order.cancel()
+        self.assertEqual(order.is_canceled, True)
+        self.assertEqual(Enrollment.objects.count(), 1)
+        self.assertEqual(Enrollment.objects.filter(is_active=False).count(), 1)
+
+    def test_models_order_cancel_with_course_implied_in_several_products(self):
+        """
+        On order cancellation, if the user owns other products which order's enrollments
+        also rely on, it should not be unenrolled.
+        """
+        owner = factories.UserFactory()
+        [course, target_course] = factories.CourseFactory.create_batch(2)
+
+        cr1 = factories.CourseRunFactory.create_batch(
+            2,
+            course=target_course,
+            start=timezone.now() - timedelta(hours=1),
+            end=timezone.now() + timedelta(hours=2),
+            enrollment_end=timezone.now() + timedelta(hours=1),
+            is_listed=False,
+        )[0]
+
+        # - Create 2 products which relies on the same course
+        [product_1, product_2] = factories.ProductFactory.create_batch(
+            2, courses=[course], target_courses=[target_course], price=Money("0.00")
+        )
+        # - User purchases the two products
+        order = factories.OrderFactory(owner=owner, product=product_1, course=course)
+        factories.OrderFactory(owner=owner, product=product_2, course=course)
+
+        # - As target_course has several course runs, user should not be enrolled automatically
+        self.assertEqual(Enrollment.objects.count(), 0)
+
+        # - User enroll to the cr1
+        factories.EnrollmentFactory(course_run=cr1, user=owner, is_active=True)
+        self.assertEqual(Enrollment.objects.count(), 1)
+        self.assertEqual(Enrollment.objects.filter(is_active=True).count(), 1)
+
+        # - When order is canceled, user should not be unenrolled to related enrollments
+        with self.assertNumQueries(8):
+            order.cancel()
+        self.assertEqual(order.is_canceled, True)
+        self.assertEqual(Enrollment.objects.count(), 1)
+        self.assertEqual(Enrollment.objects.filter(is_active=True).count(), 1)
+
+    def test_models_order_cancel_with_listed_course_run(self):
+        """
+        On order cancellation, if order's enrollment relies on course with `is_listed`
+        attribute set to True, user should not be unenrolled.
         """
         owner = factories.UserFactory()
         [course, target_course] = factories.CourseFactory.create_batch(2)
@@ -162,23 +239,88 @@ class OrderModelsTestCase(TestCase):
             enrollment_end=timezone.now() + timedelta(hours=1),
         )[0]
 
+        # - Create one product which relies on the same course
         product = factories.ProductFactory(
             courses=[course], target_courses=[target_course], price=Money("0.00")
         )
+        # - User purchases the two products
         order = factories.OrderFactory(owner=owner, product=product, course=course)
 
         # - As target_course has several course runs, user should not be enrolled automatically
         self.assertEqual(Enrollment.objects.count(), 0)
 
         # - User enroll to the cr1
-        factories.EnrollmentFactory(
-            course_run=cr1, order=order, user=owner, is_active=True
-        )
+        factories.EnrollmentFactory(course_run=cr1, user=owner, is_active=True)
         self.assertEqual(Enrollment.objects.count(), 1)
         self.assertEqual(Enrollment.objects.filter(is_active=True).count(), 1)
 
-        # - When order is canceled, user should be unenrolled to related enrollments
-        order.cancel()
+        # - When order is canceled, user should not be unenrolled to related enrollments
+        with self.assertNumQueries(6):
+            order.cancel()
         self.assertEqual(order.is_canceled, True)
         self.assertEqual(Enrollment.objects.count(), 1)
-        self.assertEqual(Enrollment.objects.filter(is_active=False).count(), 1)
+        self.assertEqual(Enrollment.objects.filter(is_active=True).count(), 1)
+
+    def test_models_order_get_enrollments(self):
+        """
+        Order model implements a `get_enrollment` method to retrieve enrollments
+        related to the order instance.
+        """
+        [cr1, cr2] = factories.CourseRunFactory.create_batch(
+            2,
+            start=timezone.now() - timedelta(hours=1),
+            end=timezone.now() + timedelta(hours=2),
+            enrollment_end=timezone.now() + timedelta(hours=1),
+            is_listed=False,
+        )
+        product = factories.ProductFactory(
+            price="0.00", target_courses=[cr1.course, cr2.course]
+        )
+        order = factories.OrderFactory(product=product)
+
+        # - As the two product's target courses have only one course run, order owner
+        #   should have been automatically enrolled to those course runs.
+        with self.assertNumQueries(1):
+            self.assertEqual(len(order.get_enrollments()), 2)
+        self.assertEqual(len(order.get_enrollments(is_active=True)), 2)
+        self.assertEqual(len(order.get_enrollments(is_active=False)), 0)
+
+        # - Then order is canceled so user should be unenrolled to course runs.
+        order.cancel()
+        self.assertEqual(len(order.get_enrollments()), 2)
+        self.assertEqual(len(order.get_enrollments(is_active=True)), 0)
+        self.assertEqual(len(order.get_enrollments(is_active=False)), 2)
+
+    def test_models_order_target_course_runs_property(self):
+        """
+        Order model has a target course runs property to retrieve all course runs
+        related to the order instance.
+        """
+        [course1, course2] = factories.CourseFactory.create_batch(2)
+        [cr1, cr2] = factories.CourseRunFactory.create_batch(2, course=course1)
+        [cr3, cr4] = factories.CourseRunFactory.create_batch(2, course=course2)
+        product = factories.ProductFactory(target_courses=[course1, course2])
+
+        # - Link cr3 to the product course relations
+        relation = product.course_relations.get(course=course2)
+        relation.course_runs.add(cr3)
+
+        # - Create an order link to the product
+        order = factories.OrderFactory(product=product)
+
+        # - Update product course relation, order course relation should not be impacted
+        relation.course_runs.set([])
+
+        # - DB queries should be optimized
+        with self.assertNumQueries(1):
+            # - product.target_course_runs should return all course runs
+            course_runs = product.target_course_runs.order_by("pk")
+            self.assertEqual(len(course_runs), 4)
+            self.assertListEqual(list(course_runs), [cr1, cr2, cr3, cr4])
+
+        # - DB queries should be optimized
+        with self.assertNumQueries(1):
+            # - order.target_course_runs should only return cr1, cr2, cr3
+            course_runs = order.target_course_runs.order_by("pk")
+            self.assertEqual(len(course_runs), 3)
+            self.assertListEqual(list(course_runs), [cr1, cr2, cr3])

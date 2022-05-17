@@ -3,6 +3,8 @@ from collections import OrderedDict
 
 from django.test import TestCase
 
+from rest_framework import serializers
+
 from joanie.core import factories
 from joanie.core.serializers import (
     CourseRunSerializer,
@@ -46,19 +48,37 @@ class TargetCourseSerializerTestCase(TestCase):
         factories.CourseRunFactory.create_batch(2, course=target_course)
         product = factories.ProductFactory(target_courses=[target_course])
 
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(3):
             representation = TargetCourseSerializer(
                 context={"product": product}
             ).to_representation(target_course)
 
-        # - No course runs are linked to product course relation
-        self.assertEqual(
-            target_course.product_relations.get(product=product).course_runs.count(), 0
-        )
+        # - Product should target the two course runs
+        self.assertEqual(product.target_course_runs.count(), 2)
 
-        # - So target_course.course_runs are used
+        # - So all course runs are returned
         course_runs_repr = representation["course_runs"]
         self.assertEqual(len(course_runs_repr), 2)
+
+    def test_serializer_target_course_without_product_in_context(
+        self,
+    ):
+        """
+        If no product is provided through serializer context, an exception should be
+        raised when getting serializer representation.
+        """
+        target_course = factories.CourseFactory()
+
+        with self.assertRaises(serializers.ValidationError) as context:
+            TargetCourseSerializer().to_representation(target_course)
+
+        self.assertEqual(
+            str(context.exception),
+            (
+                "[ErrorDetail(string='TargetCourseSerializer context must contain a "
+                "\"product\" property.', code='invalid')]"
+            ),
+        )
 
     def test_serializer_target_course_get_product_relation_course_runs_if_there_are(
         self,
@@ -81,10 +101,8 @@ class TargetCourseSerializerTestCase(TestCase):
             context={"product": product}
         ).to_representation(instance=target_course)
 
-        # - One course runs is linked to product course relation
-        self.assertEqual(
-            target_course.product_relations.get(product=product).course_runs.count(), 1
-        )
+        # - Product should target only one course run
+        self.assertEqual(product.target_course_runs.count(), 1)
 
         # - So target_course.product_relations.course_runs are used
         course_runs_repr = representation["course_runs"]

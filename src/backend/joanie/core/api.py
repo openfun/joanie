@@ -126,7 +126,7 @@ class OrderViewSet(
         return (
             user.orders.all()
             .select_related("owner", "product")
-            .prefetch_related("enrollments__course_run")
+            .prefetch_related("target_courses__course_runs")
         )
 
     def perform_create(self, serializer):

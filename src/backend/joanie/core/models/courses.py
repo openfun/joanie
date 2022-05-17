@@ -272,7 +272,7 @@ class CourseRun(parler_models.TranslatableModel):
         _("is listed"),
         default=True,
         help_text=_(
-            "If checked the course run will be listed from the list of course runs "
+            "If checked the course run will be included in the list of course runs "
             "available for enrollment on the related course page."
         ),
     )
@@ -335,8 +335,30 @@ class CourseRun(parler_models.TranslatableModel):
         )
 
     def clean(self):
-        """Normalize the resource_link url."""
+        """
+        Normalize the resource_link url and prevent data integrity error when course is
+        updated.
+        """
         self.resource_link = url_normalize(self.resource_link)
+
+        # If the course run is updating and the course field has changed ...
+        if self.pk:
+            old_course_id = (
+                CourseRun.objects.only("course_id").get(pk=self.pk).course_id
+            )
+            if old_course_id != self.course_id:
+                # ... Check the course run instance does not rely on product/order relations
+                if (
+                    self.product_relations.count() > 0
+                    or self.order_relations.count() > 0
+                ):
+                    raise ValidationError(
+                        _(
+                            "This course run relies on a product relation. "
+                            "So you cannot modify its course."
+                        )
+                    )
+
         super().clean()
 
     def save(self, *args, **kwargs):

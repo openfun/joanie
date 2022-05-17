@@ -81,21 +81,24 @@ class ProductModelsTestCase(TestCase):
         It's possible to restrict a course to use some course runs but if course runs
         linked does not rely on the relation course, a ValidationError should be raised.
         """
-        course = factories.CourseFactory(
-            course_runs=factories.CourseRunFactory.create_batch(1)
-        )
+        course = factories.CourseFactory(course_runs=[factories.CourseRunFactory()])
         product = factories.ProductFactory(target_courses=[course])
         course_relation = product.course_relations.get(course=course)
 
-        course_run = factories.CourseRunFactory.create_batch(1)
+        course_run = factories.CourseRunFactory()
 
         with self.assertRaises(ValidationError) as context:
             with transaction.atomic():
-                course_relation.course_runs.set(course_run)
+                course_relation.course_runs.set([course_run])
 
         self.assertEqual(
             str(context.exception),
-            "{'course_runs': ['Course runs to link does not relies on the relation course.']}",
+            (
+                "{'course_runs': ['"
+                "Limiting a course to targeted course runs can only be done"
+                " for course runs already belonging to this course."
+                "']}"
+            ),
         )
 
         self.assertEqual(course_relation.course_runs.count(), 0)
@@ -104,3 +107,23 @@ class ProductModelsTestCase(TestCase):
             course_relation.course_runs.set(course.course_runs.all())
 
         self.assertEqual(course_relation.course_runs.count(), 1)
+
+    def test_models_product_target_course_runs_property(self):
+        """
+        Product model has a target course runs property to retrieve all course runs
+        related to the product instance.
+        """
+        [course1, course2] = factories.CourseFactory.create_batch(2)
+        [cr1, cr2] = factories.CourseRunFactory.create_batch(2, course=course1)
+        [cr3, _] = factories.CourseRunFactory.create_batch(2, course=course2)
+        product = factories.ProductFactory(target_courses=[course1, course2])
+
+        # - Link cr3 to the product course relations
+        relation = product.course_relations.get(course=course2)
+        relation.course_runs.add(cr3)
+
+        # - DB queries should be optimized
+        with self.assertNumQueries(1):
+            course_runs = product.target_course_runs.order_by("pk")
+            self.assertEqual(len(course_runs), 3)
+            self.assertListEqual(list(course_runs), [cr1, cr2, cr3])

@@ -113,7 +113,6 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "id": str(enrollment.uid),
                         "user": enrollment.user.username,
                         "course_run": enrollment.course_run.resource_link,
-                        "order": None,
                         "is_active": enrollment.is_active,
                         "state": enrollment.state,
                     }
@@ -142,7 +141,6 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "id": str(other_enrollment.uid),
                         "user": other_enrollment.user.username,
                         "course_run": other_enrollment.course_run.resource_link,
-                        "order": None,
                         "is_active": other_enrollment.is_active,
                         "state": other_enrollment.state,
                     }
@@ -176,7 +174,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         # - Create a pro forma invoice related to the order to mark it as validated
         ProformaInvoiceFactory(order=order, total=order.total)
         enrollment = factories.EnrollmentFactory(
-            course_run=target_course_runs[0], user=user, order=order
+            course_run=target_course_runs[0], user=user
         )
         token = self.get_user_token(user.username)
 
@@ -193,7 +191,6 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "id": str(enrollment.uid),
                 "user": user.username,
                 "course_run": enrollment.course_run.resource_link,
-                "order": str(order.uid),
                 "is_active": enrollment.is_active,
                 "state": enrollment.state,
             },
@@ -261,7 +258,6 @@ class EnrollmentApiTest(BaseAPITestCase):
             {
                 "id": str(enrollment.uid),
                 "course_run": course_run.resource_link,
-                "order": None,
                 "user": "panoramix",
                 "is_active": is_active,
                 "state": "set",
@@ -290,13 +286,10 @@ class EnrollmentApiTest(BaseAPITestCase):
         ProformaInvoiceFactory(order=order, total=order.total)
 
         # Create a pre-existing enrollment and try to enroll to this course's second course run
-        factories.EnrollmentFactory(
-            course_run=course_run1, user=user, order=order, is_active=True
-        )
+        factories.EnrollmentFactory(course_run=course_run1, user=user, is_active=True)
         self.assertTrue(models.Enrollment.objects.filter(is_active=True).exists())
         data = {
             "course_run": course_run2.resource_link,
-            "order": order.uid,
             "is_active": random.choice([True, False]),
         }
         token = self.get_user_token(user.username)
@@ -313,8 +306,9 @@ class EnrollmentApiTest(BaseAPITestCase):
         self.assertEqual(
             content,
             {
-                "order": [
-                    f'User "{user.username:s}" is already enrolled to this course for this order.'
+                "user": [
+                    "You are already enrolled to an opened course run "
+                    f'for the course "{course_run2.course.title}".'
                 ]
             },
         )
@@ -349,7 +343,6 @@ class EnrollmentApiTest(BaseAPITestCase):
             {
                 "id": str(enrollment.uid),
                 "course_run": course_run.resource_link,
-                "order": None,
                 "user": "panoramix",
                 "is_active": is_active,
                 "state": "failed",
@@ -398,7 +391,6 @@ class EnrollmentApiTest(BaseAPITestCase):
             {
                 "id": str(enrollment.uid),
                 "course_run": course_run.resource_link,
-                "order": None,
                 "user": "panoramix",
                 "is_active": is_active,
                 "state": "failed",
@@ -474,7 +466,6 @@ class EnrollmentApiTest(BaseAPITestCase):
             {
                 "id": str(enrollment.uid),
                 "course_run": resource_link,
-                "order": str(order.uid),
                 "user": order.owner.username,
                 "is_active": is_active,
                 "state": "set",
@@ -486,14 +477,14 @@ class EnrollmentApiTest(BaseAPITestCase):
         An authenticated user should not be allowed to create an enrollment linked
         to an order that he/she does not own.
         """
-        target_course_runs = self.create_opened_course_run(2)
+        target_course_runs = self.create_opened_course_run(2, is_listed=False)
         product = factories.ProductFactory(
             target_courses=[cr.course for cr in target_course_runs]
         )
-        order = factories.OrderFactory(product=product)
+        factories.OrderFactory(product=product)
+        resource_link = target_course_runs[0].resource_link
         data = {
-            "course_run": target_course_runs[0].resource_link,
-            "order": order.uid,
+            "course_run": resource_link,
             "is_active": True,
         }
         token = self.get_user_token("another-username")
@@ -509,39 +500,9 @@ class EnrollmentApiTest(BaseAPITestCase):
 
         self.assertEqual(
             content,
-            {"user": [f"You are not allowed to enroll on order {order.uid!s}."]},
-        )
-        self.assertFalse(models.Enrollment.objects.exists())
-
-    def test_api_enrollment_create_authenticated_course_not_matching(self):
-        """
-        An authenticated user should not be allowed to create an enrollment linked
-        to an order that is not linked to a course related to the course run targeted
-        by the enrollment.
-        """
-        target_course_runs = self.create_opened_course_run(2)
-        product = factories.ProductFactory(
-            target_courses=[cr.course for cr in target_course_runs]
-        )
-        order = factories.OrderFactory(product=product)
-        resource_link = self.create_opened_course_run().resource_link
-        data = {"course_run": resource_link, "order": order.uid, "is_active": True}
-        token = self.get_user_token(order.owner.username)
-
-        response = self.client.post(
-            "/api/enrollments/",
-            data=data,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-        self.assertEqual(response.status_code, 400)
-        content = json.loads(response.content)
-
-        self.assertEqual(
-            content,
             {
                 "__all__": [
-                    f'This order does not contain course run "{resource_link:s}".'
+                    f'Course run "{resource_link}" requires a valid order to enroll.'
                 ]
             },
         )
@@ -552,7 +513,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         It should not be allowed to create an enrollment with an order that is
         not validated for a course linked to a product.
         """
-        target_course_runs = self.create_opened_course_run(2)
+        target_course_runs = self.create_opened_course_run(2, is_listed=False)
         product = factories.ProductFactory(
             target_courses=[cr.course for cr in target_course_runs]
         )
@@ -562,7 +523,6 @@ class EnrollmentApiTest(BaseAPITestCase):
         )
         data = {
             "course_run": target_course_runs[0].resource_link,
-            "order": order.uid,
             "is_active": True,
         }
         token = self.get_user_token(order.owner.username)
@@ -587,7 +547,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         It should not be allowed to create an enrollment without an order for a course
         linked to a product.
         """
-        target_course_runs = self.create_opened_course_run(2)
+        target_course_runs = self.create_opened_course_run(2, is_listed=False)
         factories.ProductFactory(
             target_courses=[cr.course for cr in target_course_runs]
         )
@@ -651,7 +611,6 @@ class EnrollmentApiTest(BaseAPITestCase):
             {
                 "id": str(enrollment.uid),
                 "course_run": course_run.resource_link,
-                "order": None,
                 "user": "panoramix",
                 "is_active": is_active,
                 "state": "set",
@@ -815,7 +774,6 @@ class EnrollmentApiTest(BaseAPITestCase):
                     "id": str(enrollment.uid),
                     "user": enrollment.user.username,
                     "course_run": enrollment.course_run.resource_link,
-                    "order": None,
                     "is_active": is_active_new,
                     "state": "set",
                 },
@@ -866,7 +824,8 @@ class EnrollmentApiTest(BaseAPITestCase):
         # Get alternative values to try to modify our enrollment
         other_user = factories.UserFactory(is_superuser=random.choice([True, False]))
         other_order = factories.OrderFactory(
-            owner=other_user, product=enrollment.order.product
+            owner=other_user,
+            product=enrollment.course_run.course.targeted_by_products.first(),
         )
         # - Create a pro forma invoice related to the order to mark it as validated
         ProformaInvoiceFactory(order=other_order, total=other_order.total)
@@ -877,7 +836,6 @@ class EnrollmentApiTest(BaseAPITestCase):
             "id": uuid.uuid4(),
             "user": other_user.username,
             "course_run": course_run.resource_link,
-            "order": str(other_order.uid),
             "state": "failed",
         }
         headers = (
@@ -921,7 +879,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         # - Create a pro forma invoice related to the order to mark it as validated
         ProformaInvoiceFactory(order=order, total=order.total)
         enrollment = factories.EnrollmentFactory(
-            course_run=course_run1, user=order.owner, order=order
+            course_run=course_run1, user=order.owner
         )
         self._check_api_enrollment_update_detail(enrollment, None, 401)
 
@@ -943,7 +901,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         # - Create a pro forma invoice related to the order to mark it as validated
         ProformaInvoiceFactory(order=order, total=order.total)
         enrollment = factories.EnrollmentFactory(
-            course_run=course_run1, user=order.owner, order=order
+            course_run=course_run1, user=order.owner
         )
         self._check_api_enrollment_update_detail(enrollment, user, 404)
 
@@ -964,7 +922,5 @@ class EnrollmentApiTest(BaseAPITestCase):
         order = factories.OrderFactory(owner=user, product=product)
         # - Create a pro forma invoice related to the order to mark it as validated
         ProformaInvoiceFactory(order=order, total=order.total)
-        enrollment = factories.EnrollmentFactory(
-            course_run=course_run1, user=user, order=order
-        )
+        enrollment = factories.EnrollmentFactory(course_run=course_run1, user=user)
         self._check_api_enrollment_update_detail(enrollment, user, 200)
