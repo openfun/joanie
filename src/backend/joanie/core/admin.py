@@ -90,7 +90,7 @@ class CourseAdmin(DjangoObjectActions, TranslatableAdmin):
     )
 
     @takes_instance_or_queryset
-    def generate_certificates(self, request, queryset):  # pylint: disable=no-self-use
+    def generate_certificates(self, request, queryset):  # pylint: disable no-self-use
         """
         Custom action to generate certificates for a collection of courses
         passed as a queryset
