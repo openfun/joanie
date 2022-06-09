@@ -43,11 +43,6 @@ def get_release():
         return "NA"  # Default: not available
 
 
-# Disable pylint error "W0232: Class has no __init__ method", because base Configuration
-# class does not define an __init__ method.
-# pylint: disable = W0232
-
-
 class Base(Configuration):
     """
     This is the base configuration every configuration (aka environnement) should inherit from. It
