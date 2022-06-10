@@ -7,7 +7,7 @@ from rest_framework.test import APIRequestFactory
 from joanie.core.factories import OrderFactory
 from joanie.payment.backends.base import BasePaymentBackend
 from joanie.payment.factories import BillingAddressDictFactory
-from joanie.payment.models import Invoice, Transaction
+from joanie.payment.models import ProformaInvoice, Transaction
 
 
 class BasePaymentBackendTestCase(TestCase):
@@ -91,9 +91,9 @@ class BasePaymentBackendTestCase(TestCase):
     def test_payment_backend_base_do_on_payment_success(self):
         """
         Base backend contains a method _do_on_payment_success which aims to be
-        call by subclasses when a payment succeeded. It should create an invoice
-        related to the provided order, create a transaction from payment
-        information provided then mark order as validated.
+        call by subclasses when a payment succeeded. It should create
+        a pro forma invoice related to the provided order, create a transaction from
+        payment information provided then mark order as validated.
         """
         backend = BasePaymentBackend()
         order = OrderFactory()
@@ -113,7 +113,7 @@ class BasePaymentBackendTestCase(TestCase):
         )
 
         # - Invoice has been created
-        self.assertEqual(Invoice.objects.filter(order=order).count(), 1)
+        self.assertEqual(ProformaInvoice.objects.filter(order=order).count(), 1)
 
         # - Order has been validated
         self.assertEqual(order.state, "validated")
@@ -157,7 +157,9 @@ class BasePaymentBackendTestCase(TestCase):
 
         # - Refund entirely the order
         backend._do_on_refund(
-            amount=order.total, invoice=payment.invoice, refund_reference="ref_0"
+            amount=order.total,
+            proforma_invoice=payment.proforma_invoice,
+            refund_reference="ref_0",
         )
 
         # - Credit transaction has been created

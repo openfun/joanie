@@ -209,7 +209,7 @@ class Order(models.Model):
         """
         Return order state.
         If order has been explicitly canceled, return canceled state.
-        Then if order is free or has a related invoice, return validated state
+        Then if order is free or has a related pro forma invoice, return validated state
         Otherwise return pending state.
         """
         if self.is_canceled is True:
@@ -217,20 +217,21 @@ class Order(models.Model):
 
         if (
             self.total.amount == 0  # pylint: disable=no-member
-            or self.invoices.count() > 0
+            or self.proforma_invoices.count() > 0
         ):
             return enums.ORDER_STATE_VALIDATED
 
         return enums.ORDER_STATE_PENDING
 
     @cached_property
-    def main_invoice(self):
+    def main_proforma_invoice(self):
         """
-        Return main order's invoice.
-        It corresponds to the only invoice related to the order without parent.
+        Return main order's pro forma invoice.
+        It corresponds to the only pro forma invoice related
+        to the order without parent.
         """
         try:
-            return self.invoices.get(parent__isnull=True)
+            return self.proforma_invoices.get(parent__isnull=True)
         except ObjectDoesNotExist:
             return None
 

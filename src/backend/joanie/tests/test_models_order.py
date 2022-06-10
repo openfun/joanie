@@ -12,7 +12,7 @@ from moneyed import Money
 
 from joanie.core import enums, factories
 from joanie.core.models import Enrollment
-from joanie.payment.factories import InvoiceFactory
+from joanie.payment.factories import ProformaInvoiceFactory
 
 
 class OrderModelsTestCase(TestCase):
@@ -79,7 +79,8 @@ class OrderModelsTestCase(TestCase):
 
     def test_models_order_state_property(self):
         """
-        Order state property is dynamically computed from `is_canceled` state and related invoice.
+        Order state property is dynamically computed from `is_canceled` state
+        and related pro forma invoice.
         """
         course = factories.CourseFactory()
         product = factories.ProductFactory(title="Traçabilité", courses=[course])
@@ -88,8 +89,8 @@ class OrderModelsTestCase(TestCase):
         # 1 - By default, an order is `pending``
         self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
 
-        # 2 - When an invoice is linked to the order, its state is `validated`
-        InvoiceFactory(order=order, total=order.total)
+        # 2 - When a pro forma invoice is linked to the order, its state is `validated`
+        ProformaInvoiceFactory(order=order, total=order.total)
         self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
 
         # 3 - When order is canceled, its state is `canceled`
@@ -100,7 +101,7 @@ class OrderModelsTestCase(TestCase):
     def test_models_order_state_property_validated_when_free(self):
         """
         When an order relies on a free product, its state should be validated
-        without any invoice.
+        without any pro forma invoice.
         """
         courses = factories.CourseFactory.create_batch(2)
         # Create a free product
@@ -134,8 +135,8 @@ class OrderModelsTestCase(TestCase):
         self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
         self.assertEqual(Enrollment.objects.count(), 0)
 
-        # - Create an invoice to mark order as validated
-        InvoiceFactory(order=order, total=order.total)
+        # - Create a pro forma invoice to mark order as validated
+        ProformaInvoiceFactory(order=order, total=order.total)
 
         self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
 

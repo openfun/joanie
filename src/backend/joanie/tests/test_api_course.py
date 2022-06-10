@@ -7,7 +7,7 @@ from django.test import override_settings
 from django.utils import timezone
 
 from joanie.core import enums, factories, models
-from joanie.payment.factories import InvoiceFactory
+from joanie.payment.factories import ProformaInvoiceFactory
 
 from .base import BaseAPITestCase
 
@@ -86,8 +86,8 @@ class CourseApiTest(BaseAPITestCase):
                     course=course,
                     product=product,
                 )
-                # Create an invoice to mark order has validated
-                InvoiceFactory(order=order, total=order.total)
+                # Create a pro forma invoice to mark order has validated
+                ProformaInvoiceFactory(order=order, total=order.total)
 
                 if should_enroll:
                     course_run = random.choice(target_course_runs)
@@ -184,8 +184,8 @@ class CourseApiTest(BaseAPITestCase):
         # - But cache should rely on the current language
 
         # As django parler caches its queries, we have to adapt the number of
-        # queries expected according to an invoice has been created or not.
-        # Because if an invoice has been created, product translation has been
+        # queries expected according to a pro forma invoice has been created or not.
+        # Because if a pro forma invoice has been created, product translation has been
         # cached.
         expected_num_queries = 19 if product_purchased else 20
         with self.assertNumQueries(expected_num_queries):
@@ -252,8 +252,8 @@ class CourseApiTest(BaseAPITestCase):
             product=product1,
             course=course,
         )
-        # - Create an invoice related to the order to mark it as validated
-        InvoiceFactory(order=order1, total=order1.total)
+        # - Create a pro forma invoice related to the order to mark it as validated
+        ProformaInvoiceFactory(order=order1, total=order1.total)
 
         # - Enrollment to course run 11
         factories.EnrollmentFactory(
@@ -269,8 +269,8 @@ class CourseApiTest(BaseAPITestCase):
             product=product2,
             course=course,
         )
-        # - Create an invoice related to the order to mark it as validated
-        InvoiceFactory(order=order2, total=order2.total)
+        # - Create a pro forma invoice related to the order to mark it as validated
+        ProformaInvoiceFactory(order=order2, total=order2.total)
         # - Enrollment to course run 21
         factories.EnrollmentFactory(
             user=user, course_run=target_course_run21, order=order2, is_active=True
@@ -297,8 +297,9 @@ class CourseApiTest(BaseAPITestCase):
                     course=course,
                     product=product,
                 )
-                # - Create an invoice related to the order to mark it as validated
-                InvoiceFactory(order=order, total=order.total)
+                # - Create a pro forma  invoice related to the order
+                #   to mark it as validated
+                ProformaInvoiceFactory(order=order, total=order.total)
 
                 if should_enroll:
                     course_run = random.choice(
@@ -334,7 +335,7 @@ class CourseApiTest(BaseAPITestCase):
                     "total": float(order.total.amount),
                     "total_currency": str(order.total.currency),
                     "state": order.state,
-                    "main_invoice": order.main_invoice.reference,
+                    "main_proforma_invoice": order.main_proforma_invoice.reference,
                     "product": str(order.product.uid),
                     "enrollments": [
                         {
@@ -457,7 +458,7 @@ class CourseApiTest(BaseAPITestCase):
         order_paid = factories.OrderFactory(
             owner=user, product=product_paid, course=course
         )
-        InvoiceFactory(order=order_paid, total=order_paid.total)
+        ProformaInvoiceFactory(order=order_paid, total=order_paid.total)
 
         # - Furthermore it has a pending order
         product_pending = factories.ProductFactory(courses=[course])
@@ -527,8 +528,8 @@ class CourseApiTest(BaseAPITestCase):
 
         # - User purchases the product
         order = factories.OrderFactory(owner=user, product=product)
-        # - Create invoice related to the order to mark it as validated
-        InvoiceFactory(order=order, total=order.total)
+        # - Create pro forma invoice related to the order to mark it as validated
+        ProformaInvoiceFactory(order=order, total=order.total)
         # - Then enrolls to a course run
         factories.EnrollmentFactory(
             course_run=cr1,

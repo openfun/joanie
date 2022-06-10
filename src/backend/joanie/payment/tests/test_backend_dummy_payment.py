@@ -432,7 +432,7 @@ class DummyPaymentBackendTestCase(TestCase):
 
         self.assertEqual(len(args), 3)
         self.assertEqual(args["amount"], order.total.amount)
-        self.assertEqual(args["invoice"], order.main_invoice)
+        self.assertEqual(args["proforma_invoice"], order.main_proforma_invoice)
         self.assertIsNotNone(re.fullmatch(r"ref_\d{10}", args["refund_reference"]))
 
     def test_payment_backend_dummy_abort_payment_with_unknown_payment_id(self):

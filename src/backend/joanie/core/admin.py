@@ -271,7 +271,7 @@ class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
     """Admin class for the Order model"""
 
     list_display = ("uid", "owner", "product", "state")
-    readonly_fields = ("state", "total", "invoice", "certificate")
+    readonly_fields = ("state", "total", "proforma_invoice", "certificate")
     change_actions = (ACTION_NAME_GENERATE_CERTIFICATES,)
     actions = (ACTION_NAME_CANCEL, ACTION_NAME_GENERATE_CERTIFICATES)
 
@@ -290,14 +290,16 @@ class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
         certificate_generated_count = helpers.generate_certificates_for_orders(queryset)
         summarize_certification_to_user(request, certificate_generated_count)
 
-    def invoice(self, obj):  # pylint: disable=no-self-use
-        """Retrieve the root invoice related to the order."""
-        invoice = obj.invoices.get(parent__isnull=True)
+    def proforma_invoice(self, obj):  # pylint: disable=no-self-use
+        """Retrieve the root pro forma invoice related to the order."""
+        proforma_invoice = obj.proforma_invoices.get(parent__isnull=True)
 
         return format_html(
             (
-                f"<a href='{reverse('admin:payment_invoice_change', args=(invoice.id,), )}'>"
-                f"{str(invoice)}"
+                "<a href='"
+                f"{reverse('admin:payment_proformainvoice_change', args=(proforma_invoice.id,))}"
+                "'>"
+                f"{str(proforma_invoice)}"
                 "</a>"
             )
         )

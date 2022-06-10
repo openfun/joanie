@@ -2,7 +2,7 @@
 from django.urls import reverse
 
 from ..enums import INVOICE_STATE_REFUNDED
-from ..models import Invoice, Transaction
+from ..models import ProformaInvoice, Transaction
 
 
 class BasePaymentBackend:
@@ -21,11 +21,11 @@ class BasePaymentBackend:
     def _do_on_payment_success(order, payment):
         """
         Generic actions triggered when a succeeded payment has been received.
-        It registers the debit transaction, mark invoice as paid if
-        transaction amount is equal to the invoice amount then mark the order
-        as validated
+        It creates a pro forma invoice and registers the debit transaction,
+        then mark invoice as paid if transaction amount is equal to the invoice amount
+        then mark the order as validated
         """
-        # - Create an invoice
+        # - Create a pro forma invoice
         recipient_name = (
             f"{payment['billing_address']['first_name']} "
             f"{payment['billing_address']['last_name']}"
@@ -36,7 +36,7 @@ class BasePaymentBackend:
             f"{payment['billing_address']['country']}"
         )
 
-        invoice = Invoice.objects.create(
+        proforma_invoice = ProformaInvoice.objects.create(
             order=order,
             total=order.total,
             recipient_name=recipient_name,
@@ -46,7 +46,7 @@ class BasePaymentBackend:
         # - Store the payment transaction
         Transaction.objects.create(
             total=payment["amount"],
-            invoice=invoice,
+            proforma_invoice=proforma_invoice,
             reference=payment["id"],
         )
 
@@ -57,37 +57,37 @@ class BasePaymentBackend:
     def _do_on_payment_failure(order):
         """
         Generic actions triggered when a failed payment has been received.
-        Mark the invoice as canceled and cancel the order.
+        Mark the pro forma invoice as canceled and cancel the order.
         """
         # - Unvalidate order
         order.cancel()
 
     @staticmethod
-    def _do_on_refund(amount, invoice, refund_reference):
+    def _do_on_refund(amount, proforma_invoice, refund_reference):
         """
         Generic actions triggered when a refund has been received.
         Create a credit transaction then cancel the related order if sum of
-        credit transactions is equal to the invoice amount.
+        credit transactions is equal to the pro forma invoice amount.
         """
 
         # - Create a credit note
-        credit_note = Invoice.objects.create(
-            order=invoice.order,
-            parent=invoice,
+        credit_note = ProformaInvoice.objects.create(
+            order=proforma_invoice.order,
+            parent=proforma_invoice,
             total=-amount,
-            recipient_name=invoice.recipient_name,
-            recipient_address=invoice.recipient_address,
+            recipient_name=proforma_invoice.recipient_name,
+            recipient_address=proforma_invoice.recipient_address,
         )
 
         Transaction.objects.create(
             total=credit_note.total,
-            invoice=credit_note,
+            proforma_invoice=credit_note,
             reference=refund_reference,
         )
 
-        if invoice.state == INVOICE_STATE_REFUNDED:
+        if proforma_invoice.state == INVOICE_STATE_REFUNDED:
             # order has been fully refunded
-            invoice.order.cancel()
+            proforma_invoice.order.cancel()
 
     @staticmethod
     def get_notification_url(request):

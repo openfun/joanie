@@ -13,7 +13,7 @@ from django.utils import timezone
 from joanie.core import enums, exceptions, factories, models
 from joanie.core.factories import CourseRunFactory
 from joanie.lms_handler.backends.openedx import OpenEdXLMSBackend
-from joanie.payment.factories import InvoiceFactory
+from joanie.payment.factories import ProformaInvoiceFactory
 
 from .base import BaseAPITestCase
 
@@ -173,8 +173,8 @@ class EnrollmentApiTest(BaseAPITestCase):
             target_courses=[cr.course for cr in target_course_runs]
         )
         order = factories.OrderFactory(owner=user, product=product)
-        # - Create an invoice related to the order to mark it as validated
-        InvoiceFactory(order=order, total=order.total)
+        # - Create a pro forma invoice related to the order to mark it as validated
+        ProformaInvoiceFactory(order=order, total=order.total)
         enrollment = factories.EnrollmentFactory(
             course_run=target_course_runs[0], user=user, order=order
         )
@@ -286,8 +286,8 @@ class EnrollmentApiTest(BaseAPITestCase):
         )
         product = factories.ProductFactory(target_courses=[target_course])
         order = factories.OrderFactory(owner=user, product=product)
-        #  - Create an invoice related to the order to mark it as validated
-        InvoiceFactory(order=order, total=order.total)
+        # - Create a pro forma invoice related to the order to mark it as validated
+        ProformaInvoiceFactory(order=order, total=order.total)
 
         # Create a pre-existing enrollment and try to enroll to this course's second course run
         factories.EnrollmentFactory(
@@ -451,8 +451,8 @@ class EnrollmentApiTest(BaseAPITestCase):
             target_courses=[course_run.course, other_course_run.course]
         )
         order = factories.OrderFactory(product=product)
-        # - Create an invoice related to the order to mark it as validated
-        InvoiceFactory(order=order, total=order.total)
+        # - Create a pro forma invoice related to the order to mark it as validated
+        ProformaInvoiceFactory(order=order, total=order.total)
 
         data = {"course_run": resource_link, "order": order.uid, "is_active": is_active}
         token = self.get_user_token(order.owner.username)
@@ -868,8 +868,8 @@ class EnrollmentApiTest(BaseAPITestCase):
         other_order = factories.OrderFactory(
             owner=other_user, product=enrollment.order.product
         )
-        # - Create an invoice related to the order to mark it as validated
-        InvoiceFactory(order=other_order, total=other_order.total)
+        # - Create a pro forma invoice related to the order to mark it as validated
+        ProformaInvoiceFactory(order=other_order, total=other_order.total)
 
         # Try modifying the enrollment on each field with our alternative data
         course_run = models.CourseRun.objects.exclude(id=enrollment.course_run_id).get()
@@ -918,8 +918,8 @@ class EnrollmentApiTest(BaseAPITestCase):
         )
         product = factories.ProductFactory(target_courses=[target_course])
         order = factories.OrderFactory(product=product)
-        #  - Create an invoice related to the order to mark it as validated
-        InvoiceFactory(order=order, total=order.total)
+        # - Create a pro forma invoice related to the order to mark it as validated
+        ProformaInvoiceFactory(order=order, total=order.total)
         enrollment = factories.EnrollmentFactory(
             course_run=course_run1, user=order.owner, order=order
         )
@@ -940,8 +940,8 @@ class EnrollmentApiTest(BaseAPITestCase):
         )
         product = factories.ProductFactory(target_courses=[target_course])
         order = factories.OrderFactory(product=product)
-        # - Create an invoice related to the order to mark it as validated
-        InvoiceFactory(order=order, total=order.total)
+        # - Create a pro forma invoice related to the order to mark it as validated
+        ProformaInvoiceFactory(order=order, total=order.total)
         enrollment = factories.EnrollmentFactory(
             course_run=course_run1, user=order.owner, order=order
         )
@@ -962,8 +962,8 @@ class EnrollmentApiTest(BaseAPITestCase):
         )
         product = factories.ProductFactory(target_courses=[target_course])
         order = factories.OrderFactory(owner=user, product=product)
-        # - Create an invoice related to the order to mark it as validated
-        InvoiceFactory(order=order, total=order.total)
+        # - Create a pro forma invoice related to the order to mark it as validated
+        ProformaInvoiceFactory(order=order, total=order.total)
         enrollment = factories.EnrollmentFactory(
             course_run=course_run1, user=user, order=order
         )
