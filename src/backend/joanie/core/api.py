@@ -14,7 +14,7 @@ from rest_framework.views import exception_handler as drf_exception_handler
 from joanie.core import models
 from joanie.core.enums import ORDER_STATE_PENDING
 from joanie.payment import get_payment_backend
-from joanie.payment.models import Invoice
+from joanie.payment.models import ProformaInvoice
 
 from ..payment.models import CreditCard
 from . import serializers
@@ -223,34 +223,37 @@ class OrderViewSet(
         return Response(status=204)
 
     @action(detail=True, methods=["GET"])
-    def invoice(self, request, uid=None):  # pylint: disable=no-self-use
+    def proforma_invoice(self, request, uid=None):  # pylint: disable=no-self-use
         """
-        Retrieve an invoice through its reference if it is related to the order instance
-        and owned by the authenticated user.
+        Retrieve a pro forma invoice through its reference if it is related to
+        the order instance and owned by the authenticated user.
         """
-        invoice_reference = request.query_params.get("reference")
+        reference = request.query_params.get("reference")
 
-        if invoice_reference is None:
+        if reference is None:
             return Response({"reference": "This parameter is required."}, status=400)
 
         try:
-            invoice = Invoice.objects.get(
-                reference=invoice_reference,
+            proforma_invoice = ProformaInvoice.objects.get(
+                reference=reference,
                 order__uid=uid,
                 order__owner__username=request.user.username,
             )
-        except Invoice.DoesNotExist:
+        except ProformaInvoice.DoesNotExist:
             return Response(
-                f"No invoice found for order {uid} with reference {invoice_reference}.",
+                (
+                    f"No pro forma invoice found for order {uid} "
+                    f"with reference {reference}."
+                ),
                 status=404,
             )
 
         response = HttpResponse(
-            invoice.document, content_type="application/pdf", status=200
+            proforma_invoice.document, content_type="application/pdf", status=200
         )
         response[
             "Content-Disposition"
-        ] = f"attachment; filename={invoice.reference}.pdf;"
+        ] = f"attachment; filename={proforma_invoice.reference}.pdf;"
 
         return response
 

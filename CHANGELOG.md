@@ -47,6 +47,7 @@ and this project adheres to
 
 ### Changed
 
+- Rename Invoice model into ProformaInvoice
 - Update Order serializers to bind certificate
 - Order `state` is now a computed property
 - Split address fullname field into first_name and last_name fields

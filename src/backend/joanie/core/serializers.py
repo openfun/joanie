@@ -212,7 +212,9 @@ class OrderLiteSerializer(serializers.ModelSerializer):
         many=True, read_only=True, required=False
     )
     product = serializers.SlugRelatedField(read_only=True, slug_field="uid")
-    main_invoice = serializers.SlugRelatedField(read_only=True, slug_field="reference")
+    main_proforma_invoice = serializers.SlugRelatedField(
+        read_only=True, slug_field="reference"
+    )
     certificate = serializers.SlugRelatedField(read_only=True, slug_field="uid")
 
     class Meta:
@@ -221,7 +223,7 @@ class OrderLiteSerializer(serializers.ModelSerializer):
             "id",
             "certificate",
             "created_on",
-            "main_invoice",
+            "main_proforma_invoice",
             "total",
             "total_currency",
             "enrollments",
@@ -232,7 +234,7 @@ class OrderLiteSerializer(serializers.ModelSerializer):
             "id",
             "certificate",
             "created_on",
-            "main_invoice",
+            "main_proforma_invoice",
             "total",
             "total_currency",
             "enrollments",
@@ -273,7 +275,7 @@ class CourseSerializer(serializers.ModelSerializer):
             username = self.context["username"]
             orders = (
                 models.Order.objects.filter(
-                    Q(total=0) | Q(invoices__isnull=False),
+                    Q(total=0) | Q(proforma_invoices__isnull=False),
                     owner__username=username,
                     course=instance,
                     is_canceled=False,
@@ -392,7 +394,9 @@ class OrderSerializer(serializers.ModelSerializer):
         many=True, read_only=True, required=False
     )
     target_courses = serializers.SerializerMethodField(read_only=True)
-    main_invoice = serializers.SlugRelatedField(read_only=True, slug_field="reference")
+    main_proforma_invoice = serializers.SlugRelatedField(
+        read_only=True, slug_field="reference"
+    )
     certificate = serializers.SlugRelatedField(read_only=True, slug_field="uid")
 
     class Meta:
@@ -403,7 +407,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "certificate",
             "enrollments",
             "id",
-            "main_invoice",
+            "main_proforma_invoice",
             "owner",
             "total",
             "total_currency",
@@ -416,7 +420,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "created_on",
             "enrollments",
             "id",
-            "main_invoice",
+            "main_proforma_invoice",
             "owner",
             "total",
             "total_currency",

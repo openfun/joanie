@@ -24,7 +24,7 @@ from joanie.payment.exceptions import (
 from joanie.payment.factories import (
     BillingAddressDictFactory,
     CreditCardFactory,
-    InvoiceFactory,
+    ProformaInvoiceFactory,
     TransactionFactory,
 )
 from joanie.payment.models import CreditCard
@@ -517,12 +517,12 @@ class PayplugBackendTestCase(TestCase):
         self, mock_treat, mock_do_on_refund
     ):
         """
-        When backend receives a refund notification, it should called the
+        When backend receives a refund notification, it should call the
         generic method `_do_on_refund`.
         """
         order = OrderFactory()
-        invoice = InvoiceFactory(order=order, total=order.total)
-        payment = TransactionFactory(invoice=invoice)
+        invoice = ProformaInvoiceFactory(order=order, total=order.total)
+        payment = TransactionFactory(proforma_invoice=invoice)
 
         mock_treat.return_value = PayplugFactories.PayplugRefundFactory(
             payment_id=payment.reference
@@ -538,7 +538,7 @@ class PayplugBackendTestCase(TestCase):
         args = mock_do_on_refund.call_args.kwargs
         self.assertEqual(len(args), 3)
         self.assertIsInstance(args["amount"], D)
-        self.assertEqual(args["invoice"], invoice)
+        self.assertEqual(args["proforma_invoice"], invoice)
         self.assertIsNotNone(re.fullmatch(r"ref_\d{5}", args["refund_reference"]))
 
     @mock.patch.object(payplug.Payment, "abort")

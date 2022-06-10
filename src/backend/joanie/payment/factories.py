@@ -31,13 +31,13 @@ class CreditCardFactory(factory.django.DjangoModelFactory):
     token = factory.Sequence(lambda k: f"card_{k:022d}")
 
 
-class InvoiceFactory(factory.django.DjangoModelFactory):
-    """A factory to create an invoice"""
+class ProformaInvoiceFactory(factory.django.DjangoModelFactory):
+    """A factory to create a pro forma invoice"""
 
     class Meta:
         """Meta"""
 
-        model = models.Invoice
+        model = models.ProformaInvoice
 
     recipient_address = factory.Faker("address")
     recipient_name = factory.Faker("name")
@@ -46,7 +46,8 @@ class InvoiceFactory(factory.django.DjangoModelFactory):
     @factory.lazy_attribute
     def total(self):
         """
-        Return a Money object with a random value less than the invoice total amount.
+        Return a Money object with a random value less than
+        the pro forma invoice total amount.
         """
         amount = D(random.randrange(self.order.total.amount * 100)) / 100  # nosec
         return Money(amount, self.order.total.currency)
@@ -63,20 +64,23 @@ class TransactionFactory(factory.django.DjangoModelFactory):
     reference = factory.LazyAttributeSequence(
         lambda t, n: f"{'ref' if t.total.amount < 0 else 'pay'}_{n:05d}"
     )
-    invoice = factory.SubFactory(InvoiceFactory)
+    proforma_invoice = factory.SubFactory(ProformaInvoiceFactory)
 
     @factory.lazy_attribute
     def total(self):
         """
-        Return a Money object with a random value less than the invoice total amount.
+        Return a Money object with a random value less than
+        the pro forma invoice total amount.
         """
-        amount = D(random.randrange(self.invoice.total.amount * 100)) / 100  # nosec
-        return Money(amount, self.invoice.total.currency)
+        amount = (
+            D(random.randrange(self.proforma_invoice.total.amount * 100)) / 100  # nosec
+        )
+        return Money(amount, self.proforma_invoice.total.currency)
 
 
 class BillingAddressDictFactory(factory.DictFactory):
     """
-    Return a billing address dictionnary
+    Return a billing address dictionary
     """
 
     address = factory.Faker("street_address")
