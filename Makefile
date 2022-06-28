@@ -7,7 +7,7 @@
 #
 # /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\
 #
-# Note to developpers:
+# Note to developers:
 #
 # While editing this file, please respect the following statements:
 #
@@ -81,8 +81,8 @@ logs: ## display app-dev logs (follow mode)
 .PHONY: logs
 
 run: ## start the wsgi (production) and development server
-	@$(COMPOSE) up -d nginx
-	@$(COMPOSE) up -d app-dev
+	@$(COMPOSE) up --force-recreate -d nginx
+	@$(COMPOSE) up --force-recreate -d app-dev
 	@echo "Wait for postgresql to be up..."
 	@$(WAIT_DB)
 .PHONY: run
