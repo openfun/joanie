@@ -18,7 +18,7 @@ jobs:
   # Check that the git history is clean and complies with our expectations
   lint-git:
     docker:
-      - image: cimg/python:3.8
+      - image: cimg/python:3.10
     working_directory: ~/joanie
     steps:
       - checkout
@@ -93,7 +93,7 @@ jobs:
   # Build backend development environment
   build-back:
     docker:
-      - image: cimg/python:3.8
+      - image: cimg/python:3.10
     working_directory: ~/joanie
     steps:
       - checkout
@@ -111,7 +111,7 @@ jobs:
 
   lint-back:
     docker:
-      - image: cimg/python:3.8
+      - image: cimg/python:3.10
     working_directory: ~/joanie/src/backend
     steps:
       - checkout:
@@ -140,7 +140,7 @@ jobs:
 
   test-back:
     docker:
-      - image: cimg/python:3.8
+      - image: cimg/python:3.10
         environment:
           DJANGO_SETTINGS_MODULE: joanie.settings
           DJANGO_CONFIGURATION: Test
@@ -164,6 +164,11 @@ jobs:
       - restore_cache:
           keys:
             - v1-back-dependencies-{{ .Revision }}
+      - run:
+          name: Install libpangocairo required by pdfminer.six
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y libpangocairo-1.0-0
       # While running tests, we need to make the /data directory writable for
       # the circleci user
       - run:
@@ -190,7 +195,7 @@ jobs:
   # ---- Packaging jobs ----
   package-back:
     docker:
-      - image: cimg/python:3.8
+      - image: cimg/python:3.10
     working_directory: ~/joanie/src/backend
     steps:
       - checkout:
