@@ -210,7 +210,7 @@ class OrderApiTest(BaseAPITestCase):
         """Any authenticated user should be able to create an order."""
         target_courses = factories.CourseFactory.create_batch(2)
         product = factories.ProductFactory(
-            target_courses=target_courses, price=Money("0.00")
+            target_courses=target_courses, price=Money("0.00", "EUR")
         )
         course = product.courses.first()
         self.assertEqual(
@@ -264,7 +264,7 @@ class OrderApiTest(BaseAPITestCase):
         """
         target_courses = factories.CourseFactory.create_batch(2)
         product = factories.ProductFactory(
-            target_courses=target_courses, price=Money(0.00)
+            target_courses=target_courses, price=Money(0.00, "EUR")
         )
         course = product.courses.first()
         self.assertEqual(
@@ -321,7 +321,9 @@ class OrderApiTest(BaseAPITestCase):
 
     def test_api_order_create_authenticated_invalid_product(self):
         """The course and product passed in payload to create an order should match."""
-        product = factories.ProductFactory(title="balançoire", price=Money("0.00"))
+        product = factories.ProductFactory(
+            title="balançoire", price=Money("0.00", "EUR")
+        )
         course = factories.CourseFactory(title="mathématiques")
 
         data = {
@@ -378,7 +380,7 @@ class OrderApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.get_user_token(user.username)
         course = factories.CourseFactory()
-        product = factories.ProductFactory(courses=[course], price=Money("0.00"))
+        product = factories.ProductFactory(courses=[course], price=Money("0.00", "EUR"))
 
         # User already owns an order for this product and course
         order = factories.OrderFactory(owner=user, course=course, product=product)
@@ -903,7 +905,7 @@ class OrderApiTest(BaseAPITestCase):
         to abort the order if it is not pending.
         """
         user = factories.UserFactory()
-        product = factories.ProductFactory(price=Money("0.00"))
+        product = factories.ProductFactory(price=Money("0.00", "EUR"))
         order = factories.OrderFactory(owner=user, product=product)
 
         token = self.get_user_token(user.username)

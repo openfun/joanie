@@ -131,7 +131,8 @@ class ProformaInvoiceModelTestCase(TestCase):
 
         # - Then we register the transaction to refund the client (100.00)
         TransactionFactory(
-            total=Money(-100.00, "XYZ"), proforma_invoice=proforma_credit_note
+            total=Money(-100.00, order.total.currency),
+            proforma_invoice=proforma_credit_note,
         )
         proforma_invoice.refresh_from_db()
         self.assertEqual(proforma_invoice.balance.amount, D("0.00"))
