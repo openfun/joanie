@@ -51,9 +51,7 @@ class ProformaInvoiceAdminTestCase(TestCase):
 
         # - Create an order with a related pro forma invoice
         order = factories.OrderFactory()
-        invoice = ProformaInvoiceFactory(
-            order=order, total=Money(order.total.amount, currency="XYZ")
-        )
+        invoice = ProformaInvoiceFactory(order=order, total=order.total)
         ProformaInvoiceFactory(order=invoice.order, parent=invoice, total=-order.total)
 
         # - Now go to the pro forma invoice admin change view
@@ -71,9 +69,10 @@ class ProformaInvoiceAdminTestCase(TestCase):
         )[0]
         invoiced_balance_field = html.cssselect(".field-invoiced_balance .readonly")[0]
 
-        self.assertEqual(balance_field.text_content(), "XYZ0.00")
-        self.assertEqual(transactions_balance_field.text_content(), "XYZ0.00")
-        self.assertEqual(invoiced_balance_field.text_content(), "XYZ0.00")
+        null_amount_repr = str(Money("0.00", order.total.currency))
+        self.assertEqual(balance_field.text_content(), null_amount_repr)
+        self.assertEqual(transactions_balance_field.text_content(), null_amount_repr)
+        self.assertEqual(invoiced_balance_field.text_content(), null_amount_repr)
 
     def test_admin_proforma_invoice_display_invoice_children_as_link(self):
         """

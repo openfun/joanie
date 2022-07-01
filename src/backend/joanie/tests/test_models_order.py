@@ -165,7 +165,7 @@ class OrderModelsTestCase(TestCase):
         )[0]
 
         product = factories.ProductFactory(
-            courses=[course], target_courses=[target_course], price=Money("0.00")
+            courses=[course], target_courses=[target_course], price=Money("0.00", "EUR")
         )
         order = factories.OrderFactory(owner=owner, product=product, course=course)
 
@@ -202,7 +202,10 @@ class OrderModelsTestCase(TestCase):
 
         # - Create 2 products which relies on the same course
         [product_1, product_2] = factories.ProductFactory.create_batch(
-            2, courses=[course], target_courses=[target_course], price=Money("0.00")
+            2,
+            courses=[course],
+            target_courses=[target_course],
+            price=Money("0.00", "EUR"),
         )
         # - User purchases the two products
         order = factories.OrderFactory(owner=owner, product=product_1, course=course)
@@ -241,7 +244,7 @@ class OrderModelsTestCase(TestCase):
 
         # - Create one product which relies on the same course
         product = factories.ProductFactory(
-            courses=[course], target_courses=[target_course], price=Money("0.00")
+            courses=[course], target_courses=[target_course], price=Money("0.00", "EUR")
         )
         # - User purchases the two products
         order = factories.OrderFactory(owner=owner, product=product, course=course)
