@@ -81,8 +81,12 @@ $ make superuser
 
 ### Explanation
 
-- [LMS Connection](https://github.com/openfun/joanie/blob/master/docs/explanation/lms-connection.md)
-- [Payment backends](https://github.com/openfun/joanie/blob/master/docs/explanation/payment-backend.md)
+- [LMS Connection](https://github.com/openfun/joanie/blob/main/docs/explanation/lms-connection.md)
+- [Payment backends](https://github.com/openfun/joanie/blob/main/docs/explanation/payment-backend.md)
+
+### Reference
+
+- [Models](https://github.com/openfun/joanie/blob/main/docs/reference/models.md)
 
 ## Contributing
 
