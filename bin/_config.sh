@@ -90,7 +90,7 @@ function _dc_exec() {
 #
 # ARGS : django's manage.py command arguments
 function _django_manage() {
-    _dc_run -w /app/src/backend/joanie "joanie" python manage.py "$@"
+    _dc_run "app-dev" python manage.py "$@"
 }
 
 # _set_openstack_project: select an OpenStack project from the openrc files defined in the
