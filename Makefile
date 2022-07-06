@@ -138,6 +138,11 @@ lint-pylint: ## lint back-end python sources with pylint
 	@$(COMPOSE_TEST_RUN_APP) pylint joanie
 .PHONY: lint-pylint
 
+test: ## run project tests
+test: \
+	test-back
+.PHONY: test
+
 test-back: ## run back-end tests
 	bin/pytest
 .PHONY: test-back
