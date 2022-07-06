@@ -38,15 +38,15 @@ database migrations and compile translations. It's a good idea to use this
 command each time you are pulling code from the project repository to avoid
 dependency-releated or migration-releated issues.
 
-Now that your Docker services should be up and running 🎉
+Your Docker services should now be up and running 🎉
 
-Note that if you need to run them afterwards, use the eponym Make rule:
+Note that if you need to run them afterwards, you can use the eponym Make rule:
 
 ```bash
 $ make run
 ```
 
-Now, you should be able to access to the API overview interface at
+Now, you should be able to access the API overview interface at
 [http://localhost:8071/api/](http://localhost:8071/api/).
 
 Finally, you can check all available Make rules using:
