@@ -49,7 +49,7 @@ class ProformaInvoiceFactory(factory.django.DjangoModelFactory):
         Return a Money object with a random value less than
         the pro forma invoice total amount.
         """
-        amount = D(random.randrange(self.order.total.amount * 100)) / 100  # nosec
+        amount = D(random.randrange(int(self.order.total.amount * 100))) / 100  # nosec
         return Money(amount, self.order.total.currency)
 
 
@@ -73,7 +73,8 @@ class TransactionFactory(factory.django.DjangoModelFactory):
         the pro forma invoice total amount.
         """
         amount = (
-            D(random.randrange(self.proforma_invoice.total.amount * 100)) / 100  # nosec
+            D(random.randrange(int(self.proforma_invoice.total.amount * 100)))  # nosec
+            / 100
         )
         return Money(amount, self.proforma_invoice.total.currency)
 

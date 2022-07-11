@@ -278,6 +278,7 @@ class Order(models.Model):
                 name="unique_owner_product_not_canceled",
             )
         ]
+        ordering = ("pk",)
         verbose_name = _("Order")
         verbose_name_plural = _("Orders")
 
@@ -565,6 +566,7 @@ class Enrollment(models.Model):
 
     class Meta:
         db_table = "joanie_enrollment"
+        ordering = ("pk",)
         unique_together = ("course_run", "user")
         verbose_name = _("Enrollment")
         verbose_name_plural = _("Enrollments")
