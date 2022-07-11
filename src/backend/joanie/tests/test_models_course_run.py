@@ -2,14 +2,12 @@
 Test suite for order models
 """
 import random
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from unittest import mock
 
 from django.core.exceptions import ValidationError
 from django.test import TestCase
-from django.utils import timezone
-
-import pytz
+from django.utils import timezone as django_timezone
 
 from joanie.core import factories
 from joanie.core.factories import CourseRunFactory
@@ -20,7 +18,7 @@ class CourseRunModelsTestCase(TestCase):
 
     def setUp(self):
         super().setUp()
-        self.now = timezone.now()
+        self.now = django_timezone.now()
 
     def test_models_course_run_normalized(self):
         """
@@ -99,9 +97,9 @@ class CourseRunModelsTestCase(TestCase):
                 int(course_run.enrollment_start.timestamp()) + 1,
                 int(course_run.enrollment_end.timestamp()) - 1,
             )
-        ).replace(tzinfo=pytz.utc)
+        ).replace(tzinfo=timezone.utc)
 
-        with mock.patch.object(timezone, "now", return_value=now):
+        with mock.patch.object(django_timezone, "now", return_value=now):
             state = course_run.state
 
         self.assertIn(dict(state)["priority"], [0, 1])
@@ -112,9 +110,9 @@ class CourseRunModelsTestCase(TestCase):
                 int(course_run.enrollment_end.timestamp()),
                 int(datetime(9999, 12, 31).timestamp()),
             )
-        ).replace(tzinfo=pytz.utc)
+        ).replace(tzinfo=timezone.utc)
 
-        with mock.patch.object(timezone, "now", return_value=now):
+        with mock.patch.object(django_timezone, "now", return_value=now):
             state = course_run.state
 
         self.assertEqual(
@@ -139,9 +137,9 @@ class CourseRunModelsTestCase(TestCase):
                 int(course_run.enrollment_start.timestamp()) + 1,
                 int(course_run.start.timestamp()) - 1,
             )
-        ).replace(tzinfo=pytz.utc)
+        ).replace(tzinfo=timezone.utc)
 
-        with mock.patch.object(timezone, "now", return_value=now):
+        with mock.patch.object(django_timezone, "now", return_value=now):
             state = course_run.state
 
         self.assertEqual(
@@ -160,9 +158,9 @@ class CourseRunModelsTestCase(TestCase):
                 int(course_run.start.timestamp()) + 1,
                 int(course_run.end.timestamp()) - 1,
             )
-        ).replace(tzinfo=pytz.utc)
+        ).replace(tzinfo=timezone.utc)
 
-        with mock.patch.object(timezone, "now", return_value=now):
+        with mock.patch.object(django_timezone, "now", return_value=now):
             state = course_run.state
 
         self.assertEqual(
@@ -181,9 +179,9 @@ class CourseRunModelsTestCase(TestCase):
                 int(course_run.end.timestamp()) + 1,
                 int(datetime(9999, 12, 31).timestamp()) - 1,
             )
-        ).replace(tzinfo=pytz.utc)
+        ).replace(tzinfo=timezone.utc)
 
-        with mock.patch.object(timezone, "now", return_value=now):
+        with mock.patch.object(django_timezone, "now", return_value=now):
             state = course_run.state
 
         self.assertEqual(
@@ -208,9 +206,9 @@ class CourseRunModelsTestCase(TestCase):
                 int(course_run.enrollment_start.timestamp()) + 1,
                 int(course_run.start.timestamp()) - 1,
             )
-        ).replace(tzinfo=pytz.utc)
+        ).replace(tzinfo=timezone.utc)
 
-        with mock.patch.object(timezone, "now", return_value=now):
+        with mock.patch.object(django_timezone, "now", return_value=now):
             state = course_run.state
 
         self.assertEqual(
@@ -229,9 +227,9 @@ class CourseRunModelsTestCase(TestCase):
                 int(course_run.start.timestamp()) + 1,
                 int(datetime(9999, 12, 31).timestamp()) - 1,
             )
-        ).replace(tzinfo=pytz.utc)
+        ).replace(tzinfo=timezone.utc)
 
-        with mock.patch.object(timezone, "now", return_value=now):
+        with mock.patch.object(django_timezone, "now", return_value=now):
             state = course_run.state
 
         self.assertEqual(

@@ -2,16 +2,15 @@
 Declare and configure the models for the courses part
 """
 from collections.abc import Mapping
-from datetime import MAXYEAR, datetime
+from datetime import MAXYEAR, datetime, timezone
 
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.utils import timezone
+from django.utils import timezone as django_timezone
 from django.utils.functional import lazy
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
-import pytz
 from parler import models as parler_models
 from url_normalize import url_normalize
 
@@ -19,7 +18,7 @@ from joanie.core import utils
 from joanie.core.enums import ALL_LANGUAGES
 from joanie.core.fields.multiselect import MultiSelectField
 
-MAX_DATE = datetime(MAXYEAR, 12, 31, tzinfo=pytz.utc)
+MAX_DATE = datetime(MAXYEAR, 12, 31, tzinfo=timezone.utc)
 
 
 class CourseState(Mapping):
@@ -299,7 +298,7 @@ class CourseRun(parler_models.TranslatableModel):
         end = end or MAX_DATE
         enrollment_end = enrollment_end or MAX_DATE
 
-        now = timezone.now()
+        now = django_timezone.now()
         if start < now:
             if end > now:
                 if enrollment_end > now:
