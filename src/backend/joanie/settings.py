@@ -173,6 +173,7 @@ class Base(Configuration):
         # Joanie
         "joanie.core",
         "joanie.payment",
+        "joanie.badges",
     ]
 
     # Joanie
