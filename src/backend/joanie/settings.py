@@ -209,6 +209,17 @@ class Base(Configuration):
             ),
         }
     ]
+    JOANIE_BADGE_PROVIDERS = {
+        "obf": {
+            "client_id": values.Value(
+                environ_name="OBF_CLIENT_ID", environ_prefix=None
+            ),
+            "client_secret": values.Value(
+                environ_name="OBF_CLIENT_SECRET", environ_prefix=None
+            ),
+        }
+    }
+
     # Cache
     CACHES = {
         "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
@@ -372,6 +383,24 @@ class Test(Base):
     }
 
     JOANIE_ENROLLMENT_GRADE_CACHE_TTL = 0
+
+    LOGGING = values.DictValue(
+        {
+            "version": 1,
+            "disable_existing_loggers": False,
+            "handlers": {
+                "console": {
+                    "class": "logging.StreamHandler",
+                },
+            },
+            "loggers": {
+                "joanie": {
+                    "handlers": ["console"],
+                    "level": "DEBUG",
+                },
+            },
+        }
+    )
 
 
 class ContinuousIntegration(Test):

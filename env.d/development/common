@@ -25,3 +25,7 @@ JOANIE_ENROLLMENT_GRADE_CACHE_TTL=600
 
 # Payment Backend
 JOANIE_PAYMENT_BACKEND=joanie.payment.backends.dummy.DummyPaymentBackend
+
+# Badge providers
+# OBF_CLIENT_ID=
+# OBF_CLIENT_SECRET=
