@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Add Arnold tray to facilitate deploying Joanie to Kubernetes
 - Add the `badges` application
 - Add `is_listed` boolean field to course run model
 - Add custom actions into admin to generate certificates
