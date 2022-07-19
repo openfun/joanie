@@ -63,7 +63,7 @@ def issue_certificates_for_orders(orders):
     Iterate over the provided orders and check if they are eligible for certification
     then return the count of issued certificates.
     """
-    issue_counter = 0
+    issued_certificates_count = 0
 
     orders = [
         order
@@ -78,6 +78,6 @@ def issue_certificates_for_orders(orders):
     ]
 
     for order in orders:
-        issue_counter += issue_certificate_for_order(order)
+        issued_certificates_count += issue_certificate_for_order(order)
 
-    return issue_counter
+    return issued_certificates_count

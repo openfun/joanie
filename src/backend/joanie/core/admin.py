@@ -18,7 +18,7 @@ from joanie.core import helpers, models
 from joanie.core.enums import PRODUCT_TYPE_CERTIFICATE_ALLOWED
 from joanie.core.forms import ProductCourseRelationAdminForm
 
-ACTION_NAME_GENERATE_CERTIFICATES = "issue_certificates"
+ACTION_NAME_ISSUE_CERTIFICATES = "issue_certificates"
 ACTION_NAME_CANCEL = "cancel"
 
 
@@ -29,14 +29,14 @@ def summarize_certification_to_user(request, count):
     if count == 0:
         messages.warning(
             request,
-            _("No certificates have been generated."),
+            _("No certificates have been issued."),
         )
     else:
         messages.success(
             request,
             ngettext_lazy(  # pylint: disable=no-member
-                "{:d} certificate has been generated.",
-                "{:d} certificates have been generated.",
+                "{:d} certificate has been issued.",
+                "{:d} certificates have been issued.",
                 count,
             ).format(count),
         )
@@ -71,8 +71,8 @@ class IssuedCertificateAdmin(admin.ModelAdmin):
 class CourseAdmin(DjangoObjectActions, TranslatableAdmin):
     """Admin class for the Course model"""
 
-    actions = (ACTION_NAME_GENERATE_CERTIFICATES,)
-    change_actions = (ACTION_NAME_GENERATE_CERTIFICATES,)
+    actions = (ACTION_NAME_ISSUE_CERTIFICATES,)
+    change_actions = (ACTION_NAME_ISSUE_CERTIFICATES,)
     list_display = ("code", "title", "organization", "state")
     filter_horizontal = ("products",)
     fieldsets = (
@@ -94,11 +94,11 @@ class CourseAdmin(DjangoObjectActions, TranslatableAdmin):
         Custom action to generate certificates for a collection of courses
         passed as a queryset
         """
-        certificate_generated_count = helpers.issue_certificates_for_orders(
+        issued_certificate_count = helpers.issue_certificates_for_orders(
             models.Order.objects.filter(course__in=queryset)
         )
 
-        summarize_certification_to_user(request, certificate_generated_count)
+        summarize_certification_to_user(request, issued_certificate_count)
 
 
 @admin.register(models.CourseRun)
@@ -155,8 +155,8 @@ class ProductAdmin(
 
     inlines = (ProductCourseRelationInline,)
     readonly_fields = ("related_courses",)
-    actions = (ACTION_NAME_GENERATE_CERTIFICATES,)
-    change_actions = (ACTION_NAME_GENERATE_CERTIFICATES,)
+    actions = (ACTION_NAME_ISSUE_CERTIFICATES,)
+    change_actions = (ACTION_NAME_ISSUE_CERTIFICATES,)
 
     def get_change_actions(self, request, object_id, form_url):
         """
@@ -169,7 +169,7 @@ class ProductAdmin(
         if not self.model.objects.filter(
             pk=object_id, type__in=PRODUCT_TYPE_CERTIFICATE_ALLOWED
         ).exists():
-            actions.remove(ACTION_NAME_GENERATE_CERTIFICATES)
+            actions.remove(ACTION_NAME_ISSUE_CERTIFICATES)
 
         return actions
 
@@ -183,7 +183,7 @@ class ProductAdmin(
             re_path(
                 r"^(?P<product_id>.+)/generate-certificates/(?P<course_code>.+)/$",
                 self.admin_site.admin_view(self.issue_certificates_for_course),
-                name=ACTION_NAME_GENERATE_CERTIFICATES,
+                name=ACTION_NAME_ISSUE_CERTIFICATES,
             )
         ] + url_patterns
 
@@ -193,11 +193,11 @@ class ProductAdmin(
         Custom action to generate certificates for a collection of products
         passed as a queryset
         """
-        certificate_generated_count = helpers.issue_certificates_for_orders(
+        issued_certificate_count = helpers.issue_certificates_for_orders(
             models.Order.objects.filter(product__in=queryset)
         )
 
-        summarize_certification_to_user(request, certificate_generated_count)
+        summarize_certification_to_user(request, issued_certificate_count)
 
     def issue_certificates_for_course(
         self, request, product_id, course_code
@@ -205,13 +205,13 @@ class ProductAdmin(
         """
         A custom action to generate certificates for a course - product couple.
         """
-        certificate_generated_count = helpers.issue_certificates_for_orders(
+        issued_certificate_count = helpers.issue_certificates_for_orders(
             models.Order.objects.filter(
                 product__id=product_id, course__code=course_code
             )
         )
 
-        summarize_certification_to_user(request, certificate_generated_count)
+        summarize_certification_to_user(request, issued_certificate_count)
 
         return HttpResponseRedirect(
             reverse("admin:core_product_change", args=(product_id,))
@@ -248,7 +248,7 @@ class ProductAdmin(
                 if is_certifying:
                     # Add a button to generate certificate
                     issue_certificates_url = reverse(
-                        f"admin:{ACTION_NAME_GENERATE_CERTIFICATES}",
+                        f"admin:{ACTION_NAME_ISSUE_CERTIFICATES}",
                         kwargs={"product_id": obj.id, "course_code": course.code},
                     )
 
@@ -272,8 +272,8 @@ class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
 
     list_display = ("uid", "owner", "product", "state")
     readonly_fields = ("state", "total", "proforma_invoice", "issued_certificate")
-    change_actions = (ACTION_NAME_GENERATE_CERTIFICATES,)
-    actions = (ACTION_NAME_CANCEL, ACTION_NAME_GENERATE_CERTIFICATES)
+    change_actions = (ACTION_NAME_ISSUE_CERTIFICATES,)
+    actions = (ACTION_NAME_CANCEL, ACTION_NAME_ISSUE_CERTIFICATES)
 
     @admin.action(description=_("Cancel selected orders"))
     def cancel(self, request, queryset):  # pylint: disable=no-self-use
@@ -287,8 +287,8 @@ class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
         Custom action to launch issue_certificates management commands
         over the order selected
         """
-        certificate_generated_count = helpers.issue_certificates_for_orders(queryset)
-        summarize_certification_to_user(request, certificate_generated_count)
+        issued_certificate_count = helpers.issue_certificates_for_orders(queryset)
+        summarize_certification_to_user(request, issued_certificate_count)
 
     def proforma_invoice(self, obj):  # pylint: disable=no-self-use
         """Retrieve the root pro forma invoice related to the order."""

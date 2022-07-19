@@ -369,7 +369,7 @@ class ProductAdminTestCase(BaseAPITestCase):
         # Check the presence of a confirmation message
         messages = list(get_messages(response.wsgi_request))
         self.assertEqual(len(messages), 1)
-        self.assertEqual(str(messages[0]), "No certificates have been generated.")
+        self.assertEqual(str(messages[0]), "No certificates have been issued.")
 
         # - User should be redirected to the product change view
         self.assertRedirects(

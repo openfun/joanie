@@ -131,11 +131,11 @@ class IssueCertificatesTestCase(TestCase):
 
         self.assertEqual(issued_certificate_qs.count(), 0)
 
-        # A certificate should be generated for the 1st course
+        # A certificate should be issued for the 1st course
         call_command("issue_certificates", course=course_1.code)
         self.assertEqual(issued_certificate_qs.filter(order=orders[0]).count(), 1)
 
-        # Then a certificate should be generated for the 2nd course
+        # Then a certificate should be issued for the 2nd course
         call_command("issue_certificates", course=course_2.code)
         self.assertEqual(issued_certificate_qs.filter(order=orders[1]).count(), 1)
 
@@ -172,12 +172,12 @@ class IssueCertificatesTestCase(TestCase):
 
         self.assertEqual(issued_certificate_qs.count(), 0)
 
-        # A certificate should be generated for the 1st product
+        # A certificate should be issued for the 1st product
         with self.assertNumQueries(10):
             call_command("issue_certificates", product=product_1.uid)
         self.assertEqual(issued_certificate_qs.filter(order=orders[0]).count(), 1)
 
-        # Then a certificate should be generated for the 2nd product
+        # Then a certificate should be issued for the 2nd product
         with self.assertNumQueries(9):
             call_command("issue_certificates", product=product_2.uid)
         self.assertEqual(issued_certificate_qs.filter(order=orders[1]).count(), 1)
@@ -221,19 +221,19 @@ class IssueCertificatesTestCase(TestCase):
 
         self.assertEqual(issued_certificate_qs.count(), 0)
 
-        # A certificate should be generated for the couple course_1 - product_1
+        # A certificate should be issued for the couple course_1 - product_1
         call_command("issue_certificates", course=course_1.code, product=product_1.uid)
         self.assertEqual(issued_certificate_qs.filter(order=orders[0]).count(), 1)
 
-        # Then a certificate should be generated for the couple course_1 - product_2
+        # Then a certificate should be issued for the couple course_1 - product_2
         call_command("issue_certificates", course=course_1.code, product=product_2.uid)
         self.assertEqual(issued_certificate_qs.filter(order=orders[1]).count(), 1)
 
-        # Then a certificate should be generated for the couple course_2 - product_1
+        # Then a certificate should be issued for the couple course_2 - product_1
         call_command("issue_certificates", course=course_2.code, product=product_1.uid)
         self.assertEqual(issued_certificate_qs.filter(order=orders[2]).count(), 1)
 
-        # Finally, a certificate should be generated for the couple course_2 - product_2
+        # Finally, a certificate should be issued for the couple course_2 - product_2
         call_command("issue_certificates", course=course_2.code, product=product_2.uid)
         self.assertEqual(issued_certificate_qs.filter(order=orders[3]).count(), 1)
 
@@ -270,12 +270,12 @@ class IssueCertificatesTestCase(TestCase):
 
         self.assertEqual(issued_certificate_qs.count(), 0)
 
-        # A certificate should be generated for the 1st product
+        # A certificate should be issued for the 1st product
         with self.assertNumQueries(10):
             call_command("issue_certificates", product=product_1.uid)
         self.assertEqual(issued_certificate_qs.filter(order=orders[0]).count(), 1)
 
-        # Then a certificate should be generated for the 2nd product
+        # Then a certificate should be issued for the 2nd product
         with self.assertNumQueries(9):
             call_command("issue_certificates", product=product_2.uid)
         self.assertEqual(issued_certificate_qs.filter(order=orders[1]).count(), 1)

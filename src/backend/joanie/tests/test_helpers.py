@@ -42,7 +42,7 @@ class HelpersTestCase(TestCase):
     def test_helpers_issue_certificate_for_order_needs_gradable_course_runs(self):
         """
         If the order does not rely on gradable course runs,
-        no certificate should be generated.
+        no certificate should be issued.
         """
         # Create a certifying product with one order eligible for certification
         course_run = factories.CourseRunFactory(
@@ -75,7 +75,7 @@ class HelpersTestCase(TestCase):
         self,
     ):
         """
-        Certificate is generated only if owner has passed all graded courses.
+        Certificate is issued only if owner has passed all graded courses.
         """
         # Create a certifying product with one order eligible for certification
         course_run = factories.CourseRunFactory(
@@ -112,7 +112,7 @@ class HelpersTestCase(TestCase):
         """
         If the provided order relies on a certifying product containing graded courses
         with gradable course runs and the owner passed all gradable course runs,
-        a certificate should be generated
+        a certificate should be issued.
         """
 
         # Create a certifying product with one order eligible for certification
