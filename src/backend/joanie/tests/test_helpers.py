@@ -12,10 +12,10 @@ from joanie.lms_handler.backends.dummy import DummyLMSBackend
 class HelpersTestCase(TestCase):
     """Joanie core helpers tests case"""
 
-    def test_helpers_generate_certificate_for_order_needs_graded_courses(self):
+    def test_helpers_issue_certificate_for_order_needs_graded_courses(self):
         """
         If the order relies on a certifying product which does not contain
-        graded courses, no certificate should be generated.
+        graded courses, no certificate should be issued.
         """
         # Create a certifying product with one order eligible for certification
         course_run = factories.CourseRunFactory(
@@ -33,13 +33,13 @@ class HelpersTestCase(TestCase):
         course_run.course.product_relations.update(is_graded=False)
         course = factories.CourseFactory(products=[product])
         order = factories.OrderFactory(product=product, course=course)
-        certificate_qs = models.Certificate.objects.filter(order=order)
-        self.assertEqual(certificate_qs.count(), 0)
+        issued_certificate_qs = models.IssuedCertificate.objects.filter(order=order)
+        self.assertEqual(issued_certificate_qs.count(), 0)
 
-        self.assertEqual(helpers.generate_certificate_for_order(order), 0)
-        self.assertEqual(certificate_qs.count(), 0)
+        self.assertEqual(helpers.issue_certificate_for_order(order), 0)
+        self.assertEqual(issued_certificate_qs.count(), 0)
 
-    def test_helpers_generate_certificate_for_order_needs_gradable_course_runs(self):
+    def test_helpers_issue_certificate_for_order_needs_gradable_course_runs(self):
         """
         If the order does not rely on gradable course runs,
         no certificate should be generated.
@@ -58,20 +58,20 @@ class HelpersTestCase(TestCase):
         )
         course = factories.CourseFactory(products=[product])
         order = factories.OrderFactory(product=product, course=course)
-        certificate_qs = models.Certificate.objects.filter(order=order)
-        self.assertEqual(certificate_qs.count(), 0)
+        issued_certificate_qs = models.IssuedCertificate.objects.filter(order=order)
+        self.assertEqual(issued_certificate_qs.count(), 0)
 
-        self.assertEqual(helpers.generate_certificate_for_order(order), 0)
-        self.assertEqual(certificate_qs.count(), 0)
+        self.assertEqual(helpers.issue_certificate_for_order(order), 0)
+        self.assertEqual(issued_certificate_qs.count(), 0)
 
         # - Now flag the course run as gradable
         course_run.is_gradable = True
         course_run.save()
 
-        self.assertEqual(helpers.generate_certificate_for_order(order), 1)
-        self.assertEqual(certificate_qs.count(), 1)
+        self.assertEqual(helpers.issue_certificate_for_order(order), 1)
+        self.assertEqual(issued_certificate_qs.count(), 1)
 
-    def test_helpers_generate_certificate_for_order_needs_enrollments_has_been_passed(
+    def test_helpers_issue_certificate_for_order_needs_enrollments_has_been_passed(
         self,
     ):
         """
@@ -91,24 +91,24 @@ class HelpersTestCase(TestCase):
         )
         course = factories.CourseFactory(products=[product])
         order = factories.OrderFactory(product=product, course=course)
-        certificate_qs = models.Certificate.objects.filter(order=order)
-        self.assertEqual(certificate_qs.count(), 0)
+        issued_certificate_qs = models.IssuedCertificate.objects.filter(order=order)
+        self.assertEqual(issued_certificate_qs.count(), 0)
 
         # Simulate that all enrollments are not passed
         with mock.patch.object(DummyLMSBackend, "get_grades") as mock_get_grades:
             mock_get_grades.return_value = {"passed": False}
-            self.assertEqual(helpers.generate_certificate_for_order(order), 0)
+            self.assertEqual(helpers.issue_certificate_for_order(order), 0)
 
-        self.assertEqual(certificate_qs.count(), 0)
+        self.assertEqual(issued_certificate_qs.count(), 0)
 
         # Simulate that all enrollments are passed
         with mock.patch.object(DummyLMSBackend, "get_grades") as mock_get_grades:
             mock_get_grades.return_value = {"passed": True}
-            self.assertEqual(helpers.generate_certificate_for_order(order), 1)
+            self.assertEqual(helpers.issue_certificate_for_order(order), 1)
 
-        self.assertEqual(certificate_qs.count(), 1)
+        self.assertEqual(issued_certificate_qs.count(), 1)
 
-    def test_helpers_generate_certificate_for_order(self):
+    def test_helpers_issue_certificate_for_order(self):
         """
         If the provided order relies on a certifying product containing graded courses
         with gradable course runs and the owner passed all gradable course runs,
@@ -136,21 +136,21 @@ class HelpersTestCase(TestCase):
         )
         course = factories.CourseFactory(products=[product])
         order = factories.OrderFactory(product=product, course=course)
-        certificate_qs = models.Certificate.objects.filter(order=order)
+        issued_certificate_qs = models.IssuedCertificate.objects.filter(order=order)
 
-        self.assertEqual(certificate_qs.count(), 0)
+        self.assertEqual(issued_certificate_qs.count(), 0)
 
         # DB queries should be minimized
         with self.assertNumQueries(7):
-            self.assertEqual(helpers.generate_certificate_for_order(order), 1)
-        self.assertEqual(certificate_qs.count(), 1)
+            self.assertEqual(helpers.issue_certificate_for_order(order), 1)
+        self.assertEqual(issued_certificate_qs.count(), 1)
 
         # But calling it again, should not create a new certificate
         with self.assertNumQueries(4):
-            self.assertEqual(helpers.generate_certificate_for_order(order), 0)
-        self.assertEqual(certificate_qs.count(), 1)
+            self.assertEqual(helpers.issue_certificate_for_order(order), 0)
+        self.assertEqual(issued_certificate_qs.count(), 1)
 
-    def test_helpers_generate_certificates_for_orders(self):
+    def test_helpers_issue_certificates_for_orders(self):
         """
         This method should generate a certificate for each order eligible for certification.
         """
@@ -187,17 +187,19 @@ class HelpersTestCase(TestCase):
             factories.OrderFactory(product=product_1, course=course, is_canceled=True),
         ]
 
-        certificate_qs = models.Certificate.objects.filter(order__in=orders)
+        issued_certificate_qs = models.IssuedCertificate.objects.filter(
+            order__in=orders
+        )
 
-        self.assertEqual(certificate_qs.count(), 0)
+        self.assertEqual(issued_certificate_qs.count(), 0)
 
         self.assertEqual(
-            helpers.generate_certificates_for_orders(models.Order.objects.all()), 10
+            helpers.issue_certificates_for_orders(models.Order.objects.all()), 10
         )
-        self.assertEqual(certificate_qs.count(), 10)
+        self.assertEqual(issued_certificate_qs.count(), 10)
 
         # But call it again, should not create a new certificate
         self.assertEqual(
-            helpers.generate_certificates_for_orders(models.Order.objects.all()), 0
+            helpers.issue_certificates_for_orders(models.Order.objects.all()), 0
         )
-        self.assertEqual(certificate_qs.count(), 10)
+        self.assertEqual(issued_certificate_qs.count(), 10)

@@ -155,30 +155,30 @@ having several main pro forma invoices.
 - A `CheckConstraint` "main_proforma_invoice_should_have_a_positive_amount" to ensure that a
 main pro forma invoice has a positive amount.
 
-## Relation between `Order` / `Product` / `CertificateDefinition` and `Certificate` models
+## Relation between `Order` / `Product` / `Certificate` and `IssuedCertificate` models
 
 ```mermaid
 erDiagram
     %% Models
     Product
-    CertificateDefinition
+    Certificate
     Organization
     User
     Order
-    Certificate
+    IssuedCertificate
     
     %% Relations
-    Product }o--o| CertificateDefinition : ""
+    Product }o--o| Certificate : ""
     Product || -- o{ Order : ""
-    CertificateDefinition }o--|| Organization : "is owned by"
-    CertificateDefinition ||--o{ Certificate : "is defined by"
+    Certificate }o--|| Organization : "is owned by"
+    Certificate ||--o{ IssuedCertificate : "issues"
     
     User ||--o{ Order : "owns"
-    Order }o--o| Certificate : ""
+    Order }o--o| IssuedCertificate : ""
 ```
 
 ### Focus
 
-#### `Product` / `CertificateDefinition` constraint
+#### `Product` / `Certificate` constraint
 
-Only `Product` of type `CREDENTIAL` or `CERTIFICATE` can have a `CertificateDefinition`.
+Only `Product` of type `CREDENTIAL` or `CERTIFICATE` can have a `Certificate`.

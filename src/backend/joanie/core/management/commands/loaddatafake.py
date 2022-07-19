@@ -73,7 +73,7 @@ class Command(BaseCommand):
             type=enums.PRODUCT_TYPE_CREDENTIAL,
             title="Become a certified botanist",
             target_courses=credential_courses,
-            certificate_definition=factories.CertificateDefinitionFactory(
+            certificate=factories.CertificateFactory(
                 title="Botanist Certification",
             ),
         )

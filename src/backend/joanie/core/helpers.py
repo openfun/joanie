@@ -7,16 +7,16 @@ from django.utils import timezone
 from joanie.core import enums, models
 
 
-def generate_certificate_for_order(order):
+def issue_certificate_for_order(order):
     """
-    Check if order is eligible for certification then generate certificate if it is.
+    Check if order is eligible for certification then issue certificate if it is.
 
     Eligibility means that order contains
     one passed enrollment per graded courses.
 
     Return:
         0: if the order is not eligible for certification
-        1: if a certificate has been generated for the current order
+        1: if a certificate has been issued for the current order
     """
     graded_courses = (
         order.target_courses.filter(order_relations__is_graded=True)
@@ -51,25 +51,25 @@ def generate_certificate_for_order(order):
             return 0
 
     try:
-        order.create_certificate()
+        order.issue_certificate()
     except ValidationError:
         return 0
 
     return 1
 
 
-def generate_certificates_for_orders(orders):
+def issue_certificates_for_orders(orders):
     """
     Iterate over the provided orders and check if they are eligible for certification
-    then return the count of generated certificates.
+    then return the count of issued certificates.
     """
-    total = 0
+    issue_counter = 0
 
     orders = [
         order
         for order in orders.filter(
             is_canceled=False,
-            certificate__isnull=True,
+            issued_certificate__isnull=True,
             product__type__in=enums.PRODUCT_TYPE_CERTIFICATE_ALLOWED,
         )
         .select_related("course__organization")
@@ -78,6 +78,6 @@ def generate_certificates_for_orders(orders):
     ]
 
     for order in orders:
-        total += generate_certificate_for_order(order)
+        issue_counter += issue_certificate_for_order(order)
 
-    return total
+    return issue_counter

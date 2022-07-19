@@ -49,6 +49,8 @@ and this project adheres to
 
 ### Changed
 
+- Rename CertificateDefinition model into Certificate
+- Rename Certificate model into IssuedCertificate
 - Update codebase to remove the use of deprecated pytz and USE_L10N
   with Django 4.0
 - Refactor links between enrollment and order models

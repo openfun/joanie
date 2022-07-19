@@ -20,7 +20,7 @@ from djmoney.models.validators import MinMoneyValidator
 from parler import models as parler_models
 
 from joanie.core.exceptions import EnrollmentError, GradeError
-from joanie.core.models.certifications import Certificate
+from joanie.core.models.certifications import IssuedCertificate
 from joanie.lms_handler import LMSHandler
 
 from .. import enums
@@ -67,9 +67,9 @@ class Product(parler_models.TranslatableModel):
             MinMoneyValidator(0),
         ],
     )
-    certificate_definition = models.ForeignKey(
-        "CertificateDefinition",
-        verbose_name=_("certificate definition"),
+    certificate = models.ForeignKey(
+        "Certificate",
+        verbose_name=_("certificate"),
         on_delete=models.PROTECT,
         blank=True,
         null=True,
@@ -118,15 +118,12 @@ class Product(parler_models.TranslatableModel):
 
     def clean(self):
         """
-        Allow certificate definition only for product with type credential or certificate.
+        Allow certificate only for product with type credential or certificate.
         """
-        if (
-            self.certificate_definition
-            and self.type not in enums.PRODUCT_TYPE_CERTIFICATE_ALLOWED
-        ):
+        if self.certificate and self.type not in enums.PRODUCT_TYPE_CERTIFICATE_ALLOWED:
             raise ValidationError(
                 _(
-                    f"Certificate definition is only allowed for product kinds: "
+                    f"Certificate is only allowed for product kinds: "
                     f"{', '.join(enums.PRODUCT_TYPE_CERTIFICATE_ALLOWED)}"
                 )
             )
@@ -462,9 +459,9 @@ class Order(models.Model):
         self.is_canceled = True
         self.save()
 
-    def create_certificate(self):
+    def issue_certificate(self):
         """
-        Create a certificate if the related product type is certifying and if one
+        Issue a certificate if the related product type is certifying and if one
         has not been already created.
         """
         if self.product.type not in enums.PRODUCT_TYPE_CERTIFICATE_ALLOWED:
@@ -477,18 +474,18 @@ class Order(models.Model):
                 )
             )
 
-        if Certificate.objects.filter(order=self).exists():
+        if IssuedCertificate.objects.filter(order=self).exists():
             raise ValidationError(
                 _(
                     (
                         "A certificate has been already issued for "  # pylint: disable=no-member
                         f"the order {self.uid} "
-                        f"on {self.certificate.issued_on}."
+                        f"on {self.issued_certificate.issued_on}."
                     )
                 )
             )
 
-        Certificate.objects.create(order=self)
+        IssuedCertificate.objects.create(order=self)
 
 
 class OrderCourseRelation(models.Model):

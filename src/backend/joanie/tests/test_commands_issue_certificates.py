@@ -1,4 +1,4 @@
-"""Test suite for the management command 'generate_certificates'"""
+"""Test suite for the management command 'issue_certificates'"""
 import uuid
 from datetime import timedelta
 
@@ -9,10 +9,10 @@ from django.utils import timezone
 from joanie.core import enums, factories, models
 
 
-class CreateCertificatesTestCase(TestCase):
-    """Test case for the management command 'generate_certificates'"""
+class IssueCertificatesTestCase(TestCase):
+    """Test case for the management command 'issue_certificates'"""
 
-    def test_commands_generate_certificates_has_options(
+    def test_commands_issue_certificates_has_options(
         self,
     ):  # pylint: disable=no-self-use
         """
@@ -28,13 +28,13 @@ class CreateCertificatesTestCase(TestCase):
         }
 
         # TypeError: Unknown option(s) should not be raised
-        call_command("generate_certificates", **options)
+        call_command("issue_certificates", **options)
 
-    def test_commands_generate_certificates(self):
+    def test_commands_issue_certificates(self):
         """
         If a certifying product contains graded courses with gradable course runs
         and a user purchased this product and passed all gradable course runs,
-        a certificate should be generated
+        a certificate should be issued
         """
 
         # Create a certifying product with one order eligible for certification
@@ -51,19 +51,21 @@ class CreateCertificatesTestCase(TestCase):
         )
         course = factories.CourseFactory(products=[product])
         order = factories.OrderFactory(product=product, course=course)
-        certificate_qs = models.Certificate.objects.filter(order=order)
+        issued_issued_certificate_qs = models.IssuedCertificate.objects.filter(
+            order=order
+        )
 
-        self.assertEqual(certificate_qs.count(), 0)
+        self.assertEqual(issued_issued_certificate_qs.count(), 0)
 
         # Calling command should generate one certificate
-        call_command("generate_certificates")
-        self.assertEqual(certificate_qs.count(), 1)
+        call_command("issue_certificates")
+        self.assertEqual(issued_issued_certificate_qs.count(), 1)
 
         # But call it again, should not create a new certificate
-        call_command("generate_certificates")
-        self.assertEqual(certificate_qs.count(), 1)
+        call_command("issue_certificates")
+        self.assertEqual(issued_issued_certificate_qs.count(), 1)
 
-    def test_commands_generate_certificates_can_be_restricted_to_order(self):
+    def test_commands_issue_certificates_can_be_restricted_to_order(self):
         """
         If `order` option is used, the review is restricted to it.
         """
@@ -81,19 +83,25 @@ class CreateCertificatesTestCase(TestCase):
         )
         course = factories.CourseFactory(products=[product])
         orders = factories.OrderFactory.create_batch(2, product=product, course=course)
-        certificate_qs = models.Certificate.objects.filter(order__in=orders)
+        issued_issued_certificate_qs = models.IssuedCertificate.objects.filter(
+            order__in=orders
+        )
 
-        self.assertEqual(certificate_qs.count(), 0)
+        self.assertEqual(issued_issued_certificate_qs.count(), 0)
 
-        # A certificate should be generated for the 1st order
-        call_command("generate_certificates", order=orders[0].uid)
-        self.assertEqual(certificate_qs.filter(order=orders[0]).count(), 1)
+        # A certificate should be issued for the 1st order
+        call_command("issue_certificates", order=orders[0].uid)
+        self.assertEqual(
+            issued_issued_certificate_qs.filter(order=orders[0]).count(), 1
+        )
 
-        # Then a certificate should be generated for the 2nd order
-        call_command("generate_certificates", order=orders[1].uid)
-        self.assertEqual(certificate_qs.filter(order=orders[1]).count(), 1)
+        # Then a certificate should be issued for the 2nd order
+        call_command("issue_certificates", order=orders[1].uid)
+        self.assertEqual(
+            issued_issued_certificate_qs.filter(order=orders[1]).count(), 1
+        )
 
-    def test_commands_generate_certificates_can_be_restricted_to_course(self):
+    def test_commands_issue_certificates_can_be_restricted_to_course(self):
         """
         If `course` option is used, the review is restricted to it.
         """
@@ -117,19 +125,21 @@ class CreateCertificatesTestCase(TestCase):
             factories.OrderFactory(product=product, course=course_1),
             factories.OrderFactory(product=product, course=course_2),
         ]
-        certificate_qs = models.Certificate.objects.filter(order__in=orders)
+        issued_certificate_qs = models.IssuedCertificate.objects.filter(
+            order__in=orders
+        )
 
-        self.assertEqual(certificate_qs.count(), 0)
+        self.assertEqual(issued_certificate_qs.count(), 0)
 
         # A certificate should be generated for the 1st course
-        call_command("generate_certificates", course=course_1.code)
-        self.assertEqual(certificate_qs.filter(order=orders[0]).count(), 1)
+        call_command("issue_certificates", course=course_1.code)
+        self.assertEqual(issued_certificate_qs.filter(order=orders[0]).count(), 1)
 
         # Then a certificate should be generated for the 2nd course
-        call_command("generate_certificates", course=course_2.code)
-        self.assertEqual(certificate_qs.filter(order=orders[1]).count(), 1)
+        call_command("issue_certificates", course=course_2.code)
+        self.assertEqual(issued_certificate_qs.filter(order=orders[1]).count(), 1)
 
-    def test_commands_generate_certificates_can_be_restricted_to_product(self):
+    def test_commands_issue_certificates_can_be_restricted_to_product(self):
         """
         If `product` option is used, the review is restricted to it.
         """
@@ -156,21 +166,23 @@ class CreateCertificatesTestCase(TestCase):
             factories.OrderFactory(course=course, product=product_1),
             factories.OrderFactory(course=course, product=product_2),
         ]
-        certificate_qs = models.Certificate.objects.filter(order__in=orders)
+        issued_certificate_qs = models.IssuedCertificate.objects.filter(
+            order__in=orders
+        )
 
-        self.assertEqual(certificate_qs.count(), 0)
+        self.assertEqual(issued_certificate_qs.count(), 0)
 
         # A certificate should be generated for the 1st product
         with self.assertNumQueries(10):
-            call_command("generate_certificates", product=product_1.uid)
-        self.assertEqual(certificate_qs.filter(order=orders[0]).count(), 1)
+            call_command("issue_certificates", product=product_1.uid)
+        self.assertEqual(issued_certificate_qs.filter(order=orders[0]).count(), 1)
 
         # Then a certificate should be generated for the 2nd product
         with self.assertNumQueries(9):
-            call_command("generate_certificates", product=product_2.uid)
-        self.assertEqual(certificate_qs.filter(order=orders[1]).count(), 1)
+            call_command("issue_certificates", product=product_2.uid)
+        self.assertEqual(issued_certificate_qs.filter(order=orders[1]).count(), 1)
 
-    def test_commands_generate_certificates_can_be_restricted_to_product_course(self):
+    def test_commands_issue_certificates_can_be_restricted_to_product_course(self):
         """
         `product` and `course` options can be used together to restrict review to them.
         """
@@ -203,35 +215,29 @@ class CreateCertificatesTestCase(TestCase):
             factories.OrderFactory(course=course_2, product=product_1),
             factories.OrderFactory(course=course_2, product=product_2),
         ]
-        certificate_qs = models.Certificate.objects.filter(order__in=orders)
+        issued_certificate_qs = models.IssuedCertificate.objects.filter(
+            order__in=orders
+        )
 
-        self.assertEqual(certificate_qs.count(), 0)
+        self.assertEqual(issued_certificate_qs.count(), 0)
 
         # A certificate should be generated for the couple course_1 - product_1
-        call_command(
-            "generate_certificates", course=course_1.code, product=product_1.uid
-        )
-        self.assertEqual(certificate_qs.filter(order=orders[0]).count(), 1)
+        call_command("issue_certificates", course=course_1.code, product=product_1.uid)
+        self.assertEqual(issued_certificate_qs.filter(order=orders[0]).count(), 1)
 
         # Then a certificate should be generated for the couple course_1 - product_2
-        call_command(
-            "generate_certificates", course=course_1.code, product=product_2.uid
-        )
-        self.assertEqual(certificate_qs.filter(order=orders[1]).count(), 1)
+        call_command("issue_certificates", course=course_1.code, product=product_2.uid)
+        self.assertEqual(issued_certificate_qs.filter(order=orders[1]).count(), 1)
 
         # Then a certificate should be generated for the couple course_2 - product_1
-        call_command(
-            "generate_certificates", course=course_2.code, product=product_1.uid
-        )
-        self.assertEqual(certificate_qs.filter(order=orders[2]).count(), 1)
+        call_command("issue_certificates", course=course_2.code, product=product_1.uid)
+        self.assertEqual(issued_certificate_qs.filter(order=orders[2]).count(), 1)
 
         # Finally, a certificate should be generated for the couple course_2 - product_2
-        call_command(
-            "generate_certificates", course=course_2.code, product=product_2.uid
-        )
-        self.assertEqual(certificate_qs.filter(order=orders[3]).count(), 1)
+        call_command("issue_certificates", course=course_2.code, product=product_2.uid)
+        self.assertEqual(issued_certificate_qs.filter(order=orders[3]).count(), 1)
 
-    def test_commands_generate_certificates_optimizes_db_queries(self):
+    def test_commands_issue_certificates_optimizes_db_queries(self):
         """
         The management command should optimize db access
         """
@@ -258,16 +264,18 @@ class CreateCertificatesTestCase(TestCase):
             factories.OrderFactory(course=course, product=product_1),
             factories.OrderFactory(course=course, product=product_2),
         ]
-        certificate_qs = models.Certificate.objects.filter(order__in=orders)
+        issued_certificate_qs = models.IssuedCertificate.objects.filter(
+            order__in=orders
+        )
 
-        self.assertEqual(certificate_qs.count(), 0)
+        self.assertEqual(issued_certificate_qs.count(), 0)
 
         # A certificate should be generated for the 1st product
         with self.assertNumQueries(10):
-            call_command("generate_certificates", product=product_1.uid)
-        self.assertEqual(certificate_qs.filter(order=orders[0]).count(), 1)
+            call_command("issue_certificates", product=product_1.uid)
+        self.assertEqual(issued_certificate_qs.filter(order=orders[0]).count(), 1)
 
         # Then a certificate should be generated for the 2nd product
         with self.assertNumQueries(9):
-            call_command("generate_certificates", product=product_2.uid)
-        self.assertEqual(certificate_qs.filter(order=orders[1]).count(), 1)
+            call_command("issue_certificates", product=product_2.uid)
+        self.assertEqual(issued_certificate_qs.filter(order=orders[1]).count(), 1)

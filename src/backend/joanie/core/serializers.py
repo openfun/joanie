@@ -10,15 +10,15 @@ from rest_framework import serializers
 from joanie.core import models
 
 
-class CertificationDefinitionSerializer(serializers.ModelSerializer):
+class CertificateSerializer(serializers.ModelSerializer):
     """
-    Serialize information about a certificate definition
+    Serialize information about a Certificate
     """
 
     description = serializers.CharField(read_only=True)
 
     class Meta:
-        model = models.CertificateDefinition
+        model = models.Certificate
         fields = ["description", "name", "title"]
         read_only_fields = ["description", "name", "title"]
 
@@ -114,9 +114,7 @@ class ProductSerializer(serializers.ModelSerializer):
     """
 
     id = serializers.CharField(read_only=True, source="uid")
-    certificate = CertificationDefinitionSerializer(
-        read_only=True, source="certificate_definition"
-    )
+    certificate = CertificateSerializer(read_only=True)
     price = MoneyField(
         coerce_to_string=False,
         decimal_places=2,
@@ -229,13 +227,13 @@ class OrderLiteSerializer(serializers.ModelSerializer):
     main_proforma_invoice = serializers.SlugRelatedField(
         read_only=True, slug_field="reference"
     )
-    certificate = serializers.SlugRelatedField(read_only=True, slug_field="uid")
+    issued_certificate = serializers.SlugRelatedField(read_only=True, slug_field="uid")
 
     class Meta:
         model = models.Order
         fields = [
             "id",
-            "certificate",
+            "issued_certificate",
             "created_on",
             "main_proforma_invoice",
             "total",
@@ -246,7 +244,7 @@ class OrderLiteSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "id",
-            "certificate",
+            "issued_certificate",
             "created_on",
             "main_proforma_invoice",
             "total",
@@ -411,14 +409,14 @@ class OrderSerializer(serializers.ModelSerializer):
     main_proforma_invoice = serializers.SlugRelatedField(
         read_only=True, slug_field="reference"
     )
-    certificate = serializers.SlugRelatedField(read_only=True, slug_field="uid")
+    issued_certificate = serializers.SlugRelatedField(read_only=True, slug_field="uid")
 
     class Meta:
         model = models.Order
         fields = [
             "course",
             "created_on",
-            "certificate",
+            "issued_certificate",
             "enrollments",
             "id",
             "main_proforma_invoice",
@@ -430,7 +428,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "target_courses",
         ]
         read_only_fields = [
-            "certificate",
+            "issued_certificate",
             "created_on",
             "enrollments",
             "id",
@@ -493,14 +491,14 @@ class AddressSerializer(serializers.ModelSerializer):
         ]
 
 
-class CertificateSerializer(serializers.ModelSerializer):
+class IssuedCertificateSerializer(serializers.ModelSerializer):
     """
-    Certificate model serializer
+    IssuedCertificate model serializer
     """
 
     id = serializers.CharField(source="uid", read_only=True, required=False)
 
     class Meta:
-        model = models.Certificate
+        model = models.IssuedCertificate
         fields = ["id"]
         read_only_fields = ["id"]

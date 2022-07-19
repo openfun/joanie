@@ -280,8 +280,8 @@ class CourseApiTest(BaseAPITestCase):
             user=user, course_run=target_course_run22, is_active=True
         )
 
-        # - Create a certificate
-        certificate = factories.CertificateFactory(order=order2)
+        # - Create an issued certificate
+        issued_certificate = factories.IssuedCertificateFactory(order=order2)
 
         # - Create a set of random users which possibly purchase one of the products
         # then enroll to one of its course run.
@@ -328,7 +328,7 @@ class CourseApiTest(BaseAPITestCase):
             "orders": [
                 {
                     "id": str(order.uid),
-                    "certificate": str(certificate.uid)
+                    "issued_certificate": str(issued_certificate.uid)
                     if order.uid == order2.uid
                     else None,
                     "created_on": order.created_on.isoformat().replace("+00:00", "Z"),

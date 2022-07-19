@@ -48,20 +48,20 @@ class ProductModelsTestCase(TestCase):
         ordered_courses = list(product.target_courses.order_by("product_relations"))
         self.assertEqual(ordered_courses, expected_courses)
 
-    def test_model_order_create_certificate(self):
+    def test_model_order_issue_certificate(self):
         """Generate a certificate for a product order"""
 
         course = factories.CourseFactory()
         product = factories.ProductFactory(
             courses=[course],
             type=PRODUCT_TYPE_CERTIFICATE,
-            certificate_definition=factories.CertificateDefinitionFactory(),
+            certificate=factories.CertificateFactory(),
         )
         order = factories.OrderFactory(product=product)
 
-        order.create_certificate()
-        self.assertEqual(models.Certificate.objects.count(), 1)
-        certificate = models.Certificate.objects.first()
+        order.issue_certificate()
+        self.assertEqual(models.IssuedCertificate.objects.count(), 1)
+        certificate = models.IssuedCertificate.objects.first()
         document_context = certificate.get_document_context()
         blue_square_base64 = (
             "data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgY"

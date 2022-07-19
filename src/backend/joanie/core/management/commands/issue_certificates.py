@@ -5,16 +5,16 @@ from django.core.management import BaseCommand
 from django.utils.translation import ngettext_lazy
 
 from joanie.core import models
-from joanie.core.helpers import generate_certificates_for_orders
+from joanie.core.helpers import issue_certificates_for_orders
 
-logger = logging.getLogger("joanie.core.generate_certificates")
+logger = logging.getLogger("joanie.core.issue_certificates")
 
 
 class Command(BaseCommand):
     """
-    A command to generate all pending certificates.
+    A command to issue all pending certificates.
     It browses all certifying products, checks if related orders are eligible for
-    certification and generates a certificate if they are.
+    certification and issues a certificate if they are.
 
     Through options, you are able to restrict this command
     to a list of courses (-c), products (-p) or orders (-o).
@@ -92,14 +92,14 @@ class Command(BaseCommand):
             if product_uids:
                 filters.update({"product__uid__in": product_uids})
 
-        certificate_generated_count = generate_certificates_for_orders(
+        issued_certificates_count = issue_certificates_for_orders(
             models.Order.objects.filter(**filters)
         )
         logger.info(
             ngettext_lazy(
-                "%d certificate has been generated.",
-                "%d certificates have been generated.",
-                certificate_generated_count,
+                "%d certificate has been issued.",
+                "%d certificates have been issued.",
+                issued_certificates_count,
             ),
-            certificate_generated_count,
+            issued_certificates_count,
         )

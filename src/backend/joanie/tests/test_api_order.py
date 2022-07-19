@@ -70,7 +70,7 @@ class OrderApiTest(BaseAPITestCase):
                 "results": [
                     {
                         "course": order.course.code,
-                        "certificate": None,
+                        "issued_certificate": None,
                         "created_on": order.created_on.strftime(
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
@@ -107,7 +107,7 @@ class OrderApiTest(BaseAPITestCase):
                 "results": [
                     {
                         "id": str(other_order.uid),
-                        "certificate": None,
+                        "issued_certificate": None,
                         "course": other_order.course.code,
                         "created_on": other_order.created_on.strftime(
                             "%Y-%m-%dT%H:%M:%S.%fZ"
@@ -158,7 +158,7 @@ class OrderApiTest(BaseAPITestCase):
             content,
             {
                 "id": str(order.uid),
-                "certificate": None,
+                "issued_certificate": None,
                 "course": order.course.code,
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "state": order.state,
@@ -241,7 +241,7 @@ class OrderApiTest(BaseAPITestCase):
             content,
             {
                 "id": str(order.uid),
-                "certificate": None,
+                "issued_certificate": None,
                 "course": course.code,
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "state": "validated",
@@ -303,7 +303,7 @@ class OrderApiTest(BaseAPITestCase):
             content,
             {
                 "id": str(order.uid),
-                "certificate": None,
+                "issued_certificate": None,
                 "course": course.code,
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "state": "validated",
@@ -480,7 +480,7 @@ class OrderApiTest(BaseAPITestCase):
             content,
             {
                 "id": str(order.uid),
-                "certificate": None,
+                "issued_certificate": None,
                 "course": course.code,
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "state": "pending",
@@ -546,7 +546,7 @@ class OrderApiTest(BaseAPITestCase):
             content,
             {
                 "id": str(order.uid),
-                "certificate": None,
+                "issued_certificate": None,
                 "course": course.code,
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "state": "validated",
@@ -683,7 +683,7 @@ class OrderApiTest(BaseAPITestCase):
             [
                 "course",
                 "created_on",
-                "certificate",
+                "issued_certificate",
                 "enrollments",
                 "id",
                 "main_proforma_invoice",

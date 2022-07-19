@@ -31,14 +31,14 @@ class UserFactory(factory.django.DjangoModelFactory):
     last_name = factory.Faker("last_name")
 
 
-class CertificateDefinitionFactory(factory.django.DjangoModelFactory):
-    """A factory to create a certificate definition"""
+class CertificateFactory(factory.django.DjangoModelFactory):
+    """A factory to create a certificate"""
 
     class Meta:
-        model = models.CertificateDefinition
+        model = models.Certificate
 
-    title = factory.Sequence(lambda n: f"Certificate definition {n}")
-    name = factory.Sequence(lambda n: f"certificate-definition-{n}")
+    title = factory.Sequence(lambda n: f"Certificate {n}")
+    name = factory.Sequence(lambda n: f"certificate-{n}")
     template = settings.MARION_CERTIFICATE_DOCUMENT_ISSUER
 
 
@@ -306,10 +306,10 @@ class AddressFactory(factory.django.DjangoModelFactory):
     owner = factory.SubFactory(UserFactory)
 
 
-class CertificateFactory(factory.django.DjangoModelFactory):
-    """A factory to create a certificate"""
+class IssuedCertificateFactory(factory.django.DjangoModelFactory):
+    """A factory to create an issued certificate"""
 
     class Meta:
-        model = models.Certificate
+        model = models.IssuedCertificate
 
     order = factory.SubFactory(OrderFactory)

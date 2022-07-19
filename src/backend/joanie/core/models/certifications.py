@@ -15,9 +15,9 @@ from parler.utils import get_language_settings
 from joanie.core.utils import image_to_base64, merge_dict
 
 
-class CertificateDefinition(parler_models.TranslatableModel):
+class Certificate(parler_models.TranslatableModel):
     """
-    Certificate definition describes templates used to generate user certificates
+    Certificate model describes templates used to issue user certificates
     """
 
     name = models.CharField(_("name"), max_length=255, unique=True)
@@ -25,7 +25,7 @@ class CertificateDefinition(parler_models.TranslatableModel):
         title=models.CharField(_("title"), max_length=255),
         description=models.TextField(_("description"), max_length=500, blank=True),
     )
-    # howard template used to generate pdf certificate
+    # howard template used to issue a pdf certificate
     template = models.CharField(
         _("template to generate pdf"),
         max_length=255,
@@ -34,17 +34,18 @@ class CertificateDefinition(parler_models.TranslatableModel):
     )
 
     class Meta:
-        db_table = "joanie_certificate_definition"
-        verbose_name = _("Certificate definition")
-        verbose_name_plural = _("Certificate definitions")
+        db_table = "joanie_certificate"
+        verbose_name = _("Certificate")
+        verbose_name_plural = _("Certificates")
 
     def __str__(self):
         return self.safe_translation_getter("title", any_language=True)
 
 
-class Certificate(models.Model):
+class IssuedCertificate(models.Model):
     """
-    Certificate represents and records all user certificates issued as part of an order
+    IssuedCertificate model represents and records all user certificates issued
+    as part of an order.
     """
 
     uid = models.UUIDField(
@@ -54,20 +55,23 @@ class Certificate(models.Model):
         # disable=all is necessary to avoid an AstroidImportError because of our models structure
         # Astroid is looking for a module models.py that does not exist
         "core.Order",  # pylint: disable=all
+        related_name=_("issued_certificate"),
         verbose_name=_("order"),
         on_delete=models.PROTECT,
     )
     issued_on = models.DateTimeField(_("issued on date"), auto_now=True, editable=False)
     localized_context = models.JSONField(
         _("context"),
-        help_text=_("Localized data that needs to be frozen on certificate creation"),
+        help_text=_(
+            "Localized data that needs to be frozen when a certificate is issued"
+        ),
         editable=False,
     )
 
     class Meta:
-        db_table = "joanie_certificate"
-        verbose_name = _("Certificate")
-        verbose_name_plural = _("Certificates")
+        db_table = "joanie_issued_certificate"
+        verbose_name = _("Issued certificate")
+        verbose_name_plural = _("Issued certificates")
 
     def __str__(self):
         return f"{self.order.owner}'s certificate for course {self.order.course}"
@@ -75,17 +79,17 @@ class Certificate(models.Model):
     @property
     def document(self):
         """
-        Get the document related to the certificate instance.
+        Get the document related to the issued certificate instance.
         """
-        certificate_definition = self.order.product.certificate_definition
-        document_issuer = import_string(certificate_definition.template)
+        certificate = self.order.product.certificate
+        document_issuer = import_string(certificate.template)
         context = self.get_document_context()
         document = document_issuer(identifier=self.uid, context_query=context)
         return document.create(persist=False)
 
     def _set_localized_context(self):
         """
-        Update or create the certificate context for all languages.
+        Update or create the issued certificate context for all languages.
 
         Saving is left to the caller.
         """
@@ -111,7 +115,7 @@ class Certificate(models.Model):
 
     def get_document_context(self, language_code=None):
         """
-        Build the certificate document context for the given language.
+        Build the issued certificate document context for the given language.
         If no language_code is provided, we use the active language.
         """
 

@@ -26,9 +26,11 @@ from joanie.payment.urls import urlpatterns as payment_urlpatterns
 
 router = DefaultRouter()
 router.register("addresses", api.AddressViewSet, basename="addresses")
-router.register("certificates", api.CertificateViewSet, basename="certificates")
 router.register("courses", api.CourseViewSet, basename="courses")
 router.register("enrollments", api.EnrollmentViewSet, basename="enrollments")
+router.register(
+    "issued-certificates", api.IssuedCertificateViewSet, basename="issued-certificates"
+)
 router.register("orders", api.OrderViewSet, basename="orders")
 
 urlpatterns = [

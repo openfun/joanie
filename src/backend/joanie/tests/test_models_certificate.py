@@ -1,4 +1,4 @@
-"""Test suite for Certificate Model"""
+"""Test suite for IssuedCertificate Model"""
 from io import BytesIO
 
 from django.conf import settings
@@ -9,29 +9,31 @@ from pdfminer.high_level import extract_text as pdf_extract_text
 
 from joanie.core.enums import PRODUCT_TYPE_CERTIFICATE
 from joanie.core.factories import (
-    CertificateDefinitionFactory,
     CertificateFactory,
     CourseFactory,
+    IssuedCertificateFactory,
     OrderFactory,
     OrganizationFactory,
     ProductFactory,
 )
 
 
-class CertificateModelTestCase(TestCase):
-    """Certificate model test case."""
+class IssuedCertificateModelTestCase(TestCase):
+    """IssuedCertificate model test case."""
 
-    def test_models_certificate_localized_context(self):
+    def test_models_issued_certificate_localized_context(self):
         """
-        When a certificate is created, localized contexts in each enabled languages
-        should be created.
+        When an issued certificate is created, localized contexts in each enabled
+        languages should be created.
         """
-        certificate = CertificateFactory()
+        issued_certificate = IssuedCertificateFactory()
         languages = settings.LANGUAGES
 
-        self.assertEqual(len(list(certificate.localized_context)), len(languages))
+        self.assertEqual(
+            len(list(issued_certificate.localized_context)), len(languages)
+        )
 
-    def test_models_certificate_get_document_context(self):
+    def test_models_issued_certificate_get_document_context(self):
         """
         We should get the document context in the provided language. If the translation
         does not exist, we should gracefully fallback to the default language defined
@@ -46,37 +48,37 @@ class CertificateModelTestCase(TestCase):
         product.translations.create(language_code="fr-fr", title="Produit certifiant")
 
         order = OrderFactory(product=product)
-        certificate = CertificateFactory(order=order)
+        issued_certificate = IssuedCertificateFactory(order=order)
 
-        context = certificate.get_document_context("en-us")
+        context = issued_certificate.get_document_context("en-us")
         self.assertEqual(context["course"]["name"], "Graded product")
         self.assertEqual(context["course"]["organization"]["name"], "Organization 1")
 
-        context = certificate.get_document_context("fr-fr")
+        context = issued_certificate.get_document_context("fr-fr")
         self.assertEqual(context["course"]["name"], "Produit certifiant")
         self.assertEqual(context["course"]["organization"]["name"], "Établissement 1")
 
         # When translation for the given language does not exist,
         # we should get the fallback language translation.
-        context = certificate.get_document_context("de-de")
+        context = issued_certificate.get_document_context("de-de")
         self.assertEqual(context["course"]["name"], "Graded product")
         self.assertEqual(context["course"]["organization"]["name"], "Organization 1")
 
-    def test_models_certificate_document(self):
+    def test_models_issued_certificate_document(self):
         """
-        Certificate document property should generate a document
+        IssuedCertificate document property should generate a document
         in the active language.
         """
         organization = OrganizationFactory(
             title="University X", representative="Joanie Cunningham"
         )
         course = CourseFactory(organization=organization)
-        certificate_definition = CertificateDefinitionFactory()
+        certificate = CertificateFactory()
         product = ProductFactory(
             title="Graded product",
             courses=[course],
             type=PRODUCT_TYPE_CERTIFICATE,
-            certificate_definition=certificate_definition,
+            certificate=certificate,
         )
 
         # - Add French translations
@@ -84,9 +86,9 @@ class CertificateModelTestCase(TestCase):
         product.translations.create(language_code="fr-fr", title="Produit certifiant")
 
         order = OrderFactory(product=product)
-        certificate = CertificateFactory(order=order)
+        issued_certificate = IssuedCertificateFactory(order=order)
 
-        document_text = pdf_extract_text(BytesIO(certificate.document)).replace(
+        document_text = pdf_extract_text(BytesIO(issued_certificate.document)).replace(
             "\n", ""
         )
         self.assertRegex(
@@ -94,14 +96,14 @@ class CertificateModelTestCase(TestCase):
         )
 
         with switch_language(product, "fr-fr"):
-            document_text = pdf_extract_text(BytesIO(certificate.document)).replace(
-                "\n", ""
-            )
+            document_text = pdf_extract_text(
+                BytesIO(issued_certificate.document)
+            ).replace("\n", "")
             self.assertRegex(document_text, r"Joanie Cunningham.*Université X")
 
         with switch_language(product, "de-de"):
             # - Finally, unknown language should use the default language as fallback
-            document_text = pdf_extract_text(BytesIO(certificate.document)).replace(
-                "\n", ""
-            )
+            document_text = pdf_extract_text(
+                BytesIO(issued_certificate.document)
+            ).replace("\n", "")
             self.assertRegex(document_text, r"Joanie Cunningham.*University X")

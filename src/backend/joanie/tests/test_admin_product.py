@@ -44,7 +44,7 @@ class ProductAdminTestCase(BaseAPITestCase):
         user = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=user.username, password="password")
 
-        # Now we create a product with type 'enrollment' so without certificate definition
+        # Now we create a product with type 'enrollment' so without certificate
         data = {
             "type": "enrollment",
             "title": "My product",
@@ -65,23 +65,23 @@ class ProductAdminTestCase(BaseAPITestCase):
 
     def test_admin_product_create_with_certificate_and_bad_type_product(self):
         """
-        It should not be allowed to specify a certificate definition for products of
+        It should not be allowed to specify a certificate for products of
         type enrollment.
         """
-        certificate_definition = factories.CertificateDefinitionFactory()
+        certificate = factories.CertificateFactory()
 
         # Log in a user with all permission to manage products in django admin
         user = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=user.username, password="password")
 
-        # now try to create a product with certificate definition for a product with bad type
+        # now try to create a product with certificate for a product with bad type
         response = self.client.post(
             reverse("admin:core_product_add"),
             data={
                 "type": "enrollment",
                 "title": "Product for course",
                 "call_to_action": "Let's go",
-                "certificate_definition": certificate_definition.pk,
+                "certificate": certificate.pk,
             },
         )
         self.assertEqual(models.Product.objects.count(), 0)
@@ -89,27 +89,27 @@ class ProductAdminTestCase(BaseAPITestCase):
         self.assertContains(response, "errorlist")
         self.assertContains(
             response,
-            "Certificate definition is only allowed for product kinds: certificate, credential",
+            "Certificate is only allowed for product kinds: certificate, credential",
         )
 
     def test_admin_product_create_success_certificate(self):
         """
-        It should be allowed to specify a certificate definition for products of
+        It should be allowed to specify a certificate for products of
         type "certificate" or "credential".
         """
-        certificate_definition = factories.CertificateDefinitionFactory()
+        certificate = factories.CertificateFactory()
 
         # Login a user with all permission to manage products in django admin
         user = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=user.username, password="password")
 
-        # Now we create a product with type 'credential' so with certificate definition
+        # Now we create a product with type 'credential' so with certificate
         product_type = random.choice(["certificate", "credential"])
         data = {
             "type": product_type,
             "title": "Product for course",
             "call_to_action": "Let's go",
-            "certificate_definition": certificate_definition.pk,
+            "certificate": certificate.pk,
             "course_relations-TOTAL_FORMS": 0,
             "course_relations-INITIAL_FORMS": 0,
         }
@@ -122,7 +122,7 @@ class ProductAdminTestCase(BaseAPITestCase):
         self.assertEqual(models.Product.objects.count(), 1)
 
         product = models.Product.objects.get()
-        self.assertEqual(product.certificate_definition, certificate_definition)
+        self.assertEqual(product.certificate, certificate)
         self.assertEqual(product.type, product_type)
         self.assertEqual(product.title, "Product for course")
         self.assertEqual(product.call_to_action, "Let's go")
@@ -133,7 +133,7 @@ class ProductAdminTestCase(BaseAPITestCase):
         user = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=user.username, password="password")
 
-        # Now we create a product with type 'credential' so with certificate definition
+        # Now we create a product with type 'credential' so with certificate
         data = {
             "uid": "my-uid",
             "type": "credential",
@@ -337,18 +337,18 @@ class ProductAdminTestCase(BaseAPITestCase):
         self.assertEqual(
             links[1].attrib["href"],
             reverse(
-                "admin:generate_certificates",
+                "admin:issue_certificates",
                 kwargs={"product_id": product.id, "course_code": course.code},
             ),
         )
 
-    @mock.patch("joanie.core.helpers.generate_certificates_for_orders", return_value=0)
+    @mock.patch("joanie.core.helpers.issue_certificates_for_orders", return_value=0)
     def test_admin_product_generate_certificate_for_course(
-        self, mock_generate_certificates
+        self, mock_issue_certificates
     ):
         """
         Product Admin should contain an endpoint which triggers the
-        `create_certificates` management command with product and course as options.
+        `issue_certificates` management command with product and course as options.
         """
         user = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=user.username, password="password")
@@ -358,13 +358,13 @@ class ProductAdminTestCase(BaseAPITestCase):
 
         response = self.client.get(
             reverse(
-                "admin:generate_certificates",
+                "admin:issue_certificates",
                 kwargs={"course_code": course.code, "product_id": product.id},
             ),
         )
 
         # - Generate certificates command should have been called
-        mock_generate_certificates.assert_called_once()
+        mock_issue_certificates.assert_called_once()
 
         # Check the presence of a confirmation message
         messages = list(get_messages(response.wsgi_request))
