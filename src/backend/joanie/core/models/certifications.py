@@ -55,7 +55,7 @@ class IssuedCertificate(models.Model):
         # disable=all is necessary to avoid an AstroidImportError because of our models structure
         # Astroid is looking for a module models.py that does not exist
         "core.Order",  # pylint: disable=all
-        related_name=_("issued_certificate"),
+        related_name="issued_certificate",
         verbose_name=_("order"),
         on_delete=models.PROTECT,
     )
