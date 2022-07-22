@@ -50,6 +50,19 @@ class Certificate(models.Model):
     uid = models.UUIDField(
         default=uuid.uuid4, unique=True, editable=False, db_index=True
     )
+
+    issued_on = models.DateTimeField(
+        _("Date of issuance"), auto_now=True, editable=False
+    )
+
+    certificate_definition = models.ForeignKey(
+        CertificateDefinition,
+        verbose_name=_("Certificate definition"),
+        related_name="certificates",
+        on_delete=models.RESTRICT,
+        editable=False,
+    )
+
     order = models.OneToOneField(
         # disable=all is necessary to avoid an AstroidImportError because of our models structure
         # Astroid is looking for a module models.py that does not exist
@@ -57,7 +70,7 @@ class Certificate(models.Model):
         verbose_name=_("order"),
         on_delete=models.PROTECT,
     )
-    issued_on = models.DateTimeField(_("issued on date"), auto_now=True, editable=False)
+
     localized_context = models.JSONField(
         _("context"),
         help_text=_("Localized data that needs to be frozen on certificate creation"),
@@ -77,8 +90,7 @@ class Certificate(models.Model):
         """
         Get the document related to the certificate instance.
         """
-        certificate_definition = self.order.product.certificate_definition
-        document_issuer = import_string(certificate_definition.template)
+        document_issuer = import_string(self.certificate_definition.template)
         context = self.get_document_context()
         document = document_issuer(identifier=self.uid, context_query=context)
         return document.create(persist=False)

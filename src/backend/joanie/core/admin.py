@@ -53,18 +53,12 @@ class CertificateDefinitionAdmin(TranslatableAdmin):
 class CertificateAdmin(admin.ModelAdmin):
     """Admin class for the Certificate model"""
 
-    list_display = ("order", "issued_on")
-    readonly_fields = ("order", "issued_on", "certificate_definition")
+    list_display = ("order", "owner", "issued_on")
+    readonly_fields = ("order", "issued_on", "owner", "certificate_definition")
 
-    def certificate_definition(self, obj):  # pylint: disable=no-self-use
-        """Retrieve the certification definition from the related order."""
-        certificate_definition = obj.order.product.certificate_definition
-
-        url = reverse(
-            "admin:core_certificatedefinition_change",
-            args=(certificate_definition.id,),
-        )
-        return format_html(f"<a href='{url:s}'>{certificate_definition!s}</a>")
+    def owner(self, obj):  # pylint: disable=no-self-use
+        """Retrieve the owner of the certificate from the related order."""
+        return obj.order.owner
 
 
 @admin.register(models.Course)

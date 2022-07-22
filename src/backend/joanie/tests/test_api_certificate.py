@@ -38,7 +38,9 @@ class CertificateApiTest(BaseAPITestCase):
         """
         CertificateFactory.create_batch(5)
         user = UserFactory()
-        order = OrderFactory(owner=user)
+        order = OrderFactory(
+            owner=user, product=ProductFactory(type=PRODUCT_TYPE_CERTIFICATE)
+        )
         certificate = CertificateFactory(order=order)
 
         token = self.get_user_token(user.username)
@@ -74,7 +76,9 @@ class CertificateApiTest(BaseAPITestCase):
         """
         not_owned_certificate = CertificateFactory()
         user = UserFactory()
-        order = OrderFactory(owner=user)
+        order = OrderFactory(
+            owner=user, product=ProductFactory(type=PRODUCT_TYPE_CERTIFICATE)
+        )
         certificate = CertificateFactory(order=order)
 
         token = self.get_user_token(user.username)

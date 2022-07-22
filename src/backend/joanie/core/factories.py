@@ -245,6 +245,17 @@ class ProductFactory(factory.django.DjangoModelFactory):
         for position, course in enumerate(extracted):
             ProductCourseRelationFactory(product=self, course=course, position=position)
 
+    @factory.lazy_attribute
+    def certificate_definition(self):
+        """
+        Return a CertificateDefinition object with a random name and a random
+        description if the product type allows to have a certificate.
+        """
+        if self.type not in enums.PRODUCT_TYPE_CERTIFICATE_ALLOWED:
+            return None
+
+        return CertificateDefinitionFactory()
+
 
 class ProductCourseRelationFactory(factory.django.DjangoModelFactory):
     """A factory to create ProductCourseRelation object"""
@@ -312,4 +323,14 @@ class CertificateFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.Certificate
 
-    order = factory.SubFactory(OrderFactory)
+    order = factory.SubFactory(
+        OrderFactory,
+        product__type=enums.PRODUCT_TYPE_CERTIFICATE,
+    )
+
+    @factory.lazy_attribute
+    def certificate_definition(self):
+        """
+        Return the order product certificate definition.
+        """
+        return self.order.product.certificate_definition

@@ -336,6 +336,7 @@ class CertificateViewSet(
         Custom queryset to get user certificates
         """
         user = models.User.objects.get_or_create(username=self.request.user.username)[0]
+
         return models.Certificate.objects.filter(order__owner=user)
 
     @action(detail=True, methods=["GET"])

@@ -239,7 +239,8 @@ class CourseApiTest(BaseAPITestCase):
             target_courses=[target_course_run11.course, target_course_run12.course]
         )
         product2 = factories.ProductFactory(
-            target_courses=[target_course_run21.course, target_course_run22.course]
+            target_courses=[target_course_run21.course, target_course_run22.course],
+            type=enums.PRODUCT_TYPE_CREDENTIAL,
         )
         course = factories.CourseFactory(products=[product1, product2])
         user = factories.UserFactory()
@@ -311,7 +312,7 @@ class CourseApiTest(BaseAPITestCase):
                         user=user, course_run=course_run, is_active=True
                     )
 
-        with self.assertNumQueries(35):
+        with self.assertNumQueries(36):
             response = self.client.get(
                 f"/api/courses/{course.code}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -365,7 +366,13 @@ class CourseApiTest(BaseAPITestCase):
             "products": [
                 {
                     "call_to_action": product.call_to_action,
-                    "certificate": None,
+                    "certificate": {
+                        "description": product.certificate_definition.description,
+                        "name": product.certificate_definition.name,
+                        "title": product.certificate_definition.title,
+                    }
+                    if product.certificate_definition
+                    else None,
                     "id": str(product.uid),
                     "price": float(product.price.amount),
                     "price_currency": str(product.price.currency),
