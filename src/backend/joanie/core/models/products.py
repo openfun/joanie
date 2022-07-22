@@ -488,7 +488,10 @@ class Order(models.Model):
                 )
             )
 
-        Certificate.objects.create(order=self)
+        Certificate.objects.create(
+            order=self,
+            certificate_definition=self.product.certificate_definition,
+        )
 
 
 class OrderCourseRelation(models.Model):

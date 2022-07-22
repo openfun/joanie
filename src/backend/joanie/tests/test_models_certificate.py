@@ -39,7 +39,9 @@ class CertificateModelTestCase(TestCase):
         """
         organization = OrganizationFactory(title="Organization 1")
         course = CourseFactory(organization=organization)
-        product = ProductFactory(title="Graded product", courses=[course])
+        product = ProductFactory(
+            title="Graded product", courses=[course], type=PRODUCT_TYPE_CERTIFICATE
+        )
 
         # - Add French translations
         organization.translations.create(language_code="fr-fr", title="Établissement 1")

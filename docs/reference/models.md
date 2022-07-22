@@ -162,7 +162,6 @@ erDiagram
     %% Models
     Product
     CertificateDefinition
-    Organization
     User
     Order
     Certificate
@@ -170,7 +169,6 @@ erDiagram
     %% Relations
     Product }o--o| CertificateDefinition : ""
     Product || -- o{ Order : ""
-    CertificateDefinition }o--|| Organization : "is owned by"
     CertificateDefinition ||--o{ Certificate : "is defined by"
     
     User ||--o{ Order : "owns"
