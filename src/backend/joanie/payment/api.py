@@ -62,5 +62,5 @@ class CreditCardViewSet(
 
     def get_queryset(self):
         """Custom queryset to get user's credit cards"""
-        user = User.objects.get_or_create(username=self.request.user.username)[0]
+        user = User.update_or_create_from_request_user(request_user=self.request.user)
         return user.credit_cards.all()

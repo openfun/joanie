@@ -16,6 +16,7 @@ from joanie.core.enums import ORDER_STATE_PENDING
 from joanie.payment import get_payment_backend
 from joanie.payment.models import ProformaInvoice
 
+from ..core.models import User
 from ..payment.models import CreditCard
 from . import serializers
 
@@ -85,13 +86,12 @@ class EnrollmentViewSet(
 
     def get_queryset(self):
         """Custom queryset to limit to orders owned by the logged-in user."""
-        user = models.User.objects.get_or_create(username=self.request.user.username)[0]
+        user = User.update_or_create_from_request_user(request_user=self.request.user)
         return user.enrollments.all().select_related("course_run")
 
     def perform_create(self, serializer):
         """Force the enrollment's "owner" field to the logged-in user."""
-        username = self.request.user.username
-        user = models.User.objects.get_or_create(username=username)[0]
+        user = User.update_or_create_from_request_user(request_user=self.request.user)
         serializer.save(user=user)
 
 
@@ -122,7 +122,7 @@ class OrderViewSet(
 
     def get_queryset(self):
         """Custom queryset to limit to orders owned by the logged-in user."""
-        user = models.User.objects.get_or_create(username=self.request.user.username)[0]
+        user = User.update_or_create_from_request_user(request_user=self.request.user)
         return (
             user.orders.all()
             .select_related("owner", "product")
@@ -131,8 +131,7 @@ class OrderViewSet(
 
     def perform_create(self, serializer):
         """Force the order's "owner" field to the logged-in user."""
-        username = self.request.user.username
-        owner = models.User.objects.get_or_create(username=username)[0]
+        owner = User.update_or_create_from_request_user(request_user=self.request.user)
         serializer.save(owner=owner)
 
     @transaction.atomic
@@ -304,12 +303,12 @@ class AddressViewSet(
 
     def get_queryset(self):
         """Custom queryset to get user addresses"""
-        user = models.User.objects.get_or_create(username=self.request.user.username)[0]
+        user = User.update_or_create_from_request_user(request_user=self.request.user)
         return user.addresses.all()
 
     def perform_create(self, serializer):
         """Create a new address for user authenticated"""
-        user = models.User.objects.get_or_create(username=self.request.user.username)[0]
+        user = User.update_or_create_from_request_user(request_user=self.request.user)
         serializer.save(owner=user)
 
 
@@ -335,8 +334,7 @@ class CertificateViewSet(
         """
         Custom queryset to get user certificates
         """
-        user = models.User.objects.get_or_create(username=self.request.user.username)[0]
-
+        user = User.update_or_create_from_request_user(request_user=self.request.user)
         return models.Certificate.objects.filter(order__owner=user)
 
     @action(detail=True, methods=["GET"])

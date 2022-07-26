@@ -22,6 +22,16 @@ class User(auth_models.AbstractUser):
     def __str__(self):
         return self.username
 
+    @staticmethod
+    def update_or_create_from_request_user(request_user):
+        """Create user from token or update it"""
+        user = User.objects.update_or_create(
+            username=request_user.username,
+            defaults={"email": request_user.email},
+        )[0]
+
+        return user
+
 
 class Address(models.Model):
     """Address model stores address information (to generate bill after payment)"""
