@@ -231,6 +231,15 @@ class Base(Configuration):
         "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
     }
 
+    # Mail
+    EMAIL_BACKEND = values.Value("django.core.mail.backends.smtp.EmailBackend")
+    EMAIL_HOST = values.Value(None)
+    EMAIL_HOST_USER = values.Value(None)
+    EMAIL_HOST_PASSWORD = values.Value(None)
+    EMAIL_PORT = values.PositiveIntegerValue(None)
+    EMAIL_USE_TLS = values.BooleanValue(False)
+    EMAIL_FROM = values.Value("from@fun-mooc.fr")
+
     # Marion
     MARION_DOCUMENT_ISSUER_CHOICES_CLASS = "howard.defaults.DocumentIssuerChoices"
     MARION_CERTIFICATE_DOCUMENT_ISSUER = "howard.issuers.CertificateDocument"
@@ -343,6 +352,10 @@ class Development(Base):
     CORS_ALLOW_ALL_ORIGINS = True
     DEBUG = True
     NGROK_ENDPOINT = values.Value(None, "NGROK_ENDPOINT", environ_prefix=None)
+
+    # Mail
+    EMAIL_HOST = values.Value("mailcatcher")
+    EMAIL_PORT = values.PositiveIntegerValue(1025)
 
 
 class Test(Base):

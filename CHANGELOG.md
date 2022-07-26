@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Add email settings and configure `mailcatcher` in docker-compose stack
 - Add language in the user token
 - Set and update user's email sent from the token
 - Add `certification_definition` field to `Certificate` model

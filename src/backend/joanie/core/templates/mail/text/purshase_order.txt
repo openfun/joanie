@@ -1,0 +1,13 @@
+{% load i18n %}
+{%trans "Thank you very much for your purchase."%}
+
+{{course.title}}
+
+{%if username%} {%trans "Hello"%} {{username}}, {%else%} {%trans "Hello,"%} {%endif%}
+{%trans "Your order has been confirmed."%} {%trans "You have bought "%} `{{product.title}}` {%trans "for a price of"%} {{product.price}}.
+
+
+
+{%trans "We wish you plenty of success in your training!"%}
+
+{%trans "This mail has been sent to" %} {{email}} {%trans "by Joanie"%}

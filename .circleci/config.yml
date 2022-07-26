@@ -191,8 +191,7 @@ jobs:
               -wait tcp://localhost:5432 \
               -timeout 60s \
                 ~/.local/bin/pytest
-
-
+  
   # ---- Internationalization jobs ----
   build-i18n:
     docker:
