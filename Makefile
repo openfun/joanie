@@ -37,6 +37,7 @@ COMPOSE              = DOCKER_USER=$(DOCKER_USER) docker-compose
 COMPOSE_RUN          = $(COMPOSE) run --rm
 COMPOSE_RUN_APP      = $(COMPOSE_RUN) app-dev
 COMPOSE_RUN_CROWDIN  = $(COMPOSE_RUN) crowdin crowdin
+COMPOSE_RUN_MAIL  	 = $(COMPOSE_RUN) mail-generator yarn 
 COMPOSE_TEST_RUN     = $(COMPOSE_RUN)
 COMPOSE_TEST_RUN_APP = $(COMPOSE_TEST_RUN) app-dev
 MANAGE               = $(COMPOSE_RUN_APP) python manage.py
@@ -64,7 +65,9 @@ bootstrap: \
 	build \
 	run \
 	migrate \
-	i18n-compile
+	i18n-compile \
+	install-mails \
+	build-mails 
 .PHONY: bootstrap
 
 # -- Docker/compose
@@ -191,6 +194,26 @@ i18n-generate-and-upload: \
   i18n-generate \
   crowdin-upload
 .PHONY: i18n-generate-and-upload
+
+
+# -- Mail generator
+
+build-mails: ## Convert mjml files to html and text
+	@$(COMPOSE_RUN_MAIL) build-mails
+.PHONY: build-mails 
+
+build-mails-html-to-plain-text: ## Convert html files to text
+	@$(COMPOSE_RUN_MAIL) build-mails-html-to-plain-text
+.PHONY: build-mails-html-to-plain-text
+
+build-mjml-to-html:	## Convert mjml files to html and text
+	@$(COMPOSE_RUN_MAIL) build-mjml-to-html
+.PHONY: build-mjml-to-html 
+
+install-mails: ## mail-generator yarn install 
+	@$(COMPOSE_RUN_MAIL) install
+.PHONY: install-mails 	
+
 
 # -- Misc
 clean: ## restore repository state as it was freshly cloned

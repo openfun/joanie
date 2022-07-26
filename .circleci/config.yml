@@ -192,6 +192,38 @@ jobs:
               -timeout 60s \
                 ~/.local/bin/pytest
   
+  # ---- mail jobs ----
+  build-mails:
+    docker:
+      - image: cimg/node:16.15
+        auth:
+          username: $DOCKER_USER
+          password: $DOCKER_PASS
+    working_directory: ~/joanie/src/mail
+    steps:
+      - checkout:
+          path: ~/joanie
+      - restore_cache:
+          keys:
+            - v1-mail-dependencies-{{ .Revision }}
+      # If the yarn.lock file is not up-to-date with the package.json file,
+      # using the --frozen-lockfile should fail.
+      - run:
+          name: Install node dependencies
+          command: yarn install --frozen-lockfile
+      - run:
+          name: Build mails
+          command: yarn build-mails
+      - persist_to_workspace:
+          root: ~/joanie
+          paths:
+            - src/backend/joanie/core/templates/mail
+      - save_cache:
+          paths:
+            - ./node_modules
+          key: v1-mail-dependencies-{{ .Revision }}
+
+
   # ---- Internationalization jobs ----
   build-i18n:
     docker:
@@ -449,6 +481,11 @@ workflows:
               ignore: main
             tags:
               only: /.*/
+      # Build mails
+      - build-mails:
+          filters:
+            tags:
+              only: /.*/
 
       # Docker jobs
       #
@@ -475,6 +512,7 @@ workflows:
       - test-back:
           requires:
             - build-back
+            - build-mails
           filters:
             tags:
               only: /.*/
@@ -485,6 +523,7 @@ workflows:
       - build-i18n:
           requires:
             - build-back
+            - build-mails
           filters:
             tags:
               only: /.*/

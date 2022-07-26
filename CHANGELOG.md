@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Transform `mjml` files (email's template files) to html and plaintext
 - Add email settings and configure `mailcatcher` in docker-compose stack
 - Add language in the user token
 - Set and update user's email sent from the token
