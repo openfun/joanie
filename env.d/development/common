@@ -29,3 +29,7 @@ JOANIE_PAYMENT_BACKEND=joanie.payment.backends.dummy.DummyPaymentBackend
 # Badge providers
 # OBF_CLIENT_ID=
 # OBF_CLIENT_SECRET=
+
+# Mail
+EMAIL_HOST="mailcatcher"
+EMAIL_PORT=1025

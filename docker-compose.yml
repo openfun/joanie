@@ -29,6 +29,7 @@ services:
       - ./data/media:/data/media
     depends_on:
       - postgresql
+      - mailcatcher
     networks:
       default:
       lms_outside:
@@ -79,6 +80,17 @@ services:
       - env.d/development/crowdin
     user: "${DOCKER_USER:-1000}"
     working_dir: /app
+
+  mail-generator:
+    image: node:16.15
+    volumes:
+      - ".:/app"
+    working_dir: /app/src/mail
+
+  mailcatcher:
+    image: sj26/mailcatcher:latest
+    ports:
+      - "1081:1080"
 
   ngrok:
     image: wernight/ngrok

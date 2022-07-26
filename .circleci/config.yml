@@ -21,7 +21,8 @@ jobs:
       - image: cimg/python:3.10
     working_directory: ~/joanie
     steps:
-      - checkout
+      - checkout:
+          path: ~/joanie
       # Make sure the changes don't add a "print" statement to the code base.
       # We should exclude the ".circleci" folder from the search as the very command that checks
       # the absence of "print" is including a "print(" itself.
@@ -48,7 +49,8 @@ jobs:
       - image: cimg/base:2022.06
     working_directory: ~/joanie
     steps:
-      - checkout
+      - checkout:
+          path: ~/joanie
       - run:
           name: Check that the CHANGELOG has been modified in the current branch
           command: |
@@ -60,7 +62,8 @@ jobs:
       - image: debian:stretch
     working_directory: ~/joanie
     steps:
-      - checkout
+      - checkout:
+          path: ~/joanie
       - run:
           name: Check CHANGELOG max line length
           command: |
@@ -75,7 +78,8 @@ jobs:
     working_directory: ~/joanie
     steps:
       # Checkout repository sources
-      - checkout
+      - checkout:
+          path: ~/joanie
       # Generate a version.json file describing app release
       - <<: *generate-version-file
       # Activate docker-in-docker
@@ -96,7 +100,8 @@ jobs:
       - image: cimg/python:3.10
     working_directory: ~/joanie
     steps:
-      - checkout
+      - checkout:
+          path: ~/joanie
       - restore_cache:
           keys:
             - v1-back-dependencies-{{ .Revision }}
@@ -158,9 +163,12 @@ jobs:
           POSTGRES_DB: test_joanie
           POSTGRES_USER: fun
           POSTGRES_PASSWORD: pass
-    working_directory: ~/joanie
+    working_directory: ~/joanie/src/backend
     steps:
-      - checkout
+      - checkout:
+          path: ~/joanie
+      - attach_workspace:
+          at: ~/joanie
       - restore_cache:
           keys:
             - v1-back-dependencies-{{ .Revision }}
@@ -191,6 +199,37 @@ jobs:
               -wait tcp://localhost:5432 \
               -timeout 60s \
                 ~/.local/bin/pytest
+  
+  # ---- mail jobs ----
+  build-mails:
+    docker:
+      - image: cimg/node:16.15
+        auth:
+          username: $DOCKER_USER
+          password: $DOCKER_PASS
+    working_directory: ~/joanie/src/mail
+    steps:
+      - checkout:
+          path: ~/joanie
+      - restore_cache:
+          keys:
+            - v1-mail-dependencies-{{ .Revision }}
+      # If the yarn.lock file is not up-to-date with the package.json file,
+      # using the --frozen-lockfile should fail.
+      - run:
+          name: Install node dependencies
+          command: yarn install --frozen-lockfile
+      - run:
+          name: Build mails
+          command: yarn build-mails
+      - persist_to_workspace:
+          root: ~/joanie
+          paths:
+            - src/backend/joanie/core/templates/mail
+      - save_cache:
+          paths:
+            - ./node_modules
+          key: v1-mail-dependencies-{{ .Revision }}
 
 
   # ---- Internationalization jobs ----
@@ -204,6 +243,8 @@ jobs:
     steps:
       - checkout:
           path: ~/joanie
+      - attach_workspace:
+          at: ~/joanie
       - restore_cache:
           keys:
             - v1-back-dependencies-{{ .Revision }}
@@ -219,7 +260,7 @@ jobs:
       - persist_to_workspace:
           root: ~/joanie
           paths:
-            - src/backend/locale/django.pot
+            - src/backend/locale
 
   # Restore POT files containing strings to translate and upload them to our
   # translation management tool
@@ -231,7 +272,8 @@ jobs:
           password: $DOCKER_PASS
     working_directory: ~/joanie
     steps:
-      - checkout
+      - checkout:
+          path: ~/joanie
       - attach_workspace:
           at: ~/joanie
       - run:
@@ -245,9 +287,10 @@ jobs:
       image: ubuntu-2004:202201-02
       # Prevent cache-related issues
       docker_layer_caching: false
-    working_directory: ~/fun
+    working_directory: ~/joanie
     steps:
-      - checkout
+      - checkout:
+          path: ~/joanie
       - *generate-version-file
       - run:
           name: Build production image
@@ -362,7 +405,8 @@ jobs:
     working_directory: ~/joanie
     steps:
       # Checkout repository sources
-      - checkout
+      - checkout:
+          path: ~/joanie
       # Generate a version.json file describing app release
       - <<: *generate-version-file
       # Activate docker-in-docker
