@@ -192,6 +192,53 @@ jobs:
               -timeout 60s \
                 ~/.local/bin/pytest
 
+
+  # ---- Internationalization jobs ----
+  build-i18n:
+    docker:
+      - image: cimg/python:3.10
+        auth:
+          username: $DOCKER_USER
+          password: $DOCKER_PASS
+    working_directory: ~/joanie/src/backend
+    steps:
+      - checkout:
+          path: ~/joanie
+      - restore_cache:
+          keys:
+            - v1-back-dependencies-{{ .Revision }}
+      - run:
+          name: Install gettext (required to make messages)
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y gettext
+      # Generate and persist the translations base file
+      - run:
+          name: Generate a POT file from strings extracted from the project
+          command: ~/.local/bin/django-admin makemessages --keep-pot --all
+      - persist_to_workspace:
+          root: ~/joanie
+          paths:
+            - src/backend/locale/django.pot
+
+  # Restore POT files containing strings to translate and upload them to our
+  # translation management tool
+  upload-i18n-strings:
+    docker:
+      - image: crowdin/cli:3.7.9
+        auth:
+          username: $DOCKER_USER
+          password: $DOCKER_PASS
+    working_directory: ~/joanie
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/joanie
+      - run:
+          name: upload files to crowdin
+          command: crowdin upload sources -c crowdin/config.yml
+
+
   # ---- Tray jobs (k8s) ----
   tray:
     machine:
@@ -432,6 +479,22 @@ workflows:
           filters:
             tags:
               only: /.*/
+
+      # Internationalization jobs
+      #
+      # Extract strings and upload them to our translation management platform
+      - build-i18n:
+          requires:
+            - build-back
+          filters:
+            tags:
+              only: /.*/
+      - upload-i18n-strings:
+          requires:
+            - build-i18n
+          filters:
+            branches:
+              only: main
 
       # Tray
       #
