@@ -42,3 +42,28 @@ class BaseAPITestCase(TestCase):
             }
         )
         return token
+
+    @staticmethod
+    def generate_token_from_user(user, expires_at=None):
+        """
+        Generate a jwt token used to authenticate a user from a user registered in
+        the database
+
+        Args:
+            user: User
+            expires_at: datetime.datetime, time after which the token should expire.
+
+        Returns:
+            token, the jwt token generated as it should
+        """
+        issued_at = datetime.utcnow()
+        token = AccessToken()
+        token.payload.update(
+            {
+                "email": user.email,
+                "username": user.username,
+                "exp": expires_at or issued_at + timedelta(days=2),
+                "iat": issued_at,
+            }
+        )
+        return token
