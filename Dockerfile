@@ -22,6 +22,21 @@ COPY ./src/backend /builder
 RUN mkdir /install && \
   pip install --prefix=/install .
 
+
+# ---- mails ----
+FROM node:16 as mail-builder
+RUN mkdir -p /app/backend/joanie/core/templates/mail/html/ && \
+    mkdir -p /app/backend/joanie/core/templates/mail/text/ && \
+    mkdir -p /app/mail
+
+COPY ./src/mail /app/mail
+
+WORKDIR /app/mail
+
+RUN yarn install --frozen-lockfile && \
+    yarn build-mails
+
+
 # ---- static link collector ----
 FROM base as link-collector
 ARG JOANIE_STATIC_ROOT=/data/static
@@ -38,6 +53,10 @@ COPY --from=back-builder /install /usr/local
 
 # Copy joanie application (see .dockerignore)
 COPY ./src/backend /app/
+
+# Copy joanie mails
+COPY --from=mail-builder /app/backend/joanie/core/templates/mail /app/src/backend/joanie/core/templates/mail
+
 
 WORKDIR /app
 
@@ -128,3 +147,4 @@ USER ${DOCKER_USER}
 
 # The default command runs gunicorn WSGI server in joanie's main module
 CMD gunicorn -c /usr/local/etc/gunicorn/joanie.py joanie.wsgi:application
+

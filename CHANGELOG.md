@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Transform `mjml` files (email's template files) to html and plaintext
 - Add email settings and configure `mailcatcher` in docker-compose stack
 - Add Open Badge Factory badge provider
 - Add language in the user token

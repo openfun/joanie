@@ -41,6 +41,12 @@ venv.bak/
 env.d/development/crowdin
 env.d/terraform
 
+# npm
+node_modules
+
+# Mails
+src/backend/joanie/core/templates/mail/
+
 # Logs
 *.log
 

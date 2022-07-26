@@ -494,6 +494,11 @@ workflows:
               ignore: main
             tags:
               only: /.*/
+      # Build mails
+      - build-mails:
+          filters:
+            tags:
+              only: /.*/
 
       # Docker jobs
       #
@@ -520,6 +525,8 @@ workflows:
       - test-back:
           requires:
             - build-back
+            - build-mails
+            - build-i18n
           filters:
             tags:
               only: /.*/
@@ -530,6 +537,7 @@ workflows:
       - build-i18n:
           requires:
             - build-back
+            - build-mails
           filters:
             tags:
               only: /.*/
