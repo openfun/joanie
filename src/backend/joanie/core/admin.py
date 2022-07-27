@@ -67,6 +67,7 @@ class CourseAdmin(DjangoObjectActions, TranslatableAdmin):
 
     actions = (ACTION_NAME_GENERATE_CERTIFICATES,)
     change_actions = (ACTION_NAME_GENERATE_CERTIFICATES,)
+    change_form_template = "joanie/admin/translatable_change_form_with_actions.html"
     list_display = ("code", "title", "organization", "state")
     filter_horizontal = ("products",)
     fieldsets = (
@@ -157,10 +158,13 @@ class ProductCourseRelationInline(SortableInlineAdminMixin, admin.TabularInline)
 
 @admin.register(models.Product)
 class ProductAdmin(
-    DjangoObjectActions, SortableAdminBase, TranslatableAdmin
+    DjangoObjectActions,
+    SortableAdminBase,
+    TranslatableAdmin,
 ):  # pylint: disable=too-many-ancestors
     """Admin class for the Product model"""
 
+    change_form_template = "joanie/admin/translatable_change_form_with_actions.html"
     list_display = ("title", "type", "price")
     fields = (
         "type",
