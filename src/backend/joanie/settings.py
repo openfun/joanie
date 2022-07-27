@@ -205,11 +205,10 @@ class Base(Configuration):
         ("fr-fr", _("French")),
     )
     LOCALE_PATHS = (os.path.join(BASE_DIR, "locale"),)
-    PARLER_DEFAULT_LANGUAGE_CODE = "en-us"
     PARLER_LANGUAGES = {
         None: (tuple(dict(code=code) for code, _name in LANGUAGES)),
         "default": {
-            "fallbacks": ["en-us"],
+            "fallbacks": [LANGUAGE_CODE],
             "hide_untranslated": False,
         },
     }
