@@ -1,5 +1,5 @@
 """
-Test suite for products API
+Test suite for products admin pages
 """
 import random
 import uuid
@@ -17,7 +17,7 @@ from .base import BaseAPITestCase
 
 
 class ProductAdminTestCase(BaseAPITestCase):
-    """Test suite for API to manipulate products."""
+    """Test suite for admin to manipulate products."""
 
     def test_admin_product_create_forbidden(self):
         """A user with not enough permissions should not be allowed to create a product."""
@@ -376,23 +376,23 @@ class ProductAdminTestCase(BaseAPITestCase):
             response, reverse("admin:core_product_change", args=(product.id,))
         )
 
-    @mock.patch.object(models.Order, "cancel")
-    def test_admin_order_action_cancel(self, mock_cancel):
+    def test_admin_product_use_translatable_change_form_with_actions_template(self):
         """
-        Order admin should display an action to cancel an order which call
-        order.cancel method.
+        The product admin change view should use a custom change form template
+        to display both translation tabs of django parler and action buttons of
+        django object actions.
         """
-        user = factories.UserFactory(is_staff=True, is_superuser=True)
-        order = factories.OrderFactory()
-        self.client.login(username=user.username, password="password")
-        order_changelist_page = reverse("admin:core_order_changelist")
-        response = self.client.get(order_changelist_page)
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Cancel selected orders")
+        # Create a product
+        product = factories.ProductFactory()
 
-        # - Trigger "cancel" action
-        self.client.post(
-            order_changelist_page, {"action": "cancel", "_selected_action": order.pk}
-        )
-        self.assertEqual(response.status_code, 200)
-        mock_cancel.assert_called_once_with()
+        # Login a user with all permission to manage products in django admin
+        user = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=user.username, password="password")
+
+        # Now we go to the product admin change view
+        with self.assertTemplateUsed(
+            "joanie/admin/translatable_change_form_with_actions.html"
+        ):
+            self.client.get(
+                reverse("admin:core_product_change", args=(product.pk,)),
+            )

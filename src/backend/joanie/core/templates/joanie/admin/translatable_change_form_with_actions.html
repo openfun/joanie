@@ -1,0 +1,23 @@
+{% extends "admin/parler/change_form.html" %}
+{% load add_preserved_filters from admin_urls %}
+{% comment %}
+    This template must be used when a model admin class inherits both from
+    TranslatableAdmin and DjangoObjectActions.
+    https://github.com/crccheck/django-object-actions/blob/master/django_object_actions/templates/django_object_actions/change_form.html
+{% endcomment %}
+
+{% block object-tools-items %}
+{% for tool in objectactions %}
+<li class="objectaction-item" data-tool-name="{{ tool.name }}">
+    {% url tools_view_name pk=object_id tool=tool.name as action_url %}
+    <a href="{% add_preserved_filters action_url %}" title="{{ tool.standard_attrs.title }}"
+       {% for k, v in tool.custom_attrs.items %}
+       {{ k }}="{{ v }}"
+       {% endfor %}
+       class="{{ tool.standard_attrs.class }}">
+        {{ tool.label|capfirst }}
+    </a>
+</li>
+{% endfor %}
+{{ block.super }}
+{% endblock %}
