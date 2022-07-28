@@ -12,7 +12,7 @@ class UserModelTestCase(TestCase):
     def test_model_create(self):
         """A simple test to check model consistency."""
 
-        UserFactory(username="Sam", email="sam@fun-test.fr")
+        UserFactory(username="Sam", email="sam@fun-test.fr", language="fr")
         UserFactory(username="Joanie")
 
         self.assertEqual(User.objects.count(), 2)
@@ -20,6 +20,7 @@ class UserModelTestCase(TestCase):
         first_user = User.objects.first()
         self.assertEqual(first_user.username, "Sam")
         self.assertEqual(first_user.email, "sam@fun-test.fr")
+        self.assertEqual(first_user.language, "fr")
         self.assertEqual(str(first_user), "Sam")
 
     def test_models_unique_username(self):
@@ -49,18 +50,22 @@ class UserModelTestCase(TestCase):
         request = RequestFactory()
         request.username = "Sam"
         request.email = "sam@fun-test.fr"
+        request.language = "fr"
 
         User.update_or_create_from_request_user(request)
         user.refresh_from_db()
 
         # email has been updated
         self.assertEqual(user.email, "sam@fun-test.fr")
+        self.assertEqual(user.language, "fr")
         # no new object has been created
         self.assertEqual(User.objects.count(), 1)
 
         request.username = "Sam2"
+        request.language = "en"
         User.update_or_create_from_request_user(request)
         # a new object has been created
         self.assertEqual(User.objects.count(), 2)
         user2 = User.objects.get(username="Sam2")
+        self.assertEqual(user2.language, "en")
         self.assertEqual(user2.email, "sam@fun-test.fr")
