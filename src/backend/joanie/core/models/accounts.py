@@ -4,6 +4,7 @@ Declare and configure the models for the customers part
 import uuid
 
 import django.contrib.auth.models as auth_models
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -13,6 +14,13 @@ from django_countries.fields import CountryField
 
 class User(auth_models.AbstractUser):
     """User model which follow courses or manage backend (is_staff)"""
+
+    language = models.CharField(
+        default=settings.LANGUAGE_CODE,
+        max_length=10,
+        verbose_name=_("language"),
+        help_text=_("language of the user"),
+    )
 
     class Meta:
         db_table = "joanie_user"
@@ -27,7 +35,7 @@ class User(auth_models.AbstractUser):
         """Create user from token or update it"""
         user = User.objects.update_or_create(
             username=request_user.username,
-            defaults={"email": request_user.email},
+            defaults={"email": request_user.email, "language": request_user.language},
         )[0]
 
         return user

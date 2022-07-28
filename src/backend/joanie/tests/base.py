@@ -3,6 +3,7 @@ Common base API test case
 """
 from datetime import datetime, timedelta
 
+from django.conf import settings
 from django.test import TestCase
 from django.utils import translation
 
@@ -36,9 +37,10 @@ class BaseAPITestCase(TestCase):
         token.payload.update(
             {
                 "email": f"{username}@funmooc.fr",
-                "username": username,
                 "exp": expires_at or issued_at + timedelta(days=2),
                 "iat": issued_at,
+                "language": settings.LANGUAGE_CODE,
+                "username": username,
             }
         )
         return token
@@ -61,9 +63,10 @@ class BaseAPITestCase(TestCase):
         token.payload.update(
             {
                 "email": user.email,
-                "username": user.username,
                 "exp": expires_at or issued_at + timedelta(days=2),
                 "iat": issued_at,
+                "language": user.language,
+                "username": user.username,
             }
         )
         return token
