@@ -119,7 +119,32 @@ class OrganizationAdmin(TranslatableAdmin):
 class UserAdmin(auth_admin.UserAdmin):
     """Admin class for the User model"""
 
-    list_display = ("username",)
+    list_display = (
+        "username",
+        "email",
+        "language",
+    )
+    fieldsets = (
+        (None, {"fields": ("username",)}),
+        (_("Personal info"), {"fields": ("email", "language")}),
+        (
+            _("Permissions"),
+            {
+                "fields": (
+                    "is_active",
+                    "is_staff",
+                    "is_superuser",
+                    "groups",
+                    "user_permissions",
+                ),
+            },
+        ),
+        (_("Important dates"), {"fields": ("last_login", "date_joined")}),
+    )
+    readonly_fields = (
+        "username",
+        "language",
+    )
 
 
 class ProductCourseRelationInline(SortableInlineAdminMixin, admin.TabularInline):
