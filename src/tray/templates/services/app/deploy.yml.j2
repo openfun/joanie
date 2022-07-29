@@ -75,6 +75,8 @@ spec:
               value: "{{ joanie_database_port }}"
             - name: DJANGO_ALLOWED_HOSTS
               value: "{{ joanie_host }}"
+            - name: DJANGO_CSRF_TRUSTED_ORIGINS
+              value: "{{ joanie_host | blue_green_hosts | split(',') | map('regex_replace', '^(.*)$', 'https://\\1') | join(',') }}"
             - name: DJANGO_CONFIGURATION
               value: "{{ joanie_django_configuration }}"
             - name: DJANGO_SETTINGS_MODULE
