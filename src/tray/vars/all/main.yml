@@ -2,6 +2,7 @@
 
 # -- route
 joanie_host: "joanie.{{ namespace_name }}.{{ domain_name }}"
+richie_host: "richie.{{ namespace_name }}.{{ domain_name }}"
 
 # -- nginx
 joanie_nginx_image_name: "nginxinc/nginx-unprivileged"
