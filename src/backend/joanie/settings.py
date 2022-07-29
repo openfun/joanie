@@ -275,10 +275,10 @@ class Base(Configuration):
         },
     }
 
-    # CORS headers
-    CORS_ALLOWED_ORIGINS = values.ListValue(
-        [], environ_name="CORS_ALLOWED_ORIGINS", environ_prefix=None
-    )
+    # CORS
+    CORS_ALLOW_ALL_ORIGINS = values.BooleanValue(False)
+    CORS_ALLOWED_ORIGINS = values.ListValue([])
+    CORS_ALLOWED_ORIGIN_REGEXES = values.ListValue([])
 
     # Sentry
     SENTRY_DSN = values.Value(None, environ_name="SENTRY_DSN")
