@@ -1,8 +1,9 @@
 # Application default configuration
 
-# -- route
+# -- ingress
 joanie_host: "joanie.{{ namespace_name }}.{{ domain_name }}"
 richie_host: "richie.{{ namespace_name }}.{{ domain_name }}"
+joanie_ingress_class_name: "{{ default_ingress_class_name }}"
 
 # -- nginx
 joanie_nginx_image_name: "nginxinc/nginx-unprivileged"
