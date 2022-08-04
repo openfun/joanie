@@ -14,8 +14,7 @@ from joanie.core import enums, exceptions, factories, models
 from joanie.core.factories import CourseRunFactory
 from joanie.lms_handler.backends.openedx import OpenEdXLMSBackend
 from joanie.payment.factories import ProformaInvoiceFactory
-
-from .base import BaseAPITestCase
+from joanie.tests.base import BaseAPITestCase
 
 
 @override_settings(

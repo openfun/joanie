@@ -8,8 +8,7 @@ from django.urls import reverse
 import lxml
 
 from joanie.core import factories
-
-from .base import BaseAPITestCase
+from joanie.tests.base import BaseAPITestCase
 
 
 class CourseAdminTestCase(BaseAPITestCase):
