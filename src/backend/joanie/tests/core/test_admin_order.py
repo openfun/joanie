@@ -7,8 +7,7 @@ from unittest import mock
 from django.urls import reverse
 
 from joanie.core import factories, models
-
-from .base import BaseAPITestCase
+from joanie.tests.base import BaseAPITestCase
 
 
 class OrderAdminTestCase(BaseAPITestCase):

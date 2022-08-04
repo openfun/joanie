@@ -8,8 +8,7 @@ from django.utils import timezone
 
 from joanie.core import enums, factories, models
 from joanie.payment.factories import ProformaInvoiceFactory
-
-from .base import BaseAPITestCase
+from joanie.tests.base import BaseAPITestCase
 
 
 class CourseApiTest(BaseAPITestCase):

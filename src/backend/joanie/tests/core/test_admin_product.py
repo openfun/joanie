@@ -10,10 +10,8 @@ from django.urls import reverse
 
 import lxml.html
 
-from joanie.core import factories, models
-
-from ..core import enums
-from .base import BaseAPITestCase
+from joanie.core import enums, factories, models
+from joanie.tests.base import BaseAPITestCase
 
 
 class ProductAdminTestCase(BaseAPITestCase):

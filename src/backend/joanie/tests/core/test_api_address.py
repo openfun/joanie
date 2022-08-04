@@ -7,8 +7,7 @@ import uuid
 import arrow
 
 from joanie.core import factories, models
-
-from .base import BaseAPITestCase
+from joanie.tests.base import BaseAPITestCase
 
 
 def get_payload(address):

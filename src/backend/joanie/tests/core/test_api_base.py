@@ -4,8 +4,7 @@ Test suite for BaseTest class
 from datetime import datetime, timedelta
 
 from joanie.core import factories
-
-from .base import BaseAPITestCase
+from joanie.tests.base import BaseAPITestCase
 
 
 class BaseAPITestTestCase(BaseAPITestCase):

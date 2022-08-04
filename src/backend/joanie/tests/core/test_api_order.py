@@ -18,8 +18,7 @@ from joanie.payment.factories import (
     CreditCardFactory,
     ProformaInvoiceFactory,
 )
-
-from .base import BaseAPITestCase
+from joanie.tests.base import BaseAPITestCase
 
 
 class OrderApiTest(BaseAPITestCase):
