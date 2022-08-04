@@ -34,9 +34,7 @@ class PayplugBackendTestCase(TestCase):
     """Test case of the Payplug backend"""
 
     def setUp(self):
-        """
-        Define once configuration required to instantiate a payplug backend.
-        """
+        """Define once configuration required to instantiate a payplug backend."""
         self.configuration = {"secret_key": "sk_test_0"}
 
     def test_payment_backend_payplug_name(self):
@@ -49,6 +47,7 @@ class PayplugBackendTestCase(TestCase):
         """Payplug backend requires a configuration"""
         # - Configuration is required
         with self.assertRaises(TypeError):
+            # pylint: disable=no-value-for-parameter
             PayplugBackend()
 
         # - a secret_key is required
@@ -68,7 +67,7 @@ class PayplugBackendTestCase(TestCase):
         order = OrderFactory(owner=owner, product=product)
         billing_address = BillingAddressDictFactory()
         request = APIRequestFactory().post("/")
-
+        # pylint: disable=protected-access
         payload = backend._get_payment_data(request, order, billing_address)
 
         self.assertEqual(
