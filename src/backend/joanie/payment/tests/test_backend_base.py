@@ -10,6 +10,39 @@ from joanie.payment.factories import BillingAddressDictFactory
 from joanie.payment.models import ProformaInvoice, Transaction
 
 
+class TestBasePaymentBackend(BasePaymentBackend):
+    """Class that instantiates BasePaymentBackend and calls private methods"""
+
+    def call_do_on_payment_success(self, order, payment):
+        """call private method _do_on_payment_success"""
+        self._do_on_payment_success(order, payment)
+
+    def call_do_on_payment_failure(self, order):
+        """call private method _do_on_payment_failure"""
+        self._do_on_payment_failure(order)
+
+    def call_do_on_refund(self, amount, proforma_invoice, refund_reference):
+        """call private method _do_on_refund"""
+        self._do_on_refund(amount, proforma_invoice, refund_reference)
+
+    def abort_payment(self, payment_id):
+        pass
+
+    def create_one_click_payment(
+        self, request, order, billing_address, credit_card_token
+    ):
+        pass
+
+    def create_payment(self, request, order, billing_address):
+        pass
+
+    def delete_credit_card(self, credit_card):
+        pass
+
+    def handle_notification(self, request):
+        pass
+
+
 class BasePaymentBackendTestCase(TestCase):
     """Test suite for the Base Payment Backend"""
 
@@ -95,7 +128,7 @@ class BasePaymentBackendTestCase(TestCase):
         a pro forma invoice related to the provided order, create a transaction from
         payment information provided then mark order as validated.
         """
-        backend = BasePaymentBackend()
+        backend = TestBasePaymentBackend()
         order = OrderFactory()
         billing_address = BillingAddressDictFactory()
         payment = {
@@ -104,7 +137,7 @@ class BasePaymentBackendTestCase(TestCase):
             "billing_address": billing_address,
         }
 
-        backend._do_on_payment_success(order, payment)
+        backend.call_do_on_payment_success(order, payment)
 
         # - Payment transaction has been registered
         self.assertEqual(
@@ -124,10 +157,10 @@ class BasePaymentBackendTestCase(TestCase):
         call by subclasses when a payment failed. It should cancel the related
         order.
         """
-        backend = BasePaymentBackend()
+        backend = TestBasePaymentBackend()
         order = OrderFactory()
 
-        backend._do_on_payment_failure(order)
+        backend.call_do_on_payment_failure(order)
 
         # - Order has been canceled
         self.assertEqual(order.state, "canceled")
@@ -138,7 +171,7 @@ class BasePaymentBackendTestCase(TestCase):
         call by subclasses when a refund occurred. It should register the refund
         transaction.
         """
-        backend = BasePaymentBackend()
+        backend = TestBasePaymentBackend()
         order = OrderFactory()
         billing_address = BillingAddressDictFactory()
 
@@ -149,14 +182,14 @@ class BasePaymentBackendTestCase(TestCase):
             "billing_address": billing_address,
         }
 
-        backend._do_on_payment_success(order, payment)
+        backend.call_do_on_payment_success(order, payment)
         payment = Transaction.objects.get(reference="pay_0")
 
         # - Order has been validated
         self.assertEqual(order.state, "validated")
 
         # - Refund entirely the order
-        backend._do_on_refund(
+        backend.call_do_on_refund(
             amount=order.total,
             proforma_invoice=payment.proforma_invoice,
             refund_reference="ref_0",

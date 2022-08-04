@@ -10,6 +10,8 @@ from joanie.payment.factories import ProformaInvoiceFactory, TransactionFactory
 
 
 class ProformaInvoiceAdminTestCase(TestCase):
+    """ProformaInvoice admin tests"""
+
     def test_admin_proforma_invoice_display_human_readable_type(self):
         """
         ProformaInvoice admin view should display

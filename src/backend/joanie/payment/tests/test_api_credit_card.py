@@ -11,6 +11,7 @@ from joanie.payment.factories import CreditCardFactory
 from joanie.tests.base import BaseAPITestCase
 
 
+# pylint: disable=too-many-public-methods
 class CreditCardAPITestCase(BaseAPITestCase):
     """Manage user's credit cards API test cases"""
 
