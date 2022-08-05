@@ -9,13 +9,13 @@
         </mj-text>
       </mj-column>
     </mj-section>
-    <mj-include path="./partial/course_description.mjml" />
+    <mj-include path="./partial/course_title.mjml" />
     <mj-section background-color="#FFFFFF" padding="0px 50px">
       <mj-column width="100%">
         <mj-include path="./partial/hello.mjml" />
         <mj-text align="center" font-size="18px" padding="10px 50px">
           {%trans "Your order has been confirmed."%} 
-          {%trans "You have bought "%} `{{product.title}}` {%trans for a price of%} {{product.price}}{{product.price_currency}}.
+          {%trans "You have bought "%} `{{product.title}}` {%trans "for a price of"%} {{product.price}}.
         </mj-text>
       </mj-column>
     </mj-section>
