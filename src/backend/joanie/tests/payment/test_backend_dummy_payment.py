@@ -1,15 +1,15 @@
 """Test suite of the Dummy Payment backend"""
 import json
 import re
+from logging import Logger
 from unittest import mock
 
 from django.core.cache import cache
-from django.test import TestCase
 from django.urls import reverse
 
 from rest_framework.test import APIRequestFactory
 
-from joanie.core.factories import OrderFactory, ProductFactory
+from joanie.core.factories import OrderFactory, ProductFactory, UserFactory
 from joanie.payment.backends.base import BasePaymentBackend
 from joanie.payment.backends.dummy import DummyPaymentBackend
 from joanie.payment.exceptions import (
@@ -20,8 +20,10 @@ from joanie.payment.exceptions import (
 )
 from joanie.payment.factories import BillingAddressDictFactory
 
+from .base_payment import BasePaymentTestCase
 
-class DummyPaymentBackendTestCase(TestCase):
+
+class DummyPaymentBackendTestCase(BasePaymentTestCase):
     """Test case for the Dummy Payment Backend"""
 
     def setUp(self):
@@ -78,6 +80,7 @@ class DummyPaymentBackendTestCase(TestCase):
             },
         )
 
+    @mock.patch.object(Logger, "info")
     @mock.patch.object(
         DummyPaymentBackend,
         "handle_notification",
@@ -89,7 +92,7 @@ class DummyPaymentBackendTestCase(TestCase):
         side_effect=DummyPaymentBackend().create_payment,
     )
     def test_payment_backend_dummy_create_one_click_payment(
-        self, mock_create_payment, mock_handle_notification
+        self, mock_create_payment, mock_handle_notification, mock_logger
     ):
         """
         Dummy backend `one_click_payment` calls the `create_payment` method then immediately
@@ -99,7 +102,8 @@ class DummyPaymentBackendTestCase(TestCase):
         """
 
         backend = DummyPaymentBackend()
-        order = OrderFactory()
+        owner = UserFactory(email="sam@fun-test.fr", language="en", username="Samantha")
+        order = OrderFactory(owner=owner)
         billing_address = BillingAddressDictFactory()
         request = APIRequestFactory().post(path="/")
         payment_id = f"pay_{order.uid}"
@@ -132,6 +136,13 @@ class DummyPaymentBackendTestCase(TestCase):
         )
 
         mock_handle_notification.assert_called_once()
+
+        # check email has been sent
+        self._check_purchase_order_email_sent("sam@fun-test.fr", "Samantha", order)
+
+        mock_logger.assert_called_once_with(
+            "Mail is sent to %s from dummy payment", "sam@fun-test.fr"
+        )
 
     def test_payment_backend_dummy_handle_notification_unknown_resource(self):
         """

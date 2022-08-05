@@ -111,6 +111,11 @@ class DummyPaymentBackend(BasePaymentBackend):
             refund_reference=f"ref_{timezone.now().timestamp():.0f}",
         )
 
+    @classmethod
+    def _send_mail_payment_success(cls, order):
+        logger.info("Mail is sent to %s from dummy payment", order.owner.email)
+        BasePaymentBackend._send_mail_payment_success(order)
+
     def create_payment(self, request, order, billing_address):
         """
         Generate a payment object then store it in the cache.

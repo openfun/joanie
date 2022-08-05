@@ -1,13 +1,18 @@
 """Test suite of the Base Payment backend"""
+import smtplib
+from logging import Logger
+from unittest import mock
 
-from django.test import TestCase
+from django.core import mail
 
 from rest_framework.test import APIRequestFactory
 
-from joanie.core.factories import OrderFactory
+from joanie.core.factories import OrderFactory, UserFactory
 from joanie.payment.backends.base import BasePaymentBackend
 from joanie.payment.factories import BillingAddressDictFactory
 from joanie.payment.models import ProformaInvoice, Transaction
+
+from .base_payment import BasePaymentTestCase
 
 
 class TestBasePaymentBackend(BasePaymentBackend):
@@ -43,7 +48,7 @@ class TestBasePaymentBackend(BasePaymentBackend):
         pass
 
 
-class BasePaymentBackendTestCase(TestCase):
+class BasePaymentBackendTestCase(BasePaymentTestCase):
     """Test suite for the Base Payment Backend"""
 
     def test_payment_backend_base_name(self):
@@ -129,7 +134,8 @@ class BasePaymentBackendTestCase(TestCase):
         payment information provided then mark order as validated.
         """
         backend = TestBasePaymentBackend()
-        order = OrderFactory()
+        owner = UserFactory(email="sam@fun-test.fr", language="en", username="Samantha")
+        order = OrderFactory(owner=owner)
         billing_address = BillingAddressDictFactory()
         payment = {
             "id": "pay_0",
@@ -151,6 +157,9 @@ class BasePaymentBackendTestCase(TestCase):
         # - Order has been validated
         self.assertEqual(order.state, "validated")
 
+        # - Email has been sent
+        self._check_purchase_order_email_sent("sam@fun-test.fr", "Samantha", order)
+
     def test_payment_backend_base_do_on_payment_failure(self):
         """
         Base backend contains a method _do_on_payment_failure which aims to be
@@ -164,6 +173,9 @@ class BasePaymentBackendTestCase(TestCase):
 
         # - Order has been canceled
         self.assertEqual(order.state, "canceled")
+
+        # - No email has been sent
+        self.assertEqual(len(mail.outbox), 0)
 
     def test_payment_backend_base_do_on_refund(self):
         """
@@ -216,3 +228,86 @@ class BasePaymentBackendTestCase(TestCase):
             backend.get_notification_url(request),
             "http://testserver/api/payments/notifications",
         )
+
+    @mock.patch(
+        "joanie.payment.backends.base.send_mail",
+        side_effect=smtplib.SMTPException("Error SMTPException"),
+    )
+    @mock.patch.object(Logger, "error")
+    def test_payment_backend_base_payment_success_email_failure(
+        self, mock_logger, _mock_send_mail
+    ):
+        """Check error is raised if send_mails fails"""
+        backend = TestBasePaymentBackend()
+        owner = UserFactory(email="sam@fun-test.fr", username="Samantha")
+        order = OrderFactory(owner=owner)
+        billing_address = BillingAddressDictFactory()
+        payment = {
+            "id": "pay_0",
+            "amount": order.total.amount,
+            "billing_address": billing_address,
+        }
+
+        backend.call_do_on_payment_success(order, payment)
+
+        # Payment transaction has been registered
+        self.assertEqual(
+            Transaction.objects.filter(reference="pay_0", total=order.total).count(),
+            1,
+        )
+
+        # Invoice has been created
+        self.assertEqual(ProformaInvoice.objects.filter(order=order).count(), 1)
+
+        # Order has been validated
+        self.assertEqual(order.state, "validated")
+
+        # No email has been sent
+        self.assertEqual(len(mail.outbox), 0)
+        mock_logger.assert_called_once()
+        self.assertEqual(
+            mock_logger.call_args.args[0],
+            "purchase order mail %s not send",
+        )
+        self.assertEqual(
+            mock_logger.call_args.args[1],
+            "sam@fun-test.fr",
+        )
+        self.assertIsInstance(mock_logger.call_args.args[2], smtplib.SMTPException)
+
+    def test_payment_backend_base_payment_success_email_language(self):
+        """Check language of the user is taken into account for the email"""
+
+        backend = TestBasePaymentBackend()
+        owner = UserFactory(
+            email="sam@fun-test.fr", language="Fr-fr", username="Samantha"
+        )
+        order = OrderFactory(owner=owner)
+        billing_address = BillingAddressDictFactory()
+        payment = {
+            "id": "pay_0",
+            "amount": order.total.amount,
+            "billing_address": billing_address,
+        }
+
+        backend.call_do_on_payment_success(order, payment)
+
+        # - Payment transaction has been registered
+        self.assertEqual(
+            Transaction.objects.filter(reference="pay_0", total=order.total).count(),
+            1,
+        )
+
+        # - Invoice has been created
+        self.assertEqual(ProformaInvoice.objects.filter(order=order).count(), 1)
+
+        # - Order has been validated
+        self.assertEqual(order.state, "validated")
+
+        # - Email has been sent
+        email_content = " ".join(mail.outbox[0].body.split())
+        self.assertIn("Votre achat a été confirmé.", email_content)
+        self.assertNotIn("Your order has been confirmed.", email_content)
+
+        # - Check it's the right object
+        self.assertEqual(mail.outbox[0].subject, "Commande validée !")

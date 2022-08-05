@@ -1,8 +1,18 @@
 """Base Payment Backend"""
+import smtplib
+from logging import getLogger
+
+from django.conf import settings
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils.translation import gettext as _
+from django.utils.translation import override
 
 from ..enums import INVOICE_STATE_REFUNDED
 from ..models import ProformaInvoice, Transaction
+
+logger = getLogger(__name__)
 
 
 class BasePaymentBackend:
@@ -17,8 +27,8 @@ class BasePaymentBackend:
     def __init__(self, configuration=None):
         self.configuration = configuration
 
-    @staticmethod
-    def _do_on_payment_success(order, payment):
+    @classmethod
+    def _do_on_payment_success(cls, order, payment):
         """
         Generic actions triggered when a succeeded payment has been received.
         It creates a pro forma invoice and registers the debit transaction,
@@ -52,6 +62,40 @@ class BasePaymentBackend:
 
         # - Mark order as validated
         order.validate()
+
+        # send mail
+        cls._send_mail_payment_success(order)
+
+    @classmethod
+    def _send_mail_payment_success(cls, order):
+        """Send mail with the current language of the user"""
+        try:
+
+            with override(order.owner.language):
+                template_vars = {
+                    "email": order.owner.email,
+                    "username": order.owner.username,
+                    "product": order.product,
+                }
+                msg_html = render_to_string(
+                    "mail/html/purchase_order.html", template_vars
+                )
+                msg_plain = render_to_string(
+                    "mail/text/purchase_order.txt", template_vars
+                )
+                send_mail(
+                    _("Purchase order confirmed!"),
+                    msg_plain,
+                    settings.EMAIL_FROM,
+                    [order.owner.email],
+                    html_message=msg_html,
+                    fail_silently=False,
+                )
+        except smtplib.SMTPException as exception:
+            # no exception raised as user can't sometimes change his mail,
+            logger.error(
+                "%s purchase order mail %s not send", order.owner.email, exception
+            )
 
     @staticmethod
     def _do_on_payment_failure(order):
