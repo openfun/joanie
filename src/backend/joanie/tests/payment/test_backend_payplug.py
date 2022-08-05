@@ -3,7 +3,6 @@ import re
 from decimal import Decimal as D
 from unittest import mock
 
-from django.test import TestCase
 from django.urls import reverse
 
 import payplug
@@ -29,8 +28,10 @@ from joanie.payment.factories import (
 )
 from joanie.payment.models import CreditCard
 
+from .base_payment import BasePaymentTestCase
 
-class PayplugBackendTestCase(TestCase):
+
+class PayplugBackendTestCase(BasePaymentTestCase):
     """Test case of the Payplug backend"""
 
     def setUp(self):
@@ -432,6 +433,40 @@ class PayplugBackendTestCase(TestCase):
                 "amount": D("123.45"),
                 "billing_address": billing_address,
             },
+        )
+
+    @mock.patch.object(payplug.notifications, "treat")
+    def test_payment_backend_payplug_handle_notification_payment_mail(self, mock_treat):
+        """
+        When backend receives a payment success notification, success email is sent
+        """
+        payment_id = "pay_00000"
+        product = ProductFactory()
+        owner = UserFactory(language="en")
+        order = OrderFactory(product=product, owner=owner)
+        backend = PayplugBackend(self.configuration)
+        billing_address = BillingAddressDictFactory()
+        payplug_billing_address = billing_address.copy()
+        payplug_billing_address["address1"] = payplug_billing_address["address"]
+        del payplug_billing_address["address"]
+        mock_treat.return_value = PayplugFactories.PayplugPaymentFactory(
+            id=payment_id,
+            amount=12345,
+            billing=payplug_billing_address,
+            metadata={"order_id": str(order.uid)},
+            is_paid=True,
+            is_refunded=False,
+        )
+
+        request = APIRequestFactory().post(
+            reverse("payment_webhook"), data={"id": payment_id}, format="json"
+        )
+
+        backend.handle_notification(request)
+
+        # Email has been sent
+        self._check_purchase_order_email_sent(
+            order.owner.email, order.owner.username, order
         )
 
     @mock.patch.object(BasePaymentBackend, "_do_on_payment_success")

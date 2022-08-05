@@ -168,6 +168,7 @@ class OrderViewSet(
             payment_backend = get_payment_backend()
             credit_card_id = serializer.initial_data.get("credit_card_id")
 
+            # if payment in one click
             if credit_card_id:
                 try:
                     credit_card = CreditCard.objects.get(
@@ -178,9 +179,6 @@ class OrderViewSet(
                         order=order,
                         billing_address=billing_address,
                         credit_card_token=credit_card.token,
-                    )
-                    return Response(
-                        {**serializer.data, "payment_info": payment_info}, status=201
                     )
                 except (CreditCard.DoesNotExist, NotImplementedError):
                     pass
