@@ -185,6 +185,15 @@ jobs:
             sudo mkdir -p /data/media && \
             sudo mkdir -p /data/static && \
             sudo chown -R circleci:circleci /data
+      - run:
+          name: Install gettext (required to compile messages)
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y gettext
+      # Compile translation messages already present in the project
+      - run:
+          name: Generate a MO file from strings extracted from the project
+          command: python manage.py compilemessages
       # Run back-end (Django) test suite
       #
       # Nota bene: to run the django test suite, we need to ensure that
