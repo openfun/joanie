@@ -65,3 +65,4 @@ db.sqlite3
 # Site media
 /data/
 src/backend/joanie/static/joanie/
+
