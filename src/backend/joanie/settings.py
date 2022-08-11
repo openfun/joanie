@@ -106,6 +106,23 @@ class Base(Configuration):
     # Languages
     LANGUAGE_CODE = "en-us"
 
+    # Careful! Languages should be ordered by priority, as this tuple is used to get
+    # fallback/default languages throughout the app.
+    LANGUAGES = (
+        ("en-us", _("English")),
+        ("fr-fr", _("French")),
+    )
+
+    LOCALE_PATHS = (os.path.join(BASE_DIR, "locale"),)
+
+    PARLER_LANGUAGES = {
+        None: (tuple(dict(code=code) for code, _name in LANGUAGES)),
+        "default": {
+            "fallbacks": [LANGUAGE_CODE],
+            "hide_untranslated": False,
+        },
+    }
+
     TIME_ZONE = "UTC"
     USE_I18N = True
     USE_TZ = True
@@ -204,18 +221,6 @@ class Base(Configuration):
         600, environ_prefix=None
     )  # 10 minutes
 
-    LANGUAGES = (
-        ("en-us", _("English")),
-        ("fr-fr", _("French")),
-    )
-    LOCALE_PATHS = (os.path.join(BASE_DIR, "locale"),)
-    PARLER_LANGUAGES = {
-        None: (tuple(dict(code=code) for code, _name in LANGUAGES)),
-        "default": {
-            "fallbacks": [LANGUAGE_CODE],
-            "hide_untranslated": False,
-        },
-    }
     REST_FRAMEWORK = {
         "DEFAULT_AUTHENTICATION_CLASSES": (
             "rest_framework_simplejwt.authentication.JWTTokenUserAuthentication",
@@ -416,6 +421,13 @@ class Production(Base):
 
     # Privacy
     SECURE_REFERRER_POLICY = "same-origin"
+
+    # Language
+    LANGUAGE_CODE = "fr-fr"
+    LANGUAGES = (
+        ("fr-fr", _("French")),
+        ("en-us", _("English")),
+    )
 
     # Media
     DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
