@@ -267,7 +267,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase):
         mock_logger.assert_called_once()
         self.assertEqual(
             mock_logger.call_args.args[0],
-            "purchase order mail %s not send",
+            "%s purchase order mail %s not send",
         )
         self.assertEqual(
             mock_logger.call_args.args[1],
