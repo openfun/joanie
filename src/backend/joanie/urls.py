@@ -21,6 +21,10 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from joanie.core import api
+from joanie.core.views import (
+    DebugMailSuccessPaymentViewHtml,
+    DebugMailSuccessPaymentViewTxt,
+)
 from joanie.lms_handler.urls import urlpatterns as lms_urlpatterns
 from joanie.payment.urls import urlpatterns as payment_urlpatterns
 
@@ -39,6 +43,18 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns = (
         urlpatterns
-        + [path("__debug__/", include("marion.urls.debug"))]
+        + [
+            path("__debug__/", include("marion.urls.debug")),
+            path(
+                "__debug__/mail/success_payment_html",
+                DebugMailSuccessPaymentViewHtml.as_view(),
+                name="debug.mail.success_payment_html",
+            ),
+            path(
+                "__debug__/mail/success_payment_txt",
+                DebugMailSuccessPaymentViewTxt.as_view(),
+                name="debug.mail.success_payment_txt",
+            ),
+        ]
         + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     )
