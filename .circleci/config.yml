@@ -393,6 +393,107 @@ jobs:
             arnold -d -c joanie -e ci -a joanie deploy
             kubectl -n ci-joanie get pods -l app=joanie | grep Running
 
+  # ---- Helm jobs (k8s) ----
+  helm:
+    machine:
+      image: ubuntu-2004:2022.07.1
+      # Prevent cache-related issues
+      docker_layer_caching: false
+    working_directory: ~/joanie
+    resource_class: large
+    steps:
+      - checkout
+      - *generate-version-file
+      - run:
+          name: Build production image
+          command: docker build -t joanie:${CIRCLE_SHA1} --target production .
+      - run:
+          name: Check built image availability
+          command: docker images "joanie:${CIRCLE_SHA1}*"
+      # Login to DockerHub to Publish new images
+      #
+      # Nota bene: you'll need to define the following secrets environment vars
+      # in CircleCI interface:
+      #
+      #   - DOCKER_HUB_USER
+      #   - DOCKER_HUB_PASSWORD
+      - run:
+          name: Login to DockerHub
+          command: echo "$DOCKER_HUB_PASSWORD" | docker login -u "$DOCKER_HUB_USER" --password-stdin
+      - run:
+          name: Install the kubectl client and k3d
+          command: |
+            export KUBECTL_RELEASE="v1.25.2"
+            curl -Lo "${HOME}/bin/kubectl" "https://dl.k8s.io/release/${KUBECTL_RELEASE}/bin/linux/amd64/kubectl"
+            curl -Lo /tmp/kubectl.sha256 "https://dl.k8s.io/${KUBECTL_RELEASE}/bin/linux/amd64/kubectl.sha256"
+            echo "$(</tmp/kubectl.sha256) ${HOME}/bin/kubectl" | sha256sum --check
+            chmod 755 "${HOME}/bin/kubectl"
+            export K3D_RELEASE="v5.4.6"
+            curl -Lo "${HOME}/bin/k3d" "https://github.com/k3d-io/k3d/releases/download/${K3D_RELEASE}/k3d-linux-amd64"
+            # FIXME
+            # Removed checksum checking: https://github.com/k3d-io/k3d/discussions/1037
+            #curl -sL https://github.com/k3d-io/k3d/releases/download/${K3D_RELEASE}/sha256sum.txt | \
+            #  grep _dist/k3d-linux-amd64 | \
+            #  sed "s|_dist/k3d-linux-amd64|${HOME}/bin/k3d|" | \
+            #  sha256sum --check
+            chmod 755 "${HOME}/bin/k3d"
+      - run:
+          name: Run local k3d cluster & configure environment
+          command: |
+            curl -Lo "${HOME}/bin/init-cluster" "https://raw.githubusercontent.com/openfun/arnold/master/bin/init-cluster"
+            chmod +x "${HOME}/bin/init-cluster"
+            # Bootstrap the k3d cluster with the following specific settings :
+            # - use standard HTTP and HTTPS ports
+            # - pre-provision 15 volumes instead of 100
+            MINIMUM_AVAILABLE_RWX_VOLUME=15 \
+            K3D_BIND_HOST_PORT_HTTP=80 \
+            K3D_BIND_HOST_PORT_HTTPS=443 \
+            K3D_REGISTRY_HOST=registry.127.0.0.1.nip.io \
+            K3D_ENABLE_REGISTRY=1 \
+              init-cluster arnold
+            # Set environment variables for the CI
+            echo "export K8S_DOMAIN=$(hostname -I | awk '{print $1}')" >> $BASH_ENV
+            echo "export K3D_REGISTRY_NAME=k3d-registry.127.0.0.1.nip.io" >> $BASH_ENV
+            echo "export K3D_REGISTRY_PORT=5000" >> $BASH_ENV
+            source $BASH_ENV
+      - run:
+          name: Install Helm
+          command: |
+            curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+            chmod 700 get_helm.sh
+            ./get_helm.sh
+      - run:
+          name: Push joanie image to the k8s cluster docker registry
+          command: |
+            docker tag joanie:${CIRCLE_SHA1} "${K3D_REGISTRY_NAME}:${K3D_REGISTRY_PORT}/ci-joanie/joanie:${CIRCLE_SHA1}"
+            docker push "${K3D_REGISTRY_NAME}:${K3D_REGISTRY_PORT}/ci-joanie/joanie:${CIRCLE_SHA1}"
+      - run:
+          name: Install Helm Chart
+          command: helm install joanie --set image.repository=${K3D_REGISTRY_NAME}:${K3D_REGISTRY_PORT}/ci-joanie/joanie,image.tag=${CIRCLE_SHA1},domainName="${K8S_DOMAIN}",appDjangoConfiguration="${DJANGO_CONFIGURATION}" --namespace ci-joanie --create-namespace src/helm/joanie --dependency-update
+      - run:
+          name: Test Helm Chart deployment
+          command: |
+            i=0
+            timeout=120
+            while :
+            do
+                i=$((i+1))
+                r=$(kubectl -n ci-joanie get pods -o jsonpath='{range .items[*].status.containerStatuses[*]}[{.state};{.ready}]{"\n"}{end}')
+                if ! ( echo "$r" | grep -q waiting )   && [[ $( echo "$r" | grep -c 'running.*true' || true ) -eq 2 ]] &&  echo "$r" | grep -q 'terminated.*Completed' ; then 
+                    kubectl get all -n ci-joanie
+                    echo Successful Deployment
+                    break;
+                elif  echo "$r" | grep -q 'waiting.*CrashLoopBackOff\|ErrImagePull\|ImagePullBackOff\|CreateContainerConfigError\|InvalidImageName\|CreateContainerError' ; then
+                    kubectl get all -n ci-joanie
+                    echo Unsuccessful Deployment
+                    exit 1
+                elif [[ $i -gt $timeout ]]; then
+                    echo Timeout
+                    exit 2
+                fi
+                sleep 2
+            done
+
   # ---- Packaging jobs ----
   package-back:
     docker:
@@ -567,6 +668,14 @@ workflows:
       #
       # Deploy ralph in a k8s cluster using arnold
       - tray:
+          filters:
+            tags:
+              only: /.*/
+
+      # Helm
+      #
+      # Deploy joanie in a k8s cluster using Helm
+      - helm:
           filters:
             tags:
               only: /.*/
