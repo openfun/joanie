@@ -1,0 +1,50 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "joanie.fullname" . }}-dbmigrate
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{- include "joanie.labels" . | nindent 4 }}
+    {{- if .Values.commonLabels }}
+    {{ toYaml .Values.commonLabels | nindent 4 }}
+    {{- end }}
+    app.kubernetes.io/component: joanie
+  annotations:
+{{- if .Values.commonAnnotations }}
+{{- toYaml .Values.commonAnnotations | nindent 4 }}
+{{- end }}
+    "helm.sh/hook": pre-upgrade, pre-install
+    "helm.sh/hook-weight": "0"
+spec:
+  template:
+    metadata:
+      labels: {{- include "joanie.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: joanie
+    spec: {{- include "joanie.imagePullSecrets" . | nindent 6 }}
+      {{- if .Values.podSecurityContext -}}
+      securityContext: {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: joanie-dbmigrate
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: DB_HOST
+              value: {{ include "joanie.fullname" . }}-postgresql
+            - name: DB_NAME
+              value: {{ .Values.databaseName }}
+            - name: DB_PORT
+              value: {{ .Values.databasePort | quote }}
+            - name: DJANGO_ALLOWED_HOSTS
+              value: {{ include "joanie.host" . }}
+            - name: DJANGO_CONFIGURATION
+              value: {{ .Values.appDjangoConfiguration }}
+            - name: DJANGO_SETTINGS_MODULE
+              value: {{ .Values.appDjangoSettingsModule }}
+          envFrom:
+            - secretRef:
+                name:  {{ include "joanie.fullname" . }}
+          command: ["python", "manage.py", "migrate"]
+          {{- if .Values.resources }}
+          resources: {{ toYaml .Values.resources | nindent 12 }}
+          {{- end }}
+      restartPolicy: Never

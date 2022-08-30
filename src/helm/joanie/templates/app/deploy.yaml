@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "joanie.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{- include "joanie.labels" . | nindent 4 }}
+    {{- if .Values.commonLabels }}
+    {{ toYaml .Values.commonLabels | nindent 4 }}
+    {{- end }}
+    app.kubernetes.io/component: joanie
+  {{- if .Values.commonAnnotations }}
+  annotations: {{ toYaml .Values.commonAnnotations | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels: {{- include "joanie.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: joanie
+  template:
+    metadata:
+      labels: {{- include "joanie.labels" . | nindent 8 }}
+        app.kubernetes.io/component: joanie
+        {{- if .Values.podLabels }}
+        {{ toYaml .Values.podLabels | nindent 8 }}
+        {{- end }}
+    annotations:
+      {{- if .Values.podAnnotations }}
+      {{- toYaml .Values.podAnnotations | nindent 8 }}
+      {{- end }}
+    spec: {{- include "joanie.imagePullSecrets" . | nindent 6 }}
+      {{- if .Values.affinity }}
+      affinity: {{- toYaml .Values.affinity | nindent 8 }}
+      {{- else -}}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels: {{- include "joanie.selectorLabels" . | nindent 20 }}
+                    app.kubernetes.io/component: joanie
+                namespaces: 
+                  - {{ .Release.Namespace | quote }}
+                topologyKey: kubernetes.io/hostname
+              weight: 100
+      {{- end }}
+      {{- if .Values.podSecurityContext }}
+      securityContext: {{ toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: joanie
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if .Values.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          env:
+            - name: DB_HOST
+              value: {{ include "joanie.fullname" . }}-postgresql
+            - name: DB_NAME
+              value: {{ .Values.databaseName }}
+            - name: DB_PORT
+              value: {{ .Values.databasePort | quote }}
+            - name: DJANGO_ALLOWED_HOSTS
+              value: {{ include  "joanie.host" . }}
+            - name: DJANGO_CONFIGURATION
+              value: {{ .Values.appDjangoConfiguration }}
+            - name: DJANGO_SETTINGS_MODULE
+              value: {{ .Values.appDjangoSettingsModule }}
+          envFrom:
+            - secretRef:
+                name: {{ include "joanie.fullname" . }}
+            - configMapRef:
+                name: {{ include "joanie.fullname" . }}-dotenv
+          {{- if .Values.customLivenessProbe }}
+          livenessProbe: {{- toYaml .Values.customLivenessProbe | nindent 12 }}
+          {{ else }}
+          livenessProbe:
+            httpGet:
+              path: {{.Values.livenessProbe.path }}
+              port: {{ .Values.service.port }}
+              httpHeaders:
+                - name: Host
+                  value: "{{ include  "joanie.host" .   }}"
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.livenessProbe.periodeSeconds }}
+          {{- end }}
+          {{- if .Values.customReadinessProbe }}
+          readinessProbe: {{- toYaml .Values.customReadinessProbe | nindent 12 }}
+          {{ else }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.readinessProbe.path }}
+              port: {{ .Values.service.port }}
+              httpHeaders:
+                - name: Host
+                  value: "{{ include "joanie.host" .   }}"
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.readinessProbe.periodeSeconds }}
+          {{- end }}
+          {{- if .Values.resources }}
+          resources: {{ toYaml .Values.resources | nindent 12 }}
+          {{- end }}

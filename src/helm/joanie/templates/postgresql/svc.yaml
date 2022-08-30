@@ -1,0 +1,24 @@
+{{ if not .Values.postgresql.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "joanie.fullname" . }}-postgresql
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{- include "joanie.labels" . | nindent 4 }}
+    {{- if .Values.commonLabels }}
+    {{ toYaml .Values.commonLabels | nindent 4 }}
+    {{- end }}
+    app.kubernetes.io/component: postgresql
+  annotations:
+{{- if .Values.commonAnnotations }}
+{{- toYaml .Values.commonAnnotations | nindent 4 }}
+{{- end }}
+    "helm.sh/hook": pre-upgrade, pre-install
+    "helm.sh/hook-weight": "-5"
+spec:
+  ports:
+    - name: tcp-postgresql
+      port: {{ .Values.databasePort }}
+      protocol: TCP
+      targetPort: {{ .Values.databasePort }}
+{{- end }}

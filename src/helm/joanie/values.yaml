@@ -1,0 +1,141 @@
+# Number of joanie replicas to deploy
+replicaCount: 1
+
+# Settings for joanie image
+image:
+  repository: fundocker/joanie
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "main"
+
+# Docker registry secret names as an array
+imagePullSecrets: []
+
+# String to partially override joanie.fullname template (will maintain the release name)
+nameOverride: ""
+
+# String to fully override joanie.fullname template
+fullnameOverride: ""
+
+# Labels to add to all deployed resources
+commonLabels: {}
+
+# Annotations to add to all deployed resources
+commonAnnotations: {}
+
+# Extra Labels for Joanie pods
+podLabels: {}
+
+# Annotations for joanie pods
+podAnnotations: {}
+
+# Joanie pods security context (https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container)
+podSecurityContext: 
+  runAsUser: 10000
+  runAsGroup: 0
+
+# Joanie service parameters
+service:
+  type: ClusterIP
+  port: 8000
+
+# Joanie containers' resource requests and limits
+resources:
+# limits:
+#   cpu: 100m
+#   memory: 128Mi
+  requests:
+    cpu: 50m
+    memory: 500Mi
+
+# Affinity for pod assignement
+affinity: {}
+
+# The cluster domain ( this variable is to be overwritten )
+domainName: localhost
+
+# Joanie app Django settings to be used in deployement
+appDjangoSettingsModule: "joanie.settings"
+appDjangoConfiguration: "Development"
+
+# Joanie app secrets
+DjangoSecretKey: ThisIsAnExampleKeyForTestPurposeOnly
+# FIXME uncomment this variable and replace with your sentry's credentials
+# DjangoSentryDsn: https://super:django@sentry.io/foo
+DjangoJwtPrivateSigningKey: 1234
+
+# Database settings used in the joanie app deployement
+## Postgresql database port
+databasePort: 5432
+## Postgresql database name
+databaseName: "joanie"
+
+# Configure options for the joanie app containers' liveness probe, readiness probe and container security.
+## Joanie containers' liveness probe
+livenessProbe:
+  path:  /__heartbeat__ 
+  initialDelaySeconds: 60
+  periodSeconds: 30
+## Joanie containers' readiness probe
+readinessProbe:
+  path: /__lbheartbeat__
+  initialDelaySeconds: 10
+  periodSeconds: 5
+## Joanie containers' security context
+containerSecurityContext: 
+  enabled: false
+  runAsUser: 1001
+  runAsNonRoot: true
+  allowPrivilegeEscalation: false
+
+# Configure the ingress nginx settings
+ingress:
+## Name of the cert-manager to be used to generate the tls secret
+  acmeIssuerName: ""
+## Activate the HTTP basic auth, a secret that contains the credentials needs to be created manually 
+## https://kubernetes.github.io/ingress-nginx/examples/auth/basic/
+  activateHttpBasicAuth: false
+  htpasswdSecretName: basic-auth
+  httpBasicAuthMessage: "Restricted Area"
+## List of IP addresses that can bypass the HTTP basic auth
+  bypassHtaccessIpWhitelist: []
+## List of the IP addresses that can access the /admin path
+  adminIpWhitelist: []
+## Name of the tls secret (this secret is either created manually or created by the cert-manager during deployement)
+  tlsSecretName: ""
+
+# Set the variable postgresql.enabled to true if you want to deploy a database alongside the application joanie.
+# the bitnami postgresql helm chart is used for this purpose, the next section overrides the default values set
+# by the postgresql subchart.(https://artifacthub.io/packages/helm/bitnami/postgresql)
+postgresql:
+  commonAnnotations:
+    "helm.sh/hook": pre-upgrade, pre-install
+    "helm.sh/hook-weight": "-5"
+  enabled: true
+  image:
+    tag: 14
+  auth:
+    enablePostgreUser: false
+    username: fun
+    database: joanie
+    password: pass
+  primary:
+    livenessProbe:
+      enabled: false
+    readinessProbe:
+      enabled: false
+    resources:
+      requests:
+        cpu: "10m"
+        memory: "100Mi"
+    podSecurityContext:
+      enabled: true 
+      runAsUser: 10000
+      runAsGroup: 0
+    containerSecurityContext:
+      enabled: false
+    persistence:
+      enabled: false
+
+# External database IP (only needed when postgresql.enabled set to false )
+endpointPostgresqlIp: ""
