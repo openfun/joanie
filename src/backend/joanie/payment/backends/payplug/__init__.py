@@ -208,6 +208,7 @@ class PayplugBackend(BasePaymentBackend):
                 "Content-Type": "appliation/json",
                 "Payplug-Version": self.configuration.get("api_version"),
             },
+            timeout=10,
         )
 
         if not response.ok:

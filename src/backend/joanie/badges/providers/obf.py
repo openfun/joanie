@@ -95,6 +95,7 @@ class OBFAPIClient(requests.Session):
                 "client_id": client_id,
                 "client_secret": client_secret,
             },
+            timeout=10,
         )
         try:
             json_response = response.json()
