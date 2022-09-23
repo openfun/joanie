@@ -37,7 +37,7 @@ COMPOSE              = DOCKER_USER=$(DOCKER_USER) docker-compose
 COMPOSE_RUN          = $(COMPOSE) run --rm
 COMPOSE_RUN_APP      = $(COMPOSE_RUN) app-dev
 COMPOSE_RUN_CROWDIN  = $(COMPOSE_RUN) crowdin crowdin
-COMPOSE_RUN_MAIL_YARN= $(COMPOSE_RUN) mail-generator yarn 
+COMPOSE_RUN_MAIL_YARN= $(COMPOSE_RUN) mail-generator yarn
 COMPOSE_TEST_RUN     = $(COMPOSE_RUN)
 COMPOSE_TEST_RUN_APP = $(COMPOSE_TEST_RUN) app-dev
 MANAGE               = $(COMPOSE_RUN_APP) python manage.py
@@ -67,7 +67,7 @@ bootstrap: \
 	migrate \
 	i18n-compile \
 	install-mails \
-	build-mails 
+	build-mails
 .PHONY: bootstrap
 
 # -- Docker/compose
@@ -147,7 +147,7 @@ test: \
 .PHONY: test
 
 test-back: ## run back-end tests
-	bin/pytest
+	bin/pytest -k test_api_enrollment_create_with_unknown_course_run
 .PHONY: test-back
 
 migrate:  ## run django migrations for the joanie project.
@@ -200,7 +200,7 @@ i18n-generate-and-upload: \
 
 build-mails: ## Convert mjml files to html and text
 	@$(COMPOSE_RUN_MAIL_YARN) build-mails
-.PHONY: build-mails 
+.PHONY: build-mails
 
 build-mails-html-to-plain-text: ## Convert html files to text
 	@$(COMPOSE_RUN_MAIL_YARN) build-mails-html-to-plain-text
@@ -208,11 +208,11 @@ build-mails-html-to-plain-text: ## Convert html files to text
 
 build-mjml-to-html:	## Convert mjml files to html and text
 	@$(COMPOSE_RUN_MAIL_YARN) build-mjml-to-html
-.PHONY: build-mjml-to-html 
+.PHONY: build-mjml-to-html
 
-install-mails: ## mail-generator yarn install 
+install-mails: ## mail-generator yarn install
 	@$(COMPOSE_RUN_MAIL_YARN) install
-.PHONY: install-mails 	
+.PHONY: install-mails
 
 
 # -- Misc

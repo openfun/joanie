@@ -1,4 +1,5 @@
 """Tests for the Enrollment API."""
+# pylint: disable=too-many-lines
 import itertools
 import json
 import random
@@ -110,8 +111,33 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "results": [
                     {
                         "id": str(enrollment.uid),
-                        "user": enrollment.user.username,
-                        "course_run": enrollment.course_run.resource_link,
+                        "course_run": {
+                            "id": enrollment.course_run.id,
+                            "resource_link": enrollment.course_run.resource_link,
+                            "title": enrollment.course_run.title,
+                            "enrollment_start": enrollment.course_run.enrollment_start.isoformat().replace(  # noqa pylint: disable=line-too-long
+                                "+00:00", "Z"
+                            ),
+                            "enrollment_end": enrollment.course_run.enrollment_end.isoformat().replace(  # noqa pylint: disable=line-too-long
+                                "+00:00", "Z"
+                            ),
+                            "start": enrollment.course_run.start.isoformat().replace(
+                                "+00:00", "Z"
+                            ),
+                            "end": enrollment.course_run.end.isoformat().replace(
+                                "+00:00", "Z"
+                            ),
+                            "state": {
+                                "priority": enrollment.course_run.state["priority"],
+                                "text": enrollment.course_run.state["text"],
+                                "call_to_action": enrollment.course_run.state[
+                                    "call_to_action"
+                                ],
+                                "datetime": enrollment.course_run.state["datetime"]
+                                .isoformat()
+                                .replace("+00:00", "Z"),
+                            },
+                        },
                         "is_active": enrollment.is_active,
                         "state": enrollment.state,
                     }
@@ -138,8 +164,37 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "results": [
                     {
                         "id": str(other_enrollment.uid),
-                        "user": other_enrollment.user.username,
-                        "course_run": other_enrollment.course_run.resource_link,
+                        "course_run": {
+                            "id": other_enrollment.course_run.id,
+                            "resource_link": other_enrollment.course_run.resource_link,
+                            "title": other_enrollment.course_run.title,
+                            "enrollment_start": other_enrollment.course_run.enrollment_start.isoformat().replace(  # noqa pylint: disable=line-too-long
+                                "+00:00", "Z"
+                            ),
+                            "enrollment_end": other_enrollment.course_run.enrollment_end.isoformat().replace(  # noqa pylint: disable=line-too-long
+                                "+00:00", "Z"
+                            ),
+                            "start": other_enrollment.course_run.start.isoformat().replace(
+                                "+00:00", "Z"
+                            ),
+                            "end": other_enrollment.course_run.end.isoformat().replace(
+                                "+00:00", "Z"
+                            ),
+                            "state": {
+                                "priority": other_enrollment.course_run.state[
+                                    "priority"
+                                ],
+                                "text": other_enrollment.course_run.state["text"],
+                                "call_to_action": other_enrollment.course_run.state[
+                                    "call_to_action"
+                                ],
+                                "datetime": other_enrollment.course_run.state[
+                                    "datetime"
+                                ]
+                                .isoformat()
+                                .replace("+00:00", "Z"),
+                            },
+                        },
                         "is_active": other_enrollment.is_active,
                         "state": other_enrollment.state,
                     }
@@ -188,8 +243,29 @@ class EnrollmentApiTest(BaseAPITestCase):
             content,
             {
                 "id": str(enrollment.uid),
-                "user": user.username,
-                "course_run": enrollment.course_run.resource_link,
+                "course_run": {
+                    "id": enrollment.course_run.id,
+                    "resource_link": enrollment.course_run.resource_link,
+                    "title": enrollment.course_run.title,
+                    "enrollment_start": enrollment.course_run.enrollment_start.isoformat().replace(
+                        "+00:00", "Z"
+                    ),
+                    "enrollment_end": enrollment.course_run.enrollment_end.isoformat().replace(
+                        "+00:00", "Z"
+                    ),
+                    "start": enrollment.course_run.start.isoformat().replace(
+                        "+00:00", "Z"
+                    ),
+                    "end": enrollment.course_run.end.isoformat().replace("+00:00", "Z"),
+                    "state": {
+                        "priority": enrollment.course_run.state["priority"],
+                        "text": enrollment.course_run.state["text"],
+                        "call_to_action": enrollment.course_run.state["call_to_action"],
+                        "datetime": enrollment.course_run.state["datetime"]
+                        .isoformat()
+                        .replace("+00:00", "Z"),
+                    },
+                },
                 "is_active": enrollment.is_active,
                 "state": enrollment.state,
             },
@@ -256,8 +332,27 @@ class EnrollmentApiTest(BaseAPITestCase):
             content,
             {
                 "id": str(enrollment.uid),
-                "course_run": course_run.resource_link,
-                "user": "panoramix",
+                "course_run": {
+                    "id": course_run.id,
+                    "resource_link": course_run.resource_link,
+                    "title": course_run.title,
+                    "enrollment_start": course_run.enrollment_start.isoformat().replace(
+                        "+00:00", "Z"
+                    ),
+                    "enrollment_end": course_run.enrollment_end.isoformat().replace(
+                        "+00:00", "Z"
+                    ),
+                    "start": course_run.start.isoformat().replace("+00:00", "Z"),
+                    "end": course_run.end.isoformat().replace("+00:00", "Z"),
+                    "state": {
+                        "priority": course_run.state["priority"],
+                        "text": course_run.state["text"],
+                        "call_to_action": course_run.state["call_to_action"],
+                        "datetime": course_run.state["datetime"]
+                        .isoformat()
+                        .replace("+00:00", "Z"),
+                    },
+                },
                 "is_active": is_active,
                 "state": "set",
             },
@@ -341,8 +436,27 @@ class EnrollmentApiTest(BaseAPITestCase):
             content,
             {
                 "id": str(enrollment.uid),
-                "course_run": course_run.resource_link,
-                "user": "panoramix",
+                "course_run": {
+                    "id": course_run.id,
+                    "resource_link": course_run.resource_link,
+                    "title": course_run.title,
+                    "enrollment_start": course_run.enrollment_start.isoformat().replace(
+                        "+00:00", "Z"
+                    ),
+                    "enrollment_end": course_run.enrollment_end.isoformat().replace(
+                        "+00:00", "Z"
+                    ),
+                    "start": course_run.start.isoformat().replace("+00:00", "Z"),
+                    "end": course_run.end.isoformat().replace("+00:00", "Z"),
+                    "state": {
+                        "priority": course_run.state["priority"],
+                        "text": course_run.state["text"],
+                        "call_to_action": course_run.state["call_to_action"],
+                        "datetime": course_run.state["datetime"]
+                        .isoformat()
+                        .replace("+00:00", "Z"),
+                    },
+                },
                 "is_active": is_active,
                 "state": "failed",
             },
@@ -379,6 +493,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
+
         self.assertEqual(response.status_code, 201)
         content = json.loads(response.content)
 
@@ -389,8 +504,27 @@ class EnrollmentApiTest(BaseAPITestCase):
             content,
             {
                 "id": str(enrollment.uid),
-                "course_run": course_run.resource_link,
-                "user": "panoramix",
+                "course_run": {
+                    "id": course_run.id,
+                    "resource_link": course_run.resource_link,
+                    "title": course_run.title,
+                    "enrollment_start": course_run.enrollment_start.isoformat().replace(
+                        "+00:00", "Z"
+                    ),
+                    "enrollment_end": course_run.enrollment_end.isoformat().replace(
+                        "+00:00", "Z"
+                    ),
+                    "start": course_run.start.isoformat().replace("+00:00", "Z"),
+                    "end": course_run.end.isoformat().replace("+00:00", "Z"),
+                    "state": {
+                        "priority": course_run.state["priority"],
+                        "text": course_run.state["text"],
+                        "call_to_action": course_run.state["call_to_action"],
+                        "datetime": course_run.state["datetime"]
+                        .isoformat()
+                        .replace("+00:00", "Z"),
+                    },
+                },
                 "is_active": is_active,
                 "state": "failed",
             },
@@ -464,8 +598,27 @@ class EnrollmentApiTest(BaseAPITestCase):
             content,
             {
                 "id": str(enrollment.uid),
-                "course_run": resource_link,
-                "user": order.owner.username,
+                "course_run": {
+                    "id": course_run.id,
+                    "resource_link": course_run.resource_link,
+                    "title": course_run.title,
+                    "enrollment_start": course_run.enrollment_start.isoformat().replace(
+                        "+00:00", "Z"
+                    ),
+                    "enrollment_end": course_run.enrollment_end.isoformat().replace(
+                        "+00:00", "Z"
+                    ),
+                    "start": course_run.start.isoformat().replace("+00:00", "Z"),
+                    "end": course_run.end.isoformat().replace("+00:00", "Z"),
+                    "state": {
+                        "priority": course_run.state["priority"],
+                        "text": course_run.state["text"],
+                        "call_to_action": course_run.state["call_to_action"],
+                        "datetime": course_run.state["datetime"]
+                        .isoformat()
+                        .replace("+00:00", "Z"),
+                    },
+                },
                 "is_active": is_active,
                 "state": "set",
             },
@@ -609,10 +762,86 @@ class EnrollmentApiTest(BaseAPITestCase):
             content,
             {
                 "id": str(enrollment.uid),
-                "course_run": course_run.resource_link,
-                "user": "panoramix",
+                "course_run": {
+                    "id": course_run.id,
+                    "resource_link": course_run.resource_link,
+                    "title": course_run.title,
+                    "enrollment_start": course_run.enrollment_start.isoformat().replace(
+                        "+00:00", "Z"
+                    ),
+                    "enrollment_end": course_run.enrollment_end.isoformat().replace(
+                        "+00:00", "Z"
+                    ),
+                    "start": course_run.start.isoformat().replace("+00:00", "Z"),
+                    "end": course_run.end.isoformat().replace("+00:00", "Z"),
+                    "state": {
+                        "priority": course_run.state["priority"],
+                        "text": course_run.state["text"],
+                        "call_to_action": course_run.state["call_to_action"],
+                        "datetime": course_run.state["datetime"]
+                        .isoformat()
+                        .replace("+00:00", "Z"),
+                    },
+                },
                 "is_active": is_active,
                 "state": "set",
+            },
+        )
+
+    def test_api_enrollment_create_for_closed_course_run(self):
+        """An authenticated user should not be allowed to enroll to a closed course run."""
+        user = factories.UserFactory()
+        token = self.get_user_token(username=user.username)
+        target_course = factories.CourseFactory()
+        course_run = self.create_closed_course_run(
+            course=target_course,
+            resource_link="http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course",
+        )
+
+        data = {"course_run": course_run.resource_link, "is_active": True}
+
+        response = self.client.post(
+            "/api/enrollments/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, 400)
+
+        self.assertEqual(
+            response.json(),
+            {
+                "__all__": [
+                    "You are not allowed to enroll to a course run not opened for enrollment."
+                ]
+            },
+        )
+
+    def test_api_enrollment_create_with_unknown_course_run(self):
+        """An authenticated user should not be allowed to enroll to an unknown course run."""
+
+        user = factories.UserFactory()
+        token = self.get_user_token(username=user.username)
+        data = {"course_run": "this-course-run-does-not-exist", "is_active": True}
+
+        response = self.client.post(
+            "/api/enrollments/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+        self.assertEqual(
+            response.json(),
+            {
+                "__all__": [
+                    (
+                        "A course run with resource link "
+                        '"this-course-run-does-not-exist" does not exist.'
+                    )
+                ]
             },
         )
 
@@ -771,42 +1000,37 @@ class EnrollmentApiTest(BaseAPITestCase):
                 content,
                 {
                     "id": str(enrollment.uid),
-                    "user": enrollment.user.username,
-                    "course_run": enrollment.course_run.resource_link,
+                    "course_run": {
+                        "id": enrollment.course_run.id,
+                        "resource_link": enrollment.course_run.resource_link,
+                        "title": enrollment.course_run.title,
+                        "enrollment_start": enrollment.course_run.enrollment_start.isoformat().replace(  # noqa pylint: disable=line-too-long
+                            "+00:00", "Z"
+                        ),
+                        "enrollment_end": enrollment.course_run.enrollment_end.isoformat().replace(
+                            "+00:00", "Z"
+                        ),
+                        "start": enrollment.course_run.start.isoformat().replace(
+                            "+00:00", "Z"
+                        ),
+                        "end": enrollment.course_run.end.isoformat().replace(
+                            "+00:00", "Z"
+                        ),
+                        "state": {
+                            "priority": enrollment.course_run.state["priority"],
+                            "text": enrollment.course_run.state["text"],
+                            "call_to_action": enrollment.course_run.state[
+                                "call_to_action"
+                            ],
+                            "datetime": enrollment.course_run.state["datetime"]
+                            .isoformat()
+                            .replace("+00:00", "Z"),
+                        },
+                    },
                     "is_active": is_active_new,
                     "state": "set",
                 },
             )
-
-    def test_api_enrollment_create_for_closed_course_run(self):
-        """An authenticated user should not be allowed to enroll to a closed course run."""
-        user = factories.UserFactory()
-        token = self.get_user_token(username=user.username)
-        target_course = factories.CourseFactory()
-        course_run = self.create_closed_course_run(
-            course=target_course,
-            resource_link="http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course",
-        )
-
-        data = {"course_run": course_run.resource_link, "is_active": True}
-
-        response = self.client.post(
-            "/api/enrollments/",
-            data=data,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-        self.assertEqual(response.status_code, 400)
-        content = json.loads(response.content)
-
-        self.assertEqual(
-            content,
-            {
-                "__all__": [
-                    "You are not allowed to enroll to a course run not opened for enrollment."
-                ]
-            },
-        )
 
     # pylint: disable=too-many-locals
     def _check_api_enrollment_update_detail(self, enrollment, user, http_code):
