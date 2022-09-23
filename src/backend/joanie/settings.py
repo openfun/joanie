@@ -104,13 +104,16 @@ class Base(Configuration):
     # https://docs.djangoproject.com/en/3.1/topics/i18n/
 
     # Languages
-    LANGUAGE_CODE = "en-us"
+    LANGUAGE_CODE = values.Value("en-us", environ_name="LANGUAGE_CODE")
 
     # Careful! Languages should be ordered by priority, as this tuple is used to get
     # fallback/default languages throughout the app.
-    LANGUAGES = (
-        ("en-us", _("English")),
-        ("fr-fr", _("French")),
+    LANGUAGES = values.SingleNestedTupleValue(
+        (
+            ("en-us", _("English")),
+            ("fr-fr", _("French")),
+        ),
+        environ_name="LANGUAGES",
     )
 
     LOCALE_PATHS = (os.path.join(BASE_DIR, "locale"),)
@@ -459,13 +462,6 @@ class Production(Base):
 
     # Privacy
     SECURE_REFERRER_POLICY = "same-origin"
-
-    # Language
-    LANGUAGE_CODE = "fr-fr"
-    LANGUAGES = (
-        ("fr-fr", _("French")),
-        ("en-us", _("English")),
-    )
 
     # Media
     DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
