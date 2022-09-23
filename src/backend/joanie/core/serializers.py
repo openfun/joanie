@@ -166,51 +166,6 @@ class ProductSerializer(serializers.ModelSerializer):
         ).data
 
 
-class CourseRunEnrollmentSerializer(serializers.ModelSerializer):
-    """
-    Enrollment for course run serializer
-    """
-
-    id = serializers.CharField(source="uid", read_only=True, required=False)
-    resource_link = serializers.CharField(
-        read_only=True, source="course_run.resource_link"
-    )
-    title = serializers.CharField(read_only=True, source="course_run.title")
-    start = serializers.DateTimeField(read_only=True, source="course_run.start")
-    end = serializers.DateTimeField(read_only=True, source="course_run.end")
-    enrollment_start = serializers.DateTimeField(
-        read_only=True, source="course_run.enrollment_start"
-    )
-    enrollment_end = serializers.DateTimeField(
-        read_only=True, source="course_run.enrollment_end"
-    )
-
-    class Meta:
-        model = models.Enrollment
-        fields = [
-            "id",
-            "is_active",
-            "resource_link",
-            "title",
-            "start",
-            "end",
-            "enrollment_start",
-            "enrollment_end",
-            "state",
-        ]
-        read_only_fields = [
-            "id",
-            "is_active",
-            "resource_link",
-            "title",
-            "start",
-            "end",
-            "enrollment_start",
-            "enrollment_end",
-            "state",
-        ]
-
-
 class OrderLiteSerializer(serializers.ModelSerializer):
     """
     Minimal Order model serializer
@@ -260,7 +215,7 @@ class OrderLiteSerializer(serializers.ModelSerializer):
         """
         For the current order, retrieve its related enrollments.
         """
-        return CourseRunEnrollmentSerializer(
+        return EnrollmentSerializer(
             instance=order.get_enrollments(),
             many=True,
             context=self.context,
@@ -364,15 +319,30 @@ class EnrollmentSerializer(serializers.ModelSerializer):
     """
 
     id = serializers.CharField(source="uid", read_only=True, required=False)
-    user = serializers.CharField(source="user.username", read_only=True, required=False)
-    course_run = serializers.SlugRelatedField(
-        queryset=models.CourseRun.objects.all(), slug_field="resource_link"
-    )
+    course_run = CourseRunSerializer(read_only=True)
 
     class Meta:
         model = models.Enrollment
-        fields = ["id", "user", "course_run", "is_active", "state"]
-        read_only_fields = ["id", "user", "state"]
+        fields = ["id", "course_run", "is_active", "state"]
+        read_only_fields = ["id", "state"]
+
+    def create(self, validated_data):
+        """
+        Retrieve the course run ressource through the provided resource_link
+        then try to create the enrollment ressource.
+        """
+        resource_link = self.initial_data["course_run"]
+        try:
+            course_run = models.CourseRun.objects.get(resource_link=resource_link)
+        except models.CourseRun.DoesNotExist as exception:
+            message = (
+                f'A course run with resource link "{resource_link}" does not exist.'
+            )
+            raise serializers.ValidationError({"__all__": [message]}) from exception
+
+        validated_data["course_run"] = course_run
+
+        return super().create(validated_data=validated_data)
 
     def update(self, instance, validated_data):
         """
@@ -455,7 +425,7 @@ class OrderSerializer(serializers.ModelSerializer):
         """
         For the current order, retrieve its related enrollments.
         """
-        return CourseRunEnrollmentSerializer(
+        return EnrollmentSerializer(
             instance=order.get_enrollments(),
             many=True,
             context=self.context,

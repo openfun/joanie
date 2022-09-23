@@ -342,20 +342,33 @@ class CourseApiTest(BaseAPITestCase):
                             "id": str(enrollment.uid),
                             "is_active": enrollment.is_active,
                             "state": enrollment.state,
-                            "title": enrollment.course_run.title,
-                            "resource_link": enrollment.course_run.resource_link,
-                            "start": enrollment.course_run.start.isoformat().replace(
-                                "+00:00", "Z"
-                            ),
-                            "end": enrollment.course_run.end.isoformat().replace(
-                                "+00:00", "Z"
-                            ),
-                            "enrollment_start": enrollment.course_run.enrollment_start.isoformat().replace(  # noqa pylint: disable=line-too-long
-                                "+00:00", "Z"
-                            ),
-                            "enrollment_end": enrollment.course_run.enrollment_end.isoformat().replace(  # noqa pylint: disable=line-too-long
-                                "+00:00", "Z"
-                            ),
+                            "course_run": {
+                                "id": enrollment.course_run.id,
+                                "resource_link": enrollment.course_run.resource_link,
+                                "title": enrollment.course_run.title,
+                                "enrollment_start": enrollment.course_run.enrollment_start.isoformat().replace(  # noqa pylint: disable=line-too-long
+                                    "+00:00", "Z"
+                                ),
+                                "enrollment_end": enrollment.course_run.enrollment_end.isoformat().replace(  # noqa pylint: disable=line-too-long
+                                    "+00:00", "Z"
+                                ),
+                                "start": enrollment.course_run.start.isoformat().replace(
+                                    "+00:00", "Z"
+                                ),
+                                "end": enrollment.course_run.end.isoformat().replace(
+                                    "+00:00", "Z"
+                                ),
+                                "state": {
+                                    "priority": enrollment.course_run.state["priority"],
+                                    "text": enrollment.course_run.state["text"],
+                                    "call_to_action": enrollment.course_run.state[
+                                        "call_to_action"
+                                    ],
+                                    "datetime": enrollment.course_run.state["datetime"]
+                                    .isoformat()
+                                    .replace("+00:00", "Z"),
+                                },
+                            },
                         }
                         for enrollment in order.get_enrollments()
                     ],
@@ -554,7 +567,9 @@ class CourseApiTest(BaseAPITestCase):
 
         self.assertEqual(len(enrollments), 1)
 
-        self.assertEqual(enrollments[0]["resource_link"], cr1.resource_link)
+        self.assertEqual(
+            enrollments[0]["course_run"]["resource_link"], cr1.resource_link
+        )
         self.assertEqual(enrollments[0]["state"], enums.ENROLLMENT_STATE_SET)
         self.assertTrue(enrollments[0]["is_active"])
 
