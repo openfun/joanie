@@ -18,6 +18,8 @@ from .base_payment import BasePaymentTestCase
 class TestBasePaymentBackend(BasePaymentBackend):
     """Class that instantiates BasePaymentBackend and calls private methods"""
 
+    __test__ = False
+
     def call_do_on_payment_success(self, order, payment):
         """call private method _do_on_payment_success"""
         self._do_on_payment_success(order, payment)
