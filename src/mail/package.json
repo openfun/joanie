@@ -13,7 +13,7 @@
     "build-mails": "yarn build-mjml-to-html; yarn build-mails-html-to-plain-text;"
   },
   "volta": {
-    "node": "16.17.1"
+    "node": "16.15.1"
   },
   "repository": "https://github.com/openfun/joanie",
   "author": "France Université Numérique",

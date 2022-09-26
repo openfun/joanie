@@ -12,6 +12,16 @@
       "matchPackageNames": [
         "django"
       ]
+    },
+    {
+      "enabled": false,
+      "groupName": "ignored js dependencies",
+      "matchManagers": [
+        "npm"
+      ],
+      "matchPackageNames": [
+        "node"
+      ]
     }
   ]
 }
