@@ -30,8 +30,8 @@ class OrganizationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Organization
-        fields = ["code", "title"]
-        read_only_fields = ["code", "title"]
+        fields = ["code", "title", "logo"]
+        read_only_fields = ["code", "title", "logo"]
 
 
 class TargetCourseSerializer(serializers.ModelSerializer):

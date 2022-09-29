@@ -14,6 +14,8 @@ from joanie.tests.base import BaseAPITestCase
 class CourseApiTest(BaseAPITestCase):
     """Test the API of the Course object."""
 
+    test_media = "http://testserver/media/"
+
     def test_api_course_read_list_anonymous(self):
         """It should not be possible to retrieve the list of courses for anonymous users."""
         factories.CourseFactory()
@@ -97,12 +99,12 @@ class CourseApiTest(BaseAPITestCase):
         with self.assertNumQueries(11):
             response = self.client.get(f"/api/courses/{course.code}/")
 
-        content = json.loads(response.content)
         expected = {
             "code": course.code,
             "organization": {
                 "code": course.organization.code,
                 "title": course.organization.title,
+                "logo": f"{self.test_media}{course.organization.logo}",
             },
             "title": course.title,
             "orders": None,
@@ -119,6 +121,7 @@ class CourseApiTest(BaseAPITestCase):
                             "organization": {
                                 "code": target_course.organization.code,
                                 "title": target_course.organization.title,
+                                "logo": f"{self.test_media}{target_course.organization.logo}",
                             },
                             "course_runs": [
                                 {
@@ -172,7 +175,7 @@ class CourseApiTest(BaseAPITestCase):
         }
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(content, expected)
+        self.assertEqual(response.json(), expected)
 
         # - An other request should get the cached response
         with self.assertNumQueries(1):
@@ -317,12 +320,12 @@ class CourseApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        content = json.loads(response.content)
         expected = {
             "code": course.code,
             "organization": {
                 "code": course.organization.code,
                 "title": course.organization.title,
+                "logo": f"{self.test_media}{course.organization.logo}",
             },
             "title": course.title,
             "orders": [
@@ -394,6 +397,7 @@ class CourseApiTest(BaseAPITestCase):
                             "organization": {
                                 "code": target_course.organization.code,
                                 "title": target_course.organization.title,
+                                "logo": f"{self.test_media}{target_course.organization.logo}",
                             },
                             "course_runs": [
                                 {
@@ -447,7 +451,7 @@ class CourseApiTest(BaseAPITestCase):
         }
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(content, expected)
+        self.assertEqual(response.json(), expected)
 
         # - When user is authenticated, response should be partially cached.
         # Course information should have been cached, but orders not.
