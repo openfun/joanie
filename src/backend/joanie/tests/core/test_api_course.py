@@ -107,7 +107,6 @@ class CourseApiTest(BaseAPITestCase):
                 "logo": f"{self.test_media}{course.organization.logo}",
             },
             "title": course.title,
-            "orders": None,
             "products": [
                 {
                     "call_to_action": product.call_to_action,
@@ -248,73 +247,7 @@ class CourseApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.get_user_token(user.username)
 
-        # User has purchased each product and he is enrolled to the related course run
-        # - Product 1
-        order1 = factories.OrderFactory(
-            owner=user,
-            product=product1,
-            course=course,
-        )
-        # - Create a pro forma invoice related to the order to mark it as validated
-        ProformaInvoiceFactory(order=order1, total=order1.total)
-
-        # - Enrollment to course run 11
-        factories.EnrollmentFactory(
-            user=user, course_run=target_course_run11, is_active=True
-        )
-        # - Enrollment to course run 12
-        factories.EnrollmentFactory(
-            user=user, course_run=target_course_run12, is_active=True
-        )
-        # - Product 2
-        order2 = factories.OrderFactory(
-            owner=user,
-            product=product2,
-            course=course,
-        )
-        # - Create a pro forma invoice related to the order to mark it as validated
-        ProformaInvoiceFactory(order=order2, total=order2.total)
-        # - Enrollment to course run 21
-        factories.EnrollmentFactory(
-            user=user, course_run=target_course_run21, is_active=True
-        )
-        # - Enrollment to course run 22
-        factories.EnrollmentFactory(
-            user=user, course_run=target_course_run22, is_active=True
-        )
-
-        # - Create a certificate
-        certificate = factories.CertificateFactory(order=order2)
-
-        # - Create a set of random users which possibly purchase one of the products
-        # then enroll to one of its course run.
-        for _ in range(random.randrange(1, 5)):
-            user = factories.UserFactory()
-            should_purchase = random.choice([True, False])
-            should_enroll = random.choice([True, False])
-
-            if should_purchase:
-                product = random.choice(course.products.all())
-                order = factories.OrderFactory(
-                    owner=user,
-                    course=course,
-                    product=product,
-                )
-                # - Create a pro forma  invoice related to the order
-                #   to mark it as validated
-                ProformaInvoiceFactory(order=order, total=order.total)
-
-                if should_enroll:
-                    course_run = random.choice(
-                        models.CourseRun.objects.filter(
-                            course__product_relations__product=product
-                        )
-                    )
-                    factories.EnrollmentFactory(
-                        user=user, course_run=course_run, is_active=True
-                    )
-
-        with self.assertNumQueries(36):
+        with self.assertNumQueries(21):
             response = self.client.get(
                 f"/api/courses/{course.code}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -328,56 +261,6 @@ class CourseApiTest(BaseAPITestCase):
                 "logo": f"{self.test_media}{course.organization.logo}",
             },
             "title": course.title,
-            "orders": [
-                {
-                    "id": str(order.uid),
-                    "certificate": str(certificate.uid)
-                    if order.uid == order2.uid
-                    else None,
-                    "created_on": order.created_on.isoformat().replace("+00:00", "Z"),
-                    "total": float(order.total.amount),
-                    "total_currency": str(order.total.currency),
-                    "state": order.state,
-                    "main_proforma_invoice": order.main_proforma_invoice.reference,
-                    "product": str(order.product.uid),
-                    "enrollments": [
-                        {
-                            "id": str(enrollment.uid),
-                            "is_active": enrollment.is_active,
-                            "state": enrollment.state,
-                            "course_run": {
-                                "id": enrollment.course_run.id,
-                                "resource_link": enrollment.course_run.resource_link,
-                                "title": enrollment.course_run.title,
-                                "enrollment_start": enrollment.course_run.enrollment_start.isoformat().replace(  # noqa pylint: disable=line-too-long
-                                    "+00:00", "Z"
-                                ),
-                                "enrollment_end": enrollment.course_run.enrollment_end.isoformat().replace(  # noqa pylint: disable=line-too-long
-                                    "+00:00", "Z"
-                                ),
-                                "start": enrollment.course_run.start.isoformat().replace(
-                                    "+00:00", "Z"
-                                ),
-                                "end": enrollment.course_run.end.isoformat().replace(
-                                    "+00:00", "Z"
-                                ),
-                                "state": {
-                                    "priority": enrollment.course_run.state["priority"],
-                                    "text": enrollment.course_run.state["text"],
-                                    "call_to_action": enrollment.course_run.state[
-                                        "call_to_action"
-                                    ],
-                                    "datetime": enrollment.course_run.state["datetime"]
-                                    .isoformat()
-                                    .replace("+00:00", "Z"),
-                                },
-                            },
-                        }
-                        for enrollment in order.get_enrollments()
-                    ],
-                }
-                for order in [order1, order2]
-            ],
             "products": [
                 {
                     "call_to_action": product.call_to_action,
@@ -453,55 +336,28 @@ class CourseApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), expected)
 
-        # - When user is authenticated, response should be partially cached.
-        # Course information should have been cached, but orders not.
-        with self.assertNumQueries(16):
+        # - When user is authenticated, response should be cached.
+        with self.assertNumQueries(1):
             self.client.get(
                 f"/api/courses/{course.code}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-    def test_api_course_read_detail_orders(self):
+    def test_api_course_read_products(self):
         """
-        When user purchased products, if related orders are validated they should
-        be embedded in the response.
+        Products should be embedded in the response.
         """
         user = factories.UserFactory()
         token = self.get_user_token(user.username)
         course = factories.CourseFactory()
 
-        # - User owned a free product
-        product_free = factories.ProductFactory(courses=[course], price="0.00")
-        order_free = factories.OrderFactory(
-            owner=user, product=product_free, course=course
-        )
-
-        # - He also purchased a product
-        product_paid = factories.ProductFactory(courses=[course])
-        order_paid = factories.OrderFactory(
-            owner=user, product=product_paid, course=course
-        )
-        ProformaInvoiceFactory(order=order_paid, total=order_paid.total)
-
-        # - Furthermore it has a pending order
-        product_pending = factories.ProductFactory(courses=[course])
-        order_pending = factories.OrderFactory(
-            owner=user, product=product_pending, course=course
-        )
-
-        # - And a canceled order
-        product_canceled = factories.ProductFactory(courses=[course])
-        order_canceled = factories.OrderFactory(
-            course=course, owner=user, product=product_canceled, is_canceled=True
-        )
-
-        self.assertEqual(order_free.state, enums.ORDER_STATE_VALIDATED)
-        self.assertEqual(order_paid.state, enums.ORDER_STATE_VALIDATED)
-        self.assertEqual(order_pending.state, enums.ORDER_STATE_PENDING)
-        self.assertEqual(order_canceled.state, enums.ORDER_STATE_CANCELED)
+        factories.ProductFactory(courses=[course], price="0.00")
+        factories.ProductFactory(courses=[course])
+        factories.ProductFactory(courses=[course])
+        factories.ProductFactory(courses=[course])
 
         # - Retrieve course information
-        with self.assertNumQueries(16):
+        with self.assertNumQueries(6):
             response = self.client.get(
                 f"/api/courses/{course.code}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -509,15 +365,8 @@ class CourseApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, 200)
 
-        content = json.loads(response.content)
+        content = response.json()
         self.assertEqual(len(content["products"]), 4)
-
-        # - Response should only contain the two validated orders
-        self.assertEqual(len(content["orders"]), 2)
-        self.assertContains(response, str(order_free.uid))
-        self.assertContains(response, str(order_paid.uid))
-        self.assertNotContains(response, str(order_pending.uid))
-        self.assertNotContains(response, str(order_canceled.uid))
 
     @override_settings(
         JOANIE_LMS_BACKENDS=[
@@ -529,54 +378,6 @@ class CourseApiTest(BaseAPITestCase):
             }
         ]
     )
-    # pylint: disable=too-many-locals
-    def test_api_course_read_detail_enrollments(self):
-        """
-        When authenticated user purchased a course's product and then he enrolls
-        to a course run, enrollment information should be embedded
-        in the response
-        """
-        user = factories.UserFactory()
-        token = self.get_user_token(user.username)
-        course, tc1, tc2 = factories.CourseFactory.create_batch(3)
-        cr1 = factories.CourseRunFactory.create_batch(
-            5,
-            course=tc1,
-            start=timezone.now() - timedelta(hours=1),
-            end=timezone.now() + timedelta(hours=2),
-            enrollment_end=timezone.now() + timedelta(hours=1),
-        )[1]
-
-        product = factories.ProductFactory(courses=[course], target_courses=[tc1, tc2])
-
-        # - User purchases the product
-        order = factories.OrderFactory(owner=user, product=product)
-        # - Create pro forma invoice related to the order to mark it as validated
-        ProformaInvoiceFactory(order=order, total=order.total)
-        # - Then enrolls to a course run
-        factories.EnrollmentFactory(
-            course_run=cr1,
-            user=user,
-            is_active=True,
-            state=enums.ENROLLMENT_STATE_SET,
-        )
-
-        response = self.client.get(
-            f"/api/courses/{course.code}/",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-
-        content = json.loads(response.content)
-        enrollments = content["orders"][0]["enrollments"]
-
-        self.assertEqual(len(enrollments), 1)
-
-        self.assertEqual(
-            enrollments[0]["course_run"]["resource_link"], cr1.resource_link
-        )
-        self.assertEqual(enrollments[0]["state"], enums.ENROLLMENT_STATE_SET)
-        self.assertTrue(enrollments[0]["is_active"])
-
     def test_api_course_create_anonymous(self):
         """Anonymous users should not be able to create a course."""
         organization = factories.OrganizationFactory()

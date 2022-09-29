@@ -2,7 +2,6 @@
 
 from django.conf import settings
 from django.core.cache import cache
-from django.db.models import Q
 
 from djmoney.contrib.django_rest_framework import MoneyField
 from rest_framework import serializers
@@ -245,24 +244,6 @@ class CourseSerializer(serializers.ModelSerializer):
             "products",
         ]
 
-    def get_orders(self, instance):
-        """
-        If a user is authenticated, retrieves its orders related to the serializer
-        Course instance else return None
-        """
-        try:
-            username = self.context["username"]
-            orders = models.Order.objects.filter(
-                Q(total=0) | Q(proforma_invoices__isnull=False),
-                owner__username=username,
-                course=instance,
-                is_canceled=False,
-            ).select_related("product")
-
-            return OrderLiteSerializer(orders, many=True).data
-        except KeyError:
-            return None
-
     def to_representation(self, instance):
         """
         Cache the serializer representation that does not vary from user to user
@@ -278,8 +259,6 @@ class CourseSerializer(serializers.ModelSerializer):
                 representation,
                 settings.JOANIE_ANONYMOUS_COURSE_SERIALIZER_CACHE_TTL,
             )
-
-        representation["orders"] = self.get_orders(instance)
 
         return representation
 

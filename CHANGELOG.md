@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Delete nested orders from course endpoint
 - Add logo in organization serializer
 - Configure language through environment variables
 - Send email when the payment is successful
