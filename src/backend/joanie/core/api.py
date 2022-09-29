@@ -41,6 +41,22 @@ def exception_handler(exc, context):
     return drf_exception_handler(exc, context)
 
 
+class DynamicGetFieldContext(viewsets.GenericViewSet):
+    """
+    Add query param fields to the context
+    """
+
+    def get_serializer_context(self):
+        """Add query param fields to the context"""
+        context = super().get_serializer_context()
+        if self.request.method == "GET":
+            query_fields = self.request.query_params.get("fields", None)
+            if query_fields:
+                context.update({"fields": query_fields.split(",")})
+
+        return context
+
+
 class Pagination(pagination.PageNumberPagination):
     """Pagination to display no more than 100 objects per page sorted by creation date."""
 
@@ -48,7 +64,7 @@ class Pagination(pagination.PageNumberPagination):
     page_size = 100
 
 
-class CourseViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class CourseViewSet(mixins.RetrieveModelMixin, DynamicGetFieldContext):
     """API ViewSet for all interactions with courses."""
 
     lookup_field = "code"

@@ -9,6 +9,28 @@ from rest_framework import serializers
 from joanie.core import models
 
 
+class DynamicFieldsModelSerializer(serializers.ModelSerializer):
+    """
+    A ModelSerializer that takes an additional `fields` argument that
+    controls which fields should be displayed.
+    """
+
+    def __init__(self, *args, **kwargs):
+        # Don't pass the 'fields' arg up to the superclass
+        kwargs.pop("fields", None)
+        # Instantiate the superclass normally
+        super().__init__(*args, **kwargs)
+
+        fields = kwargs.get("context").get("fields", None)
+
+        if fields is not None:
+            # Drop any fields that are not specified in the `fields` argument.
+            allowed = set(fields)
+            existing = set(self.fields)
+            for field_name in existing - allowed:
+                self.fields.pop(field_name)
+
+
 class CertificationDefinitionSerializer(serializers.ModelSerializer):
     """
     Serialize information about a certificate definition
@@ -221,7 +243,7 @@ class OrderLiteSerializer(serializers.ModelSerializer):
         ).data
 
 
-class CourseSerializer(serializers.ModelSerializer):
+class CourseSerializer(DynamicFieldsModelSerializer):
     """
     Serialize all information about a course.
     """
@@ -250,6 +272,11 @@ class CourseSerializer(serializers.ModelSerializer):
         then, if user is authenticated, add private information to the representation
         """
         cache_key = instance.get_cache_key()
+
+        # specify a cache key if api calls has been filtered on specific fields
+        if fields := self.context.get("fields", None):
+            cache_key = "-".join(fields)
+
         representation = cache.get(cache_key)
 
         if representation is None:

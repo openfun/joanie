@@ -343,6 +343,206 @@ class CourseApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
+    def test_api_course_read_detail_authenticated_filtered(self):
+        """
+        Filtering fields on API call should get the right fields and change the number of requests
+        """
+        target_course_run11 = factories.CourseRunFactory(
+            resource_link="http://lms.test/courses/course-v1:edx+000011+Demo_Course/course",
+            start=timezone.now() - timedelta(hours=1),
+            end=timezone.now() + timedelta(hours=2),
+            enrollment_end=timezone.now() + timedelta(hours=1),
+        )
+        target_course_run12 = factories.CourseRunFactory(
+            resource_link="http://lms.test/courses/course-v1:edx+000012+Demo_Course/course",
+            start=timezone.now() - timedelta(hours=1),
+            end=timezone.now() + timedelta(hours=2),
+            enrollment_end=timezone.now() + timedelta(hours=1),
+        )
+        target_course_run21 = factories.CourseRunFactory(
+            resource_link="http://lms.test/courses/course-v1:edx+000021+Demo_Course/course",
+            start=timezone.now() - timedelta(hours=1),
+            end=timezone.now() + timedelta(hours=2),
+            enrollment_end=timezone.now() + timedelta(hours=1),
+        )
+        target_course_run22 = factories.CourseRunFactory(
+            resource_link="http://lms.test/courses/course-v1:edx+000022+Demo_Course/course",
+            start=timezone.now() - timedelta(hours=1),
+            end=timezone.now() + timedelta(hours=2),
+            enrollment_end=timezone.now() + timedelta(hours=1),
+        )
+
+        product1 = factories.ProductFactory(
+            target_courses=[target_course_run11.course, target_course_run12.course]
+        )
+        product2 = factories.ProductFactory(
+            target_courses=[target_course_run21.course, target_course_run22.course],
+            type=enums.PRODUCT_TYPE_CREDENTIAL,
+        )
+        course = factories.CourseFactory(products=[product1, product2])
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+
+        # calling api only requesting only products field
+        url = f"/api/courses/{course.code}/?fields=products"
+        with self.assertNumQueries(21):
+            response = self.client.get(
+                url,
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "products": [
+                    {
+                        "call_to_action": product.call_to_action,
+                        "certificate": {
+                            "description": product.certificate_definition.description,
+                            "name": product.certificate_definition.name,
+                            "title": product.certificate_definition.title,
+                        }
+                        if product.certificate_definition
+                        else None,
+                        "id": str(product.uid),
+                        "price": float(product.price.amount),
+                        "price_currency": str(product.price.currency),
+                        "target_courses": [
+                            {
+                                "code": target_course.code,
+                                "organization": {
+                                    "code": target_course.organization.code,
+                                    "title": target_course.organization.title,
+                                    "logo": f"{self.test_media}{target_course.organization.logo}",
+                                },
+                                "course_runs": [
+                                    {
+                                        "id": course_run.id,
+                                        "title": course_run.title,
+                                        "resource_link": course_run.resource_link,
+                                        "state": {
+                                            "priority": course_run.state["priority"],
+                                            "datetime": course_run.state["datetime"]
+                                            .isoformat()
+                                            .replace("+00:00", "Z"),
+                                            "call_to_action": course_run.state[
+                                                "call_to_action"
+                                            ],
+                                            "text": course_run.state["text"],
+                                        },
+                                        "start": course_run.start.isoformat().replace(
+                                            "+00:00", "Z"
+                                        ),
+                                        "end": course_run.end.isoformat().replace(
+                                            "+00:00", "Z"
+                                        ),
+                                        "enrollment_start": course_run.enrollment_start.isoformat().replace(  # noqa pylint: disable=line-too-long
+                                            "+00:00", "Z"
+                                        ),
+                                        "enrollment_end": course_run.enrollment_end.isoformat().replace(  # noqa pylint: disable=line-too-long
+                                            "+00:00", "Z"
+                                        ),
+                                    }
+                                    for course_run in target_course.course_runs.all().order_by(
+                                        "start"
+                                    )
+                                ],
+                                "position": target_course.product_relations.get(
+                                    product=product
+                                ).position,
+                                "is_graded": target_course.product_relations.get(
+                                    product=product
+                                ).is_graded,
+                                "title": target_course.title,
+                            }
+                            for target_course in product.target_courses.all().order_by(
+                                "product_relations__position"
+                            )
+                        ],
+                        "title": product.title,
+                        "type": product.type,
+                    }
+                    for product in course.products.all()
+                ],
+            },
+        )
+
+        # - response should be cached.
+        with self.assertNumQueries(1):
+            self.client.get(
+                url,
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        # the response with no filters shouldn't be cached
+        with self.assertNumQueries(21):
+            self.client.get(
+                f"/api/courses/{course.code}/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        # calling api requesting code and products fields
+        url = f"/api/courses/{course.code}/?fields=code,organization"
+        with self.assertNumQueries(1):
+            response = self.client.get(
+                url,
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "code": course.code,
+                "organization": {
+                    "code": course.organization.code,
+                    "title": course.organization.title,
+                    "logo": f"{self.test_media}{course.organization.logo}",
+                },
+            },
+        )
+
+        # calling api requesting code and tata fields, tata doesn't exist
+        url = f"/api/courses/{course.code}/?fields=code,tata"
+        with self.assertNumQueries(1):
+            response = self.client.get(
+                url,
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "code": course.code,
+            },
+        )
+        # calling api requesting toto and tata fields, none exist
+        url = f"/api/courses/{course.code}/?fields=toto,tata"
+        with self.assertNumQueries(1):
+            response = self.client.get(
+                url,
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {})
+
+        url = f"/api/courses/{course.code}/?fields=title"
+        with self.assertNumQueries(1):
+            response = self.client.get(
+                url,
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "title": course.title,
+            },
+        )
+
     def test_api_course_read_products(self):
         """
         Products should be embedded in the response.
