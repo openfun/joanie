@@ -166,62 +166,6 @@ class ProductSerializer(serializers.ModelSerializer):
         ).data
 
 
-class OrderLiteSerializer(serializers.ModelSerializer):
-    """
-    Minimal Order model serializer
-    """
-
-    id = serializers.CharField(read_only=True, source="uid")
-    total = MoneyField(
-        coerce_to_string=False,
-        decimal_places=2,
-        max_digits=9,
-        min_value=0,
-        read_only=True,
-    )
-    enrollments = serializers.SerializerMethodField(read_only=True)
-    product = serializers.SlugRelatedField(read_only=True, slug_field="uid")
-    main_proforma_invoice = serializers.SlugRelatedField(
-        read_only=True, slug_field="reference"
-    )
-    certificate = serializers.SlugRelatedField(read_only=True, slug_field="uid")
-
-    class Meta:
-        model = models.Order
-        fields = [
-            "id",
-            "certificate",
-            "created_on",
-            "main_proforma_invoice",
-            "total",
-            "total_currency",
-            "enrollments",
-            "product",
-            "state",
-        ]
-        read_only_fields = [
-            "id",
-            "certificate",
-            "created_on",
-            "main_proforma_invoice",
-            "total",
-            "total_currency",
-            "enrollments",
-            "product",
-            "state",
-        ]
-
-    def get_enrollments(self, order):
-        """
-        For the current order, retrieve its related enrollments.
-        """
-        return EnrollmentSerializer(
-            instance=order.get_enrollments(),
-            many=True,
-            context=self.context,
-        ).data
-
-
 class CourseSerializer(serializers.ModelSerializer):
     """
     Serialize all information about a course.
@@ -245,24 +189,6 @@ class CourseSerializer(serializers.ModelSerializer):
             "products",
         ]
 
-    def get_orders(self, instance):
-        """
-        If a user is authenticated, retrieves its orders related to the serializer
-        Course instance else return None
-        """
-        try:
-            username = self.context["username"]
-            orders = models.Order.objects.filter(
-                Q(total=0) | Q(proforma_invoices__isnull=False),
-                owner__username=username,
-                course=instance,
-                is_canceled=False,
-            ).select_related("product")
-
-            return OrderLiteSerializer(orders, many=True).data
-        except KeyError:
-            return None
-
     def to_representation(self, instance):
         """
         Cache the serializer representation that does not vary from user to user
@@ -278,8 +204,6 @@ class CourseSerializer(serializers.ModelSerializer):
                 representation,
                 settings.JOANIE_ANONYMOUS_COURSE_SERIALIZER_CACHE_TTL,
             )
-
-        representation["orders"] = self.get_orders(instance)
 
         return representation
 
