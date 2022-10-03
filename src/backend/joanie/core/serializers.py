@@ -187,62 +187,6 @@ class ProductSerializer(serializers.ModelSerializer):
         ).data
 
 
-class OrderLiteSerializer(serializers.ModelSerializer):
-    """
-    Minimal Order model serializer
-    """
-
-    id = serializers.CharField(read_only=True, source="uid")
-    total = MoneyField(
-        coerce_to_string=False,
-        decimal_places=2,
-        max_digits=9,
-        min_value=0,
-        read_only=True,
-    )
-    enrollments = serializers.SerializerMethodField(read_only=True)
-    product = serializers.SlugRelatedField(read_only=True, slug_field="uid")
-    main_proforma_invoice = serializers.SlugRelatedField(
-        read_only=True, slug_field="reference"
-    )
-    certificate = serializers.SlugRelatedField(read_only=True, slug_field="uid")
-
-    class Meta:
-        model = models.Order
-        fields = [
-            "id",
-            "certificate",
-            "created_on",
-            "main_proforma_invoice",
-            "total",
-            "total_currency",
-            "enrollments",
-            "product",
-            "state",
-        ]
-        read_only_fields = [
-            "id",
-            "certificate",
-            "created_on",
-            "main_proforma_invoice",
-            "total",
-            "total_currency",
-            "enrollments",
-            "product",
-            "state",
-        ]
-
-    def get_enrollments(self, order):
-        """
-        For the current order, retrieve its related enrollments.
-        """
-        return EnrollmentSerializer(
-            instance=order.get_enrollments(),
-            many=True,
-            context=self.context,
-        ).data
-
-
 class CourseSerializer(DynamicFieldsModelSerializer):
     """
     Serialize all information about a course.
