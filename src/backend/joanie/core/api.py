@@ -4,7 +4,7 @@ API endpoints
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import IntegrityError, transaction
 from django.http import HttpResponse
-
+from dynamic_rest.viewsets import WithDynamicViewSetMixin
 from rest_framework import mixins, pagination, permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError as DRFValidationError
@@ -48,7 +48,7 @@ class Pagination(pagination.PageNumberPagination):
     page_size = 100
 
 
-class CourseViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class CourseViewSet(WithDynamicViewSetMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     """API ViewSet for all interactions with courses."""
 
     lookup_field = "code"

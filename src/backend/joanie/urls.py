@@ -18,7 +18,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
-from rest_framework.routers import DefaultRouter
+from dynamic_rest.routers import DynamicRouter
 
 from joanie.core import api
 from joanie.core.views import (
@@ -28,12 +28,12 @@ from joanie.core.views import (
 from joanie.lms_handler.urls import urlpatterns as lms_urlpatterns
 from joanie.payment.urls import urlpatterns as payment_urlpatterns
 
-router = DefaultRouter()
-router.register("addresses", api.AddressViewSet, basename="addresses")
-router.register("certificates", api.CertificateViewSet, basename="certificates")
-router.register("courses", api.CourseViewSet, basename="courses")
-router.register("enrollments", api.EnrollmentViewSet, basename="enrollments")
-router.register("orders", api.OrderViewSet, basename="orders")
+router = DynamicRouter()
+router.register("addresses", api.AddressViewSet)
+router.register("certificates", api.CertificateViewSet)
+router.register("courses", api.CourseViewSet)
+router.register("enrollments", api.EnrollmentViewSet)
+router.register("orders", api.OrderViewSet)
 
 urlpatterns = [
     path("admin/", admin.site.urls),

@@ -1,5 +1,6 @@
 """Tests for the Course API."""
 import json
+from pprint import pprint
 import random
 from datetime import timedelta
 
@@ -15,7 +16,8 @@ class CourseApiTest(BaseAPITestCase):
     """Test the API of the Course object."""
 
     test_media = "http://testserver/media/"
-
+    #maxDiff = None
+    
     def test_api_course_read_list_anonymous(self):
         """It should not be possible to retrieve the list of courses for anonymous users."""
         factories.CourseFactory()
@@ -96,9 +98,18 @@ class CourseApiTest(BaseAPITestCase):
                         user=user, course_run=course_run, is_active=True
                     )
 
-        with self.assertNumQueries(11):
-            response = self.client.get(f"/api/courses/{course.code}/")
-
+        #with self.assertNumQueries(11):
+        #response = self.client.get(f"/api/courses/{course.code}/?include[]=products.target_courses.code&include[]=products.*&include[]=organization.*")
+        #response = self.client.get(f"/api/courses/{course.code}/?include[]=products.target_courses.course_runs&include[]=organization.*")
+        #response = self.client.get(f"/api/courses/{course.code}/?include[]=products.*&include[]=organization.*")
+        #response = self.client.get(f"/api/courses/{course.code}/?include[]=products.*&include[]=products.target_courses.courses.*&include[]=products.target_courses.courses.course_runs.*")
+        #response = self.client.get(f"/api/courses/{course.code}/?include[]=products.target_courses.course_runs.*")
+        #response = self.client.get(f"/api/courses/{course.code}/?include[]=products.target_courses.course_runs.*")
+        #response = self.client.get(f"/api/courses/{course.code}/?include[]=products.*") => affiche pas les target_courses
+        #response = self.client.get(f"/api/courses/{course.code}/?include[]=products.target_courses") => affiche systématiquement les course_run
+        #response = self.client.get(f"/api/courses/{course.code}/?include[]=products.target_courses.course_runs.*") => affiche systématiquement les course_run
+        response = self.client.get(f"/api/courses/{course.code}/?include[]=products.target_courses.courses")
+        #expected = {'code': '04764458', 'organization': {'code': '24481526', 'title': 'Organization 3', 'logo': 'http://testserver/media/logo_OhOAsJR.png'}, 'title': 'Course 3', 'products': [{'call_to_action': "let's go!", 'certificate': None, 'id': '928667f1-fcfe-4513-92d0-f96ba010a673', 'price': 964.76, 'price_currency': 'EUR', 'target_courses': [{'code': '88730318', 'organization': {'code': '69811487', 'title': 'Organization 0', 'logo': 'http://testserver/media/logo_W11cQe3.png'}, 'course_runs': [{'id': 1, 'title': 'Course run 0', 'resource_link': 'http://leblanc-frank.info/terms/', 'state': {'priority': 0, 'datetime': '2022-10-07T16:53:39.933819Z', 'call_to_action': 'enroll now', 'text': 'closing on'}, 'start': '2022-10-07T14:53:39.933785Z', 'end': '2022-10-07T17:53:39.933805Z', 'enrollment_start': '2022-08-02T17:39:00Z', 'enrollment_end': '2022-10-07T16:53:39.933819Z'}], 'position': 0, 'is_graded': True, 'title': 'Course 0'}, {'code': '25372632', 'organization': {'code': '69519673', 'title': 'Organization 1', 'logo': 'http://testserver/media/logo_kaFWGbj.png'}, 'course_runs': [{'id': 2, 'title': 'Course run 1', 'resource_link': 'http://www.smith.com/list/main/homepage.html', 'state': {'priority': 0, 'datetime': '2022-10-07T16:53:39.933819Z', 'call_to_action': 'enroll now', 'text': 'closing on'}, 'start': '2022-10-07T14:53:39.933785Z', 'end': '2022-10-07T17:53:39.933805Z', 'enrollment_start': '2022-08-27T14:18:31Z', 'enrollment_end': '2022-10-07T16:53:39.933819Z'}], 'position': 1, 'is_graded': True, 'title': 'Course 1'}], 'title': 'transition next-generation paradigms', 'type': 'enrollment'}]}
         expected = {
             "code": course.code,
             "organization": {
@@ -174,7 +185,14 @@ class CourseApiTest(BaseAPITestCase):
         }
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), expected)
+        response_json = response.json()
+        """print("test")
+        print(response.json())
+        print("organizations")
+        print(response_json["organizations"])"""
+        pprint(expected)
+        pprint(response_json)
+        self.assertEqual(response_json, expected)
 
         # - An other request should get the cached response
         with self.assertNumQueries(1):
@@ -249,7 +267,7 @@ class CourseApiTest(BaseAPITestCase):
 
         with self.assertNumQueries(21):
             response = self.client.get(
-                f"/api/courses/{course.code}/",
+                f"/api/courses/{course.code}/?includes=products",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
@@ -355,19 +373,24 @@ class CourseApiTest(BaseAPITestCase):
         factories.ProductFactory(courses=[course])
         factories.ProductFactory(courses=[course])
         factories.ProductFactory(courses=[course])
-
+        
         # - Retrieve course information
-        with self.assertNumQueries(6):
-            response = self.client.get(
-                f"/api/courses/{course.code}/",
+        #with self.assertNumQueries(6):
+        query = "?include[]=products&filter{products}=1"
+        response = self.client.get(
+                f"/api/courses/{course.code}/?include[]=products.*&include=products.image&include=",
+        #        f"/api/courses/{course.code}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
+        
+        
+        print("response ",response.json())
 
         self.assertEqual(response.status_code, 200)
 
         content = response.json()
         self.assertEqual(len(content["products"]), 4)
-
+        self.assertTrue(False)
     @override_settings(
         JOANIE_LMS_BACKENDS=[
             {

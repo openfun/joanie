@@ -3,14 +3,19 @@
 from django.conf import settings
 from django.core.cache import cache
 from django.db.models import Q
+from dynamic_rest.serializers import DynamicModelSerializer,DynamicRelationField
+from dynamic_rest.fields import DynamicMethodField
 
 from djmoney.contrib.django_rest_framework import MoneyField
 from rest_framework import serializers
 
 from joanie.core import models
 
+#class DynamicMethodFieldModelSerializer(DynamicModelSerializer):
+    
 
-class CertificationDefinitionSerializer(serializers.ModelSerializer):
+
+class CertificationDefinitionSerializer(DynamicModelSerializer):
     """
     Serialize information about a certificate definition
     """
@@ -23,7 +28,7 @@ class CertificationDefinitionSerializer(serializers.ModelSerializer):
         read_only_fields = ["description", "name", "title"]
 
 
-class OrganizationSerializer(serializers.ModelSerializer):
+class OrganizationSerializer(DynamicModelSerializer):
     """
     Serialize all non-sensitive information about an organization
     """
@@ -34,15 +39,16 @@ class OrganizationSerializer(serializers.ModelSerializer):
         read_only_fields = ["code", "title", "logo"]
 
 
-class TargetCourseSerializer(serializers.ModelSerializer):
+class TargetCourseSerializer(DynamicModelSerializer):
     """
     Serialize all information about a target course.
     """
 
-    course_runs = serializers.SerializerMethodField(read_only=True)
+    #course_runs = DynamicMethodField(read_only=True, requires=['target_course_runs'])# """deferred=True,""" si true n'arrive pas à afficher
+    course_runs = DynamicMethodField(read_only=True, )# """deferred=True,""" si true n'arrive pas à afficher par url
     organization = OrganizationSerializer(read_only=True)
-    position = serializers.SerializerMethodField(read_only=True)
-    is_graded = serializers.SerializerMethodField(read_only=True)
+    position = DynamicMethodField(read_only=True)
+    is_graded = DynamicMethodField(read_only=True)
 
     class Meta:
         model = models.Course
@@ -62,6 +68,7 @@ class TargetCourseSerializer(serializers.ModelSerializer):
             "position",
             "title",
         ]
+        #deferred_fields = ['course_runs']
 
     @property
     def context_product(self):
@@ -103,7 +110,7 @@ class TargetCourseSerializer(serializers.ModelSerializer):
         return CourseRunSerializer(course_runs, many=True).data
 
 
-class ProductSerializer(serializers.ModelSerializer):
+class ProductSerializer(DynamicModelSerializer):
     """
     Product serializer including
         - certificate information if there is
@@ -115,7 +122,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
     id = serializers.CharField(read_only=True, source="uid")
     certificate = CertificationDefinitionSerializer(
-        read_only=True, source="certificate_definition"
+        read_only=True, source="certificate_definition",
     )
     price = MoneyField(
         coerce_to_string=False,
@@ -124,7 +131,8 @@ class ProductSerializer(serializers.ModelSerializer):
         min_value=0,
         read_only=True,
     )
-    target_courses = serializers.SerializerMethodField(read_only=True)
+    target_courses = DynamicMethodField(read_only=True, deferred=True)#,#,requires=['location.cat_set.*'],
+       #deferred=False)
 
     class Meta:
         model = models.Product
@@ -157,36 +165,45 @@ class ProductSerializer(serializers.ModelSerializer):
         context = self.context.copy()
         context.update({"product": product})
 
-        return TargetCourseSerializer(
+        target_course =  TargetCourseSerializer(
             instance=models.Course.objects.filter(
                 product_relations__product=product
             ).order_by("product_relations__position"),
             many=True,
             context=context,
-        ).data
+           # deferred=False unexpected
+        )
+        return target_course.data
 
 
-class CourseSerializer(serializers.ModelSerializer):
+class CourseSerializer(DynamicModelSerializer):
     """
     Serialize all information about a course.
     """
 
-    organization = OrganizationSerializer(read_only=True)
-    products = ProductSerializer(many=True, read_only=True)
-
+    #organization = DynamicRelationField('OrganizationSerializer', deferred=False, read_only=True)
+    #products = DynamicRelationField('ProductSerializer',deferred=False, many=True,read_only=True,  embed=False )#, embed=True
+    organization = DynamicRelationField('OrganizationSerializer', deferred=False,many=False, embed=True,read_only=True)
+    products = DynamicRelationField('ProductSerializer', deferred=True, many=True,read_only=True)#embed=True
+    #orders = DynamicRelationField('OrderSerializer', deferred=True, many=True, read_only=True)
+    
     class Meta:
         model = models.Course
+        name="Course"
         fields = [
             "code",
             "organization",
-            "title",
+        #   "orders",
             "products",
+            "title",
         ]
         read_only_fields = [
             "code",
             "organization",
-            "title",
+         #   "orders",
             "products",
+            "title",
+            
         ]
 
     def to_representation(self, instance):
@@ -208,7 +225,7 @@ class CourseSerializer(serializers.ModelSerializer):
         return representation
 
 
-class CourseRunSerializer(serializers.ModelSerializer):
+class CourseRunSerializer(DynamicModelSerializer):
     """
     Serialize all information about a course run
     """
@@ -237,7 +254,7 @@ class CourseRunSerializer(serializers.ModelSerializer):
         ]
 
 
-class EnrollmentSerializer(serializers.ModelSerializer):
+class EnrollmentSerializer(DynamicModelSerializer):
     """
     Enrollment model serializer
     """
@@ -300,8 +317,18 @@ class OrderSerializer(serializers.ModelSerializer):
     product = serializers.SlugRelatedField(
         queryset=models.Product.objects.all(), slug_field="uid"
     )
-    enrollments = serializers.SerializerMethodField(read_only=True)
-    target_courses = serializers.SerializerMethodField(read_only=True)
+    enrollments = DynamicMethodField(read_only=True) 
+    """ requires=[
+            'profile.preferred_first_name',
+            'profile.preferred_last_name'
+        ]) """
+        
+
+    target_courses = DynamicMethodField(read_only=True)
+    """, requires=[
+            'profile.preferred_first_name',
+            'profile.preferred_last_name'
+        ]"""
     main_proforma_invoice = serializers.SlugRelatedField(
         read_only=True, slug_field="reference"
     )
@@ -387,7 +414,7 @@ class AddressSerializer(serializers.ModelSerializer):
         ]
 
 
-class CertificateSerializer(serializers.ModelSerializer):
+class CertificateSerializer(DynamicModelSerializer):
     """
     Certificate model serializer
     """
