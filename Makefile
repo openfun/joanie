@@ -147,7 +147,7 @@ test: \
 .PHONY: test
 
 test-back: ## run back-end tests
-	bin/pytest -k test_api_enrollment_create_with_unknown_course_run
+	bin/pytest
 .PHONY: test-back
 
 migrate:  ## run django migrations for the joanie project.
