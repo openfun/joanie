@@ -58,6 +58,7 @@ and this project adheres to
 
 ### Changed
 
+- The field `password` from user's model has a default value
 - Configure language field of the user's model
 - Update codebase to remove the use of deprecated pytz and USE_L10N
   with Django 4.0
