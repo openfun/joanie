@@ -13,11 +13,13 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, re_path
 
+from rest_framework import permissions
 from rest_framework.routers import DefaultRouter
 
 from joanie.core import api
@@ -58,3 +60,38 @@ if settings.DEBUG:
         ]
         + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     )
+
+    try:
+        # Try to import `drf_yasg` dynamically as this dependency is installed only
+        # in a development context then configure schema views and routes
+        from drf_yasg import openapi, views
+    except ModuleNotFoundError:
+        pass
+    else:
+        SchemaView = views.get_schema_view(
+            openapi.Info(
+                title="Joanie API",
+                default_version="v1",
+                description="This is the Joanie API schema.",
+            ),
+            public=True,
+            permission_classes=[permissions.AllowAny],
+        )
+
+        urlpatterns += [
+            re_path(
+                r"^swagger(?P<format>\.json|\.yaml)$",
+                SchemaView.without_ui(cache_timeout=0),
+                name="api-schema",
+            ),
+            re_path(
+                r"^swagger/$",
+                SchemaView.with_ui("swagger", cache_timeout=0),
+                name="swagger-ui-schema",
+            ),
+            re_path(
+                r"^redoc/$",
+                SchemaView.with_ui("redoc", cache_timeout=0),
+                name="redoc-schema",
+            ),
+        ]

@@ -9,7 +9,6 @@ https://docs.djangoproject.com/en/3.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
-
 import json
 import os
 
@@ -375,6 +374,23 @@ class Development(Base):
     CORS_ALLOW_ALL_ORIGINS = True
     DEBUG = True
     NGROK_ENDPOINT = values.Value(None, "NGROK_ENDPOINT", environ_prefix=None)
+
+    # Swagger security settings
+    # e.g: For API routes which requires a jwt token to authenticate user, you can
+    # fulfill this field with `Bearer <USER_JWT_TOKEN>`
+    SWAGGER_SETTINGS = {
+        "SECURITY_DEFINITIONS": {
+            "Bearer": {
+                "type": "apiKey",
+                "name": "Authorization",
+                "in": "header",
+            }
+        }
+    }
+
+    def __init__(self):
+        # pylint: disable=invalid-name
+        self.INSTALLED_APPS += ["drf_yasg"]
 
 
 class Test(Base):
