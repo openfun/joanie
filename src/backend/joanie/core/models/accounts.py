@@ -24,6 +24,12 @@ class User(auth_models.AbstractUser):
         help_text=_("Language of the user"),
     )
 
+    password = models.CharField(
+        max_length=128,
+        default="!",
+        verbose_name=_("password"),
+    )
+
     class Meta:
         db_table = "joanie_user"
         verbose_name = _("User")
