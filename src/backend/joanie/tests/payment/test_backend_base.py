@@ -136,7 +136,9 @@ class BasePaymentBackendTestCase(BasePaymentTestCase):
         payment information provided then mark order as validated.
         """
         backend = TestBasePaymentBackend()
-        owner = UserFactory(email="sam@fun-test.fr", language="en", username="Samantha")
+        owner = UserFactory(
+            email="sam@fun-test.fr", language="en-us", username="Samantha"
+        )
         order = OrderFactory(owner=owner)
         billing_address = BillingAddressDictFactory()
         payment = {
@@ -282,7 +284,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase):
 
         backend = TestBasePaymentBackend()
         owner = UserFactory(
-            email="sam@fun-test.fr", language="Fr-fr", username="Samantha"
+            email="sam@fun-test.fr", language="fr-fr", username="Samantha"
         )
         order = OrderFactory(owner=owner)
         billing_address = BillingAddressDictFactory()

@@ -102,7 +102,9 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
         """
 
         backend = DummyPaymentBackend()
-        owner = UserFactory(email="sam@fun-test.fr", language="en", username="Samantha")
+        owner = UserFactory(
+            email="sam@fun-test.fr", language="en-us", username="Samantha"
+        )
         order = OrderFactory(owner=owner)
         billing_address = BillingAddressDictFactory()
         request = APIRequestFactory().post(path="/")
