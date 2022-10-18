@@ -150,6 +150,14 @@ test-back: ## run back-end tests
 	bin/pytest
 .PHONY: test-back
 
+
+makemigrations:  ## run django makemigrations for the joanie project.
+	@echo "$(BOLD)Running makemigrations$(RESET)"
+	@$(COMPOSE) up -d postgresql
+	@$(WAIT_DB)
+	@$(MANAGE) makemigrations
+.PHONY: makemigrations
+
 migrate:  ## run django migrations for the joanie project.
 	@echo "$(BOLD)Running migrations$(RESET)"
 	@$(COMPOSE) up -d postgresql
