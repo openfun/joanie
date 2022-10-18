@@ -208,7 +208,7 @@ jobs:
               -wait tcp://localhost:5432 \
               -timeout 60s \
                 ~/.local/bin/pytest
-  
+
   # ---- mail jobs ----
   build-mails:
     docker:
@@ -293,7 +293,7 @@ jobs:
   # ---- Tray jobs (k8s) ----
   tray:
     machine:
-      image: ubuntu-2004:202201-02
+      image: ubuntu-2004:2022.07.1
       # Prevent cache-related issues
       docker_layer_caching: false
     working_directory: ~/joanie
@@ -320,17 +320,19 @@ jobs:
       - run:
           name: Install the kubectl client and k3d
           command: |
-            export KUBECTL_RELEASE="v1.23.5"
+            export KUBECTL_RELEASE="v1.25.2"
             curl -Lo "${HOME}/bin/kubectl" "https://dl.k8s.io/release/${KUBECTL_RELEASE}/bin/linux/amd64/kubectl"
             curl -Lo /tmp/kubectl.sha256 "https://dl.k8s.io/${KUBECTL_RELEASE}/bin/linux/amd64/kubectl.sha256"
             echo "$(</tmp/kubectl.sha256) ${HOME}/bin/kubectl" | sha256sum --check
             chmod 755 "${HOME}/bin/kubectl"
-            export K3D_RELEASE="v4.4.8"
+            export K3D_RELEASE="v5.4.6"
             curl -Lo "${HOME}/bin/k3d" "https://github.com/k3d-io/k3d/releases/download/${K3D_RELEASE}/k3d-linux-amd64"
-            curl -sL https://github.com/k3d-io/k3d/releases/download/${K3D_RELEASE}/sha256sum.txt | \
-              grep _dist/k3d-linux-amd64 | \
-              sed "s|_dist/k3d-linux-amd64|${HOME}/bin/k3d|" | \
-              sha256sum --check
+            # FIXME
+            # Removed checksum checking: https://github.com/k3d-io/k3d/discussions/1037
+            #curl -sL https://github.com/k3d-io/k3d/releases/download/${K3D_RELEASE}/sha256sum.txt | \
+            #  grep _dist/k3d-linux-amd64 | \
+            #  sed "s|_dist/k3d-linux-amd64|${HOME}/bin/k3d|" | \
+            #  sha256sum --check
             chmod 755 "${HOME}/bin/k3d"
       - run:
           name: Run local k3d cluster & configure environment
