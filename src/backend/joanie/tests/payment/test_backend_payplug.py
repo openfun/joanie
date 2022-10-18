@@ -442,7 +442,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         """
         payment_id = "pay_00000"
         product = ProductFactory()
-        owner = UserFactory(language="en")
+        owner = UserFactory(language="en-us")
         order = OrderFactory(product=product, owner=owner)
         backend = PayplugBackend(self.configuration)
         billing_address = BillingAddressDictFactory()

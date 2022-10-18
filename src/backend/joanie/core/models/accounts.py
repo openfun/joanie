@@ -7,6 +7,8 @@ import django.contrib.auth.models as auth_models
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils.functional import lazy
+from django.utils.translation import get_supported_language_variant
 from django.utils.translation import gettext_lazy as _
 
 from django_countries.fields import CountryField
@@ -16,10 +18,10 @@ class User(auth_models.AbstractUser):
     """User model which follow courses or manage backend (is_staff)"""
 
     language = models.CharField(
-        default=settings.LANGUAGE_CODE,
         max_length=10,
+        choices=lazy(lambda: settings.LANGUAGES, tuple)(),
         verbose_name=_("language"),
-        help_text=_("language of the user"),
+        help_text=_("Language of the user"),
     )
 
     class Meta:
@@ -33,12 +35,32 @@ class User(auth_models.AbstractUser):
     @staticmethod
     def update_or_create_from_request_user(request_user):
         """Create user from token or update it"""
+        try:
+            language = get_supported_language_variant(
+                request_user.language.replace("_", "-")
+            )
+        except LookupError:
+            language = settings.LANGUAGE_CODE
+
         user = User.objects.update_or_create(
             username=request_user.username,
-            defaults={"email": request_user.email, "language": request_user.language},
+            defaults={"email": request_user.email, "language": language},
         )[0]
 
         return user
+
+    # pylint: disable=arguments-differ
+    def save(self, *args, **kwargs):
+        """Enforcing field constraints on save.
+        Parameters
+        ----------
+        args : list
+            Passed onto parent's `save` method
+        kwargs: dict
+            Passed onto parent's `save` method
+        """
+        self.full_clean()
+        super().save(*args, **kwargs)
 
 
 class Address(models.Model):
