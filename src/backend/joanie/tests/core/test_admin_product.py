@@ -125,15 +125,15 @@ class ProductAdminTestCase(BaseAPITestCase):
         self.assertEqual(product.title, "Product for course")
         self.assertEqual(product.call_to_action, "Let's go")
 
-    def test_admin_product_create_uid_read_only(self):
-        """The uid field should be readonly"""
+    def test_admin_product_create_id_read_only(self):
+        """The id field should be readonly"""
         # Login a user with all permission to manage products in django admin
         user = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=user.username, password="password")
 
         # Now we create a product with type 'credential' so with certificate definition
         data = {
-            "uid": "my-uid",
+            "id": "my-uid",
             "type": "credential",
             "title": "Product for course",
             "call_to_action": "Let's go",
@@ -150,9 +150,9 @@ class ProductAdminTestCase(BaseAPITestCase):
         self.assertEqual(models.Product.objects.count(), 1)
 
         product = models.Product.objects.get()
-        self.assertNotEqual(product.uid, data["uid"])
-        self.assertEqual(len(str(product.uid)), 36)
-        self.assertEqual(type(product.uid), uuid.UUID)
+        self.assertNotEqual(product.id, data["id"])
+        self.assertEqual(len(str(product.id)), 36)
+        self.assertEqual(type(product.id), uuid.UUID)
 
     def test_admin_product_allow_sorting_targeted_courses(self):
         """

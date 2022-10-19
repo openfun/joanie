@@ -4,7 +4,7 @@ Test suite for products models
 from decimal import Decimal as D
 
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError, transaction
+from django.db import transaction
 from django.test import TestCase
 
 from djmoney.money import Money
@@ -31,7 +31,7 @@ class ProductModelsTestCase(TestCase):
     def test_models_product_course_runs_unique(self):
         """A product can only be linked once to a given course run."""
         relation = factories.ProductCourseRelationFactory()
-        with self.assertRaises(IntegrityError):
+        with self.assertRaises(ValidationError):
             factories.ProductCourseRelationFactory(
                 course=relation.course, product=relation.product
             )
@@ -126,4 +126,4 @@ class ProductModelsTestCase(TestCase):
         with self.assertNumQueries(1):
             course_runs = product.target_course_runs.order_by("pk")
             self.assertEqual(len(course_runs), 3)
-            self.assertListEqual(list(course_runs), [cr1, cr2, cr3])
+            self.assertCountEqual(list(course_runs), [cr1, cr2, cr3])

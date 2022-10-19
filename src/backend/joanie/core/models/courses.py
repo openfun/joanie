@@ -18,6 +18,8 @@ from joanie.core import utils
 from joanie.core.enums import ALL_LANGUAGES
 from joanie.core.fields.multiselect import MultiSelectField
 
+from .base import BaseModel
+
 MAX_DATE = datetime(MAXYEAR, 12, 31, tzinfo=timezone.utc)
 
 
@@ -124,7 +126,7 @@ class CourseState(Mapping):
         return self._d["priority"] < other["priority"]
 
 
-class Organization(parler_models.TranslatableModel):
+class Organization(parler_models.TranslatableModel, BaseModel):
     """
     Organization model represents and records entities that manage courses.
     It could be a university or a training company for example.
@@ -156,7 +158,7 @@ class Organization(parler_models.TranslatableModel):
         )
 
 
-class Course(parler_models.TranslatableModel):
+class Course(parler_models.TranslatableModel, BaseModel):
     """
     Course model represents and records a course in the cms catalog.
     A new course created will initialize a cms page.
@@ -167,7 +169,7 @@ class Course(parler_models.TranslatableModel):
         title=models.CharField(_("title"), max_length=255)
     )
     organization = models.ForeignKey(
-        Organization,
+        to=Organization,
         verbose_name=_("organization"),
         on_delete=models.PROTECT,
     )
@@ -225,22 +227,15 @@ class Course(parler_models.TranslatableModel):
         self.code = utils.normalize_code(self.code)
         return super().clean()
 
-    def save(self, *args, **kwargs):
-        """
-        Enforce validation each time an instance is saved
-        """
-        self.full_clean()
-        super().save(*args, **kwargs)
 
-
-class CourseRun(parler_models.TranslatableModel):
+class CourseRun(parler_models.TranslatableModel, BaseModel):
     """
     Course run represents and records the occurrence of a course between a start
     and an end date.
     """
 
     course = models.ForeignKey(
-        Course,
+        to=Course,
         on_delete=models.PROTECT,
         related_name="course_runs",
         verbose_name=_("course"),
@@ -341,7 +336,7 @@ class CourseRun(parler_models.TranslatableModel):
         self.resource_link = url_normalize(self.resource_link)
 
         # If the course run is updating and the course field has changed ...
-        if self.pk:
+        if self.created_on:
             old_course_id = (
                 CourseRun.objects.only("course_id").get(pk=self.pk).course_id
             )
@@ -359,8 +354,3 @@ class CourseRun(parler_models.TranslatableModel):
                     )
 
         super().clean()
-
-    def save(self, *args, **kwargs):
-        """Call full clean before saving instance."""
-        self.full_clean()
-        super().save(*args, **kwargs)

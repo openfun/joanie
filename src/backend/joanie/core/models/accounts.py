@@ -1,8 +1,6 @@
 """
 Declare and configure the models for the customers part
 """
-import uuid
-
 import django.contrib.auth.models as auth_models
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -13,8 +11,10 @@ from django.utils.translation import gettext_lazy as _
 
 from django_countries.fields import CountryField
 
+from .base import BaseModel
 
-class User(auth_models.AbstractUser):
+
+class User(BaseModel, auth_models.AbstractUser):
     """User model which follow courses or manage backend (is_staff)"""
 
     language = models.CharField(
@@ -56,26 +56,10 @@ class User(auth_models.AbstractUser):
 
         return user
 
-    # pylint: disable=arguments-differ
-    def save(self, *args, **kwargs):
-        """Enforcing field constraints on save.
-        Parameters
-        ----------
-        args : list
-            Passed onto parent's `save` method
-        kwargs: dict
-            Passed onto parent's `save` method
-        """
-        self.full_clean()
-        super().save(*args, **kwargs)
 
-
-class Address(models.Model):
+class Address(BaseModel):
     """Address model stores address information (to generate bill after payment)"""
 
-    uid = models.UUIDField(
-        default=uuid.uuid4, unique=True, editable=False, db_index=True
-    )
     title = models.CharField(_("title"), max_length=100)
     address = models.CharField(_("address"), max_length=255)
     postcode = models.CharField(_("postcode"), max_length=50)
@@ -117,20 +101,13 @@ class Address(models.Model):
         elif self.is_main is True:
             self.owner.addresses.filter(is_main=True).update(is_main=False)
         elif (
-            self.pk
+            self.created_on
             and self.is_main is False
             and self.owner.addresses.filter(is_main=True, pk=self.pk).exists()
         ):
             raise ValidationError(_("Demote a main address is forbidden"))
 
         return super().clean()
-
-    def save(self, *args, **kwargs):
-        """
-        Enforce validation each time an instance is saved
-        """
-        self.full_clean()
-        super().save(*args, **kwargs)
 
     @property
     def full_name(self):

@@ -52,7 +52,7 @@ class CertificateApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, 200)
 
         content = json.loads(response.content)
-        self.assertEqual(content, [{"id": str(certificate.uid)}])
+        self.assertEqual(content, [{"id": str(certificate.id)}])
 
     def test_api_certificate_read_anonymous(self):
         """
@@ -60,7 +60,7 @@ class CertificateApiTest(BaseAPITestCase):
         """
         certificate = CertificateFactory()
 
-        response = self.client.get(f"/api/certificates/{certificate.uid}/")
+        response = self.client.get(f"/api/certificates/{certificate.id}/")
 
         self.assertEqual(response.status_code, 401)
 
@@ -85,7 +85,7 @@ class CertificateApiTest(BaseAPITestCase):
 
         # - Try to retrieve a not owned certificate should return a 404
         response = self.client.get(
-            f"/api/certificates/{not_owned_certificate.uid}/",
+            f"/api/certificates/{not_owned_certificate.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -96,14 +96,14 @@ class CertificateApiTest(BaseAPITestCase):
 
         # - Try to retrieve an owned certificate should return the certificate id
         response = self.client.get(
-            f"/api/certificates/{certificate.uid}/",
+            f"/api/certificates/{certificate.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
         self.assertEqual(response.status_code, 200)
 
         content = json.loads(response.content)
-        self.assertEqual(content, {"id": str(certificate.uid)})
+        self.assertEqual(content, {"id": str(certificate.id)})
 
     def test_api_certificate_download_anonymous(self):
         """
@@ -111,7 +111,7 @@ class CertificateApiTest(BaseAPITestCase):
         """
         certificate = CertificateFactory()
 
-        response = self.client.get(f"/api/certificates/{certificate.uid}/download/")
+        response = self.client.get(f"/api/certificates/{certificate.id}/download/")
 
         self.assertEqual(response.status_code, 401)
 
@@ -142,7 +142,7 @@ class CertificateApiTest(BaseAPITestCase):
 
         # - Try to retrieve a not owned certificate should return a 404
         response = self.client.get(
-            f"/api/certificates/{not_owned_certificate.uid}/download/",
+            f"/api/certificates/{not_owned_certificate.id}/download/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -151,12 +151,12 @@ class CertificateApiTest(BaseAPITestCase):
         content = json.loads(response.content)
         self.assertEqual(
             content,
-            {"detail": f"No certificate found with uid {not_owned_certificate.uid}."},
+            {"detail": f"No certificate found with id {not_owned_certificate.id}."},
         )
 
         # - Try to retrieve an owned certificate should return the certificate id
         response = self.client.get(
-            f"/api/certificates/{certificate.uid}/download/",
+            f"/api/certificates/{certificate.id}/download/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -164,7 +164,7 @@ class CertificateApiTest(BaseAPITestCase):
         self.assertEqual(response.headers["Content-Type"], "application/pdf")
         self.assertEqual(
             response.headers["Content-Disposition"],
-            f"attachment; filename={certificate.uid}.pdf;",
+            f"attachment; filename={certificate.id}.pdf;",
         )
 
         document_text = pdf_extract_text(BytesIO(response.content)).replace("\n", "")
@@ -194,7 +194,7 @@ class CertificateApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
         certificate = CertificateFactory()
         response = self.client.put(
-            f"/api/certificates/{certificate.uid}/",
+            f"/api/certificates/{certificate.id}/",
             {"id": uuid.uuid4()},
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
@@ -211,7 +211,7 @@ class CertificateApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
         certificate = CertificateFactory()
         response = self.client.delete(
-            f"/api/certificates/{certificate.uid}/",
+            f"/api/certificates/{certificate.id}/",
             {"id": uuid.uuid4()},
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )

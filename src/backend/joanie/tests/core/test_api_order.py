@@ -74,11 +74,11 @@ class OrderApiTest(BaseAPITestCase):
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
                         "enrollments": [],
-                        "id": str(order.uid),
+                        "id": str(order.id),
                         "owner": order.owner.username,
                         "total": float(product.price.amount),
                         "total_currency": str(product.price.currency),
-                        "product": str(order.product.uid),
+                        "product": str(order.product.id),
                         "main_proforma_invoice": None,
                         "state": order.state,
                         "target_courses": [],
@@ -105,7 +105,7 @@ class OrderApiTest(BaseAPITestCase):
                 "previous": None,
                 "results": [
                     {
-                        "id": str(other_order.uid),
+                        "id": str(other_order.id),
                         "certificate": None,
                         "course": other_order.course.code,
                         "created_on": other_order.created_on.strftime(
@@ -116,7 +116,7 @@ class OrderApiTest(BaseAPITestCase):
                         "owner": other_order.owner.username,
                         "total": float(other_order.total.amount),
                         "total_currency": str(other_order.total.currency),
-                        "product": str(other_order.product.uid),
+                        "product": str(other_order.product.id),
                         "state": other_order.state,
                         "target_courses": [],
                     }
@@ -129,7 +129,7 @@ class OrderApiTest(BaseAPITestCase):
         product = factories.ProductFactory()
         order = factories.OrderFactory(product=product)
 
-        response = self.client.get(f"/api/orders/{order.uid}/")
+        response = self.client.get(f"/api/orders/{order.id}/")
         self.assertEqual(response.status_code, 401)
 
         content = json.loads(response.content)
@@ -147,7 +147,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(owner)
 
         response = self.client.get(
-            f"/api/orders/{order.uid}/",
+            f"/api/orders/{order.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 200)
@@ -156,7 +156,7 @@ class OrderApiTest(BaseAPITestCase):
         self.assertEqual(
             content,
             {
-                "id": str(order.uid),
+                "id": str(order.id),
                 "certificate": None,
                 "course": order.course.code,
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
@@ -165,7 +165,7 @@ class OrderApiTest(BaseAPITestCase):
                 "owner": owner.username,
                 "total": float(product.price.amount),
                 "total_currency": str(product.price.currency),
-                "product": str(product.uid),
+                "product": str(product.id),
                 "enrollments": [],
                 "target_courses": [
                     c.code for c in product.target_courses.order_by("product_relations")
@@ -180,7 +180,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.get_user_token("panoramix")
 
         response = self.client.get(
-            f"/api/orders/{order.uid}/",
+            f"/api/orders/{order.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 404)
@@ -193,7 +193,7 @@ class OrderApiTest(BaseAPITestCase):
         product = factories.ProductFactory()
         data = {
             "course": product.courses.first().code,
-            "product": str(product.uid),
+            "product": str(product.id),
         }
         response = self.client.post(
             "/api/orders/", data=data, content_type="application/json"
@@ -217,7 +217,7 @@ class OrderApiTest(BaseAPITestCase):
 
         data = {
             "course": course.code,
-            "product": str(product.uid),
+            "product": str(product.id),
         }
         token = self.get_user_token("panoramix")
 
@@ -237,14 +237,13 @@ class OrderApiTest(BaseAPITestCase):
         self.assertEqual(models.User.objects.count(), 1)
         user = models.User.objects.get()
         self.assertEqual(user.username, "panoramix")
-
         self.assertEqual(
             list(order.target_courses.order_by("product_relations")), target_courses
         )
         self.assertEqual(
             response.json(),
             {
-                "id": str(order.uid),
+                "id": str(order.id),
                 "certificate": None,
                 "course": course.code,
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
@@ -253,7 +252,7 @@ class OrderApiTest(BaseAPITestCase):
                 "owner": "panoramix",
                 "total": float(product.price.amount),
                 "total_currency": str(product.price.currency),
-                "product": str(product.uid),
+                "product": str(product.id),
                 "enrollments": [],
                 "target_courses": [
                     c.code for c in product.target_courses.order_by("product_relations")
@@ -277,7 +276,7 @@ class OrderApiTest(BaseAPITestCase):
 
         data = {
             "course": course.code,
-            "product": str(product.uid),
+            "product": str(product.id),
             "id": uuid.uuid4(),
             "amount": 0.00,
         }
@@ -304,7 +303,7 @@ class OrderApiTest(BaseAPITestCase):
         self.assertEqual(
             response.json(),
             {
-                "id": str(order.uid),
+                "id": str(order.id),
                 "certificate": None,
                 "course": course.code,
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
@@ -313,7 +312,7 @@ class OrderApiTest(BaseAPITestCase):
                 "owner": "panoramix",
                 "total": float(product.price.amount),
                 "total_currency": str(product.price.currency),
-                "product": str(product.uid),
+                "product": str(product.id),
                 "enrollments": [],
                 "target_courses": [
                     c.code for c in product.target_courses.order_by("product_relations")
@@ -330,7 +329,7 @@ class OrderApiTest(BaseAPITestCase):
 
         data = {
             "course": course.code,
-            "product": str(product.uid),
+            "product": str(product.id),
         }
         token = self.get_user_token("panoramix")
 
@@ -384,7 +383,7 @@ class OrderApiTest(BaseAPITestCase):
         # User already owns an order for this product and course
         order = factories.OrderFactory(owner=user, course=course, product=product)
 
-        data = {"product": str(product.uid), "course": course.code}
+        data = {"product": str(product.id), "course": course.code}
 
         response = self.client.post(
             "/api/orders/",
@@ -397,7 +396,7 @@ class OrderApiTest(BaseAPITestCase):
         self.assertEqual(
             response.json(),
             (
-                f"Cannot create order related to the product {product.uid} "
+                f"Cannot create order related to the product {product.id} "
                 f"and course {course.code}"
             ),
         )
@@ -425,7 +424,7 @@ class OrderApiTest(BaseAPITestCase):
         course = factories.CourseFactory()
         product = factories.ProductFactory(target_courses=[course])
 
-        data = {"product": str(product.uid), "course": course.code}
+        data = {"product": str(product.id), "course": course.code}
 
         response = self.client.post(
             "/api/orders/",
@@ -457,7 +456,7 @@ class OrderApiTest(BaseAPITestCase):
         billing_address = BillingAddressDictFactory()
 
         data = {
-            "product": str(product.uid),
+            "product": str(product.id),
             "course": course.code,
             "billing_address": billing_address,
         }
@@ -477,7 +476,7 @@ class OrderApiTest(BaseAPITestCase):
         self.assertEqual(
             response.json(),
             {
-                "id": str(order.uid),
+                "id": str(order.id),
                 "certificate": None,
                 "course": course.code,
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
@@ -486,13 +485,13 @@ class OrderApiTest(BaseAPITestCase):
                 "owner": user.username,
                 "total": float(product.price.amount),
                 "total_currency": str(product.price.currency),
-                "product": str(product.uid),
+                "product": str(product.id),
                 "enrollments": [],
                 "target_courses": [
                     c.code for c in product.target_courses.order_by("product_relations")
                 ],
                 "payment_info": {
-                    "payment_id": f"pay_{order.uid}",
+                    "payment_id": f"pay_{order.id}",
                     "provider": "dummy",
                     "url": "http://testserver/api/payments/notifications",
                 },
@@ -520,10 +519,10 @@ class OrderApiTest(BaseAPITestCase):
         billing_address = BillingAddressDictFactory()
 
         data = {
-            "product": str(product.uid),
+            "product": str(product.id),
             "course": course.code,
             "billing_address": billing_address,
-            "credit_card_id": str(credit_card.uid),
+            "credit_card_id": str(credit_card.id),
         }
 
         response = self.client.post(
@@ -542,7 +541,7 @@ class OrderApiTest(BaseAPITestCase):
         self.assertEqual(
             response.json(),
             {
-                "id": str(order.uid),
+                "id": str(order.id),
                 "certificate": None,
                 "course": course.code,
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
@@ -551,13 +550,13 @@ class OrderApiTest(BaseAPITestCase):
                 "owner": user.username,
                 "total": float(product.price.amount),
                 "total_currency": str(product.price.currency),
-                "product": str(product.uid),
+                "product": str(product.id),
                 "enrollments": [],
                 "target_courses": [
                     c.code for c in product.target_courses.order_by("product_relations")
                 ],
                 "payment_info": {
-                    "payment_id": f"pay_{order.uid}",
+                    "payment_id": f"pay_{order.id}",
                     "provider": "dummy",
                     "url": "http://testserver/api/payments/notifications",
                     "is_paid": True,
@@ -578,7 +577,7 @@ class OrderApiTest(BaseAPITestCase):
         billing_address = BillingAddressDictFactory()
 
         data = {
-            "product": str(product.uid),
+            "product": str(product.id),
             "course": course.code,
             "billing_address": billing_address,
         }
@@ -601,7 +600,7 @@ class OrderApiTest(BaseAPITestCase):
         product = factories.ProductFactory()
         order = factories.OrderFactory(product=product)
 
-        response = self.client.delete(f"/api/orders/{order.uid}/")
+        response = self.client.delete(f"/api/orders/{order.id}/")
 
         self.assertEqual(response.status_code, 401)
 
@@ -627,7 +626,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
 
         response = self.client.delete(
-            f"/api/orders/{order.uid}/",
+            f"/api/orders/{order.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 405)
@@ -640,7 +639,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.get_user_token(order.owner.username)
 
         response = self.client.delete(
-            f"/api/orders/{order.uid}/",
+            f"/api/orders/{order.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 405)
@@ -652,7 +651,7 @@ class OrderApiTest(BaseAPITestCase):
         owner_token = self.generate_token_from_user(order.owner)
 
         response = self.client.get(
-            f"/api/orders/{order.uid}/",
+            f"/api/orders/{order.id}/",
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {owner_token}",
         )
@@ -667,7 +666,7 @@ class OrderApiTest(BaseAPITestCase):
         other_owner_token = self.get_user_token(other_owner.username)
 
         other_response = self.client.get(
-            f"/api/orders/{other_order.uid}/",
+            f"/api/orders/{other_order.id}/",
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {other_owner_token}",
         )
@@ -703,7 +702,7 @@ class OrderApiTest(BaseAPITestCase):
             # With full object
             data[field] = other_data[field]
             response = self.client.put(
-                f"/api/orders/{order.uid}/",
+                f"/api/orders/{order.id}/",
                 data=data,
                 content_type="application/json",
                 **headers,
@@ -712,7 +711,7 @@ class OrderApiTest(BaseAPITestCase):
 
             # With partial object
             response = self.client.patch(
-                f"/api/orders/{order.uid}/",
+                f"/api/orders/{order.id}/",
                 data={field: other_data[field]},
                 content_type="application/json",
                 **headers,
@@ -722,7 +721,7 @@ class OrderApiTest(BaseAPITestCase):
             # Check that nothing was modified
             self.assertEqual(models.Order.objects.count(), 2)
             response = self.client.get(
-                f"/api/orders/{order.uid}/",
+                f"/api/orders/{order.id}/",
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {owner_token}",
             )
@@ -758,7 +757,7 @@ class OrderApiTest(BaseAPITestCase):
 
         response = self.client.get(
             (
-                f"/api/orders/{proforma_invoice.order.uid}/proforma_invoice/"
+                f"/api/orders/{proforma_invoice.order.id}/proforma_invoice/"
                 f"?reference={proforma_invoice.reference}"
             ),
         )
@@ -779,7 +778,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.get_user_token(proforma_invoice.order.owner.username)
 
         response = self.client.get(
-            f"/api/orders/{proforma_invoice.order.uid}/proforma_invoice/",
+            f"/api/orders/{proforma_invoice.order.id}/proforma_invoice/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -798,7 +797,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
 
         response = self.client.get(
-            f"/api/orders/{order.uid}/proforma_invoice/?reference={proforma_invoice.reference}",
+            f"/api/orders/{order.id}/proforma_invoice/?reference={proforma_invoice.reference}",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -807,7 +806,7 @@ class OrderApiTest(BaseAPITestCase):
         self.assertEqual(
             content,
             (
-                f"No pro forma invoice found for order {order.uid} "
+                f"No pro forma invoice found for order {order.id} "
                 f"with reference {proforma_invoice.reference}."
             ),
         )
@@ -823,7 +822,7 @@ class OrderApiTest(BaseAPITestCase):
 
         response = self.client.get(
             (
-                f"/api/orders/{proforma_invoice.order.uid}/proforma_invoice/"
+                f"/api/orders/{proforma_invoice.order.id}/proforma_invoice/"
                 f"?reference={proforma_invoice.reference}"
             ),
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -834,7 +833,7 @@ class OrderApiTest(BaseAPITestCase):
         self.assertEqual(
             content,
             (
-                f"No pro forma invoice found for order {proforma_invoice.order.uid} "
+                f"No pro forma invoice found for order {proforma_invoice.order.id} "
                 f"with reference {proforma_invoice.reference}."
             ),
         )
@@ -849,7 +848,7 @@ class OrderApiTest(BaseAPITestCase):
 
         response = self.client.get(
             (
-                f"/api/orders/{proforma_invoice.order.uid}/proforma_invoice/"
+                f"/api/orders/{proforma_invoice.order.id}/proforma_invoice/"
                 f"?reference={proforma_invoice.reference}"
             ),
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -869,7 +868,7 @@ class OrderApiTest(BaseAPITestCase):
         """An anonymous user should not be allowed to abort an order"""
         order = factories.OrderFactory()
 
-        response = self.client.post(f"/api/orders/{order.uid}/abort/")
+        response = self.client.post(f"/api/orders/{order.id}/abort/")
 
         content = json.loads(response.content)
         self.assertEqual(response.status_code, 401)
@@ -887,13 +886,13 @@ class OrderApiTest(BaseAPITestCase):
 
         token = self.generate_token_from_user(user)
         response = self.client.post(
-            f"/api/orders/{order.uid}/abort/", HTTP_AUTHORIZATION=f"Bearer {token}"
+            f"/api/orders/{order.id}/abort/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
 
         content = json.loads(response.content)
         self.assertEqual(response.status_code, 404)
         self.assertEqual(
-            content, f'No order found with id "{order.uid}" owned by {user.username}.'
+            content, f'No order found with id "{order.id}" owned by {user.username}.'
         )
 
     def test_api_order_abort_not_pending(self):
@@ -907,7 +906,7 @@ class OrderApiTest(BaseAPITestCase):
 
         token = self.generate_token_from_user(user)
         response = self.client.post(
-            f"/api/orders/{order.uid}/abort/", HTTP_AUTHORIZATION=f"Bearer {token}"
+            f"/api/orders/{order.id}/abort/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
 
         content = json.loads(response.content)
@@ -933,7 +932,7 @@ class OrderApiTest(BaseAPITestCase):
         # - Create an order and its related payment
         token = self.generate_token_from_user(user)
         data = {
-            "product": str(product.uid),
+            "product": str(product.id),
             "course": course.code,
             "billing_address": billing_address,
         }
@@ -945,7 +944,7 @@ class OrderApiTest(BaseAPITestCase):
         )
 
         content = json.loads(response.content)
-        order = models.Order.objects.get(uid=content["id"])
+        order = models.Order.objects.get(id=content["id"])
         payment_id = content["payment_info"]["payment_id"]
 
         # - A pending order should have been created...
@@ -957,7 +956,7 @@ class OrderApiTest(BaseAPITestCase):
 
         # - User asks to abort the order
         response = self.client.post(
-            f"/api/orders/{order.uid}/abort/",
+            f"/api/orders/{order.id}/abort/",
             data={"payment_id": payment_id},
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",

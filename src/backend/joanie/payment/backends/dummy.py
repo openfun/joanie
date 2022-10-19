@@ -38,7 +38,7 @@ class DummyPaymentBackend(BasePaymentBackend):
     @staticmethod
     def get_payment_id(order_id):
         """
-        Process a payment id according to order uid.
+        Process a payment id according to order id.
         """
         return f"pay_{order_id:s}"
 
@@ -48,7 +48,7 @@ class DummyPaymentBackend(BasePaymentBackend):
         payment state (`failed` or `success`), call respectively generic methods
         _do_on_payment_failure and _do_on_payment_success.
         """
-        order_id = resource["metadata"]["order_uid"]
+        order_id = resource["metadata"]["order_id"]
         state = data.get("state")
 
         if state is None:
@@ -60,7 +60,7 @@ class DummyPaymentBackend(BasePaymentBackend):
             )
 
         try:
-            order = Order.objects.get(uid=order_id)
+            order = Order.objects.get(id=order_id)
         except Order.DoesNotExist as error:
             logger.error(
                 (
@@ -68,7 +68,7 @@ class DummyPaymentBackend(BasePaymentBackend):
                     "a non existing order #%s."
                 ),
                 resource["id"],
-                resource["metadata"]["order_uid"],
+                resource["metadata"]["order_id"],
             )
             raise exceptions.RegisterPaymentFailed(
                 f"Payment {resource['id']} relies on a non-existing order."
@@ -120,7 +120,7 @@ class DummyPaymentBackend(BasePaymentBackend):
         """
         Generate a payment object then store it in the cache.
         """
-        order_id = str(order.uid)
+        order_id = str(order.id)
         payment_id = self.get_payment_id(order_id)
         notification_url = self.get_notification_url(request)
         payment_info = {
@@ -128,7 +128,7 @@ class DummyPaymentBackend(BasePaymentBackend):
             "amount": int(order.total.amount * 100),
             "billing_address": billing_address,
             "notification_url": notification_url,
-            "metadata": {"order_uid": order_id},
+            "metadata": {"order_id": order_id},
         }
         cache.set(payment_id, payment_info)
 

@@ -1,13 +1,14 @@
 """
 Declare and configure the models for the badges part
 """
-import uuid
 from functools import lru_cache
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from parler import models as parler_models
+
+from joanie.core.models import BaseModel
 
 from ..core.models import User
 
@@ -23,18 +24,10 @@ def get_badge_provider_choices():
     return models.TextChoices("BadgeProvider", choices)
 
 
-class Badge(parler_models.TranslatableModel):
+class Badge(parler_models.TranslatableModel, BaseModel):
     """
     Issuable badges for a provider.
     """
-
-    id = models.UUIDField(
-        verbose_name=_("ID"),
-        help_text=_("Primary key for the badge as UUID"),
-        primary_key=True,
-        default=uuid.uuid4,
-        editable=False,
-    )
 
     translations = parler_models.TranslatedFields(
         name=models.CharField(
@@ -75,20 +68,6 @@ class Badge(parler_models.TranslatableModel):
         unique=True,
     )
 
-    created_on = models.DateTimeField(
-        verbose_name=_("Created on"),
-        help_text=_("Date and time at which a badge was created"),
-        auto_now_add=True,
-        editable=False,
-    )
-
-    updated_on = models.DateTimeField(
-        verbose_name=_("Updated on"),
-        help_text=_("Date and time at which a badge was last updated"),
-        auto_now=True,
-        editable=False,
-    )
-
     class Meta:
         """Options for the Badge model"""
 
@@ -101,18 +80,10 @@ class Badge(parler_models.TranslatableModel):
         return f"{self.provider}: {self.safe_translation_getter('name')}"
 
 
-class IssuedBadge(models.Model):
+class IssuedBadge(BaseModel):
     """
     Issued badges for a resource.
     """
-
-    id = models.UUIDField(
-        verbose_name=_("ID"),
-        help_text=_("Primary key for the badge as UUID"),
-        primary_key=True,
-        default=uuid.uuid4,
-        editable=False,
-    )
 
     iri = models.URLField(
         _("Issued badge IRI"),
@@ -130,7 +101,7 @@ class IssuedBadge(models.Model):
     )
 
     user = models.ForeignKey(
-        User,
+        to=User,
         verbose_name=_("User"),
         related_name="issued_badges",
         on_delete=models.CASCADE,
@@ -138,7 +109,7 @@ class IssuedBadge(models.Model):
     )
 
     badge = models.ForeignKey(
-        Badge,
+        to=Badge,
         verbose_name=_("Badge"),
         related_name="issued",
         on_delete=models.RESTRICT,
@@ -151,20 +122,6 @@ class IssuedBadge(models.Model):
         editable=False,
         blank=True,
         null=True,
-    )
-
-    created_on = models.DateTimeField(
-        verbose_name=_("Created on"),
-        help_text=_("Date and time at which an issued badge was created"),
-        auto_now_add=True,
-        editable=False,
-    )
-
-    updated_on = models.DateTimeField(
-        verbose_name=_("Updated on"),
-        help_text=_("Date and time at which an issued badge was last updated"),
-        auto_now=True,
-        editable=False,
     )
 
     class Meta:

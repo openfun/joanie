@@ -220,7 +220,7 @@ class OrderModelsTestCase(TestCase):
         self.assertEqual(Enrollment.objects.filter(is_active=True).count(), 1)
 
         # - When order is canceled, user should not be unenrolled to related enrollments
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(7):
             order.cancel()
         self.assertEqual(order.is_canceled, True)
         self.assertEqual(Enrollment.objects.count(), 1)
@@ -258,7 +258,7 @@ class OrderModelsTestCase(TestCase):
         self.assertEqual(Enrollment.objects.filter(is_active=True).count(), 1)
 
         # - When order is canceled, user should not be unenrolled to related enrollments
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(5):
             order.cancel()
         self.assertEqual(order.is_canceled, True)
         self.assertEqual(Enrollment.objects.count(), 1)
@@ -319,11 +319,11 @@ class OrderModelsTestCase(TestCase):
             # - product.target_course_runs should return all course runs
             course_runs = product.target_course_runs.order_by("pk")
             self.assertEqual(len(course_runs), 4)
-            self.assertListEqual(list(course_runs), [cr1, cr2, cr3, cr4])
+            self.assertCountEqual(list(course_runs), [cr1, cr2, cr3, cr4])
 
         # - DB queries should be optimized
         with self.assertNumQueries(1):
             # - order.target_course_runs should only return cr1, cr2, cr3
             course_runs = order.target_course_runs.order_by("pk")
             self.assertEqual(len(course_runs), 3)
-            self.assertListEqual(list(course_runs), [cr1, cr2, cr3])
+            self.assertCountEqual(list(course_runs), [cr1, cr2, cr3])

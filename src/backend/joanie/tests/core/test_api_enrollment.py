@@ -110,9 +110,9 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "previous": None,
                 "results": [
                     {
-                        "id": str(enrollment.uid),
+                        "id": str(enrollment.id),
                         "course_run": {
-                            "id": enrollment.course_run.id,
+                            "id": str(enrollment.course_run.id),
                             "resource_link": enrollment.course_run.resource_link,
                             "title": enrollment.course_run.title,
                             "enrollment_start": enrollment.course_run.enrollment_start.isoformat().replace(  # noqa pylint: disable=line-too-long
@@ -163,9 +163,9 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "previous": None,
                 "results": [
                     {
-                        "id": str(other_enrollment.uid),
+                        "id": str(other_enrollment.id),
                         "course_run": {
-                            "id": other_enrollment.course_run.id,
+                            "id": str(other_enrollment.course_run.id),
                             "resource_link": other_enrollment.course_run.resource_link,
                             "title": other_enrollment.course_run.title,
                             "enrollment_start": other_enrollment.course_run.enrollment_start.isoformat().replace(  # noqa pylint: disable=line-too-long
@@ -208,7 +208,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             course_run=self.create_opened_course_run(),
         )
 
-        response = self.client.get(f"/api/enrollments/{enrollment.uid}/")
+        response = self.client.get(f"/api/enrollments/{enrollment.id}/")
         self.assertEqual(response.status_code, 401)
 
         content = json.loads(response.content)
@@ -233,7 +233,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         response = self.client.get(
-            f"/api/enrollments/{enrollment.uid}/",
+            f"/api/enrollments/{enrollment.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 200)
@@ -242,9 +242,9 @@ class EnrollmentApiTest(BaseAPITestCase):
         self.assertEqual(
             content,
             {
-                "id": str(enrollment.uid),
+                "id": str(enrollment.id),
                 "course_run": {
-                    "id": enrollment.course_run.id,
+                    "id": str(enrollment.course_run.id),
                     "resource_link": enrollment.course_run.resource_link,
                     "title": enrollment.course_run.title,
                     "enrollment_start": enrollment.course_run.enrollment_start.isoformat().replace(
@@ -279,7 +279,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         token = self.get_user_token("panoramix")
 
         response = self.client.get(
-            f"/api/enrollments/{enrollment.uid}/",
+            f"/api/enrollments/{enrollment.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 404)
@@ -331,9 +331,9 @@ class EnrollmentApiTest(BaseAPITestCase):
         self.assertEqual(
             content,
             {
-                "id": str(enrollment.uid),
+                "id": str(enrollment.id),
                 "course_run": {
-                    "id": course_run.id,
+                    "id": str(course_run.id),
                     "resource_link": course_run.resource_link,
                     "title": course_run.title,
                     "enrollment_start": course_run.enrollment_start.isoformat().replace(
@@ -435,9 +435,9 @@ class EnrollmentApiTest(BaseAPITestCase):
         self.assertEqual(
             content,
             {
-                "id": str(enrollment.uid),
+                "id": str(enrollment.id),
                 "course_run": {
-                    "id": course_run.id,
+                    "id": str(course_run.id),
                     "resource_link": course_run.resource_link,
                     "title": course_run.title,
                     "enrollment_start": course_run.enrollment_start.isoformat().replace(
@@ -503,9 +503,9 @@ class EnrollmentApiTest(BaseAPITestCase):
         self.assertEqual(
             content,
             {
-                "id": str(enrollment.uid),
+                "id": str(enrollment.id),
                 "course_run": {
-                    "id": course_run.id,
+                    "id": str(course_run.id),
                     "resource_link": course_run.resource_link,
                     "title": course_run.title,
                     "enrollment_start": course_run.enrollment_start.isoformat().replace(
@@ -579,7 +579,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         # - Create a pro forma invoice related to the order to mark it as validated
         ProformaInvoiceFactory(order=order, total=order.total)
 
-        data = {"course_run": resource_link, "order": order.uid, "is_active": is_active}
+        data = {"course_run": resource_link, "order": order.id, "is_active": is_active}
         token = self.get_user_token(order.owner.username)
 
         response = self.client.post(
@@ -597,9 +597,9 @@ class EnrollmentApiTest(BaseAPITestCase):
         self.assertEqual(
             content,
             {
-                "id": str(enrollment.uid),
+                "id": str(enrollment.id),
                 "course_run": {
-                    "id": course_run.id,
+                    "id": str(course_run.id),
                     "resource_link": course_run.resource_link,
                     "title": course_run.title,
                     "enrollment_start": course_run.enrollment_start.isoformat().replace(
@@ -757,13 +757,13 @@ class EnrollmentApiTest(BaseAPITestCase):
 
         # - Enrollment uid has been generated and state has been set according
         #   to LMSHandler.set_enrollment response
-        self.assertNotEqual(enrollment.uid, data["id"])
+        self.assertNotEqual(enrollment.id, data["id"])
         self.assertEqual(
             content,
             {
-                "id": str(enrollment.uid),
+                "id": str(enrollment.id),
                 "course_run": {
-                    "id": course_run.id,
+                    "id": str(course_run.id),
                     "resource_link": course_run.resource_link,
                     "title": course_run.title,
                     "enrollment_start": course_run.enrollment_start.isoformat().replace(
@@ -878,7 +878,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         response = self.client.delete(
-            f"/api/enrollments/{enrollment.uid}/",
+            f"/api/enrollments/{enrollment.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 405)
@@ -892,7 +892,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         token = self.get_user_token(enrollment.user.username)
 
         response = self.client.delete(
-            f"/api/enrollments/{enrollment.uid}/",
+            f"/api/enrollments/{enrollment.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 405)
@@ -919,7 +919,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             )
 
             response = self.client.patch(
-                f"/api/enrollments/{enrollment.uid}/",
+                f"/api/enrollments/{enrollment.id}/",
                 data={"state": new_state[0]},
                 content_type="application/json",
             )
@@ -957,7 +957,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             )
 
             response = self.client.patch(
-                f"/api/enrollments/{enrollment.uid}/",
+                f"/api/enrollments/{enrollment.id}/",
                 data={"is_active": is_active_new},
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -988,7 +988,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             token = self.get_user_token(enrollment.user.username)
 
             response = self.client.patch(
-                f"/api/enrollments/{enrollment.uid}/",
+                f"/api/enrollments/{enrollment.id}/",
                 data={"is_active": is_active_new},
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -999,9 +999,9 @@ class EnrollmentApiTest(BaseAPITestCase):
             self.assertEqual(
                 content,
                 {
-                    "id": str(enrollment.uid),
+                    "id": str(enrollment.id),
                     "course_run": {
-                        "id": enrollment.course_run.id,
+                        "id": str(enrollment.course_run.id),
                         "resource_link": enrollment.course_run.resource_link,
                         "title": enrollment.course_run.title,
                         "enrollment_start": enrollment.course_run.enrollment_start.isoformat().replace(  # noqa pylint: disable=line-too-long
@@ -1038,7 +1038,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         user_token = self.get_user_token(enrollment.user.username)
 
         response = self.client.get(
-            f"/api/enrollments/{enrollment.uid}/",
+            f"/api/enrollments/{enrollment.id}/",
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {user_token}",
         )
@@ -1068,7 +1068,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         )
 
         response = self.client.patch(
-            f"/api/enrollments/{enrollment.uid}/",
+            f"/api/enrollments/{enrollment.id}/",
             data=new_data,
             content_type="application/json",
             **headers,
@@ -1078,7 +1078,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         # Check that nothing was modified
         self.assertEqual(models.Enrollment.objects.count(), 1)
         response = self.client.get(
-            f"/api/enrollments/{enrollment.uid}/",
+            f"/api/enrollments/{enrollment.id}/",
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {user_token}",
         )

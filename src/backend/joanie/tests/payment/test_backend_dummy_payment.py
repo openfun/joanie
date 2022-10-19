@@ -42,9 +42,9 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
         """
         backend = DummyPaymentBackend()
         order = OrderFactory()
-        payment_id = backend.get_payment_id(str(order.uid))
+        payment_id = backend.get_payment_id(str(order.id))
 
-        self.assertEqual(payment_id, f"pay_{order.uid}")
+        self.assertEqual(payment_id, f"pay_{order.id}")
 
     def test_payment_backend_dummy_create_payment(self):
         """
@@ -57,7 +57,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
         billing_address = BillingAddressDictFactory()
         request = APIRequestFactory().post(path="/")
         payment_payload = backend.create_payment(request, order, billing_address)
-        payment_id = f"pay_{order.uid}"
+        payment_id = f"pay_{order.id}"
 
         self.assertEqual(
             payment_payload,
@@ -76,7 +76,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
                 "amount": int(order.total.amount * 100),
                 "billing_address": billing_address,
                 "notification_url": "http://testserver/api/payments/notifications",
-                "metadata": {"order_uid": str(order.uid)},
+                "metadata": {"order_id": str(order.id)},
             },
         )
 
@@ -108,7 +108,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
         order = OrderFactory(owner=owner)
         billing_address = BillingAddressDictFactory()
         request = APIRequestFactory().post(path="/")
-        payment_id = f"pay_{order.uid}"
+        payment_id = f"pay_{order.id}"
 
         payment_payload = backend.create_one_click_payment(
             request, order, billing_address
@@ -133,7 +133,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
                 "amount": int(order.total.amount * 100),
                 "billing_address": billing_address,
                 "notification_url": "http://testserver/api/payments/notifications",
-                "metadata": {"order_uid": str(order.uid)},
+                "metadata": {"order_id": str(order.id)},
             },
         )
 

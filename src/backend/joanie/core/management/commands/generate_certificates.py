@@ -37,7 +37,7 @@ class Command(BaseCommand):
             "--products",
             "--product",
             help=(
-                "Accept a single or a list of product uuid to restrict review to "
+                "Accept a single or a list of product id to restrict review to "
                 "this/those product(s)."
             ),
         )
@@ -46,7 +46,7 @@ class Command(BaseCommand):
             "--orders",
             "--order",
             help=(
-                "Accept a single or a list of order uuid to restrict review to "
+                "Accept a single or a list of order id to restrict review to "
                 "this/those order(s)."
             ),
         )
@@ -58,12 +58,12 @@ class Command(BaseCommand):
         certification of all related orders.
         If `order` option is used, this order is directly retrieved.
         """
-        order_uids = None
-        product_uids = None
+        order_ids = None
+        product_ids = None
         course_codes = None
 
         if options["orders"]:
-            order_uids = (
+            order_ids = (
                 options["orders"]
                 if isinstance(options["orders"], list)
                 else [options["orders"]]
@@ -77,20 +77,20 @@ class Command(BaseCommand):
             )
 
         if options["products"]:
-            product_uids = (
+            product_ids = (
                 options["products"]
                 if isinstance(options["products"], list)
                 else [options["products"]]
             )
 
         filters = {}
-        if order_uids:
-            filters.update({"uid__in": order_uids})
+        if order_ids:
+            filters.update({"id__in": order_ids})
         else:
             if course_codes:
                 filters.update({"course__code__in": course_codes})
-            if product_uids:
-                filters.update({"product__uid__in": product_uids})
+            if product_ids:
+                filters.update({"product__id__in": product_ids})
 
         certificate_generated_count = generate_certificates_for_orders(
             models.Order.objects.filter(**filters)

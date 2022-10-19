@@ -48,15 +48,15 @@ class CreditCardViewSet(
     GET /api/credit-cards/
         Return the list of all credit cards owned by the authenticated user
 
-    PUT /api/credit-cards/<credit_card_uid> with expected data:
+    PUT /api/credit-cards/<credit_card_id> with expected data:
         - title: str
         - is_main?: bool
 
-    DELETE /api/credit-cards/<credit_card_uid>
+    DELETE /api/credit-cards/<credit_card_id>
         Delete the selected credit card
     """
 
-    lookup_field = "uid"
+    lookup_field = "id"
     serializer_class = serializers.CreditCardSerializer
     permission_classes = [permissions.IsAuthenticated]
 

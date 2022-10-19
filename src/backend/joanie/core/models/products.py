@@ -2,7 +2,6 @@
 Declare and configure the models for the productorder_s part
 """
 import logging
-import uuid
 from decimal import Decimal as D
 
 from django.conf import settings
@@ -26,20 +25,17 @@ from joanie.lms_handler import LMSHandler
 from .. import enums
 from . import accounts as customers_models
 from . import courses as courses_models
+from .base import BaseModel
 
 logger = logging.getLogger(__name__)
 
 
-class Product(parler_models.TranslatableModel):
+class Product(parler_models.TranslatableModel, BaseModel):
     """
     Product model represents detailed description of product to purchase for a course.
     All course runs and certification available for a product are defined here.
     """
 
-    # uid used by cms to get order and enrollment
-    uid = models.UUIDField(
-        default=uuid.uuid4, unique=True, editable=False, db_index=True
-    )
     type = models.CharField(
         _("type"), choices=enums.PRODUCT_TYPE_CHOICES, max_length=50
     )
@@ -79,7 +75,6 @@ class Product(parler_models.TranslatableModel):
         db_table = "joanie_product"
         verbose_name = _("Product")
         verbose_name_plural = _("Products")
-        ordering = ("pk",)
 
     def __str__(self):
         return (
@@ -133,20 +128,20 @@ class Product(parler_models.TranslatableModel):
         super().clean()
 
 
-class ProductCourseRelation(models.Model):
+class ProductCourseRelation(BaseModel):
     """
     ProductCourseRelation model allows to define position of each courses to follow
     for a product.
     """
 
     course = models.ForeignKey(
-        courses_models.Course,
+        to=courses_models.Course,
         verbose_name=_("course"),
         related_name="product_relations",
         on_delete=models.RESTRICT,
     )
     product = models.ForeignKey(
-        Product,
+        to=Product,
         verbose_name=_("product"),
         related_name="course_relations",
         on_delete=models.CASCADE,
@@ -218,22 +213,19 @@ m2m_changed.connect(
 )
 
 
-class Order(models.Model):
+class Order(BaseModel):
     """
     Order model represents and records details user's order (for free or not) to a course product
     All course runs to enroll selected are defined here.
     """
 
-    uid = models.UUIDField(
-        default=uuid.uuid4, unique=True, editable=False, db_index=True
-    )
     course = models.ForeignKey(
-        courses_models.Course,
+        to=courses_models.Course,
         verbose_name=_("course"),
         on_delete=models.PROTECT,
     )
     product = models.ForeignKey(
-        Product,
+        to=Product,
         verbose_name=_("product"),
         related_name="orders",
         on_delete=models.RESTRICT,
@@ -258,15 +250,11 @@ class Order(models.Model):
         ],
     )
     owner = models.ForeignKey(
-        customers_models.User,
+        to=customers_models.User,
         verbose_name=_("owner"),
         related_name="orders",
         on_delete=models.RESTRICT,
     )
-    created_on = models.DateTimeField(
-        _("created on"), default=timezone.now, editable=False
-    )
-    updated_on = models.DateTimeField(_("updated on"), auto_now=True, editable=False)
     is_canceled = models.BooleanField(_("is canceled"), default=False, editable=False)
 
     class Meta:
@@ -278,7 +266,6 @@ class Order(models.Model):
                 name="unique_owner_product_not_canceled",
             )
         ]
-        ordering = ("pk",)
         verbose_name = _("Order")
         verbose_name_plural = _("Orders")
 
@@ -347,7 +334,7 @@ class Order(models.Model):
     def clean(self):
         """Clean instance fields and raise a ValidationError in case of issue."""
         if (
-            not self.pk
+            not self.created_on
             and self.course_id
             and self.product_id
             and not self.product.courses.filter(id=self.course_id).exists()
@@ -359,7 +346,7 @@ class Order(models.Model):
             )
             raise ValidationError({"__all__": [message]})
 
-        if not self.pk:
+        if not self.created_on:
             self.total = self.product.price
 
         return super().clean()
@@ -367,9 +354,8 @@ class Order(models.Model):
     def save(self, *args, **kwargs):
         """Call full clean before saving instance."""
         self.full_clean()
-        is_new = not bool(self.pk)
-        super().save(*args, **kwargs)
-
+        is_new = not bool(self.created_on)
+        models.Model.save(self, *args, **kwargs)
         if is_new:
             # - Generate order course relation
             for relation in ProductCourseRelation.objects.filter(product=self.product):
@@ -482,7 +468,7 @@ class Order(models.Model):
                 _(
                     (
                         "A certificate has been already issued for "  # pylint: disable=no-member
-                        f"the order {self.uid} "
+                        f"the order {self.id} "
                         f"on {self.certificate.issued_on}."
                     )
                 )
@@ -494,14 +480,14 @@ class Order(models.Model):
         )
 
 
-class OrderCourseRelation(models.Model):
+class OrderCourseRelation(BaseModel):
     """
     OrderCourseRelation model allows to define position of each courses to follow
     for an order.
     """
 
     course = models.ForeignKey(
-        courses_models.Course,
+        to=courses_models.Course,
         verbose_name=_("course"),
         related_name="order_relations",
         on_delete=models.RESTRICT,
@@ -513,7 +499,7 @@ class OrderCourseRelation(models.Model):
         blank=True,
     )
     order = models.ForeignKey(
-        Order,
+        to=Order,
         verbose_name=_("order"),
         related_name="course_relations",
         on_delete=models.CASCADE,
@@ -536,29 +522,24 @@ class OrderCourseRelation(models.Model):
         return f"{self.order}: {self.position} / {self.course}"
 
 
-class Enrollment(models.Model):
+class Enrollment(BaseModel):
     """
     Enrollment model represents and records lms enrollment state for course run
     as part of an order
     """
 
-    uid = models.UUIDField(
-        default=uuid.uuid4, unique=True, editable=False, db_index=True
-    )
     course_run = models.ForeignKey(
-        courses_models.CourseRun,
+        to=courses_models.CourseRun,
         verbose_name=_("course run"),
         related_name="enrollments",
         on_delete=models.RESTRICT,
     )
     user = models.ForeignKey(
-        customers_models.User,
+        to=customers_models.User,
         verbose_name=_("user"),
         related_name="enrollments",
         on_delete=models.RESTRICT,
     )
-    created_on = models.DateTimeField(_("created on"), default=timezone.now)
-    updated_on = models.DateTimeField(_("updated on"), auto_now=True)
     is_active = models.BooleanField(
         help_text="Tick to enroll the user to the course run.",
         verbose_name="is active",
@@ -569,7 +550,6 @@ class Enrollment(models.Model):
 
     class Meta:
         db_table = "joanie_enrollment"
-        ordering = ("pk",)
         unique_together = ("course_run", "user")
         verbose_name = _("Enrollment")
         verbose_name_plural = _("Enrollments")
@@ -581,7 +561,7 @@ class Enrollment(models.Model):
     @property
     def grade_cache_key(self):
         """The cache key used to store enrollment's grade."""
-        return f"grade_{self.uid}"
+        return f"grade_{self.id}"
 
     @property
     def is_passed(self):
@@ -630,7 +610,7 @@ class Enrollment(models.Model):
 
         # The user should not be enrolled in another opened course run of the same course.
         if (
-            self.pk is None
+            self.created_on is None
             and self.user.enrollments.filter(
                 course_run__course=self.course_run.course,
                 course_run__end__gte=timezone.now(),
@@ -674,12 +654,6 @@ class Enrollment(models.Model):
 
         return super().clean()
 
-    def save(self, *args, **kwargs):
-        """Call full clean before saving instance."""
-        self.full_clean()
-        self.set()
-        super().save(*args, **kwargs)
-
     def set(self):
         """Try setting the state to the LMS. Saving is left to the caller."""
         # Now we can enroll user to LMS course run
@@ -693,7 +667,7 @@ class Enrollment(models.Model):
             logger.error('No LMS configuration found for course run: "%s".', link)
             self.state = enums.ENROLLMENT_STATE_FAILED
         elif (
-            not self.pk
+            not self.created_on
             or Enrollment.objects.only("is_active").get(pk=self.pk).is_active
             != self.is_active
         ):
@@ -705,3 +679,9 @@ class Enrollment(models.Model):
                 self.state = enums.ENROLLMENT_STATE_FAILED
             else:
                 self.state = enums.ENROLLMENT_STATE_SET
+
+    def save(self, *args, **kwargs):
+        """Call full clean before saving instance."""
+        self.full_clean()
+        self.set()
+        models.Model.save(self, *args, **kwargs)

@@ -1,8 +1,6 @@
 """
 Declare and configure the models for the certifications part
 """
-import uuid
-
 from django.conf import settings
 from django.db import models
 from django.utils.module_loading import import_string
@@ -14,8 +12,10 @@ from parler.utils import get_language_settings
 
 from joanie.core.utils import image_to_base64, merge_dict
 
+from .base import BaseModel
 
-class CertificateDefinition(parler_models.TranslatableModel):
+
+class CertificateDefinition(parler_models.TranslatableModel, BaseModel):
     """
     Certificate definition describes templates used to generate user certificates
     """
@@ -42,21 +42,17 @@ class CertificateDefinition(parler_models.TranslatableModel):
         return self.safe_translation_getter("title", any_language=True)
 
 
-class Certificate(models.Model):
+class Certificate(BaseModel):
     """
     Certificate represents and records all user certificates issued as part of an order
     """
-
-    uid = models.UUIDField(
-        default=uuid.uuid4, unique=True, editable=False, db_index=True
-    )
 
     issued_on = models.DateTimeField(
         _("Date of issuance"), auto_now=True, editable=False
     )
 
     certificate_definition = models.ForeignKey(
-        CertificateDefinition,
+        to=CertificateDefinition,
         verbose_name=_("Certificate definition"),
         related_name="certificates",
         on_delete=models.RESTRICT,
@@ -92,7 +88,7 @@ class Certificate(models.Model):
         """
         document_issuer = import_string(self.certificate_definition.template)
         context = self.get_document_context()
-        document = document_issuer(identifier=self.uid, context_query=context)
+        document = document_issuer(identifier=self.id, context_query=context)
         return document.create(persist=False)
 
     def _set_localized_context(self):
@@ -118,7 +114,6 @@ class Certificate(models.Model):
                     },
                 }
             }
-
         self.localized_context = context
 
     def get_document_context(self, language_code=None):
@@ -155,9 +150,11 @@ class Certificate(models.Model):
 
     def save(self, *args, **kwargs):
         """On creation, create a context for each active languages"""
-        is_new = self.pk is None
 
+        self.full_clean()
+
+        is_new = self.created_on is None
         if is_new:
             self._set_localized_context()
 
-        super().save(*args, **kwargs)
+        models.Model.save(self, *args, **kwargs)

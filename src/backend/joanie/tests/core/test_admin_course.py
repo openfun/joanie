@@ -5,7 +5,7 @@ Test suite for courses admin pages
 from django.conf import settings
 from django.urls import reverse
 
-import lxml
+import lxml.html
 
 from joanie.core import factories
 from joanie.tests.base import BaseAPITestCase
