@@ -110,7 +110,7 @@ class CourseApiTest(BaseAPITestCase):
                 {
                     "call_to_action": product.call_to_action,
                     "certificate": None,
-                    "id": str(product.uid),
+                    "id": str(product.id),
                     "price": float(product.price.amount),
                     "price_currency": str(product.price.currency),
                     "target_courses": [
@@ -122,7 +122,7 @@ class CourseApiTest(BaseAPITestCase):
                             },
                             "course_runs": [
                                 {
-                                    "id": course_run.id,
+                                    "id": str(course_run.id),
                                     "title": course_run.title,
                                     "resource_link": course_run.resource_link,
                                     "state": {
@@ -167,7 +167,7 @@ class CourseApiTest(BaseAPITestCase):
                     "title": product.title,
                     "type": product.type,
                 }
-                for product in course.products.all()
+                for product in course.products.all().order_by("-created_on")
             ],
         }
 
@@ -211,27 +211,27 @@ class CourseApiTest(BaseAPITestCase):
         """
         target_course_run11 = factories.CourseRunFactory(
             resource_link="http://lms.test/courses/course-v1:edx+000011+Demo_Course/course",
-            start=timezone.now() - timedelta(hours=1),
-            end=timezone.now() + timedelta(hours=2),
-            enrollment_end=timezone.now() + timedelta(hours=1),
+            start=timezone.now() - timedelta(days=1),
+            end=timezone.now() + timedelta(days=2),
+            enrollment_end=timezone.now() + timedelta(days=1),
         )
         target_course_run12 = factories.CourseRunFactory(
             resource_link="http://lms.test/courses/course-v1:edx+000012+Demo_Course/course",
-            start=timezone.now() - timedelta(hours=1),
-            end=timezone.now() + timedelta(hours=2),
-            enrollment_end=timezone.now() + timedelta(hours=1),
+            start=timezone.now() - timedelta(days=1),
+            end=timezone.now() + timedelta(days=2),
+            enrollment_end=timezone.now() + timedelta(days=1),
         )
         target_course_run21 = factories.CourseRunFactory(
             resource_link="http://lms.test/courses/course-v1:edx+000021+Demo_Course/course",
-            start=timezone.now() - timedelta(hours=1),
-            end=timezone.now() + timedelta(hours=2),
-            enrollment_end=timezone.now() + timedelta(hours=1),
+            start=timezone.now() - timedelta(days=1),
+            end=timezone.now() + timedelta(days=2),
+            enrollment_end=timezone.now() + timedelta(days=1),
         )
         target_course_run22 = factories.CourseRunFactory(
             resource_link="http://lms.test/courses/course-v1:edx+000022+Demo_Course/course",
-            start=timezone.now() - timedelta(hours=1),
-            end=timezone.now() + timedelta(hours=2),
-            enrollment_end=timezone.now() + timedelta(hours=1),
+            start=timezone.now() - timedelta(days=1),
+            end=timezone.now() + timedelta(days=2),
+            enrollment_end=timezone.now() + timedelta(days=1),
         )
 
         product1 = factories.ProductFactory(
@@ -269,6 +269,7 @@ class CourseApiTest(BaseAPITestCase):
             product=product2,
             course=course,
         )
+
         # - Create a pro forma invoice related to the order to mark it as validated
         ProformaInvoiceFactory(order=order2, total=order2.total)
         # - Enrollment to course run 21
@@ -317,7 +318,7 @@ class CourseApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        content = json.loads(response.content)
+        content = response.json()
         expected = {
             "code": course.code,
             "organization": {
@@ -327,23 +328,23 @@ class CourseApiTest(BaseAPITestCase):
             "title": course.title,
             "orders": [
                 {
-                    "id": str(order.uid),
-                    "certificate": str(certificate.uid)
-                    if order.uid == order2.uid
+                    "id": str(order.id),
+                    "certificate": str(certificate.id)
+                    if order.id == order2.id
                     else None,
                     "created_on": order.created_on.isoformat().replace("+00:00", "Z"),
                     "total": float(order.total.amount),
                     "total_currency": str(order.total.currency),
                     "state": order.state,
                     "main_proforma_invoice": order.main_proforma_invoice.reference,
-                    "product": str(order.product.uid),
+                    "product": str(order.product.id),
                     "enrollments": [
                         {
-                            "id": str(enrollment.uid),
+                            "id": str(enrollment.id),
                             "is_active": enrollment.is_active,
                             "state": enrollment.state,
                             "course_run": {
-                                "id": enrollment.course_run.id,
+                                "id": str(enrollment.course_run.id),
                                 "resource_link": enrollment.course_run.resource_link,
                                 "title": enrollment.course_run.title,
                                 "enrollment_start": enrollment.course_run.enrollment_start.isoformat().replace(  # noqa pylint: disable=line-too-long
@@ -385,7 +386,7 @@ class CourseApiTest(BaseAPITestCase):
                     }
                     if product.certificate_definition
                     else None,
-                    "id": str(product.uid),
+                    "id": str(product.id),
                     "price": float(product.price.amount),
                     "price_currency": str(product.price.currency),
                     "target_courses": [
@@ -397,7 +398,7 @@ class CourseApiTest(BaseAPITestCase):
                             },
                             "course_runs": [
                                 {
-                                    "id": course_run.id,
+                                    "id": str(course_run.id),
                                     "title": course_run.title,
                                     "resource_link": course_run.resource_link,
                                     "state": {
@@ -442,12 +443,16 @@ class CourseApiTest(BaseAPITestCase):
                     "title": product.title,
                     "type": product.type,
                 }
-                for product in course.products.all()
+                for product in course.products.all().order_by("created_on")
             ],
         }
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(content, expected)
+        self.assertEqual(content["code"], expected["code"])
+        self.assertEqual(content["title"], expected["title"])
+        self.assertEqual(content["organization"], expected["organization"])
+        self.assertCountEqual(content["products"], expected["products"])
+        self.assertCountEqual(content["orders"], expected["orders"])
 
         # - When user is authenticated, response should be partially cached.
         # Course information should have been cached, but orders not.
@@ -510,10 +515,10 @@ class CourseApiTest(BaseAPITestCase):
 
         # - Response should only contain the two validated orders
         self.assertEqual(len(content["orders"]), 2)
-        self.assertContains(response, str(order_free.uid))
-        self.assertContains(response, str(order_paid.uid))
-        self.assertNotContains(response, str(order_pending.uid))
-        self.assertNotContains(response, str(order_canceled.uid))
+        self.assertContains(response, str(order_free.id))
+        self.assertContains(response, str(order_paid.id))
+        self.assertNotContains(response, str(order_pending.id))
+        self.assertNotContains(response, str(order_canceled.id))
 
     @override_settings(
         JOANIE_LMS_BACKENDS=[
@@ -538,9 +543,9 @@ class CourseApiTest(BaseAPITestCase):
         cr1 = factories.CourseRunFactory.create_batch(
             5,
             course=tc1,
-            start=timezone.now() - timedelta(hours=1),
-            end=timezone.now() + timedelta(hours=2),
-            enrollment_end=timezone.now() + timedelta(hours=1),
+            start=timezone.now() - timedelta(days=1),
+            end=timezone.now() + timedelta(days=2),
+            enrollment_end=timezone.now() + timedelta(days=1),
         )[1]
 
         product = factories.ProductFactory(courses=[course], target_courses=[tc1, tc2])

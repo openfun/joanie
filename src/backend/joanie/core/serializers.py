@@ -113,7 +113,7 @@ class ProductSerializer(serializers.ModelSerializer):
         - order if user is authenticated
     """
 
-    id = serializers.CharField(read_only=True, source="uid")
+    id = serializers.CharField(read_only=True)
     certificate = CertificationDefinitionSerializer(
         read_only=True, source="certificate_definition"
     )
@@ -171,7 +171,7 @@ class OrderLiteSerializer(serializers.ModelSerializer):
     Minimal Order model serializer
     """
 
-    id = serializers.CharField(read_only=True, source="uid")
+    id = serializers.CharField(read_only=True)
     total = MoneyField(
         coerce_to_string=False,
         decimal_places=2,
@@ -180,11 +180,11 @@ class OrderLiteSerializer(serializers.ModelSerializer):
         read_only=True,
     )
     enrollments = serializers.SerializerMethodField(read_only=True)
-    product = serializers.SlugRelatedField(read_only=True, slug_field="uid")
+    product = serializers.SlugRelatedField(read_only=True, slug_field="id")
     main_proforma_invoice = serializers.SlugRelatedField(
         read_only=True, slug_field="reference"
     )
-    certificate = serializers.SlugRelatedField(read_only=True, slug_field="uid")
+    certificate = serializers.SlugRelatedField(read_only=True, slug_field="id")
 
     class Meta:
         model = models.Order
@@ -318,7 +318,7 @@ class EnrollmentSerializer(serializers.ModelSerializer):
     Enrollment model serializer
     """
 
-    id = serializers.CharField(source="uid", read_only=True, required=False)
+    id = serializers.CharField(read_only=True, required=False)
     course_run = CourseRunSerializer(read_only=True)
 
     class Meta:
@@ -358,7 +358,7 @@ class OrderSerializer(serializers.ModelSerializer):
     Order model serializer
     """
 
-    id = serializers.CharField(source="uid", read_only=True, required=False)
+    id = serializers.CharField(read_only=True, required=False)
     owner = serializers.CharField(
         source="owner.username", read_only=True, required=False
     )
@@ -374,14 +374,14 @@ class OrderSerializer(serializers.ModelSerializer):
         required=False,
     )
     product = serializers.SlugRelatedField(
-        queryset=models.Product.objects.all(), slug_field="uid"
+        queryset=models.Product.objects.all(), slug_field="id"
     )
     enrollments = serializers.SerializerMethodField(read_only=True)
     target_courses = serializers.SerializerMethodField(read_only=True)
     main_proforma_invoice = serializers.SlugRelatedField(
         read_only=True, slug_field="reference"
     )
-    certificate = serializers.SlugRelatedField(read_only=True, slug_field="uid")
+    certificate = serializers.SlugRelatedField(read_only=True, slug_field="id")
 
     class Meta:
         model = models.Order
@@ -443,7 +443,7 @@ class AddressSerializer(serializers.ModelSerializer):
     Address model serializer
     """
 
-    id = serializers.CharField(source="uid", read_only=True, required=False)
+    id = serializers.CharField(read_only=True, required=False)
 
     class Meta:
         model = models.Address
@@ -468,7 +468,7 @@ class CertificateSerializer(serializers.ModelSerializer):
     Certificate model serializer
     """
 
-    id = serializers.CharField(source="uid", read_only=True, required=False)
+    id = serializers.CharField(read_only=True, required=False)
 
     class Meta:
         model = models.Certificate

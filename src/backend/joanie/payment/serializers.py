@@ -9,7 +9,7 @@ class CreditCardSerializer(serializers.ModelSerializer):
     CreditCard Serializer
     """
 
-    id = serializers.CharField(source="uid", read_only=True, required=False)
+    id = serializers.CharField(read_only=True, required=False)
 
     class Meta:
         model = models.CreditCard

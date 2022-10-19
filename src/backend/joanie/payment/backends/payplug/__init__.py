@@ -49,7 +49,7 @@ class PayplugBackend(BasePaymentBackend):
             },
             "notification_url": self.get_notification_url(request),
             "metadata": {
-                "order_id": str(order.uid),
+                "order_id": str(order.id),
             },
         }
 
@@ -65,7 +65,7 @@ class PayplugBackend(BasePaymentBackend):
         to save its credit card, so we create a credit card object in database.
         """
         try:
-            order = Order.objects.get(uid=resource.metadata["order_id"])
+            order = Order.objects.get(id=resource.metadata["order_id"])
         except Order.DoesNotExist as error:
             logger.error(
                 (

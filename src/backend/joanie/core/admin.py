@@ -293,7 +293,7 @@ class ProductAdmin(
 class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
     """Admin class for the Order model"""
 
-    list_display = ("uid", "owner", "product", "state")
+    list_display = ("id", "owner", "product", "state")
     readonly_fields = ("state", "total", "proforma_invoice", "certificate")
     change_actions = (ACTION_NAME_GENERATE_CERTIFICATES,)
     actions = (ACTION_NAME_CANCEL, ACTION_NAME_GENERATE_CERTIFICATES)

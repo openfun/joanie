@@ -32,15 +32,6 @@ class Migration(migrations.Migration):
             name="User",
             fields=[
                 (
-                    "id",
-                    models.AutoField(
-                        auto_created=True,
-                        primary_key=True,
-                        serialize=False,
-                        verbose_name="ID",
-                    ),
-                ),
-                (
                     "last_login",
                     models.DateTimeField(
                         blank=True, null=True, verbose_name="last login"
@@ -110,6 +101,33 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        help_text="primary key for the record as UUID",
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="id",
+                    ),
+                ),
+                (
+                    "created_on",
+                    models.DateTimeField(
+                        auto_now_add=True,
+                        help_text="date and time at which a record was created",
+                        verbose_name="created on",
+                    ),
+                ),
+                (
+                    "updated_on",
+                    models.DateTimeField(
+                        auto_now=True,
+                        help_text="date and time at which a record was last updated",
+                        verbose_name="updated on",
+                    ),
+                ),
+                (
                     "language",
                     models.CharField(
                         choices=[("en-us", "English"), ("fr-fr", "French")],
@@ -162,11 +180,29 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     "id",
-                    models.AutoField(
-                        auto_created=True,
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        help_text="primary key for the record as UUID",
                         primary_key=True,
                         serialize=False,
-                        verbose_name="ID",
+                        verbose_name="id",
+                    ),
+                ),
+                (
+                    "created_on",
+                    models.DateTimeField(
+                        auto_now_add=True,
+                        help_text="date and time at which a record was created",
+                        verbose_name="created on",
+                    ),
+                ),
+                (
+                    "updated_on",
+                    models.DateTimeField(
+                        auto_now=True,
+                        help_text="date and time at which a record was last updated",
+                        verbose_name="updated on",
                     ),
                 ),
                 (
@@ -195,11 +231,29 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     "id",
-                    models.AutoField(
-                        auto_created=True,
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        help_text="primary key for the record as UUID",
                         primary_key=True,
                         serialize=False,
-                        verbose_name="ID",
+                        verbose_name="id",
+                    ),
+                ),
+                (
+                    "created_on",
+                    models.DateTimeField(
+                        auto_now_add=True,
+                        help_text="date and time at which a record was created",
+                        verbose_name="created on",
+                    ),
+                ),
+                (
+                    "updated_on",
+                    models.DateTimeField(
+                        auto_now=True,
+                        help_text="date and time at which a record was last updated",
+                        verbose_name="updated on",
                     ),
                 ),
                 (
@@ -222,11 +276,29 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     "id",
-                    models.AutoField(
-                        auto_created=True,
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        help_text="primary key for the record as UUID",
                         primary_key=True,
                         serialize=False,
-                        verbose_name="ID",
+                        verbose_name="id",
+                    ),
+                ),
+                (
+                    "created_on",
+                    models.DateTimeField(
+                        auto_now_add=True,
+                        help_text="date and time at which a record was created",
+                        verbose_name="created on",
+                    ),
+                ),
+                (
+                    "updated_on",
+                    models.DateTimeField(
+                        auto_now=True,
+                        help_text="date and time at which a record was last updated",
+                        verbose_name="updated on",
                     ),
                 ),
                 (
@@ -400,17 +472,29 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     "id",
-                    models.AutoField(
-                        auto_created=True,
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        help_text="primary key for the record as UUID",
                         primary_key=True,
                         serialize=False,
-                        verbose_name="ID",
+                        verbose_name="id",
                     ),
                 ),
                 (
-                    "uid",
-                    models.UUIDField(
-                        db_index=True, default=uuid.uuid4, editable=False, unique=True
+                    "created_on",
+                    models.DateTimeField(
+                        auto_now_add=True,
+                        help_text="date and time at which a record was created",
+                        verbose_name="created on",
+                    ),
+                ),
+                (
+                    "updated_on",
+                    models.DateTimeField(
+                        auto_now=True,
+                        help_text="date and time at which a record was last updated",
+                        verbose_name="updated on",
                     ),
                 ),
                 (
@@ -433,18 +517,6 @@ class Migration(migrations.Migration):
                         validators=[djmoney.models.validators.MinMoneyValidator(0)],
                         verbose_name="total",
                     ),
-                ),
-                (
-                    "created_on",
-                    models.DateTimeField(
-                        default=django.utils.timezone.now,
-                        editable=False,
-                        verbose_name="created on",
-                    ),
-                ),
-                (
-                    "updated_on",
-                    models.DateTimeField(auto_now=True, verbose_name="updated on"),
                 ),
                 (
                     "is_canceled",
@@ -474,7 +546,6 @@ class Migration(migrations.Migration):
                 "verbose_name": "Order",
                 "verbose_name_plural": "Orders",
                 "db_table": "joanie_order",
-                "ordering": ("pk",),
             },
         ),
         migrations.CreateModel(
@@ -482,11 +553,29 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     "id",
-                    models.AutoField(
-                        auto_created=True,
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        help_text="primary key for the record as UUID",
                         primary_key=True,
                         serialize=False,
-                        verbose_name="ID",
+                        verbose_name="id",
+                    ),
+                ),
+                (
+                    "created_on",
+                    models.DateTimeField(
+                        auto_now_add=True,
+                        help_text="date and time at which a record was created",
+                        verbose_name="created on",
+                    ),
+                ),
+                (
+                    "updated_on",
+                    models.DateTimeField(
+                        auto_now=True,
+                        help_text="date and time at which a record was last updated",
+                        verbose_name="updated on",
                     ),
                 ),
                 (
@@ -527,17 +616,29 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     "id",
-                    models.AutoField(
-                        auto_created=True,
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        help_text="primary key for the record as UUID",
                         primary_key=True,
                         serialize=False,
-                        verbose_name="ID",
+                        verbose_name="id",
                     ),
                 ),
                 (
-                    "uid",
-                    models.UUIDField(
-                        db_index=True, default=uuid.uuid4, editable=False, unique=True
+                    "created_on",
+                    models.DateTimeField(
+                        auto_now_add=True,
+                        help_text="date and time at which a record was created",
+                        verbose_name="created on",
+                    ),
+                ),
+                (
+                    "updated_on",
+                    models.DateTimeField(
+                        auto_now=True,
+                        help_text="date and time at which a record was last updated",
+                        verbose_name="updated on",
                     ),
                 ),
                 (
@@ -588,7 +689,6 @@ class Migration(migrations.Migration):
                 "verbose_name": "Product",
                 "verbose_name_plural": "Products",
                 "db_table": "joanie_product",
-                "ordering": ("pk",),
             },
             bases=(parler.models.TranslatableModelMixin, models.Model),
         ),
@@ -597,11 +697,29 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     "id",
-                    models.AutoField(
-                        auto_created=True,
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        help_text="primary key for the record as UUID",
                         primary_key=True,
                         serialize=False,
-                        verbose_name="ID",
+                        verbose_name="id",
+                    ),
+                ),
+                (
+                    "created_on",
+                    models.DateTimeField(
+                        auto_now_add=True,
+                        help_text="date and time at which a record was created",
+                        verbose_name="created on",
+                    ),
+                ),
+                (
+                    "updated_on",
+                    models.DateTimeField(
+                        auto_now=True,
+                        help_text="date and time at which a record was last updated",
+                        verbose_name="updated on",
                     ),
                 ),
                 (
@@ -670,11 +788,29 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     "id",
-                    models.AutoField(
-                        auto_created=True,
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        help_text="primary key for the record as UUID",
                         primary_key=True,
                         serialize=False,
-                        verbose_name="ID",
+                        verbose_name="id",
+                    ),
+                ),
+                (
+                    "created_on",
+                    models.DateTimeField(
+                        auto_now_add=True,
+                        help_text="date and time at which a record was created",
+                        verbose_name="created on",
+                    ),
+                ),
+                (
+                    "updated_on",
+                    models.DateTimeField(
+                        auto_now=True,
+                        help_text="date and time at which a record was last updated",
+                        verbose_name="updated on",
                     ),
                 ),
                 (
@@ -751,28 +887,30 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     "id",
-                    models.AutoField(
-                        auto_created=True,
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        help_text="primary key for the record as UUID",
                         primary_key=True,
                         serialize=False,
-                        verbose_name="ID",
-                    ),
-                ),
-                (
-                    "uid",
-                    models.UUIDField(
-                        db_index=True, default=uuid.uuid4, editable=False, unique=True
+                        verbose_name="id",
                     ),
                 ),
                 (
                     "created_on",
                     models.DateTimeField(
-                        default=django.utils.timezone.now, verbose_name="created on"
+                        auto_now_add=True,
+                        help_text="date and time at which a record was created",
+                        verbose_name="created on",
                     ),
                 ),
                 (
                     "updated_on",
-                    models.DateTimeField(auto_now=True, verbose_name="updated on"),
+                    models.DateTimeField(
+                        auto_now=True,
+                        help_text="date and time at which a record was last updated",
+                        verbose_name="updated on",
+                    ),
                 ),
                 (
                     "is_active",
@@ -813,7 +951,6 @@ class Migration(migrations.Migration):
                 "verbose_name": "Enrollment",
                 "verbose_name_plural": "Enrollments",
                 "db_table": "joanie_enrollment",
-                "ordering": ("pk",),
             },
         ),
         migrations.CreateModel(
@@ -963,17 +1100,29 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     "id",
-                    models.AutoField(
-                        auto_created=True,
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        help_text="primary key for the record as UUID",
                         primary_key=True,
                         serialize=False,
-                        verbose_name="ID",
+                        verbose_name="id",
                     ),
                 ),
                 (
-                    "uid",
-                    models.UUIDField(
-                        db_index=True, default=uuid.uuid4, editable=False, unique=True
+                    "created_on",
+                    models.DateTimeField(
+                        auto_now_add=True,
+                        help_text="date and time at which a record was created",
+                        verbose_name="created on",
+                    ),
+                ),
+                (
+                    "updated_on",
+                    models.DateTimeField(
+                        auto_now=True,
+                        help_text="date and time at which a record was last updated",
+                        verbose_name="updated on",
                     ),
                 ),
                 (
@@ -1020,17 +1169,29 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     "id",
-                    models.AutoField(
-                        auto_created=True,
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        help_text="primary key for the record as UUID",
                         primary_key=True,
                         serialize=False,
-                        verbose_name="ID",
+                        verbose_name="id",
                     ),
                 ),
                 (
-                    "uid",
-                    models.UUIDField(
-                        db_index=True, default=uuid.uuid4, editable=False, unique=True
+                    "created_on",
+                    models.DateTimeField(
+                        auto_now_add=True,
+                        help_text="date and time at which a record was created",
+                        verbose_name="created on",
+                    ),
+                ),
+                (
+                    "updated_on",
+                    models.DateTimeField(
+                        auto_now=True,
+                        help_text="date and time at which a record was last updated",
+                        verbose_name="updated on",
                     ),
                 ),
                 ("title", models.CharField(max_length=100, verbose_name="title")),

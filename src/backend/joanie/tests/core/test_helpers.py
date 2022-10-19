@@ -141,7 +141,7 @@ class HelpersTestCase(TestCase):
         self.assertEqual(certificate_qs.count(), 0)
 
         # DB queries should be minimized
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(11):
             self.assertEqual(helpers.generate_certificate_for_order(order), 1)
         self.assertEqual(certificate_qs.count(), 1)
 

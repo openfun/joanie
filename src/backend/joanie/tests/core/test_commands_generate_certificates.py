@@ -86,11 +86,11 @@ class CreateCertificatesTestCase(TestCase):
         self.assertEqual(certificate_qs.count(), 0)
 
         # A certificate should be generated for the 1st order
-        call_command("generate_certificates", order=orders[0].uid)
+        call_command("generate_certificates", order=orders[0].id)
         self.assertEqual(certificate_qs.filter(order=orders[0]).count(), 1)
 
         # Then a certificate should be generated for the 2nd order
-        call_command("generate_certificates", order=orders[1].uid)
+        call_command("generate_certificates", order=orders[1].id)
         self.assertEqual(certificate_qs.filter(order=orders[1]).count(), 1)
 
     def test_commands_generate_certificates_can_be_restricted_to_course(self):
@@ -161,13 +161,13 @@ class CreateCertificatesTestCase(TestCase):
         self.assertEqual(certificate_qs.count(), 0)
 
         # A certificate should be generated for the 1st product
-        with self.assertNumQueries(11):
-            call_command("generate_certificates", product=product_1.uid)
+        with self.assertNumQueries(15):
+            call_command("generate_certificates", product=product_1.id)
         self.assertEqual(certificate_qs.filter(order=orders[0]).count(), 1)
 
         # Then a certificate should be generated for the 2nd product
-        with self.assertNumQueries(10):
-            call_command("generate_certificates", product=product_2.uid)
+        with self.assertNumQueries(14):
+            call_command("generate_certificates", product=product_2.id)
         self.assertEqual(certificate_qs.filter(order=orders[1]).count(), 1)
 
     def test_commands_generate_certificates_can_be_restricted_to_product_course(self):
@@ -209,25 +209,25 @@ class CreateCertificatesTestCase(TestCase):
 
         # A certificate should be generated for the couple course_1 - product_1
         call_command(
-            "generate_certificates", course=course_1.code, product=product_1.uid
+            "generate_certificates", course=course_1.code, product=product_1.id
         )
         self.assertEqual(certificate_qs.filter(order=orders[0]).count(), 1)
 
         # Then a certificate should be generated for the couple course_1 - product_2
         call_command(
-            "generate_certificates", course=course_1.code, product=product_2.uid
+            "generate_certificates", course=course_1.code, product=product_2.id
         )
         self.assertEqual(certificate_qs.filter(order=orders[1]).count(), 1)
 
         # Then a certificate should be generated for the couple course_2 - product_1
         call_command(
-            "generate_certificates", course=course_2.code, product=product_1.uid
+            "generate_certificates", course=course_2.code, product=product_1.id
         )
         self.assertEqual(certificate_qs.filter(order=orders[2]).count(), 1)
 
         # Finally, a certificate should be generated for the couple course_2 - product_2
         call_command(
-            "generate_certificates", course=course_2.code, product=product_2.uid
+            "generate_certificates", course=course_2.code, product=product_2.id
         )
         self.assertEqual(certificate_qs.filter(order=orders[3]).count(), 1)
 
@@ -263,11 +263,11 @@ class CreateCertificatesTestCase(TestCase):
         self.assertEqual(certificate_qs.count(), 0)
 
         # A certificate should be generated for the 1st product
-        with self.assertNumQueries(11):
-            call_command("generate_certificates", product=product_1.uid)
+        with self.assertNumQueries(15):
+            call_command("generate_certificates", product=product_1.id)
         self.assertEqual(certificate_qs.filter(order=orders[0]).count(), 1)
 
         # Then a certificate should be generated for the 2nd product
-        with self.assertNumQueries(10):
-            call_command("generate_certificates", product=product_2.uid)
+        with self.assertNumQueries(14):
+            call_command("generate_certificates", product=product_2.id)
         self.assertEqual(certificate_qs.filter(order=orders[1]).count(), 1)

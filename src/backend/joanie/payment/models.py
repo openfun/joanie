@@ -1,7 +1,6 @@
 """
 Declare and configure models for the payment part
 """
-import uuid
 from decimal import Decimal as D
 
 from django.conf import settings
@@ -22,7 +21,7 @@ from howard.issuers import InvoiceDocument
 from parler.utils import get_language_settings
 from parler.utils.context import switch_language
 
-from joanie.core.models import Order
+from joanie.core.models import BaseModel, Order
 from joanie.core.utils import merge_dict
 
 from . import enums as payment_enums
@@ -31,13 +30,13 @@ from . import get_payment_backend
 User = get_user_model()
 
 
-class ProformaInvoice(models.Model):
+class ProformaInvoice(BaseModel):
     """
     ProformaInvoice model is an informative accounting element related to an order
     """
 
     parent = models.ForeignKey(
-        "self",
+        to="self",
         on_delete=models.RESTRICT,
         related_name="children",
         verbose_name="parent",
@@ -50,18 +49,8 @@ class ProformaInvoice(models.Model):
         max_length=40,
         unique=True,
     )
-    created_on = models.DateTimeField(
-        _("created on"),
-        auto_now_add=True,
-        editable=False,
-    )
-    updated_on = models.DateTimeField(
-        _("updated on"),
-        auto_now=True,
-        editable=False,
-    )
     order = models.ForeignKey(
-        Order,
+        to=Order,
         verbose_name=_("order"),
         related_name="proforma_invoices",
         on_delete=models.PROTECT,
@@ -270,7 +259,7 @@ class ProformaInvoice(models.Model):
         Generate a normalized reference related to the date
         and the related order
         """
-        order_uid_fragment = str(self.order.uid).split("-", maxsplit=1)[0]
+        order_uid_fragment = str(self.order.id).split("-", maxsplit=1)[0]
         timestamp = int(timezone.now().timestamp() * 1_000)  # Time in milliseconds
 
         return f"{order_uid_fragment}-{timestamp}"
@@ -314,7 +303,7 @@ class ProformaInvoice(models.Model):
                     )
                 )
 
-        if self.pk is None:
+        if self.created_on is None:
             self.reference = self.normalize_reference()
 
         return super().clean()
@@ -328,21 +317,19 @@ class ProformaInvoice(models.Model):
 
         self.full_clean()
 
-        is_new = self.pk is None
+        is_new = self.created_on is None
 
         if is_new:
             self._set_localized_context()
 
-        super().save(*args, **kwargs)
+        models.Model.save(self, *args, **kwargs)
 
 
-class Transaction(models.Model):
+class Transaction(BaseModel):
     """
     Transaction model represents financial transactions
     (debit, credit) related to a pro forma invoice.
     """
-
-    created_on = models.DateTimeField(_("created on"), auto_now_add=True)
 
     reference = models.CharField(
         help_text=_("Reference to identify transaction from external platform"),
@@ -355,7 +342,7 @@ class Transaction(models.Model):
     )
 
     proforma_invoice = models.ForeignKey(
-        ProformaInvoice,
+        to=ProformaInvoice,
         verbose_name=_("proforma invoice"),
         related_name="transactions",
         on_delete=models.PROTECT,
@@ -382,15 +369,12 @@ class Transaction(models.Model):
         return f"{transaction_type} transaction ({self.total})"
 
 
-class CreditCard(models.Model):
+class CreditCard(BaseModel):
     """
     Credit card model stores credit card information in order to allow
     one click payment.
     """
 
-    uid = models.UUIDField(
-        default=uuid.uuid4, unique=True, editable=False, db_index=True
-    )
     token = models.CharField(
         max_length=50,
         unique=True,
@@ -406,7 +390,7 @@ class CreditCard(models.Model):
     expiration_year = models.PositiveSmallIntegerField(_("expiration year"))
     last_numbers = models.CharField(_("last 4 numbers"), max_length=4)
     owner = models.ForeignKey(
-        User,
+        to=User,
         verbose_name=_("owner"),
         related_name="credit_cards",
         on_delete=models.CASCADE,
@@ -436,18 +420,13 @@ class CreditCard(models.Model):
         elif self.is_main is True:
             self.owner.credit_cards.filter(is_main=True).update(is_main=False)
         elif (
-            self.pk
+            self.created_on
             and self.is_main is False
             and self.owner.credit_cards.filter(is_main=True, pk=self.pk).exists()
         ):
             raise ValidationError(_("Demote a main credit card is forbidden"))
 
         return super().clean()
-
-    def save(self, *args, **kwargs):
-        """Enforce validation each time an instance is saved."""
-        self.full_clean()
-        super().save(*args, **kwargs)
 
 
 @receiver(models.signals.post_delete, sender=CreditCard)

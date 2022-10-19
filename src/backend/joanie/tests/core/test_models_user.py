@@ -18,11 +18,11 @@ class UserModelTestCase(TestCase):
 
         self.assertEqual(User.objects.count(), 2)
 
-        first_user = User.objects.first()
-        self.assertEqual(first_user.username, "Sam")
-        self.assertEqual(first_user.email, "sam@fun-test.fr")
-        self.assertEqual(first_user.language, "fr-fr")
-        self.assertEqual(str(first_user), "Sam")
+        user = User.objects.get(username="Sam")
+        self.assertEqual(user.username, "Sam")
+        self.assertEqual(user.email, "sam@fun-test.fr")
+        self.assertEqual(user.language, "fr-fr")
+        self.assertEqual(str(user), "Sam")
 
     @override_settings(
         LANGUAGES=(("fr-ca", "Canadian"), ("it", "Italian")),

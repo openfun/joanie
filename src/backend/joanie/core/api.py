@@ -79,7 +79,7 @@ class EnrollmentViewSet(
 ):
     """API ViewSet for all interactions with enrollments."""
 
-    lookup_field = "uid"
+    lookup_field = "id"
     pagination_class = Pagination
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = serializers.EnrollmentSerializer
@@ -110,12 +110,12 @@ class OrderViewSet(
 
     POST /api/orders/ with expected data:
         - course: course code
-        - product: product uid (product must be associated to the course. Otherwise,
+        - product: product id (product must be associated to the course. Otherwise,
           a 400 error is returned)
         Return new order just created
     """
 
-    lookup_field = "uid"
+    lookup_field = "pk"
     pagination_class = Pagination
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = serializers.OrderSerializer
@@ -156,7 +156,7 @@ class OrderViewSet(
         except (DRFValidationError, IntegrityError):
             return Response(
                 (
-                    f"Cannot create order related to the product {product.uid} "
+                    f"Cannot create order related to the product {product.id} "
                     f"and course {course.code}"
                 ),
                 status=400,
@@ -172,7 +172,7 @@ class OrderViewSet(
             if credit_card_id:
                 try:
                     credit_card = CreditCard.objects.get(
-                        owner=order.owner, uid=credit_card_id
+                        owner=order.owner, id=credit_card_id
                     )
                     payment_info = payment_backend.create_one_click_payment(
                         request=request,
@@ -196,16 +196,16 @@ class OrderViewSet(
         return Response(serializer.data, status=201)
 
     @action(detail=True, methods=["POST"])
-    def abort(self, request, uid=None):  # pylint: disable=no-self-use
+    def abort(self, request, pk=None):  # pylint: disable=no-self-use, invalid-name
         """Abort a pending order and the related payment if there is one."""
         username = request.user.username
         payment_id = request.data.get("payment_id")
 
         try:
-            order = models.Order.objects.get(uid=uid, owner__username=username)
+            order = models.Order.objects.get(pk=pk, owner__username=username)
         except models.Order.DoesNotExist:
             return Response(
-                f'No order found with id "{uid}" owned by {username}.', status=404
+                f'No order found with id "{pk}" owned by {username}.', status=404
             )
 
         if order.state != ORDER_STATE_PENDING:
@@ -220,7 +220,9 @@ class OrderViewSet(
         return Response(status=204)
 
     @action(detail=True, methods=["GET"])
-    def proforma_invoice(self, request, uid=None):  # pylint: disable=no-self-use
+    def proforma_invoice(
+        self, request, pk=None
+    ):  # pylint: disable=no-self-use, invalid-name
         """
         Retrieve a pro forma invoice through its reference if it is related to
         the order instance and owned by the authenticated user.
@@ -233,13 +235,13 @@ class OrderViewSet(
         try:
             proforma_invoice = ProformaInvoice.objects.get(
                 reference=reference,
-                order__uid=uid,
+                order__id=pk,
                 order__owner__username=request.user.username,
             )
         except ProformaInvoice.DoesNotExist:
             return Response(
                 (
-                    f"No pro forma invoice found for order {uid} "
+                    f"No pro forma invoice found for order {pk} "
                     f"with reference {reference}."
                 ),
                 status=404,
@@ -295,7 +297,7 @@ class AddressViewSet(
         Delete selected address
     """
 
-    lookup_field = "uid"
+    lookup_field = "id"
     serializer_class = serializers.AddressSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -316,15 +318,15 @@ class CertificateViewSet(
     """
     API views to get all certificates for a user
 
-    GET /api/certificates/:certificate_uid
-        Return list of all certificates for a user or one certificate if an uid is
+    GET /api/certificates/:certificate_id
+        Return list of all certificates for a user or one certificate if an id is
         provided.
 
-    GET /api/certificates/:certificate_uid/download
+    GET /api/certificates/:certificate_id/download
         Return the certificate document in PDF format.
     """
 
-    lookup_field = "uid"
+    lookup_field = "pk"
     serializer_class = serializers.CertificateSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -336,24 +338,24 @@ class CertificateViewSet(
         return models.Certificate.objects.filter(order__owner=user)
 
     @action(detail=True, methods=["GET"])
-    def download(self, request, uid=None):  # pylint: disable=no-self-use
+    def download(self, request, pk=None):  # pylint: disable=no-self-use, invalid-name
         """
-        Retrieve a certificate through its uid if it is owned by the authenticated user.
+        Retrieve a certificate through its id if it is owned by the authenticated user.
         """
         try:
             certificate = models.Certificate.objects.get(
-                uid=uid,
+                pk=pk,
                 order__owner__username=request.user.username,
             )
         except models.Certificate.DoesNotExist:
             return Response(
-                {"detail": f"No certificate found with uid {uid}."}, status=404
+                {"detail": f"No certificate found with id {pk}."}, status=404
             )
 
         response = HttpResponse(
             certificate.document, content_type="application/pdf", status=200
         )
 
-        response["Content-Disposition"] = f"attachment; filename={uid}.pdf;"
+        response["Content-Disposition"] = f"attachment; filename={pk}.pdf;"
 
         return response

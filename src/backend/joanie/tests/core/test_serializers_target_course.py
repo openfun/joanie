@@ -107,4 +107,4 @@ class TargetCourseSerializerTestCase(TestCase):
         # - So target_course.product_relations.course_runs are used
         course_runs_repr = representation["course_runs"]
         self.assertEqual(len(course_runs_repr), 1)
-        self.assertEqual(course_runs_repr[0]["id"], course_run.pk)
+        self.assertEqual(course_runs_repr[0]["id"], str(course_run.pk))

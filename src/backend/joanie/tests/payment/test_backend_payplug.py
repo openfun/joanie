@@ -87,7 +87,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
                 },
                 "shipping": {"delivery_type": "DIGITAL_GOODS"},
                 "notification_url": "http://testserver/api/payments/notifications",
-                "metadata": {"order_id": str(order.uid)},
+                "metadata": {"order_id": str(order.id)},
             },
         )
 
@@ -142,7 +142,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
                 },
                 "shipping": {"delivery_type": "DIGITAL_GOODS"},
                 "notification_url": "http://testserver/api/payments/notifications",
-                "metadata": {"order_id": str(order.uid)},
+                "metadata": {"order_id": str(order.id)},
             }
         )
         self.assertEqual(len(payload), 3)
@@ -169,7 +169,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
 
         mock_payplug_create.side_effect = BadRequest()
         mock_backend_create_payment.return_value = {
-            "order_id": str(order.uid),
+            "order_id": str(order.id),
             "payment_id": "pay_00001",
             "provider": "payplug",
             "url": "https://payplug.test/00001",
@@ -198,7 +198,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
                 },
                 "shipping": {"delivery_type": "DIGITAL_GOODS"},
                 "notification_url": "http://testserver/api/payments/notifications",
-                "metadata": {"order_id": str(order.uid)},
+                "metadata": {"order_id": str(order.id)},
             }
         )
 
@@ -209,7 +209,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         self.assertEqual(
             payload,
             {
-                "order_id": str(order.uid),
+                "order_id": str(order.id),
                 "payment_id": "pay_00001",
                 "provider": "payplug",
                 "url": "https://payplug.test/00001",
@@ -258,7 +258,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
                 },
                 "shipping": {"delivery_type": "DIGITAL_GOODS"},
                 "notification_url": "http://testserver/api/payments/notifications",
-                "metadata": {"order_id": str(order.uid)},
+                "metadata": {"order_id": str(order.id)},
             }
         )
 
@@ -310,7 +310,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
                 },
                 "shipping": {"delivery_type": "DIGITAL_GOODS"},
                 "notification_url": "http://testserver/api/payments/notifications",
-                "metadata": {"order_id": str(order.uid)},
+                "metadata": {"order_id": str(order.id)},
             }
         )
 
@@ -354,7 +354,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         order = OrderFactory.build(product=product)
         backend = PayplugBackend(self.configuration)
         mock_treat.return_value = PayplugFactories.PayplugPaymentFactory(
-            id=payment_id, metadata={"order_id": str(order.uid)}
+            id=payment_id, metadata={"order_id": str(order.id)}
         )
 
         request = APIRequestFactory().post(
@@ -383,7 +383,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         order = OrderFactory(product=product)
         backend = PayplugBackend(self.configuration)
         mock_treat.return_value = PayplugFactories.PayplugPaymentFactory(
-            id=payment_id, failure=True, metadata={"order_id": str(order.uid)}
+            id=payment_id, failure=True, metadata={"order_id": str(order.id)}
         )
 
         request = APIRequestFactory().post(
@@ -415,7 +415,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
             id=payment_id,
             amount=12345,
             billing=payplug_billing_address,
-            metadata={"order_id": str(order.uid)},
+            metadata={"order_id": str(order.id)},
             is_paid=True,
             is_refunded=False,
         )
@@ -453,7 +453,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
             id=payment_id,
             amount=12345,
             billing=payplug_billing_address,
-            metadata={"order_id": str(order.uid)},
+            metadata={"order_id": str(order.id)},
             is_paid=True,
             is_refunded=False,
         )
@@ -493,7 +493,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
             amount=12345,
             billing=payplug_billing_address,
             card=PayplugFactories.PayplugCardFactory(id=card_id),
-            metadata={"order_id": str(order.uid)},
+            metadata={"order_id": str(order.id)},
             is_paid=True,
             is_refunded=False,
         )

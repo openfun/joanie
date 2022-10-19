@@ -95,11 +95,11 @@ class AddressAPITestCase(BaseAPITestCase):
         self.assertEqual(addresses_data[0]["title"], "Office")
         self.assertEqual(addresses_data[0]["first_name"], address1.first_name)
         self.assertEqual(addresses_data[0]["last_name"], address1.last_name)
-        self.assertEqual(addresses_data[0]["id"], str(address1.uid))
+        self.assertEqual(addresses_data[0]["id"], str(address1.id))
         self.assertEqual(addresses_data[1]["title"], "Home")
         self.assertEqual(addresses_data[1]["first_name"], address2.first_name)
         self.assertEqual(addresses_data[1]["last_name"], address2.last_name)
-        self.assertEqual(addresses_data[1]["id"], str(address2.uid))
+        self.assertEqual(addresses_data[1]["id"], str(address2.id))
 
     def test_api_address_create_without_authorization(self):
         """Create/update user addresses not allowed without HTTP AUTH"""
@@ -125,7 +125,7 @@ class AddressAPITestCase(BaseAPITestCase):
         new_address = factories.AddressFactory.build()
 
         response = self.client.put(
-            f"/api/addresses/{address.uid}",
+            f"/api/addresses/{address.id}",
             data=get_payload(new_address),
             follow=True,
             content_type="application/json",
@@ -160,7 +160,7 @@ class AddressAPITestCase(BaseAPITestCase):
         new_address = factories.AddressFactory.build()
 
         response = self.client.put(
-            f"/api/addresses/{address.uid}",
+            f"/api/addresses/{address.id}",
             HTTP_AUTHORIZATION="Bearer nawak",
             data=get_payload(new_address),
             follow=True,
@@ -204,7 +204,7 @@ class AddressAPITestCase(BaseAPITestCase):
         new_address = factories.AddressFactory.build()
 
         response = self.client.put(
-            f"/api/addresses/{address.uid}",
+            f"/api/addresses/{address.id}",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             data=get_payload(new_address),
             follow=True,
@@ -254,7 +254,7 @@ class AddressAPITestCase(BaseAPITestCase):
         new_address = factories.AddressFactory.build()
         payload = get_payload(new_address)
 
-        # Put request without address uid should not be allowed
+        # Put request without address id should not be allowed
         response = self.client.put(
             "/api/addresses/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -267,7 +267,7 @@ class AddressAPITestCase(BaseAPITestCase):
         bad_payload["country"] = "FRANCE"
 
         response = self.client.put(
-            f"/api/addresses/{address.uid}/",
+            f"/api/addresses/{address.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             data=bad_payload,
             content_type="application/json",
@@ -280,7 +280,7 @@ class AddressAPITestCase(BaseAPITestCase):
         del bad_payload["title"]
         bad_payload["country"] = "FR"
         response = self.client.put(
-            f"/api/addresses/{address.uid}/",
+            f"/api/addresses/{address.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             data=bad_payload,
             content_type="application/json",
@@ -298,7 +298,7 @@ class AddressAPITestCase(BaseAPITestCase):
         # now use a token for an other user to update address
         token = self.get_user_token("panoramix")
         response = self.client.put(
-            f"/api/addresses/{address.uid}/",
+            f"/api/addresses/{address.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             data=get_payload(new_address),
             content_type="application/json",
@@ -318,7 +318,7 @@ class AddressAPITestCase(BaseAPITestCase):
         payload["is_main"] = False
 
         response = self.client.put(
-            f"/api/addresses/{address.uid}/",
+            f"/api/addresses/{address.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             content_type="application/json",
             data=payload,
@@ -358,7 +358,7 @@ class AddressAPITestCase(BaseAPITestCase):
         # finally update address
         payload["title"] = "Office"
         response = self.client.put(
-            f"/api/addresses/{address.uid}/",
+            f"/api/addresses/{address.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             data=payload,
             content_type="application/json",
@@ -391,32 +391,32 @@ class AddressAPITestCase(BaseAPITestCase):
 
         self.assertEqual(response.status_code, 201)
 
-        # new address has been successfully created but with a generated uid
+        # new address has been successfully created but with a generated id
         address = models.Address.objects.get()
         self.assertEqual(address.title, payload["title"])
-        self.assertNotEqual(address.uid, payload["id"])
+        self.assertNotEqual(address.id, payload["id"])
 
         payload["id"] = uuid.uuid4()
         payload["title"] = "Work"
 
         response = self.client.put(
-            f"/api/addresses/{address.uid}/",
+            f"/api/addresses/{address.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             data=payload,
             content_type="application/json",
         )
 
-        # address has been successfully updated but its uid not
+        # address has been successfully updated but its id not
         address = models.Address.objects.get()
         self.assertEqual(address.title, "Work")
-        self.assertNotEqual(address.uid, payload["id"])
+        self.assertNotEqual(address.id, payload["id"])
 
     def test_api_address_delete_without_authorization(self):
         """Delete address is not allowed without authorization"""
         user = factories.UserFactory()
         address = factories.AddressFactory.create(owner=user, title="Office")
         response = self.client.delete(
-            f"/api/addresses/{address.uid}/",
+            f"/api/addresses/{address.id}/",
         )
         self.assertEqual(response.status_code, 401)
 
@@ -425,7 +425,7 @@ class AddressAPITestCase(BaseAPITestCase):
         user = factories.UserFactory()
         address = factories.AddressFactory.create(owner=user)
         response = self.client.delete(
-            f"/api/addresses/{address.uid}/",
+            f"/api/addresses/{address.id}/",
             HTTP_AUTHORIZATION="Bearer nawak",
         )
         self.assertEqual(response.status_code, 401)
@@ -439,7 +439,7 @@ class AddressAPITestCase(BaseAPITestCase):
         )
         address = factories.AddressFactory.create(owner=user)
         response = self.client.delete(
-            f"/api/addresses/{address.uid}/",
+            f"/api/addresses/{address.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 401)
@@ -451,7 +451,7 @@ class AddressAPITestCase(BaseAPITestCase):
         # now use a token for an other user to update address
         token = self.get_user_token("panoramix")
         response = self.client.delete(
-            f"/api/addresses/{address.uid}/",
+            f"/api/addresses/{address.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 404)
@@ -462,7 +462,7 @@ class AddressAPITestCase(BaseAPITestCase):
         token = self.get_user_token(user.username)
         address = factories.AddressFactory.create(owner=user)
         response = self.client.delete(
-            f"/api/addresses/{address.uid}/",
+            f"/api/addresses/{address.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 204)
