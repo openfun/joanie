@@ -230,7 +230,7 @@ class ProductFactory(factory.django.DjangoModelFactory):
         - link the list of courses passed in "extracted" if any
         - otherwise create a random course and link it
         """
-        courses = extracted or [CourseFactory()]
+        courses = extracted if extracted is not None else [CourseFactory()]
         self.courses.set(courses)
 
     @factory.post_generation
