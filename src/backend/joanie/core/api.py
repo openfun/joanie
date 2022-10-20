@@ -69,6 +69,15 @@ class CourseViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         return context
 
 
+class CourseRunViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    """API ViewSet for all interactions with course runs."""
+
+    lookup_field = "id"
+    permissions_classes = [permissions.AllowAny]
+    queryset = models.CourseRun.objects.filter(is_listed=True)
+    serializer_class = serializers.CourseRunSerializer
+
+
 # pylint: disable=too-many-ancestors
 class EnrollmentViewSet(
     mixins.ListModelMixin,
