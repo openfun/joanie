@@ -10,7 +10,7 @@ and this project adheres to
 
 ### Added
 
-- Add CourseRun API endpoint
+- Add CourseRun & Product API endpoints
 - Configure language through environment variables
 - Send email when the payment is successful
 - Transform `mjml` files (email's template files) to html and plaintext

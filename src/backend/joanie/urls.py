@@ -37,6 +37,7 @@ router.register("courses", api.CourseViewSet, basename="courses")
 router.register("enrollments", api.EnrollmentViewSet, basename="enrollments")
 router.register("orders", api.OrderViewSet, basename="orders")
 router.register("course-runs", api.CourseRunViewSet, basename="course-runs")
+router.register("products", api.ProductViewSet, basename="products")
 
 urlpatterns = [
     path("admin/", admin.site.urls),

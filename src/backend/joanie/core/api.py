@@ -78,6 +78,17 @@ class CourseRunViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     serializer_class = serializers.CourseRunSerializer
 
 
+class ProductViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    """API ViewSet for all interactions with products."""
+
+    lookup_field = "id"
+    permissions_classes = [permissions.AllowAny]
+    queryset = models.Product.objects.filter(courses__isnull=False).select_related(
+        "certificate_definition"
+    )
+    serializer_class = serializers.ProductSerializer
+
+
 # pylint: disable=too-many-ancestors
 class EnrollmentViewSet(
     mixins.ListModelMixin,
