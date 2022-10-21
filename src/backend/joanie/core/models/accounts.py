@@ -18,6 +18,7 @@ class User(auth_models.AbstractUser):
     """User model which follow courses or manage backend (is_staff)"""
 
     language = models.CharField(
+        default=settings.LANGUAGE_CODE,
         max_length=10,
         choices=lazy(lambda: settings.LANGUAGES, tuple)(),
         verbose_name=_("language"),
