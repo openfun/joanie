@@ -39,9 +39,14 @@ router.register("orders", api.OrderViewSet, basename="orders")
 router.register("course-runs", api.CourseRunViewSet, basename="course-runs")
 router.register("products", api.ProductViewSet, basename="products")
 
+API_VERSION = "v1.0"
+
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/", include([*router.urls, *lms_urlpatterns, *payment_urlpatterns])),
+    path(
+        f"api/{API_VERSION}/",
+        include([*router.urls, *lms_urlpatterns, *payment_urlpatterns]),
+    ),
 ]
 
 if settings.DEBUG:
@@ -73,7 +78,7 @@ if settings.DEBUG:
         SchemaView = views.get_schema_view(
             openapi.Info(
                 title="Joanie API",
-                default_version="v1",
+                default_version=API_VERSION,
                 description="This is the Joanie API schema.",
             ),
             public=True,
@@ -82,17 +87,17 @@ if settings.DEBUG:
 
         urlpatterns += [
             re_path(
-                r"^swagger(?P<format>\.json|\.yaml)$",
+                rf"^{API_VERSION}/swagger(?P<format>\.json|\.yaml)$",
                 SchemaView.without_ui(cache_timeout=0),
                 name="api-schema",
             ),
             re_path(
-                r"^swagger/$",
+                rf"^{API_VERSION}/swagger/$",
                 SchemaView.with_ui("swagger", cache_timeout=0),
                 name="swagger-ui-schema",
             ),
             re_path(
-                r"^redoc/$",
+                rf"^{API_VERSION}/redoc/$",
                 SchemaView.with_ui("redoc", cache_timeout=0),
                 name="redoc-schema",
             ),

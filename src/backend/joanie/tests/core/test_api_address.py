@@ -33,7 +33,7 @@ class AddressAPITestCase(BaseAPITestCase):
     def test_api_address_get_addresses_without_authorization(self):
         """Get user addresses not allowed without HTTP AUTH"""
         # Try to get addresses without Authorization
-        response = self.client.get("/api/addresses/")
+        response = self.client.get("/api/v1.0/addresses/")
         self.assertEqual(response.status_code, 401)
         content = json.loads(response.content)
         self.assertEqual(
@@ -44,7 +44,7 @@ class AddressAPITestCase(BaseAPITestCase):
         """Get user addresses not allowed with bad user token"""
         # Try to get addresses with bad token
         response = self.client.get(
-            "/api/addresses/",
+            "/api/v1.0/addresses/",
             HTTP_AUTHORIZATION="Bearer nawak",
         )
         self.assertEqual(response.status_code, 401)
@@ -59,7 +59,7 @@ class AddressAPITestCase(BaseAPITestCase):
             expires_at=arrow.utcnow().shift(days=-1).datetime,
         )
         response = self.client.get(
-            "/api/addresses/",
+            "/api/v1.0/addresses/",
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
@@ -72,7 +72,7 @@ class AddressAPITestCase(BaseAPITestCase):
         username = "panoramix"
         token = self.get_user_token(username)
         response = self.client.get(
-            "/api/addresses/", HTTP_AUTHORIZATION=f"Bearer {token}"
+            "/api/v1.0/addresses/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
         self.assertEqual(response.status_code, 200)
         addresses_data = response.data
@@ -86,7 +86,7 @@ class AddressAPITestCase(BaseAPITestCase):
         address1 = factories.AddressFactory.create(owner=user, title="Office")
         address2 = factories.AddressFactory.create(owner=user, title="Home")
         response = self.client.get(
-            "/api/addresses/", HTTP_AUTHORIZATION=f"Bearer {token}"
+            "/api/v1.0/addresses/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
         self.assertEqual(response.status_code, 200)
 
@@ -107,7 +107,7 @@ class AddressAPITestCase(BaseAPITestCase):
         address = factories.AddressFactory.build()
 
         response = self.client.post(
-            "/api/addresses/",
+            "/api/v1.0/addresses/",
             data=get_payload(address),
             content_type="application/json",
         )
@@ -125,7 +125,7 @@ class AddressAPITestCase(BaseAPITestCase):
         new_address = factories.AddressFactory.build()
 
         response = self.client.put(
-            f"/api/addresses/{address.id}",
+            f"/api/v1.0/addresses/{address.id}",
             data=get_payload(new_address),
             follow=True,
             content_type="application/json",
@@ -143,7 +143,7 @@ class AddressAPITestCase(BaseAPITestCase):
         address = factories.AddressFactory.build()
 
         response = self.client.post(
-            "/api/addresses/",
+            "/api/v1.0/addresses/",
             HTTP_AUTHORIZATION="Bearer nawak",
             data=get_payload(address),
             content_type="application/json",
@@ -160,7 +160,7 @@ class AddressAPITestCase(BaseAPITestCase):
         new_address = factories.AddressFactory.build()
 
         response = self.client.put(
-            f"/api/addresses/{address.id}",
+            f"/api/v1.0/addresses/{address.id}",
             HTTP_AUTHORIZATION="Bearer nawak",
             data=get_payload(new_address),
             follow=True,
@@ -182,7 +182,7 @@ class AddressAPITestCase(BaseAPITestCase):
         address = factories.AddressFactory.build()
 
         response = self.client.post(
-            "/api/addresses/",
+            "/api/v1.0/addresses/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             data=get_payload(address),
             content_type="application/json",
@@ -204,7 +204,7 @@ class AddressAPITestCase(BaseAPITestCase):
         new_address = factories.AddressFactory.build()
 
         response = self.client.put(
-            f"/api/addresses/{address.id}",
+            f"/api/v1.0/addresses/{address.id}",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             data=get_payload(new_address),
             follow=True,
@@ -224,7 +224,7 @@ class AddressAPITestCase(BaseAPITestCase):
         bad_payload["country"] = "FRANCE"
 
         response = self.client.post(
-            "/api/addresses/",
+            "/api/v1.0/addresses/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             data=bad_payload,
         )
@@ -237,7 +237,7 @@ class AddressAPITestCase(BaseAPITestCase):
         del bad_payload["title"]
         bad_payload["country"] = "FR"
         response = self.client.post(
-            "/api/addresses/",
+            "/api/v1.0/addresses/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             data=bad_payload,
             content_type="application/json",
@@ -256,7 +256,7 @@ class AddressAPITestCase(BaseAPITestCase):
 
         # Put request without address id should not be allowed
         response = self.client.put(
-            "/api/addresses/",
+            "/api/v1.0/addresses/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             data=payload,
             content_type="application/json",
@@ -267,7 +267,7 @@ class AddressAPITestCase(BaseAPITestCase):
         bad_payload["country"] = "FRANCE"
 
         response = self.client.put(
-            f"/api/addresses/{address.id}/",
+            f"/api/v1.0/addresses/{address.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             data=bad_payload,
             content_type="application/json",
@@ -280,7 +280,7 @@ class AddressAPITestCase(BaseAPITestCase):
         del bad_payload["title"]
         bad_payload["country"] = "FR"
         response = self.client.put(
-            f"/api/addresses/{address.id}/",
+            f"/api/v1.0/addresses/{address.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             data=bad_payload,
             content_type="application/json",
@@ -298,7 +298,7 @@ class AddressAPITestCase(BaseAPITestCase):
         # now use a token for an other user to update address
         token = self.get_user_token("panoramix")
         response = self.client.put(
-            f"/api/addresses/{address.id}/",
+            f"/api/v1.0/addresses/{address.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             data=get_payload(new_address),
             content_type="application/json",
@@ -318,7 +318,7 @@ class AddressAPITestCase(BaseAPITestCase):
         payload["is_main"] = False
 
         response = self.client.put(
-            f"/api/addresses/{address.id}/",
+            f"/api/v1.0/addresses/{address.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             content_type="application/json",
             data=payload,
@@ -338,7 +338,7 @@ class AddressAPITestCase(BaseAPITestCase):
         payload = get_payload(address)
 
         response = self.client.post(
-            "/api/addresses/",
+            "/api/v1.0/addresses/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             data=payload,
             content_type="application/json",
@@ -358,7 +358,7 @@ class AddressAPITestCase(BaseAPITestCase):
         # finally update address
         payload["title"] = "Office"
         response = self.client.put(
-            f"/api/addresses/{address.id}/",
+            f"/api/v1.0/addresses/{address.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             data=payload,
             content_type="application/json",
@@ -383,7 +383,7 @@ class AddressAPITestCase(BaseAPITestCase):
         payload["id"] = uuid.uuid4()
 
         response = self.client.post(
-            "/api/addresses/",
+            "/api/v1.0/addresses/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             data=payload,
             content_type="application/json",
@@ -400,7 +400,7 @@ class AddressAPITestCase(BaseAPITestCase):
         payload["title"] = "Work"
 
         response = self.client.put(
-            f"/api/addresses/{address.id}/",
+            f"/api/v1.0/addresses/{address.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             data=payload,
             content_type="application/json",
@@ -416,7 +416,7 @@ class AddressAPITestCase(BaseAPITestCase):
         user = factories.UserFactory()
         address = factories.AddressFactory.create(owner=user, title="Office")
         response = self.client.delete(
-            f"/api/addresses/{address.id}/",
+            f"/api/v1.0/addresses/{address.id}/",
         )
         self.assertEqual(response.status_code, 401)
 
@@ -425,7 +425,7 @@ class AddressAPITestCase(BaseAPITestCase):
         user = factories.UserFactory()
         address = factories.AddressFactory.create(owner=user)
         response = self.client.delete(
-            f"/api/addresses/{address.id}/",
+            f"/api/v1.0/addresses/{address.id}/",
             HTTP_AUTHORIZATION="Bearer nawak",
         )
         self.assertEqual(response.status_code, 401)
@@ -439,7 +439,7 @@ class AddressAPITestCase(BaseAPITestCase):
         )
         address = factories.AddressFactory.create(owner=user)
         response = self.client.delete(
-            f"/api/addresses/{address.id}/",
+            f"/api/v1.0/addresses/{address.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 401)
@@ -451,7 +451,7 @@ class AddressAPITestCase(BaseAPITestCase):
         # now use a token for an other user to update address
         token = self.get_user_token("panoramix")
         response = self.client.delete(
-            f"/api/addresses/{address.id}/",
+            f"/api/v1.0/addresses/{address.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 404)
@@ -462,7 +462,7 @@ class AddressAPITestCase(BaseAPITestCase):
         token = self.get_user_token(user.username)
         address = factories.AddressFactory.create(owner=user)
         response = self.client.delete(
-            f"/api/addresses/{address.id}/",
+            f"/api/v1.0/addresses/{address.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 204)

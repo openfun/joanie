@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Add api versioning
 - Add CourseRun & Product API endpoints
 - Configure language through environment variables
 - Send email when the payment is successful

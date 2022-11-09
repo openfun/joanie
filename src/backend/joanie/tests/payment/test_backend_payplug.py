@@ -86,7 +86,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
                     "country": billing_address["country"],
                 },
                 "shipping": {"delivery_type": "DIGITAL_GOODS"},
-                "notification_url": "http://testserver/api/payments/notifications",
+                "notification_url": "http://testserver/api/v1.0/payments/notifications",
                 "metadata": {"order_id": str(order.id)},
             },
         )
@@ -141,7 +141,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
                     "country": billing_address["country"],
                 },
                 "shipping": {"delivery_type": "DIGITAL_GOODS"},
-                "notification_url": "http://testserver/api/payments/notifications",
+                "notification_url": "http://testserver/api/v1.0/payments/notifications",
                 "metadata": {"order_id": str(order.id)},
             }
         )
@@ -197,7 +197,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
                     "country": billing_address["country"],
                 },
                 "shipping": {"delivery_type": "DIGITAL_GOODS"},
-                "notification_url": "http://testserver/api/payments/notifications",
+                "notification_url": "http://testserver/api/v1.0/payments/notifications",
                 "metadata": {"order_id": str(order.id)},
             }
         )
@@ -257,7 +257,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
                     "country": billing_address["country"],
                 },
                 "shipping": {"delivery_type": "DIGITAL_GOODS"},
-                "notification_url": "http://testserver/api/payments/notifications",
+                "notification_url": "http://testserver/api/v1.0/payments/notifications",
                 "metadata": {"order_id": str(order.id)},
             }
         )
@@ -309,7 +309,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
                     "country": billing_address["country"],
                 },
                 "shipping": {"delivery_type": "DIGITAL_GOODS"},
-                "notification_url": "http://testserver/api/payments/notifications",
+                "notification_url": "http://testserver/api/v1.0/payments/notifications",
                 "metadata": {"order_id": str(order.id)},
             }
         )

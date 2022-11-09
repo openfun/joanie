@@ -22,7 +22,7 @@ class CertificateApiTest(BaseAPITestCase):
     def test_api_certificate_read_list_anonymous(self):
         """It should not be possible to retrieve the list of certificates for anonymous user"""
         CertificateFactory.create_batch(2)
-        response = self.client.get("/api/certificates/")
+        response = self.client.get("/api/v1.0/certificates/")
 
         self.assertEqual(response.status_code, 401)
 
@@ -46,7 +46,7 @@ class CertificateApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         response = self.client.get(
-            "/api/certificates/", HTTP_AUTHORIZATION=f"Bearer {token}"
+            "/api/v1.0/certificates/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
 
         self.assertEqual(response.status_code, 200)
@@ -60,7 +60,7 @@ class CertificateApiTest(BaseAPITestCase):
         """
         certificate = CertificateFactory()
 
-        response = self.client.get(f"/api/certificates/{certificate.id}/")
+        response = self.client.get(f"/api/v1.0/certificates/{certificate.id}/")
 
         self.assertEqual(response.status_code, 401)
 
@@ -85,7 +85,7 @@ class CertificateApiTest(BaseAPITestCase):
 
         # - Try to retrieve a not owned certificate should return a 404
         response = self.client.get(
-            f"/api/certificates/{not_owned_certificate.id}/",
+            f"/api/v1.0/certificates/{not_owned_certificate.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -96,7 +96,7 @@ class CertificateApiTest(BaseAPITestCase):
 
         # - Try to retrieve an owned certificate should return the certificate id
         response = self.client.get(
-            f"/api/certificates/{certificate.id}/",
+            f"/api/v1.0/certificates/{certificate.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -111,7 +111,7 @@ class CertificateApiTest(BaseAPITestCase):
         """
         certificate = CertificateFactory()
 
-        response = self.client.get(f"/api/certificates/{certificate.id}/download/")
+        response = self.client.get(f"/api/v1.0/certificates/{certificate.id}/download/")
 
         self.assertEqual(response.status_code, 401)
 
@@ -142,7 +142,7 @@ class CertificateApiTest(BaseAPITestCase):
 
         # - Try to retrieve a not owned certificate should return a 404
         response = self.client.get(
-            f"/api/certificates/{not_owned_certificate.id}/download/",
+            f"/api/v1.0/certificates/{not_owned_certificate.id}/download/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -156,7 +156,7 @@ class CertificateApiTest(BaseAPITestCase):
 
         # - Try to retrieve an owned certificate should return the certificate id
         response = self.client.get(
-            f"/api/certificates/{certificate.id}/download/",
+            f"/api/v1.0/certificates/{certificate.id}/download/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -177,7 +177,7 @@ class CertificateApiTest(BaseAPITestCase):
         user = UserFactory(is_staff=True, is_superuser=True)
         token = self.get_user_token(user.username)
         response = self.client.post(
-            "/api/certificates/",
+            "/api/v1.0/certificates/",
             {"id": uuid.uuid4()},
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
@@ -194,7 +194,7 @@ class CertificateApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
         certificate = CertificateFactory()
         response = self.client.put(
-            f"/api/certificates/{certificate.id}/",
+            f"/api/v1.0/certificates/{certificate.id}/",
             {"id": uuid.uuid4()},
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
@@ -211,7 +211,7 @@ class CertificateApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
         certificate = CertificateFactory()
         response = self.client.delete(
-            f"/api/certificates/{certificate.id}/",
+            f"/api/v1.0/certificates/{certificate.id}/",
             {"id": uuid.uuid4()},
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )

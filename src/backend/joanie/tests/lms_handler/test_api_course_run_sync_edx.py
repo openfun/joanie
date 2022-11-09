@@ -39,7 +39,7 @@ class SyncCourseRunApiTestCase(TestCase):
         }
 
         response = self.client.post(
-            "/api/course-runs-sync", data, content_type="application/json"
+            "/api/v1.0/course-runs-sync", data, content_type="application/json"
         )
 
         self.assertEqual(response.status_code, 403)
@@ -59,7 +59,7 @@ class SyncCourseRunApiTestCase(TestCase):
         }
 
         response = self.client.post(
-            "/api/course-runs-sync",
+            "/api/v1.0/course-runs-sync",
             data,
             content_type="application/json",
             HTTP_AUTHORIZATION=("invalid authorization"),
@@ -84,7 +84,7 @@ class SyncCourseRunApiTestCase(TestCase):
         }
 
         response = self.client.post(
-            "/api/course-runs-sync",
+            "/api/v1.0/course-runs-sync",
             data,
             content_type="application/json",
             HTTP_AUTHORIZATION=(
@@ -115,7 +115,7 @@ class SyncCourseRunApiTestCase(TestCase):
         }
 
         response = self.client.post(
-            "/api/course-runs-sync",
+            "/api/v1.0/course-runs-sync",
             data,
             content_type="application/json",
             HTTP_AUTHORIZATION=(
@@ -153,7 +153,7 @@ class SyncCourseRunApiTestCase(TestCase):
         }
 
         response = self.client.post(
-            "/api/course-runs-sync",
+            "/api/v1.0/course-runs-sync",
             data,
             content_type="application/json",
             HTTP_AUTHORIZATION=(
@@ -184,7 +184,7 @@ class SyncCourseRunApiTestCase(TestCase):
         }
 
         response = self.client.post(
-            "/api/course-runs-sync",
+            "/api/v1.0/course-runs-sync",
             data,
             content_type="application/json",
             HTTP_AUTHORIZATION=(
@@ -214,7 +214,7 @@ class SyncCourseRunApiTestCase(TestCase):
         }
 
         response = self.client.post(
-            "/api/course-runs-sync",
+            "/api/v1.0/course-runs-sync",
             data,
             content_type="application/json",
             HTTP_AUTHORIZATION=(
@@ -242,7 +242,7 @@ class SyncCourseRunApiTestCase(TestCase):
         }
 
         response = self.client.post(
-            "/api/course-runs-sync",
+            "/api/v1.0/course-runs-sync",
             data,
             content_type="application/json",
             HTTP_AUTHORIZATION=(
@@ -278,7 +278,7 @@ class SyncCourseRunApiTestCase(TestCase):
         }
 
         response = self.client.post(
-            "/api/course-runs-sync",
+            "/api/v1.0/course-runs-sync",
             data,
             content_type="application/json",
             HTTP_AUTHORIZATION=(
@@ -309,7 +309,7 @@ class SyncCourseRunApiTestCase(TestCase):
         data = {"resource_link": link, "end": "2021-03-14T09:31:59.417895Z"}
 
         response = self.client.post(
-            "/api/course-runs-sync",
+            "/api/v1.0/course-runs-sync",
             data,
             content_type="application/json",
             HTTP_AUTHORIZATION=(
@@ -363,7 +363,7 @@ class SyncCourseRunApiTestCase(TestCase):
         }
 
         response = self.client.post(
-            "/api/course-runs-sync",
+            "/api/v1.0/course-runs-sync",
             data,
             content_type="application/json",
             HTTP_AUTHORIZATION=(
