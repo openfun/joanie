@@ -64,7 +64,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
             {
                 "provider": "dummy",
                 "payment_id": payment_id,
-                "url": "http://testserver/api/payments/notifications",
+                "url": "http://testserver/api/v1.0/payments/notifications",
             },
         )
 
@@ -75,7 +75,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
                 "id": payment_id,
                 "amount": int(order.total.amount * 100),
                 "billing_address": billing_address,
-                "notification_url": "http://testserver/api/payments/notifications",
+                "notification_url": "http://testserver/api/v1.0/payments/notifications",
                 "metadata": {"order_id": str(order.id)},
             },
         )
@@ -119,7 +119,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
             {
                 "provider": "dummy",
                 "payment_id": payment_id,
-                "url": "http://testserver/api/payments/notifications",
+                "url": "http://testserver/api/v1.0/payments/notifications",
                 "is_paid": True,
             },
         )
@@ -132,7 +132,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
                 "id": payment_id,
                 "amount": int(order.total.amount * 100),
                 "billing_address": billing_address,
-                "notification_url": "http://testserver/api/payments/notifications",
+                "notification_url": "http://testserver/api/v1.0/payments/notifications",
                 "metadata": {"order_id": str(order.id)},
             },
         )

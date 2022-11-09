@@ -12,7 +12,7 @@ class ProductApiTest(BaseAPITestCase):
         """
         factories.ProductFactory()
 
-        response = self.client.get("/api/products/")
+        response = self.client.get("/api/v1.0/products/")
 
         self.assertContains(
             response,
@@ -29,7 +29,7 @@ class ProductApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         response = self.client.get(
-            "/api/products/", HTTP_AUTHORIZATION=f"Bearer {token}"
+            "/api/v1.0/products/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
 
         self.assertContains(
@@ -45,7 +45,7 @@ class ProductApiTest(BaseAPITestCase):
         product = factories.ProductFactory(type=enums.PRODUCT_TYPE_CREDENTIAL)
 
         with self.assertNumQueries(2):
-            response = self.client.get(f"/api/products/{product.id}/")
+            response = self.client.get(f"/api/v1.0/products/{product.id}/")
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -121,7 +121,7 @@ class ProductApiTest(BaseAPITestCase):
         An anonymous user should not be allowed to retrieve a product linked to any course.
         """
         product = factories.ProductFactory(courses=[])
-        response = self.client.get(f"/api/products/{product.id}/")
+        response = self.client.get(f"/api/v1.0/products/{product.id}/")
 
         self.assertContains(response, "Not found.", status_code=404)
 
@@ -134,7 +134,7 @@ class ProductApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         response = self.client.get(
-            f"/api/products/{product.id}/", HTTP_AUTHORIZATION=f"Bearer {token}"
+            f"/api/v1.0/products/{product.id}/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
 
         self.assertContains(response, "Not found.", status_code=404)
@@ -149,7 +149,7 @@ class ProductApiTest(BaseAPITestCase):
             "call_to_action": "Purchase now!",
         }
 
-        response = self.client.post("/api/products/", data=data)
+        response = self.client.post("/api/v1.0/products/", data=data)
 
         self.assertContains(
             response,
@@ -172,7 +172,7 @@ class ProductApiTest(BaseAPITestCase):
         }
 
         response = self.client.post(
-            "/api/products/", data=data, HTTP_AUTHORIZATION=f"Bearer {token}"
+            "/api/v1.0/products/", data=data, HTTP_AUTHORIZATION=f"Bearer {token}"
         )
 
         self.assertContains(
@@ -194,7 +194,7 @@ class ProductApiTest(BaseAPITestCase):
             "call_to_action": "Purchase now!",
         }
 
-        response = self.client.put(f"/api/products/{product.id}/", data=data)
+        response = self.client.put(f"/api/v1.0/products/{product.id}/", data=data)
 
         self.assertContains(response, 'Method \\"PUT\\" not allowed.', status_code=405)
         product.refresh_from_db()
@@ -215,7 +215,7 @@ class ProductApiTest(BaseAPITestCase):
         }
 
         response = self.client.put(
-            f"/api/products/{product.id}/",
+            f"/api/v1.0/products/{product.id}/",
             data=data,
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
@@ -230,7 +230,7 @@ class ProductApiTest(BaseAPITestCase):
 
         data = {"price": 1337.00}
 
-        response = self.client.patch(f"/api/products/{product.id}/", data=data)
+        response = self.client.patch(f"/api/v1.0/products/{product.id}/", data=data)
 
         self.assertContains(
             response, 'Method \\"PATCH\\" not allowed.', status_code=405
@@ -249,7 +249,7 @@ class ProductApiTest(BaseAPITestCase):
         }
 
         response = self.client.patch(
-            f"/api/products/{product.id}/",
+            f"/api/v1.0/products/{product.id}/",
             data=data,
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
@@ -264,7 +264,7 @@ class ProductApiTest(BaseAPITestCase):
         """Anonymous users should not be allowed to delete a product."""
         product = factories.ProductFactory()
 
-        response = self.client.delete(f"/api/products/{product.id}/")
+        response = self.client.delete(f"/api/v1.0/products/{product.id}/")
 
         self.assertContains(
             response, 'Method \\"DELETE\\" not allowed.', status_code=405
@@ -278,7 +278,7 @@ class ProductApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         response = self.client.delete(
-            f"/api/products/{product.id}/", HTTP_AUTHORIZATION=f"Bearer {token}"
+            f"/api/v1.0/products/{product.id}/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
 
         self.assertContains(

@@ -35,7 +35,7 @@ class OrderApiTest(BaseAPITestCase):
         factories.OrderFactory(product=product)
 
         response = self.client.get(
-            "/api/orders/",
+            "/api/v1.0/orders/",
         )
         self.assertEqual(response.status_code, 401)
         content = json.loads(response.content)
@@ -54,7 +54,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.get_user_token(order.owner.username)
 
         response = self.client.get(
-            "/api/orders/",
+            "/api/v1.0/orders/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 200)
@@ -91,7 +91,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.get_user_token(other_order.owner.username)
 
         response = self.client.get(
-            "/api/orders/",
+            "/api/v1.0/orders/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 200)
@@ -129,7 +129,7 @@ class OrderApiTest(BaseAPITestCase):
         product = factories.ProductFactory()
         order = factories.OrderFactory(product=product)
 
-        response = self.client.get(f"/api/orders/{order.id}/")
+        response = self.client.get(f"/api/v1.0/orders/{order.id}/")
         self.assertEqual(response.status_code, 401)
 
         content = json.loads(response.content)
@@ -147,7 +147,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(owner)
 
         response = self.client.get(
-            f"/api/orders/{order.id}/",
+            f"/api/v1.0/orders/{order.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 200)
@@ -180,7 +180,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.get_user_token("panoramix")
 
         response = self.client.get(
-            f"/api/orders/{order.id}/",
+            f"/api/v1.0/orders/{order.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 404)
@@ -196,7 +196,7 @@ class OrderApiTest(BaseAPITestCase):
             "product": str(product.id),
         }
         response = self.client.post(
-            "/api/orders/", data=data, content_type="application/json"
+            "/api/v1.0/orders/", data=data, content_type="application/json"
         )
         self.assertEqual(response.status_code, 401)
 
@@ -222,7 +222,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.get_user_token("panoramix")
 
         response = self.client.post(
-            "/api/orders/",
+            "/api/v1.0/orders/",
             data=data,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -283,7 +283,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.get_user_token("panoramix")
 
         response = self.client.post(
-            "/api/orders/",
+            "/api/v1.0/orders/",
             data=data,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -334,7 +334,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.get_user_token("panoramix")
 
         response = self.client.post(
-            "/api/orders/",
+            "/api/v1.0/orders/",
             data=data,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -355,7 +355,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.get_user_token("panoramix")
 
         response = self.client.post(
-            "/api/orders/",
+            "/api/v1.0/orders/",
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
@@ -386,7 +386,7 @@ class OrderApiTest(BaseAPITestCase):
         data = {"product": str(product.id), "course": course.code}
 
         response = self.client.post(
-            "/api/orders/",
+            "/api/v1.0/orders/",
             data=data,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -405,7 +405,7 @@ class OrderApiTest(BaseAPITestCase):
         order.cancel()
 
         response = self.client.post(
-            "/api/orders/",
+            "/api/v1.0/orders/",
             data=data,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -427,7 +427,7 @@ class OrderApiTest(BaseAPITestCase):
         data = {"product": str(product.id), "course": course.code}
 
         response = self.client.post(
-            "/api/orders/",
+            "/api/v1.0/orders/",
             data=data,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -462,7 +462,7 @@ class OrderApiTest(BaseAPITestCase):
         }
 
         response = self.client.post(
-            "/api/orders/",
+            "/api/v1.0/orders/",
             data=data,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -493,7 +493,7 @@ class OrderApiTest(BaseAPITestCase):
                 "payment_info": {
                     "payment_id": f"pay_{order.id}",
                     "provider": "dummy",
-                    "url": "http://testserver/api/payments/notifications",
+                    "url": "http://testserver/api/v1.0/payments/notifications",
                 },
             },
         )
@@ -526,7 +526,7 @@ class OrderApiTest(BaseAPITestCase):
         }
 
         response = self.client.post(
-            "/api/orders/",
+            "/api/v1.0/orders/",
             data=data,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -558,7 +558,7 @@ class OrderApiTest(BaseAPITestCase):
                 "payment_info": {
                     "payment_id": f"pay_{order.id}",
                     "provider": "dummy",
-                    "url": "http://testserver/api/payments/notifications",
+                    "url": "http://testserver/api/v1.0/payments/notifications",
                     "is_paid": True,
                 },
             },
@@ -583,7 +583,7 @@ class OrderApiTest(BaseAPITestCase):
         }
 
         response = self.client.post(
-            "/api/orders/",
+            "/api/v1.0/orders/",
             data=data,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -600,7 +600,7 @@ class OrderApiTest(BaseAPITestCase):
         product = factories.ProductFactory()
         order = factories.OrderFactory(product=product)
 
-        response = self.client.delete(f"/api/orders/{order.id}/")
+        response = self.client.delete(f"/api/v1.0/orders/{order.id}/")
 
         self.assertEqual(response.status_code, 401)
 
@@ -626,7 +626,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
 
         response = self.client.delete(
-            f"/api/orders/{order.id}/",
+            f"/api/v1.0/orders/{order.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 405)
@@ -639,7 +639,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.get_user_token(order.owner.username)
 
         response = self.client.delete(
-            f"/api/orders/{order.id}/",
+            f"/api/v1.0/orders/{order.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 405)
@@ -651,7 +651,7 @@ class OrderApiTest(BaseAPITestCase):
         owner_token = self.generate_token_from_user(order.owner)
 
         response = self.client.get(
-            f"/api/orders/{order.id}/",
+            f"/api/v1.0/orders/{order.id}/",
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {owner_token}",
         )
@@ -666,7 +666,7 @@ class OrderApiTest(BaseAPITestCase):
         other_owner_token = self.get_user_token(other_owner.username)
 
         other_response = self.client.get(
-            f"/api/orders/{other_order.id}/",
+            f"/api/v1.0/orders/{other_order.id}/",
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {other_owner_token}",
         )
@@ -702,7 +702,7 @@ class OrderApiTest(BaseAPITestCase):
             # With full object
             data[field] = other_data[field]
             response = self.client.put(
-                f"/api/orders/{order.id}/",
+                f"/api/v1.0/orders/{order.id}/",
                 data=data,
                 content_type="application/json",
                 **headers,
@@ -711,7 +711,7 @@ class OrderApiTest(BaseAPITestCase):
 
             # With partial object
             response = self.client.patch(
-                f"/api/orders/{order.id}/",
+                f"/api/v1.0/orders/{order.id}/",
                 data={field: other_data[field]},
                 content_type="application/json",
                 **headers,
@@ -721,7 +721,7 @@ class OrderApiTest(BaseAPITestCase):
             # Check that nothing was modified
             self.assertEqual(models.Order.objects.count(), 2)
             response = self.client.get(
-                f"/api/orders/{order.id}/",
+                f"/api/v1.0/orders/{order.id}/",
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {owner_token}",
             )
@@ -757,7 +757,7 @@ class OrderApiTest(BaseAPITestCase):
 
         response = self.client.get(
             (
-                f"/api/orders/{proforma_invoice.order.id}/proforma_invoice/"
+                f"/api/v1.0/orders/{proforma_invoice.order.id}/proforma_invoice/"
                 f"?reference={proforma_invoice.reference}"
             ),
         )
@@ -778,7 +778,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.get_user_token(proforma_invoice.order.owner.username)
 
         response = self.client.get(
-            f"/api/orders/{proforma_invoice.order.id}/proforma_invoice/",
+            f"/api/v1.0/orders/{proforma_invoice.order.id}/proforma_invoice/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -797,7 +797,10 @@ class OrderApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
 
         response = self.client.get(
-            f"/api/orders/{order.id}/proforma_invoice/?reference={proforma_invoice.reference}",
+            (
+                f"/api/v1.0/orders/{order.id}/proforma_invoice/"
+                f"?reference={proforma_invoice.reference}"
+            ),
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -822,7 +825,7 @@ class OrderApiTest(BaseAPITestCase):
 
         response = self.client.get(
             (
-                f"/api/orders/{proforma_invoice.order.id}/proforma_invoice/"
+                f"/api/v1.0/orders/{proforma_invoice.order.id}/proforma_invoice/"
                 f"?reference={proforma_invoice.reference}"
             ),
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -848,7 +851,7 @@ class OrderApiTest(BaseAPITestCase):
 
         response = self.client.get(
             (
-                f"/api/orders/{proforma_invoice.order.id}/proforma_invoice/"
+                f"/api/v1.0/orders/{proforma_invoice.order.id}/proforma_invoice/"
                 f"?reference={proforma_invoice.reference}"
             ),
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -868,7 +871,7 @@ class OrderApiTest(BaseAPITestCase):
         """An anonymous user should not be allowed to abort an order"""
         order = factories.OrderFactory()
 
-        response = self.client.post(f"/api/orders/{order.id}/abort/")
+        response = self.client.post(f"/api/v1.0/orders/{order.id}/abort/")
 
         content = json.loads(response.content)
         self.assertEqual(response.status_code, 401)
@@ -886,7 +889,7 @@ class OrderApiTest(BaseAPITestCase):
 
         token = self.generate_token_from_user(user)
         response = self.client.post(
-            f"/api/orders/{order.id}/abort/", HTTP_AUTHORIZATION=f"Bearer {token}"
+            f"/api/v1.0/orders/{order.id}/abort/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
 
         content = json.loads(response.content)
@@ -906,7 +909,7 @@ class OrderApiTest(BaseAPITestCase):
 
         token = self.generate_token_from_user(user)
         response = self.client.post(
-            f"/api/orders/{order.id}/abort/", HTTP_AUTHORIZATION=f"Bearer {token}"
+            f"/api/v1.0/orders/{order.id}/abort/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
 
         content = json.loads(response.content)
@@ -937,7 +940,7 @@ class OrderApiTest(BaseAPITestCase):
             "billing_address": billing_address,
         }
         response = self.client.post(
-            "/api/orders/",
+            "/api/v1.0/orders/",
             data=data,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -956,7 +959,7 @@ class OrderApiTest(BaseAPITestCase):
 
         # - User asks to abort the order
         response = self.client.post(
-            f"/api/orders/{order.id}/abort/",
+            f"/api/v1.0/orders/{order.id}/abort/",
             data={"payment_id": payment_id},
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",

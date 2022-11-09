@@ -239,6 +239,7 @@ class Base(Configuration):
             "rest_framework_simplejwt.authentication.JWTTokenUserAuthentication",
         ),
         "EXCEPTION_HANDLER": "joanie.core.api.exception_handler",
+        "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.URLPathVersioning",
     }
 
     SIMPLE_JWT = {

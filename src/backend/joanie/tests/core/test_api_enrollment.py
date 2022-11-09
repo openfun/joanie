@@ -77,7 +77,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         factories.EnrollmentFactory(course_run=self.create_opened_course_run())
 
         response = self.client.get(
-            "/api/enrollments/",
+            "/api/v1.0/enrollments/",
         )
         self.assertEqual(response.status_code, 401)
         content = json.loads(response.content)
@@ -96,7 +96,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         token = self.get_user_token(enrollment.user.username)
 
         response = self.client.get(
-            "/api/enrollments/",
+            "/api/v1.0/enrollments/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 200)
@@ -149,7 +149,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         token = self.get_user_token(other_enrollment.user.username)
 
         response = self.client.get(
-            "/api/enrollments/",
+            "/api/v1.0/enrollments/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 200)
@@ -208,7 +208,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             course_run=self.create_opened_course_run(),
         )
 
-        response = self.client.get(f"/api/enrollments/{enrollment.id}/")
+        response = self.client.get(f"/api/v1.0/enrollments/{enrollment.id}/")
         self.assertEqual(response.status_code, 401)
 
         content = json.loads(response.content)
@@ -233,7 +233,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         response = self.client.get(
-            f"/api/enrollments/{enrollment.id}/",
+            f"/api/v1.0/enrollments/{enrollment.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 200)
@@ -279,7 +279,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         token = self.get_user_token("panoramix")
 
         response = self.client.get(
-            f"/api/enrollments/{enrollment.id}/",
+            f"/api/v1.0/enrollments/{enrollment.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 404)
@@ -294,7 +294,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             "course_run": course_run.resource_link,
         }
         response = self.client.post(
-            "/api/enrollments/", data=data, content_type="application/json"
+            "/api/v1.0/enrollments/", data=data, content_type="application/json"
         )
         self.assertEqual(response.status_code, 401)
 
@@ -317,7 +317,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         token = self.get_user_token("panoramix")
 
         response = self.client.post(
-            "/api/enrollments/",
+            "/api/v1.0/enrollments/",
             data=data,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -389,7 +389,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         response = self.client.post(
-            "/api/enrollments/",
+            "/api/v1.0/enrollments/",
             data=data,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -421,7 +421,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         token = self.get_user_token("panoramix")
 
         response = self.client.post(
-            "/api/enrollments/",
+            "/api/v1.0/enrollments/",
             data=data,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -488,7 +488,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         token = self.get_user_token("panoramix")
 
         response = self.client.post(
-            "/api/enrollments/",
+            "/api/v1.0/enrollments/",
             data=data,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -543,7 +543,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         token = self.get_user_token("panoramix")
 
         response = self.client.post(
-            "/api/enrollments/",
+            "/api/v1.0/enrollments/",
             data=data,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -583,7 +583,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         token = self.get_user_token(order.owner.username)
 
         response = self.client.post(
-            "/api/enrollments/",
+            "/api/v1.0/enrollments/",
             data=data,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -642,7 +642,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         token = self.get_user_token("another-username")
 
         response = self.client.post(
-            "/api/enrollments/",
+            "/api/v1.0/enrollments/",
             data=data,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -680,7 +680,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         token = self.get_user_token(order.owner.username)
 
         response = self.client.post(
-            "/api/enrollments/",
+            "/api/v1.0/enrollments/",
             data=data,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -707,7 +707,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         token = self.get_user_token("panoramix")
 
         response = self.client.post(
-            "/api/enrollments/",
+            "/api/v1.0/enrollments/",
             data=data,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -743,7 +743,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         token = self.get_user_token("panoramix")
 
         response = self.client.post(
-            "/api/enrollments/",
+            "/api/v1.0/enrollments/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             content_type="application/json",
             data=data,
@@ -801,7 +801,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         data = {"course_run": course_run.resource_link, "is_active": True}
 
         response = self.client.post(
-            "/api/enrollments/",
+            "/api/v1.0/enrollments/",
             data=data,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -825,7 +825,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         data = {"course_run": "this-course-run-does-not-exist", "is_active": True}
 
         response = self.client.post(
-            "/api/enrollments/",
+            "/api/v1.0/enrollments/",
             data=data,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -851,7 +851,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             course_run=self.create_opened_course_run()
         )
 
-        response = self.client.delete(f"/api/enrollments/{enrollment.id}/")
+        response = self.client.delete(f"/api/v1.0/enrollments/{enrollment.id}/")
 
         self.assertEqual(response.status_code, 401)
 
@@ -878,7 +878,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         response = self.client.delete(
-            f"/api/enrollments/{enrollment.id}/",
+            f"/api/v1.0/enrollments/{enrollment.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 405)
@@ -892,7 +892,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         token = self.get_user_token(enrollment.user.username)
 
         response = self.client.delete(
-            f"/api/enrollments/{enrollment.id}/",
+            f"/api/v1.0/enrollments/{enrollment.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 405)
@@ -919,7 +919,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             )
 
             response = self.client.patch(
-                f"/api/enrollments/{enrollment.id}/",
+                f"/api/v1.0/enrollments/{enrollment.id}/",
                 data={"state": new_state[0]},
                 content_type="application/json",
             )
@@ -957,7 +957,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             )
 
             response = self.client.patch(
-                f"/api/enrollments/{enrollment.id}/",
+                f"/api/v1.0/enrollments/{enrollment.id}/",
                 data={"is_active": is_active_new},
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -988,7 +988,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             token = self.get_user_token(enrollment.user.username)
 
             response = self.client.patch(
-                f"/api/enrollments/{enrollment.id}/",
+                f"/api/v1.0/enrollments/{enrollment.id}/",
                 data={"is_active": is_active_new},
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -1038,7 +1038,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         user_token = self.get_user_token(enrollment.user.username)
 
         response = self.client.get(
-            f"/api/enrollments/{enrollment.id}/",
+            f"/api/v1.0/enrollments/{enrollment.id}/",
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {user_token}",
         )
@@ -1068,7 +1068,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         )
 
         response = self.client.patch(
-            f"/api/enrollments/{enrollment.id}/",
+            f"/api/v1.0/enrollments/{enrollment.id}/",
             data=new_data,
             content_type="application/json",
             **headers,
@@ -1078,7 +1078,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         # Check that nothing was modified
         self.assertEqual(models.Enrollment.objects.count(), 1)
         response = self.client.get(
-            f"/api/enrollments/{enrollment.id}/",
+            f"/api/v1.0/enrollments/{enrollment.id}/",
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {user_token}",
         )

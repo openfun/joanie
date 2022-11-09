@@ -27,7 +27,7 @@ class PaymentApiTestCase(BaseAPITestCase):
         )
 
         response = self.client.post(
-            "/api/payments/notifications",
+            "/api/v1.0/payments/notifications",
             content_type="application/json",
             data={"id": "pay_0000"},
         )
@@ -44,7 +44,7 @@ class PaymentApiTestCase(BaseAPITestCase):
         """
 
         response = self.client.post(
-            "/api/payments/notifications",
+            "/api/v1.0/payments/notifications",
             content_type="application/json",
             data={"id": "pay_0000"},
         )

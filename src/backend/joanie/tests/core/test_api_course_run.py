@@ -13,7 +13,7 @@ class CourseRunApiTest(BaseAPITestCase):
         """
         factories.CourseRunFactory()
 
-        response = self.client.get("/api/course-runs/")
+        response = self.client.get("/api/v1.0/course-runs/")
 
         self.assertContains(
             response,
@@ -31,7 +31,7 @@ class CourseRunApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         response = self.client.get(
-            "/api/course-runs/", HTTP_AUTHORIZATION=f"Bearer {token}"
+            "/api/v1.0/course-runs/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
 
         self.assertContains(
@@ -47,7 +47,7 @@ class CourseRunApiTest(BaseAPITestCase):
         course_run = factories.CourseRunFactory()
 
         with self.assertNumQueries(1):
-            response = self.client.get(f"/api/course-runs/{course_run.id}/")
+            response = self.client.get(f"/api/v1.0/course-runs/{course_run.id}/")
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -83,7 +83,7 @@ class CourseRunApiTest(BaseAPITestCase):
         """
         course_run = factories.CourseRunFactory(is_listed=False)
 
-        response = self.client.get(f"/api/course-runs/{course_run.id}/")
+        response = self.client.get(f"/api/v1.0/course-runs/{course_run.id}/")
 
         self.assertContains(
             response,
@@ -100,7 +100,8 @@ class CourseRunApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         response = self.client.get(
-            f"/api/course-runs/{course_run.id}/", HTTP_AUTHORIZATION=f"Bearer {token}"
+            f"/api/v1.0/course-runs/{course_run.id}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
         self.assertContains(
@@ -117,7 +118,7 @@ class CourseRunApiTest(BaseAPITestCase):
             "course": course.id,
         }
 
-        response = self.client.post("/api/course-runs/", data=data)
+        response = self.client.post("/api/v1.0/course-runs/", data=data)
 
         self.assertContains(
             response,
@@ -138,7 +139,7 @@ class CourseRunApiTest(BaseAPITestCase):
         }
 
         response = self.client.post(
-            "/api/course-runs/", data=data, HTTP_AUTHORIZATION=f"Bearer {token}"
+            "/api/v1.0/course-runs/", data=data, HTTP_AUTHORIZATION=f"Bearer {token}"
         )
 
         self.assertContains(
@@ -165,7 +166,7 @@ class CourseRunApiTest(BaseAPITestCase):
             "enrollment_end": "2020-12-24T09:31:59.417972Z",
         }
 
-        response = self.client.put(f"/api/course-runs/{course_run.id}/", data=data)
+        response = self.client.put(f"/api/v1.0/course-runs/{course_run.id}/", data=data)
 
         self.assertContains(response, 'Method \\"PUT\\" not allowed.', status_code=405)
         course_run.refresh_from_db()
@@ -194,7 +195,7 @@ class CourseRunApiTest(BaseAPITestCase):
         }
 
         response = self.client.put(
-            f"/api/course-runs/{course_run.id}/",
+            f"/api/v1.0/course-runs/{course_run.id}/",
             data=data,
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
@@ -216,7 +217,9 @@ class CourseRunApiTest(BaseAPITestCase):
             "resource_link": "https://perdu.com",
         }
 
-        response = self.client.patch(f"/api/course-runs/{course_run.id}/", data=data)
+        response = self.client.patch(
+            f"/api/v1.0/course-runs/{course_run.id}/", data=data
+        )
 
         self.assertContains(
             response, 'Method \\"PATCH\\" not allowed.', status_code=405
@@ -240,7 +243,7 @@ class CourseRunApiTest(BaseAPITestCase):
         }
 
         response = self.client.patch(
-            f"/api/course-runs/{course_run.id}/",
+            f"/api/v1.0/course-runs/{course_run.id}/",
             data=data,
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
@@ -258,7 +261,7 @@ class CourseRunApiTest(BaseAPITestCase):
         """Anonymous users should not be allowed to delete a course run."""
         course_run = factories.CourseRunFactory()
 
-        response = self.client.delete(f"/api/course-runs/{course_run.id}/")
+        response = self.client.delete(f"/api/v1.0/course-runs/{course_run.id}/")
 
         self.assertContains(
             response, 'Method \\"DELETE\\" not allowed.', status_code=405
@@ -272,7 +275,8 @@ class CourseRunApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         response = self.client.delete(
-            f"/api/course-runs/{course_run.id}/", HTTP_AUTHORIZATION=f"Bearer {token}"
+            f"/api/v1.0/course-runs/{course_run.id}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
         self.assertContains(

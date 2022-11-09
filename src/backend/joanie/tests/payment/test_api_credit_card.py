@@ -17,7 +17,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
 
     def test_api_credit_card_get_credit_cards_without_authorization(self):
         """Retrieve credit cards without authorization header is forbidden."""
-        response = self.client.get("/api/credit-cards/")
+        response = self.client.get("/api/v1.0/credit-cards/")
         self.assertEqual(response.status_code, 401)
         self.assertEqual(
             response.data, {"detail": "Authentication credentials were not provided."}
@@ -26,7 +26,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
     def test_api_credit_card_get_credit_cards_with_bad_token(self):
         """Retrieve credit cards with bad token is forbidden."""
         response = self.client.get(
-            "/api/credit-cards/", HTTP_AUTHORIZATION="Bearer invalid_token"
+            "/api/v1.0/credit-cards/", HTTP_AUTHORIZATION="Bearer invalid_token"
         )
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.data["code"], "token_not_valid")
@@ -38,7 +38,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
             expires_at=arrow.utcnow().shift(days=-1).datetime,
         )
         response = self.client.get(
-            "/api/credit-cards/", HTTP_AUTHORIZATION=f"Bearer {token}"
+            "/api/v1.0/credit-cards/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.data["code"], "token_not_valid")
@@ -52,7 +52,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         self.assertFalse(User.objects.filter(username=username).exists())
         token = self.get_user_token(username)
         response = self.client.get(
-            "/api/credit-cards/", HTTP_AUTHORIZATION=f"Bearer {token}"
+            "/api/v1.0/credit-cards/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 0)
@@ -65,7 +65,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         CreditCardFactory.create_batch(2, owner=user)
 
         response = self.client.get(
-            "/api/credit-cards/", HTTP_AUTHORIZATION=f"Bearer {token}"
+            "/api/v1.0/credit-cards/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 2)
@@ -77,7 +77,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         card = CreditCardFactory(owner=user)
 
         response = self.client.get(
-            f"/api/credit-cards/{card.id}/", HTTP_AUTHORIZATION=f"Bearer {token}"
+            f"/api/v1.0/credit-cards/{card.id}/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
         self.assertEqual(response.status_code, 200)
 
@@ -102,7 +102,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         card = CreditCardFactory.build(owner=user)
 
         response = self.client.get(
-            f"/api/credit-cards/{card.id}/", HTTP_AUTHORIZATION=f"Bearer {token}"
+            f"/api/v1.0/credit-cards/{card.id}/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
         self.assertEqual(response.status_code, 404)
 
@@ -116,7 +116,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         card = CreditCardFactory()
 
         response = self.client.get(
-            f"/api/credit-cards/{card.id}/", HTTP_AUTHORIZATION=f"Bearer {token}"
+            f"/api/v1.0/credit-cards/{card.id}/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
         self.assertEqual(response.status_code, 404)
 
@@ -124,7 +124,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         """Create a credit card is not allowed."""
         token = self.get_user_token("johndoe")
         response = self.client.post(
-            "/api/credit-cards/", HTTP_AUTHORIZATION=f"Bearer {token}"
+            "/api/v1.0/credit-cards/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
 
         self.assertEqual(response.status_code, 405)
@@ -133,7 +133,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         """Update a credit card without authorization header is forbidden."""
         card = CreditCardFactory()
         response = self.client.put(
-            f"/api/credit-cards/{card.id}/",
+            f"/api/v1.0/credit-cards/{card.id}/",
             content_type="application/json",
             data={"title": "Card title updated"},
         )
@@ -149,7 +149,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         )
         card = CreditCardFactory(owner=user)
         response = self.client.put(
-            f"/api/credit-cards/{card.id}/",
+            f"/api/v1.0/credit-cards/{card.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             content_type="application/json",
             data={"title": "Card title updated"},
@@ -165,7 +165,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         token = self.get_user_token(username=user.username)
         card = CreditCardFactory(owner=user)
         response = self.client.put(
-            f"/api/credit-cards/{card.id}/",
+            f"/api/v1.0/credit-cards/{card.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             content_type="application/json",
             data=[],
@@ -187,7 +187,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         token = self.get_user_token(username=user.username)
         card = CreditCardFactory()
         response = self.client.put(
-            f"/api/credit-cards/{card.id}/",
+            f"/api/v1.0/credit-cards/{card.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             content_type="application/json",
             data={"title": "Credit card title updated!"},
@@ -201,7 +201,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         token = self.get_user_token(username=user.username)
         card = CreditCardFactory(owner=user)
         response = self.client.put(
-            f"/api/credit-cards/{card.id}/",
+            f"/api/v1.0/credit-cards/{card.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             content_type="application/json",
             data={"is_main": False},
@@ -220,7 +220,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         token = self.get_user_token(username=user.username)
         main_card, card = CreditCardFactory.create_batch(2, owner=user)
         response = self.client.put(
-            f"/api/credit-cards/{card.id}/",
+            f"/api/v1.0/credit-cards/{card.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             content_type="application/json",
             data={"is_main": True},
@@ -248,7 +248,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         token = self.get_user_token(username=user.username)
         card = CreditCardFactory(owner=user)
         response = self.client.put(
-            f"/api/credit-cards/{card.id}/",
+            f"/api/v1.0/credit-cards/{card.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             content_type="application/json",
             data={
@@ -274,7 +274,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
     def test_api_credit_card_delete_without_authorization(self):
         """Delete credit card without authorization header is forbidden."""
         card = CreditCardFactory()
-        response = self.client.delete(f"/api/credit-cards/{card.id}/")
+        response = self.client.delete(f"/api/v1.0/credit-cards/{card.id}/")
 
         self.assertEqual(response.status_code, 401)
 
@@ -282,7 +282,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         """Delete credit card with invalid authorization header is forbidden."""
         card = CreditCardFactory()
         response = self.client.delete(
-            f"/api/credit-cards/{card.id}/",
+            f"/api/v1.0/credit-cards/{card.id}/",
             HTTP_AUTHORIZATION="Bearer invalid-token",
         )
 
@@ -296,7 +296,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         )
         card = CreditCardFactory()
         response = self.client.delete(
-            f"/api/credit-cards/{card.id}/",
+            f"/api/v1.0/credit-cards/{card.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -307,7 +307,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         token = self.get_user_token("johndoe")
         card = CreditCardFactory()
         response = self.client.delete(
-            f"/api/credit-cards/{card.id}/",
+            f"/api/v1.0/credit-cards/{card.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -325,7 +325,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         token = self.get_user_token(user.username)
         card = CreditCardFactory(owner=user)
         response = self.client.delete(
-            f"/api/credit-cards/{card.id}/",
+            f"/api/v1.0/credit-cards/{card.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 

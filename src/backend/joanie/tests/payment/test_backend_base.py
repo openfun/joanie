@@ -230,7 +230,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase):
         request = APIRequestFactory().post(path="/")
         self.assertEqual(
             backend.get_notification_url(request),
-            "http://testserver/api/payments/notifications",
+            "http://testserver/api/v1.0/payments/notifications",
         )
 
     @mock.patch(

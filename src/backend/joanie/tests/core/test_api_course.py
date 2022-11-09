@@ -19,7 +19,7 @@ class CourseApiTest(BaseAPITestCase):
         factories.CourseFactory()
 
         response = self.client.get(
-            "/api/courses/",
+            "/api/v1.0/courses/",
         )
 
         self.assertContains(
@@ -34,7 +34,7 @@ class CourseApiTest(BaseAPITestCase):
         token = self.get_user_token("panoramix")
 
         response = self.client.get(
-            "/api/courses/",
+            "/api/v1.0/courses/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -95,7 +95,7 @@ class CourseApiTest(BaseAPITestCase):
                     )
 
         with self.assertNumQueries(11):
-            response = self.client.get(f"/api/courses/{course.code}/")
+            response = self.client.get(f"/api/v1.0/courses/{course.code}/")
 
         content = json.loads(response.content)
         expected = {
@@ -177,7 +177,7 @@ class CourseApiTest(BaseAPITestCase):
         # - An other request should get the cached response
         with self.assertNumQueries(1):
             self.client.get(
-                f"/api/courses/{course.code}/",
+                f"/api/v1.0/courses/{course.code}/",
             )
 
         # - But cache should rely on the current language
@@ -189,7 +189,7 @@ class CourseApiTest(BaseAPITestCase):
         expected_num_queries = 19 if product_purchased else 20
         with self.assertNumQueries(expected_num_queries):
             self.client.get(
-                f"/api/courses/{course.code}/",
+                f"/api/v1.0/courses/{course.code}/",
                 HTTP_ACCEPT_LANGUAGE="fr-fr",
             )
 
@@ -314,7 +314,7 @@ class CourseApiTest(BaseAPITestCase):
 
         with self.assertNumQueries(36):
             response = self.client.get(
-                f"/api/courses/{course.code}/",
+                f"/api/v1.0/courses/{course.code}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
@@ -458,7 +458,7 @@ class CourseApiTest(BaseAPITestCase):
         # Course information should have been cached, but orders not.
         with self.assertNumQueries(16):
             self.client.get(
-                f"/api/courses/{course.code}/",
+                f"/api/v1.0/courses/{course.code}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
@@ -504,7 +504,7 @@ class CourseApiTest(BaseAPITestCase):
         # - Retrieve course information
         with self.assertNumQueries(16):
             response = self.client.get(
-                f"/api/courses/{course.code}/",
+                f"/api/v1.0/courses/{course.code}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
@@ -563,7 +563,7 @@ class CourseApiTest(BaseAPITestCase):
         )
 
         response = self.client.get(
-            f"/api/courses/{course.code}/",
+            f"/api/v1.0/courses/{course.code}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -588,7 +588,7 @@ class CourseApiTest(BaseAPITestCase):
             "title": "mathématiques",
             "products": [p.id for p in products],
         }
-        response = self.client.post("/api/courses/", data=data)
+        response = self.client.post("/api/v1.0/courses/", data=data)
 
         self.assertContains(
             response,
@@ -609,7 +609,7 @@ class CourseApiTest(BaseAPITestCase):
         token = self.get_user_token("panoramix")
 
         response = self.client.post(
-            "/api/courses/",
+            "/api/v1.0/courses/",
             data=data,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -625,7 +625,7 @@ class CourseApiTest(BaseAPITestCase):
         """Anonymous users should not be able to delete a course."""
         course = factories.CourseFactory()
 
-        response = self.client.delete(f"/api/courses/{course.id}/")
+        response = self.client.delete(f"/api/v1.0/courses/{course.id}/")
 
         self.assertEqual(response.status_code, 405)
         self.assertEqual(models.Course.objects.count(), 1)
@@ -636,7 +636,7 @@ class CourseApiTest(BaseAPITestCase):
         token = self.get_user_token("panoramix")
 
         response = self.client.delete(
-            f"/api/courses/{course.id}/",
+            f"/api/v1.0/courses/{course.id}/",
             fHTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 405)
@@ -647,14 +647,14 @@ class CourseApiTest(BaseAPITestCase):
         course = factories.CourseFactory(code="initial_code")
 
         response = self.client.get(
-            f"/api/courses/{course.code}/",
+            f"/api/v1.0/courses/{course.code}/",
         )
         data = json.loads(response.content)
         data["code"] = "modified_code"
 
         # With POST method
         response = self.client.post(
-            f"/api/courses/{course.code}/",
+            f"/api/v1.0/courses/{course.code}/",
             content_type="application/json",
             data=data,
         )
@@ -665,7 +665,7 @@ class CourseApiTest(BaseAPITestCase):
 
         # With PUT method
         response = self.client.put(
-            f"/api/courses/{course.code}/",
+            f"/api/v1.0/courses/{course.code}/",
             content_type="application/json",
             data=data,
         )
@@ -684,14 +684,14 @@ class CourseApiTest(BaseAPITestCase):
         token = self.get_user_token("panoramix")
 
         response = self.client.get(
-            f"/api/courses/{course.code}/",
+            f"/api/v1.0/courses/{course.code}/",
         )
         data = json.loads(response.content)
         data["code"] = "modified_code"
 
         # With POST method
         response = self.client.post(
-            f"/api/courses/{course.code}/",
+            f"/api/v1.0/courses/{course.code}/",
             data=data,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -703,7 +703,7 @@ class CourseApiTest(BaseAPITestCase):
 
         # With PUT method
         response = self.client.put(
-            f"/api/courses/{course.code}/",
+            f"/api/v1.0/courses/{course.code}/",
             data=data,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
