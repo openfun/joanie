@@ -324,7 +324,9 @@ class OBF(BaseProvider):
 
         return Badge(**fetched.dict())
 
-    def read(self, badge: Badge = None, query: BadgeQuery = None) -> Iterable[Badge]:
+    def read(
+        self, badge: Badge | None = None, query: BadgeQuery | None = None
+    ) -> Iterable[Badge]:
         """Fetch one, selected or all badges.
 
         Args:
@@ -383,7 +385,7 @@ class OBF(BaseProvider):
 
         return badge
 
-    def delete(self, badge: Badge = None) -> None:
+    def delete(self, badge: Badge | None = None) -> None:
         """Delete a badge."""
 
         # Delete all client badges
