@@ -1,4 +1,5 @@
 """Tests for the Order API."""
+# pylint: disable=too-many-lines
 import json
 import random
 import uuid
@@ -53,15 +54,15 @@ class OrderApiTest(BaseAPITestCase):
         # The owner can see his/her order
         token = self.get_user_token(order.owner.username)
 
-        response = self.client.get(
-            "/api/v1.0/orders/",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-        self.assertEqual(response.status_code, 200)
-        content = json.loads(response.content)
+        with self.assertNumQueries(14):
+            response = self.client.get(
+                "/api/v1.0/orders/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
 
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(
-            content,
+            response.json(),
             {
                 "count": 1,
                 "next": None,
@@ -90,15 +91,15 @@ class OrderApiTest(BaseAPITestCase):
         # The owner of the other order can only see his/her order
         token = self.get_user_token(other_order.owner.username)
 
-        response = self.client.get(
-            "/api/v1.0/orders/",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-        self.assertEqual(response.status_code, 200)
-        content = json.loads(response.content)
+        with self.assertNumQueries(14):
+            response = self.client.get(
+                "/api/v1.0/orders/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
 
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(
-            content,
+            response.json(),
             {
                 "count": 1,
                 "next": None,
@@ -121,6 +122,292 @@ class OrderApiTest(BaseAPITestCase):
                         "target_courses": [],
                     }
                 ],
+            },
+        )
+
+    def test_api_order_read_list_filtered_by_product_id(self):
+        """Authenticated user should be able to filter their orders by product id."""
+        [product_1, product_2] = factories.ProductFactory.create_batch(2)
+        user = factories.UserFactory()
+
+        # User purchases the product 1
+        order = factories.OrderFactory(owner=user, product=product_1)
+
+        # User purchases the product 2
+        factories.OrderFactory(owner=user, product=product_2)
+
+        token = self.get_user_token(user.username)
+
+        # Retrieve user's order related to the product 1
+        with self.assertNumQueries(14):
+            response = self.client.get(
+                f"/api/v1.0/orders/?product={product_1.id}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "count": 1,
+                "next": None,
+                "previous": None,
+                "results": [
+                    {
+                        "id": str(order.id),
+                        "certificate": None,
+                        "course": order.course.code,
+                        "created_on": order.created_on.strftime(
+                            "%Y-%m-%dT%H:%M:%S.%fZ"
+                        ),
+                        "enrollments": [],
+                        "main_proforma_invoice": None,
+                        "owner": order.owner.username,
+                        "total": float(order.total.amount),
+                        "total_currency": str(order.total.currency),
+                        "product": str(order.product.id),
+                        "state": order.state,
+                        "target_courses": [],
+                    }
+                ],
+            },
+        )
+
+    def test_api_order_read_list_filtered_by_invalid_product_id(self):
+        """
+        Authenticated user providing an invalid product id to filter its orders
+        should get a 400 error response.
+        """
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+
+        # Try to retrieve user's order related with an invalid product id
+        # should return a 400 error
+        with self.assertNumQueries(5):
+            response = self.client.get(
+                "/api/v1.0/orders/?product=invalid_product_id",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {"product": ["Enter a valid UUID."]})
+
+    def test_api_order_read_list_filtered_by_course_code(self):
+        """Authenticated user should be able to filter their orders by course code."""
+        [product_1, product_2] = factories.ProductFactory.create_batch(2)
+        user = factories.UserFactory()
+
+        # User purchases the product 1
+        order = factories.OrderFactory(owner=user, product=product_1)
+
+        # User purchases the product 2
+        factories.OrderFactory(owner=user, product=product_2)
+
+        token = self.get_user_token(user.username)
+
+        # Retrieve user's order related to the first course linked to the product 1
+        with self.assertNumQueries(15):
+            response = self.client.get(
+                f"/api/v1.0/orders/?course={product_1.courses.first().code}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "count": 1,
+                "next": None,
+                "previous": None,
+                "results": [
+                    {
+                        "id": str(order.id),
+                        "certificate": None,
+                        "course": order.course.code,
+                        "created_on": order.created_on.strftime(
+                            "%Y-%m-%dT%H:%M:%S.%fZ"
+                        ),
+                        "enrollments": [],
+                        "main_proforma_invoice": None,
+                        "owner": order.owner.username,
+                        "total": float(order.total.amount),
+                        "total_currency": str(order.total.currency),
+                        "product": str(order.product.id),
+                        "state": order.state,
+                        "target_courses": [],
+                    }
+                ],
+            },
+        )
+
+    def test_api_order_read_list_filtered_by_state_pending(self):
+        """Authenticated user should be able to retrieve its pending orders."""
+        [product_1, product_2] = factories.ProductFactory.create_batch(2)
+        user = factories.UserFactory()
+
+        # User purchases the product 1
+        order = factories.OrderFactory(owner=user, product=product_1)
+
+        # User purchases the product 2 then cancels it
+        factories.OrderFactory(owner=user, product=product_2, is_canceled=True)
+
+        token = self.get_user_token(user.username)
+
+        # Retrieve user's order related to the product 1
+        with self.assertNumQueries(14):
+            response = self.client.get(
+                "/api/v1.0/orders/?state=pending", HTTP_AUTHORIZATION=f"Bearer {token}"
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "count": 1,
+                "next": None,
+                "previous": None,
+                "results": [
+                    {
+                        "id": str(order.id),
+                        "certificate": None,
+                        "course": order.course.code,
+                        "created_on": order.created_on.strftime(
+                            "%Y-%m-%dT%H:%M:%S.%fZ"
+                        ),
+                        "enrollments": [],
+                        "main_proforma_invoice": None,
+                        "owner": order.owner.username,
+                        "total": float(order.total.amount),
+                        "total_currency": str(order.total.currency),
+                        "product": str(order.product.id),
+                        "state": order.state,
+                        "target_courses": [],
+                    }
+                ],
+            },
+        )
+
+    def test_api_order_read_list_filtered_by_state_canceled(self):
+        """Authenticated user should be able to retrieve its canceled orders."""
+        [product_1, product_2] = factories.ProductFactory.create_batch(2)
+        user = factories.UserFactory()
+
+        # User purchases the product 1
+        factories.OrderFactory(owner=user, product=product_1)
+
+        # User purchases the product 2 then cancels it
+        order = factories.OrderFactory(owner=user, product=product_2, is_canceled=True)
+
+        token = self.get_user_token(user.username)
+
+        # Retrieve user's order related to the product 1
+        with self.assertNumQueries(13):
+            response = self.client.get(
+                "/api/v1.0/orders/?state=canceled", HTTP_AUTHORIZATION=f"Bearer {token}"
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "count": 1,
+                "next": None,
+                "previous": None,
+                "results": [
+                    {
+                        "id": str(order.id),
+                        "certificate": None,
+                        "course": order.course.code,
+                        "created_on": order.created_on.strftime(
+                            "%Y-%m-%dT%H:%M:%S.%fZ"
+                        ),
+                        "enrollments": [],
+                        "main_proforma_invoice": None,
+                        "owner": order.owner.username,
+                        "total": float(order.total.amount),
+                        "total_currency": str(order.total.currency),
+                        "product": str(order.product.id),
+                        "state": order.state,
+                        "target_courses": [],
+                    }
+                ],
+            },
+        )
+
+    def test_api_order_read_list_filtered_by_state_validated(self):
+        """Authenticated user should be able to retrieve its validated orders."""
+        [product_1, product_2] = factories.ProductFactory.create_batch(
+            2, price=Money(0.00, "EUR")
+        )
+        user = factories.UserFactory()
+
+        # User purchases the product 1 as its price is equal to 0.00€,
+        # the order is directly validated
+        order = factories.OrderFactory(owner=user, product=product_1)
+
+        # User purchases the product 2 then cancels it
+        factories.OrderFactory(owner=user, product=product_2, is_canceled=True)
+
+        token = self.get_user_token(user.username)
+
+        # Retrieve user's order related to the product 1
+        with self.assertNumQueries(13):
+            response = self.client.get(
+                "/api/v1.0/orders/?state=validated",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "count": 1,
+                "next": None,
+                "previous": None,
+                "results": [
+                    {
+                        "id": str(order.id),
+                        "certificate": None,
+                        "course": order.course.code,
+                        "created_on": order.created_on.strftime(
+                            "%Y-%m-%dT%H:%M:%S.%fZ"
+                        ),
+                        "enrollments": [],
+                        "main_proforma_invoice": None,
+                        "owner": order.owner.username,
+                        "total": float(order.total.amount),
+                        "total_currency": str(order.total.currency),
+                        "product": str(order.product.id),
+                        "state": order.state,
+                        "target_courses": [],
+                    }
+                ],
+            },
+        )
+
+    def test_api_order_read_list_filtered_by_invalid_state(self):
+        """
+        Authenticated user providing an invalid state to filter its orders
+        should get a 400 error response.
+        """
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+
+        # Try to retrieve user's order related with an invalid product id
+        # should return a 400 error
+        with self.assertNumQueries(5):
+            response = self.client.get(
+                "/api/v1.0/orders/?state=invalid_state",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json(),
+            {
+                "state": [
+                    "Select a valid choice. invalid_state is not one of the available choices."
+                ]
             },
         )
 
