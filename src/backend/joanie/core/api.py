@@ -16,6 +16,7 @@ from joanie.core.enums import ORDER_STATE_PENDING
 from joanie.payment import get_payment_backend
 from joanie.payment.models import ProformaInvoice
 
+from ..core import filters
 from ..core.models import User
 from ..payment.models import CreditCard
 from . import serializers
@@ -139,6 +140,7 @@ class OrderViewSet(
     pagination_class = Pagination
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = serializers.OrderSerializer
+    filterset_class = filters.OrderViewSetFilter
 
     def get_queryset(self):
         """Custom queryset to limit to orders owned by the logged-in user."""
