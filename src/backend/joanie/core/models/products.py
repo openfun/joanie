@@ -1,33 +1,51 @@
 """
 Declare and configure the models for the productorder_s part
 """
+import hashlib
+import hmac
+import itertools
+import json
 import logging
 from decimal import Decimal as D
 
 from django.conf import settings
+from django.contrib.sites.models import Site
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import models
-from django.db.models import Q
-from django.db.models.signals import m2m_changed
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
+import requests
 from djmoney.models.fields import MoneyField
 from djmoney.models.validators import MinMoneyValidator
 from parler import models as parler_models
+from rest_framework.reverse import reverse
+from urllib3.util import Retry
 
+from joanie.core import enums
 from joanie.core.exceptions import EnrollmentError, GradeError
 from joanie.core.models.certifications import Certificate
 from joanie.lms_handler import LMSHandler
 
-from .. import enums
 from . import accounts as customers_models
 from . import courses as courses_models
 from .base import BaseModel
 
 logger = logging.getLogger(__name__)
+
+adapter = requests.adapters.HTTPAdapter(
+    max_retries=Retry(
+        total=4,
+        backoff_factor=0.1,
+        status_forcelist=[500],
+        method_whitelist=["POST"],
+    )
+)
+session = requests.Session()
+session.mount("http://", adapter)
+session.mount("https://", adapter)
 
 
 class Product(parler_models.TranslatableModel, BaseModel):
@@ -47,7 +65,7 @@ class Product(parler_models.TranslatableModel, BaseModel):
     target_courses = models.ManyToManyField(
         courses_models.Course,
         related_name="targeted_by_products",
-        through="ProductCourseRelation",
+        through="ProductTargetCourseRelation",
         verbose_name=_("target courses"),
         blank=True,
     )
@@ -91,7 +109,7 @@ class Product(parler_models.TranslatableModel, BaseModel):
 
             - all course runs related to target courses for which the product/course
               relation does not specify a list of eligible course runs (see course_runs
-              field on the ProductCourseRelation model)
+              field on the ProductTargetCourseRelation model)
 
             - only the course runs specified on the product/course relation for target
               courses on which a list of eligible course runs was specified on the
@@ -103,13 +121,115 @@ class Product(parler_models.TranslatableModel, BaseModel):
         ).only("pk")
 
         return courses_models.CourseRun.objects.filter(
-            Q(product_relations__in=course_relations_with_course_runs)
-            | Q(
+            models.Q(product_relations__in=course_relations_with_course_runs)
+            | models.Q(
                 course__in=self.target_courses.exclude(
                     product_relations__in=course_relations_with_course_runs
                 )
             )
         )
+
+    def get_equivalent_course_run_data(self):
+        """
+        Return data for the virtual course run equivalent to this product when, taking
+        into account all course runs targeted by the product if any.
+
+        The dates (start, end, enrollment start and enrollment end) and languages of this
+        equivalent course run are calculated based on the course runs of each course targeted
+        by this product.
+
+        If a product has no target courses or no related course runs, it will still return
+        an equivalent course run with null dates and hidden visibility.
+        """
+        site = Site.objects.get_current()
+        aggregate = self.target_course_runs.aggregate(
+            models.Min("start"),
+            models.Max("end"),
+            models.Max("enrollment_start"),
+            models.Min("enrollment_end"),
+        )
+        resource_path = reverse("products-detail", kwargs={"id": self.id})
+        return {
+            "resource_link": f"https://{site.domain:s}{resource_path:s}",
+            "catalog_visibility": enums.COURSE_AND_SEARCH
+            if any(aggregate.values())
+            else enums.HIDDEN,
+            "languages": self.equivalent_course_run_languages,
+            # Get dates from aggregate
+            **{
+                key.split("__")[0]: value.isoformat() if value else None
+                for key, value in aggregate.items()
+            },
+        }
+
+    @property
+    def equivalent_course_run_languages(self):
+        """Return a list of distinct languages available in alphabetical order."""
+        languages = self.target_course_runs.values_list(
+            "languages", flat=True
+        ).distinct()
+        # Go through a set for uniqueness of each language then return an ordered list
+        return sorted(list(set(itertools.chain.from_iterable(languages))))
+
+    @staticmethod
+    def synchronize_products(products, visibility=None):
+        """
+        Synchronize a product's related course runs by calling remote web hooks.
+
+        visibility: [CATALOG_VISIBILITY_CHOICES]:
+            If not None, force visibility for the synchronized products. Useful when
+            synchronizing a product that does not have anymore course runs and should
+            therefore be hidden.
+        """
+        if not settings.COURSE_WEB_HOOKS:
+            return
+
+        equivalent_course_runs = []
+        for product in products:
+            if course_run_dict := product.get_equivalent_course_run_data():
+                if visibility:
+                    course_run_dict["catalog_visibility"] = visibility
+                for course in product.courses.only("code").iterator():
+                    equivalent_course_runs.append(
+                        {**course_run_dict, "course": course.code}
+                    )
+
+        if not equivalent_course_runs:
+            return
+
+        json_equivalent_course_runs = json.dumps(equivalent_course_runs).encode("utf-8")
+        for webhook in settings.COURSE_WEB_HOOKS:
+            signature = hmac.new(
+                str(webhook["secret"]).encode("utf-8"),
+                msg=json_equivalent_course_runs,
+                digestmod=hashlib.sha256,
+            ).hexdigest()
+
+            response = session.post(
+                webhook["url"],
+                json=equivalent_course_runs,
+                headers={"Authorization": f"SIG-HMAC-SHA256 {signature:s}"},
+                verify=bool(webhook.get("verify", True)),
+                timeout=3,
+            )
+
+            extra = {
+                "sent": json_equivalent_course_runs,
+                "response": response.content,
+            }
+            # pylint: disable=no-member
+            if response.status_code == requests.codes.ok:
+                logger.info(
+                    "Synchronisation succeeded with %s",
+                    webhook["url"],
+                    extra=extra,
+                )
+            else:
+                logger.error(
+                    "Synchronisation failed with %s",
+                    webhook["url"],
+                    extra=extra,
+                )
 
     def clean(self):
         """
@@ -128,9 +248,9 @@ class Product(parler_models.TranslatableModel, BaseModel):
         super().clean()
 
 
-class ProductCourseRelation(BaseModel):
+class ProductTargetCourseRelation(BaseModel):
     """
-    ProductCourseRelation model allows to define position of each courses to follow
+    ProductTargetCourseRelation model allows to define position of each courses to follow
     for a product.
     """
 
@@ -146,10 +266,12 @@ class ProductCourseRelation(BaseModel):
         related_name="course_relations",
         on_delete=models.CASCADE,
     )
+    # allow restricting what course runs are proposed
+    # for a given course when a product is bought.
     course_runs = models.ManyToManyField(
         courses_models.CourseRun,
-        verbose_name=_("course runs"),
         related_name="product_relations",
+        verbose_name=_("course runs"),
         blank=True,
     )
     position = models.PositiveSmallIntegerField(_("position in product"))
@@ -160,57 +282,29 @@ class ProductCourseRelation(BaseModel):
     )
 
     class Meta:
-        db_table = "joanie_product_course_relation"
+        db_table = "joanie_product_target_course_relation"
         ordering = ("position", "course")
         unique_together = ("product", "course")
-        verbose_name = _("Course relation to a product with a position")
-        verbose_name_plural = _("Courses relations to products with a position")
+        verbose_name = _("Target course relation to a product with a position")
+        verbose_name_plural = _("Target courses relations to products with a position")
 
     def __str__(self):
         return f"{self.product}: {self.position} / {self.course}"
 
+    def delete(self, using=None, keep_parents=False):
+        """
+        We need to synchronize with webhooks upon deletion. We could have used the signal but it
+        also triggers on query deletes and is being called as many times as there are objects in
+        the query. This would generate many separate calls to the webhook and would not scale. We
+        decided to not provide synchronization for the moment on bulk deletes and leave it up to
+        the developper to handle these cases correctly.
+        """
+        super().delete(using, keep_parents)
+        self.synchronize_with_webhooks()
 
-def on_add_course_runs_to_product_course_relation(action, instance, pk_set, **kwargs):
-    """
-    Signal triggered when course runs are added to a product course relation.
-    Some checks are processed before course runs are linked to product course relation :
-        1. Check that course runs linked are related to the relation course
-    """
-    if action != "pre_add":
-        return
-
-    # Instance can be a `ProductCourseRelation` or a `CourseRun`. In the case instance
-    # is a CourseRun, we have to retrieve manually product course relations instances.
-    if isinstance(instance, ProductCourseRelation):
-        relations = [instance]
-        course_runs_set = pk_set
-    else:
-        relations = ProductCourseRelation.objects.filter(pk__in=pk_set).select_related(
-            "course__course_runs"
-        )
-        course_runs_set = {instance.pk}
-
-    for relation in relations:
-        # Check that all involved course runs rely on the relation course
-        if relation.course.course_runs.filter(pk__in=course_runs_set).count() != len(
-            course_runs_set
-        ):
-            raise ValidationError(
-                {
-                    "course_runs": [
-                        (
-                            "Limiting a course to targeted course runs can only be done"
-                            " for course runs already belonging to this course."
-                        )
-                    ]
-                }
-            )
-
-
-m2m_changed.connect(
-    on_add_course_runs_to_product_course_relation,
-    sender=ProductCourseRelation.course_runs.through,
-)
+    def synchronize_with_webhooks(self):
+        """Trigger webhook calls to keep remote apps synchronized."""
+        Product.synchronize_products([self.product])
 
 
 class Order(BaseModel):
@@ -233,7 +327,7 @@ class Order(BaseModel):
     target_courses = models.ManyToManyField(
         courses_models.Course,
         related_name="orders",
-        through="OrderCourseRelation",
+        through="OrderTargetCourseRelation",
         verbose_name=_("courses"),
         blank=True,
     )
@@ -301,7 +395,7 @@ class Order(BaseModel):
 
             - all course runs related to target courses for which the product/course
               relation does not specify a list of eligible course runs (see course_runs
-              field on the ProductCourseRelation model)
+              field on the ProductTargetCourseRelation model)
 
             - only the course runs specified on the product/course relation for target
               courses on which a list of eligible course runs was specified on the
@@ -312,8 +406,8 @@ class Order(BaseModel):
         ).only("pk")
 
         return courses_models.CourseRun.objects.filter(
-            Q(order_relations__in=course_relations_with_course_runs)
-            | Q(
+            models.Q(order_relations__in=course_relations_with_course_runs)
+            | models.Q(
                 course__in=self.target_courses.exclude(
                     order_relations__in=course_relations_with_course_runs
                 )
@@ -359,8 +453,10 @@ class Order(BaseModel):
         models.Model.save(self, *args, **kwargs)
         if is_new:
             # - Generate order course relation
-            for relation in ProductCourseRelation.objects.filter(product=self.product):
-                order_relation = OrderCourseRelation.objects.create(
+            for relation in ProductTargetCourseRelation.objects.filter(
+                product=self.product
+            ):
+                order_relation = OrderTargetCourseRelation.objects.create(
                     order=self,
                     course=relation.course,
                     position=relation.position,
@@ -481,9 +577,9 @@ class Order(BaseModel):
         )
 
 
-class OrderCourseRelation(BaseModel):
+class OrderTargetCourseRelation(BaseModel):
     """
-    OrderCourseRelation model allows to define position of each courses to follow
+    OrderTargetCourseRelation model allows to define position of each courses to follow
     for an order.
     """
 
@@ -513,7 +609,7 @@ class OrderCourseRelation(BaseModel):
     )
 
     class Meta:
-        db_table = "joanie_order_course_relation"
+        db_table = "joanie_order_target_course_relation"
         ordering = ("position", "course")
         unique_together = ("order", "course")
         verbose_name = _("Course relation to an order with a position")

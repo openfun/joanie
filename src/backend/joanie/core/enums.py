@@ -34,6 +34,15 @@ PRODUCT_TYPE_CERTIFICATE_ALLOWED = [
     PRODUCT_TYPE_CREDENTIAL,
 ]
 
+COURSE_AND_SEARCH = "course_and_search"
+COURSE_ONLY = "course_only"
+HIDDEN = "hidden"
+CATALOG_VISIBILITY_CHOICES = (
+    COURSE_AND_SEARCH,
+    COURSE_ONLY,
+    HIDDEN,
+)
+
 ORDER_STATE_PENDING = "pending"  # waiting for payment
 ORDER_STATE_CANCELED = "canceled"  # has been canceled
 ORDER_STATE_FAILED = "failed"  # payment failed

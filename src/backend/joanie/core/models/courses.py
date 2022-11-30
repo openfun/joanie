@@ -267,6 +267,32 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
         verbose_name = _("Course run")
         verbose_name_plural = _("Course runs")
 
+    def __str__(self):
+        return (
+            f"{self.safe_translation_getter('title', any_language=True)} "
+            f"[{self.start:%Y-%m-%d} to {self.end:%Y-%m-%d}]"
+        )
+
+    def delete(self, using=None):
+        """
+        We need to synchronize with webhooks upon deletion. We could have used the signal but it
+        also triggers on query deletes and is being called as many times as there are objects in
+        the query. This would generate many separate calls to the webhook and would not scale. We
+        decided to not provide synchronization for the moment on bulk deletes and leave it up to
+        the developper to handle these cases correctly.
+        """
+        super().delete(using)
+        self.synchronize_with_webhooks()
+
+    def synchronize_with_webhooks(self):
+        """Trigger webhook calls to keep remote apps synchronized."""
+        products = self.course.products.model.objects.filter(
+            models.Q(course_relations__course_runs__isnull=True)
+            | models.Q(course_relations__course_runs=self),
+            course_relations__course=self.course,
+        )
+        self.course.products.model.synchronize_products(products)
+
     # pylint: disable=too-many-return-statements
     @staticmethod
     def compute_state(start, end, enrollment_start, enrollment_end):
@@ -311,12 +337,6 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
         """Return the state of the course run at the current time."""
         return self.compute_state(
             self.start, self.end, self.enrollment_start, self.enrollment_end
-        )
-
-    def __str__(self):
-        return (
-            f"{self.safe_translation_getter('title', any_language=True)} "
-            f"[{self.start:%Y-%m-%d} to {self.end:%Y-%m-%d}]"
         )
 
     def clean(self):
