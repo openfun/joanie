@@ -189,7 +189,7 @@ class ProductAdminTestCase(BaseAPITestCase):
         section_title = sortable_section.cssselect("h2")[0]
         self.assertEqual(
             section_title.text_content(),
-            "Courses relations to products with a position",
+            "Target courses relations to products with a position",
         )
 
         sortable_courses = sortable_section.cssselect(".form-row.has_original")

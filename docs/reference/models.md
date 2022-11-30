@@ -21,7 +21,7 @@ erDiagram
             Integer id PK
             User owner FK
             Course course FK
-            OrderCourseRelation target_courses FK
+            OrderTargetCourseRelation target_courses FK
         }
         CourseRun {
             string resource_link PK
@@ -32,10 +32,10 @@ erDiagram
         Product {
             Integer id PK
             Course course FK
-            ProductCourseRelation target_courses FK
+            ProductTargetCourseRelation target_courses FK
         }
         
-        ProductCourseRelation {
+        ProductTargetCourseRelation {
             Product product FK
             Course course FK
             PositiveSmallInteger position
@@ -43,7 +43,7 @@ erDiagram
             CourseRun course_runs FK
         }
         
-        OrderCourseRelation {
+        OrderTargetCourseRelation {
             Order order FK
             Course course FK
             PositiveSmallInteger position
@@ -60,20 +60,20 @@ erDiagram
         
         Order }o--|| Course : ""
         Order }o--|| Product : ""
-        Order ||--o{ OrderCourseRelation : ""
+        Order ||--o{ OrderTargetCourseRelation : ""
         
         CourseRun }o--|| Course : ""
-        CourseRun }o--o{ OrderCourseRelation : "" 
+        CourseRun }o--o{ OrderTargetCourseRelation : "" 
         CourseRun }o--|| on_add_course_runs_to_product_course_relation : ""
-        on_add_course_runs_to_product_course_relation || -- o{ ProductCourseRelation : ""
+        on_add_course_runs_to_product_course_relation || -- o{ ProductTargetCourseRelation : ""
         
         Course }o--o{ Product : "displays"
-        Course ||--o{ OrderCourseRelation : "is included in"
-        Course ||--o{ ProductCourseRelation : "is included in"
+        Course ||--o{ OrderTargetCourseRelation : "is included in"
+        Course ||--o{ ProductTargetCourseRelation : "is included in"
         
-        Product ||--o{ ProductCourseRelation : ""
+        Product ||--o{ ProductTargetCourseRelation : ""
         
-        ProductCourseRelation ||..|| OrderCourseRelation : "copied at order creation"
+        ProductTargetCourseRelation ||..|| OrderTargetCourseRelation : "copied at order creation"
 ```
 
 ### Focus
@@ -84,9 +84,9 @@ The `course` field represents the course under which the product is sold. Each o
 this product is sold will also be related to it. On the other hand, the `target_courses` field
 represents the courses that the students will be able to follow once they buy the product.
 
-#### The `ProductCourseRelation` and `OrderCourseRelation` models
+#### The `ProductTargetCourseRelation` and `OrderTargetCourseRelation` models
 
-First the `ProductCourseRelation` model is a join table between  a `Product` and a `Course`.
+First the `ProductTargetCourseRelation` model is a join table between  a `Product` and a `Course`.
 
 It has extra attributes :
 - `position`: To order courses in the product
@@ -94,7 +94,7 @@ It has extra attributes :
 - `course_runs`: To restrict the course to specific course runs. If this field is left blank, all 
   course runs related to linked course will be eligible for enrollment.
 
-Then the `OrderCourseRelation` model is a join table between an `Order` and a `Course`.
+Then the `OrderTargetCourseRelation` model is a join table between an `Order` and a `Course`.
 This relation is created at the creation of an `Order` by copying the `CourseProductRelation`
 of the related `Product`. In this way, a `Product` can be updated without impacting previously
 created `Order`.

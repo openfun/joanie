@@ -1,6 +1,8 @@
 """
 Test suite for products models
 """
+import random
+from datetime import datetime, timedelta
 from decimal import Decimal as D
 
 from django.core.exceptions import ValidationError
@@ -10,8 +12,7 @@ from django.test import TestCase
 from djmoney.money import Money
 from moneyed import EUR
 
-from joanie.core import factories, models
-from joanie.core.enums import PRODUCT_TYPE_CERTIFICATE
+from joanie.core import enums, factories, models
 
 
 class ProductModelsTestCase(TestCase):
@@ -30,19 +31,20 @@ class ProductModelsTestCase(TestCase):
 
     def test_models_product_course_runs_unique(self):
         """A product can only be linked once to a given course run."""
-        relation = factories.ProductCourseRelationFactory()
+        relation = factories.ProductTargetCourseRelationFactory()
         with self.assertRaises(ValidationError):
-            factories.ProductCourseRelationFactory(
+            factories.ProductTargetCourseRelationFactory(
                 course=relation.course, product=relation.product
             )
 
     def test_models_product_course_runs_relation_sorted_by_position(self):
         """The product/course relation should be sorted by position."""
         product = factories.ProductFactory()
-        factories.ProductCourseRelationFactory.create_batch(5, product=product)
+        factories.ProductTargetCourseRelationFactory.create_batch(5, product=product)
 
         expected_courses = list(
-            p.course for p in models.ProductCourseRelation.objects.order_by("position")
+            p.course
+            for p in models.ProductTargetCourseRelation.objects.order_by("position")
         )
 
         ordered_courses = list(product.target_courses.order_by("product_relations"))
@@ -54,7 +56,7 @@ class ProductModelsTestCase(TestCase):
         course = factories.CourseFactory()
         product = factories.ProductFactory(
             courses=[course],
-            type=PRODUCT_TYPE_CERTIFICATE,
+            type=enums.PRODUCT_TYPE_CERTIFICATE,
             certificate_definition=factories.CertificateDefinitionFactory(),
         )
         order = factories.OrderFactory(product=product)
@@ -127,3 +129,127 @@ class ProductModelsTestCase(TestCase):
             course_runs = product.target_course_runs.order_by("pk")
             self.assertEqual(len(course_runs), 3)
             self.assertCountEqual(list(course_runs), [cr1, cr2, cr3])
+
+    def test_model_product_get_equivalent_course_run_data_type_not_enrollment(self):
+        """
+        If the product is not of type enrollment, it should return an empty equivalent
+        course run
+        """
+        product = factories.ProductFactory(
+            type=random.choice(enums.PRODUCT_TYPE_CERTIFICATE_ALLOWED)
+        )
+        self.assertEqual(
+            product.get_equivalent_course_run_data(),
+            {
+                "catalog_visibility": "hidden",
+                "end": None,
+                "enrollment_end": None,
+                "enrollment_start": None,
+                "languages": [],
+                "resource_link": f"https://example.com/api/v1.0/products/{product.id!s}/",
+                "start": None,
+            },
+        )
+
+    def test_model_product_get_equivalent_course_run_data_type_enrollment_no_course(
+        self,
+    ):
+        """
+        If the product is of type enrollment but has no target courses, it should return None.
+        """
+        product = factories.ProductFactory(type=enums.PRODUCT_TYPE_ENROLLMENT)
+        self.assertEqual(
+            product.get_equivalent_course_run_data(),
+            {
+                "resource_link": f"https://example.com/api/v1.0/products/{product.id!s}/",
+                "start": None,
+                "end": None,
+                "enrollment_start": None,
+                "enrollment_end": None,
+                "languages": [],
+                "catalog_visibility": "hidden",
+            },
+        )
+
+    def test_model_product_get_equivalent_course_run_data_with_courses(self):
+        """
+        If the product is of type enrollment, it should return an equivalent course
+        run with the expected data.
+        """
+        sample_size = 5
+        course_runs_dates = {
+            "start": random.sample(
+                [
+                    datetime(2022, 12, 1, 9, 0)
+                    + timedelta(seconds=i * random.randint(0, 10**6))
+                    for i in range(sample_size)
+                ],
+                sample_size,
+            ),
+            "end": random.sample(
+                [
+                    datetime(2022, 12, 15, 19, 0)
+                    - timedelta(seconds=i * random.randint(0, 10**6))
+                    for i in range(sample_size)
+                ],
+                sample_size,
+            ),
+            "enrollment_start": random.sample(
+                [
+                    datetime(2022, 11, 20, 9, 0)
+                    - timedelta(seconds=i * random.randint(0, 10**6))
+                    for i in range(sample_size)
+                ],
+                sample_size,
+            ),
+            "enrollment_end": random.sample(
+                [
+                    datetime(2022, 12, 5, 19, 0)
+                    + timedelta(seconds=i * random.randint(0, 10**6))
+                    for i in range(sample_size)
+                ],
+                sample_size,
+            ),
+        }
+
+        course_runs = [
+            factories.CourseRunFactory(**dates)
+            for dates in [
+                {k: dates[i] for k, dates in course_runs_dates.items()}
+                for i in range(sample_size)
+            ]
+        ]
+        product = factories.ProductFactory(
+            target_courses=[cr.course for cr in course_runs]
+        )
+
+        with self.assertNumQueries(3):
+            data = product.get_equivalent_course_run_data()
+
+        languages = data.pop("languages")
+        expected_data = {
+            "resource_link": f"https://example.com/api/v1.0/products/{product.id}/",
+            "start": "2022-12-01T09:00:00+00:00",
+            "end": "2022-12-15T19:00:00+00:00",
+            "enrollment_start": "2022-11-20T09:00:00+00:00",
+            "enrollment_end": "2022-12-05T19:00:00+00:00",
+            "catalog_visibility": "course_and_search",
+        }
+        self.assertEqual(data, expected_data)
+        self.assertTrue(
+            all(lang in languages for cr in course_runs for lang in cr.languages)
+        )
+
+    def test_model_product_equivalent_course_run_languages(self):
+        """Check that the lists of languages are merged"""
+        courses = (
+            factories.CourseRunFactory(
+                languages=["ne", "ro", "ast", "af", "tr"]
+            ).course,
+            factories.CourseRunFactory(languages=["ne", "it", "fr"]).course,
+        )
+        product = factories.ProductFactory.create(target_courses=courses)
+        self.assertCountEqual(
+            product.equivalent_course_run_languages,
+            ["tr", "ast", "ne", "it", "af", "ro", "fr"],
+        )

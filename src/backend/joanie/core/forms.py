@@ -7,9 +7,9 @@ from django.contrib.admin import widgets
 from joanie.core import models
 
 
-class ProductCourseRelationAdminForm(forms.ModelForm):
+class ProductTargetCourseRelationAdminForm(forms.ModelForm):
     """
-    The admin form for the ProductCourseRelation model.
+    The admin form for the ProductTargetCourseRelation model.
 
     This is a customized form in order to filter the list of course runs to
     those related to the course instance.
@@ -25,7 +25,7 @@ class ProductCourseRelationAdminForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         """
-        Initialize the admin form of the ProductCourseRelation model.
+        Initialize the admin form of the ProductTargetCourseRelation model.
 
         In the case where user is editing an existing instance, we populate choices of
         the "course_runs" field with course runs of the related course.

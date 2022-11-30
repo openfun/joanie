@@ -99,6 +99,8 @@ class Base(Configuration):
     MEDIA_URL = "/media/"
     MEDIA_ROOT = os.path.join(DATA_DIR, "media")
 
+    SITE_ID = 1
+
     # Internationalization
     # https://docs.djangoproject.com/en/3.1/topics/i18n/
 
@@ -118,13 +120,12 @@ class Base(Configuration):
     LOCALE_PATHS = (os.path.join(BASE_DIR, "locale"),)
 
     PARLER_LANGUAGES = {
-        None: (tuple(dict(code=code) for code, _name in LANGUAGES)),
+        SITE_ID: (tuple(dict(code=code) for code, _name in LANGUAGES)),
         "default": {
             "fallbacks": [LANGUAGE_CODE],
             "hide_untranslated": False,
         },
     }
-
     TIME_ZONE = "UTC"
     USE_I18N = True
     USE_TZ = True
@@ -177,6 +178,7 @@ class Base(Configuration):
         "django.contrib.auth",
         "django.contrib.contenttypes",
         "django.contrib.sessions",
+        "django.contrib.sites",
         "django.contrib.messages",
         "django.contrib.staticfiles",
         # Third party apps
@@ -318,6 +320,22 @@ class Base(Configuration):
 
     # Sentry
     SENTRY_DSN = values.Value(None, environ_name="SENTRY_DSN")
+
+    # Richie synchronization
+    COURSE_WEB_HOOK_URL = values.Value()
+    COURSE_WEB_HOOK_SECRET = values.Value()
+    COURSE_WEB_HOOK_VERIFY = values.BooleanValue(True)
+    COURSE_WEB_HOOKS = (
+        [
+            {
+                "secret": COURSE_WEB_HOOK_SECRET,
+                "url": COURSE_WEB_HOOK_URL,
+                "verify": COURSE_WEB_HOOK_VERIFY,
+            }
+        ]
+        if COURSE_WEB_HOOK_URL
+        else []
+    )
 
     # pylint: disable=invalid-name
     @property

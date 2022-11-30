@@ -244,7 +244,9 @@ class ProductFactory(factory.django.DjangoModelFactory):
             return
 
         for position, course in enumerate(extracted):
-            ProductCourseRelationFactory(product=self, course=course, position=position)
+            ProductTargetCourseRelationFactory(
+                product=self, course=course, position=position
+            )
 
     @factory.lazy_attribute
     def certificate_definition(self):
@@ -258,11 +260,11 @@ class ProductFactory(factory.django.DjangoModelFactory):
         return CertificateDefinitionFactory()
 
 
-class ProductCourseRelationFactory(factory.django.DjangoModelFactory):
-    """A factory to create ProductCourseRelation object"""
+class ProductTargetCourseRelationFactory(factory.django.DjangoModelFactory):
+    """A factory to create ProductTargetCourseRelation object"""
 
     class Meta:
-        model = models.ProductCourseRelation
+        model = models.ProductTargetCourseRelation
 
     product = factory.SubFactory(ProductFactory)
     course = factory.SubFactory(CourseFactory)
@@ -291,11 +293,11 @@ class OrderFactory(factory.django.DjangoModelFactory):
     owner = factory.SubFactory(UserFactory)
 
 
-class OrderCourseRelationFactory(factory.django.DjangoModelFactory):
-    """A factory to create OrderCourseRelation object"""
+class OrderTargetCourseRelationFactory(factory.django.DjangoModelFactory):
+    """A factory to create OrderTargetCourseRelation object"""
 
     class Meta:
-        model = models.OrderCourseRelation
+        model = models.OrderTargetCourseRelation
 
     order = factory.SubFactory(OrderFactory)
     course = factory.SubFactory(CourseFactory)

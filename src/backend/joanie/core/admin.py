@@ -16,7 +16,7 @@ from parler.admin import TranslatableAdmin
 
 from joanie.core import helpers, models
 from joanie.core.enums import PRODUCT_TYPE_CERTIFICATE_ALLOWED
-from joanie.core.forms import ProductCourseRelationAdminForm
+from joanie.core.forms import ProductTargetCourseRelationAdminForm
 
 ACTION_NAME_GENERATE_CERTIFICATES = "generate_certificates"
 ACTION_NAME_CANCEL = "cancel"
@@ -148,10 +148,10 @@ class UserAdmin(auth_admin.UserAdmin):
     )
 
 
-class ProductCourseRelationInline(SortableInlineAdminMixin, admin.TabularInline):
-    """Admin class for the ProductCourseRelation model"""
+class ProductTargetCourseRelationInline(SortableInlineAdminMixin, admin.TabularInline):
+    """Admin class for the ProductTargetCourseRelation model"""
 
-    form = ProductCourseRelationAdminForm
+    form = ProductTargetCourseRelationAdminForm
     model = models.Product.target_courses.through
     extra = 0
 
@@ -176,7 +176,7 @@ class ProductAdmin(
         "related_courses",
     )
 
-    inlines = (ProductCourseRelationInline,)
+    inlines = (ProductTargetCourseRelationInline,)
     readonly_fields = ("related_courses",)
     actions = (ACTION_NAME_GENERATE_CERTIFICATES,)
     change_actions = (ACTION_NAME_GENERATE_CERTIFICATES,)
