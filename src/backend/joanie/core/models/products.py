@@ -268,6 +268,7 @@ class Order(BaseModel):
         ]
         verbose_name = _("Order")
         verbose_name_plural = _("Orders")
+        ordering = ["-created_on"]
 
     def __str__(self):
         return f"Order {self.product} for user {self.owner}"
