@@ -141,6 +141,7 @@ class OrderViewSet(
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = serializers.OrderSerializer
     filterset_class = filters.OrderViewSetFilter
+    ordering = ["-created_on"]
 
     def get_queryset(self):
         """Custom queryset to limit to orders owned by the logged-in user."""
