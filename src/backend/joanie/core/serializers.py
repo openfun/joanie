@@ -165,6 +165,53 @@ class ProductSerializer(serializers.ModelSerializer):
             context=context,
         ).data
 
+    def get_orders(self, instance):
+        """
+        If a user is authenticated, it retrieves valid or pending orders related to the
+        product instance. If a course code has been provided through query
+        parameters order are also filtered by course.
+        """
+        try:
+            filters = {"owner__username": self.context["username"]}
+        except KeyError:
+            return None
+
+        if course_code := self.context.get("course_code"):
+            filters["course__code"] = course_code
+
+        try:
+            orders = models.Order.objects.filter(
+                is_canceled=False,
+                product=instance,
+                **filters,
+            ).only("pk")
+        except models.Order.DoesNotExist:
+            return None
+
+        return [order.pk for order in orders]
+
+    def to_representation(self, instance):
+        """
+        Cache the serializer representation that does not vary from user to user
+        then, if user is authenticated, add private information to the representation
+        """
+        cache_key = utils.get_resource_cache_key(
+            "product", instance.id, is_language_sensitive=True
+        )
+        representation = cache.get(cache_key)
+
+        if representation is None:
+            representation = super().to_representation(instance)
+            cache.set(
+                cache_key,
+                representation,
+                settings.JOANIE_ANONYMOUS_SERIALIZER_DEFAULT_CACHE_TTL,
+            )
+
+        representation["orders"] = self.get_orders(instance)
+
+        return representation
+
 
 class OrderLiteSerializer(serializers.ModelSerializer):
     """
