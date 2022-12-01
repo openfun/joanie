@@ -84,7 +84,8 @@ class ProductViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
 
     lookup_field = "id"
     permissions_classes = [permissions.AllowAny]
-    queryset = models.Product.objects.filter(courses__isnull=False).select_related(
+    filterset_class = filters.ProductViewSetFilter
+    queryset = models.Product.objects.filter(courses__isnull=False).distinct().select_related(
         "certificate_definition"
     )
     serializer_class = serializers.ProductSerializer

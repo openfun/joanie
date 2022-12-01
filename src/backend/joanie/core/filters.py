@@ -52,3 +52,15 @@ class OrderViewSetFilter(filters.FilterSet):
             )
 
         return queryset
+
+
+class ProductViewSetFilter(filters.FilterSet):
+    """
+    ProductViewSetFilter allows to filter this resource with a course code.
+    """
+
+    course = filters.CharFilter(field_name="courses__code")
+
+    class Meta:
+        model = models.Product
+        fields: List[str] = []
