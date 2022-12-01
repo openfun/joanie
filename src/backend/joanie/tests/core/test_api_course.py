@@ -166,6 +166,7 @@ class CourseApiTest(BaseAPITestCase):
                     ],
                     "title": product.title,
                     "type": product.type,
+                    "orders": None,
                 }
                 for product in course.products.all().order_by("-created_on")
             ],
@@ -312,7 +313,7 @@ class CourseApiTest(BaseAPITestCase):
                         user=user, course_run=course_run, is_active=True
                     )
 
-        with self.assertNumQueries(36):
+        with self.assertNumQueries(38):
             response = self.client.get(
                 f"/api/v1.0/courses/{course.code}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -442,11 +443,15 @@ class CourseApiTest(BaseAPITestCase):
                     ],
                     "title": product.title,
                     "type": product.type,
+                    "orders": [
+                        str(order.id)
+                        for order in [order1, order2]
+                        if order.product.id == product.id
+                    ],
                 }
                 for product in course.products.all().order_by("created_on")
             ],
         }
-
         self.assertEqual(response.status_code, 200)
         self.assertEqual(content["code"], expected["code"])
         self.assertEqual(content["title"], expected["title"])
@@ -502,7 +507,7 @@ class CourseApiTest(BaseAPITestCase):
         self.assertEqual(order_canceled.state, enums.ORDER_STATE_CANCELED)
 
         # - Retrieve course information
-        with self.assertNumQueries(16):
+        with self.assertNumQueries(20):
             response = self.client.get(
                 f"/api/v1.0/courses/{course.code}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -510,14 +515,13 @@ class CourseApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, 200)
 
-        content = json.loads(response.content)
+        content = response.json()
         self.assertEqual(len(content["products"]), 4)
 
-        # - Response should only contain the two validated orders
+        # - Response should only contain the validated and pending orders
         self.assertEqual(len(content["orders"]), 2)
         self.assertContains(response, str(order_free.id))
         self.assertContains(response, str(order_paid.id))
-        self.assertNotContains(response, str(order_pending.id))
         self.assertNotContains(response, str(order_canceled.id))
 
     @override_settings(

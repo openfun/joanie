@@ -7,7 +7,7 @@ from django.db.models import Q
 from djmoney.contrib.django_rest_framework import MoneyField
 from rest_framework import serializers
 
-from joanie.core import models
+from joanie.core import models, utils
 
 
 class CertificationDefinitionSerializer(serializers.ModelSerializer):
@@ -268,7 +268,9 @@ class CourseSerializer(serializers.ModelSerializer):
         Cache the serializer representation that does not vary from user to user
         then, if user is authenticated, add private information to the representation
         """
-        cache_key = instance.get_cache_key()
+        cache_key = utils.get_resource_cache_key(
+            "course", instance.code, is_language_sensitive=True
+        )
         representation = cache.get(cache_key)
 
         if representation is None:
@@ -276,7 +278,7 @@ class CourseSerializer(serializers.ModelSerializer):
             cache.set(
                 cache_key,
                 representation,
-                settings.JOANIE_ANONYMOUS_COURSE_SERIALIZER_CACHE_TTL,
+                settings.JOANIE_ANONYMOUS_SERIALIZER_DEFAULT_CACHE_TTL,
             )
 
         representation["orders"] = self.get_orders(instance)
