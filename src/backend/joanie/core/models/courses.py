@@ -8,7 +8,6 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone as django_timezone
 from django.utils.functional import lazy
-from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
 from parler import models as parler_models
@@ -210,14 +209,6 @@ class Course(parler_models.TranslatableModel, BaseModel):
                 break
 
         return best_state
-
-    def get_cache_key(self, language=None):
-        """
-        Return a course cache key related to its code and the current
-        language can be forced by through the language argument.
-        """
-        current_language = language or get_language()
-        return f"course-{self.code}-{current_language}"
 
     def clean(self):
         """
