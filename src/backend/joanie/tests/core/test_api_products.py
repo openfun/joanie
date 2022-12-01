@@ -1,4 +1,6 @@
 """Test suite for the Product API"""
+from djmoney.money import Money
+
 from joanie.core import enums, factories, models
 from joanie.tests.base import BaseAPITestCase
 
@@ -113,8 +115,174 @@ class ProductApiTest(BaseAPITestCase):
                 ],
                 "title": product.title,
                 "type": product.type,
+                "orders": None,
             },
         )
+
+        # Product response should have been cached,
+        # so db queries should be reduced if we request the resource again.
+        with self.assertNumQueries(1):
+            response = self.client.get(f"/api/v1.0/products/{product.id}/")
+
+        self.assertEqual(response.status_code, 200)
+
+        # But cache should be language sensitive
+        with self.assertNumQueries(4):
+            response = self.client.get(
+                f"/api/v1.0/products/{product.id}/",
+                HTTP_ACCEPT_LANGUAGE="fr-fr",
+            )
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_api_product_detail_with_pending_order(self):
+        """
+        An authenticated user with a pending order related to the product resource
+        should get the order id within the response
+        """
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+        product = factories.ProductFactory(type=enums.PRODUCT_TYPE_CREDENTIAL)
+        order = factories.OrderFactory(owner=user, product=product)
+
+        self.assertEqual(order.state, "pending")
+
+        with self.assertNumQueries(3):
+            response = self.client.get(
+                f"/api/v1.0/products/{product.id}/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        content = response.json()
+        self.assertEqual(response.status_code, 200)
+        self.assertListEqual(content["orders"], [str(order.id)])
+
+    def test_api_product_detail_with_validated_order(self):
+        """
+        An authenticated user with a validated order related to the product resource
+        should get the order id within the response
+        """
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+        product = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CREDENTIAL, price=Money(0.00, "EUR")
+        )
+        order = factories.OrderFactory(owner=user, product=product)
+
+        self.assertEqual(order.state, "validated")
+
+        with self.assertNumQueries(3):
+            response = self.client.get(
+                f"/api/v1.0/products/{product.id}/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        content = response.json()
+        self.assertEqual(response.status_code, 200)
+        self.assertListEqual(content["orders"], [str(order.id)])
+
+    def test_api_product_detail_with_cancel_order(self):
+        """
+        An authenticated user with a canceled order related to the product resource
+        should not get the order id within the response
+        """
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+        product = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CREDENTIAL, price=Money(0.00, "EUR")
+        )
+        order = factories.OrderFactory(owner=user, product=product, is_canceled=True)
+
+        self.assertEqual(order.state, "canceled")
+
+        with self.assertNumQueries(3):
+            response = self.client.get(
+                f"/api/v1.0/products/{product.id}/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        content = response.json()
+        self.assertEqual(response.status_code, 200)
+        self.assertListEqual(content["orders"], [])
+
+    def test_api_product_filtered_by_an_invalid_course(self):
+        """
+        A product can be filtered by courses. If the provided course_code does not correspond to
+        a course linked to the product, a 404 response should be return.
+        """
+        [course1, course2] = factories.CourseFactory.create_batch(2)
+        product = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CREDENTIAL, courses=[course1]
+        )
+
+        with self.assertNumQueries(1):
+            response = self.client.get(
+                f"/api/v1.0/products/{product.id}/?course={course2.code}"
+            )
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json(), {"detail": "Not found."})
+
+        # Link the course to the product
+        product.courses.add(course2)
+
+        with self.assertNumQueries(2):
+            response = self.client.get(
+                f"/api/v1.0/products/{product.id}/?course={course2.code}"
+            )
+
+        content = response.json()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(content["id"], str(product.id))
+
+    def test_api_product_with_order_filtered_by_course(self):
+        """
+        An authenticated user who has purchased several times the same product for
+        different courses should be able to filter orders property of the response
+        per course.
+        """
+        courses = factories.CourseFactory.create_batch(2)
+
+        # Create a certificate product linked to two courses
+        product = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CERTIFICATE,
+            courses=courses,
+            price=Money(0.00, "EUR"),
+        )
+
+        # Create a user
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+
+        # Purchase certificate for all courses
+        order1 = factories.OrderFactory(owner=user, product=product, course=courses[0])
+        order2 = factories.OrderFactory(owner=user, product=product, course=courses[1])
+
+        # If user requests product without filters,
+        # it should see all pending/validated related orders.
+        with self.assertNumQueries(3):
+            response = self.client.get(
+                f"/api/v1.0/products/{product.id}/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        content = response.json()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(content["id"], str(product.id))
+        self.assertListEqual(content["orders"], [str(order2.id), str(order1.id)])
+
+        # If user request product only and filter to the first course,
+        # it should get only one order into orders property
+        with self.assertNumQueries(2):
+            response = self.client.get(
+                f"/api/v1.0/products/{product.id}/?course={courses[0].code}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        content = response.json()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(content["id"], str(product.id))
+        self.assertListEqual(content["orders"], [str(order1.id)])
 
     def test_api_product_read_detail_without_course_anonymous(self):
         """

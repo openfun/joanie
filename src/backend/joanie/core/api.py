@@ -85,10 +85,27 @@ class ProductViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     lookup_field = "id"
     permissions_classes = [permissions.AllowAny]
     filterset_class = filters.ProductViewSetFilter
-    queryset = models.Product.objects.filter(courses__isnull=False).distinct().select_related(
-        "certificate_definition"
+    queryset = (
+        models.Product.objects.filter(courses__isnull=False)
+        .distinct()
+        .select_related("certificate_definition")
     )
     serializer_class = serializers.ProductSerializer
+
+    def get_serializer_context(self):
+        """
+        Provide username to the authenticated user (if one is authenticated)
+        and course code to the `ProductSerializer`
+        """
+        context = super().get_serializer_context()
+
+        if self.request.user.username:
+            context.update({"username": self.request.user.username})
+
+        if course := self.request.query_params.get("course"):
+            context.update({"course_code": course})
+
+        return context
 
 
 # pylint: disable=too-many-ancestors
