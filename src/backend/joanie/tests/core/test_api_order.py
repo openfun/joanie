@@ -54,7 +54,7 @@ class OrderApiTest(BaseAPITestCase):
         # The owner can see his/her order
         token = self.get_user_token(order.owner.username)
 
-        with self.assertNumQueries(14):
+        with self.assertNumQueries(12):
             response = self.client.get(
                 "/api/v1.0/orders/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -91,7 +91,7 @@ class OrderApiTest(BaseAPITestCase):
         # The owner of the other order can only see his/her order
         token = self.get_user_token(other_order.owner.username)
 
-        with self.assertNumQueries(14):
+        with self.assertNumQueries(12):
             response = self.client.get(
                 "/api/v1.0/orders/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -139,7 +139,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         # Retrieve user's order related to the product 1
-        with self.assertNumQueries(14):
+        with self.assertNumQueries(12):
             response = self.client.get(
                 f"/api/v1.0/orders/?product={product_1.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -206,7 +206,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         # Retrieve user's order related to the first course linked to the product 1
-        with self.assertNumQueries(15):
+        with self.assertNumQueries(13):
             response = self.client.get(
                 f"/api/v1.0/orders/?course={product_1.courses.first().code}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -254,7 +254,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         # Retrieve user's order related to the product 1
-        with self.assertNumQueries(14):
+        with self.assertNumQueries(12):
             response = self.client.get(
                 "/api/v1.0/orders/?state=pending", HTTP_AUTHORIZATION=f"Bearer {token}"
             )
@@ -301,7 +301,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         # Retrieve user's order related to the product 1
-        with self.assertNumQueries(13):
+        with self.assertNumQueries(11):
             response = self.client.get(
                 "/api/v1.0/orders/?state=canceled", HTTP_AUTHORIZATION=f"Bearer {token}"
             )
@@ -351,7 +351,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         # Retrieve user's order related to the product 1
-        with self.assertNumQueries(13):
+        with self.assertNumQueries(11):
             response = self.client.get(
                 "/api/v1.0/orders/?state=validated",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -433,15 +433,15 @@ class OrderApiTest(BaseAPITestCase):
         order = factories.OrderFactory(product=product, owner=owner)
         token = self.generate_token_from_user(owner)
 
-        response = self.client.get(
-            f"/api/v1.0/orders/{order.id}/",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-        self.assertEqual(response.status_code, 200)
-        content = json.loads(response.content)
+        with self.assertNumQueries(19):
+            response = self.client.get(
+                f"/api/v1.0/orders/{order.id}/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
 
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(
-            content,
+            response.json(),
             {
                 "id": str(order.id),
                 "certificate": None,
@@ -455,7 +455,55 @@ class OrderApiTest(BaseAPITestCase):
                 "product": str(product.id),
                 "enrollments": [],
                 "target_courses": [
-                    c.code for c in product.target_courses.order_by("product_relations")
+                    {
+                        "code": target_course.code,
+                        "organization": {
+                            "code": target_course.organization.code,
+                            "title": target_course.organization.title,
+                        },
+                        "course_runs": [
+                            {
+                                "id": course_run.id,
+                                "title": course_run.title,
+                                "resource_link": course_run.resource_link,
+                                "state": {
+                                    "priority": course_run.state["priority"],
+                                    "datetime": course_run.state["datetime"]
+                                    .isoformat()
+                                    .replace("+00:00", "Z"),
+                                    "call_to_action": course_run.state[
+                                        "call_to_action"
+                                    ],
+                                    "text": course_run.state["text"],
+                                },
+                                "start": course_run.start.isoformat().replace(
+                                    "+00:00", "Z"
+                                ),
+                                "end": course_run.end.isoformat().replace(
+                                    "+00:00", "Z"
+                                ),
+                                "enrollment_start": course_run.enrollment_start.isoformat().replace(  # noqa pylint: disable=line-too-long
+                                    "+00:00", "Z"
+                                ),
+                                "enrollment_end": course_run.enrollment_end.isoformat().replace(  # noqa pylint: disable=line-too-long
+                                    "+00:00", "Z"
+                                ),
+                            }
+                            for course_run in target_course.course_runs.all().order_by(
+                                "start"
+                            )
+                        ],
+                        "position": target_course.order_relations.get(
+                            order=order
+                        ).position,
+                        "is_graded": target_course.order_relations.get(
+                            order=order
+                        ).is_graded,
+                        "title": target_course.title,
+                    }
+                    for target_course in order.target_courses.all().order_by(
+                        "order_relations__position"
+                    )
                 ],
             },
         )
@@ -514,8 +562,8 @@ class OrderApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, 201)
 
+        self.assertEqual(response.status_code, 201)
         # order has been created
         self.assertEqual(models.Order.objects.count(), 1)
         order = models.Order.objects.get()
@@ -542,7 +590,55 @@ class OrderApiTest(BaseAPITestCase):
                 "product": str(product.id),
                 "enrollments": [],
                 "target_courses": [
-                    c.code for c in product.target_courses.order_by("product_relations")
+                    {
+                        "code": target_course.code,
+                        "organization": {
+                            "code": target_course.organization.code,
+                            "title": target_course.organization.title,
+                        },
+                        "course_runs": [
+                            {
+                                "id": course_run.id,
+                                "title": course_run.title,
+                                "resource_link": course_run.resource_link,
+                                "state": {
+                                    "priority": course_run.state["priority"],
+                                    "datetime": course_run.state["datetime"]
+                                    .isoformat()
+                                    .replace("+00:00", "Z"),
+                                    "call_to_action": course_run.state[
+                                        "call_to_action"
+                                    ],
+                                    "text": course_run.state["text"],
+                                },
+                                "start": course_run.start.isoformat().replace(
+                                    "+00:00", "Z"
+                                ),
+                                "end": course_run.end.isoformat().replace(
+                                    "+00:00", "Z"
+                                ),
+                                "enrollment_start": course_run.enrollment_start.isoformat().replace(  # noqa pylint: disable=line-too-long
+                                    "+00:00", "Z"
+                                ),
+                                "enrollment_end": course_run.enrollment_end.isoformat().replace(  # noqa pylint: disable=line-too-long
+                                    "+00:00", "Z"
+                                ),
+                            }
+                            for course_run in target_course.course_runs.all().order_by(
+                                "start"
+                            )
+                        ],
+                        "position": target_course.order_relations.get(
+                            order=order
+                        ).position,
+                        "is_graded": target_course.order_relations.get(
+                            order=order
+                        ).is_graded,
+                        "title": target_course.title,
+                    }
+                    for target_course in order.target_courses.all().order_by(
+                        "order_relations__position"
+                    )
                 ],
             },
         )
@@ -602,7 +698,55 @@ class OrderApiTest(BaseAPITestCase):
                 "product": str(product.id),
                 "enrollments": [],
                 "target_courses": [
-                    c.code for c in product.target_courses.order_by("product_relations")
+                    {
+                        "code": target_course.code,
+                        "organization": {
+                            "code": target_course.organization.code,
+                            "title": target_course.organization.title,
+                        },
+                        "course_runs": [
+                            {
+                                "id": course_run.id,
+                                "title": course_run.title,
+                                "resource_link": course_run.resource_link,
+                                "state": {
+                                    "priority": course_run.state["priority"],
+                                    "datetime": course_run.state["datetime"]
+                                    .isoformat()
+                                    .replace("+00:00", "Z"),
+                                    "call_to_action": course_run.state[
+                                        "call_to_action"
+                                    ],
+                                    "text": course_run.state["text"],
+                                },
+                                "start": course_run.start.isoformat().replace(
+                                    "+00:00", "Z"
+                                ),
+                                "end": course_run.end.isoformat().replace(
+                                    "+00:00", "Z"
+                                ),
+                                "enrollment_start": course_run.enrollment_start.isoformat().replace(  # noqa pylint: disable=line-too-long
+                                    "+00:00", "Z"
+                                ),
+                                "enrollment_end": course_run.enrollment_end.isoformat().replace(  # noqa pylint: disable=line-too-long
+                                    "+00:00", "Z"
+                                ),
+                            }
+                            for course_run in target_course.course_runs.all().order_by(
+                                "start"
+                            )
+                        ],
+                        "position": target_course.order_relations.get(
+                            order=order
+                        ).position,
+                        "is_graded": target_course.order_relations.get(
+                            order=order
+                        ).is_graded,
+                        "title": target_course.title,
+                    }
+                    for target_course in order.target_courses.all().order_by(
+                        "order_relations__position"
+                    )
                 ],
             },
         )
@@ -748,12 +892,13 @@ class OrderApiTest(BaseAPITestCase):
             "billing_address": billing_address,
         }
 
-        response = self.client.post(
-            "/api/v1.0/orders/",
-            data=data,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
+        with self.assertNumQueries(22):
+            response = self.client.post(
+                "/api/v1.0/orders/",
+                data=data,
+                content_type="application/json",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
 
         self.assertEqual(models.Order.objects.count(), 1)
         order = models.Order.objects.get(product=product, course=course, owner=user)
@@ -775,7 +920,55 @@ class OrderApiTest(BaseAPITestCase):
                 "product": str(product.id),
                 "enrollments": [],
                 "target_courses": [
-                    c.code for c in product.target_courses.order_by("product_relations")
+                    {
+                        "code": target_course.code,
+                        "organization": {
+                            "code": target_course.organization.code,
+                            "title": target_course.organization.title,
+                        },
+                        "course_runs": [
+                            {
+                                "id": course_run.id,
+                                "title": course_run.title,
+                                "resource_link": course_run.resource_link,
+                                "state": {
+                                    "priority": course_run.state["priority"],
+                                    "datetime": course_run.state["datetime"]
+                                    .isoformat()
+                                    .replace("+00:00", "Z"),
+                                    "call_to_action": course_run.state[
+                                        "call_to_action"
+                                    ],
+                                    "text": course_run.state["text"],
+                                },
+                                "start": course_run.start.isoformat().replace(
+                                    "+00:00", "Z"
+                                ),
+                                "end": course_run.end.isoformat().replace(
+                                    "+00:00", "Z"
+                                ),
+                                "enrollment_start": course_run.enrollment_start.isoformat().replace(  # noqa pylint: disable=line-too-long
+                                    "+00:00", "Z"
+                                ),
+                                "enrollment_end": course_run.enrollment_end.isoformat().replace(  # noqa pylint: disable=line-too-long
+                                    "+00:00", "Z"
+                                ),
+                            }
+                            for course_run in target_course.course_runs.all().order_by(
+                                "start"
+                            )
+                        ],
+                        "position": target_course.order_relations.get(
+                            order=order
+                        ).position,
+                        "is_graded": target_course.order_relations.get(
+                            order=order
+                        ).is_graded,
+                        "title": target_course.title,
+                    }
+                    for target_course in order.target_courses.all().order_by(
+                        "order_relations__position"
+                    )
                 ],
                 "payment_info": {
                     "payment_id": f"pay_{order.id}",
@@ -839,9 +1032,7 @@ class OrderApiTest(BaseAPITestCase):
                 "total_currency": str(product.price.currency),
                 "product": str(product.id),
                 "enrollments": [],
-                "target_courses": [
-                    c.code for c in product.target_courses.order_by("product_relations")
-                ],
+                "target_courses": [],
                 "payment_info": {
                     "payment_id": f"pay_{order.id}",
                     "provider": "dummy",

@@ -164,11 +164,7 @@ class OrderViewSet(
     def get_queryset(self):
         """Custom queryset to limit to orders owned by the logged-in user."""
         user = User.update_or_create_from_request_user(request_user=self.request.user)
-        return (
-            user.orders.all()
-            .select_related("owner", "product")
-            .prefetch_related("target_courses__course_runs")
-        )
+        return user.orders.all().select_related("owner", "product", "certificate")
 
     def perform_create(self, serializer):
         """Force the order's "owner" field to the logged-in user."""
