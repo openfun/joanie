@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Bind full target_courses object into order serializer representation
 - Allow to filter order resource by product id, course code and state 
 - Add api versioning
 - Add CourseRun & Product API endpoints

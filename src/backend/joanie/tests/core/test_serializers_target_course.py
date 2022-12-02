@@ -50,7 +50,7 @@ class TargetCourseSerializerTestCase(TestCase):
 
         with self.assertNumQueries(3):
             representation = TargetCourseSerializer(
-                context={"product": product}
+                context={"resource": product}
             ).to_representation(target_course)
 
         # - Product should target the two course runs
@@ -60,11 +60,35 @@ class TargetCourseSerializerTestCase(TestCase):
         course_runs_repr = representation["course_runs"]
         self.assertEqual(len(course_runs_repr), 2)
 
-    def test_serializer_target_course_without_product_in_context(
+    def test_serializer_target_course_get_course_runs_if_order_relation_course_runs_is_empty(
         self,
     ):
         """
-        If no product is provided through serializer context, an exception should be
+        If the target course order relation has no course runs, course runs from the
+        course itself should be returned.
+        """
+        target_course = factories.CourseFactory()
+        factories.CourseRunFactory.create_batch(2, course=target_course)
+        product = factories.ProductFactory(target_courses=[target_course])
+        order = factories.OrderFactory(product=product)
+
+        with self.assertNumQueries(3):
+            representation = TargetCourseSerializer(
+                context={"resource": order}
+            ).to_representation(target_course)
+
+        # - Order should target the two course runs
+        self.assertEqual(order.target_course_runs.count(), 2)
+
+        # - So all course runs are returned
+        course_runs_repr = representation["course_runs"]
+        self.assertEqual(len(course_runs_repr), 2)
+
+    def test_serializer_target_course_without_resource_in_context(
+        self,
+    ):
+        """
+        If no resource is provided through serializer context, an exception should be
         raised when getting serializer representation.
         """
         target_course = factories.CourseFactory()
@@ -76,7 +100,30 @@ class TargetCourseSerializerTestCase(TestCase):
             str(context.exception),
             (
                 "[ErrorDetail(string='TargetCourseSerializer context must contain a "
-                "\"product\" property.', code='invalid')]"
+                "\"resource\" property.', code='invalid')]"
+            ),
+        )
+
+    def test_serializer_target_course_with_invalid_resource_in_context(
+        self,
+    ):
+        """
+        If something else than Product or Order is provided as resource through
+        serializer context, an exception should be raised when getting serializer
+        representation.
+        """
+        target_course = factories.CourseFactory()
+
+        with self.assertRaises(serializers.ValidationError) as context:
+            TargetCourseSerializer(
+                context={"resource": factories.CourseFactory()}
+            ).to_representation(target_course)
+
+        self.assertEqual(
+            str(context.exception),
+            (
+                "[ErrorDetail(string='TargetCourseSerializer context resource property "
+                "must be instance of Product or Order.', code='invalid')]"
             ),
         )
 
@@ -98,11 +145,41 @@ class TargetCourseSerializerTestCase(TestCase):
         relation.course_runs.set([course_run])
 
         representation = TargetCourseSerializer(
-            context={"product": product}
+            context={"resource": product}
         ).to_representation(instance=target_course)
 
         # - Product should target only one course run
         self.assertEqual(product.target_course_runs.count(), 1)
+
+        # - So target_course.product_relations.course_runs are used
+        course_runs_repr = representation["course_runs"]
+        self.assertEqual(len(course_runs_repr), 1)
+        self.assertEqual(course_runs_repr[0]["id"], str(course_run.pk))
+
+    def test_serializer_target_course_get_order_relation_course_runs_if_there_are(
+        self,
+    ):
+        """
+        If the target course order relation has course runs, they should be used to populate
+        the course runs field
+        """
+        target_course = factories.CourseFactory()
+        course_run, _ = factories.CourseRunFactory.create_batch(2, course=target_course)
+        product = factories.ProductFactory(target_courses=[target_course])
+
+        # - Link only one course run to the product course relation
+        relation = target_course.product_relations.get(product=product)
+        relation.course_runs.set([course_run])
+
+        # - Create an order related to the product
+        order = factories.OrderFactory(product=product)
+
+        representation = TargetCourseSerializer(
+            context={"resource": order}
+        ).to_representation(instance=target_course)
+
+        # - Product should target only one course run
+        self.assertEqual(order.target_course_runs.count(), 1)
 
         # - So target_course.product_relations.course_runs are used
         course_runs_repr = representation["course_runs"]

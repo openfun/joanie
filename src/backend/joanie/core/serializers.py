@@ -64,39 +64,60 @@ class TargetCourseSerializer(serializers.ModelSerializer):
         ]
 
     @property
-    def context_product(self):
+    def context_resource(self):
         """
-        Retrieve the product provided in context. If no product is provided, it raises
-        a ValidationError.
+        Retrieve the product/order resource provided in context.
+        If no product/order is provided, it raises a ValidationError.
         """
         try:
-            return self.context["product"]
+            resource = self.context["resource"]
         except KeyError as exception:
             raise serializers.ValidationError(
-                'TargetCourseSerializer context must contain a "product" property.'
+                'TargetCourseSerializer context must contain a "resource" property.'
             ) from exception
+
+        if not isinstance(resource, (models.Order, models.Product)):
+            raise serializers.ValidationError(
+                "TargetCourseSerializer context resource property must be instance of "
+                "Product or Order."
+            )
+
+        return resource
+
+    def get_target_course_relation(self, target_course):
+        """
+        Return the relevant course relation according to the resource context
+        is a product or an order.
+        """
+        if isinstance(self.context_resource, models.Order):
+            return target_course.order_relations.get(order=self.context_resource)
+
+        if isinstance(self.context_resource, models.Product):
+            return target_course.product_relations.get(product=self.context_resource)
+
+        return None
 
     def get_position(self, target_course):
         """
-        Retrieve the position of the course related to its product_relation
+        Retrieve the position of the course related to its product/order relation
         """
-        return target_course.product_relations.get(
-            product=self.context_product
-        ).position
+        relation = self.get_target_course_relation(target_course)
+
+        return relation.position
 
     def get_is_graded(self, target_course):
         """
-        Retrieve the `is_graded` state of the course related to its product_relation
+        Retrieve the `is_graded` state of the course related to its product/order relation
         """
-        return target_course.product_relations.get(
-            product=self.context_product
-        ).is_graded
+        relation = self.get_target_course_relation(target_course)
+
+        return relation.is_graded
 
     def get_course_runs(self, target_course):
         """
         Return related course runs ordered by start date asc
         """
-        course_runs = self.context_product.target_course_runs.filter(
+        course_runs = self.context_resource.target_course_runs.filter(
             course=target_course
         ).order_by("start")
 
@@ -155,12 +176,12 @@ class ProductSerializer(serializers.ModelSerializer):
         """
 
         context = self.context.copy()
-        context.update({"product": product})
+        context["resource"] = product
 
         return TargetCourseSerializer(
-            instance=models.Course.objects.filter(
-                product_relations__product=product
-            ).order_by("product_relations__position"),
+            instance=product.target_courses.all().order_by(
+                "product_relations__position"
+            ),
             many=True,
             context=context,
         ).data
@@ -461,14 +482,16 @@ class OrderSerializer(serializers.ModelSerializer):
             "target_courses",
         ]
 
-    @staticmethod
-    def get_target_courses(obj):
+    def get_target_courses(self, order):
         """Compute the serialized value for the "target_courses" field."""
-        return (
-            models.Course.objects.filter(order_relations__order=obj)
-            .order_by("order_relations__position")
-            .values_list("code", flat=True)
-        )
+        context = self.context.copy()
+        context["resource"] = order
+
+        return TargetCourseSerializer(
+            instance=order.target_courses.all().order_by("order_relations__position"),
+            many=True,
+            context=context,
+        ).data
 
     def get_enrollments(self, order):
         """
