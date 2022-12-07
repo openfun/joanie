@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "An util to generate html and text django's templates from mjml templates",
   "dependencies": {
-    "html-to-text": "8.2.1",
+    "html-to-text": "9.0.2",
     "mjml": "4.13.0"
   },
   "private": true,
