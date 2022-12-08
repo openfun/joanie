@@ -2,8 +2,9 @@
   "name": "mail_mjml",
   "version": "1.0.0",
   "description": "An util to generate html and text django's templates from mjml templates",
+  "type": "module",
   "dependencies": {
-    "html-to-text": "9.0.2",
+    "@html-to/text-cli": "0.5.2",
     "mjml": "4.13.0"
   },
   "private": true,
