@@ -597,8 +597,8 @@ class OBFProviderTestCase(TestCase):
         ):
             obf.delete()
 
-    def test_issue(self):
-        """Test the OBF issue method."""
+    def test_issue_non_existing(self):
+        """Trying to issue a badge for a non-existing instance should fail."""
 
         self.requests_mock.post(
             "https://openbadgefactory.com/v1/client/oauth2/token",
@@ -621,17 +621,50 @@ class OBFProviderTestCase(TestCase):
         ):
             obf.issue(badge, issue)
 
-        # pylint: disable=invalid-name
-        badge.id = "abcd1234"
-        badge.draft = True
+    def test_issue_draft(self):
+        """Trying to issue a badge for a draft instance should fail."""
+
+        self.requests_mock.post(
+            "https://openbadgefactory.com/v1/client/oauth2/token",
+            json={
+                "access_token": "accesstoken123",
+            },
+            status=200,
+        )
+        obf = OBF(client_id="real_client", client_secret="super_duper")
+
+        badge = Badge(id="abcd1234", name="test", description="lorem ipsum", draft=True)
+        issue = BadgeIssue(
+            recipient=[
+                "foo@example.org",
+            ]
+        )
         with pytest.raises(
             BadgeProviderError,
             match="You cannot issue a badge with a draft status",
         ):
             obf.issue(badge, issue)
 
-        # Now the badge should be valid
-        badge.draft = False
+    def test_issue_success(self):
+        """Test the OBF issue method."""
+
+        self.requests_mock.post(
+            "https://openbadgefactory.com/v1/client/oauth2/token",
+            json={
+                "access_token": "accesstoken123",
+            },
+            status=200,
+        )
+        obf = OBF(client_id="real_client", client_secret="super_duper")
+
+        badge = Badge(
+            id="abcd1234", name="test", description="lorem ipsum", draft=False
+        )
+        issue = BadgeIssue(
+            recipient=[
+                "foo@example.org",
+            ]
+        )
 
         self.requests_mock.add(
             responses.POST,
