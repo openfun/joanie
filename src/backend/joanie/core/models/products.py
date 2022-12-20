@@ -40,7 +40,7 @@ adapter = requests.adapters.HTTPAdapter(
         total=4,
         backoff_factor=0.1,
         status_forcelist=[500],
-        method_whitelist=["POST"],
+        allowed_methods=["POST"],
     )
 )
 session = requests.Session()
@@ -650,6 +650,7 @@ class Enrollment(BaseModel):
         unique_together = ("course_run", "user")
         verbose_name = _("Enrollment")
         verbose_name_plural = _("Enrollments")
+        ordering = ["-created_on"]
 
     def __str__(self):
         active = _("active") if self.is_active else _("inactive")
