@@ -483,6 +483,56 @@ jobs:
             if [[ -n "$CIRCLE_TAG" ]]; then
               docker push fundocker/joanie:latest
             fi
+# ------- Dockerhub publication job for open pull requests -------
+  pull-request-hub:
+    docker:
+      - image: cimg/base:2022.05
+    working_directory: ~/joanie
+    steps:
+      # Checkout repository sources
+      - checkout:
+          path: ~/joanie
+      # Generate a version.json file describing app release
+      - <<: *generate-version-file
+      # Activate docker-in-docker
+      - setup_remote_docker:
+          version: 20.10.7
+      - run:
+          name: Build production image
+          command: docker build -t joanie:${CIRCLE_SHA1} --target production .
+      - run:
+          name: Check built images availability
+          command: docker images "joanie:${CIRCLE_SHA1}*"
+      # Login to DockerHub to Publish new images
+      #
+      # Nota bene: you'll need to define the following secrets environment vars
+      # in CircleCI interface:
+      #
+      #   - DOCKER_HUB_USER
+      #   - DOCKER_HUB_PASSWORD
+      - run:
+          name: Login to DockerHub
+          command: echo "$DOCKER_HUB_PASSWORD" | docker login -u "$DOCKER_HUB_USER" --password-stdin
+      # Tag docker images with the same pattern PR-{{PULL_REQUEST_NUMBER}}
+      - run:
+          name: Tag image
+          command: |
+            docker images fundocker/joanie
+            DOCKER_TAG=PR-${CIRCLE_PULL_REQUEST##*/}
+            echo "DOCKER_TAG: ${DOCKER_TAG} "
+            docker tag joanie:${CIRCLE_SHA1} fundocker/joanie:${DOCKER_TAG}
+            docker images "fundocker/joanie:${DOCKER_TAG}"
+      # Publish images to DockerHub
+      #
+      # Nota bene: logged user (see "Login to DockerHub" step) must have write
+      # permission for the project's repository; this also implies that the
+      # DockerHub repository already exists.
+      - run:
+          name: Publish image
+          command: |
+            DOCKER_TAG=PR-${CIRCLE_PULL_REQUEST##*/}
+            echo "DOCKER_TAG: ${DOCKER_TAG} "
+            docker push fundocker/joanie:${DOCKER_TAG}
 
 workflows:
   version: 2
@@ -596,3 +646,14 @@ workflows:
               only: main
             tags:
               only: /^v.*/
+      # DockerHub publication for open pull requests
+      #
+      # Publish docker images only if all build, lint and test jobs succeed
+      - pull-request-hub:
+          requires:
+            - build-docker
+            - test-back
+            - tray
+          filters:
+            branches:
+              ignore: main
