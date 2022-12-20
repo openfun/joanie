@@ -68,10 +68,17 @@ class CourseAdmin(DjangoObjectActions, TranslatableAdmin):
     actions = (ACTION_NAME_GENERATE_CERTIFICATES,)
     change_actions = (ACTION_NAME_GENERATE_CERTIFICATES,)
     change_form_template = "joanie/admin/translatable_change_form_with_actions.html"
-    list_display = ("code", "title", "organization", "state")
+    list_display = ("code", "title", "state")
     filter_horizontal = ("products",)
     fieldsets = (
-        (_("Main information"), {"fields": ("code", "title", "organization")}),
+        (_("Main information"), {"fields": ("code", "title")}),
+        (
+            _("Organizations"),
+            {
+                "description": _("Select organizations that author this course."),
+                "fields": ("organizations",),
+            },
+        ),
         (
             _("Related products"),
             {
@@ -166,14 +173,28 @@ class ProductAdmin(
 
     change_form_template = "joanie/admin/translatable_change_form_with_actions.html"
     list_display = ("title", "type", "price")
-    fields = (
-        "type",
-        "title",
-        "description",
-        "call_to_action",
-        "price",
-        "certificate_definition",
-        "related_courses",
+    fieldsets = (
+        (
+            _("Main information"),
+            {
+                "fields": (
+                    "type",
+                    "title",
+                    "description",
+                    "call_to_action",
+                    "price",
+                    "certificate_definition",
+                    "related_courses",
+                )
+            },
+        ),
+        (
+            _("Organizations"),
+            {
+                "description": _("Select organizations that promote this product."),
+                "fields": ("organizations",),
+            },
+        ),
     )
 
     inlines = (ProductTargetCourseRelationInline,)
@@ -293,7 +314,7 @@ class ProductAdmin(
 class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
     """Admin class for the Order model"""
 
-    list_display = ("id", "owner", "product", "state")
+    list_display = ("id", "organization", "owner", "product", "state")
     readonly_fields = ("state", "total", "proforma_invoice", "certificate")
     change_actions = (ACTION_NAME_GENERATE_CERTIFICATES,)
     actions = (ACTION_NAME_CANCEL, ACTION_NAME_GENERATE_CERTIFICATES)

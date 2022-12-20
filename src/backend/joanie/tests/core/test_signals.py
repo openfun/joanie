@@ -281,11 +281,10 @@ class SignalsTestCase(TestCase):
     @mock.patch.object(models.Product, "synchronize_products")
     def test_signals_on_change_product_course_relation_create(self, mock_sync):
         """Product synchronization should be triggered when a course is created for a product."""
-        organization = factories.OrganizationFactory()
         product = factories.ProductFactory()
         mock_sync.reset_mock()
 
-        product.courses.create(organization=organization, code="123")
+        product.courses.create(code="123")
 
         self.assertEqual(mock_sync.call_count, 1)
         self.assertEqual(mock_sync.call_args_list[0][1], {})

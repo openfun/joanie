@@ -54,7 +54,7 @@ class CourseViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
 
     lookup_field = "code"
     permission_classes = [permissions.AllowAny]
-    queryset = models.Course.objects.select_related("organization").all()
+    queryset = models.Course.objects.all()
     serializer_class = serializers.CourseSerializer
 
     def get_serializer_context(self):

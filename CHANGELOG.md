@@ -10,6 +10,8 @@ and this project adheres to
 
 ### Added
 
+- Allow linking organizations to a course (who created it?) to a product
+  (who is advertising it?) and to an order (who sold it?)
 - Bind full target_courses object into order serializer representation
 - Allow to filter order resource by product id, course code and state 
 - Add api versioning

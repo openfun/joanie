@@ -70,11 +70,11 @@ class ProductModelsTestCase(TestCase):
             "PgPAAEDAQAIicLsAAAAAElFTkSuQmCC"
         )
         self.assertEqual(
-            document_context["course"]["organization"]["logo"],
+            document_context["organization"]["logo"],
             blue_square_base64,
         )
         self.assertEqual(
-            document_context["course"]["organization"]["signature"],
+            document_context["organization"]["signature"],
             blue_square_base64,
         )
 

@@ -71,9 +71,7 @@ def generate_certificates_for_orders(orders):
             is_canceled=False,
             certificate__isnull=True,
             product__type__in=enums.PRODUCT_TYPE_CERTIFICATE_ALLOWED,
-        )
-        .select_related("course__organization")
-        .iterator()
+        ).iterator()
         if order.state == enums.ORDER_STATE_VALIDATED
     ]
 

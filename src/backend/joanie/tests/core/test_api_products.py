@@ -45,8 +45,9 @@ class ProductApiTest(BaseAPITestCase):
         Any users should be allowed to retrieve a product with minimal db access.
         """
         product = factories.ProductFactory(type=enums.PRODUCT_TYPE_CREDENTIAL)
+        organization = product.organizations.first()
 
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(3):
             response = self.client.get(f"/api/v1.0/products/{product.id}/")
 
         self.assertEqual(response.status_code, 200)
@@ -59,6 +60,13 @@ class ProductApiTest(BaseAPITestCase):
                     "name": product.certificate_definition.name,
                     "title": product.certificate_definition.title,
                 },
+                "organizations": [
+                    {
+                        "id": str(organization.id),
+                        "code": organization.code,
+                        "title": organization.title,
+                    }
+                ],
                 "id": str(product.id),
                 "price": float(product.price.amount),
                 "price_currency": str(product.price.currency),
@@ -127,7 +135,7 @@ class ProductApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, 200)
 
         # But cache should be language sensitive
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(6):
             response = self.client.get(
                 f"/api/v1.0/products/{product.id}/",
                 HTTP_ACCEPT_LANGUAGE="fr-fr",
@@ -147,7 +155,7 @@ class ProductApiTest(BaseAPITestCase):
 
         self.assertEqual(order.state, "pending")
 
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(4):
             response = self.client.get(
                 f"/api/v1.0/products/{product.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -171,7 +179,7 @@ class ProductApiTest(BaseAPITestCase):
 
         self.assertEqual(order.state, "validated")
 
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(4):
             response = self.client.get(
                 f"/api/v1.0/products/{product.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -195,7 +203,7 @@ class ProductApiTest(BaseAPITestCase):
 
         self.assertEqual(order.state, "canceled")
 
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(4):
             response = self.client.get(
                 f"/api/v1.0/products/{product.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -226,7 +234,7 @@ class ProductApiTest(BaseAPITestCase):
         # Link the course to the product
         product.courses.add(course2)
 
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(3):
             response = self.client.get(
                 f"/api/v1.0/products/{product.id}/?course={course2.code}"
             )
@@ -260,7 +268,7 @@ class ProductApiTest(BaseAPITestCase):
 
         # If user requests product without filters,
         # it should see all pending/validated related orders.
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(4):
             response = self.client.get(
                 f"/api/v1.0/products/{product.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",

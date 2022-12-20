@@ -18,16 +18,16 @@ class UtilsTestCase(TestCase):
 
     def test_utils_image_to_base64_file_closed(self):
         """Image to base64 from closed file."""
-        course = factories.CourseFactory()
-        logo = course.organization.logo
+        organization = factories.OrganizationFactory()
+        logo = organization.logo
 
         self.assertEqual(utils.image_to_base64(logo), BLUE_SQUARE_BASE64)
         self.assertEqual(logo.tell(), 0)
 
     def test_utils_image_to_base64_file_opened(self):
         """Image to base64 from opened file."""
-        course = factories.CourseFactory()
-        logo = course.organization.logo
+        organization = factories.OrganizationFactory()
+        logo = organization.logo
         with logo.open() as logo_file:
             logo_file.seek(3)
 
@@ -37,10 +37,10 @@ class UtilsTestCase(TestCase):
 
     def test_utils_image_to_base64_path(self):
         """Image to base64 from path."""
-        course = factories.CourseFactory()
+        organization = factories.OrganizationFactory()
 
         self.assertEqual(
-            utils.image_to_base64(course.organization.logo.path), BLUE_SQUARE_BASE64
+            utils.image_to_base64(organization.logo.path), BLUE_SQUARE_BASE64
         )
 
     def test_utils_image_to_base64_path_not_found(self):

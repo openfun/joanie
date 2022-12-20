@@ -54,7 +54,7 @@ class OrderApiTest(BaseAPITestCase):
         # The owner can see his/her order
         token = self.get_user_token(order.owner.username)
 
-        with self.assertNumQueries(12):
+        with self.assertNumQueries(13):
             response = self.client.get(
                 "/api/v1.0/orders/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -76,6 +76,7 @@ class OrderApiTest(BaseAPITestCase):
                         ),
                         "enrollments": [],
                         "id": str(order.id),
+                        "organization": str(order.organization.id),
                         "owner": order.owner.username,
                         "total": float(product.price.amount),
                         "total_currency": str(product.price.currency),
@@ -91,7 +92,7 @@ class OrderApiTest(BaseAPITestCase):
         # The owner of the other order can only see his/her order
         token = self.get_user_token(other_order.owner.username)
 
-        with self.assertNumQueries(12):
+        with self.assertNumQueries(13):
             response = self.client.get(
                 "/api/v1.0/orders/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -114,6 +115,7 @@ class OrderApiTest(BaseAPITestCase):
                         ),
                         "enrollments": [],
                         "main_proforma_invoice": None,
+                        "organization": str(other_order.organization.id),
                         "owner": other_order.owner.username,
                         "total": float(other_order.total.amount),
                         "total_currency": str(other_order.total.currency),
@@ -139,7 +141,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         # Retrieve user's order related to the product 1
-        with self.assertNumQueries(12):
+        with self.assertNumQueries(13):
             response = self.client.get(
                 f"/api/v1.0/orders/?product={product_1.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -162,6 +164,7 @@ class OrderApiTest(BaseAPITestCase):
                         ),
                         "enrollments": [],
                         "main_proforma_invoice": None,
+                        "organization": str(order.organization.id),
                         "owner": order.owner.username,
                         "total": float(order.total.amount),
                         "total_currency": str(order.total.currency),
@@ -206,7 +209,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         # Retrieve user's order related to the first course linked to the product 1
-        with self.assertNumQueries(13):
+        with self.assertNumQueries(14):
             response = self.client.get(
                 f"/api/v1.0/orders/?course={product_1.courses.first().code}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -229,6 +232,7 @@ class OrderApiTest(BaseAPITestCase):
                         ),
                         "enrollments": [],
                         "main_proforma_invoice": None,
+                        "organization": str(order.organization.id),
                         "owner": order.owner.username,
                         "total": float(order.total.amount),
                         "total_currency": str(order.total.currency),
@@ -254,7 +258,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         # Retrieve user's order related to the product 1
-        with self.assertNumQueries(12):
+        with self.assertNumQueries(13):
             response = self.client.get(
                 "/api/v1.0/orders/?state=pending", HTTP_AUTHORIZATION=f"Bearer {token}"
             )
@@ -276,6 +280,7 @@ class OrderApiTest(BaseAPITestCase):
                         ),
                         "enrollments": [],
                         "main_proforma_invoice": None,
+                        "organization": str(order.organization.id),
                         "owner": order.owner.username,
                         "total": float(order.total.amount),
                         "total_currency": str(order.total.currency),
@@ -301,7 +306,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         # Retrieve user's order related to the product 1
-        with self.assertNumQueries(11):
+        with self.assertNumQueries(12):
             response = self.client.get(
                 "/api/v1.0/orders/?state=canceled", HTTP_AUTHORIZATION=f"Bearer {token}"
             )
@@ -323,6 +328,7 @@ class OrderApiTest(BaseAPITestCase):
                         ),
                         "enrollments": [],
                         "main_proforma_invoice": None,
+                        "organization": str(order.organization.id),
                         "owner": order.owner.username,
                         "total": float(order.total.amount),
                         "total_currency": str(order.total.currency),
@@ -351,7 +357,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         # Retrieve user's order related to the product 1
-        with self.assertNumQueries(11):
+        with self.assertNumQueries(12):
             response = self.client.get(
                 "/api/v1.0/orders/?state=validated",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -374,6 +380,7 @@ class OrderApiTest(BaseAPITestCase):
                         ),
                         "enrollments": [],
                         "main_proforma_invoice": None,
+                        "organization": str(order.organization.id),
                         "owner": order.owner.username,
                         "total": float(order.total.amount),
                         "total_currency": str(order.total.currency),
@@ -433,7 +440,7 @@ class OrderApiTest(BaseAPITestCase):
         order = factories.OrderFactory(product=product, owner=owner)
         token = self.generate_token_from_user(owner)
 
-        with self.assertNumQueries(19):
+        with self.assertNumQueries(20):
             response = self.client.get(
                 f"/api/v1.0/orders/{order.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -449,6 +456,7 @@ class OrderApiTest(BaseAPITestCase):
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "state": order.state,
                 "main_proforma_invoice": None,
+                "organization": str(order.organization.id),
                 "owner": owner.username,
                 "total": float(product.price.amount),
                 "total_currency": str(product.price.currency),
@@ -457,10 +465,7 @@ class OrderApiTest(BaseAPITestCase):
                 "target_courses": [
                     {
                         "code": target_course.code,
-                        "organization": {
-                            "code": target_course.organization.code,
-                            "title": target_course.organization.title,
-                        },
+                        "organizations": [],
                         "course_runs": [
                             {
                                 "id": course_run.id,
@@ -545,6 +550,7 @@ class OrderApiTest(BaseAPITestCase):
         product = factories.ProductFactory(
             target_courses=target_courses, price=Money(0.00, "EUR")
         )
+        organization = product.organizations.first()
         course = product.courses.first()
         self.assertEqual(
             list(product.target_courses.order_by("product_relations")), target_courses
@@ -552,6 +558,7 @@ class OrderApiTest(BaseAPITestCase):
 
         data = {
             "course": course.code,
+            "organization": str(organization.id),
             "product": str(product.id),
         }
         token = self.get_user_token("panoramix")
@@ -584,6 +591,7 @@ class OrderApiTest(BaseAPITestCase):
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "state": "validated",
                 "main_proforma_invoice": None,
+                "organization": str(order.organization.id),
                 "owner": "panoramix",
                 "total": float(product.price.amount),
                 "total_currency": str(product.price.currency),
@@ -592,10 +600,7 @@ class OrderApiTest(BaseAPITestCase):
                 "target_courses": [
                     {
                         "code": target_course.code,
-                        "organization": {
-                            "code": target_course.organization.code,
-                            "title": target_course.organization.title,
-                        },
+                        "organizations": [],
                         "course_runs": [
                             {
                                 "id": course_run.id,
@@ -659,6 +664,7 @@ class OrderApiTest(BaseAPITestCase):
 
         data = {
             "course": course.code,
+            "organization": str(product.organizations.first().id),
             "product": str(product.id),
             "id": uuid.uuid4(),
             "amount": 0.00,
@@ -692,6 +698,7 @@ class OrderApiTest(BaseAPITestCase):
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "state": "validated",
                 "main_proforma_invoice": None,
+                "organization": str(order.organization.id),
                 "owner": "panoramix",
                 "total": float(product.price.amount),
                 "total_currency": str(product.price.currency),
@@ -700,10 +707,7 @@ class OrderApiTest(BaseAPITestCase):
                 "target_courses": [
                     {
                         "code": target_course.code,
-                        "organization": {
-                            "code": target_course.organization.code,
-                            "title": target_course.organization.title,
-                        },
+                        "organizations": [],
                         "course_runs": [
                             {
                                 "id": course_run.id,
@@ -753,13 +757,14 @@ class OrderApiTest(BaseAPITestCase):
 
     def test_api_order_create_authenticated_invalid_product(self):
         """The course and product passed in payload to create an order should match."""
+        organization = factories.OrganizationFactory(title="fun")
         product = factories.ProductFactory(
-            title="balançoire", price=Money("0.00", "EUR")
+            organizations=[organization], title="balançoire", price=Money("0.00", "EUR")
         )
         course = factories.CourseFactory(title="mathématiques")
-
         data = {
             "course": course.code,
+            "organization": str(organization.id),
             "product": str(product.id),
         }
         token = self.get_user_token("panoramix")
@@ -776,13 +781,73 @@ class OrderApiTest(BaseAPITestCase):
             response.json(),
             {
                 "__all__": [
-                    'The product "balançoire" is not linked to course "mathématiques".'
+                    'The course "mathématiques" and the organization "fun" '
+                    'should be linked to the product "balançoire".'
                 ]
             },
         )
 
+        # Linking the course to the product should solve the problem
+        course.products.add(product)
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertTrue(models.Order.objects.filter(course=course).exists())
+
+    def test_api_order_create_authenticated_invalid_organization(self):
+        """
+        The organization passed in payload to create an order should be one of the
+        product's organizations.
+        """
+        course = factories.CourseFactory(title="mathématiques")
+        organization = factories.OrganizationFactory(title="fun")
+        product = factories.ProductFactory(
+            courses=[course], title="balançoire", price=Money("0.00", "EUR")
+        )
+        data = {
+            "course": course.code,
+            "organization": str(organization.id),
+            "product": str(product.id),
+        }
+        token = self.get_user_token("panoramix")
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(models.Order.objects.exists())
+        self.assertEqual(
+            response.json(),
+            {
+                "__all__": [
+                    'The course "mathématiques" and the organization "fun" '
+                    'should be linked to the product "balançoire".'
+                ]
+            },
+        )
+
+        # Linking the organization to the product should solve the problem
+        product.organizations.add(organization)
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertTrue(models.Order.objects.filter(organization=organization).exists())
+
     def test_api_order_create_authenticated_missing_product_then_course(self):
-        """The payload must contain at least a product uid and a course code."""
+        """
+        The payload must contain at least a product uid, an organization uid and a course code.
+        """
         token = self.get_user_token("panoramix")
 
         response = self.client.post(
@@ -797,6 +862,7 @@ class OrderApiTest(BaseAPITestCase):
             response.json(),
             {
                 "course": ["This field is required."],
+                "organization": ["This field is required."],
                 "product": ["This field is required."],
             },
         )
@@ -814,7 +880,11 @@ class OrderApiTest(BaseAPITestCase):
         # User already owns an order for this product and course
         order = factories.OrderFactory(owner=user, course=course, product=product)
 
-        data = {"product": str(product.id), "course": course.code}
+        data = {
+            "product": str(product.id),
+            "course": course.code,
+            "organization": str(product.organizations.first().id),
+        }
 
         response = self.client.post(
             "/api/v1.0/orders/",
@@ -855,7 +925,11 @@ class OrderApiTest(BaseAPITestCase):
         course = factories.CourseFactory()
         product = factories.ProductFactory(target_courses=[course])
 
-        data = {"product": str(product.id), "course": course.code}
+        data = {
+            "product": str(product.id),
+            "course": course.code,
+            "organization": str(product.organizations.first().id),
+        }
 
         response = self.client.post(
             "/api/v1.0/orders/",
@@ -887,12 +961,13 @@ class OrderApiTest(BaseAPITestCase):
         billing_address = BillingAddressDictFactory()
 
         data = {
-            "product": str(product.id),
             "course": course.code,
+            "organization": str(product.organizations.first().id),
+            "product": str(product.id),
             "billing_address": billing_address,
         }
 
-        with self.assertNumQueries(22):
+        with self.assertNumQueries(24):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -914,6 +989,7 @@ class OrderApiTest(BaseAPITestCase):
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "state": "pending",
                 "main_proforma_invoice": None,
+                "organization": str(order.organization.id),
                 "owner": user.username,
                 "total": float(product.price.amount),
                 "total_currency": str(product.price.currency),
@@ -999,8 +1075,9 @@ class OrderApiTest(BaseAPITestCase):
         billing_address = BillingAddressDictFactory()
 
         data = {
-            "product": str(product.id),
             "course": course.code,
+            "organization": str(product.organizations.first().id),
+            "product": str(product.id),
             "billing_address": billing_address,
             "credit_card_id": str(credit_card.id),
         }
@@ -1011,10 +1088,10 @@ class OrderApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
+        self.assertEqual(response.status_code, 201)
 
         self.assertEqual(models.Order.objects.count(), 1)
         order = models.Order.objects.get(product=product, course=course, owner=user)
-        self.assertEqual(response.status_code, 201)
 
         mock_create_one_click_payment.assert_called_once()
 
@@ -1027,6 +1104,7 @@ class OrderApiTest(BaseAPITestCase):
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "state": "validated",
                 "main_proforma_invoice": order.main_proforma_invoice.reference,
+                "organization": str(order.organization.id),
                 "owner": user.username,
                 "total": float(product.price.amount),
                 "total_currency": str(product.price.currency),
@@ -1055,8 +1133,9 @@ class OrderApiTest(BaseAPITestCase):
         billing_address = BillingAddressDictFactory()
 
         data = {
-            "product": str(product.id),
             "course": course.code,
+            "organization": str(product.organizations.first().id),
+            "product": str(product.id),
             "billing_address": billing_address,
         }
 
@@ -1161,6 +1240,7 @@ class OrderApiTest(BaseAPITestCase):
                 "enrollments",
                 "id",
                 "main_proforma_invoice",
+                "organization",
                 "owner",
                 "total",
                 "total_currency",
@@ -1408,11 +1488,13 @@ class OrderApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         course = factories.CourseFactory()
         product = factories.ProductFactory(courses=[course])
+        organization = product.organizations.all()[0]
         billing_address = BillingAddressDictFactory()
 
         # - Create an order and its related payment
         token = self.generate_token_from_user(user)
         data = {
+            "organization": str(organization.id),
             "product": str(product.id),
             "course": course.code,
             "billing_address": billing_address,

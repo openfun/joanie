@@ -10,6 +10,8 @@ from joanie.core import enums, factories, models
 from joanie.payment.factories import ProformaInvoiceFactory
 from joanie.tests.base import BaseAPITestCase
 
+# pylint: disable=too-many-locals
+
 
 class CourseApiTest(BaseAPITestCase):
     """Test the API of the Course object."""
@@ -59,16 +61,23 @@ class CourseApiTest(BaseAPITestCase):
         Anonymous users should be allowed to retrieve a course
         with a minimal db access
         """
+        target_course_organizations = factories.OrganizationFactory.create_batch(2)
         target_course_runs = factories.CourseRunFactory.create_batch(
             2,
             start=timezone.now() - timedelta(hours=1),
             end=timezone.now() + timedelta(hours=2),
             enrollment_end=timezone.now() + timedelta(hours=1),
+            course__organizations=target_course_organizations,
         )
+        product_organizations = factories.OrganizationFactory.create_batch(2)
         product = factories.ProductFactory.create(
+            organizations=product_organizations,
             target_courses=[course_run.course for course_run in target_course_runs],
         )
-        course = factories.CourseFactory(products=[product])
+        course_organizations = factories.OrganizationFactory.create_batch(2)
+        course = factories.CourseFactory(
+            organizations=course_organizations, products=[product]
+        )
 
         # - Create a set of random users which possibly purchase the product
         # then enroll to one of its course run.
@@ -94,32 +103,60 @@ class CourseApiTest(BaseAPITestCase):
                         user=user, course_run=course_run, is_active=True
                     )
 
-        with self.assertNumQueries(11):
+        with self.assertNumQueries(13):
             response = self.client.get(f"/api/v1.0/courses/{course.code}/")
 
         content = json.loads(response.content)
         expected = {
             "code": course.code,
-            "organization": {
-                "code": course.organization.code,
-                "title": course.organization.title,
-            },
-            "title": course.title,
             "orders": None,
+            "organizations": [
+                {
+                    "id": str(course_organizations[0].id),
+                    "code": course_organizations[0].code,
+                    "title": course_organizations[0].title,
+                },
+                {
+                    "id": str(course_organizations[1].id),
+                    "code": course_organizations[1].code,
+                    "title": course_organizations[1].title,
+                },
+            ],
             "products": [
                 {
+                    "id": str(product.id),
                     "call_to_action": product.call_to_action,
                     "certificate": None,
-                    "id": str(product.id),
+                    "organizations": [
+                        {
+                            "id": str(product_organizations[0].id),
+                            "code": product_organizations[0].code,
+                            "title": product_organizations[0].title,
+                        },
+                        {
+                            "id": str(product_organizations[1].id),
+                            "code": product_organizations[1].code,
+                            "title": product_organizations[1].title,
+                        },
+                    ],
+                    "orders": None,
                     "price": float(product.price.amount),
                     "price_currency": str(product.price.currency),
                     "target_courses": [
                         {
                             "code": target_course.code,
-                            "organization": {
-                                "code": target_course.organization.code,
-                                "title": target_course.organization.title,
-                            },
+                            "organizations": [
+                                {
+                                    "id": str(target_course_organizations[0].id),
+                                    "code": target_course_organizations[0].code,
+                                    "title": target_course_organizations[0].title,
+                                },
+                                {
+                                    "id": str(target_course_organizations[1].id),
+                                    "code": target_course_organizations[1].code,
+                                    "title": target_course_organizations[1].title,
+                                },
+                            ],
                             "course_runs": [
                                 {
                                     "id": str(course_run.id),
@@ -166,10 +203,9 @@ class CourseApiTest(BaseAPITestCase):
                     ],
                     "title": product.title,
                     "type": product.type,
-                    "orders": None,
                 }
-                for product in course.products.all().order_by("-created_on")
             ],
+            "title": course.title,
         }
 
         self.assertEqual(response.status_code, 200)
@@ -187,7 +223,7 @@ class CourseApiTest(BaseAPITestCase):
         # queries expected according to a pro forma invoice has been created or not.
         # Because if a pro forma invoice has been created, product translation has been
         # cached.
-        expected_num_queries = 19 if product_purchased else 20
+        expected_num_queries = 24 if product_purchased else 25
         with self.assertNumQueries(expected_num_queries):
             self.client.get(
                 f"/api/v1.0/courses/{course.code}/",
@@ -313,21 +349,99 @@ class CourseApiTest(BaseAPITestCase):
                         user=user, course_run=course_run, is_active=True
                     )
 
-        with self.assertNumQueries(38):
+        with self.assertNumQueries(43):
             response = self.client.get(
                 f"/api/v1.0/courses/{course.code}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
+        self.assertEqual(response.status_code, 200)
 
         content = response.json()
-        expected = {
-            "code": course.code,
-            "organization": {
-                "code": course.organization.code,
-                "title": course.organization.title,
-            },
-            "title": course.title,
-            "orders": [
+        expected_products = [
+            {
+                "id": str(product.id),
+                "call_to_action": product.call_to_action,
+                "organizations": [
+                    {
+                        "id": str(product.organizations.all()[0].id),
+                        "code": product.organizations.all()[0].code,
+                        "title": product.organizations.all()[0].title,
+                    }
+                ],
+                "certificate": {
+                    "description": product.certificate_definition.description,
+                    "name": product.certificate_definition.name,
+                    "title": product.certificate_definition.title,
+                }
+                if product.certificate_definition
+                else None,
+                "price": float(product.price.amount),
+                "price_currency": str(product.price.currency),
+                "target_courses": [
+                    {
+                        "code": target_course.code,
+                        "organizations": [],
+                        "course_runs": [
+                            {
+                                "id": str(course_run.id),
+                                "title": course_run.title,
+                                "resource_link": course_run.resource_link,
+                                "state": {
+                                    "priority": course_run.state["priority"],
+                                    "datetime": course_run.state["datetime"]
+                                    .isoformat()
+                                    .replace("+00:00", "Z"),
+                                    "call_to_action": course_run.state[
+                                        "call_to_action"
+                                    ],
+                                    "text": course_run.state["text"],
+                                },
+                                "start": course_run.start.isoformat().replace(
+                                    "+00:00", "Z"
+                                ),
+                                "end": course_run.end.isoformat().replace(
+                                    "+00:00", "Z"
+                                ),
+                                "enrollment_start": course_run.enrollment_start.isoformat().replace(  # noqa pylint: disable=line-too-long
+                                    "+00:00", "Z"
+                                ),
+                                "enrollment_end": course_run.enrollment_end.isoformat().replace(  # noqa pylint: disable=line-too-long
+                                    "+00:00", "Z"
+                                ),
+                            }
+                            for course_run in target_course.course_runs.all().order_by(
+                                "start"
+                            )
+                        ],
+                        "position": target_course.product_relations.get(
+                            product=product
+                        ).position,
+                        "is_graded": target_course.product_relations.get(
+                            product=product
+                        ).is_graded,
+                        "title": target_course.title,
+                    }
+                    for target_course in product.target_courses.all().order_by(
+                        "product_relations__position"
+                    )
+                ],
+                "title": product.title,
+                "type": product.type,
+                "orders": [
+                    str(order.id)
+                    for order in [order1, order2]
+                    if order.product.id == product.id
+                ],
+            }
+            for product in course.products.all().order_by("created_on")
+        ]
+        self.assertCountEqual(
+            content.pop("products"),
+            expected_products,
+        )
+        self.assertCountEqual(
+            content.pop("orders"),
+            [
                 {
                     "id": str(order.id),
                     "certificate": str(certificate.id)
@@ -338,6 +452,7 @@ class CourseApiTest(BaseAPITestCase):
                     "total_currency": str(order.total.currency),
                     "state": order.state,
                     "main_proforma_invoice": order.main_proforma_invoice.reference,
+                    "organization": str(order.organization.id),
                     "product": str(order.product.id),
                     "enrollments": [
                         {
@@ -377,91 +492,20 @@ class CourseApiTest(BaseAPITestCase):
                 }
                 for order in [order1, order2]
             ],
-            "products": [
-                {
-                    "call_to_action": product.call_to_action,
-                    "certificate": {
-                        "description": product.certificate_definition.description,
-                        "name": product.certificate_definition.name,
-                        "title": product.certificate_definition.title,
-                    }
-                    if product.certificate_definition
-                    else None,
-                    "id": str(product.id),
-                    "price": float(product.price.amount),
-                    "price_currency": str(product.price.currency),
-                    "target_courses": [
-                        {
-                            "code": target_course.code,
-                            "organization": {
-                                "code": target_course.organization.code,
-                                "title": target_course.organization.title,
-                            },
-                            "course_runs": [
-                                {
-                                    "id": str(course_run.id),
-                                    "title": course_run.title,
-                                    "resource_link": course_run.resource_link,
-                                    "state": {
-                                        "priority": course_run.state["priority"],
-                                        "datetime": course_run.state["datetime"]
-                                        .isoformat()
-                                        .replace("+00:00", "Z"),
-                                        "call_to_action": course_run.state[
-                                            "call_to_action"
-                                        ],
-                                        "text": course_run.state["text"],
-                                    },
-                                    "start": course_run.start.isoformat().replace(
-                                        "+00:00", "Z"
-                                    ),
-                                    "end": course_run.end.isoformat().replace(
-                                        "+00:00", "Z"
-                                    ),
-                                    "enrollment_start": course_run.enrollment_start.isoformat().replace(  # noqa pylint: disable=line-too-long
-                                        "+00:00", "Z"
-                                    ),
-                                    "enrollment_end": course_run.enrollment_end.isoformat().replace(  # noqa pylint: disable=line-too-long
-                                        "+00:00", "Z"
-                                    ),
-                                }
-                                for course_run in target_course.course_runs.all().order_by(
-                                    "start"
-                                )
-                            ],
-                            "position": target_course.product_relations.get(
-                                product=product
-                            ).position,
-                            "is_graded": target_course.product_relations.get(
-                                product=product
-                            ).is_graded,
-                            "title": target_course.title,
-                        }
-                        for target_course in product.target_courses.all().order_by(
-                            "product_relations__position"
-                        )
-                    ],
-                    "title": product.title,
-                    "type": product.type,
-                    "orders": [
-                        str(order.id)
-                        for order in [order1, order2]
-                        if order.product.id == product.id
-                    ],
-                }
-                for product in course.products.all().order_by("created_on")
-            ],
-        }
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(content["code"], expected["code"])
-        self.assertEqual(content["title"], expected["title"])
-        self.assertEqual(content["organization"], expected["organization"])
-        self.assertCountEqual(content["products"], expected["products"])
-        self.assertCountEqual(content["orders"], expected["orders"])
+        )
+
+        self.assertEqual(
+            content,
+            {
+                "code": course.code,
+                "organizations": [],
+                "title": course.title,
+            },
+        )
 
         # - When user is authenticated, response should be partially cached.
         # Course information should have been cached, but orders not.
-        with self.assertNumQueries(16):
+        with self.assertNumQueries(18):
             self.client.get(
                 f"/api/v1.0/courses/{course.code}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -507,7 +551,7 @@ class CourseApiTest(BaseAPITestCase):
         self.assertEqual(order_canceled.state, enums.ORDER_STATE_CANCELED)
 
         # - Retrieve course information
-        with self.assertNumQueries(20):
+        with self.assertNumQueries(27):
             response = self.client.get(
                 f"/api/v1.0/courses/{course.code}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",

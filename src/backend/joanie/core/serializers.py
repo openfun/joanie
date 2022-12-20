@@ -30,8 +30,8 @@ class OrganizationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Organization
-        fields = ["code", "title"]
-        read_only_fields = ["code", "title"]
+        fields = ["id", "code", "title"]
+        read_only_fields = ["id", "code", "title"]
 
 
 class TargetCourseSerializer(serializers.ModelSerializer):
@@ -40,7 +40,7 @@ class TargetCourseSerializer(serializers.ModelSerializer):
     """
 
     course_runs = serializers.SerializerMethodField(read_only=True)
-    organization = OrganizationSerializer(read_only=True)
+    organizations = OrganizationSerializer(many=True, read_only=True)
     position = serializers.SerializerMethodField(read_only=True)
     is_graded = serializers.SerializerMethodField(read_only=True)
 
@@ -50,7 +50,7 @@ class TargetCourseSerializer(serializers.ModelSerializer):
             "code",
             "course_runs",
             "is_graded",
-            "organization",
+            "organizations",
             "position",
             "title",
         ]
@@ -58,7 +58,7 @@ class TargetCourseSerializer(serializers.ModelSerializer):
             "code",
             "course_runs",
             "is_graded",
-            "organization",
+            "organizations",
             "position",
             "title",
         ]
@@ -138,6 +138,7 @@ class ProductSerializer(serializers.ModelSerializer):
     certificate = CertificationDefinitionSerializer(
         read_only=True, source="certificate_definition"
     )
+    organizations = OrganizationSerializer(many=True, read_only=True)
     price = MoneyField(
         coerce_to_string=False,
         decimal_places=2,
@@ -153,6 +154,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "call_to_action",
             "certificate",
             "id",
+            "organizations",
             "price",
             "price_currency",
             "target_courses",
@@ -163,6 +165,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "call_to_action",
             "certificate",
             "id",
+            "organizations",
             "price",
             "price_currency",
             "target_courses",
@@ -248,6 +251,7 @@ class OrderLiteSerializer(serializers.ModelSerializer):
         read_only=True,
     )
     enrollments = serializers.SerializerMethodField(read_only=True)
+    organization = serializers.SlugRelatedField(read_only=True, slug_field="id")
     product = serializers.SlugRelatedField(read_only=True, slug_field="id")
     main_proforma_invoice = serializers.SlugRelatedField(
         read_only=True, slug_field="reference"
@@ -261,6 +265,7 @@ class OrderLiteSerializer(serializers.ModelSerializer):
             "certificate",
             "created_on",
             "main_proforma_invoice",
+            "organization",
             "total",
             "total_currency",
             "enrollments",
@@ -272,6 +277,7 @@ class OrderLiteSerializer(serializers.ModelSerializer):
             "certificate",
             "created_on",
             "main_proforma_invoice",
+            "organization",
             "total",
             "total_currency",
             "enrollments",
@@ -295,20 +301,20 @@ class CourseSerializer(serializers.ModelSerializer):
     Serialize all information about a course.
     """
 
-    organization = OrganizationSerializer(read_only=True)
+    organizations = OrganizationSerializer(many=True, read_only=True)
     products = ProductSerializer(many=True, read_only=True)
 
     class Meta:
         model = models.Course
         fields = [
             "code",
-            "organization",
+            "organizations",
             "title",
             "products",
         ]
         read_only_fields = [
             "code",
-            "organization",
+            "organizations",
             "title",
             "products",
         ]
@@ -443,6 +449,9 @@ class OrderSerializer(serializers.ModelSerializer):
         read_only=True,
         required=False,
     )
+    organization = serializers.SlugRelatedField(
+        queryset=models.Organization.objects.all(), slug_field="id"
+    )
     product = serializers.SlugRelatedField(
         queryset=models.Product.objects.all(), slug_field="id"
     )
@@ -462,6 +471,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "enrollments",
             "id",
             "main_proforma_invoice",
+            "organization",
             "owner",
             "total",
             "total_currency",
@@ -506,6 +516,7 @@ class OrderSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         """Make the "course" and "product" fields read_only only on update."""
         validated_data.pop("course", None)
+        validated_data.pop("organization", None)
         validated_data.pop("product", None)
         return super().update(instance, validated_data)
 

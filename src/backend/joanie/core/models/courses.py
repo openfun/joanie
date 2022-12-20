@@ -167,10 +167,10 @@ class Course(parler_models.TranslatableModel, BaseModel):
     translations = parler_models.TranslatedFields(
         title=models.CharField(_("title"), max_length=255)
     )
-    organization = models.ForeignKey(
+    organizations = models.ManyToManyField(
         to=Organization,
-        verbose_name=_("organization"),
-        on_delete=models.PROTECT,
+        related_name="courses",
+        verbose_name=_("organizations"),
     )
     products = models.ManyToManyField(
         "Product",

@@ -532,15 +532,6 @@ class Migration(migrations.Migration):
                         verbose_name="course",
                     ),
                 ),
-                (
-                    "owner",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.RESTRICT,
-                        related_name="orders",
-                        to=settings.AUTH_USER_MODEL,
-                        verbose_name="owner",
-                    ),
-                ),
             ],
             options={
                 "verbose_name": "Order",
@@ -683,6 +674,14 @@ class Migration(migrations.Migration):
                         on_delete=django.db.models.deletion.PROTECT,
                         to="core.certificatedefinition",
                         verbose_name="certificate definition",
+                    ),
+                ),
+                (
+                    "organizations",
+                    models.ManyToManyField(
+                        related_name="products",
+                        to="core.organization",
+                        verbose_name="organizations",
                     ),
                 ),
             ],
@@ -864,6 +863,25 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name="order",
+            name="organization",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT,
+                to="core.organization",
+                verbose_name="organization",
+            ),
+        ),
+        migrations.AddField(
+            model_name="order",
+            name="owner",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.RESTRICT,
+                related_name="orders",
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="owner",
+            ),
+        ),
+        migrations.AddField(
+            model_name="order",
             name="product",
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.RESTRICT,
@@ -1035,11 +1053,11 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name="course",
-            name="organization",
-            field=models.ForeignKey(
-                on_delete=django.db.models.deletion.PROTECT,
+            name="organizations",
+            field=models.ManyToManyField(
+                related_name="courses",
                 to="core.organization",
-                verbose_name="organization",
+                verbose_name="organizations",
             ),
         ),
         migrations.AddField(

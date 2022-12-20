@@ -38,31 +38,34 @@ class CertificateModelTestCase(TestCase):
         through parler settings ("en-us" in our case).
         """
         organization = OrganizationFactory(title="Organization 1")
-        course = CourseFactory(organization=organization)
+        course = CourseFactory()
         product = ProductFactory(
-            title="Graded product", courses=[course], type=PRODUCT_TYPE_CERTIFICATE
+            title="Graded product",
+            courses=[course],
+            organizations=[organization],
+            type=PRODUCT_TYPE_CERTIFICATE,
         )
 
         # - Add French translations
         organization.translations.create(language_code="fr-fr", title="Établissement 1")
         product.translations.create(language_code="fr-fr", title="Produit certifiant")
 
-        order = OrderFactory(product=product)
+        order = OrderFactory(product=product, organization=organization)
         certificate = CertificateFactory(order=order)
 
         context = certificate.get_document_context("en-us")
         self.assertEqual(context["course"]["name"], "Graded product")
-        self.assertEqual(context["course"]["organization"]["name"], "Organization 1")
+        self.assertEqual(context["organization"]["name"], "Organization 1")
 
         context = certificate.get_document_context("fr-fr")
         self.assertEqual(context["course"]["name"], "Produit certifiant")
-        self.assertEqual(context["course"]["organization"]["name"], "Établissement 1")
+        self.assertEqual(context["organization"]["name"], "Établissement 1")
 
         # When translation for the given language does not exist,
         # we should get the fallback language translation.
         context = certificate.get_document_context("de-de")
         self.assertEqual(context["course"]["name"], "Graded product")
-        self.assertEqual(context["course"]["organization"]["name"], "Organization 1")
+        self.assertEqual(context["organization"]["name"], "Organization 1")
 
     def test_models_certificate_document(self):
         """
@@ -72,11 +75,12 @@ class CertificateModelTestCase(TestCase):
         organization = OrganizationFactory(
             title="University X", representative="Joanie Cunningham"
         )
-        course = CourseFactory(organization=organization)
+        course = CourseFactory()
         certificate_definition = CertificateDefinitionFactory()
         product = ProductFactory(
             title="Graded product",
             courses=[course],
+            organizations=[organization],
             type=PRODUCT_TYPE_CERTIFICATE,
             certificate_definition=certificate_definition,
         )

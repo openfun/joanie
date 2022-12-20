@@ -31,7 +31,7 @@ class DummyLMSBackend(BaseLMSBackend):
         Get fake enrollment from cache for a user on a course run given its resource_link.
         """
         course_id = self.extract_course_id(resource_link)
-        course_run = CourseRunFactory.build()
+        course_run = CourseRunFactory.build(course=None)
         cache_key = self.get_cache_key(username, course_id)
 
         return {
