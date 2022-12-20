@@ -2,7 +2,7 @@
 Test suite for products models
 """
 import random
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal as D
 
 from django.core.exceptions import ValidationError
@@ -180,7 +180,7 @@ class ProductModelsTestCase(TestCase):
         course_runs_dates = {
             "start": random.sample(
                 [
-                    datetime(2022, 12, 1, 9, 0)
+                    datetime(2022, 12, 1, 9, 0, tzinfo=timezone.utc)
                     + timedelta(seconds=i * random.randint(0, 10**6))
                     for i in range(sample_size)
                 ],
@@ -188,7 +188,7 @@ class ProductModelsTestCase(TestCase):
             ),
             "end": random.sample(
                 [
-                    datetime(2022, 12, 15, 19, 0)
+                    datetime(2022, 12, 15, 19, 0, tzinfo=timezone.utc)
                     - timedelta(seconds=i * random.randint(0, 10**6))
                     for i in range(sample_size)
                 ],
@@ -196,7 +196,7 @@ class ProductModelsTestCase(TestCase):
             ),
             "enrollment_start": random.sample(
                 [
-                    datetime(2022, 11, 20, 9, 0)
+                    datetime(2022, 11, 20, 9, 0, tzinfo=timezone.utc)
                     - timedelta(seconds=i * random.randint(0, 10**6))
                     for i in range(sample_size)
                 ],
@@ -204,7 +204,7 @@ class ProductModelsTestCase(TestCase):
             ),
             "enrollment_end": random.sample(
                 [
-                    datetime(2022, 12, 5, 19, 0)
+                    datetime(2022, 12, 5, 19, 0, tzinfo=timezone.utc)
                     + timedelta(seconds=i * random.randint(0, 10**6))
                     for i in range(sample_size)
                 ],
