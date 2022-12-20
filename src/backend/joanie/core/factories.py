@@ -67,7 +67,18 @@ class CourseFactory(factory.django.DjangoModelFactory):
 
     code = factory.Faker("ean", length=8)
     title = factory.Sequence(lambda n: f"Course {n}")
-    organization = factory.SubFactory(OrganizationFactory)
+
+    @factory.post_generation
+    # pylint: disable=unused-argument,no-member
+    def organizations(self, create, extracted, **kwargs):
+        """
+        Link organizations to the course after its creation:
+        - link the list of organizations passed in "extracted" if any
+        """
+        if not extracted:
+            return
+
+        self.organizations.set(extracted)
 
     @factory.post_generation
     # pylint: disable=unused-argument,no-member
@@ -235,6 +246,16 @@ class ProductFactory(factory.django.DjangoModelFactory):
 
     @factory.post_generation
     # pylint: disable=unused-argument,no-member
+    def organizations(self, create, extracted, **kwargs):
+        """
+        Link organizations to the product after its creation:
+        - link the list of organizations passed in "extracted" if any
+        """
+        organizations = extracted if extracted is not None else [OrganizationFactory()]
+        self.organizations.set(organizations)
+
+    @factory.post_generation
+    # pylint: disable=unused-argument,no-member
     def target_courses(self, create, extracted, **kwargs):
         """
         Link target courses to the product after its creation:
@@ -290,6 +311,9 @@ class OrderFactory(factory.django.DjangoModelFactory):
 
     product = factory.SubFactory(ProductFactory)
     course = factory.LazyAttribute(lambda o: o.product.courses.order_by("?").first())
+    organization = factory.LazyAttribute(
+        lambda o: o.product.organizations.order_by("?").first()
+    )
     owner = factory.SubFactory(UserFactory)
 
 

@@ -99,7 +99,7 @@ class Certificate(BaseModel):
         """
         context = {}
         related_product = self.order.product
-        organization = self.order.course.organization
+        organization = self.order.organization
 
         for language, __ in settings.LANGUAGES:
             context[language] = {
@@ -107,12 +107,12 @@ class Certificate(BaseModel):
                     "name": related_product.safe_translation_getter(
                         "title", language_code=language
                     ),
-                    "organization": {
-                        "name": organization.safe_translation_getter(
-                            "title", language_code=language
-                        ),
-                    },
-                }
+                },
+                "organization": {
+                    "name": organization.safe_translation_getter(
+                        "title", language_code=language
+                    ),
+                },
             }
         self.localized_context = context
 
@@ -123,7 +123,7 @@ class Certificate(BaseModel):
         """
 
         language_settings = get_language_settings(language_code or get_language())
-        organization = self.order.course.organization
+        organization = self.order.organization
         owner = self.order.owner
 
         base_context = {
@@ -131,12 +131,10 @@ class Certificate(BaseModel):
             "student": {
                 "name": owner.get_full_name() or owner.username,
             },
-            "course": {
-                "organization": {
-                    "representative": organization.representative,
-                    "signature": image_to_base64(organization.signature),
-                    "logo": image_to_base64(organization.logo),
-                },
+            "organization": {
+                "representative": organization.representative,
+                "signature": image_to_base64(organization.signature),
+                "logo": image_to_base64(organization.logo),
             },
         }
 

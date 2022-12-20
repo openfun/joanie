@@ -52,7 +52,10 @@ class OrderModelsTestCase(TestCase):
         the moment the order is created.
         """
         course = factories.CourseFactory()
-        product = factories.ProductFactory(title="Traçabilité", courses=[course])
+        organization = factories.OrganizationFactory(title="fun")
+        product = factories.ProductFactory(
+            title="Traçabilité", courses=[course], organizations=[organization]
+        )
         self.assertTrue(product.courses.filter(id=course.id).exists())
 
         other_course = factories.CourseFactory(title="Mathématiques")
@@ -62,7 +65,10 @@ class OrderModelsTestCase(TestCase):
 
         self.assertEqual(
             context.exception.messages,
-            ['The product "Traçabilité" is not linked to course "Mathématiques".'],
+            [
+                'The course "Mathématiques" and the organization "fun" should be '
+                'linked to the product "Traçabilité".'
+            ],
         )
 
     @staticmethod
@@ -220,7 +226,7 @@ class OrderModelsTestCase(TestCase):
         self.assertEqual(Enrollment.objects.filter(is_active=True).count(), 1)
 
         # - When order is canceled, user should not be unenrolled to related enrollments
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(8):
             order.cancel()
         self.assertEqual(order.is_canceled, True)
         self.assertEqual(Enrollment.objects.count(), 1)
@@ -258,7 +264,7 @@ class OrderModelsTestCase(TestCase):
         self.assertEqual(Enrollment.objects.filter(is_active=True).count(), 1)
 
         # - When order is canceled, user should not be unenrolled to related enrollments
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
             order.cancel()
         self.assertEqual(order.is_canceled, True)
         self.assertEqual(Enrollment.objects.count(), 1)

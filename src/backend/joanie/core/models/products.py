@@ -62,8 +62,13 @@ class Product(parler_models.TranslatableModel, BaseModel):
         description=models.CharField(_("description"), max_length=500, blank=True),
         call_to_action=models.CharField(_("call to action"), max_length=255),
     )
+    organizations = models.ManyToManyField(
+        to=courses_models.Organization,
+        related_name="products",
+        verbose_name=_("organizations"),
+    )
     target_courses = models.ManyToManyField(
-        courses_models.Course,
+        to=courses_models.Course,
         related_name="targeted_by_products",
         through="ProductTargetCourseRelation",
         verbose_name=_("target courses"),
@@ -313,6 +318,11 @@ class Order(BaseModel):
     All course runs to enroll selected are defined here.
     """
 
+    organization = models.ForeignKey(
+        to=courses_models.Organization,
+        verbose_name=_("organization"),
+        on_delete=models.PROTECT,
+    )
     course = models.ForeignKey(
         to=courses_models.Course,
         verbose_name=_("course"),
@@ -432,12 +442,16 @@ class Order(BaseModel):
             not self.created_on
             and self.course_id
             and self.product_id
-            and not self.product.courses.filter(id=self.course_id).exists()
+            and self.organization_id
+            and not Product.objects.filter(
+                courses=self.course_id, organizations=self.organization_id
+            ).exists()
         ):
             # pylint: disable=no-member
             message = _(
-                f'The product "{self.product.title}" is not linked to '
-                f'course "{self.course.title}".'
+                f'The course "{self.course.title}" and the organization '
+                f'"{self.organization.title}" should be linked to the product '
+                f'"{self.product.title}".'
             )
             raise ValidationError({"__all__": [message]})
 

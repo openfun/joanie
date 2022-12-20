@@ -4,7 +4,7 @@ Here are described some important relations between our models.
 You can also take a look at [core models](https://github.com/openfun/joanie/tree/main/src/backend/joanie/core/models)
 and [payment models](https://github.com/openfun/joanie/tree/main/src/backend/joanie/payment/models.py).
 
-## Relations between `Order` / `Product` / `Course` / `Course Run` and `Enrollment` models
+## Relations between `User` / `Organization` / `Order` / `Product` / `Course` / `Course Run` and `Enrollment` models
 
 ```mermaid
 erDiagram
@@ -12,7 +12,10 @@ erDiagram
     %% Models
         User {
             Integer id PK
-        }        
+        }
+        Organization {
+            Integer id PK
+        }
         Enrollment {
             User user_id FK
             CourseRun course_run_id FK
@@ -59,6 +62,7 @@ erDiagram
         Enrollment }o--|| CourseRun : "is"
         
         Order }o--|| Course : ""
+        Order }o--|| Organization : "sells"
         Order }o--|| Product : ""
         Order ||--o{ OrderTargetCourseRelation : ""
         
@@ -67,10 +71,12 @@ erDiagram
         CourseRun }o--|| on_add_course_runs_to_product_course_relation : ""
         on_add_course_runs_to_product_course_relation || -- o{ ProductTargetCourseRelation : ""
         
+        Course }o--o{ Organization : "authors"
         Course }o--o{ Product : "displays"
         Course ||--o{ OrderTargetCourseRelation : "is included in"
         Course ||--o{ ProductTargetCourseRelation : "is included in"
-        
+
+        Product }o--o{ Organization : "promotes"
         Product ||--o{ ProductTargetCourseRelation : ""
         
         ProductTargetCourseRelation ||..|| OrderTargetCourseRelation : "copied at order creation"

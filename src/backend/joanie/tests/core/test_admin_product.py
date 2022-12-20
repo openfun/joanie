@@ -38,6 +38,7 @@ class ProductAdminTestCase(BaseAPITestCase):
 
     def test_admin_product_create_success_enrollment(self):
         """A user with permissions should be able to create a product of type enrollment."""
+        organization = factories.OrganizationFactory()
         # Login a user with all permission to manage products in django admin
         user = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=user.username, password="password")
@@ -47,6 +48,7 @@ class ProductAdminTestCase(BaseAPITestCase):
             "type": "enrollment",
             "title": "My product",
             "call_to_action": "Let's go",
+            "organizations": str(organization.id),
             "course_relations-TOTAL_FORMS": 0,
             "course_relations-INITIAL_FORMS": 0,
         }
@@ -95,6 +97,7 @@ class ProductAdminTestCase(BaseAPITestCase):
         It should be allowed to specify a certificate definition for products of
         type "certificate" or "credential".
         """
+        organization = factories.OrganizationFactory()
         certificate_definition = factories.CertificateDefinitionFactory()
 
         # Login a user with all permission to manage products in django admin
@@ -108,6 +111,7 @@ class ProductAdminTestCase(BaseAPITestCase):
             "title": "Product for course",
             "call_to_action": "Let's go",
             "certificate_definition": certificate_definition.pk,
+            "organizations": str(organization.id),
             "course_relations-TOTAL_FORMS": 0,
             "course_relations-INITIAL_FORMS": 0,
         }
@@ -127,6 +131,7 @@ class ProductAdminTestCase(BaseAPITestCase):
 
     def test_admin_product_create_id_read_only(self):
         """The id field should be readonly"""
+        organization = factories.OrganizationFactory()
         # Login a user with all permission to manage products in django admin
         user = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=user.username, password="password")
@@ -137,6 +142,7 @@ class ProductAdminTestCase(BaseAPITestCase):
             "type": "credential",
             "title": "Product for course",
             "call_to_action": "Let's go",
+            "organizations": str(organization.id),
             "course_relations-TOTAL_FORMS": 0,
             "course_relations-INITIAL_FORMS": 0,
         }
@@ -159,6 +165,7 @@ class ProductAdminTestCase(BaseAPITestCase):
         It should be possible to manage targeted courses directly from product
         admin change view.
         """
+        organization = factories.OrganizationFactory()
 
         # Create courses
         [course, *target_courses] = factories.CourseFactory.create_batch(4)
@@ -208,6 +215,7 @@ class ProductAdminTestCase(BaseAPITestCase):
             "price_0": product.price.amount,
             "price_1": product.price.currency,
             "call_to_action": product.call_to_action,
+            "organizations": str(organization.id),
             "course_relations-TOTAL_FORMS": 3,
             "course_relations-INITIAL_FORMS": 3,
             "course_relations-0-id": tc2.product_relations.get(product=product).pk,

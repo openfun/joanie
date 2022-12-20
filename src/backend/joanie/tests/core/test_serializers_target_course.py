@@ -18,15 +18,16 @@ class TargetCourseSerializerTestCase(TestCase):
 
     def test_serializer_target_course_is_read_only(self):
         """A target course should be read only."""
-        course = factories.CourseFactory.build()
+        organizations = factories.OrganizationFactory.create_batch(2)
+        course = factories.CourseFactory(organizations=organizations)
         course_runs = CourseRunSerializer().to_representation(course.course_runs)
-        organization = OrganizationSerializer().to_representation(course.organization)
+        organizations = OrganizationSerializer().to_representation(organizations)
 
         data = {
             "code": str(course.code),
             "course_runs": course_runs,
             "is_graded": False,
-            "organization": organization,
+            "organizations": organizations,
             "position": 9999,
             "title": course.title,
         }
@@ -48,7 +49,7 @@ class TargetCourseSerializerTestCase(TestCase):
         factories.CourseRunFactory.create_batch(2, course=target_course)
         product = factories.ProductFactory(target_courses=[target_course])
 
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(4):
             representation = TargetCourseSerializer(
                 context={"resource": product}
             ).to_representation(target_course)
@@ -72,7 +73,7 @@ class TargetCourseSerializerTestCase(TestCase):
         product = factories.ProductFactory(target_courses=[target_course])
         order = factories.OrderFactory(product=product)
 
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(4):
             representation = TargetCourseSerializer(
                 context={"resource": order}
             ).to_representation(target_course)
