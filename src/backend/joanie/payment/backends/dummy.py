@@ -107,7 +107,7 @@ class DummyPaymentBackend(BasePaymentBackend):
 
         self._do_on_refund(
             amount=D(f"{amount / 100:.2f}"),
-            proforma_invoice=payment.proforma_invoice,
+            invoice=payment.invoice,
             refund_reference=f"ref_{timezone.now().timestamp():.0f}",
         )
 

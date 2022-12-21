@@ -71,7 +71,6 @@ and this project adheres to
 - Update codebase to remove the use of deprecated pytz and USE_L10N
   with Django 4.0
 - Refactor links between enrollment and order models
-- Rename Invoice model into ProformaInvoice
 - Update Order serializers to bind certificate
 - Order `state` is now a computed property
 - Split address fullname field into first_name and last_name fields

@@ -17,7 +17,7 @@ from joanie.payment.exceptions import CreatePaymentFailed
 from joanie.payment.factories import (
     BillingAddressDictFactory,
     CreditCardFactory,
-    ProformaInvoiceFactory,
+    InvoiceFactory,
 )
 from joanie.tests.base import BaseAPITestCase
 
@@ -81,7 +81,7 @@ class OrderApiTest(BaseAPITestCase):
                         "total": float(product.price.amount),
                         "total_currency": str(product.price.currency),
                         "product": str(order.product.id),
-                        "main_proforma_invoice": None,
+                        "main_invoice": None,
                         "state": order.state,
                         "target_courses": [],
                     }
@@ -114,7 +114,7 @@ class OrderApiTest(BaseAPITestCase):
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
                         "enrollments": [],
-                        "main_proforma_invoice": None,
+                        "main_invoice": None,
                         "organization": str(other_order.organization.id),
                         "owner": other_order.owner.username,
                         "total": float(other_order.total.amount),
@@ -163,7 +163,7 @@ class OrderApiTest(BaseAPITestCase):
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
                         "enrollments": [],
-                        "main_proforma_invoice": None,
+                        "main_invoice": None,
                         "organization": str(order.organization.id),
                         "owner": order.owner.username,
                         "total": float(order.total.amount),
@@ -231,7 +231,7 @@ class OrderApiTest(BaseAPITestCase):
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
                         "enrollments": [],
-                        "main_proforma_invoice": None,
+                        "main_invoice": None,
                         "organization": str(order.organization.id),
                         "owner": order.owner.username,
                         "total": float(order.total.amount),
@@ -279,7 +279,7 @@ class OrderApiTest(BaseAPITestCase):
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
                         "enrollments": [],
-                        "main_proforma_invoice": None,
+                        "main_invoice": None,
                         "organization": str(order.organization.id),
                         "owner": order.owner.username,
                         "total": float(order.total.amount),
@@ -327,7 +327,7 @@ class OrderApiTest(BaseAPITestCase):
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
                         "enrollments": [],
-                        "main_proforma_invoice": None,
+                        "main_invoice": None,
                         "organization": str(order.organization.id),
                         "owner": order.owner.username,
                         "total": float(order.total.amount),
@@ -379,7 +379,7 @@ class OrderApiTest(BaseAPITestCase):
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
                         "enrollments": [],
-                        "main_proforma_invoice": None,
+                        "main_invoice": None,
                         "organization": str(order.organization.id),
                         "owner": order.owner.username,
                         "total": float(order.total.amount),
@@ -455,7 +455,7 @@ class OrderApiTest(BaseAPITestCase):
                 "course": order.course.code,
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "state": order.state,
-                "main_proforma_invoice": None,
+                "main_invoice": None,
                 "organization": str(order.organization.id),
                 "owner": owner.username,
                 "total": float(product.price.amount),
@@ -590,7 +590,7 @@ class OrderApiTest(BaseAPITestCase):
                 "course": course.code,
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "state": "validated",
-                "main_proforma_invoice": None,
+                "main_invoice": None,
                 "organization": str(order.organization.id),
                 "owner": "panoramix",
                 "total": float(product.price.amount),
@@ -800,7 +800,7 @@ class OrderApiTest(BaseAPITestCase):
                 "course": course.code,
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "state": "validated",
-                "main_proforma_invoice": None,
+                "main_invoice": None,
                 "organization": str(order.organization.id),
                 "owner": "panoramix",
                 "total": float(product.price.amount),
@@ -1090,7 +1090,7 @@ class OrderApiTest(BaseAPITestCase):
                 "course": course.code,
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "state": "pending",
-                "main_proforma_invoice": None,
+                "main_invoice": None,
                 "organization": str(order.organization.id),
                 "owner": user.username,
                 "total": float(product.price.amount),
@@ -1205,7 +1205,7 @@ class OrderApiTest(BaseAPITestCase):
                 "course": course.code,
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "state": "validated",
-                "main_proforma_invoice": order.main_proforma_invoice.reference,
+                "main_invoice": order.main_invoice.reference,
                 "organization": str(order.organization.id),
                 "owner": user.username,
                 "total": float(product.price.amount),
@@ -1341,7 +1341,7 @@ class OrderApiTest(BaseAPITestCase):
                 "certificate",
                 "enrollments",
                 "id",
-                "main_proforma_invoice",
+                "main_invoice",
                 "organization",
                 "owner",
                 "total",
@@ -1411,14 +1411,14 @@ class OrderApiTest(BaseAPITestCase):
         order = factories.OrderFactory(owner=owner, product=product)
         self._check_api_order_update_detail(order, owner, 405)
 
-    def test_api_order_get_proforma_invoice_anonymous(self):
-        """An anonymous user should not be allowed to retrieve a pro forma invoice."""
-        proforma_invoice = ProformaInvoiceFactory()
+    def test_api_order_get_invoice_anonymous(self):
+        """An anonymous user should not be allowed to retrieve an invoice."""
+        invoice = InvoiceFactory()
 
         response = self.client.get(
             (
-                f"/api/v1.0/orders/{proforma_invoice.order.id}/proforma_invoice/"
-                f"?reference={proforma_invoice.reference}"
+                f"/api/v1.0/orders/{invoice.order.id}/invoice/"
+                f"?reference={invoice.reference}"
             ),
         )
 
@@ -1429,16 +1429,16 @@ class OrderApiTest(BaseAPITestCase):
             content, {"detail": "Authentication credentials were not provided."}
         )
 
-    def test_api_order_get_proforma_invoice_authenticated_user_with_no_reference(self):
+    def test_api_order_get_invoice_authenticated_user_with_no_reference(self):
         """
-        If an authenticated user tries to retrieve order's pro forma invoice
+        If an authenticated user tries to retrieve order's invoice
         without reference parameter, it should return a bad request response.
         """
-        proforma_invoice = ProformaInvoiceFactory()
-        token = self.get_user_token(proforma_invoice.order.owner.username)
+        invoice = InvoiceFactory()
+        token = self.get_user_token(invoice.order.owner.username)
 
         response = self.client.get(
-            f"/api/v1.0/orders/{proforma_invoice.order.id}/proforma_invoice/",
+            f"/api/v1.0/orders/{invoice.order.id}/invoice/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -1446,21 +1446,18 @@ class OrderApiTest(BaseAPITestCase):
         content = json.loads(response.content)
         self.assertEqual(content, {"reference": "This parameter is required."})
 
-    def test_api_order_get_proforma_invoice_not_linked_to_order(self):
+    def test_api_order_get_invoice_not_linked_to_order(self):
         """
-        An authenticated user should not be allowed to retrieve a pro forma invoice
+        An authenticated user should not be allowed to retrieve an invoice
         not linked to the current order
         """
         user = factories.UserFactory()
         order = factories.OrderFactory()
-        proforma_invoice = ProformaInvoiceFactory()
+        invoice = InvoiceFactory()
         token = self.generate_token_from_user(user)
 
         response = self.client.get(
-            (
-                f"/api/v1.0/orders/{order.id}/proforma_invoice/"
-                f"?reference={proforma_invoice.reference}"
-            ),
+            (f"/api/v1.0/orders/{order.id}/invoice/" f"?reference={invoice.reference}"),
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -1469,24 +1466,24 @@ class OrderApiTest(BaseAPITestCase):
         self.assertEqual(
             content,
             (
-                f"No pro forma invoice found for order {order.id} "
-                f"with reference {proforma_invoice.reference}."
+                f"No invoice found for order {order.id} "
+                f"with reference {invoice.reference}."
             ),
         )
 
-    def test_api_order_get_proforma_invoice_authenticated_user_not_owner(self):
+    def test_api_order_get_invoice_authenticated_user_not_owner(self):
         """
         An authenticated user should not be allowed to retrieve
-        a pro forma invoice not owned by himself
+        an invoice not owned by himself
         """
         user = factories.UserFactory()
-        proforma_invoice = ProformaInvoiceFactory()
+        invoice = InvoiceFactory()
         token = self.generate_token_from_user(user)
 
         response = self.client.get(
             (
-                f"/api/v1.0/orders/{proforma_invoice.order.id}/proforma_invoice/"
-                f"?reference={proforma_invoice.reference}"
+                f"/api/v1.0/orders/{invoice.order.id}/invoice/"
+                f"?reference={invoice.reference}"
             ),
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
@@ -1496,23 +1493,23 @@ class OrderApiTest(BaseAPITestCase):
         self.assertEqual(
             content,
             (
-                f"No pro forma invoice found for order {proforma_invoice.order.id} "
-                f"with reference {proforma_invoice.reference}."
+                f"No invoice found for order {invoice.order.id} "
+                f"with reference {invoice.reference}."
             ),
         )
 
-    def test_api_order_get_proforma_invoice_authenticated_owner(self):
+    def test_api_order_get_invoice_authenticated_owner(self):
         """
         An authenticated user which owns the related order should be able to retrieve
-        a related pro forma invoice through its reference
+        a related invoice through its reference
         """
-        proforma_invoice = ProformaInvoiceFactory()
-        token = self.get_user_token(proforma_invoice.order.owner.username)
+        invoice = InvoiceFactory()
+        token = self.get_user_token(invoice.order.owner.username)
 
         response = self.client.get(
             (
-                f"/api/v1.0/orders/{proforma_invoice.order.id}/proforma_invoice/"
-                f"?reference={proforma_invoice.reference}"
+                f"/api/v1.0/orders/{invoice.order.id}/invoice/"
+                f"?reference={invoice.reference}"
             ),
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
@@ -1521,7 +1518,7 @@ class OrderApiTest(BaseAPITestCase):
         self.assertEqual(response.headers["Content-Type"], "application/pdf")
         self.assertEqual(
             response.headers["Content-Disposition"],
-            f"attachment; filename={proforma_invoice.reference}.pdf;",
+            f"attachment; filename={invoice.reference}.pdf;",
         )
 
         document_text = pdf_extract_text(BytesIO(response.content)).replace("\n", "")

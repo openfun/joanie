@@ -112,7 +112,7 @@ product course relation. It is in charge of preventing the addition of a course 
 course relation if those two resources are not related to the same course.
 
 
-## Relation between `Order` / `ProformaInvoice` and `Transaction` models
+## Relation between `Order` / `Invoice` and `Transaction` models
 
 ```mermaid
 erDiagram
@@ -123,43 +123,43 @@ erDiagram
         Course course FK
     }
 
-    ProformaInvoice {
+    Invoice {
         Integer id PK
         Order order FK
-        ProformaInvoice parent FK
+        Invoice parent FK
     }
     
     Transaction {
         Integer id PK
-        ProformaInvoice proforma_invoice FK
+        Invoice invoice FK
     }
     
     %% Relations
-    Order ||--|| only_one_proforma_invoice_without_parent_per_order : ""
-    only_one_proforma_invoice_without_parent_per_order ||--o{ ProformaInvoice : "has"
+    Order ||--|| only_one_invoice_without_parent_per_order : ""
+    only_one_invoice_without_parent_per_order ||--o{ Invoice : "has"
     
-    ProformaInvoice ||--o{ ProformaInvoice : "is child of"
-    ProformaInvoice ||--o{ Transaction : "reconcils"
+    Invoice ||--o{ Invoice : "is child of"
+    Invoice ||--o{ Transaction : "reconcils"
 ```
 
 ### Focus
 
-#### Nesting of `ProformaInvoice`
+#### Nesting of `Invoice`
 
-The `ProformaInvoice` model has a field `parent` to be able to link pro forma invoices between them.
-An `Order` should have only one pro forma invoice without parent which is the main invoice. If we
-need to refund the client, pro forma invoices with a negative amount (a credit notes) are created
+The `Invoice` model has a field `parent` to be able to link invoices between them.
+An `Order` should have only one invoice without parent which is the main invoice. If we
+need to refund the client, invoices with a negative amount (a credit notes) are created
 which are children of the main invoice.
 
-#### Constraints on `ProformaInvoice` model
+#### Constraints on `Invoice` model
 
-The `ProformaInvoice` model has two database constraints :
+The `Invoice` model has two database constraints :
 
-- A `UniqueConstraint` "only_one_proforma_invoice_without_parent_per_order" to prevent an order from 
-having several main pro forma invoices.
+- A `UniqueConstraint` "only_one_invoice_without_parent_per_order" to prevent an order from 
+having several main invoices.
 
-- A `CheckConstraint` "main_proforma_invoice_should_have_a_positive_amount" to ensure that a
-main pro forma invoice has a positive amount.
+- A `CheckConstraint` "main_invoice_should_have_a_positive_amount" to ensure that a
+main invoice has a positive amount.
 
 ## Relation between `Order` / `Product` / `CertificateDefinition` and `Certificate` models
 
