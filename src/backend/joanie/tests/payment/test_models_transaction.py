@@ -5,7 +5,7 @@ from django.test import TestCase
 from djmoney.money import Money
 
 from joanie.core.factories import OrderFactory
-from joanie.payment.factories import ProformaInvoiceFactory, TransactionFactory
+from joanie.payment.factories import InvoiceFactory, TransactionFactory
 
 
 class TransactionModelTestCase(TestCase):
@@ -37,10 +37,10 @@ class TransactionModelTestCase(TestCase):
 
     def test_models_transaction_protected(self):
         """
-        ProformaInvoice deletion should be blocked as long as related invoice exists.
+        Invoice deletion should be blocked as long as related invoice exists.
         """
-        proforma_invoice = ProformaInvoiceFactory(order=OrderFactory(), total=10)
-        TransactionFactory(proforma_invoice=proforma_invoice)
+        invoice = InvoiceFactory(order=OrderFactory(), total=10)
+        TransactionFactory(invoice=invoice)
 
         with self.assertRaises(ProtectedError):
-            proforma_invoice.delete()
+            invoice.delete()

@@ -126,7 +126,7 @@ class PayplugBackend(BasePaymentBackend):
 
         self._do_on_refund(
             amount=D(f"{resource.amount / 100:.2f}"),
-            proforma_invoice=payment.proforma_invoice,
+            invoice=payment.invoice,
             refund_reference=resource.id,
         )
 

@@ -46,7 +46,7 @@ CATALOG_VISIBILITY_CHOICES = (
 ORDER_STATE_PENDING = "pending"  # waiting for payment
 ORDER_STATE_CANCELED = "canceled"  # has been canceled
 ORDER_STATE_FAILED = "failed"  # payment failed
-ORDER_STATE_VALIDATED = "validated"  # is free or has a pro forma invoice linked
+ORDER_STATE_VALIDATED = "validated"  # is free or has an invoice linked
 
 ORDER_STATE_CHOICES = (
     (ORDER_STATE_PENDING, _("Pending")),  # default

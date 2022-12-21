@@ -8,9 +8,9 @@ from django.utils.html import format_html
 from . import enums, models
 
 
-@admin.register(models.ProformaInvoice)
-class ProformaInvoiceAdmin(admin.ModelAdmin):
-    """Admin class for the ProformaInvoice model."""
+@admin.register(models.Invoice)
+class InvoiceAdmin(admin.ModelAdmin):
+    """Admin class for the Invoice model."""
 
     list_display = ("type", "reference", "recipient_name", "total", "balance")
     readonly_fields = (
@@ -72,12 +72,12 @@ class ProformaInvoiceAdmin(admin.ModelAdmin):
         return self.readonly_fields
 
     def type(self, obj):  # pylint: disable=no-self-use
-        """Return human-readable type of the pro forma invoice."""
+        """Return human-readable type of the invoice."""
         types = dict(enums.INVOICE_TYPES)
         return types[obj.type]
 
     def state(self, obj):  # pylint: disable=no-self-use
-        """Return human-readable state of the pro forma invoice."""
+        """Return human-readable state of the invoice."""
         states = dict(enums.INVOICE_STATES)
         return states[obj.state]
 
@@ -89,7 +89,7 @@ class ProformaInvoiceAdmin(admin.ModelAdmin):
                 (
                     "<li>"
                     "<a href='"
-                    f"{reverse('admin:payment_proformainvoice_change', args=(invoice.id,),)}"
+                    f"{reverse('admin:payment_invoice_change', args=(invoice.id,),)}"
                     "'>"
                     f"{str(invoice)} ({invoice.total})"
                     "</a>"
@@ -101,7 +101,7 @@ class ProformaInvoiceAdmin(admin.ModelAdmin):
         return "-"
 
     def transactions(self, obj):  # pylint: disable=no-self-use
-        """Return a list of transactions linked to the pro forma invoice."""
+        """Return a list of transactions linked to the invoice."""
         transactions = obj.transactions.all()
         if transactions:
             items = [
@@ -127,7 +127,7 @@ class TransactionAdmin(admin.ModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         """Return readonly fields according if obj exists or not."""
         if obj:
-            return "reference", "proforma_invoice", "total", "created_on"
+            return "reference", "invoice", "total", "created_on"
 
         return ()
 

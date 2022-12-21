@@ -30,9 +30,9 @@ from . import get_payment_backend
 User = get_user_model()
 
 
-class ProformaInvoice(BaseModel):
+class Invoice(BaseModel):
     """
-    ProformaInvoice model is an informative accounting element related to an order
+    Invoice model is an informative accounting element related to an order
     """
 
     parent = models.ForeignKey(
@@ -52,7 +52,7 @@ class ProformaInvoice(BaseModel):
     order = models.ForeignKey(
         to=Order,
         verbose_name=_("order"),
-        related_name="proforma_invoices",
+        related_name="invoices",
         on_delete=models.PROTECT,
         blank=False,
         null=False,
@@ -66,46 +66,44 @@ class ProformaInvoice(BaseModel):
         blank=False,
     )
     recipient_name = models.CharField(
-        _("proforma invoice recipient"), max_length=40, null=False, blank=False
+        _("invoice recipient"), max_length=40, null=False, blank=False
     )
     recipient_address = models.TextField(
-        _("proforma invoice address"), max_length=255, null=False, blank=False
+        _("invoice address"), max_length=255, null=False, blank=False
     )
     localized_context = models.JSONField(
         _("context"),
-        help_text=_(
-            "Localized data that needs to be frozen on pro forma invoice creation"
-        ),
+        help_text=_("Localized data that needs to be frozen on invoice creation"),
         editable=False,
     )
 
     class Meta:
-        db_table = "joanie_proforma_invoice"
-        verbose_name = _("Pro forma invoice")
-        verbose_name_plural = _("Pro forma invoices")
+        db_table = "joanie_invoice"
+        verbose_name = _("invoice")
+        verbose_name_plural = _("invoices")
         constraints = [
             models.CheckConstraint(
                 check=(
                     models.Q(parent__isnull=True) & models.Q(total__gte=0)
                     | models.Q(parent__isnull=False)
                 ),
-                name="main_proforma_invoice_should_have_a_positive_amount",
+                name="main_invoice_should_have_a_positive_amount",
             ),
             models.UniqueConstraint(
                 condition=models.Q(parent__isnull=True),
                 fields=["order"],
-                name="only_one_proforma_invoice_without_parent_per_order",
+                name="only_one_invoice_without_parent_per_order",
             ),
         ]
 
     def __str__(self):
         types = dict(payment_enums.INVOICE_TYPES)
-        return f"Pro forma {types[self.type]} {self.reference}"
+        return f"{types[self.type]} {self.reference}"
 
     @property
     def state(self):
         """
-        Process the state of the pro forma invoice
+        Process the state of the invoice
         """
         if self.balance.amount >= 0:
             if (
@@ -121,7 +119,7 @@ class ProformaInvoice(BaseModel):
     @property
     def document(self):
         """
-        Get the document related to the pro forma invoice instance;
+        Get the document related to the invoice instance;
         """
         document = InvoiceDocument(context_query=self.get_document_context())
         return document.create(persist=False)
@@ -129,8 +127,8 @@ class ProformaInvoice(BaseModel):
     @property
     def type(self):
         """
-        Return the pro forma invoice type according to its total amount.
-        If total amount is positive, pro forma invoice type is "invoice"
+        Return the invoice type according to its total amount.
+        If total amount is positive, invoice type is "invoice"
         otherwise it's "credit_note"
         """
         if self.total.amount < 0:  # pylint: disable=no-member
@@ -143,12 +141,12 @@ class ProformaInvoice(BaseModel):
         """
         Process the transactions balance.
 
-        First we retrieve all transactions registered for the current pro forma invoice
+        First we retrieve all transactions registered for the current invoice
         and its children. Then we sum all transactions amount.
         """
 
         amount = Transaction.objects.filter(
-            Q(proforma_invoice__in=self.children.all()) | Q(proforma_invoice=self)
+            Q(invoice__in=self.children.all()) | Q(invoice=self)
         ).aggregate(total=models.Sum("total"))["total"] or D(0.00)
 
         return Money(amount, self.total.currency)  # pylint: disable=no-member
@@ -158,14 +156,14 @@ class ProformaInvoice(BaseModel):
         """
         Process the invoiced amount.
 
-        First we retrieve all pro forma invoice's children
-        then we sum all pro forma invoice amount.
+        First we retrieve all invoice's children
+        then we sum all invoice amount.
         """
-        proforma_invoices = [
+        invoices = [
             self,
             *self.children.only("total", "total_currency").all(),
         ]
-        amount = sum(invoice.total.amount for invoice in proforma_invoices)
+        amount = sum(invoice.total.amount for invoice in invoices)
 
         return Money(amount, self.total.currency)  # pylint: disable=no-member
 
@@ -179,13 +177,13 @@ class ProformaInvoice(BaseModel):
 
     def _set_localized_context(self):
         """
-        Update or create the pro forma invoice context for all languages.
+        Update or create the invoice context for all languages.
 
         In order to save space, we want to generate related document only on
         demand. Furthermore, we need to store product description to prevent
         inconsistency in case of product would be updated. That's why we store
-        a product information for all active language into the pro forma invoice,
-        then we are able to generate pro forma invoice document with consistent data
+        a product information for all active language into the invoice,
+        then we are able to generate invoice document with consistent data
         only on demand.
 
         Saving is left to the caller.
@@ -208,7 +206,7 @@ class ProformaInvoice(BaseModel):
 
     def get_document_context(self, language_code=None):
         """
-        Build the pro forma invoice document context for the given language.
+        Build the invoice document context for the given language.
         If no language_code is provided, we use the active language.
         """
         language_settings = get_language_settings(language_code or get_language())
@@ -266,20 +264,17 @@ class ProformaInvoice(BaseModel):
 
     def clean(self):
         """
-        First ensure that the pro forma invoice is at least linked to an order or
+        First ensure that the invoice is at least linked to an order or
         a parent but not both.
-        Then, if the pro forma invoice is linked to a parent, set `recipient_name` and
+        Then, if the invoice is linked to a parent, set `recipient_name` and
         `recipient_address` with its parent values.
-        Finally, if the pro forma invoice is a credit note, ensure its total amount is
+        Finally, if the invoice is a credit note, ensure its total amount is
         not greater than its parent total amount.
         """
 
         if self.parent and self.parent.parent is not None:
             raise ValidationError(
-                _(
-                    "Pro forma invoice cannot have as parent "
-                    "another pro forma invoice which is a child."
-                )
+                _("invoice cannot have as parent another invoice which is a child.")
             )
 
         if self.parent:
@@ -288,9 +283,7 @@ class ProformaInvoice(BaseModel):
 
         if self.type == payment_enums.INVOICE_TYPE_CREDIT_NOTE:
             if not self.parent:
-                raise ValidationError(
-                    _("Credit note must have a parent pro forma invoice.")
-                )
+                raise ValidationError(_("Credit note must have a parent invoice."))
 
             if (
                 self.total.amount * -1  # pylint: disable=no-member
@@ -299,7 +292,7 @@ class ProformaInvoice(BaseModel):
                 raise ValidationError(
                     _(
                         "Credit note amount cannot be greater than its related "
-                        "pro forma invoice invoiced balance."
+                        "invoice invoiced balance."
                     )
                 )
 
@@ -328,7 +321,7 @@ class ProformaInvoice(BaseModel):
 class Transaction(BaseModel):
     """
     Transaction model represents financial transactions
-    (debit, credit) related to a pro forma invoice.
+    (debit, credit) related to an invoice.
     """
 
     reference = models.CharField(
@@ -341,9 +334,9 @@ class Transaction(BaseModel):
         unique=True,
     )
 
-    proforma_invoice = models.ForeignKey(
-        to=ProformaInvoice,
-        verbose_name=_("proforma invoice"),
+    invoice = models.ForeignKey(
+        to=Invoice,
+        verbose_name=_("invoice"),
         related_name="transactions",
         on_delete=models.PROTECT,
         blank=False,

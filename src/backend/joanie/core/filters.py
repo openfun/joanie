@@ -41,13 +41,13 @@ class OrderViewSetFilter(filters.FilterSet):
         if value == ORDER_STATE_PENDING:
             return queryset.filter(
                 total__gt=0,
-                proforma_invoices__isnull=True,
+                invoices__isnull=True,
                 is_canceled=False,
             )
 
         if value == ORDER_STATE_VALIDATED:
             return queryset.filter(
-                Q(total=0) | Q(proforma_invoices__isnull=False),
+                Q(total=0) | Q(invoices__isnull=False),
                 is_canceled=False,
             )
 

@@ -10,7 +10,7 @@ from rest_framework.test import APIRequestFactory
 from joanie.core.factories import OrderFactory, UserFactory
 from joanie.payment.backends.base import BasePaymentBackend
 from joanie.payment.factories import BillingAddressDictFactory
-from joanie.payment.models import ProformaInvoice, Transaction
+from joanie.payment.models import Invoice, Transaction
 
 from .base_payment import BasePaymentTestCase
 
@@ -28,9 +28,9 @@ class TestBasePaymentBackend(BasePaymentBackend):
         """call private method _do_on_payment_failure"""
         self._do_on_payment_failure(order)
 
-    def call_do_on_refund(self, amount, proforma_invoice, refund_reference):
+    def call_do_on_refund(self, amount, invoice, refund_reference):
         """call private method _do_on_refund"""
-        self._do_on_refund(amount, proforma_invoice, refund_reference)
+        self._do_on_refund(amount, invoice, refund_reference)
 
     def abort_payment(self, payment_id):
         pass
@@ -132,7 +132,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase):
         """
         Base backend contains a method _do_on_payment_success which aims to be
         call by subclasses when a payment succeeded. It should create
-        a pro forma invoice related to the provided order, create a transaction from
+        an invoice related to the provided order, create a transaction from
         payment information provided then mark order as validated.
         """
         backend = TestBasePaymentBackend()
@@ -156,7 +156,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase):
         )
 
         # - Invoice has been created
-        self.assertEqual(ProformaInvoice.objects.filter(order=order).count(), 1)
+        self.assertEqual(Invoice.objects.filter(order=order).count(), 1)
 
         # - Order has been validated
         self.assertEqual(order.state, "validated")
@@ -207,7 +207,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase):
         # - Refund entirely the order
         backend.call_do_on_refund(
             amount=order.total,
-            proforma_invoice=payment.proforma_invoice,
+            invoice=payment.invoice,
             refund_reference="ref_0",
         )
 
@@ -261,7 +261,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase):
         )
 
         # Invoice has been created
-        self.assertEqual(ProformaInvoice.objects.filter(order=order).count(), 1)
+        self.assertEqual(Invoice.objects.filter(order=order).count(), 1)
 
         # Order has been validated
         self.assertEqual(order.state, "validated")
@@ -303,7 +303,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase):
         )
 
         # - Invoice has been created
-        self.assertEqual(ProformaInvoice.objects.filter(order=order).count(), 1)
+        self.assertEqual(Invoice.objects.filter(order=order).count(), 1)
 
         # - Order has been validated
         self.assertEqual(order.state, "validated")

@@ -31,13 +31,13 @@ class CreditCardFactory(factory.django.DjangoModelFactory):
     token = factory.Sequence(lambda k: f"card_{k:022d}")
 
 
-class ProformaInvoiceFactory(factory.django.DjangoModelFactory):
-    """A factory to create a pro forma invoice"""
+class InvoiceFactory(factory.django.DjangoModelFactory):
+    """A factory to create an invoice"""
 
     class Meta:
         """Meta"""
 
-        model = models.ProformaInvoice
+        model = models.Invoice
 
     recipient_address = factory.Faker("address")
     recipient_name = factory.Faker("name")
@@ -47,7 +47,7 @@ class ProformaInvoiceFactory(factory.django.DjangoModelFactory):
     def total(self):
         """
         Return a Money object with a random value less than
-        the pro forma invoice total amount.
+        the invoice total amount.
         """
         amount = D(random.randrange(int(self.order.total.amount * 100))) / 100  # nosec
         return Money(amount, self.order.total.currency)
@@ -64,19 +64,18 @@ class TransactionFactory(factory.django.DjangoModelFactory):
     reference = factory.LazyAttributeSequence(
         lambda t, n: f"{'ref' if t.total.amount < 0 else 'pay'}_{n:05d}"
     )
-    proforma_invoice = factory.SubFactory(ProformaInvoiceFactory)
+    invoice = factory.SubFactory(InvoiceFactory)
 
     @factory.lazy_attribute
     def total(self):
         """
         Return a Money object with a random value less than
-        the pro forma invoice total amount.
+        the invoice total amount.
         """
         amount = (
-            D(random.randrange(int(self.proforma_invoice.total.amount * 100)))  # nosec
-            / 100
+            D(random.randrange(int(self.invoice.total.amount * 100))) / 100  # nosec
         )
-        return Money(amount, self.proforma_invoice.total.currency)
+        return Money(amount, self.invoice.total.currency)
 
 
 class BillingAddressDictFactory(factory.DictFactory):

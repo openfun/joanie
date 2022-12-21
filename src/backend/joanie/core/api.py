@@ -14,7 +14,7 @@ from rest_framework.views import exception_handler as drf_exception_handler
 from joanie.core import models
 from joanie.core.enums import ORDER_STATE_PENDING
 from joanie.payment import get_payment_backend
-from joanie.payment.models import ProformaInvoice
+from joanie.payment.models import Invoice
 
 from ..core import filters
 from ..core.models import User
@@ -271,11 +271,9 @@ class OrderViewSet(
         return Response(status=204)
 
     @action(detail=True, methods=["GET"])
-    def proforma_invoice(
-        self, request, pk=None
-    ):  # pylint: disable=no-self-use, invalid-name
+    def invoice(self, request, pk=None):  # pylint: disable=no-self-use, invalid-name
         """
-        Retrieve a pro forma invoice through its reference if it is related to
+        Retrieve an invoice through its reference if it is related to
         the order instance and owned by the authenticated user.
         """
         reference = request.query_params.get("reference")
@@ -284,26 +282,23 @@ class OrderViewSet(
             return Response({"reference": "This parameter is required."}, status=400)
 
         try:
-            proforma_invoice = ProformaInvoice.objects.get(
+            invoice = Invoice.objects.get(
                 reference=reference,
                 order__id=pk,
                 order__owner__username=request.user.username,
             )
-        except ProformaInvoice.DoesNotExist:
+        except Invoice.DoesNotExist:
             return Response(
-                (
-                    f"No pro forma invoice found for order {pk} "
-                    f"with reference {reference}."
-                ),
+                (f"No invoice found for order {pk} with reference {reference}."),
                 status=404,
             )
 
         response = HttpResponse(
-            proforma_invoice.document, content_type="application/pdf", status=200
+            invoice.document, content_type="application/pdf", status=200
         )
         response[
             "Content-Disposition"
-        ] = f"attachment; filename={proforma_invoice.reference}.pdf;"
+        ] = f"attachment; filename={invoice.reference}.pdf;"
 
         return response
 
