@@ -450,7 +450,7 @@ class OrderSerializer(serializers.ModelSerializer):
         required=False,
     )
     organization = serializers.SlugRelatedField(
-        queryset=models.Organization.objects.all(), slug_field="id"
+        queryset=models.Organization.objects.all(), slug_field="id", required=False
     )
     product = serializers.SlugRelatedField(
         queryset=models.Product.objects.all(), slug_field="id"

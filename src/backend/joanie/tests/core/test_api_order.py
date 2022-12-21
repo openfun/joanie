@@ -648,6 +648,109 @@ class OrderApiTest(BaseAPITestCase):
             },
         )
 
+    def test_api_order_create_authenticated_organization_not_passed_none(self):
+        """
+        It should not be possible to create an order without passing an organization if there are
+        none linked to the product.
+        """
+        target_course = factories.CourseFactory()
+        product = factories.ProductFactory(
+            organizations=[], target_courses=[target_course], price=Money(0.00, "EUR")
+        )
+        course = product.courses.first()
+
+        data = {
+            "course": course.code,
+            "product": str(product.id),
+        }
+        token = self.get_user_token("panoramix")
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(models.Order.objects.exists())
+        self.assertEqual(
+            response.json(),
+            {
+                "organization": ["This field cannot be null."],
+            },
+        )
+
+    def test_api_order_create_authenticated_organization_not_passed_one(self):
+        """
+        It should be possible to create an order without passing an organization if there is
+        only one linked to the product.
+        """
+        target_course = factories.CourseFactory()
+        product = factories.ProductFactory(
+            target_courses=[target_course], price=Money(0.00, "EUR")
+        )
+        organization = product.organizations.first()
+        course = product.courses.first()
+
+        data = {
+            "course": course.code,
+            "product": str(product.id),
+        }
+        token = self.get_user_token("panoramix")
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 201)
+        # order has been created
+        self.assertEqual(
+            models.Order.objects.filter(
+                organization=organization, course=course
+            ).count(),
+            1,
+        )
+
+    def test_api_order_create_authenticated_organization_not_passed_several(self):
+        """
+        It should not be possible to create an order without passing an organization if there are
+        several linked to the product.
+        """
+        target_course = factories.CourseFactory()
+        organizations = factories.OrganizationFactory.create_batch(2)
+        product = factories.ProductFactory(
+            organizations=organizations,
+            target_courses=[target_course],
+            price=Money(0.00, "EUR"),
+        )
+        course = product.courses.first()
+
+        data = {
+            "course": course.code,
+            "product": str(product.id),
+        }
+        token = self.get_user_token("panoramix")
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(models.Order.objects.exists())
+        self.assertEqual(
+            response.json(),
+            {
+                "organization": ["This field cannot be null."],
+            },
+        )
+
     def test_api_order_create_has_read_only_fields(self):
         """
         If an authenticated user tries to create an order with more fields than
@@ -862,7 +965,6 @@ class OrderApiTest(BaseAPITestCase):
             response.json(),
             {
                 "course": ["This field is required."],
-                "organization": ["This field is required."],
                 "product": ["This field is required."],
             },
         )
