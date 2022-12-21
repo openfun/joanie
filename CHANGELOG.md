@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Allow to filter enrollment resource by course run id
 - Allow linking organizations to a course (who created it?) to a product
   (who is advertising it?) and to an order (who sold it?)
 - Bind full target_courses object into order serializer representation

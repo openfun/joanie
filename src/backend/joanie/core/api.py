@@ -122,6 +122,7 @@ class EnrollmentViewSet(
     pagination_class = Pagination
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = serializers.EnrollmentSerializer
+    filterset_class = filters.EnrollmentViewSetFilter
 
     def get_queryset(self):
         """Custom queryset to limit to orders owned by the logged-in user."""

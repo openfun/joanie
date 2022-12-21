@@ -202,6 +202,85 @@ class EnrollmentApiTest(BaseAPITestCase):
             },
         )
 
+    def test_api_enrollment_read_list_filtered_by_course_run_id(self):
+        """
+        Authenticated users retrieving the list of enrollments should be able to filter
+        by course run id.
+        """
+        user = factories.UserFactory()
+        [course_run_1, course_run_2] = self.create_opened_course_run(2)
+
+        # User enrolls to both course runs
+        enrollment_1 = factories.EnrollmentFactory(user=user, course_run=course_run_1)
+        factories.EnrollmentFactory(user=user, course_run=course_run_2)
+
+        token = self.get_user_token(user.username)
+
+        # Retrieve user's enrollment related to the first course_run
+        with self.assertNumQueries(7):
+            response = self.client.get(
+                f"/api/v1.0/enrollments/?course_run={str(course_run_1.id)}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "count": 1,
+                "next": None,
+                "previous": None,
+                "results": [
+                    {
+                        "id": str(enrollment_1.id),
+                        "course_run": {
+                            "id": str(course_run_1.id),
+                            "resource_link": course_run_1.resource_link,
+                            "title": course_run_1.title,
+                            "enrollment_start": course_run_1.enrollment_start.isoformat().replace(  # noqa pylint: disable=line-too-long
+                                "+00:00", "Z"
+                            ),
+                            "enrollment_end": course_run_1.enrollment_end.isoformat().replace(  # noqa pylint: disable=line-too-long
+                                "+00:00", "Z"
+                            ),
+                            "start": course_run_1.start.isoformat().replace(
+                                "+00:00", "Z"
+                            ),
+                            "end": course_run_1.end.isoformat().replace("+00:00", "Z"),
+                            "state": {
+                                "priority": course_run_1.state["priority"],
+                                "text": course_run_1.state["text"],
+                                "call_to_action": course_run_1.state["call_to_action"],
+                                "datetime": course_run_1.state["datetime"]
+                                .isoformat()
+                                .replace("+00:00", "Z"),
+                            },
+                        },
+                        "is_active": enrollment_1.is_active,
+                        "state": enrollment_1.state,
+                    }
+                ],
+            },
+        )
+
+    def test_api_enrollment_read_list_filtered_by_invalid_course_run_id(self):
+        """
+        Authenticated users providing an invalid course run id to filter its enrollments
+        should get a 400 error response.
+        """
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+
+        # Retrieve user's enrollment related to the first course_run
+        with self.assertNumQueries(5):
+            response = self.client.get(
+                "/api/v1.0/enrollments/?course_run=invalid_course_run_id",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {"course_run": ["Enter a valid UUID."]})
+
     def test_api_enrollment_read_detail_anonymous(self):
         """Anonymous users should not be allowed to retrieve an enrollment."""
         enrollment = factories.EnrollmentFactory(
