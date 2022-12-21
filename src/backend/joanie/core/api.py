@@ -182,6 +182,19 @@ class OrderViewSet(
         course = serializer.validated_data.get("course")
         billing_address = serializer.initial_data.get("billing_address")
 
+        # Populate organization field if it is not set and there is only one
+        # on the product
+        if not serializer.validated_data.get("organization"):
+            try:
+                organization = product.organizations.get()
+            except (
+                models.Organization.DoesNotExist,
+                models.Organization.MultipleObjectsReturned,
+            ):
+                pass
+            else:
+                serializer.validated_data["organization"] = organization
+
         # If product is not free, we have to create a payment.
         # To create one, a billing address is mandatory
         if product.price.amount > 0 and not billing_address:
