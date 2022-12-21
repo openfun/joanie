@@ -64,3 +64,15 @@ class ProductViewSetFilter(filters.FilterSet):
     class Meta:
         model = models.Product
         fields: List[str] = []
+
+
+class EnrollmentViewSetFilter(filters.FilterSet):
+    """
+    EnrollmentViewSetFilter allows to filter this resource with a course run id.
+    """
+
+    course_run = filters.UUIDFilter(field_name="course_run__id")
+
+    class Meta:
+        model = models.Enrollment
+        fields: List[str] = []
