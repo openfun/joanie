@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Allow to filter enrollment resource by `was_created_by_order`
 - Add a flag `was_created_by_order` to the Enrollment model
 - Allow to filter enrollment resource by course run id
 - Allow linking organizations to a course (who created it?) to a product

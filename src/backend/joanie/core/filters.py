@@ -72,6 +72,7 @@ class EnrollmentViewSetFilter(filters.FilterSet):
     """
 
     course_run = filters.UUIDFilter(field_name="course_run__id")
+    was_created_by_order = filters.BooleanFilter(field_name="was_created_by_order")
 
     class Meta:
         model = models.Enrollment
