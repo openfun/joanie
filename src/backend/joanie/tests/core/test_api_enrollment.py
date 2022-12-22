@@ -370,7 +370,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         """Anonymous users should not be able to create an enrollment."""
         course_run = self.create_opened_course_run()
         data = {
-            "course_run": course_run.resource_link,
+            "course_run": course_run.id,
         }
         response = self.client.post(
             "/api/v1.0/enrollments/", data=data, content_type="application/json"
@@ -392,7 +392,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         mock_set.return_value = is_active
 
         course_run = self.create_opened_course_run(resource_link=resource_link)
-        data = {"course_run": resource_link, "is_active": is_active}
+        data = {"course_run": str(course_run.id), "is_active": is_active}
         token = self.get_user_token("panoramix")
 
         response = self.client.post(
@@ -462,7 +462,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         factories.EnrollmentFactory(course_run=course_run1, user=user, is_active=True)
         self.assertTrue(models.Enrollment.objects.filter(is_active=True).exists())
         data = {
-            "course_run": course_run2.resource_link,
+            "course_run": course_run2.id,
             "is_active": random.choice([True, False]),
         }
         token = self.get_user_token(user.username)
@@ -496,7 +496,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         mock_set.return_value = is_active
 
         course_run = self.create_opened_course_run(resource_link="http://unknown.com/")
-        data = {"course_run": course_run.resource_link, "is_active": is_active}
+        data = {"course_run": course_run.id, "is_active": is_active}
         token = self.get_user_token("panoramix")
 
         response = self.client.post(
@@ -563,7 +563,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         mock_set.side_effect = enrollment_error
 
         course_run = self.create_opened_course_run(resource_link=resource_link)
-        data = {"course_run": course_run.resource_link, "is_active": is_active}
+        data = {"course_run": course_run.id, "is_active": is_active}
         token = self.get_user_token("panoramix")
 
         response = self.client.post(
@@ -609,7 +609,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             },
         )
         mock_logger.assert_called_once_with(
-            'Enrollment failed for course run "%s".', resource_link
+            'Enrollment failed for course run "%s".', course_run.resource_link
         )
 
     def test_api_enrollment_create_authenticated_missing_is_active(self):
@@ -618,7 +618,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         if the "is_active" field is missing.
         """
         course_run = self.create_opened_course_run()
-        data = {"course_run": course_run.resource_link}
+        data = {"course_run": course_run.id}
         token = self.get_user_token("panoramix")
 
         response = self.client.post(
@@ -658,7 +658,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         # - Create an invoice related to the order to mark it as validated
         InvoiceFactory(order=order, total=order.total)
 
-        data = {"course_run": resource_link, "order": order.id, "is_active": is_active}
+        data = {"course_run": course_run.id, "order": order.id, "is_active": is_active}
         token = self.get_user_token(order.owner.username)
 
         response = self.client.post(
@@ -713,9 +713,9 @@ class EnrollmentApiTest(BaseAPITestCase):
             target_courses=[cr.course for cr in target_course_runs]
         )
         factories.OrderFactory(product=product)
-        resource_link = target_course_runs[0].resource_link
+        course_run = target_course_runs[0]
         data = {
-            "course_run": resource_link,
+            "course_run": course_run.id,
             "is_active": True,
         }
         token = self.get_user_token("another-username")
@@ -733,7 +733,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             content,
             {
                 "__all__": [
-                    f'Course run "{resource_link}" requires a valid order to enroll.'
+                    f'Course run "{course_run.resource_link}" requires a valid order to enroll.'
                 ]
             },
         )
@@ -753,7 +753,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             is_canceled=random.choice([True, False]),
         )
         data = {
-            "course_run": target_course_runs[0].resource_link,
+            "course_run": target_course_runs[0].id,
             "is_active": True,
         }
         token = self.get_user_token(order.owner.username)
@@ -782,7 +782,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         factories.ProductFactory(
             target_courses=[cr.course for cr in target_course_runs]
         )
-        data = {"course_run": target_course_runs[0].resource_link, "is_active": True}
+        data = {"course_run": target_course_runs[0].id, "is_active": True}
         token = self.get_user_token("panoramix")
 
         response = self.client.post(
@@ -814,7 +814,7 @@ class EnrollmentApiTest(BaseAPITestCase):
 
         course_run = self.create_opened_course_run(resource_link=resource_link)
         data = {
-            "course_run": resource_link,
+            "course_run": course_run.id,
             "id": uuid.uuid4(),
             "is_active": is_active,
             "state": enums.ENROLLMENT_STATE_FAILED,
@@ -877,7 +877,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             resource_link="http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course",
         )
 
-        data = {"course_run": course_run.resource_link, "is_active": True}
+        data = {"course_run": course_run.id, "is_active": True}
 
         response = self.client.post(
             "/api/v1.0/enrollments/",
@@ -901,7 +901,8 @@ class EnrollmentApiTest(BaseAPITestCase):
 
         user = factories.UserFactory()
         token = self.get_user_token(username=user.username)
-        data = {"course_run": "this-course-run-does-not-exist", "is_active": True}
+        course_run = factories.CourseRunFactory.build()
+        data = {"course_run": str(course_run.id), "is_active": True}
 
         response = self.client.post(
             "/api/v1.0/enrollments/",
@@ -916,10 +917,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             response.json(),
             {
                 "__all__": [
-                    (
-                        "A course run with resource link "
-                        '"this-course-run-does-not-exist" does not exist.'
-                    )
+                    ("A course run with id " f'"{course_run.id}" does not exist.')
                 ]
             },
         )
@@ -1137,7 +1135,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         new_data = {
             "id": uuid.uuid4(),
             "user": other_user.username,
-            "course_run": course_run.resource_link,
+            "course_run": course_run.id,
             "state": "failed",
         }
         headers = (
