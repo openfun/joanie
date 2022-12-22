@@ -140,6 +140,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         },
                         "is_active": enrollment.is_active,
                         "state": enrollment.state,
+                        "was_created_by_order": enrollment.was_created_by_order,
                     }
                 ],
             },
@@ -197,6 +198,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         },
                         "is_active": other_enrollment.is_active,
                         "state": other_enrollment.state,
+                        "was_created_by_order": other_enrollment.was_created_by_order,
                     }
                 ],
             },
@@ -258,6 +260,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         },
                         "is_active": enrollment_1.is_active,
                         "state": enrollment_1.state,
+                        "was_created_by_order": enrollment_1.was_created_by_order,
                     }
                 ],
             },
@@ -280,6 +283,51 @@ class EnrollmentApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {"course_run": ["Enter a valid UUID."]})
+
+    def test_api_enrollment_read_list_filtered_by_was_created_by_order(self):
+        """
+        Authenticated users retrieving the list of enrollments should be able to filter
+        by was_created_by_order.
+        """
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+
+        [cr1, cr2] = self.create_opened_course_run(2)
+        factories.EnrollmentFactory(
+            user=user, course_run=cr1, was_created_by_order=False
+        )
+        factories.EnrollmentFactory(
+            user=user, course_run=cr2, was_created_by_order=False
+        )
+
+        # Create an enrollment created by an order
+        course = factories.CourseFactory()
+        cr3 = self.create_opened_course_run(2, course=course)[0]
+        product = factories.ProductFactory(target_courses=[course])
+        factories.OrderFactory(owner=user, product=product)
+        factories.EnrollmentFactory(
+            user=user, course_run=cr3, was_created_by_order=True
+        )
+
+        with self.assertNumQueries(7):
+            response = self.client.get(
+                "/api/v1.0/enrollments/?was_created_by_order=false",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 2)
+
+        with self.assertNumQueries(7):
+            response = self.client.get(
+                "/api/v1.0/enrollments/?was_created_by_order=true",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
 
     def test_api_enrollment_read_detail_anonymous(self):
         """Anonymous users should not be allowed to retrieve an enrollment."""
@@ -347,6 +395,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 },
                 "is_active": enrollment.is_active,
                 "state": enrollment.state,
+                "was_created_by_order": enrollment.was_created_by_order,
             },
         )
 
@@ -369,9 +418,7 @@ class EnrollmentApiTest(BaseAPITestCase):
     def test_api_enrollment_create_anonymous(self):
         """Anonymous users should not be able to create an enrollment."""
         course_run = self.create_opened_course_run()
-        data = {
-            "course_run": course_run.id,
-        }
+        data = {"course_run": course_run.id, "was_created_by_order": False}
         response = self.client.post(
             "/api/v1.0/enrollments/", data=data, content_type="application/json"
         )
@@ -392,7 +439,11 @@ class EnrollmentApiTest(BaseAPITestCase):
         mock_set.return_value = is_active
 
         course_run = self.create_opened_course_run(resource_link=resource_link)
-        data = {"course_run": str(course_run.id), "is_active": is_active}
+        data = {
+            "course_run": str(course_run.id),
+            "is_active": is_active,
+            "was_created_by_order": False,
+        }
         token = self.get_user_token("panoramix")
 
         response = self.client.post(
@@ -434,6 +485,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 },
                 "is_active": is_active,
                 "state": "set",
+                "was_created_by_order": False,
             },
         )
 
@@ -464,6 +516,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         data = {
             "course_run": course_run2.id,
             "is_active": random.choice([True, False]),
+            "was_created_by_order": True,
         }
         token = self.get_user_token(user.username)
 
@@ -496,7 +549,11 @@ class EnrollmentApiTest(BaseAPITestCase):
         mock_set.return_value = is_active
 
         course_run = self.create_opened_course_run(resource_link="http://unknown.com/")
-        data = {"course_run": course_run.id, "is_active": is_active}
+        data = {
+            "course_run": course_run.id,
+            "is_active": is_active,
+            "was_created_by_order": False,
+        }
         token = self.get_user_token("panoramix")
 
         response = self.client.post(
@@ -538,6 +595,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 },
                 "is_active": is_active,
                 "state": "failed",
+                "was_created_by_order": False,
             },
         )
         mock_logger.assert_called_once_with(
@@ -563,7 +621,11 @@ class EnrollmentApiTest(BaseAPITestCase):
         mock_set.side_effect = enrollment_error
 
         course_run = self.create_opened_course_run(resource_link=resource_link)
-        data = {"course_run": course_run.id, "is_active": is_active}
+        data = {
+            "course_run": course_run.id,
+            "is_active": is_active,
+            "was_created_by_order": False,
+        }
         token = self.get_user_token("panoramix")
 
         response = self.client.post(
@@ -606,6 +668,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 },
                 "is_active": is_active,
                 "state": "failed",
+                "was_created_by_order": False,
             },
         )
         mock_logger.assert_called_once_with(
@@ -618,7 +681,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         if the "is_active" field is missing.
         """
         course_run = self.create_opened_course_run()
-        data = {"course_run": course_run.id}
+        data = {"course_run": course_run.id, "was_created_by_order": False}
         token = self.get_user_token("panoramix")
 
         response = self.client.post(
@@ -636,30 +699,14 @@ class EnrollmentApiTest(BaseAPITestCase):
         )
         self.assertFalse(models.Enrollment.objects.exists())
 
-    @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
-    def test_api_enrollment_create_authenticated_matching_valid_order(self, mock_set):
+    def test_api_enrollment_create_authenticated_missing_was_created_by_order(self):
         """
-        While creating an enrollment, a validated order may be specified as long as
-        the owner is the logged-in user and the course run matches one of
-        the order's target courses.
+        An authenticated user trying to enroll via the API, should get a 400 error
+        if the "is_active" field is missing.
         """
-        resource_link = (
-            "http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course"
-        )
-        is_active = random.choice([True, False])
-        mock_set.return_value = is_active
-
-        course_run = self.create_opened_course_run(resource_link=resource_link)
-        other_course_run = self.create_opened_course_run()
-        product = factories.ProductFactory(
-            target_courses=[course_run.course, other_course_run.course]
-        )
-        order = factories.OrderFactory(product=product)
-        # - Create an invoice related to the order to mark it as validated
-        InvoiceFactory(order=order, total=order.total)
-
-        data = {"course_run": course_run.id, "order": order.id, "is_active": is_active}
-        token = self.get_user_token(order.owner.username)
+        course_run = self.create_opened_course_run()
+        data = {"course_run": course_run.id, "is_active": True}
+        token = self.get_user_token("panoramix")
 
         response = self.client.post(
             "/api/v1.0/enrollments/",
@@ -667,41 +714,14 @@ class EnrollmentApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, 400)
         content = json.loads(response.content)
 
-        self.assertEqual(models.Enrollment.objects.count(), 1)
-        mock_set.assert_called_once_with(order.owner.username, resource_link, is_active)
-        enrollment = models.Enrollment.objects.get()
         self.assertEqual(
             content,
-            {
-                "id": str(enrollment.id),
-                "course_run": {
-                    "id": str(course_run.id),
-                    "resource_link": course_run.resource_link,
-                    "title": course_run.title,
-                    "enrollment_start": course_run.enrollment_start.isoformat().replace(
-                        "+00:00", "Z"
-                    ),
-                    "enrollment_end": course_run.enrollment_end.isoformat().replace(
-                        "+00:00", "Z"
-                    ),
-                    "start": course_run.start.isoformat().replace("+00:00", "Z"),
-                    "end": course_run.end.isoformat().replace("+00:00", "Z"),
-                    "state": {
-                        "priority": course_run.state["priority"],
-                        "text": course_run.state["text"],
-                        "call_to_action": course_run.state["call_to_action"],
-                        "datetime": course_run.state["datetime"]
-                        .isoformat()
-                        .replace("+00:00", "Z"),
-                    },
-                },
-                "is_active": is_active,
-                "state": "set",
-            },
+            {"was_created_by_order": ["This field is required."]},
         )
+        self.assertFalse(models.Enrollment.objects.exists())
 
     def test_api_enrollment_create_authenticated_owner_not_matching(self):
         """
@@ -717,6 +737,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         data = {
             "course_run": course_run.id,
             "is_active": True,
+            "was_created_by_order": True,
         }
         token = self.get_user_token("another-username")
 
@@ -733,7 +754,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             content,
             {
                 "__all__": [
-                    f'Course run "{course_run.resource_link}" requires a valid order to enroll.'
+                    f'Course run "{course_run.id}" requires a valid order to enroll.'
                 ]
             },
         )
@@ -755,6 +776,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         data = {
             "course_run": target_course_runs[0].id,
             "is_active": True,
+            "was_created_by_order": True,
         }
         token = self.get_user_token(order.owner.username)
 
@@ -767,10 +789,14 @@ class EnrollmentApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, 400)
         content = json.loads(response.content)
 
-        link = target_course_runs[0].resource_link
+        course_run_id = target_course_runs[0].id
         self.assertEqual(
             content,
-            {"__all__": [f'Course run "{link:s}" requires a valid order to enroll.']},
+            {
+                "__all__": [
+                    f'Course run "{course_run_id}" requires a valid order to enroll.'
+                ]
+            },
         )
 
     def test_api_enrollment_create_authenticated_matching_no_order(self):
@@ -782,7 +808,11 @@ class EnrollmentApiTest(BaseAPITestCase):
         factories.ProductFactory(
             target_courses=[cr.course for cr in target_course_runs]
         )
-        data = {"course_run": target_course_runs[0].id, "is_active": True}
+        data = {
+            "course_run": target_course_runs[0].id,
+            "is_active": True,
+            "was_created_by_order": True,
+        }
         token = self.get_user_token("panoramix")
 
         response = self.client.post(
@@ -794,10 +824,14 @@ class EnrollmentApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, 400)
         content = json.loads(response.content)
 
-        link = target_course_runs[0].resource_link
+        course_run_id = target_course_runs[0].id
         self.assertEqual(
             content,
-            {"__all__": [f'Course run "{link:s}" requires a valid order to enroll.']},
+            {
+                "__all__": [
+                    f'Course run "{course_run_id}" requires a valid order to enroll.'
+                ]
+            },
         )
 
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
@@ -818,6 +852,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             "id": uuid.uuid4(),
             "is_active": is_active,
             "state": enums.ENROLLMENT_STATE_FAILED,
+            "was_created_by_order": False,
         }
         token = self.get_user_token("panoramix")
 
@@ -864,6 +899,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 },
                 "is_active": is_active,
                 "state": "set",
+                "was_created_by_order": False,
             },
         )
 
@@ -877,7 +913,11 @@ class EnrollmentApiTest(BaseAPITestCase):
             resource_link="http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course",
         )
 
-        data = {"course_run": course_run.id, "is_active": True}
+        data = {
+            "course_run": course_run.id,
+            "is_active": True,
+            "was_created_by_order": False,
+        }
 
         response = self.client.post(
             "/api/v1.0/enrollments/",
@@ -902,7 +942,11 @@ class EnrollmentApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.get_user_token(username=user.username)
         course_run = factories.CourseRunFactory.build()
-        data = {"course_run": str(course_run.id), "is_active": True}
+        data = {
+            "course_run": str(course_run.id),
+            "is_active": True,
+            "was_created_by_order": False,
+        }
 
         response = self.client.post(
             "/api/v1.0/enrollments/",
@@ -1106,6 +1150,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                     },
                     "is_active": is_active_new,
                     "state": "set",
+                    "was_created_by_order": False,
                 },
             )
 
@@ -1137,6 +1182,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             "user": other_user.username,
             "course_run": course_run.id,
             "state": "failed",
+            "was_created_by_order": False,
         }
         headers = (
             {"HTTP_AUTHORIZATION": f"Bearer {self.get_user_token(user.username)}"}
@@ -1224,3 +1270,288 @@ class EnrollmentApiTest(BaseAPITestCase):
         InvoiceFactory(order=order, total=order.total)
         enrollment = factories.EnrollmentFactory(course_run=course_run1, user=user)
         self._check_api_enrollment_update_detail(enrollment, user, 200)
+
+    @mock.patch.object(OpenEdXLMSBackend, "set_enrollment", return_value="enrolled")
+    def test_api_enrollment_unroll_authenticated_owner(self, _):
+        """
+        An authenticated user should be allowed to update its enrollment to unroll.
+        """
+        user = factories.UserFactory()
+        user_token = self.get_user_token(user.username)
+        course_run = self.create_opened_course_run(
+            resource_link="http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course"
+        )
+        enrollment = factories.EnrollmentFactory(
+            course_run=course_run, user=user, is_active=True
+        )
+
+        response = self.client.put(
+            f"/api/v1.0/enrollments/{enrollment.id}/",
+            data={
+                "is_active": False,
+                "was_created_by_order": enrollment.was_created_by_order,
+            },
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {user_token}",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "id": str(enrollment.id),
+                "course_run": {
+                    "id": str(course_run.id),
+                    "resource_link": course_run.resource_link,
+                    "title": course_run.title,
+                    "enrollment_start": course_run.enrollment_start.isoformat().replace(
+                        "+00:00", "Z"
+                    ),
+                    "enrollment_end": course_run.enrollment_end.isoformat().replace(
+                        "+00:00", "Z"
+                    ),
+                    "start": course_run.start.isoformat().replace("+00:00", "Z"),
+                    "end": course_run.end.isoformat().replace("+00:00", "Z"),
+                    "state": {
+                        "priority": course_run.state["priority"],
+                        "text": course_run.state["text"],
+                        "call_to_action": course_run.state["call_to_action"],
+                        "datetime": course_run.state["datetime"]
+                        .isoformat()
+                        .replace("+00:00", "Z"),
+                    },
+                },
+                "is_active": False,
+                "state": "set",
+                "was_created_by_order": False,
+            },
+        )
+
+    @mock.patch.object(OpenEdXLMSBackend, "set_enrollment", return_value="enrolled")
+    def test_api_enrollment_update_was_created_by_order_on_inactive_enrollment(self, _):
+        """
+        An authenticated user should be allowed to update the was_created_by_order field
+        of one of its enrollment if this one was previously inactive.
+        """
+        user = factories.UserFactory()
+        user_token = self.get_user_token(user.username)
+        course_run = self.create_opened_course_run(
+            resource_link="http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course"
+        )
+        enrollment = factories.EnrollmentFactory(
+            course_run=course_run, user=user, is_active=True
+        )
+
+        self.assertEqual(enrollment.state, "set")
+        self.assertEqual(enrollment.is_active, True)
+        self.assertEqual(enrollment.was_created_by_order, False)
+
+        # User unrolls and tried to update the was_created_by_order field but it should
+        # not be updated because enrollment is active.
+        response = self.client.put(
+            f"/api/v1.0/enrollments/{enrollment.id}/",
+            data={
+                "is_active": False,
+                "was_created_by_order": True,
+            },
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {user_token}",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "id": str(enrollment.id),
+                "course_run": {
+                    "id": str(course_run.id),
+                    "resource_link": course_run.resource_link,
+                    "title": course_run.title,
+                    "enrollment_start": course_run.enrollment_start.isoformat().replace(
+                        "+00:00", "Z"
+                    ),
+                    "enrollment_end": course_run.enrollment_end.isoformat().replace(
+                        "+00:00", "Z"
+                    ),
+                    "start": course_run.start.isoformat().replace("+00:00", "Z"),
+                    "end": course_run.end.isoformat().replace("+00:00", "Z"),
+                    "state": {
+                        "priority": course_run.state["priority"],
+                        "text": course_run.state["text"],
+                        "call_to_action": course_run.state["call_to_action"],
+                        "datetime": course_run.state["datetime"]
+                        .isoformat()
+                        .replace("+00:00", "Z"),
+                    },
+                },
+                "is_active": False,
+                "state": "set",
+                "was_created_by_order": False,
+            },
+        )
+
+        # Then user purchases a product containing the previously created course run and
+        # tries to update to was_created_by_order field again.
+        factories.CourseRunFactory(course=course_run.course)
+        product = factories.ProductFactory(target_courses=[course_run.course])
+        order = factories.OrderFactory(owner=user, product=product)
+        # - Create an invoice related to the order to mark it as validated
+        InvoiceFactory(order=order, total=order.total)
+
+        response = self.client.put(
+            f"/api/v1.0/enrollments/{enrollment.id}/",
+            data={
+                "is_active": True,
+                "was_created_by_order": True,
+            },
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {user_token}",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "id": str(enrollment.id),
+                "course_run": {
+                    "id": str(course_run.id),
+                    "resource_link": course_run.resource_link,
+                    "title": course_run.title,
+                    "enrollment_start": course_run.enrollment_start.isoformat().replace(
+                        "+00:00", "Z"
+                    ),
+                    "enrollment_end": course_run.enrollment_end.isoformat().replace(
+                        "+00:00", "Z"
+                    ),
+                    "start": course_run.start.isoformat().replace("+00:00", "Z"),
+                    "end": course_run.end.isoformat().replace("+00:00", "Z"),
+                    "state": {
+                        "priority": course_run.state["priority"],
+                        "text": course_run.state["text"],
+                        "call_to_action": course_run.state["call_to_action"],
+                        "datetime": course_run.state["datetime"]
+                        .isoformat()
+                        .replace("+00:00", "Z"),
+                    },
+                },
+                "is_active": True,
+                "state": "set",
+                "was_created_by_order": True,
+            },
+        )
+
+    @mock.patch.object(OpenEdXLMSBackend, "set_enrollment", return_value="enrolled")
+    def test_api_enrollment_update_was_created_by_order_on_order_enrollment(self, _):
+        """
+        An authenticated user should not be allowed to update the was_created_by_order
+        field to false of one of its enrollment if this one was previously created by an
+        order and active.
+        """
+        user = factories.UserFactory()
+        user_token = self.get_user_token(user.username)
+        course_run = self.create_opened_course_run(
+            resource_link="http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course"
+        )
+        product = factories.ProductFactory(target_courses=[course_run.course])
+        factories.OrderFactory(owner=user, product=product)
+        enrollment = factories.EnrollmentFactory(
+            course_run=course_run, user=user, is_active=True, was_created_by_order=True
+        )
+
+        self.assertEqual(enrollment.state, "set")
+        self.assertEqual(enrollment.is_active, True)
+        self.assertEqual(enrollment.was_created_by_order, True)
+
+        # User unrolls and tried to update the was_created_by_order field but it should
+        # not be updated because enrollment is active.
+        response = self.client.put(
+            f"/api/v1.0/enrollments/{enrollment.id}/",
+            data={
+                "is_active": True,
+                "was_created_by_order": False,
+            },
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {user_token}",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "id": str(enrollment.id),
+                "course_run": {
+                    "id": str(course_run.id),
+                    "resource_link": course_run.resource_link,
+                    "title": course_run.title,
+                    "enrollment_start": course_run.enrollment_start.isoformat().replace(
+                        "+00:00", "Z"
+                    ),
+                    "enrollment_end": course_run.enrollment_end.isoformat().replace(
+                        "+00:00", "Z"
+                    ),
+                    "start": course_run.start.isoformat().replace("+00:00", "Z"),
+                    "end": course_run.end.isoformat().replace("+00:00", "Z"),
+                    "state": {
+                        "priority": course_run.state["priority"],
+                        "text": course_run.state["text"],
+                        "call_to_action": course_run.state["call_to_action"],
+                        "datetime": course_run.state["datetime"]
+                        .isoformat()
+                        .replace("+00:00", "Z"),
+                    },
+                },
+                "is_active": True,
+                "state": "set",
+                "was_created_by_order": True,
+            },
+        )
+
+        # Then user purchases a product containing the previously created course run and
+        # tries to update to was_created_by_order field again.
+        factories.CourseRunFactory(course=course_run.course)
+        product = factories.ProductFactory(target_courses=[course_run.course])
+        order = factories.OrderFactory(owner=user, product=product)
+        # - Create an invoice related to the order to mark it as validated
+        InvoiceFactory(order=order, total=order.total)
+
+        response = self.client.put(
+            f"/api/v1.0/enrollments/{enrollment.id}/",
+            data={
+                "is_active": True,
+                "was_created_by_order": True,
+            },
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {user_token}",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "id": str(enrollment.id),
+                "course_run": {
+                    "id": str(course_run.id),
+                    "resource_link": course_run.resource_link,
+                    "title": course_run.title,
+                    "enrollment_start": course_run.enrollment_start.isoformat().replace(
+                        "+00:00", "Z"
+                    ),
+                    "enrollment_end": course_run.enrollment_end.isoformat().replace(
+                        "+00:00", "Z"
+                    ),
+                    "start": course_run.start.isoformat().replace("+00:00", "Z"),
+                    "end": course_run.end.isoformat().replace("+00:00", "Z"),
+                    "state": {
+                        "priority": course_run.state["priority"],
+                        "text": course_run.state["text"],
+                        "call_to_action": course_run.state["call_to_action"],
+                        "datetime": course_run.state["datetime"]
+                        .isoformat()
+                        .replace("+00:00", "Z"),
+                    },
+                },
+                "is_active": True,
+                "state": "set",
+                "was_created_by_order": True,
+            },
+        )

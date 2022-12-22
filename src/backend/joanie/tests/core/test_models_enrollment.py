@@ -1,5 +1,5 @@
 """
-Test suite for order models
+Test suite for enrollment models
 """
 from datetime import timedelta
 from unittest import mock
@@ -28,6 +28,10 @@ from joanie.lms_handler.backends.openedx import OpenEdXLMSBackend
 class EnrollmentModelsTestCase(TestCase):
     """Test suite for the Enrollment model."""
 
+    def setUp(self):
+        super().setUp()
+        self.now = timezone.now()
+
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment", return_value=True)
     def test_models_enrollment_str_active(self, _mock_set):
         """The string representation should work as expected for an active enrollment."""
@@ -36,11 +40,11 @@ class EnrollmentModelsTestCase(TestCase):
         )
 
         course_run = factories.CourseRunFactory(
+            start=self.now - timedelta(hours=1),
+            end=self.now + timedelta(hours=2),
+            enrollment_end=self.now + timedelta(hours=1),
             title="my run",
             resource_link=resource_link,
-            start=timezone.now() - timedelta(hours=1),
-            end=timezone.now() + timedelta(hours=2),
-            enrollment_end=timezone.now() + timedelta(hours=1),
         )
 
         enrollment = factories.EnrollmentFactory(
@@ -59,12 +63,11 @@ class EnrollmentModelsTestCase(TestCase):
 
     def test_models_enrollment_str_inactive(self):
         """The string representation should work as expected for an inactive enrollment."""
-
         course_run = factories.CourseRunFactory(
+            start=self.now - timedelta(hours=1),
+            end=self.now + timedelta(hours=2),
+            enrollment_end=self.now + timedelta(hours=1),
             title="my run",
-            start=timezone.now() - timedelta(hours=1),
-            end=timezone.now() + timedelta(hours=2),
-            enrollment_end=timezone.now() + timedelta(hours=1),
         )
 
         enrollment = factories.EnrollmentFactory(
@@ -86,16 +89,17 @@ class EnrollmentModelsTestCase(TestCase):
         A user can only have one enrollment on a given course run.
         """
         course_run = factories.CourseRunFactory(
-            start=timezone.now() - timedelta(hours=1),
-            end=timezone.now() + timedelta(hours=2),
-            enrollment_end=timezone.now() + timedelta(hours=1),
+            start=self.now - timedelta(hours=1),
+            end=self.now + timedelta(hours=2),
+            enrollment_end=self.now + timedelta(hours=1),
         )
-
         enrollment = factories.EnrollmentFactory(course_run=course_run, is_active=False)
+
         with self.assertRaises(ValidationError) as context:
             factories.EnrollmentFactory(
                 course_run=enrollment.course_run, user=enrollment.user
             )
+
         self.assertEqual(
             "{'__all__': ['Enrollment with this Course run and User already exists.']}",
             str(context.exception),
@@ -107,13 +111,13 @@ class EnrollmentModelsTestCase(TestCase):
         """
         [cr1, cr2] = factories.CourseRunFactory.create_batch(
             2,
-            start=timezone.now() - timedelta(hours=1),
-            end=timezone.now() + timedelta(hours=2),
-            enrollment_end=timezone.now() + timedelta(hours=1),
+            start=self.now - timedelta(hours=1),
+            end=self.now + timedelta(hours=2),
+            enrollment_end=self.now + timedelta(hours=1),
             course=factories.CourseFactory(),
         )
-
         enrollment = factories.EnrollmentFactory(course_run=cr1, is_active=True)
+
         with self.assertRaises(ValidationError) as context:
             factories.EnrollmentFactory(course_run=cr2, user=enrollment.user)
 
@@ -128,14 +132,16 @@ class EnrollmentModelsTestCase(TestCase):
     def test_models_enrollment_forbid_for_non_listed_course_run(self):
         """If a course run is not listed, user should not be allowed to enroll."""
         course_run = factories.CourseRunFactory(
-            start=timezone.now() - timedelta(hours=1),
-            end=timezone.now() + timedelta(hours=2),
-            enrollment_end=timezone.now() + timedelta(hours=1),
+            start=self.now - timedelta(hours=1),
+            end=self.now + timedelta(hours=2),
+            enrollment_end=self.now + timedelta(hours=1),
             is_listed=False,
         )
 
         with self.assertRaises(ValidationError) as context:
-            factories.EnrollmentFactory(course_run=course_run)
+            factories.EnrollmentFactory(
+                course_run=course_run, was_created_by_order=True
+            )
 
         self.assertEqual(
             "{'__all__': ['You are not allowed to enroll to a course run not listed.']}",
@@ -150,9 +156,9 @@ class EnrollmentModelsTestCase(TestCase):
         user = factories.UserFactory()
         course_run = factories.CourseRunFactory.create_batch(
             2,
-            start=timezone.now() - timedelta(hours=1),
-            end=timezone.now() + timedelta(hours=2),
-            enrollment_end=timezone.now() + timedelta(hours=1),
+            start=self.now - timedelta(hours=1),
+            end=self.now + timedelta(hours=2),
+            enrollment_end=self.now + timedelta(hours=1),
             is_listed=False,
             course=factories.CourseFactory(),
         )[0]
@@ -162,11 +168,13 @@ class EnrollmentModelsTestCase(TestCase):
 
         # - Enrollment should be forbid as user does not purchase the product
         with self.assertRaises(ValidationError) as context:
-            factories.EnrollmentFactory(course_run=course_run, user=user)
+            factories.EnrollmentFactory(
+                course_run=course_run, user=user, was_created_by_order=True
+            )
 
         self.assertEqual(
             (
-                f"{{'__all__': ['Course run \"{course_run.resource_link:s}\" "
+                f"{{'__all__': ['Course run \"{str(course_run.id)}\" "
                 "requires a valid order to enroll.']}"
             ),
             str(context.exception),
@@ -174,23 +182,24 @@ class EnrollmentModelsTestCase(TestCase):
 
         # - Once the product purchased, enrollment should be allowed
         factories.OrderFactory(owner=user, product=product)
-        factories.EnrollmentFactory(course_run=course_run, user=user)
+        factories.EnrollmentFactory(
+            course_run=course_run, user=user, was_created_by_order=True
+        )
 
     def test_models_enrollment_forbid_for_non_listed_course_run_not_included_in_product(
         self,
     ):
         """
-        If a course run is not listed and not linked to a product,
-        user should not be allowed to enroll to this course run
-        even if he/she purchased the product.
+        If a course run is not listed and not linked to a product, user should not be
+        allowed to enroll to this course run even if he/she purchased the product.
         """
         user = factories.UserFactory()
         course = factories.CourseFactory()
         [cr1, cr2] = factories.CourseRunFactory.create_batch(
             2,
-            start=timezone.now() - timedelta(hours=1),
-            end=timezone.now() + timedelta(hours=2),
-            enrollment_end=timezone.now() + timedelta(hours=1),
+            start=self.now - timedelta(hours=1),
+            end=self.now + timedelta(hours=2),
+            enrollment_end=self.now + timedelta(hours=1),
             is_listed=False,
             course=course,
         )
@@ -204,11 +213,13 @@ class EnrollmentModelsTestCase(TestCase):
 
         # - Enroll to cr2 should fail
         with self.assertRaises(ValidationError) as context:
-            factories.EnrollmentFactory(course_run=cr2, user=user)
+            factories.EnrollmentFactory(
+                course_run=cr2, user=user, was_created_by_order=True
+            )
 
         self.assertEqual(
             (
-                f"{{'__all__': ['Course run \"{cr2.resource_link}\" "
+                f"{{'__all__': ['Course run \"{cr2.id}\" "
                 "requires a valid order to enroll.']}"
             ),
             str(context.exception),
@@ -216,8 +227,30 @@ class EnrollmentModelsTestCase(TestCase):
         self.assertEqual(user.enrollments.count(), 0)
 
         # - But user should be allowed to enroll to cr1
-        factories.EnrollmentFactory(course_run=cr1, user=user)
+        factories.EnrollmentFactory(
+            course_run=cr1, user=user, was_created_by_order=True
+        )
         self.assertEqual(user.enrollments.count(), 1)
+
+    def test_models_enrollment_forbid_for_closed_course_run(self):
+        """If a course run is closed, user should not be allowed to enroll."""
+        course_run = factories.CourseRunFactory(
+            start=timezone.now() - timedelta(hours=-2),
+            end=timezone.now() + timedelta(hours=-1),
+            enrollment_end=timezone.now() + timedelta(hours=-1),
+        )
+
+        with self.assertRaises(ValidationError) as context:
+            factories.EnrollmentFactory(course_run=course_run)
+
+        self.assertEqual(
+            (
+                "{'__all__': ["
+                "'You are not allowed to enroll to a course run not"
+                " opened for enrollment.']}"
+            ),
+            str(context.exception),
+        )
 
     @override_settings(JOANIE_ENROLLMENT_GRADE_CACHE_TTL=600)
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment", return_value=True)
@@ -230,14 +263,12 @@ class EnrollmentModelsTestCase(TestCase):
         resource_link = (
             "http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course"
         )
-
-        course_run = factories.CourseRunFactory(
-            start=timezone.now() - timedelta(hours=1),
-            end=timezone.now() + timedelta(hours=2),
-            enrollment_end=timezone.now() + timedelta(hours=1),
+        course_run = factories.CourseRunFactory.create(
+            start=self.now - timedelta(hours=1),
+            end=self.now + timedelta(hours=2),
+            enrollment_end=self.now + timedelta(hours=1),
             resource_link=resource_link,
         )
-
         enrollment = factories.EnrollmentFactory(course_run=course_run)
 
         self.assertIs(enrollment.is_passed, True)
@@ -264,14 +295,12 @@ class EnrollmentModelsTestCase(TestCase):
         resource_link = (
             "http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course"
         )
-
-        course_run = factories.CourseRunFactory(
-            start=timezone.now() - timedelta(hours=1),
-            end=timezone.now() + timedelta(hours=2),
-            enrollment_end=timezone.now() + timedelta(hours=1),
+        course_run = factories.CourseRunFactory.create(
+            start=self.now - timedelta(hours=1),
+            end=self.now + timedelta(hours=2),
+            enrollment_end=self.now + timedelta(hours=1),
             resource_link=resource_link,
         )
-
         enrollment = factories.EnrollmentFactory(course_run=course_run)
 
         self.assertIs(enrollment.is_passed, False)
@@ -287,4 +316,92 @@ class EnrollmentModelsTestCase(TestCase):
         self.assertIs(enrollment.is_passed, True)
         mock_get_grades.assert_called_once_with(
             username=enrollment.user.username, resource_link=course_run.resource_link
+        )
+
+    def test_models_enrollment_was_created_by_order_flag(self):
+        """
+        For a course run which is listed (available for free enrollment) and also
+        linked to a product, the `was_created_by_order` flag can be set to store
+        the creation context of an enrollment. Sets to True if the enrollment has been
+        created along an order and False otherwise.
+        """
+
+        course = factories.CourseFactory()
+        course_run = factories.CourseRunFactory.create_batch(
+            2,
+            start=self.now - timedelta(hours=1),
+            end=self.now + timedelta(hours=2),
+            enrollment_end=self.now + timedelta(hours=1),
+            is_listed=True,
+            course=course,
+        )[0]
+        product = factories.ProductFactory(target_courses=[course], price="0.00")
+
+        user = factories.UserFactory()
+        # User can enroll to the course run for free
+        enrollment = factories.EnrollmentFactory(
+            course_run=course_run, user=user, was_created_by_order=False
+        )
+        self.assertFalse(enrollment.was_created_by_order)
+
+        # Then if user purchases the product, the flag should not have been updated
+        order = factories.OrderFactory(owner=user, product=product)
+        order_enrollment = order.get_enrollments().first()
+        self.assertEqual(enrollment, order_enrollment)
+        self.assertFalse(order_enrollment.was_created_by_order)
+
+    def test_models_enrollment_forbid_for_non_listed_course_out_of_scope_of_order(
+        self,
+    ):
+        """
+        If a user tries to enroll to a non-listed course run out of scope of an order,
+        a ValidationError should be raised.
+        """
+        course_run = factories.CourseRunFactory.create(
+            start=self.now - timedelta(hours=1),
+            end=self.now + timedelta(hours=2),
+            enrollment_end=self.now + timedelta(hours=1),
+            is_listed=False,
+        )
+
+        with self.assertRaises(ValidationError) as context:
+            factories.EnrollmentFactory(
+                course_run=course_run, was_created_by_order=False
+            )
+
+        self.assertEqual(
+            str(context.exception),
+            (
+                "{'was_created_by_order': ["
+                "'You cannot enroll to a non-listed course run "
+                "out of the scope of an order.']}"
+            ),
+        )
+
+    def test_models_enrollment_forbid_for_listed_course_run_not_linked_to_product_in_scope_of_order(  # noqa pylint: disable=line-too-long
+        self,
+    ):
+        """
+        If a user tries to enroll to a listed course run which is not linked to a
+        product in the scope of an order, a ValidationError should be raised.
+        """
+        course_run = factories.CourseRunFactory.create(
+            start=self.now - timedelta(hours=1),
+            end=self.now + timedelta(hours=2),
+            enrollment_end=self.now + timedelta(hours=1),
+            is_listed=True,
+        )
+
+        with self.assertRaises(ValidationError) as context:
+            factories.EnrollmentFactory(
+                course_run=course_run, was_created_by_order=True
+            )
+
+        self.assertEqual(
+            str(context.exception),
+            (
+                "{'was_created_by_order': ["
+                "'The related course run is not linked to any product, so it cannot be "
+                "created in the scope of an order.']}"
+            ),
         )

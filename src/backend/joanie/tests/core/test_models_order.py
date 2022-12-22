@@ -147,7 +147,7 @@ class OrderModelsTestCase(TestCase):
         self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
 
         # - Validate the order should automatically enroll user to course run
-        with self.assertNumQueries(10):
+        with self.assertNumQueries(11):
             order.validate()
 
         self.assertEqual(Enrollment.objects.count(), 1)
@@ -179,7 +179,9 @@ class OrderModelsTestCase(TestCase):
         self.assertEqual(Enrollment.objects.count(), 0)
 
         # - User enroll to the cr1
-        factories.EnrollmentFactory(course_run=cr1, user=owner, is_active=True)
+        factories.EnrollmentFactory(
+            course_run=cr1, user=owner, is_active=True, was_created_by_order=True
+        )
         self.assertEqual(Enrollment.objects.count(), 1)
         self.assertEqual(Enrollment.objects.filter(is_active=True).count(), 1)
 
@@ -221,7 +223,9 @@ class OrderModelsTestCase(TestCase):
         self.assertEqual(Enrollment.objects.count(), 0)
 
         # - User enroll to the cr1
-        factories.EnrollmentFactory(course_run=cr1, user=owner, is_active=True)
+        factories.EnrollmentFactory(
+            course_run=cr1, user=owner, is_active=True, was_created_by_order=True
+        )
         self.assertEqual(Enrollment.objects.count(), 1)
         self.assertEqual(Enrollment.objects.filter(is_active=True).count(), 1)
 
