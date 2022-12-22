@@ -402,16 +402,14 @@ class EnrollmentSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """
-        Retrieve the course run ressource through the provided resource_link
-        then try to create the enrollment ressource.
+        Retrieve the course run resource through the provided id
+        then try to create the enrollment resource.
         """
-        resource_link = self.initial_data["course_run"]
+        course_run_id = self.initial_data["course_run"]
         try:
-            course_run = models.CourseRun.objects.get(resource_link=resource_link)
+            course_run = models.CourseRun.objects.get(id=course_run_id)
         except models.CourseRun.DoesNotExist as exception:
-            message = (
-                f'A course run with resource link "{resource_link}" does not exist.'
-            )
+            message = f'A course run with id "{course_run_id}" does not exist.'
             raise serializers.ValidationError({"__all__": [message]}) from exception
 
         validated_data["course_run"] = course_run
