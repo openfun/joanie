@@ -459,6 +459,7 @@ class CourseApiTest(BaseAPITestCase):
                             "id": str(enrollment.id),
                             "is_active": enrollment.is_active,
                             "state": enrollment.state,
+                            "was_created_by_order": enrollment.was_created_by_order,
                             "course_run": {
                                 "id": str(enrollment.course_run.id),
                                 "resource_link": enrollment.course_run.resource_link,

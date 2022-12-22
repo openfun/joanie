@@ -508,6 +508,7 @@ class Order(BaseModel):
                     course_run=course_run,
                     is_active=True,
                     user=self.owner,
+                    was_created_by_order=True,
                 )
             else:
                 if enrollment.is_active is False:
@@ -652,11 +653,18 @@ class Enrollment(BaseModel):
         on_delete=models.RESTRICT,
     )
     is_active = models.BooleanField(
-        help_text="Tick to enroll the user to the course run.",
+        help_text=_("Ticked if the user is enrolled to the course run."),
         verbose_name="is active",
     )
     state = models.CharField(
         _("state"), choices=enums.ENROLLMENT_STATE_CHOICES, max_length=50, blank=True
+    )
+    was_created_by_order = models.BooleanField(
+        help_text=_(
+            "Ticked if the enrollment has been initially created in the scope of an order."
+        ),
+        verbose_name=_("was created by order"),
+        default=False,
     )
 
     class Meta:
@@ -712,7 +720,26 @@ class Enrollment(BaseModel):
         return grade
 
     def clean(self):
-        """Clean instance fields and raise a ValidationError in case of issue."""
+        """
+        Clean instance fields and raise a ValidationError in case of issue.
+
+        Sometimes a course run can be available for free enrollment
+        (course_run.is_listed = True) and also included in a product. So a user can
+        enroll to this course run for free or in the scope of an order. The flag
+        `was_created_by_order` aims to store the context of the enrollment creation. If
+        the enrollment is created in the scope of an order, this flag must be set to
+        True. Otherwise, in the case of a free enrollment, the flag must be set to
+        False.
+
+        --> *1
+        But if the related course run is not listed (so not available for free
+        enrollment) the flag `was_created_by_order` cannot be set to False.
+
+        --> *2
+        And if the related course run is not linked to any product, the flag
+        `was_created_by_order` cannot be set to True.
+        """
+
         # The related course run must be opened for enrollment
         if self.course_run.state["priority"] > courses_models.CourseState.ARCHIVED_OPEN:
             message = _(
@@ -738,6 +765,12 @@ class Enrollment(BaseModel):
         # Forbid creating a free enrollment if the related course run is not listed and
         # if the course relies on a product and the owner doesn't purchase it.
         if not self.course_run.is_listed:
+            if self.was_created_by_order is False:
+                # --> *1
+                message = _(
+                    "You cannot enroll to a non-listed course run out of the scope of an order."
+                )
+                raise ValidationError({"was_created_by_order": [message]})
             if self.course_run.course.targeted_by_products.exists():
                 validated_user_orders = [
                     order
@@ -756,13 +789,23 @@ class Enrollment(BaseModel):
                 ]
                 if len(validated_user_orders) == 0:
                     message = _(
-                        f'Course run "{self.course_run.resource_link:s}" '
+                        f'Course run "{self.course_run.id!s}" '
                         "requires a valid order to enroll."
                     )
                     raise ValidationError({"__all__": [message]})
             else:
                 message = _("You are not allowed to enroll to a course run not listed.")
                 raise ValidationError({"__all__": [message]})
+        elif self.was_created_by_order is True:
+            if not self.course_run.course.targeted_by_products.exists():
+                # --> *2
+                message = _(
+                    (
+                        "The related course run is not linked to any product, "
+                        "so it cannot be created in the scope of an order."
+                    )
+                )
+                raise ValidationError({"was_created_by_order": [message]})
 
         return super().clean()
 

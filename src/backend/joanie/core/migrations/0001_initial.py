@@ -948,6 +948,14 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
+                    "was_created_by_order",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Ticked if the enrollment has been initially created in the scope of an order.",
+                        verbose_name="was created by order",
+                    ),
+                ),
+                (
                     "course_run",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.RESTRICT,
