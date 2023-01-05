@@ -184,7 +184,9 @@ class HelpersTestCase(TestCase):
             # - 10 non eligible orders
             *factories.OrderFactory.create_batch(10, product=product_2, course=course),
             # - 1 canceled order
-            factories.OrderFactory(product=product_1, course=course, is_canceled=True),
+            factories.OrderFactory(
+                product=product_1, course=course, state=enums.ORDER_STATE_CANCELED
+            ),
         ]
 
         certificate_qs = models.Certificate.objects.filter(order__in=orders)

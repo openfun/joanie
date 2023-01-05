@@ -199,7 +199,9 @@ class ProductApiTest(BaseAPITestCase):
         product = factories.ProductFactory(
             type=enums.PRODUCT_TYPE_CREDENTIAL, price=Money(0.00, "EUR")
         )
-        order = factories.OrderFactory(owner=user, product=product, is_canceled=True)
+        order = factories.OrderFactory(
+            owner=user, product=product, state=enums.ORDER_STATE_CANCELED
+        )
 
         self.assertEqual(order.state, "canceled")
 

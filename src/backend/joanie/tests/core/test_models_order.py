@@ -1,6 +1,7 @@
 """
 Test suite for order models
 """
+import random
 from datetime import timedelta
 
 from django.core.exceptions import ValidationError
@@ -8,6 +9,7 @@ from django.db import IntegrityError
 from django.test import TestCase
 from django.utils import timezone
 
+from django_fsm import TransitionNotAllowed
 from moneyed import Money
 
 from joanie.core import enums, factories
@@ -42,7 +44,9 @@ class OrderModelsTestCase(TestCase):
         """
         course = factories.CourseFactory()
         product = factories.ProductFactory(courses=[course])
-        order = factories.OrderFactory(product=product, is_canceled=True)
+        order = factories.OrderFactory(
+            product=product, state=enums.ORDER_STATE_CANCELED
+        )
 
         factories.OrderFactory(owner=order.owner, product=product, course=order.course)
 
@@ -85,34 +89,35 @@ class OrderModelsTestCase(TestCase):
 
     def test_models_order_state_property(self):
         """
-        Order state property is dynamically computed from `is_canceled` state
-        and related invoice.
+        Order state property is set and related with invoice.
         """
         course = factories.CourseFactory()
         product = factories.ProductFactory(title="Traçabilité", courses=[course])
-        order = factories.OrderFactory(product=product, is_canceled=False)
+        order = factories.OrderFactory(product=product, state=enums.ORDER_STATE_PENDING)
 
         # 1 - By default, an order is `pending``
         self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
 
-        # 2 - When an invoice is linked to the order, its state is `validated`
+        # 2 - When an invoice is linked to the order, and the method validate() is
+        # called its state is `validated`
         InvoiceFactory(order=order, total=order.total)
+        order.validate()
         self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
 
         # 3 - When order is canceled, its state is `canceled`
-        order.is_canceled = True
-        order.save()
+        order.cancel()
         self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
 
     def test_models_order_state_property_validated_when_free(self):
         """
-        When an order relies on a free product, its state should be validated
-        without any invoice.
+        When an order relies on a free product, its state should be automatically
+        validated without any invoice and without calling the validate()
+        method.
         """
         courses = factories.CourseFactory.create_batch(2)
         # Create a free product
         product = factories.ProductFactory(courses=courses, price=0)
-        order = factories.OrderFactory(product=product, is_canceled=False)
+        order = factories.OrderFactory(product=product)
 
         self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
 
@@ -144,11 +149,11 @@ class OrderModelsTestCase(TestCase):
         # - Create an invoice to mark order as validated
         InvoiceFactory(order=order, total=order.total)
 
-        self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
-
         # - Validate the order should automatically enroll user to course run
-        with self.assertNumQueries(11):
+        with self.assertNumQueries(16):
             order.validate()
+
+        self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
 
         self.assertEqual(Enrollment.objects.count(), 1)
 
@@ -156,7 +161,7 @@ class OrderModelsTestCase(TestCase):
         """
         Order has a cancel method which is in charge to unroll owner to all active
         related enrollments if related course is not listed
-        then switch the `is_canceled` property to True.
+        then switch the `state` property to cancel.
         """
         owner = factories.UserFactory()
         [course, target_course] = factories.CourseFactory.create_batch(2)
@@ -187,7 +192,7 @@ class OrderModelsTestCase(TestCase):
 
         # - When order is canceled, user should be unenrolled to related enrollments
         order.cancel()
-        self.assertEqual(order.is_canceled, True)
+        self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
         self.assertEqual(Enrollment.objects.count(), 1)
         self.assertEqual(Enrollment.objects.filter(is_active=False).count(), 1)
 
@@ -232,7 +237,7 @@ class OrderModelsTestCase(TestCase):
         # - When order is canceled, user should not be unenrolled to related enrollments
         with self.assertNumQueries(8):
             order.cancel()
-        self.assertEqual(order.is_canceled, True)
+        self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
         self.assertEqual(Enrollment.objects.count(), 1)
         self.assertEqual(Enrollment.objects.filter(is_active=True).count(), 1)
 
@@ -270,7 +275,7 @@ class OrderModelsTestCase(TestCase):
         # - When order is canceled, user should not be unenrolled to related enrollments
         with self.assertNumQueries(6):
             order.cancel()
-        self.assertEqual(order.is_canceled, True)
+        self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
         self.assertEqual(Enrollment.objects.count(), 1)
         self.assertEqual(Enrollment.objects.filter(is_active=True).count(), 1)
 
@@ -337,3 +342,65 @@ class OrderModelsTestCase(TestCase):
             course_runs = order.target_course_runs.order_by("pk")
             self.assertEqual(len(course_runs), 3)
             self.assertCountEqual(list(course_runs), [cr1, cr2, cr3])
+
+    def test_models_order_validate_transition(self):
+        """
+        Test that the validate transition is successful
+        when the order is free or has invoices and is in the
+        ORDER_STATE_PENDING state
+        """
+        order_invoice = factories.OrderFactory(
+            product=factories.ProductFactory(price="10.00"),
+            state=enums.ORDER_STATE_PENDING,
+        )
+        InvoiceFactory(order=order_invoice)
+        self.assertEqual(order_invoice.can_be_state_validated(), True)
+        order_invoice.validate()
+        self.assertEqual(order_invoice.state, enums.ORDER_STATE_VALIDATED)
+
+        order_free = factories.OrderFactory(
+            product=factories.ProductFactory(price="0.00"),
+            state=enums.ORDER_STATE_PENDING,
+        )
+        self.assertEqual(order_free.can_be_state_validated(), True)
+        # order free are automatically validated without calling the validate method
+        self.assertEqual(order_free.state, enums.ORDER_STATE_VALIDATED)
+        with self.assertRaises(TransitionNotAllowed):
+            order_free.validate()
+
+    def test_models_order_validate_transition_failure(self):
+        """
+        Test that the validate transition fails when the
+        order is not free and has no invoices
+        """
+        order_no_invoice = factories.OrderFactory(
+            product=factories.ProductFactory(price="10.00"),
+            state=enums.ORDER_STATE_PENDING,
+        )
+        self.assertEqual(order_no_invoice.can_be_state_validated(), False)
+        with self.assertRaises(TransitionNotAllowed):
+            order_no_invoice.validate()
+        self.assertEqual(order_no_invoice.state, enums.ORDER_STATE_PENDING)
+
+    def test_models_order_transition_failure_when_not_pending(self):
+        """Test that the validate transition fails when the
+        order is not in the ORDER_STATE_PENDING state
+        """
+        order = factories.OrderFactory(
+            product=factories.ProductFactory(price="0.00"),
+            state=enums.ORDER_STATE_VALIDATED,
+        )
+        self.assertEqual(order.can_be_state_validated(), True)
+        with self.assertRaises(TransitionNotAllowed):
+            order.validate()
+        self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
+
+    def test_models_order_cancel_transition(self):
+        """Test that the cancel transition is successful from any state"""
+
+        order = factories.OrderFactory(
+            product=factories.ProductFactory(price="0.00"),
+            state=random.choice(enums.ORDER_STATE_CHOICES)[0],
+        )
+        order.cancel()
+        self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)

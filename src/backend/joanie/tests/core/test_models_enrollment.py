@@ -140,7 +140,7 @@ class EnrollmentModelsTestCase(TestCase):
 
         with self.assertRaises(ValidationError) as context:
             factories.EnrollmentFactory(
-                course_run=course_run, was_created_by_order=True
+                course_run=course_run, was_created_by_order=True, is_active=True
             )
 
         self.assertEqual(
@@ -169,7 +169,10 @@ class EnrollmentModelsTestCase(TestCase):
         # - Enrollment should be forbid as user does not purchase the product
         with self.assertRaises(ValidationError) as context:
             factories.EnrollmentFactory(
-                course_run=course_run, user=user, was_created_by_order=True
+                course_run=course_run,
+                user=user,
+                was_created_by_order=True,
+                is_active=True,
             )
 
         self.assertEqual(
@@ -214,7 +217,7 @@ class EnrollmentModelsTestCase(TestCase):
         # - Enroll to cr2 should fail
         with self.assertRaises(ValidationError) as context:
             factories.EnrollmentFactory(
-                course_run=cr2, user=user, was_created_by_order=True
+                course_run=cr2, user=user, was_created_by_order=True, is_active=True
             )
 
         self.assertEqual(

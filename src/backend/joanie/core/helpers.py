@@ -64,18 +64,13 @@ def generate_certificates_for_orders(orders):
     then return the count of generated certificates.
     """
     total = 0
+    orders_filtered = orders.filter(
+        state=enums.ORDER_STATE_VALIDATED,
+        certificate__isnull=True,
+        product__type__in=enums.PRODUCT_TYPE_CERTIFICATE_ALLOWED,
+    ).iterator()
 
-    orders = [
-        order
-        for order in orders.filter(
-            is_canceled=False,
-            certificate__isnull=True,
-            product__type__in=enums.PRODUCT_TYPE_CERTIFICATE_ALLOWED,
-        ).iterator()
-        if order.state == enums.ORDER_STATE_VALIDATED
-    ]
-
-    for order in orders:
+    for order in orders_filtered:
         total += generate_certificate_for_order(order)
 
     return total

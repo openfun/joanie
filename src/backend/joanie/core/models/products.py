@@ -13,11 +13,14 @@ from django.contrib.sites.models import Site
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import models
+from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
 import requests
+from django_fsm import FSMField, TransitionNotAllowed, transition
+from django_fsm.signals import post_transition
 from djmoney.models.fields import MoneyField
 from djmoney.models.validators import MinMoneyValidator
 from parler import models as parler_models
@@ -358,15 +361,21 @@ class Order(BaseModel):
         verbose_name=_("owner"),
         related_name="orders",
         on_delete=models.RESTRICT,
+        db_index=True,
     )
-    is_canceled = models.BooleanField(_("is canceled"), default=False, editable=False)
+
+    state = FSMField(
+        default=enums.ORDER_STATE_PENDING,
+        choices=enums.ORDER_STATE_CHOICES,
+        db_index=True,
+    )
 
     class Meta:
         db_table = "joanie_order"
         constraints = [
             models.UniqueConstraint(
                 fields=["course", "owner", "product"],
-                condition=models.Q(is_canceled=False),
+                condition=~models.Q(state=enums.ORDER_STATE_CANCELED),
                 name="unique_owner_product_not_canceled",
             )
         ]
@@ -377,24 +386,32 @@ class Order(BaseModel):
     def __str__(self):
         return f"Order {self.product} for user {self.owner}"
 
-    @property
-    def state(self):
+    def can_be_state_validated(self):
         """
-        Return order state.
-        If order has been explicitly canceled, return canceled state.
-        Then if order is free or has a related invoice, return validated state
-        Otherwise return pending state.
+        An order can be validated if the product is free or if it
+        has invoices.
         """
-        if self.is_canceled is True:
-            return enums.ORDER_STATE_CANCELED
-
-        if (
+        return (
             self.total.amount == 0  # pylint: disable=no-member
             or self.invoices.count() > 0
-        ):
-            return enums.ORDER_STATE_VALIDATED
+        )
 
-        return enums.ORDER_STATE_PENDING
+    @transition(
+        field="state",
+        source=enums.ORDER_STATE_PENDING,
+        target=enums.ORDER_STATE_VALIDATED,
+        conditions=[can_be_state_validated],
+    )
+    def validate(self):
+        """
+        Transition order to validated state.
+        """
+
+    @transition(field="state", source="*", target=enums.ORDER_STATE_CANCELED)
+    def cancel(self):
+        """
+        Mark order instance as "canceled".
+        """
 
     @property
     def target_course_runs(self):
@@ -478,16 +495,27 @@ class Order(BaseModel):
                 )
                 order_relation.course_runs.set(relation.course_runs.all())
 
-            self.validate()
+            try:
+                # orders with free product are automatically validated
+                self.validate()
+            except TransitionNotAllowed:
+                pass
 
-    def validate(self):
+    def get_enrollments(self, is_active=None):
         """
-        Automatically enroll user to courses with only one course run.
+        Retrieve owner's enrollments related to the order courses.
         """
-        if self.state != enums.ORDER_STATE_VALIDATED:
-            return
+        filters = {
+            "course_run__course__in": self.target_courses.all(),
+            "user": self.owner,
+        }
+        if is_active is not None:
+            filters.update({"is_active": is_active})
 
-        # Enroll user to course run that are the only one course run of the course
+        return Enrollment.objects.filter(**filters)
+
+    def enroll_user_to_course_run(self):
+        """Enroll user to course run that are the only one course run of the course"""
         courses_with_one_course_run = self.target_courses.annotate(
             course_runs_count=models.Count("course_runs")
         ).filter(
@@ -515,24 +543,9 @@ class Order(BaseModel):
                     enrollment.is_active = True
                     enrollment.save()
 
-    def get_enrollments(self, is_active=None):
+    def unenroll_user_from_course_runs(self):
         """
-        Retrieve owner's enrollments related to the order courses.
-        """
-        filters = {
-            "course_run__course__in": self.target_courses.all(),
-            "user": self.owner,
-        }
-        if is_active is not None:
-            filters.update({"is_active": is_active})
-
-        return Enrollment.objects.filter(**filters)
-
-    def cancel(self):
-        """
-        Mark order instance as "canceled".
-
-        Then unenroll user from all active course runs related to the order instance.
+        Unenroll user from all active course runs related to the order instance.
         There are two cases where user will not be unenrolled :
             - When `course_run.is_listed` is True, that means
               this course run is available for free.
@@ -548,7 +561,9 @@ class Order(BaseModel):
                 # If order owner does not own another product which contains the course run
                 owns_other_products = (
                     enrollment.course_run.course.targeted_by_products.filter(
-                        orders__in=self.owner.orders.filter(is_canceled=False)
+                        orders__in=self.owner.orders.exclude(
+                            state=enums.ORDER_STATE_CANCELED
+                        )
                     )
                     .exclude(pk=self.product.pk)
                     .exists()
@@ -556,9 +571,6 @@ class Order(BaseModel):
                 if not owns_other_products:
                     enrollment.is_active = False
                     enrollment.save()
-
-        self.is_canceled = True
-        self.save()
 
     def create_certificate(self):
         """
@@ -590,6 +602,23 @@ class Order(BaseModel):
             order=self,
             certificate_definition=self.product.certificate_definition,
         )
+
+
+@receiver(post_transition, sender=Order)
+def order_post_transition_callback(
+    sender, instance, **kwargs
+):  # pylint: disable=unused-argument
+    """
+    Post transition callback for Order model. When an order is validated,
+    it automatically enrolls user and when it is canceled, it automatically
+    unenrolls user.
+    """
+    instance.save()
+    if instance.state == enums.ORDER_STATE_VALIDATED:
+        instance.enroll_user_to_course_run()
+
+    if instance.state == enums.ORDER_STATE_CANCELED:
+        instance.unenroll_user_from_course_runs()
 
 
 class OrderTargetCourseRelation(BaseModel):
@@ -764,7 +793,7 @@ class Enrollment(BaseModel):
 
         # Forbid creating a free enrollment if the related course run is not listed and
         # if the course relies on a product and the owner doesn't purchase it.
-        if not self.course_run.is_listed:
+        if self.is_active and not self.course_run.is_listed:
             if self.was_created_by_order is False:
                 # --> *1
                 message = _(
@@ -772,22 +801,18 @@ class Enrollment(BaseModel):
                 )
                 raise ValidationError({"was_created_by_order": [message]})
             if self.course_run.course.targeted_by_products.exists():
-                validated_user_orders = [
-                    order
-                    for order in Order.objects.filter(
-                        (
-                            models.Q(
-                                course_relations__course_runs__isnull=True,
-                                target_courses__course_runs=self.course_run,
-                            )
-                            | models.Q(course_relations__course_runs=self.course_run)
-                        ),
-                        is_canceled=False,
-                        owner=self.user,
-                    )
-                    if order.state == enums.ORDER_STATE_VALIDATED
-                ]
-                if len(validated_user_orders) == 0:
+                validated_user_orders = Order.objects.filter(
+                    (
+                        models.Q(
+                            course_relations__course_runs__isnull=True,
+                            target_courses__course_runs=self.course_run,
+                        )
+                        | models.Q(course_relations__course_runs=self.course_run)
+                    ),
+                    state=enums.ORDER_STATE_VALIDATED,
+                    owner=self.user,
+                )
+                if validated_user_orders.count() == 0:
                     message = _(
                         f'Course run "{self.course_run.id!s}" '
                         "requires a valid order to enroll."

@@ -9,6 +9,7 @@ from django.urls import reverse
 
 from rest_framework.test import APIRequestFactory
 
+from joanie.core.enums import ORDER_STATE_PENDING, ORDER_STATE_VALIDATED
 from joanie.core.factories import OrderFactory, ProductFactory, UserFactory
 from joanie.payment.backends.base import BasePaymentBackend
 from joanie.payment.backends.dummy import DummyPaymentBackend
@@ -95,8 +96,8 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
         self, mock_create_payment, mock_handle_notification, mock_logger
     ):
         """
-        Dummy backend `one_click_payment` calls the `create_payment` method then immediately
-        trigger the `handle_notification` with payment info to validate the order.
+        Dummy backend `one_click_payment` calls the `create_payment` method then after
+        we trigger the `handle_notification` with payment info to validate the order.
         It returns payment information with `is_paid` property sets to True to simulate
         that a one click payment has succeeded.
         """
@@ -123,8 +124,16 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
                 "is_paid": True,
             },
         )
-
+        self.assertEqual(order.state, ORDER_STATE_PENDING)
         mock_create_payment.assert_called_once_with(request, order, billing_address)
+
+        request = APIRequestFactory().post(
+            reverse("payment_webhook"),
+            data={"id": payment_id, "type": "payment", "state": "success"},
+            format="json",
+        )
+        request.data = json.loads(request.body.decode("utf-8"))
+        backend.handle_notification(request)
         payment = cache.get(payment_id)
         self.assertEqual(
             payment,
@@ -138,7 +147,8 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
         )
 
         mock_handle_notification.assert_called_once()
-
+        order.refresh_from_db()
+        self.assertEqual(order.state, ORDER_STATE_VALIDATED)
         # check email has been sent
         self._check_purchase_order_email_sent("sam@fun-test.fr", "Samantha", order)
 
@@ -253,6 +263,8 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
         request.data = json.loads(request.body.decode("utf-8"))
 
         backend.handle_notification(request)
+        order.refresh_from_db()
+        self.assertEqual(order.state, ORDER_STATE_PENDING)
 
         mock_payment_failure.assert_called_once_with(order)
 
