@@ -157,7 +157,6 @@ class DummyPaymentBackend(BasePaymentBackend):
         notification_request.data = json.loads(
             notification_request.body.decode("utf-8")
         )
-        self.handle_notification(notification_request)
 
         return {
             **payment_info,

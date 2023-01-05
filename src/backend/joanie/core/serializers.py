@@ -2,12 +2,13 @@
 
 from django.conf import settings
 from django.core.cache import cache
-from django.db.models import Q
 
 from djmoney.contrib.django_rest_framework import MoneyField
 from rest_framework import serializers
 
 from joanie.core import models, utils
+
+from .enums import ORDER_STATE_PENDING, ORDER_STATE_VALIDATED
 
 
 class CertificationDefinitionSerializer(serializers.ModelSerializer):
@@ -193,7 +194,7 @@ class ProductSerializer(serializers.ModelSerializer):
         """
         If a user is authenticated, it retrieves valid or pending orders related to the
         product instance. If a course code has been provided through query
-        parameters order are also filtered by course.
+        parameters orders are also filtered by course.
         """
         try:
             filters = {"owner__username": self.context["username"]}
@@ -205,7 +206,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
         try:
             orders = models.Order.objects.filter(
-                is_canceled=False,
+                state__in=(ORDER_STATE_VALIDATED, ORDER_STATE_PENDING),
                 product=instance,
                 **filters,
             ).only("pk")
@@ -322,13 +323,13 @@ class CourseSerializer(serializers.ModelSerializer):
         If a user is authenticated, retrieves its orders related to the serializer
         Course instance else return None
         """
+
         try:
             username = self.context["username"]
             orders = models.Order.objects.filter(
-                Q(total=0) | Q(invoices__isnull=False),
+                state=ORDER_STATE_VALIDATED,
                 owner__username=username,
                 course=instance,
-                is_canceled=False,
             ).select_related("product")
 
             return OrderLiteSerializer(orders, many=True).data

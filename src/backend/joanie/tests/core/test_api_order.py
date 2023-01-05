@@ -54,7 +54,7 @@ class OrderApiTest(BaseAPITestCase):
         # The owner can see his/her order
         token = self.get_user_token(order.owner.username)
 
-        with self.assertNumQueries(13):
+        with self.assertNumQueries(12):
             response = self.client.get(
                 "/api/v1.0/orders/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -92,7 +92,7 @@ class OrderApiTest(BaseAPITestCase):
         # The owner of the other order can only see his/her order
         token = self.get_user_token(other_order.owner.username)
 
-        with self.assertNumQueries(13):
+        with self.assertNumQueries(12):
             response = self.client.get(
                 "/api/v1.0/orders/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -141,7 +141,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         # Retrieve user's order related to the product 1
-        with self.assertNumQueries(13):
+        with self.assertNumQueries(12):
             response = self.client.get(
                 f"/api/v1.0/orders/?product={product_1.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -209,7 +209,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         # Retrieve user's order related to the first course linked to the product 1
-        with self.assertNumQueries(14):
+        with self.assertNumQueries(13):
             response = self.client.get(
                 f"/api/v1.0/orders/?course={product_1.courses.first().code}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -253,12 +253,14 @@ class OrderApiTest(BaseAPITestCase):
         order = factories.OrderFactory(owner=user, product=product_1)
 
         # User purchases the product 2 then cancels it
-        factories.OrderFactory(owner=user, product=product_2, is_canceled=True)
+        factories.OrderFactory(
+            owner=user, product=product_2, state=enums.ORDER_STATE_CANCELED
+        )
 
         token = self.get_user_token(user.username)
 
         # Retrieve user's order related to the product 1
-        with self.assertNumQueries(13):
+        with self.assertNumQueries(12):
             response = self.client.get(
                 "/api/v1.0/orders/?state=pending", HTTP_AUTHORIZATION=f"Bearer {token}"
             )
@@ -301,7 +303,9 @@ class OrderApiTest(BaseAPITestCase):
         factories.OrderFactory(owner=user, product=product_1)
 
         # User purchases the product 2 then cancels it
-        order = factories.OrderFactory(owner=user, product=product_2, is_canceled=True)
+        order = factories.OrderFactory(
+            owner=user, product=product_2, state=enums.ORDER_STATE_CANCELED
+        )
 
         token = self.get_user_token(user.username)
 
@@ -352,7 +356,9 @@ class OrderApiTest(BaseAPITestCase):
         order = factories.OrderFactory(owner=user, product=product_1)
 
         # User purchases the product 2 then cancels it
-        factories.OrderFactory(owner=user, product=product_2, is_canceled=True)
+        factories.OrderFactory(
+            owner=user, product=product_2, state=enums.ORDER_STATE_CANCELED
+        )
 
         token = self.get_user_token(user.username)
 
@@ -440,7 +446,7 @@ class OrderApiTest(BaseAPITestCase):
         order = factories.OrderFactory(product=product, owner=owner)
         token = self.generate_token_from_user(owner)
 
-        with self.assertNumQueries(20):
+        with self.assertNumQueries(19):
             response = self.client.get(
                 f"/api/v1.0/orders/{order.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -1069,7 +1075,7 @@ class OrderApiTest(BaseAPITestCase):
             "billing_address": billing_address,
         }
 
-        with self.assertNumQueries(24):
+        with self.assertNumQueries(23):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -1196,31 +1202,28 @@ class OrderApiTest(BaseAPITestCase):
         order = models.Order.objects.get(product=product, course=course, owner=user)
 
         mock_create_one_click_payment.assert_called_once()
-
-        self.assertEqual(
-            response.json(),
-            {
-                "id": str(order.id),
-                "certificate": None,
-                "course": course.code,
-                "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                "state": "validated",
-                "main_invoice": order.main_invoice.reference,
-                "organization": str(order.organization.id),
-                "owner": user.username,
-                "total": float(product.price.amount),
-                "total_currency": str(product.price.currency),
-                "product": str(product.id),
-                "enrollments": [],
-                "target_courses": [],
-                "payment_info": {
-                    "payment_id": f"pay_{order.id}",
-                    "provider": "dummy",
-                    "url": "http://testserver/api/v1.0/payments/notifications",
-                    "is_paid": True,
-                },
+        expected_json = {
+            "id": str(order.id),
+            "certificate": None,
+            "course": course.code,
+            "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+            "state": "pending",
+            "main_invoice": None,
+            "organization": str(order.organization.id),
+            "owner": user.username,
+            "total": float(product.price.amount),
+            "total_currency": str(product.price.currency),
+            "product": str(product.id),
+            "enrollments": [],
+            "target_courses": [],
+            "payment_info": {
+                "payment_id": f"pay_{order.id}",
+                "provider": "dummy",
+                "url": "http://testserver/api/v1.0/payments/notifications",
+                "is_paid": True,
             },
-        )
+        }
+        self.assertEqual(response.json(), expected_json)
 
     @mock.patch.object(DummyPaymentBackend, "create_payment")
     def test_api_order_create_payment_failed(self, mock_create_payment):
@@ -1628,7 +1631,7 @@ class OrderApiTest(BaseAPITestCase):
 
         # - Order should have been canceled ...
         order.refresh_from_db()
-        self.assertEqual(order.is_canceled, True)
+        self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
 
         # - and its related payment should have been aborted.
         mock_abort_payment.assert_called_once_with(payment_id)

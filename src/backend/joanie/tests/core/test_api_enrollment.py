@@ -771,7 +771,9 @@ class EnrollmentApiTest(BaseAPITestCase):
         )
         order = factories.OrderFactory(
             product=product,
-            is_canceled=random.choice([True, False]),
+            state=random.choice(
+                [enums.ORDER_STATE_PENDING, enums.ORDER_STATE_CANCELED]
+            ),
         )
         data = {
             "course_run": target_course_runs[0].id,

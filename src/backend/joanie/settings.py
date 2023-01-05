@@ -183,6 +183,7 @@ class Base(Configuration):
         "django.contrib.staticfiles",
         # Third party apps
         "django_object_actions",
+        "django_fsm",
         "adminsortable2",
         "corsheaders",
         "dockerflow.django",

@@ -85,7 +85,6 @@ class CourseApiTest(BaseAPITestCase):
         for _ in range(random.randrange(1, 5)):
             user = factories.UserFactory()
             should_purchase = random.choice([True, False])
-            should_enroll = random.choice([True, False])
 
             if should_purchase:
                 product_purchased = True
@@ -96,12 +95,7 @@ class CourseApiTest(BaseAPITestCase):
                 )
                 # Create an invoice to mark order has validated
                 InvoiceFactory(order=order, total=order.total)
-
-                if should_enroll:
-                    course_run = random.choice(target_course_runs)
-                    factories.EnrollmentFactory(
-                        user=user, course_run=course_run, is_active=True
-                    )
+                order.validate()
 
         with self.assertNumQueries(13):
             response = self.client.get(f"/api/v1.0/courses/{course.code}/")
@@ -291,15 +285,8 @@ class CourseApiTest(BaseAPITestCase):
         )
         # - Create an invoice related to the order to mark it as validated
         InvoiceFactory(order=order1, total=order1.total)
+        order1.validate()
 
-        # - Enrollment to course run 11
-        factories.EnrollmentFactory(
-            user=user, course_run=target_course_run11, is_active=True
-        )
-        # - Enrollment to course run 12
-        factories.EnrollmentFactory(
-            user=user, course_run=target_course_run12, is_active=True
-        )
         # - Product 2
         order2 = factories.OrderFactory(
             owner=user,
@@ -309,14 +296,7 @@ class CourseApiTest(BaseAPITestCase):
 
         # - Create an invoice related to the order to mark it as validated
         InvoiceFactory(order=order2, total=order2.total)
-        # - Enrollment to course run 21
-        factories.EnrollmentFactory(
-            user=user, course_run=target_course_run21, is_active=True
-        )
-        # - Enrollment to course run 22
-        factories.EnrollmentFactory(
-            user=user, course_run=target_course_run22, is_active=True
-        )
+        order2.validate()
 
         # - Create a certificate
         certificate = factories.CertificateFactory(order=order2)
@@ -326,7 +306,6 @@ class CourseApiTest(BaseAPITestCase):
         for _ in range(random.randrange(1, 5)):
             user = factories.UserFactory()
             should_purchase = random.choice([True, False])
-            should_enroll = random.choice([True, False])
 
             if should_purchase:
                 product = random.choice(course.products.all())
@@ -338,18 +317,9 @@ class CourseApiTest(BaseAPITestCase):
                 # - Create a  invoice related to the order
                 #   to mark it as validated
                 InvoiceFactory(order=order, total=order.total)
+                order.validate()
 
-                if should_enroll:
-                    course_run = random.choice(
-                        models.CourseRun.objects.filter(
-                            course__product_relations__product=product
-                        )
-                    )
-                    factories.EnrollmentFactory(
-                        user=user, course_run=course_run, is_active=True
-                    )
-
-        with self.assertNumQueries(43):
+        with self.assertNumQueries(41):
             response = self.client.get(
                 f"/api/v1.0/courses/{course.code}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -506,7 +476,7 @@ class CourseApiTest(BaseAPITestCase):
 
         # - When user is authenticated, response should be partially cached.
         # Course information should have been cached, but orders not.
-        with self.assertNumQueries(18):
+        with self.assertNumQueries(16):
             self.client.get(
                 f"/api/v1.0/courses/{course.code}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -533,7 +503,7 @@ class CourseApiTest(BaseAPITestCase):
             owner=user, product=product_paid, course=course
         )
         InvoiceFactory(order=order_paid, total=order_paid.total)
-
+        order_paid.validate()
         # - Furthermore it has a pending order
         product_pending = factories.ProductFactory(courses=[course])
         order_pending = factories.OrderFactory(
@@ -543,7 +513,10 @@ class CourseApiTest(BaseAPITestCase):
         # - And a canceled order
         product_canceled = factories.ProductFactory(courses=[course])
         order_canceled = factories.OrderFactory(
-            course=course, owner=user, product=product_canceled, is_canceled=True
+            course=course,
+            owner=user,
+            product=product_canceled,
+            state=enums.ORDER_STATE_CANCELED,
         )
 
         self.assertEqual(order_free.state, enums.ORDER_STATE_VALIDATED)
@@ -552,7 +525,7 @@ class CourseApiTest(BaseAPITestCase):
         self.assertEqual(order_canceled.state, enums.ORDER_STATE_CANCELED)
 
         # - Retrieve course information
-        with self.assertNumQueries(27):
+        with self.assertNumQueries(26):
             response = self.client.get(
                 f"/api/v1.0/courses/{course.code}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -563,7 +536,7 @@ class CourseApiTest(BaseAPITestCase):
         content = response.json()
         self.assertEqual(len(content["products"]), 4)
 
-        # - Response should only contain the validated and pending orders
+        # - Response should only contain the validated
         self.assertEqual(len(content["orders"]), 2)
         self.assertContains(response, str(order_free.id))
         self.assertContains(response, str(order_paid.id))
@@ -603,6 +576,7 @@ class CourseApiTest(BaseAPITestCase):
         order = factories.OrderFactory(owner=user, product=product)
         # - Create invoice related to the order to mark it as validated
         InvoiceFactory(order=order, total=order.total)
+        order.validate()
         # - Then enrolls to a course run
         factories.EnrollmentFactory(
             course_run=cr1,
