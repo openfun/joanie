@@ -214,8 +214,8 @@ jobs:
     docker:
       - image: cimg/node:16.15
         auth:
-          username: $DOCKER_USER
-          password: $DOCKER_PASS
+          username: $DOCKER_HUB_USER
+          password: $DOCKER_HUB_PASSWORD
     working_directory: ~/joanie/src/mail
     steps:
       - checkout:
@@ -246,8 +246,8 @@ jobs:
     docker:
       - image: cimg/python:3.10
         auth:
-          username: $DOCKER_USER
-          password: $DOCKER_PASS
+          username: $DOCKER_HUB_USER
+          password: $DOCKER_HUB_PASSWORD
     working_directory: ~/joanie/src/backend
     steps:
       - checkout:
@@ -277,8 +277,8 @@ jobs:
     docker:
       - image: crowdin/cli:3.7.9
         auth:
-          username: $DOCKER_USER
-          password: $DOCKER_PASS
+          username: $DOCKER_HUB_USER
+          password: $DOCKER_HUB_PASSWORD
     working_directory: ~/joanie
     steps:
       - checkout:
