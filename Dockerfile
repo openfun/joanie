@@ -25,13 +25,10 @@ RUN mkdir /install && \
 
 # ---- mails ----
 FROM node:16 as mail-builder
-RUN mkdir -p /app/backend/joanie/core/templates/mail/html/ && \
-    mkdir -p /app/backend/joanie/core/templates/mail/text/ && \
-    mkdir -p /app/mail
 
-COPY ./src/mail /app/mail
+COPY ./src/mail /mail/app
 
-WORKDIR /app/mail
+WORKDIR /mail/app
 
 RUN yarn install --frozen-lockfile && \
     yarn build-mails
@@ -54,10 +51,6 @@ COPY --from=back-builder /install /usr/local
 # Copy joanie application (see .dockerignore)
 COPY ./src/backend /app/
 
-# Copy joanie mails
-COPY --from=mail-builder /app/backend/joanie/core/templates/mail /app/src/backend/joanie/core/templates/mail
-
-
 WORKDIR /app
 
 # collectstatic
@@ -70,8 +63,6 @@ RUN rdfind -makesymlinks true -followsymlinks true -makeresultsfile false ${JOAN
 
 # ---- Core application image ----
 FROM base as core
-
-ARG JOANIE_STATIC_ROOT=/data/static
 
 ENV PYTHONUNBUFFERED=1
 
@@ -87,12 +78,6 @@ RUN apt-get update && \
       shared-mime-info && \
   rm -rf /var/lib/apt/lists/*
 
-# Copy installed python dependencies
-COPY --from=back-builder /install /usr/local
-
-# Copy application
-COPY ./src/backend /app/
-
 # Copy entrypoint
 COPY ./docker/files/usr/local/bin/entrypoint /usr/local/bin/entrypoint
 
@@ -101,8 +86,11 @@ COPY ./docker/files/usr/local/bin/entrypoint /usr/local/bin/entrypoint
 # docker user (see entrypoint).
 RUN chmod g=u /etc/passwd
 
-# Copy statics
-COPY --from=link-collector ${JOANIE_STATIC_ROOT} ${JOANIE_STATIC_ROOT}
+# Copy installed python dependencies
+COPY --from=back-builder /install /usr/local
+
+# Copy joanie application (see .dockerignore)
+COPY ./src/backend /app/
 
 WORKDIR /app
 
@@ -129,13 +117,15 @@ USER ${DOCKER_USER}
 # Target database host (e.g. database engine following docker-compose services
 # name) & port
 ENV DB_HOST=postgresql \
-  DB_PORT=5432
+    DB_PORT=5432
 
 # Run django development server
 CMD python manage.py runserver 0.0.0.0:8000
 
 # ---- Production image ----
 FROM core as production
+
+ARG JOANIE_STATIC_ROOT=/data/static
 
 # Gunicorn
 RUN mkdir -p /usr/local/etc/gunicorn
@@ -145,6 +135,11 @@ COPY docker/files/usr/local/etc/gunicorn/joanie.py /usr/local/etc/gunicorn/joani
 ARG DOCKER_USER
 USER ${DOCKER_USER}
 
+# Copy statics
+COPY --from=link-collector ${JOANIE_STATIC_ROOT} ${JOANIE_STATIC_ROOT}
+
+# Copy joanie mails
+COPY --from=mail-builder /mail/backend/joanie/core/templates/mail /app/joanie/core/templates/mail
+
 # The default command runs gunicorn WSGI server in joanie's main module
 CMD gunicorn -c /usr/local/etc/gunicorn/joanie.py joanie.wsgi:application
-
