@@ -18,6 +18,8 @@ import sentry_sdk
 from configurations import Configuration, values
 from sentry_sdk.integrations.django import DjangoIntegration
 
+from .core.utils import JSONValue
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join("/", "data")
@@ -323,20 +325,11 @@ class Base(Configuration):
     SENTRY_DSN = values.Value(None, environ_name="SENTRY_DSN")
 
     # Richie synchronization
-    COURSE_WEB_HOOK_URL = values.Value()
-    COURSE_WEB_HOOK_SECRET = values.Value()
-    COURSE_WEB_HOOK_VERIFY = values.BooleanValue(True)
-    COURSE_WEB_HOOKS = (
-        [
-            {
-                "secret": COURSE_WEB_HOOK_SECRET,
-                "url": COURSE_WEB_HOOK_URL,
-                "verify": COURSE_WEB_HOOK_VERIFY,
-            }
-        ]
-        if COURSE_WEB_HOOK_URL
-        else []
-    )
+    # COURSE_WEB_HOOKS environment variable should be a stringified JSON array of
+    # objects with the following structure:
+    # e.g:
+    # DJANGO_COURSE_WEB_HOOKS=[{"url": "http://example.com", "secret": "secret", "verify": true}]
+    COURSE_WEB_HOOKS = JSONValue([])
 
     # pylint: disable=invalid-name
     @property
