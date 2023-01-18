@@ -31,6 +31,20 @@ class User(BaseModel, auth_models.AbstractUser):
         verbose_name=_("password"),
     )
 
+    # used to tell if a user can be shown teacher views
+    is_teacher = models.BooleanField(
+        default=False,
+        null=False,
+        verbose_name=_("is a teacher"),
+    )
+    # a link between an user and its organizations
+    # if is_teacher is False, teaches_in must be empty
+    teaches_in = models.ManyToManyField(
+        "core.Organization", related_name="teachers", versbose_name=_("teaches in")
+    )
+    # to generate documents when an User is a representative from an organization
+    signature = models.ImageField(_("signature"), blank=True)
+
     class Meta:
         db_table = "joanie_user"
         verbose_name = _("User")

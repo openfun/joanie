@@ -4,6 +4,7 @@ Declare and configure the models for the courses part
 from collections.abc import Mapping
 from datetime import MAXYEAR, datetime, timezone
 
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone as django_timezone
@@ -20,6 +21,8 @@ from joanie.core.fields.multiselect import MultiSelectField
 from .base import BaseModel
 
 MAX_DATE = datetime(MAXYEAR, 12, 31, tzinfo=timezone.utc)
+
+User = get_user_model()
 
 
 class CourseState(Mapping):
@@ -137,14 +140,25 @@ class Organization(parler_models.TranslatableModel, BaseModel):
     translations = parler_models.TranslatedFields(
         title=models.CharField(_("title"), max_length=255)
     )
-    representative = models.CharField(
-        _("representative"),
-        help_text=_("representative fullname (to sign certificate for example)"),
-        max_length=100,
+    representative_user = models.ForeignKey(
+        to=User,
+        verbose_name=_("representative user"),
+        on_delete=models.PROTECT,
+        default=None,
+        null=True,
         blank=True,
     )
-    signature = models.ImageField(_("signature"), blank=True)
     logo = models.ImageField(_("logo"), blank=True)
+
+    # if an Organization is part of another Organization that is a member or partner, this is used in order to find the representative user, see https://fr.wikipedia.org/wiki/Liste_des_%C3%A9tablissements_publics_%C3%A0_caract%C3%A8re_scientifique,_culturel_et_professionnel#Liste_des_regroupements_universitaires
+    parent = models.ForeignKey(
+        to="self",
+        verbose_name=_("parent organization"),
+        on_delete=models.CASCADE,
+        default=None,
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         db_table = "joanie_organization"
@@ -176,6 +190,16 @@ class Course(parler_models.TranslatableModel, BaseModel):
         "Product",
         related_name="courses",
         verbose_name=_("products"),
+        blank=True,
+    )
+    # the user (that is_teacher is True) that asked from course creation
+    lead_teacher = models.ForeignKey(
+        to=User,
+        verbose_name=_("lead teacher"),
+        on_delete=models.PROTECT,
+        limit_choices_to={"is_teacher": True},
+        default=None,
+        null=True,
         blank=True,
     )
 
