@@ -3,10 +3,12 @@ Utils that can be useful throughout Joanie's core app
 """
 import base64
 import collections.abc
+import json
 
 from django.utils.text import slugify
 from django.utils.translation import get_language
 
+from configurations import values
 from PIL import ImageFile as PillowImageFile
 
 
@@ -85,3 +87,16 @@ def get_resource_cache_key(
         cache_key = f"{cache_key}-{current_language}"
 
     return cache_key
+
+
+class JSONValue(values.Value):
+    """
+    A custom value class based on django-configurations Value class that
+    allows to load a JSON string and use it as a value.
+    """
+
+    def to_python(self, value):
+        """
+        Return the python representation of the JSON string.
+        """
+        return json.loads(value)
