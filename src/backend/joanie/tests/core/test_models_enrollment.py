@@ -366,10 +366,9 @@ class EnrollmentModelsTestCase(TestCase):
             enrollment_end=self.now + timedelta(hours=1),
             is_listed=False,
         )
-
         with self.assertRaises(ValidationError) as context:
             factories.EnrollmentFactory(
-                course_run=course_run, was_created_by_order=False
+                course_run=course_run, was_created_by_order=False, is_active=True
             )
 
         self.assertEqual(
