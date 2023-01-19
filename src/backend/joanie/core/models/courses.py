@@ -150,7 +150,7 @@ class Organization(parler_models.TranslatableModel, BaseModel):
     )
     logo = models.ImageField(_("logo"), blank=True)
 
-    # if an Organization is part of another Organization that is a member or partner, this is used in order to find the representative user, see https://fr.wikipedia.org/wiki/Liste_des_%C3%A9tablissements_publics_%C3%A0_caract%C3%A8re_scientifique,_culturel_et_professionnel#Liste_des_regroupements_universitaires
+    # see https://fr.wikipedia.org/wiki/Liste_des_%C3%A9tablissements_publics_%C3%A0_caract%C3%A8re_scientifique,_culturel_et_professionnel#Liste_des_regroupements_universitaires
     parent = models.ForeignKey(
         to="self",
         verbose_name=_("parent organization"),
@@ -158,6 +158,9 @@ class Organization(parler_models.TranslatableModel, BaseModel):
         default=None,
         null=True,
         blank=True,
+        help_text=_(
+            "if an Organization is part of another Organization that is a member or partner, this is used in order to find the representative user"
+        ),
     )
 
     class Meta:
@@ -192,7 +195,6 @@ class Course(parler_models.TranslatableModel, BaseModel):
         verbose_name=_("products"),
         blank=True,
     )
-    # the user (that is_teacher is True) that asked from course creation
     lead_teacher = models.ForeignKey(
         to=User,
         verbose_name=_("lead teacher"),
@@ -201,6 +203,9 @@ class Course(parler_models.TranslatableModel, BaseModel):
         default=None,
         null=True,
         blank=True,
+        help_text=_(
+            "the user (that is_teacher is True) that asked the creation of this course"
+        ),
     )
 
     class Meta:
