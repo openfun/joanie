@@ -8,51 +8,91 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0001_initial'),
+        ("core", "0001_initial"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='organization',
-            name='representative',
+            model_name="organization",
+            name="representative",
         ),
         migrations.RemoveField(
-            model_name='organization',
-            name='signature',
+            model_name="organization",
+            name="signature",
         ),
         migrations.AddField(
-            model_name='course',
-            name='lead_teacher',
-            field=models.ForeignKey(blank=True, default=None, help_text='the user (that is_teacher is True) that asked the creation of this course', limit_choices_to={'is_teacher': True}, null=True, on_delete=django.db.models.deletion.PROTECT, to=settings.AUTH_USER_MODEL, verbose_name='lead teacher'),
+            model_name="course",
+            name="lead_teacher",
+            field=models.ForeignKey(
+                blank=True,
+                default=None,
+                help_text="the user (that is_teacher is True) that asked the creation of this course",
+                limit_choices_to={"is_teacher": True},
+                null=True,
+                on_delete=django.db.models.deletion.PROTECT,
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="lead teacher",
+            ),
         ),
         migrations.AddField(
-            model_name='organization',
-            name='parent',
-            field=models.ForeignKey(blank=True, default=None, help_text='if an Organization is part of another Organization that is a member or partner, this is used in order to find the representative user', null=True, on_delete=django.db.models.deletion.CASCADE, to='core.organization', verbose_name='parent organization'),
+            model_name="organization",
+            name="parent",
+            field=models.ForeignKey(
+                blank=True,
+                default=None,
+                help_text="if an Organization is part of another Organization that is a member or partner, this is used in order to find the representative user",
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="core.organization",
+                verbose_name="parent organization",
+            ),
         ),
         migrations.AddField(
-            model_name='organization',
-            name='representative_user',
-            field=models.ForeignKey(blank=True, default=None, null=True, on_delete=django.db.models.deletion.PROTECT, to=settings.AUTH_USER_MODEL, verbose_name='representative user'),
+            model_name="organization",
+            name="representative_user",
+            field=models.ForeignKey(
+                blank=True,
+                default=None,
+                null=True,
+                on_delete=django.db.models.deletion.PROTECT,
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="representative user",
+            ),
         ),
         migrations.AddField(
-            model_name='user',
-            name='is_teacher',
-            field=models.BooleanField(default=False, help_text='used to tell if a user can be shown teacher views', verbose_name='is a teacher'),
+            model_name="user",
+            name="is_teacher",
+            field=models.BooleanField(
+                default=False,
+                help_text="used to tell if a user can be shown teacher views",
+                verbose_name="is a teacher",
+            ),
         ),
         migrations.AddField(
-            model_name='user',
-            name='signature',
-            field=models.ImageField(blank=True, help_text='used to generate documents when an User is a representative from an organization', upload_to='signature'),
+            model_name="user",
+            name="signature",
+            field=models.ImageField(
+                blank=True,
+                help_text="used to generate documents when an User is a representative from an organization",
+                upload_to="signature",
+            ),
         ),
         migrations.AddField(
-            model_name='user',
-            name='teaches_in',
-            field=models.ManyToManyField(help_text='a link between an user and its organizations. If is_teacher is False, teaches_in must be empty.', related_name='teachers', to='core.organization', verbose_name='teaches in'),
+            model_name="user",
+            name="teaches_in",
+            field=models.ManyToManyField(
+                help_text="a link between an user and its organizations. If is_teacher is False, teaches_in must be empty.",
+                related_name="teachers",
+                to="core.organization",
+                verbose_name="teaches in",
+            ),
         ),
         migrations.AlterField(
-            model_name='enrollment',
-            name='is_active',
-            field=models.BooleanField(help_text='Ticked if the user is enrolled to the course run.', verbose_name='is active'),
+            model_name="enrollment",
+            name="is_active",
+            field=models.BooleanField(
+                help_text="Ticked if the user is enrolled to the course run.",
+                verbose_name="is active",
+            ),
         ),
     ]
