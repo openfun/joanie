@@ -107,7 +107,7 @@ class Base(Configuration):
     # https://docs.djangoproject.com/en/3.1/topics/i18n/
 
     # Languages
-    LANGUAGE_CODE = values.Value("en-us", environ_name="LANGUAGE_CODE")
+    LANGUAGE_CODE = values.Value("en-us")
 
     # Careful! Languages should be ordered by priority, as this tuple is used to get
     # fallback/default languages throughout the app.
@@ -115,19 +115,11 @@ class Base(Configuration):
         (
             ("en-us", _("English")),
             ("fr-fr", _("French")),
-        ),
-        environ_name="LANGUAGES",
+        )
     )
 
     LOCALE_PATHS = (os.path.join(BASE_DIR, "locale"),)
 
-    PARLER_LANGUAGES = {
-        SITE_ID: (tuple(dict(code=code) for code, _name in LANGUAGES)),
-        "default": {
-            "fallbacks": [LANGUAGE_CODE],
-            "hide_untranslated": False,
-        },
-    }
     TIME_ZONE = "UTC"
     USE_I18N = True
     USE_TZ = True
@@ -346,6 +338,20 @@ class Base(Configuration):
         Delegate to the module function to enable easier testing.
         """
         return get_release()
+
+    # pylint: disable=invalid-name
+    @property
+    def PARLER_LANGUAGES(self):
+        """
+        Return languages for Parler computed from the LANGUAGES and LANGUAGE_CODE settings.
+        """
+        return {
+            self.SITE_ID: tuple(dict(code=code) for code, _name in self.LANGUAGES),
+            "default": {
+                "fallbacks": [self.LANGUAGE_CODE],
+                "hide_untranslated": False,
+            },
+        }
 
     @classmethod
     def post_setup(cls):
