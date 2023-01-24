@@ -57,21 +57,24 @@ class OrderModelsTestCase(TestCase):
         """
         course = factories.CourseFactory()
         organization = factories.OrganizationFactory(title="fun")
-        product = factories.ProductFactory(
-            title="Traçabilité", courses=[course], organizations=[organization]
+        product = factories.ProductFactory(title="Traçabilité")
+        factories.CourseProductRelationFactory(
+            course=course, product=product, organizations=[organization]
         )
         self.assertTrue(product.courses.filter(id=course.id).exists())
 
         other_course = factories.CourseFactory(title="Mathématiques")
 
         with self.assertRaises(ValidationError) as context:
-            factories.OrderFactory(course=other_course, product=product)
+            factories.OrderFactory(
+                course=other_course, product=product, organization=organization
+            )
 
         self.assertEqual(
             context.exception.messages,
             [
-                'The course "Mathématiques" and the organization "fun" should be '
-                'linked to the product "Traçabilité".'
+                'The course "Mathématiques" and the product "Traçabilité" '
+                'should be linked for organization "fun".'
             ],
         )
 
@@ -320,7 +323,7 @@ class OrderModelsTestCase(TestCase):
         product = factories.ProductFactory(target_courses=[course1, course2])
 
         # - Link cr3 to the product course relations
-        relation = product.course_relations.get(course=course2)
+        relation = product.target_course_relations.get(course=course2)
         relation.course_runs.add(cr3)
 
         # - Create an order link to the product

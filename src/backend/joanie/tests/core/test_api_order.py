@@ -556,7 +556,7 @@ class OrderApiTest(BaseAPITestCase):
         product = factories.ProductFactory(
             target_courses=target_courses, price=Money(0.00, "EUR")
         )
-        organization = product.organizations.first()
+        organization = product.course_relations.first().organizations.first()
         course = product.courses.first()
         self.assertEqual(
             list(product.target_courses.order_by("product_relations")), target_courses
@@ -660,10 +660,13 @@ class OrderApiTest(BaseAPITestCase):
         none linked to the product.
         """
         target_course = factories.CourseFactory()
+        course = factories.CourseFactory()
         product = factories.ProductFactory(
-            organizations=[], target_courses=[target_course], price=Money(0.00, "EUR")
+            courses=[], target_courses=[target_course], price=Money(0.00, "EUR")
         )
-        course = product.courses.first()
+        factories.CourseProductRelationFactory(
+            course=course, product=product, organizations=[]
+        )
 
         data = {
             "course": course.code,
@@ -696,7 +699,7 @@ class OrderApiTest(BaseAPITestCase):
         product = factories.ProductFactory(
             target_courses=[target_course], price=Money(0.00, "EUR")
         )
-        organization = product.organizations.first()
+        organization = product.course_relations.first().organizations.first()
         course = product.courses.first()
 
         data = {
@@ -726,14 +729,17 @@ class OrderApiTest(BaseAPITestCase):
         It should not be possible to create an order without passing an organization if there are
         several linked to the product.
         """
-        target_course = factories.CourseFactory()
+        course = factories.CourseFactory()
         organizations = factories.OrganizationFactory.create_batch(2)
+        target_course = factories.CourseFactory()
         product = factories.ProductFactory(
-            organizations=organizations,
+            courses=[],
             target_courses=[target_course],
             price=Money(0.00, "EUR"),
         )
-        course = product.courses.first()
+        factories.CourseProductRelationFactory(
+            course=course, product=product, organizations=organizations
+        )
 
         data = {
             "course": course.code,
@@ -767,13 +773,14 @@ class OrderApiTest(BaseAPITestCase):
             target_courses=target_courses, price=Money(0.00, "EUR")
         )
         course = product.courses.first()
+        organization = product.course_relations.first().organizations.first()
         self.assertEqual(
             list(product.target_courses.order_by("product_relations")), target_courses
         )
 
         data = {
             "course": course.code,
-            "organization": str(product.organizations.first().id),
+            "organization": str(organization.id),
             "product": str(product.id),
             "id": uuid.uuid4(),
             "amount": 0.00,
@@ -868,7 +875,10 @@ class OrderApiTest(BaseAPITestCase):
         """The course and product passed in payload to create an order should match."""
         organization = factories.OrganizationFactory(title="fun")
         product = factories.ProductFactory(
-            organizations=[organization], title="balançoire", price=Money("0.00", "EUR")
+            title="balançoire", price=Money("0.00", "EUR")
+        )
+        cp_relation = factories.CourseProductRelationFactory(
+            product=product, organizations=[organization]
         )
         course = factories.CourseFactory(title="mathématiques")
         data = {
@@ -890,14 +900,16 @@ class OrderApiTest(BaseAPITestCase):
             response.json(),
             {
                 "__all__": [
-                    'The course "mathématiques" and the organization "fun" '
-                    'should be linked to the product "balançoire".'
+                    'The course "mathématiques" and the product "balançoire" '
+                    'should be linked for organization "fun".'
                 ]
             },
         )
 
         # Linking the course to the product should solve the problem
-        course.products.add(product)
+        cp_relation.course = course
+        cp_relation.save()
+
         response = self.client.post(
             "/api/v1.0/orders/",
             data=data,
@@ -936,14 +948,14 @@ class OrderApiTest(BaseAPITestCase):
             response.json(),
             {
                 "__all__": [
-                    'The course "mathématiques" and the organization "fun" '
-                    'should be linked to the product "balançoire".'
+                    'The course "mathématiques" and the product "balançoire" '
+                    'should be linked for organization "fun".'
                 ]
             },
         )
 
         # Linking the organization to the product should solve the problem
-        product.organizations.add(organization)
+        product.course_relations.first().organizations.add(organization)
         response = self.client.post(
             "/api/v1.0/orders/",
             data=data,
@@ -984,6 +996,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
         course = factories.CourseFactory()
         product = factories.ProductFactory(courses=[course], price=Money("0.00", "EUR"))
+        organization = product.course_relations.first().organizations.first()
 
         # User already owns an order for this product and course
         order = factories.OrderFactory(owner=user, course=course, product=product)
@@ -991,7 +1004,7 @@ class OrderApiTest(BaseAPITestCase):
         data = {
             "product": str(product.id),
             "course": course.code,
-            "organization": str(product.organizations.first().id),
+            "organization": str(organization.id),
         }
 
         response = self.client.post(
@@ -1032,11 +1045,12 @@ class OrderApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
         course = factories.CourseFactory()
         product = factories.ProductFactory(target_courses=[course])
+        organization = product.course_relations.first().organizations.first()
 
         data = {
             "product": str(product.id),
             "course": course.code,
-            "organization": str(product.organizations.first().id),
+            "organization": str(organization.id),
         }
 
         response = self.client.post(
@@ -1066,11 +1080,12 @@ class OrderApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
         course = factories.CourseFactory()
         product = factories.ProductFactory(courses=[course])
+        organization = product.course_relations.first().organizations.first()
         billing_address = BillingAddressDictFactory()
 
         data = {
             "course": course.code,
-            "organization": str(product.organizations.first().id),
+            "organization": str(organization.id),
             "product": str(product.id),
             "billing_address": billing_address,
         }
@@ -1179,12 +1194,13 @@ class OrderApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
         course = factories.CourseFactory()
         product = factories.ProductFactory(courses=[course])
+        organization = product.course_relations.first().organizations.first()
         credit_card = CreditCardFactory(owner=user)
         billing_address = BillingAddressDictFactory()
 
         data = {
             "course": course.code,
-            "organization": str(product.organizations.first().id),
+            "organization": str(organization.id),
             "product": str(product.id),
             "billing_address": billing_address,
             "credit_card_id": str(credit_card.id),
@@ -1235,11 +1251,12 @@ class OrderApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
         course = factories.CourseFactory()
         product = factories.ProductFactory(courses=[course])
+        organization = product.course_relations.first().organizations.first()
         billing_address = BillingAddressDictFactory()
 
         data = {
             "course": course.code,
-            "organization": str(product.organizations.first().id),
+            "organization": str(organization.id),
             "product": str(product.id),
             "billing_address": billing_address,
         }
@@ -1588,9 +1605,10 @@ class OrderApiTest(BaseAPITestCase):
         provided.
         """
         user = factories.UserFactory()
-        course = factories.CourseFactory()
-        product = factories.ProductFactory(courses=[course])
-        organization = product.organizations.all()[0]
+        product = factories.ProductFactory()
+        pc_relation = product.course_relations.first()
+        course = pc_relation.course
+        organization = pc_relation.organizations.first()
         billing_address = BillingAddressDictFactory()
 
         # - Create an order and its related payment
@@ -1607,6 +1625,7 @@ class OrderApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
+        self.assertEqual(response.status_code, 201)
 
         content = json.loads(response.content)
         order = models.Order.objects.get(id=content["id"])

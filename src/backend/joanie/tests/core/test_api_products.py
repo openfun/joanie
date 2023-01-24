@@ -40,15 +40,59 @@ class ProductApiTest(BaseAPITestCase):
             status_code=404,
         )
 
-    def test_api_product_read_detail(self):
+    def test_api_product_read_detail_no_organization(self):
+        """
+        A product linked to a course but with no selling organization should not be returned.
+        """
+        product = factories.ProductFactory(type=enums.PRODUCT_TYPE_CREDENTIAL)
+        course = factories.CourseFactory()
+        factories.CourseProductRelationFactory(
+            course=course, product=product, organizations=[]
+        )
+
+        with self.assertNumQueries(1):
+            response = self.client.get(
+                f"/api/v1.0/products/{product.id}/?course={course.code}"
+            )
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_api_product_read_detail_with_organization_no_code(self):
+        """
+        Any users should not be allowed to retrieve a product if no course code is passed in
+        querystring.
+        """
+        course = factories.CourseFactory()
+        product = factories.ProductFactory(type=enums.PRODUCT_TYPE_CREDENTIAL)
+        organization = factories.OrganizationFactory()
+        factories.CourseProductRelationFactory(
+            course=course, product=product, organizations=[organization]
+        )
+
+        with self.assertNumQueries(0):
+            response = self.client.get(f"/api/v1.0/products/{product.id}/")
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json(),
+            {"course": "You must specify a course code to get product details."},
+        )
+
+    def test_api_product_read_detail_with_organization_and_code(self):
         """
         Any users should be allowed to retrieve a product with minimal db access.
         """
+        course = factories.CourseFactory()
         product = factories.ProductFactory(type=enums.PRODUCT_TYPE_CREDENTIAL)
-        organization = product.organizations.first()
+        organization = factories.OrganizationFactory()
+        factories.CourseProductRelationFactory(
+            course=course, product=product, organizations=[organization]
+        )
 
-        with self.assertNumQueries(3):
-            response = self.client.get(f"/api/v1.0/products/{product.id}/")
+        with self.assertNumQueries(4):
+            response = self.client.get(
+                f"/api/v1.0/products/{product.id}/?course={course.code}"
+            )
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -118,7 +162,7 @@ class ProductApiTest(BaseAPITestCase):
                         "title": target_course.title,
                     }
                     for target_course in product.target_courses.all().order_by(
-                        "product_relations__position"
+                        "product_target_relations__position"
                     )
                 ],
                 "title": product.title,
@@ -130,14 +174,16 @@ class ProductApiTest(BaseAPITestCase):
         # Product response should have been cached,
         # so db queries should be reduced if we request the resource again.
         with self.assertNumQueries(1):
-            response = self.client.get(f"/api/v1.0/products/{product.id}/")
+            response = self.client.get(
+                f"/api/v1.0/products/{product.id}/?course={course.code}"
+            )
 
         self.assertEqual(response.status_code, 200)
 
         # But cache should be language sensitive
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(7):
             response = self.client.get(
-                f"/api/v1.0/products/{product.id}/",
+                f"/api/v1.0/products/{product.id}/?course={course.code}",
                 HTTP_ACCEPT_LANGUAGE="fr-fr",
             )
 
@@ -150,14 +196,17 @@ class ProductApiTest(BaseAPITestCase):
         """
         user = factories.UserFactory()
         token = self.get_user_token(user.username)
-        product = factories.ProductFactory(type=enums.PRODUCT_TYPE_CREDENTIAL)
+        course = factories.CourseFactory()
+        product = factories.ProductFactory(
+            courses=[course], type=enums.PRODUCT_TYPE_CREDENTIAL
+        )
         order = factories.OrderFactory(owner=user, product=product)
 
         self.assertEqual(order.state, "pending")
 
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             response = self.client.get(
-                f"/api/v1.0/products/{product.id}/",
+                f"/api/v1.0/products/{product.id}/?course={course.code}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
@@ -172,16 +221,19 @@ class ProductApiTest(BaseAPITestCase):
         """
         user = factories.UserFactory()
         token = self.get_user_token(user.username)
+        course = factories.CourseFactory()
         product = factories.ProductFactory(
-            type=enums.PRODUCT_TYPE_CREDENTIAL, price=Money(0.00, "EUR")
+            courses=[course],
+            type=enums.PRODUCT_TYPE_CREDENTIAL,
+            price=Money(0.00, "EUR"),
         )
         order = factories.OrderFactory(owner=user, product=product)
 
         self.assertEqual(order.state, "validated")
 
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             response = self.client.get(
-                f"/api/v1.0/products/{product.id}/",
+                f"/api/v1.0/products/{product.id}/?course={course.code}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
@@ -196,8 +248,11 @@ class ProductApiTest(BaseAPITestCase):
         """
         user = factories.UserFactory()
         token = self.get_user_token(user.username)
+        course = factories.CourseFactory()
         product = factories.ProductFactory(
-            type=enums.PRODUCT_TYPE_CREDENTIAL, price=Money(0.00, "EUR")
+            courses=[course],
+            type=enums.PRODUCT_TYPE_CREDENTIAL,
+            price=Money(0.00, "EUR"),
         )
         order = factories.OrderFactory(
             owner=user, product=product, state=enums.ORDER_STATE_CANCELED
@@ -205,9 +260,9 @@ class ProductApiTest(BaseAPITestCase):
 
         self.assertEqual(order.state, "canceled")
 
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             response = self.client.get(
-                f"/api/v1.0/products/{product.id}/",
+                f"/api/v1.0/products/{product.id}/?course={course.code}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
@@ -233,10 +288,24 @@ class ProductApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json(), {"detail": "Not found."})
 
-        # Link the course to the product
+        # Link the course to the product without organizations
         product.courses.add(course2)
 
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(1):
+            response = self.client.get(
+                f"/api/v1.0/products/{product.id}/?course={course2.code}"
+            )
+
+        content = response.json()
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json(), {"detail": "Not found."})
+
+        # Add an organization to the link with course2
+        product.course_relations.get(course=course2).organizations.add(
+            factories.OrganizationFactory()
+        )
+
+        with self.assertNumQueries(4):
             response = self.client.get(
                 f"/api/v1.0/products/{product.id}/?course={course2.code}"
             )
@@ -266,24 +335,11 @@ class ProductApiTest(BaseAPITestCase):
 
         # Purchase certificate for all courses
         order1 = factories.OrderFactory(owner=user, product=product, course=courses[0])
-        order2 = factories.OrderFactory(owner=user, product=product, course=courses[1])
-
-        # If user requests product without filters,
-        # it should see all pending/validated related orders.
-        with self.assertNumQueries(4):
-            response = self.client.get(
-                f"/api/v1.0/products/{product.id}/",
-                HTTP_AUTHORIZATION=f"Bearer {token}",
-            )
-
-        content = response.json()
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(content["id"], str(product.id))
-        self.assertListEqual(content["orders"], [str(order2.id), str(order1.id)])
+        factories.OrderFactory(owner=user, product=product, course=courses[1])
 
         # If user request product only and filter to the first course,
         # it should get only one order into orders property
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(5):
             response = self.client.get(
                 f"/api/v1.0/products/{product.id}/?course={courses[0].code}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -296,16 +352,21 @@ class ProductApiTest(BaseAPITestCase):
 
     def test_api_product_read_detail_without_course_anonymous(self):
         """
-        An anonymous user should not be allowed to retrieve a product linked to any course.
+        An anonymous user should not be allowed to retrieve a product not linked to any course.
         """
         product = factories.ProductFactory(courses=[])
         response = self.client.get(f"/api/v1.0/products/{product.id}/")
 
-        self.assertContains(response, "Not found.", status_code=404)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json(),
+            {"course": "You must specify a course code to get product details."},
+        )
 
     def test_api_product_read_detail_without_course_authenticated(self):
         """
-        An authenticated user should not be allowed to retrieve a product linked to any course.
+        An authenticated user should not be allowed to retrieve a product
+        not linked to any course.
         """
         product = factories.ProductFactory(courses=[])
         user = factories.UserFactory.build()
@@ -315,7 +376,11 @@ class ProductApiTest(BaseAPITestCase):
             f"/api/v1.0/products/{product.id}/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
 
-        self.assertContains(response, "Not found.", status_code=404)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json(),
+            {"course": "You must specify a course code to get product details."},
+        )
 
     def test_api_product_create_anonymous(self):
         """Anonymous users should not be allowed to create a product."""

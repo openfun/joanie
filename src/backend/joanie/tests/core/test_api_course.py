@@ -69,14 +69,17 @@ class CourseApiTest(BaseAPITestCase):
             enrollment_end=timezone.now() + timedelta(hours=1),
             course__organizations=target_course_organizations,
         )
+        course_organizations = factories.OrganizationFactory.create_batch(2)
+        course = factories.CourseFactory(organizations=course_organizations)
         product_organizations = factories.OrganizationFactory.create_batch(2)
         product = factories.ProductFactory.create(
-            organizations=product_organizations,
+            courses=None,
             target_courses=[course_run.course for course_run in target_course_runs],
         )
-        course_organizations = factories.OrganizationFactory.create_batch(2)
-        course = factories.CourseFactory(
-            organizations=course_organizations, products=[product]
+        factories.CourseProductRelationFactory(
+            course=course,
+            organizations=product_organizations,
+            product=product,
         )
 
         # - Create a set of random users which possibly purchase the product
@@ -97,7 +100,7 @@ class CourseApiTest(BaseAPITestCase):
                 InvoiceFactory(order=order, total=order.total)
                 order.validate()
 
-        with self.assertNumQueries(13):
+        with self.assertNumQueries(14):
             response = self.client.get(f"/api/v1.0/courses/{course.code}/")
 
         content = json.loads(response.content)
@@ -183,16 +186,16 @@ class CourseApiTest(BaseAPITestCase):
                                     "start"
                                 )
                             ],
-                            "position": target_course.product_relations.get(
+                            "position": target_course.product_target_relations.get(
                                 product=product
                             ).position,
-                            "is_graded": target_course.product_relations.get(
+                            "is_graded": target_course.product_target_relations.get(
                                 product=product
                             ).is_graded,
                             "title": target_course.title,
                         }
                         for target_course in product.target_courses.all().order_by(
-                            "product_relations__position"
+                            "product_target_relations__position"
                         )
                     ],
                     "title": product.title,
@@ -217,7 +220,7 @@ class CourseApiTest(BaseAPITestCase):
         # queries expected according to an invoice has been created or not.
         # Because if an invoice has been created, product translation has been
         # cached.
-        expected_num_queries = 24 if product_purchased else 25
+        expected_num_queries = 25 if product_purchased else 26
         with self.assertNumQueries(expected_num_queries):
             self.client.get(
                 f"/api/v1.0/courses/{course.code}/",
@@ -329,24 +332,24 @@ class CourseApiTest(BaseAPITestCase):
         content = response.json()
         expected_products = [
             {
-                "id": str(product.id),
-                "call_to_action": product.call_to_action,
+                "id": str(cp_relation.product.id),
+                "call_to_action": cp_relation.product.call_to_action,
                 "organizations": [
                     {
-                        "id": str(product.organizations.all()[0].id),
-                        "code": product.organizations.all()[0].code,
-                        "title": product.organizations.all()[0].title,
+                        "id": str(cp_relation.organizations.all()[0].id),
+                        "code": cp_relation.organizations.all()[0].code,
+                        "title": cp_relation.organizations.all()[0].title,
                     }
                 ],
                 "certificate": {
-                    "description": product.certificate_definition.description,
-                    "name": product.certificate_definition.name,
-                    "title": product.certificate_definition.title,
+                    "description": cp_relation.product.certificate_definition.description,
+                    "name": cp_relation.product.certificate_definition.name,
+                    "title": cp_relation.product.certificate_definition.title,
                 }
-                if product.certificate_definition
+                if cp_relation.product.certificate_definition
                 else None,
-                "price": float(product.price.amount),
-                "price_currency": str(product.price.currency),
+                "price": float(cp_relation.product.price.amount),
+                "price_currency": str(cp_relation.product.price.currency),
                 "target_courses": [
                     {
                         "code": target_course.code,
@@ -383,27 +386,27 @@ class CourseApiTest(BaseAPITestCase):
                                 "start"
                             )
                         ],
-                        "position": target_course.product_relations.get(
-                            product=product
+                        "position": target_course.product_target_relations.get(
+                            product=cp_relation.product
                         ).position,
-                        "is_graded": target_course.product_relations.get(
-                            product=product
+                        "is_graded": target_course.product_target_relations.get(
+                            product=cp_relation.product
                         ).is_graded,
                         "title": target_course.title,
                     }
-                    for target_course in product.target_courses.all().order_by(
-                        "product_relations__position"
+                    for target_course in cp_relation.product.target_courses.all().order_by(
+                        "product_target_relations__position"
                     )
                 ],
-                "title": product.title,
-                "type": product.type,
+                "title": cp_relation.product.title,
+                "type": cp_relation.product.type,
                 "orders": [
                     str(order.id)
                     for order in [order1, order2]
-                    if order.product.id == product.id
+                    if order.product.id == cp_relation.product.id
                 ],
             }
-            for product in course.products.all().order_by("created_on")
+            for cp_relation in course.product_relations.all()
         ]
         self.assertCountEqual(
             content.pop("products"),
@@ -525,7 +528,7 @@ class CourseApiTest(BaseAPITestCase):
         self.assertEqual(order_canceled.state, enums.ORDER_STATE_CANCELED)
 
         # - Retrieve course information
-        with self.assertNumQueries(26):
+        with self.assertNumQueries(24):
             response = self.client.get(
                 f"/api/v1.0/courses/{course.code}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",

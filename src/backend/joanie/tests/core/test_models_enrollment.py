@@ -209,7 +209,7 @@ class EnrollmentModelsTestCase(TestCase):
         product = factories.ProductFactory(target_courses=[course], price="0.00")
 
         # - Restrict available course runs for this product to cr1
-        course_relation = product.course_relations.get(course=course)
+        course_relation = product.target_course_relations.get(course=course)
         course_relation.course_runs.set([cr1])
 
         factories.OrderFactory(owner=user, product=product)

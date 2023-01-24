@@ -37,6 +37,11 @@ erDiagram
             Course course FK
             ProductTargetCourseRelation target_courses FK
         }
+        CourseProductRelation {
+            Course course FK
+            Product product FK
+            Organization organizations FK
+        }
         
         ProductTargetCourseRelation {
             Product product FK
@@ -72,13 +77,15 @@ erDiagram
         on_add_course_runs_to_product_course_relation || -- o{ ProductTargetCourseRelation : ""
         
         Course }o--o{ Organization : "authors"
-        Course }o--o{ Product : "displays"
+        Course ||--o{ CourseProductRelation : "displays"
         Course ||--o{ OrderTargetCourseRelation : "is included in"
         Course ||--o{ ProductTargetCourseRelation : "is included in"
 
-        Product }o--o{ Organization : "promotes"
+        Product ||--o{ CourseProductRelation : ""
         Product ||--o{ ProductTargetCourseRelation : ""
-        
+
+        CourseProductRelation }o--o{ Organization : "sells"
+
         ProductTargetCourseRelation ||..|| OrderTargetCourseRelation : "copied at order creation"
 ```
 

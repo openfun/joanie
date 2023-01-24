@@ -4,6 +4,7 @@ API endpoints
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import IntegrityError, transaction
 from django.http import HttpResponse
+from django.utils.translation import gettext_lazy as _
 
 from rest_framework import mixins, pagination, permissions, viewsets
 from rest_framework.decorators import action
@@ -85,12 +86,35 @@ class ProductViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     lookup_field = "id"
     permissions_classes = [permissions.AllowAny]
     filterset_class = filters.ProductViewSetFilter
-    queryset = (
-        models.Product.objects.filter(courses__isnull=False)
-        .distinct()
-        .select_related("certificate_definition")
-    )
+    queryset = models.Product.objects.all()
     serializer_class = serializers.ProductSerializer
+
+    def filter_queryset(self, queryset):
+        """
+        Custom queryset to limit to products actually related to the course given in querystring.
+        """
+        queryset = super().filter_queryset(queryset)
+
+        if self.action == "retrieve":
+            try:
+                course_code = self.request.query_params["course"]
+            except KeyError as exc:
+                raise DRFValidationError(
+                    {
+                        "course": _(
+                            "You must specify a course code to get product details."
+                        )
+                    }
+                ) from exc
+
+            queryset = queryset.filter(
+                course_relations__course__code=course_code,
+                course_relations__organizations__isnull=False,
+            )
+        else:
+            queryset = queryset.filter(course_relations__isnull=False)
+
+        return queryset.select_related("certificate_definition").distinct()
 
     def get_serializer_context(self):
         """
@@ -187,8 +211,11 @@ class OrderViewSet(
         # on the product
         if not serializer.validated_data.get("organization"):
             try:
-                organization = product.organizations.get()
+                organization = product.course_relations.get(
+                    course=course
+                ).organizations.get()
             except (
+                models.Course.DoesNotExist,
                 models.Organization.DoesNotExist,
                 models.Organization.MultipleObjectsReturned,
             ):

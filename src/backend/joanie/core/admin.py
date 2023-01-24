@@ -14,9 +14,8 @@ from adminsortable2.admin import SortableAdminBase, SortableInlineAdminMixin
 from django_object_actions import DjangoObjectActions, takes_instance_or_queryset
 from parler.admin import TranslatableAdmin
 
-from joanie.core import helpers, models
+from joanie.core import forms, helpers, models
 from joanie.core.enums import PRODUCT_TYPE_CERTIFICATE_ALLOWED
-from joanie.core.forms import ProductTargetCourseRelationAdminForm
 
 ACTION_NAME_GENERATE_CERTIFICATES = "generate_certificates"
 ACTION_NAME_CANCEL = "cancel"
@@ -61,6 +60,14 @@ class CertificateAdmin(admin.ModelAdmin):
         return obj.order.owner
 
 
+class CourseProductRelationInline(admin.TabularInline):
+    """Admin class for the CourseProductRelation model"""
+
+    form = forms.CourseProductRelationAdminForm
+    model = models.Course.products.through
+    extra = 0
+
+
 @admin.register(models.Course)
 class CourseAdmin(DjangoObjectActions, TranslatableAdmin):
     """Admin class for the Course model"""
@@ -70,6 +77,7 @@ class CourseAdmin(DjangoObjectActions, TranslatableAdmin):
     change_form_template = "joanie/admin/translatable_change_form_with_actions.html"
     list_display = ("code", "title", "state")
     filter_horizontal = ("products",)
+    inlines = (CourseProductRelationInline,)
     fieldsets = (
         (_("Main information"), {"fields": ("code", "title")}),
         (
@@ -77,15 +85,6 @@ class CourseAdmin(DjangoObjectActions, TranslatableAdmin):
             {
                 "description": _("Select organizations that author this course."),
                 "fields": ("organizations",),
-            },
-        ),
-        (
-            _("Related products"),
-            {
-                "description": _(
-                    "Select products that will be available through this course."
-                ),
-                "fields": ("products",),
             },
         ),
     )
@@ -158,7 +157,7 @@ class UserAdmin(auth_admin.UserAdmin):
 class ProductTargetCourseRelationInline(SortableInlineAdminMixin, admin.TabularInline):
     """Admin class for the ProductTargetCourseRelation model"""
 
-    form = ProductTargetCourseRelationAdminForm
+    form = forms.ProductTargetCourseRelationAdminForm
     model = models.Product.target_courses.through
     extra = 0
 
@@ -186,13 +185,6 @@ class ProductAdmin(
                     "certificate_definition",
                     "related_courses",
                 )
-            },
-        ),
-        (
-            _("Organizations"),
-            {
-                "description": _("Select organizations that promote this product."),
-                "fields": ("organizations",),
             },
         ),
     )

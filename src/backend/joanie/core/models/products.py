@@ -65,15 +65,11 @@ class Product(parler_models.TranslatableModel, BaseModel):
         description=models.CharField(_("description"), max_length=500, blank=True),
         call_to_action=models.CharField(_("call to action"), max_length=255),
     )
-    organizations = models.ManyToManyField(
-        to=courses_models.Organization,
-        related_name="products",
-        verbose_name=_("organizations"),
-    )
     target_courses = models.ManyToManyField(
         to=courses_models.Course,
         related_name="targeted_by_products",
         through="ProductTargetCourseRelation",
+        through_fields=("product", "course"),
         verbose_name=_("target courses"),
         blank=True,
     )
@@ -124,7 +120,7 @@ class Product(parler_models.TranslatableModel, BaseModel):
               product/course relation.
 
         """
-        course_relations_with_course_runs = self.course_relations.filter(
+        course_relations_with_course_runs = self.target_course_relations.filter(
             course_runs__isnull=False
         ).only("pk")
 
@@ -132,7 +128,7 @@ class Product(parler_models.TranslatableModel, BaseModel):
             models.Q(product_relations__in=course_relations_with_course_runs)
             | models.Q(
                 course__in=self.target_courses.exclude(
-                    product_relations__in=course_relations_with_course_runs
+                    product_target_relations__in=course_relations_with_course_runs
                 )
             )
         )
@@ -265,13 +261,13 @@ class ProductTargetCourseRelation(BaseModel):
     course = models.ForeignKey(
         to=courses_models.Course,
         verbose_name=_("course"),
-        related_name="product_relations",
+        related_name="product_target_relations",
         on_delete=models.RESTRICT,
     )
     product = models.ForeignKey(
         to=Product,
         verbose_name=_("product"),
-        related_name="course_relations",
+        related_name="target_course_relations",
         on_delete=models.CASCADE,
     )
     # allow restricting what course runs are proposed
@@ -282,7 +278,7 @@ class ProductTargetCourseRelation(BaseModel):
         verbose_name=_("course runs"),
         blank=True,
     )
-    position = models.PositiveSmallIntegerField(_("position in product"))
+    position = models.PositiveSmallIntegerField(_("position in product"), default=0)
     is_graded = models.BooleanField(
         _("take into account for certification"),
         help_text=_("Take into account the course grade for certification."),
@@ -341,6 +337,7 @@ class Order(BaseModel):
         courses_models.Course,
         related_name="orders",
         through="OrderTargetCourseRelation",
+        through_fields=("order", "course"),
         verbose_name=_("courses"),
         blank=True,
     )
@@ -460,15 +457,16 @@ class Order(BaseModel):
             and self.course_id
             and self.product_id
             and self.organization_id
-            and not Product.objects.filter(
-                courses=self.course_id, organizations=self.organization_id
+            and not courses_models.CourseProductRelation.objects.filter(
+                course=self.course_id,
+                product=self.product_id,
+                organizations=self.organization_id,
             ).exists()
         ):
             # pylint: disable=no-member
             message = _(
-                f'The course "{self.course.title}" and the organization '
-                f'"{self.organization.title}" should be linked to the product '
-                f'"{self.product.title}".'
+                f'The course "{self.course.title}" and the product "{self.product.title}" '
+                f'should be linked for organization "{self.organization.title}".'
             )
             raise ValidationError({"__all__": [message]})
 
