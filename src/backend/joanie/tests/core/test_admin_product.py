@@ -29,8 +29,8 @@ class ProductAdminTestCase(BaseAPITestCase):
                 "type": "enrollment",
                 "title": "Product for course",
                 "call_to_action": "Let's go",
-                "course_relations-TOTAL_FORMS": 0,
-                "course_relations-INITIAL_FORMS": 0,
+                "target_course_relations-TOTAL_FORMS": 0,
+                "target_course_relations-INITIAL_FORMS": 0,
             },
         )
         self.assertEqual(models.Product.objects.count(), 0)
@@ -49,8 +49,8 @@ class ProductAdminTestCase(BaseAPITestCase):
             "title": "My product",
             "call_to_action": "Let's go",
             "organizations": str(organization.id),
-            "course_relations-TOTAL_FORMS": 0,
-            "course_relations-INITIAL_FORMS": 0,
+            "target_course_relations-TOTAL_FORMS": 0,
+            "target_course_relations-INITIAL_FORMS": 0,
         }
         response = self.client.post(reverse("admin:core_product_add"), data=data)
 
@@ -112,8 +112,8 @@ class ProductAdminTestCase(BaseAPITestCase):
             "call_to_action": "Let's go",
             "certificate_definition": certificate_definition.pk,
             "organizations": str(organization.id),
-            "course_relations-TOTAL_FORMS": 0,
-            "course_relations-INITIAL_FORMS": 0,
+            "target_course_relations-TOTAL_FORMS": 0,
+            "target_course_relations-INITIAL_FORMS": 0,
         }
 
         response = self.client.post(
@@ -143,8 +143,8 @@ class ProductAdminTestCase(BaseAPITestCase):
             "title": "Product for course",
             "call_to_action": "Let's go",
             "organizations": str(organization.id),
-            "course_relations-TOTAL_FORMS": 0,
-            "course_relations-INITIAL_FORMS": 0,
+            "target_course_relations-TOTAL_FORMS": 0,
+            "target_course_relations-INITIAL_FORMS": 0,
         }
 
         response = self.client.post(
@@ -162,7 +162,7 @@ class ProductAdminTestCase(BaseAPITestCase):
 
     def test_admin_product_allow_sorting_targeted_courses(self):
         """
-        It should be possible to manage targeted courses directly from product
+        It should be possible to manage target courses directly from product
         admin change view.
         """
         organization = factories.OrganizationFactory()
@@ -187,7 +187,7 @@ class ProductAdminTestCase(BaseAPITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, product.title)
 
-        # - Check that there is a sortable product course relation section
+        # - Check that there is a sortable product target course relation section
         html = lxml.html.fromstring(response.content)
 
         sortable_section = html.cssselect(".sortable")[0]
@@ -202,7 +202,9 @@ class ProductAdminTestCase(BaseAPITestCase):
         sortable_courses = sortable_section.cssselect(".form-row.has_original")
         self.assertEqual(len(sortable_courses), 3)
 
-        [tc0, tc1, tc2] = product.target_courses.all().order_by("product_relations")
+        [tc0, tc1, tc2] = product.target_courses.all().order_by(
+            "product_target_relations"
+        )
         self.assertEqual(tc0, target_courses[0])
         self.assertEqual(tc1, target_courses[1])
         self.assertEqual(tc2, target_courses[2])
@@ -216,20 +218,26 @@ class ProductAdminTestCase(BaseAPITestCase):
             "price_1": product.price.currency,
             "call_to_action": product.call_to_action,
             "organizations": str(organization.id),
-            "course_relations-TOTAL_FORMS": 3,
-            "course_relations-INITIAL_FORMS": 3,
-            "course_relations-0-id": tc2.product_relations.get(product=product).pk,
-            "course_relations-0-product": product.pk,
-            "course_relations-0-position": 0,
-            "course_relations-0-course": tc2.pk,
-            "course_relations-1-id": tc1.product_relations.get(product=product).pk,
-            "course_relations-1-product": product.pk,
-            "course_relations-1-position": 1,
-            "course_relations-1-course": tc1.pk,
-            "course_relations-2-id": tc0.product_relations.get(product=product).pk,
-            "course_relations-2-product": product.pk,
-            "course_relations-2-position": 2,
-            "course_relations-2-course": tc0.pk,
+            "target_course_relations-TOTAL_FORMS": 3,
+            "target_course_relations-INITIAL_FORMS": 3,
+            "target_course_relations-0-id": tc2.product_target_relations.get(
+                product=product
+            ).pk,
+            "target_course_relations-0-product": product.pk,
+            "target_course_relations-0-position": 0,
+            "target_course_relations-0-course": tc2.pk,
+            "target_course_relations-1-id": tc1.product_target_relations.get(
+                product=product
+            ).pk,
+            "target_course_relations-1-product": product.pk,
+            "target_course_relations-1-position": 1,
+            "target_course_relations-1-course": tc1.pk,
+            "target_course_relations-2-id": tc0.product_target_relations.get(
+                product=product
+            ).pk,
+            "target_course_relations-2-product": product.pk,
+            "target_course_relations-2-position": 2,
+            "target_course_relations-2-course": tc0.pk,
         }
 
         response = self.client.post(
@@ -242,7 +250,9 @@ class ProductAdminTestCase(BaseAPITestCase):
 
         self.assertRedirects(response, reverse("admin:core_product_changelist"))
         product.refresh_from_db()
-        [tc0, tc1, tc2] = product.target_courses.all().order_by("product_relations")
+        [tc0, tc1, tc2] = product.target_courses.all().order_by(
+            "product_target_relations"
+        )
         self.assertEqual(tc0, target_courses[2])
         self.assertEqual(tc1, target_courses[1])
         self.assertEqual(tc2, target_courses[0])

@@ -30,7 +30,7 @@ class HelpersTestCase(TestCase):
             target_courses=[course_run.course],
         )
         # Mark the only product's course as non graded
-        course_run.course.product_relations.update(is_graded=False)
+        course_run.course.product_target_relations.update(is_graded=False)
         course = factories.CourseFactory(products=[product])
         order = factories.OrderFactory(product=product, course=course)
         certificate_qs = models.Certificate.objects.filter(order=order)

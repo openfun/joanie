@@ -175,6 +175,8 @@ class Course(parler_models.TranslatableModel, BaseModel):
     products = models.ManyToManyField(
         "Product",
         related_name="courses",
+        through="CourseProductRelation",
+        through_fields=("course", "product"),
         verbose_name=_("products"),
         blank=True,
     )
@@ -217,6 +219,45 @@ class Course(parler_models.TranslatableModel, BaseModel):
         # Normalize the code by slugifying and capitalizing it
         self.code = utils.normalize_code(self.code)
         return super().clean()
+
+
+class CourseProductRelation(BaseModel):
+    """
+    CourseProductRelation model allows defining the products sold on a given course.
+
+    It is used as through model in a ManyToMany relation between a Course and a Product.
+
+    The `organizations` field defines what organizations are selling the product on the
+    course. If several organizations are selling a product on a course, the buyer is asked
+    to choose from which organization they want to buy it.
+    """
+
+    course = models.ForeignKey(
+        to=Course,
+        verbose_name=_("course"),
+        related_name="product_relations",
+        on_delete=models.RESTRICT,
+    )
+    product = models.ForeignKey(
+        to="Product",
+        verbose_name=_("product"),
+        related_name="course_relations",
+        on_delete=models.CASCADE,
+    )
+    organizations = models.ManyToManyField(
+        to=Organization,
+        related_name="product_relations",
+        verbose_name=_("organizations"),
+    )
+
+    class Meta:
+        db_table = "joanie_course_product_relation"
+        unique_together = ("product", "course")
+        verbose_name = _("Course relation to a product")
+        verbose_name_plural = _("Courses relations to products")
+
+    def __str__(self):
+        return f"{self.course}: {self.product}"
 
 
 class CourseRun(parler_models.TranslatableModel, BaseModel):
@@ -287,9 +328,9 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
     def synchronize_with_webhooks(self):
         """Trigger webhook calls to keep remote apps synchronized."""
         products = self.course.products.model.objects.filter(
-            models.Q(course_relations__course_runs__isnull=True)
-            | models.Q(course_relations__course_runs=self),
-            course_relations__course=self.course,
+            models.Q(target_course_relations__course_runs__isnull=True)
+            | models.Q(target_course_relations__course_runs=self),
+            target_course_relations__course=self.course,
         )
         self.course.products.model.synchronize_products(products)
 

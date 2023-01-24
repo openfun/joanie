@@ -397,7 +397,7 @@ class CourseRunModelsTestCase(TestCase):
         product = factories.ProductFactory(target_courses=[course_run.course])
 
         # - Link course run to the product course relation
-        relation = product.course_relations.first()
+        relation = product.target_course_relations.first()
         relation.course_runs.add(course_run)
 
         # - Try to update the course of the course run

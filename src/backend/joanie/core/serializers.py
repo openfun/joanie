@@ -2,6 +2,7 @@
 
 from django.conf import settings
 from django.core.cache import cache
+from django.db.models import Prefetch
 
 from djmoney.contrib.django_rest_framework import MoneyField
 from rest_framework import serializers
@@ -87,14 +88,16 @@ class TargetCourseSerializer(serializers.ModelSerializer):
 
     def get_target_course_relation(self, target_course):
         """
-        Return the relevant course relation according to the resource context
+        Return the relevant target course relation depending on whether the resource context
         is a product or an order.
         """
         if isinstance(self.context_resource, models.Order):
             return target_course.order_relations.get(order=self.context_resource)
 
         if isinstance(self.context_resource, models.Product):
-            return target_course.product_relations.get(product=self.context_resource)
+            return target_course.product_target_relations.get(
+                product=self.context_resource
+            )
 
         return None
 
@@ -139,7 +142,7 @@ class ProductSerializer(serializers.ModelSerializer):
     certificate = CertificationDefinitionSerializer(
         read_only=True, source="certificate_definition"
     )
-    organizations = OrganizationSerializer(many=True, read_only=True)
+    organizations = serializers.SerializerMethodField("get_organizations")
     price = MoneyField(
         coerce_to_string=False,
         decimal_places=2,
@@ -184,11 +187,25 @@ class ProductSerializer(serializers.ModelSerializer):
 
         return TargetCourseSerializer(
             instance=product.target_courses.all().order_by(
-                "product_relations__position"
+                "product_target_relations__position"
             ),
             many=True,
             context=context,
         ).data
+
+    def get_organizations(self, instance):
+        """Get related organizations when in the context of a course."""
+        try:
+            organizations = instance.annotated_course_relations[0].organizations.all()
+        except AttributeError:
+            if self.context.get("course_code"):
+                organizations = models.CourseProductRelation.objects.get(
+                    course__code=self.context["course_code"], product=instance
+                ).organizations.all()
+            else:
+                organizations = []
+
+        return OrganizationSerializer(organizations, many=True, read_only=True).data
 
     def get_orders(self, instance):
         """
@@ -221,7 +238,9 @@ class ProductSerializer(serializers.ModelSerializer):
         then, if user is authenticated, add private information to the representation
         """
         cache_key = utils.get_resource_cache_key(
-            "product", instance.id, is_language_sensitive=True
+            "product_for_course",
+            f"{instance.id!s}-{self.context.get('course_code', 'nocourse'):s}",
+            is_language_sensitive=True,
         )
         representation = cache.get(cache_key)
 
@@ -301,7 +320,7 @@ class CourseSerializer(serializers.ModelSerializer):
     """
 
     organizations = OrganizationSerializer(many=True, read_only=True)
-    products = ProductSerializer(many=True, read_only=True)
+    products = serializers.SerializerMethodField("get_products")
 
     class Meta:
         model = models.Course
@@ -317,6 +336,26 @@ class CourseSerializer(serializers.ModelSerializer):
             "title",
             "products",
         ]
+
+    def get_products(self, instance):
+        """Compute the serialized value for the "target_courses" field."""
+        context = self.context.copy()
+        context["course_code"] = instance.code
+
+        return ProductSerializer(
+            instance.products.prefetch_related(
+                Prefetch(
+                    "course_relations",
+                    queryset=models.CourseProductRelation.objects.filter(
+                        course=instance
+                    ).prefetch_related("organizations"),
+                    to_attr="annotated_course_relations",
+                ),
+            ),
+            many=True,
+            read_only=True,
+            context=context,
+        ).data
 
     def get_orders(self, instance):
         """

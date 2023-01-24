@@ -53,7 +53,7 @@ def on_change_course_runs_to_product_target_course_relation(
         elif isinstance(instance, models.CourseRun):
             if action in ["post_add", "post_remove"]:
                 models.Product.synchronize_products(
-                    models.Product.objects.filter(course_relations__in=pk_set)
+                    models.Product.objects.filter(target_course_relations__in=pk_set)
                 )
             elif action == "post_clear":
                 # Update all products related to this course run's course as we won't be able to

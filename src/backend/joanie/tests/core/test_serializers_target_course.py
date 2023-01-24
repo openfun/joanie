@@ -142,7 +142,7 @@ class TargetCourseSerializerTestCase(TestCase):
         product = factories.ProductFactory(target_courses=[target_course])
 
         # - Link only one course run to the product course relation
-        relation = target_course.product_relations.get(product=product)
+        relation = target_course.product_target_relations.get(product=product)
         relation.course_runs.set([course_run])
 
         representation = TargetCourseSerializer(
@@ -169,7 +169,7 @@ class TargetCourseSerializerTestCase(TestCase):
         product = factories.ProductFactory(target_courses=[target_course])
 
         # - Link only one course run to the product course relation
-        relation = target_course.product_relations.get(product=product)
+        relation = target_course.product_target_relations.get(product=product)
         relation.course_runs.set([course_run])
 
         # - Create an order related to the product

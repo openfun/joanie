@@ -12,6 +12,7 @@ from joanie.core.factories import (
     CertificateDefinitionFactory,
     CertificateFactory,
     CourseFactory,
+    CourseProductRelationFactory,
     OrderFactory,
     OrganizationFactory,
     ProductFactory,
@@ -40,10 +41,12 @@ class CertificateModelTestCase(TestCase):
         organization = OrganizationFactory(title="Organization 1")
         course = CourseFactory()
         product = ProductFactory(
+            courses=[],
             title="Graded product",
-            courses=[course],
-            organizations=[organization],
             type=PRODUCT_TYPE_CERTIFICATE,
+        )
+        CourseProductRelationFactory(
+            course=course, product=product, organizations=[organization]
         )
 
         # - Add French translations
@@ -78,11 +81,13 @@ class CertificateModelTestCase(TestCase):
         course = CourseFactory()
         certificate_definition = CertificateDefinitionFactory()
         product = ProductFactory(
+            courses=[],
             title="Graded product",
-            courses=[course],
-            organizations=[organization],
             type=PRODUCT_TYPE_CERTIFICATE,
             certificate_definition=certificate_definition,
+        )
+        CourseProductRelationFactory(
+            course=course, product=product, organizations=[organization]
         )
 
         # - Add French translations

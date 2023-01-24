@@ -7,6 +7,25 @@ from django.contrib.admin import widgets
 from joanie.core import models
 
 
+class CourseProductRelationAdminForm(forms.ModelForm):
+    """
+    The admin form for the CourseProductRelation model.
+    """
+
+    organizations = forms.ModelMultipleChoiceField(
+        queryset=models.Organization.objects.all(),
+        widget=widgets.FilteredSelectMultiple(
+            models.Organization._meta.verbose_name_plural, is_stacked=False
+        ),
+        required=True,
+    )
+
+    class Meta:
+
+        fields = ["course", "product", "organizations"]
+        model = models.CourseProductRelation
+
+
 class ProductTargetCourseRelationAdminForm(forms.ModelForm):
     """
     The admin form for the ProductTargetCourseRelation model.
@@ -22,6 +41,11 @@ class ProductTargetCourseRelationAdminForm(forms.ModelForm):
         ),
         required=False,
     )
+
+    class Meta:
+
+        fields = ["course", "product", "position", "course_runs"]
+        model = models.ProductTargetCourseRelation
 
     def __init__(self, *args, **kwargs):
         """

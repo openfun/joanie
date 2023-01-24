@@ -47,7 +47,9 @@ class ProductModelsTestCase(TestCase):
             for p in models.ProductTargetCourseRelation.objects.order_by("position")
         )
 
-        ordered_courses = list(product.target_courses.order_by("product_relations"))
+        ordered_courses = list(
+            product.target_courses.order_by("product_target_relations")
+        )
         self.assertEqual(ordered_courses, expected_courses)
 
     def test_model_order_create_certificate(self):
@@ -85,7 +87,7 @@ class ProductModelsTestCase(TestCase):
         """
         course = factories.CourseFactory(course_runs=[factories.CourseRunFactory()])
         product = factories.ProductFactory(target_courses=[course])
-        course_relation = product.course_relations.get(course=course)
+        course_relation = product.target_course_relations.get(course=course)
 
         course_run = factories.CourseRunFactory()
 
@@ -121,7 +123,7 @@ class ProductModelsTestCase(TestCase):
         product = factories.ProductFactory(target_courses=[course1, course2])
 
         # - Link cr3 to the product course relations
-        relation = product.course_relations.get(course=course2)
+        relation = product.target_course_relations.get(course=course2)
         relation.course_runs.add(cr3)
 
         # - DB queries should be optimized

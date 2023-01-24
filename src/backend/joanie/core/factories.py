@@ -87,10 +87,11 @@ class CourseFactory(factory.django.DjangoModelFactory):
         Link products to the course after its creation:
         - link the list of products passed in "extracted" if any
         """
-        if not extracted:
+        if extracted is None:
             return
 
-        self.products.set(extracted)
+        for product in extracted:
+            CourseProductRelationFactory(course=self, product=product)
 
     @factory.post_generation
     # pylint: disable=unused-argument,no-member
@@ -241,18 +242,12 @@ class ProductFactory(factory.django.DjangoModelFactory):
         - link the list of courses passed in "extracted" if any
         - otherwise create a random course and link it
         """
-        courses = extracted if extracted is not None else [CourseFactory()]
-        self.courses.set(courses)
+        if extracted is None:
+            CourseProductRelationFactory(product=self, course=CourseFactory())
+            return
 
-    @factory.post_generation
-    # pylint: disable=unused-argument,no-member
-    def organizations(self, create, extracted, **kwargs):
-        """
-        Link organizations to the product after its creation:
-        - link the list of organizations passed in "extracted" if any
-        """
-        organizations = extracted if extracted is not None else [OrganizationFactory()]
-        self.organizations.set(organizations)
+        for course in extracted:
+            CourseProductRelationFactory(product=self, course=course)
 
     @factory.post_generation
     # pylint: disable=unused-argument,no-member
@@ -281,6 +276,27 @@ class ProductFactory(factory.django.DjangoModelFactory):
         return CertificateDefinitionFactory()
 
 
+class CourseProductRelationFactory(factory.django.DjangoModelFactory):
+    """A factory to create CourseProductRelation object"""
+
+    class Meta:
+        model = models.CourseProductRelation
+
+    product = factory.SubFactory(ProductFactory)
+    course = factory.SubFactory(CourseFactory)
+
+    @factory.post_generation
+    # pylint: disable=unused-argument,no-member
+    def organizations(self, create, extracted, **kwargs):
+        """
+        Link organizations to the course/product relation after its creation
+        """
+        if extracted is None:
+            extracted = [OrganizationFactory()]
+
+        self.organizations.set(extracted)
+
+
 class ProductTargetCourseRelationFactory(factory.django.DjangoModelFactory):
     """A factory to create ProductTargetCourseRelation object"""
 
@@ -295,7 +311,7 @@ class ProductTargetCourseRelationFactory(factory.django.DjangoModelFactory):
     # pylint: disable=unused-argument,no-member
     def course_runs(self, create, extracted, **kwargs):
         """
-        Link course runs to the product relation after its creation
+        Link course runs to the product/target course relation after its creation
         """
         if not extracted:
             return
@@ -311,10 +327,16 @@ class OrderFactory(factory.django.DjangoModelFactory):
 
     product = factory.SubFactory(ProductFactory)
     course = factory.LazyAttribute(lambda o: o.product.courses.order_by("?").first())
-    organization = factory.LazyAttribute(
-        lambda o: o.product.organizations.order_by("?").first()
-    )
     owner = factory.SubFactory(UserFactory)
+
+    @factory.lazy_attribute
+    def organization(self):
+        """Retrieve the organization from the product/course relation."""
+        return (
+            self.product.course_relations.get(course=self.course)
+            .organizations.order_by("?")
+            .first()
+        )
 
 
 class OrderTargetCourseRelationFactory(factory.django.DjangoModelFactory):
