@@ -15,6 +15,15 @@ from faker import Faker
 from . import enums, models
 
 
+class UniqueFaker(factory.Faker):
+    """A Faker util that ensures values uniqueness."""
+
+    @classmethod
+    def _get_faker(cls, locale=None):
+        """Get a faker that ensures values uniqueness."""
+        return super()._get_faker(locale=locale).unique
+
+
 class UserFactory(factory.django.DjangoModelFactory):
     """
     A factory to create an authenticated user for joanie side
@@ -24,7 +33,7 @@ class UserFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = settings.AUTH_USER_MODEL
 
-    username = factory.Faker("user_name")
+    username = UniqueFaker("user_name")
     email = factory.Faker("email")
     language = factory.fuzzy.FuzzyChoice([lang[0] for lang in settings.LANGUAGES])
     password = make_password("password")
