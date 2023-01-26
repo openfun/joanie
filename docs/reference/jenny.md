@@ -5,15 +5,10 @@ Here are described some important relations in our models.
 ## Relations 
 
 ```mermaid
+
 erDiagram
 
-PreCourse_attestation_teachers{
-
-AutoField id
-
-}
-
-PreCourse{
+CourseSubmission{
 
 UUIDField id
 
@@ -21,99 +16,19 @@ DateTimeField created_on
 
 DateTimeField updated_on
 
-DateField submission_date
-
 CharField title
 
-CharField status
-
-PositiveIntegerField session
-
-PositiveIntegerField diffusion
-
-DateField enrollment_start_date
-
-DateField course_start_date
-
-DateField course_end_date
-
-DateField enrollment_end_date
-
-CharField kind
-
-PositiveIntegerField student_number
-
-CharField plaform
-
-CharField membership_level
+DateField start_date
 
 BooleanField double_display
 
-TextField summary
+CharField kind
 
-TextField contacts
+CharField mooc_kind
 
-TextField email_addresses
+PositiveIntegerField spoc_learner_quantity
 
-TextField phone_numbers
-
-PositiveIntegerField week_duration
-
-PositiveIntegerField estimated_weekly_hours
-
-TextField comment
-
-BooleanField attestation
-
-CharField test_attestation
-
-DateField estimated_attestation_generation_date
-
-DateField attestation_generation_date
-
-TextField attestation_comment
-
-PositiveIntegerField delivered_attestation_quantity
-
-PositiveIntegerField registered_quantity
-
-BooleanField certificate
-
-CharField certificate_type
-
-DateField exam_start_date
-
-DateField exam_end_date
-
-DateField payment_start_date
-
-DateField payment_end_date
-
-DurationField exam_duration
-
-PositiveIntegerField exam_price
-
-DateField certificate_generation_date
-
-PositiveIntegerField delivered_certificate_quantity
-
-CharField exam_url
-
-TextField certificate_comment
-
-TextField invoicing
-
-CharField invoice_reference
-
-TextField invoicing_comment
-
-CharField cohort_invoicing
-
-CharField member_invoicing
-
-CharField partner_invoicing
-
-PositiveIntegerField invoicing_year
+BooleanField spocc_certificate
 
 }
 
@@ -359,23 +274,19 @@ ManyToManyField products
 
 }
 
-PreCourse_attestation_teachers||--|{PreCourse : precourse
+CourseSubmission||--|{Transaction : transaction
 
-PreCourse_attestation_teachers||--|{User : user
+CourseSubmission||--|{User : user
 
-PreCourse||--|{User : manager
+CourseSubmission||--|{Organization : organization
 
-PreCourse||--|{Organization : organization_member
+Pricing||--|{PricingFPCbyOrg : pricingfpcbyorg
 
-PreCourse||--|{Organization : organization_lead
-
-PreCourse||--|{Organization : organization_producer
-
-PreCourse||--|{Organization : secondary_organization
-
-PreCourse}|--|{User : attestation_teachers
+Pricing||--|{Contract : contract
 
 PricingFPCbyOrg||--|{Pricing : pricing
+
+Contract||--|{Transaction : transaction
 
 Contract||--|{Organization : organization
 
@@ -383,25 +294,41 @@ Contract||--|{Pricing : pricing
 
 Transaction||--|{Contract : contract
 
-Transaction||--|{PreCourse : precourse
+Transaction||--|{CourseSubmission : course_submission
+
+Quote||--|{QuoteLine : quoteline
 
 Quote||--|{Organization : organization
 
 QuoteLine||--|{Quote : quote
 
+Invoice||--|{InvoiceLine : invoiceline
+
 Invoice||--|{Organization : organization
 
-InvoiceLine||--|{Invoice : invoice
+InvoiceLine||--|{Invoice : quote
+
+User||--|{Organization : organization
 
 User||--|{Course : course
 
-User}|--|{PreCourse : attestation_teacher_precourses
+User||--|{CourseSubmission : pre_courses
 
 User}|--|{Organization : teaches_in
 
 Organization}|--|{User : teachers
 
+Organization||--|{Organization : organization
+
 Organization}|--|{Course : courses
+
+Organization||--|{CourseSubmission : pre_courses
+
+Organization||--|{Contract : contract
+
+Organization||--|{Quote : quote
+
+Organization||--|{Invoice : invoice
 
 Organization||--|{User : representative_user
 
