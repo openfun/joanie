@@ -303,23 +303,9 @@ ManyToManyField products
 
 }
 
-CourseSubmission||--|{Transaction : transaction
-
 CourseSubmission||--|{User : user
 
 CourseSubmission||--|{Organization : organization
-
-Pricing||--|{ProductPrice : productprice
-
-Pricing||--|{Contract : contract
-
-Product||--|{ProductPrice : productprice
-
-Product}|--|{ProductPricePackLine : productpricepackline
-
-ProductPrice||--|{ProductPriceRange : productpricerange
-
-ProductPrice||--|{ProductPricePackLine : pack_lines
 
 ProductPrice||--|{Pricing : pricing
 
@@ -335,8 +321,6 @@ ProductPricePackLine||--|{ProductPrice : product_price
 
 ProductPricePackLine}|--|{Product : included_products
 
-Contract||--|{Transaction : transaction
-
 Contract||--|{Organization : organization
 
 Contract||--|{Pricing : pricing
@@ -345,39 +329,15 @@ Transaction||--|{Contract : contract
 
 Transaction||--|{CourseSubmission : course_submission
 
-Quote||--|{QuoteLine : quoteline
-
 Quote||--|{Organization : organization
 
 QuoteLine||--|{Quote : quote
-
-Invoice||--|{InvoiceLine : invoiceline
 
 Invoice||--|{Organization : organization
 
 InvoiceLine||--|{Invoice : quote
 
-User||--|{Organization : organization
-
-User||--|{Course : course
-
-User||--|{CourseSubmission : pre_courses
-
 User}|--|{Organization : teaches_in
-
-Organization}|--|{User : teachers
-
-Organization||--|{Organization : organization
-
-Organization}|--|{Course : courses
-
-Organization||--|{CourseSubmission : pre_courses
-
-Organization||--|{Contract : contract
-
-Organization||--|{Quote : quote
-
-Organization||--|{Invoice : invoice
 
 Organization||--|{User : representative_user
 
@@ -386,6 +346,5 @@ Organization||--|{Organization : parent
 Course||--|{User : lead_teacher
 
 Course}|--|{Organization : organizations
-
 
 ```
