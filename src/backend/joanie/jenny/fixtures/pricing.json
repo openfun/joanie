@@ -1,0 +1,1329 @@
+[
+  {
+    "model": "jenny.pricing",
+    "pk": "0083a251-1ae6-4d0b-801e-fd761c583082",
+    "fields": {
+      "created_on": "2023-01-26T16:26:24.161Z",
+      "updated_on": "2023-01-26T16:26:24.161Z",
+      "name": "MEMBRES Niveau 3"
+    }
+  },
+  {
+    "model": "jenny.pricing",
+    "pk": "2d1e02d1-e6df-42cf-8210-cc5bde162e7c",
+    "fields": {
+      "created_on": "2023-01-26T16:26:11.439Z",
+      "updated_on": "2023-01-26T16:26:13.751Z",
+      "name": "MEMBRES Niveau 2"
+    }
+  },
+  {
+    "model": "jenny.pricing",
+    "pk": "61295d91-dbdb-44ea-8b96-439bf1ae288f",
+    "fields": {
+      "created_on": "2023-01-26T16:27:01.597Z",
+      "updated_on": "2023-01-26T16:27:01.597Z",
+      "name": "PARTENAIRES"
+    }
+  },
+  {
+    "model": "jenny.pricing",
+    "pk": "b2ca4f3d-4246-4355-b869-26f335f45801",
+    "fields": {
+      "created_on": "2023-01-26T16:26:52.067Z",
+      "updated_on": "2023-01-26T16:26:52.067Z",
+      "name": "services publics sans personnalité morale"
+    }
+  },
+  {
+    "model": "jenny.pricing",
+    "pk": "cef37c47-454a-40b6-bc9b-bda83b27c314",
+    "fields": {
+      "created_on": "2023-01-26T16:25:53.258Z",
+      "updated_on": "2023-01-26T16:25:53.258Z",
+      "name": "MEMBRES Niveau 1"
+    }
+  },
+  {
+    "model": "jenny.product",
+    "pk": "11159e73-e7e6-401c-ad08-05a8725b4eae",
+    "fields": {
+      "created_on": "2023-01-26T16:29:40.118Z",
+      "updated_on": "2023-01-26T16:29:40.118Z",
+      "name": "MEMBRE Niveau 2",
+      "code": "MEMBERSHIP_LEVEL_2"
+    }
+  },
+  {
+    "model": "jenny.product",
+    "pk": "1e579bf4-4f92-4670-a25a-729e6e13c71c",
+    "fields": {
+      "created_on": "2023-01-26T17:10:59.810Z",
+      "updated_on": "2023-01-26T17:10:59.811Z",
+      "name": "SPOC Académique",
+      "code": "SPOCA"
+    }
+  },
+  {
+    "model": "jenny.product",
+    "pk": "2dbfb788-5308-4acc-b226-5922429d62f5",
+    "fields": {
+      "created_on": "2023-01-26T16:30:15.029Z",
+      "updated_on": "2023-01-26T16:30:15.029Z",
+      "name": "Mooc Self Paced",
+      "code": "MOOC_SELF_PACED"
+    }
+  },
+  {
+    "model": "jenny.product",
+    "pk": "3d79b03d-4563-4790-a74a-fbc597ffb7b3",
+    "fields": {
+      "created_on": "2023-01-26T16:29:25.761Z",
+      "updated_on": "2023-01-26T16:29:25.761Z",
+      "name": "MEMBRE Niveau 1",
+      "code": "MEMBERSHIP_LEVEL_1"
+    }
+  },
+  {
+    "model": "jenny.product",
+    "pk": "4922f06a-d225-4dba-b2ed-44c03e1c6553",
+    "fields": {
+      "created_on": "2023-01-26T16:30:52.109Z",
+      "updated_on": "2023-01-26T16:30:52.109Z",
+      "name": "SPOC Académique - Instanciation",
+      "code": "SPOCA_INSTANCIATION"
+    }
+  },
+  {
+    "model": "jenny.product",
+    "pk": "5724c581-c799-4bdf-a7c7-8b2473740ac5",
+    "fields": {
+      "created_on": "2023-01-26T16:29:52.606Z",
+      "updated_on": "2023-01-26T16:29:52.606Z",
+      "name": "MEMBRE Niveau 3",
+      "code": "MEMBERSHIP_LEVEL_3"
+    }
+  },
+  {
+    "model": "jenny.product",
+    "pk": "7192fdc1-5f10-457c-9700-2f1edec57bb6",
+    "fields": {
+      "created_on": "2023-01-26T16:32:22.355Z",
+      "updated_on": "2023-01-26T16:32:22.355Z",
+      "name": "Certificat",
+      "code": "CERT"
+    }
+  },
+  {
+    "model": "jenny.product",
+    "pk": "782e1abd-dd8d-44eb-8104-dba2bd5fd1c3",
+    "fields": {
+      "created_on": "2023-01-26T16:30:24.180Z",
+      "updated_on": "2023-01-26T16:30:24.180Z",
+      "name": "Mooc Archivé Ouvert",
+      "code": "MOOC_OPEN_ARCHIVE"
+    }
+  },
+  {
+    "model": "jenny.product",
+    "pk": "d18ec0bc-3438-4110-ac41-fe96bdc7e9e1",
+    "fields": {
+      "created_on": "2023-01-26T16:31:51.373Z",
+      "updated_on": "2023-01-26T16:31:51.373Z",
+      "name": "FORMATION PROFESSIONNELLE CONTINUE - commercialisation par FUN",
+      "code": "SPOCC_FUN"
+    }
+  },
+  {
+    "model": "jenny.product",
+    "pk": "dbdde08b-a011-4604-80cd-dd12f399892f",
+    "fields": {
+      "created_on": "2023-01-26T16:31:32.307Z",
+      "updated_on": "2023-01-26T16:31:32.307Z",
+      "name": "FORMATION PROFESSIONNELLE CONTINUE - commercialisation par l’établissement producteur",
+      "code": "SPOCC_ORG"
+    }
+  },
+  {
+    "model": "jenny.product",
+    "pk": "ec19e66a-0615-44cc-8f68-2d6db7af49e8",
+    "fields": {
+      "created_on": "2023-01-26T16:32:13.950Z",
+      "updated_on": "2023-01-26T16:32:13.950Z",
+      "name": "Double affichage",
+      "code": "DOUBLE_DISPLAY"
+    }
+  },
+  {
+    "model": "jenny.product",
+    "pk": "f5996bef-90b5-4302-a335-79e1635dbd49",
+    "fields": {
+      "created_on": "2023-01-26T16:31:06.130Z",
+      "updated_on": "2023-01-26T16:31:06.130Z",
+      "name": "SPOC Académique - Tarif par apprenant",
+      "code": "SPOCA_LEARNERS"
+    }
+  },
+  {
+    "model": "jenny.product",
+    "pk": "ff86cac9-d44f-4fbe-8bb5-a4c76410eef5",
+    "fields": {
+      "created_on": "2023-01-26T16:30:05.966Z",
+      "updated_on": "2023-01-26T16:30:05.966Z",
+      "name": "Mooc Standard",
+      "code": "MOOC_STANDARD"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "024c1ea2-b101-4cb9-9552-af1b7cd36ef8",
+    "fields": {
+      "created_on": "2023-01-26T16:54:01.048Z",
+      "updated_on": "2023-01-26T17:56:42.471Z",
+      "pricing": "cef37c47-454a-40b6-bc9b-bda83b27c314",
+      "product": "ff86cac9-d44f-4fbe-8bb5-a4c76410eef5",
+      "year": 2022,
+      "price_type": "flat",
+      "price_flat": "3500.00",
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "course"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "0752dc23-e8dd-44e1-b48d-bcc86fc8c272",
+    "fields": {
+      "created_on": "2023-01-26T16:54:31.980Z",
+      "updated_on": "2023-01-26T17:56:36.556Z",
+      "pricing": "cef37c47-454a-40b6-bc9b-bda83b27c314",
+      "product": "782e1abd-dd8d-44eb-8104-dba2bd5fd1c3",
+      "year": 2022,
+      "price_type": "flat",
+      "price_flat": "2300.00",
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "course"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "0cf0b527-a212-495e-b5ae-2dea998b642b",
+    "fields": {
+      "created_on": "2023-01-26T17:01:32.829Z",
+      "updated_on": "2023-01-26T17:56:32.772Z",
+      "pricing": "2d1e02d1-e6df-42cf-8210-cc5bde162e7c",
+      "product": "ec19e66a-0615-44cc-8f68-2d6db7af49e8",
+      "year": 2022,
+      "price_type": "flat",
+      "price_flat": "1000.00",
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "course"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "1555a13a-b6c7-4982-afaa-7f3057c681bc",
+    "fields": {
+      "created_on": "2023-01-26T16:50:21.753Z",
+      "updated_on": "2023-01-26T17:56:27.154Z",
+      "pricing": "cef37c47-454a-40b6-bc9b-bda83b27c314",
+      "product": "3d79b03d-4563-4790-a74a-fbc597ffb7b3",
+      "year": 2022,
+      "price_type": "flat",
+      "price_flat": "5000.00",
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "year"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "18e3c9e1-ab9b-4410-8dd7-7c613fd0af9f",
+    "fields": {
+      "created_on": "2023-01-26T17:19:42.901Z",
+      "updated_on": "2023-01-26T17:56:21.450Z",
+      "pricing": "61295d91-dbdb-44ea-8b96-439bf1ae288f",
+      "product": "d18ec0bc-3438-4110-ac41-fe96bdc7e9e1",
+      "year": 2022,
+      "price_type": "percent",
+      "price_flat": null,
+      "price_percent": 30,
+      "price_percent_minimum": "1200.00",
+      "unit": "revenue"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "1ce22bfe-43b4-4a86-bddf-9df63a7725fc",
+    "fields": {
+      "created_on": "2023-01-26T17:24:56.106Z",
+      "updated_on": "2023-01-26T17:56:17.736Z",
+      "pricing": "b2ca4f3d-4246-4355-b869-26f335f45801",
+      "product": "d18ec0bc-3438-4110-ac41-fe96bdc7e9e1",
+      "year": 2022,
+      "price_type": "percent",
+      "price_flat": null,
+      "price_percent": 30,
+      "price_percent_minimum": "1200.00",
+      "unit": "revenue"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "1d90d59d-5e2c-420a-ae14-4bd462b476fe",
+    "fields": {
+      "created_on": "2023-01-26T17:23:39.640Z",
+      "updated_on": "2023-01-26T17:56:13.528Z",
+      "pricing": "b2ca4f3d-4246-4355-b869-26f335f45801",
+      "product": "dbdde08b-a011-4604-80cd-dd12f399892f",
+      "year": 2022,
+      "price_type": "range",
+      "price_flat": null,
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "learner"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "1f340181-9ebd-4e5b-9180-345f252183a4",
+    "fields": {
+      "created_on": "2023-01-26T17:10:04.932Z",
+      "updated_on": "2023-01-26T17:56:08.450Z",
+      "pricing": "2d1e02d1-e6df-42cf-8210-cc5bde162e7c",
+      "product": "7192fdc1-5f10-457c-9700-2f1edec57bb6",
+      "year": 2022,
+      "price_type": "flat",
+      "price_flat": "20.00",
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "learner"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "2044f5de-e336-4789-89c6-ba1c59670842",
+    "fields": {
+      "created_on": "2023-01-26T17:01:47.384Z",
+      "updated_on": "2023-01-26T17:56:02.653Z",
+      "pricing": "2d1e02d1-e6df-42cf-8210-cc5bde162e7c",
+      "product": "ff86cac9-d44f-4fbe-8bb5-a4c76410eef5",
+      "year": 2022,
+      "price_type": "flat",
+      "price_flat": "3500.00",
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "course"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "22f1d5dd-ce58-4657-bd19-0015cba46748",
+    "fields": {
+      "created_on": "2023-01-26T17:00:42.936Z",
+      "updated_on": "2023-01-26T17:55:57.742Z",
+      "pricing": "2d1e02d1-e6df-42cf-8210-cc5bde162e7c",
+      "product": "11159e73-e7e6-401c-ad08-05a8725b4eae",
+      "year": 2022,
+      "price_type": "flat",
+      "price_flat": "20000.00",
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "year"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "28e86ac2-3db0-4546-b7ed-919cd7f92c29",
+    "fields": {
+      "created_on": "2023-01-26T17:33:22.606Z",
+      "updated_on": "2023-01-26T17:55:53.308Z",
+      "pricing": "0083a251-1ae6-4d0b-801e-fd761c583082",
+      "product": "d18ec0bc-3438-4110-ac41-fe96bdc7e9e1",
+      "year": 2022,
+      "price_type": "percent",
+      "price_flat": null,
+      "price_percent": 30,
+      "price_percent_minimum": "1200.00",
+      "unit": "revenue"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "2e1d93c5-7a83-44d9-9380-568ad055b5ae",
+    "fields": {
+      "created_on": "2023-01-26T16:54:16.901Z",
+      "updated_on": "2023-01-26T17:55:48.797Z",
+      "pricing": "cef37c47-454a-40b6-bc9b-bda83b27c314",
+      "product": "2dbfb788-5308-4acc-b226-5922429d62f5",
+      "year": 2022,
+      "price_type": "flat",
+      "price_flat": "3500.00",
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "course"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "32e4e4e5-ad77-49c9-b868-d13a0b277b83",
+    "fields": {
+      "created_on": "2023-01-26T17:11:29.330Z",
+      "updated_on": "2023-01-26T17:55:45.213Z",
+      "pricing": "cef37c47-454a-40b6-bc9b-bda83b27c314",
+      "product": "1e579bf4-4f92-4670-a25a-729e6e13c71c",
+      "year": 2022,
+      "price_type": "packlines",
+      "price_flat": null,
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "course"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "3a6228a0-57b2-4bd6-b8e9-6570eab66235",
+    "fields": {
+      "created_on": "2023-01-26T17:20:13.680Z",
+      "updated_on": "2023-01-26T17:55:40.730Z",
+      "pricing": "b2ca4f3d-4246-4355-b869-26f335f45801",
+      "product": "ff86cac9-d44f-4fbe-8bb5-a4c76410eef5",
+      "year": 2022,
+      "price_type": "flat",
+      "price_flat": "3500.00",
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "course"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "3f64e33d-511e-46d6-a97d-f359d03540d4",
+    "fields": {
+      "created_on": "2023-01-26T17:08:41.494Z",
+      "updated_on": "2023-01-26T17:55:36.871Z",
+      "pricing": "0083a251-1ae6-4d0b-801e-fd761c583082",
+      "product": "dbdde08b-a011-4604-80cd-dd12f399892f",
+      "year": 2022,
+      "price_type": "range",
+      "price_flat": null,
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "learner"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "3f898d52-66a5-4681-965c-0acc10635c27",
+    "fields": {
+      "created_on": "2023-01-26T17:05:18.746Z",
+      "updated_on": "2023-01-26T17:55:32.777Z",
+      "pricing": "2d1e02d1-e6df-42cf-8210-cc5bde162e7c",
+      "product": "7192fdc1-5f10-457c-9700-2f1edec57bb6",
+      "year": 2022,
+      "price_type": "flat",
+      "price_flat": "20.00",
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "learner"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "563c1b9f-1026-4ab2-b5d1-fbb6957e6b09",
+    "fields": {
+      "created_on": "2023-01-26T17:22:36.818Z",
+      "updated_on": "2023-01-26T17:55:29.090Z",
+      "pricing": "b2ca4f3d-4246-4355-b869-26f335f45801",
+      "product": "1e579bf4-4f92-4670-a25a-729e6e13c71c",
+      "year": 2022,
+      "price_type": "packlines",
+      "price_flat": null,
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "course"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "5ddc7bf3-e677-4620-9aea-5030203426fd",
+    "fields": {
+      "created_on": "2023-01-26T16:54:49.265Z",
+      "updated_on": "2023-01-26T17:55:25.116Z",
+      "pricing": "cef37c47-454a-40b6-bc9b-bda83b27c314",
+      "product": "4922f06a-d225-4dba-b2ed-44c03e1c6553",
+      "year": 2022,
+      "price_type": "flat",
+      "price_flat": "500.00",
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "course"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "65039f8f-5404-430b-ba49-50df66256500",
+    "fields": {
+      "created_on": "2023-01-26T17:07:41.796Z",
+      "updated_on": "2023-01-26T17:55:21.536Z",
+      "pricing": "0083a251-1ae6-4d0b-801e-fd761c583082",
+      "product": "782e1abd-dd8d-44eb-8104-dba2bd5fd1c3",
+      "year": 2022,
+      "price_type": "flat",
+      "price_flat": "500.00",
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "course"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "6ab1a452-834d-4caf-bccf-9b810460f447",
+    "fields": {
+      "created_on": "2023-01-26T17:07:12.343Z",
+      "updated_on": "2023-01-26T17:55:17.873Z",
+      "pricing": "0083a251-1ae6-4d0b-801e-fd761c583082",
+      "product": "ff86cac9-d44f-4fbe-8bb5-a4c76410eef5",
+      "year": 2022,
+      "price_type": "flat",
+      "price_flat": "3500.00",
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "course"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "765db9ca-f250-41c2-b7ae-1fc6462bba8e",
+    "fields": {
+      "created_on": "2023-01-26T17:20:52.569Z",
+      "updated_on": "2023-01-26T17:55:13.590Z",
+      "pricing": "b2ca4f3d-4246-4355-b869-26f335f45801",
+      "product": "782e1abd-dd8d-44eb-8104-dba2bd5fd1c3",
+      "year": 2022,
+      "price_type": "flat",
+      "price_flat": "2300.00",
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "course"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "7a0b8303-415f-4f03-af36-c0e033a8d9b0",
+    "fields": {
+      "created_on": "2023-01-26T17:02:19.665Z",
+      "updated_on": "2023-01-26T17:55:09.121Z",
+      "pricing": "2d1e02d1-e6df-42cf-8210-cc5bde162e7c",
+      "product": "782e1abd-dd8d-44eb-8104-dba2bd5fd1c3",
+      "year": 2022,
+      "price_type": "flat",
+      "price_flat": "2300.00",
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "course"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "802d0633-0655-47e5-b621-87670864f4a9",
+    "fields": {
+      "created_on": "2023-01-26T17:02:42.119Z",
+      "updated_on": "2023-01-26T17:55:04.767Z",
+      "pricing": "2d1e02d1-e6df-42cf-8210-cc5bde162e7c",
+      "product": "4922f06a-d225-4dba-b2ed-44c03e1c6553",
+      "year": 2022,
+      "price_type": "flat",
+      "price_flat": "500.00",
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "course"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "8e8b998d-ce30-4ded-8ad6-02fd66037f8a",
+    "fields": {
+      "created_on": "2023-01-26T17:07:23.396Z",
+      "updated_on": "2023-01-26T17:55:00.905Z",
+      "pricing": "0083a251-1ae6-4d0b-801e-fd761c583082",
+      "product": "2dbfb788-5308-4acc-b226-5922429d62f5",
+      "year": 2022,
+      "price_type": "flat",
+      "price_flat": "3500.00",
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "course"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "90806fed-8024-462c-a09a-b5b2d43ec634",
+    "fields": {
+      "created_on": "2023-01-26T17:21:06.092Z",
+      "updated_on": "2023-01-26T17:54:55.192Z",
+      "pricing": "b2ca4f3d-4246-4355-b869-26f335f45801",
+      "product": "4922f06a-d225-4dba-b2ed-44c03e1c6553",
+      "year": 2022,
+      "price_type": "flat",
+      "price_flat": "500.00",
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "course"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "947033a7-da8d-4e75-b603-6efde31ae086",
+    "fields": {
+      "created_on": "2023-01-26T17:13:43.242Z",
+      "updated_on": "2023-01-26T17:54:51.382Z",
+      "pricing": "0083a251-1ae6-4d0b-801e-fd761c583082",
+      "product": "1e579bf4-4f92-4670-a25a-729e6e13c71c",
+      "year": 2022,
+      "price_type": "packlines",
+      "price_flat": null,
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "course"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "94cfaadf-0575-4e9b-bc1e-e9daac632086",
+    "fields": {
+      "created_on": "2023-01-26T17:04:57.667Z",
+      "updated_on": "2023-01-26T17:54:47.543Z",
+      "pricing": "2d1e02d1-e6df-42cf-8210-cc5bde162e7c",
+      "product": "d18ec0bc-3438-4110-ac41-fe96bdc7e9e1",
+      "year": 2022,
+      "price_type": "percent",
+      "price_flat": null,
+      "price_percent": 30,
+      "price_percent_minimum": "1200.00",
+      "unit": "revenue"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "9c35c22c-e7b8-4eba-9d1c-74948415cd7b",
+    "fields": {
+      "created_on": "2023-01-26T17:16:37.641Z",
+      "updated_on": "2023-01-26T17:54:42.109Z",
+      "pricing": "61295d91-dbdb-44ea-8b96-439bf1ae288f",
+      "product": "f5996bef-90b5-4302-a335-79e1635dbd49",
+      "year": 2022,
+      "price_type": "flat",
+      "price_flat": "1.80",
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "learner"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "9d7da49d-f48b-4c8f-a7df-d0a5381c16d7",
+    "fields": {
+      "created_on": "2023-01-26T17:16:57.552Z",
+      "updated_on": "2023-01-26T17:54:29.181Z",
+      "pricing": "61295d91-dbdb-44ea-8b96-439bf1ae288f",
+      "product": "1e579bf4-4f92-4670-a25a-729e6e13c71c",
+      "year": 2022,
+      "price_type": "packlines",
+      "price_flat": null,
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "course"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "aeb2a467-7dc7-406b-ac88-b4c54af2ea4d",
+    "fields": {
+      "created_on": "2023-01-26T17:01:59.285Z",
+      "updated_on": "2023-01-26T17:54:23.763Z",
+      "pricing": "2d1e02d1-e6df-42cf-8210-cc5bde162e7c",
+      "product": "2dbfb788-5308-4acc-b226-5922429d62f5",
+      "year": 2022,
+      "price_type": "flat",
+      "price_flat": "3500.00",
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "course"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "b9889a07-73cf-4654-a64e-13964d2b33c9",
+    "fields": {
+      "created_on": "2023-01-26T17:22:19.448Z",
+      "updated_on": "2023-01-26T17:54:19.781Z",
+      "pricing": "b2ca4f3d-4246-4355-b869-26f335f45801",
+      "product": "f5996bef-90b5-4302-a335-79e1635dbd49",
+      "year": 2022,
+      "price_type": "flat",
+      "price_flat": "1.50",
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "learner"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "bbd3eafd-edbf-4911-ac0a-956a74688ec2",
+    "fields": {
+      "created_on": "2023-01-26T17:12:50.973Z",
+      "updated_on": "2023-01-26T17:54:15.359Z",
+      "pricing": "2d1e02d1-e6df-42cf-8210-cc5bde162e7c",
+      "product": "1e579bf4-4f92-4670-a25a-729e6e13c71c",
+      "year": 2022,
+      "price_type": "packlines",
+      "price_flat": null,
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "course"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "bd460662-16fb-4d2a-bd75-c1656634ec19",
+    "fields": {
+      "created_on": "2023-01-26T17:02:55.946Z",
+      "updated_on": "2023-01-26T17:54:10.525Z",
+      "pricing": "2d1e02d1-e6df-42cf-8210-cc5bde162e7c",
+      "product": "f5996bef-90b5-4302-a335-79e1635dbd49",
+      "year": 2022,
+      "price_type": "flat",
+      "price_flat": "1.50",
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "learner"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "c27b734f-eb00-4b91-bdc2-c06aeee2758d",
+    "fields": {
+      "created_on": "2023-01-26T17:00:11.633Z",
+      "updated_on": "2023-01-26T17:54:03.427Z",
+      "pricing": "cef37c47-454a-40b6-bc9b-bda83b27c314",
+      "product": "d18ec0bc-3438-4110-ac41-fe96bdc7e9e1",
+      "year": 2022,
+      "price_type": "percent",
+      "price_flat": null,
+      "price_percent": 30,
+      "price_percent_minimum": "1200.00",
+      "unit": "revenue"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "c9b9b4a5-814e-434f-9250-a2becffde3fe",
+    "fields": {
+      "created_on": "2023-01-26T16:55:34.534Z",
+      "updated_on": "2023-01-26T17:53:57.973Z",
+      "pricing": "cef37c47-454a-40b6-bc9b-bda83b27c314",
+      "product": "dbdde08b-a011-4604-80cd-dd12f399892f",
+      "year": 2022,
+      "price_type": "range",
+      "price_flat": null,
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "learner"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "ca5785c8-1a19-4ec3-816f-0d646e6a7ff1",
+    "fields": {
+      "created_on": "2023-01-26T17:15:16.767Z",
+      "updated_on": "2023-01-26T17:53:51.207Z",
+      "pricing": "61295d91-dbdb-44ea-8b96-439bf1ae288f",
+      "product": "2dbfb788-5308-4acc-b226-5922429d62f5",
+      "year": 2022,
+      "price_type": "flat",
+      "price_flat": "4500.00",
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "course"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "cef1af3e-690b-44ab-af5c-fae3c116077b",
+    "fields": {
+      "created_on": "2023-01-26T17:17:55.446Z",
+      "updated_on": "2023-01-26T17:53:45.186Z",
+      "pricing": "61295d91-dbdb-44ea-8b96-439bf1ae288f",
+      "product": "dbdde08b-a011-4604-80cd-dd12f399892f",
+      "year": 2022,
+      "price_type": "range",
+      "price_flat": null,
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "learner"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "cef7b6ff-07ca-46c9-b83a-d42032a51e46",
+    "fields": {
+      "created_on": "2023-01-26T17:06:18.003Z",
+      "updated_on": "2023-01-26T17:53:33.980Z",
+      "pricing": "0083a251-1ae6-4d0b-801e-fd761c583082",
+      "product": "5724c581-c799-4bdf-a7c7-8b2473740ac5",
+      "year": 2022,
+      "price_type": "flat",
+      "price_flat": "50000.00",
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "year"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "d35e618c-840f-4baf-8619-04895b3a4a56",
+    "fields": {
+      "created_on": "2023-01-26T17:08:23.248Z",
+      "updated_on": "2023-01-26T17:53:25.945Z",
+      "pricing": "0083a251-1ae6-4d0b-801e-fd761c583082",
+      "product": "f5996bef-90b5-4302-a335-79e1635dbd49",
+      "year": 2022,
+      "price_type": "flat",
+      "price_flat": "1.50",
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "learner"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "d5c162d6-746f-4a84-adff-e58c7f147f6c",
+    "fields": {
+      "created_on": "2023-01-26T17:15:41.112Z",
+      "updated_on": "2023-01-26T17:53:19.517Z",
+      "pricing": "61295d91-dbdb-44ea-8b96-439bf1ae288f",
+      "product": "782e1abd-dd8d-44eb-8104-dba2bd5fd1c3",
+      "year": 2022,
+      "price_type": "flat",
+      "price_flat": "2800.00",
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "course"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "dc5a3200-8af6-4e21-88cc-c185c263cfaa",
+    "fields": {
+      "created_on": "2023-01-26T16:53:44.867Z",
+      "updated_on": "2023-01-26T17:53:15.207Z",
+      "pricing": "cef37c47-454a-40b6-bc9b-bda83b27c314",
+      "product": "ec19e66a-0615-44cc-8f68-2d6db7af49e8",
+      "year": 2022,
+      "price_type": "flat",
+      "price_flat": "1000.00",
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "course"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "e14931b4-3af5-4568-b1bc-b8c073962be9",
+    "fields": {
+      "created_on": "2023-01-26T17:03:39.587Z",
+      "updated_on": "2023-01-26T17:53:11.200Z",
+      "pricing": "2d1e02d1-e6df-42cf-8210-cc5bde162e7c",
+      "product": "dbdde08b-a011-4604-80cd-dd12f399892f",
+      "year": 2022,
+      "price_type": "range",
+      "price_flat": null,
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "learner"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "e1fa88c1-947c-4a95-8386-7cbb75eb5d75",
+    "fields": {
+      "created_on": "2023-01-26T17:25:17.657Z",
+      "updated_on": "2023-01-26T17:53:06.017Z",
+      "pricing": "b2ca4f3d-4246-4355-b869-26f335f45801",
+      "product": "7192fdc1-5f10-457c-9700-2f1edec57bb6",
+      "year": 2022,
+      "price_type": "flat",
+      "price_flat": "20.00",
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "learner"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "e2614b83-73fa-4a71-9d55-a73da11745d5",
+    "fields": {
+      "created_on": "2023-01-26T17:20:30.733Z",
+      "updated_on": "2023-01-26T17:52:57.256Z",
+      "pricing": "b2ca4f3d-4246-4355-b869-26f335f45801",
+      "product": "2dbfb788-5308-4acc-b226-5922429d62f5",
+      "year": 2022,
+      "price_type": "flat",
+      "price_flat": "2300.00",
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "course"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "e70a37f0-3d28-46b7-91e2-1c0eab3a8e5d",
+    "fields": {
+      "created_on": "2023-01-26T17:14:56.114Z",
+      "updated_on": "2023-01-26T17:52:53.197Z",
+      "pricing": "61295d91-dbdb-44ea-8b96-439bf1ae288f",
+      "product": "ff86cac9-d44f-4fbe-8bb5-a4c76410eef5",
+      "year": 2022,
+      "price_type": "flat",
+      "price_flat": "4500.00",
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "course"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "f1c930bd-d4a6-4923-99e2-c937372482b1",
+    "fields": {
+      "created_on": "2023-01-26T16:55:03.677Z",
+      "updated_on": "2023-01-26T17:52:48.606Z",
+      "pricing": "cef37c47-454a-40b6-bc9b-bda83b27c314",
+      "product": "f5996bef-90b5-4302-a335-79e1635dbd49",
+      "year": 2022,
+      "price_type": "flat",
+      "price_flat": "1.50",
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "learner"
+    }
+  },
+  {
+    "model": "jenny.productprice",
+    "pk": "f7e9fde7-7f5c-47ff-86ba-289a5b60e970",
+    "fields": {
+      "created_on": "2023-01-26T17:15:55.505Z",
+      "updated_on": "2023-01-26T17:52:41.777Z",
+      "pricing": "61295d91-dbdb-44ea-8b96-439bf1ae288f",
+      "product": "4922f06a-d225-4dba-b2ed-44c03e1c6553",
+      "year": 2022,
+      "price_type": "flat",
+      "price_flat": "600.00",
+      "price_percent": null,
+      "price_percent_minimum": null,
+      "unit": "course"
+    }
+  },
+  {
+    "model": "jenny.productpricerange",
+    "pk": "07ac909a-c90c-452d-9935-2b67b199c08b",
+    "fields": {
+      "created_on": "2023-01-26T17:24:20.750Z",
+      "updated_on": "2023-01-26T17:24:20.750Z",
+      "product_price": "1d90d59d-5e2c-420a-ae14-4bd462b476fe",
+      "range_start": 101,
+      "range_end": 500,
+      "unit_price": "15.00",
+      "minimum": "2000.00"
+    }
+  },
+  {
+    "model": "jenny.productpricerange",
+    "pk": "0ab29168-a703-4156-a756-29add7e86da0",
+    "fields": {
+      "created_on": "2023-01-26T17:09:14.828Z",
+      "updated_on": "2023-01-26T17:09:14.828Z",
+      "product_price": "3f64e33d-511e-46d6-a97d-f359d03540d4",
+      "range_start": 101,
+      "range_end": 500,
+      "unit_price": "15.00",
+      "minimum": "2000.00"
+    }
+  },
+  {
+    "model": "jenny.productpricerange",
+    "pk": "35477519-dced-429d-bf9d-73146a38f2e5",
+    "fields": {
+      "created_on": "2023-01-26T17:18:37.498Z",
+      "updated_on": "2023-01-26T17:18:37.498Z",
+      "product_price": "cef1af3e-690b-44ab-af5c-fae3c116077b",
+      "range_start": 501,
+      "range_end": null,
+      "unit_price": "10.00",
+      "minimum": "7500.00"
+    }
+  },
+  {
+    "model": "jenny.productpricerange",
+    "pk": "439f9469-e5a6-4559-badc-e67af8a8810b",
+    "fields": {
+      "created_on": "2023-01-26T17:08:59.715Z",
+      "updated_on": "2023-01-26T17:08:59.715Z",
+      "product_price": "3f64e33d-511e-46d6-a97d-f359d03540d4",
+      "range_start": 0,
+      "range_end": 100,
+      "unit_price": "20.00",
+      "minimum": "1500.00"
+    }
+  },
+  {
+    "model": "jenny.productpricerange",
+    "pk": "53f16903-0a40-4fd5-a682-4dc8bd696bb2",
+    "fields": {
+      "created_on": "2023-01-26T16:56:13.469Z",
+      "updated_on": "2023-01-26T16:56:13.469Z",
+      "product_price": "c9b9b4a5-814e-434f-9250-a2becffde3fe",
+      "range_start": 101,
+      "range_end": 500,
+      "unit_price": "15.00",
+      "minimum": "2000.00"
+    }
+  },
+  {
+    "model": "jenny.productpricerange",
+    "pk": "7fd7f29e-1f0e-4072-8464-3bc0628e731f",
+    "fields": {
+      "created_on": "2023-01-26T17:03:54.438Z",
+      "updated_on": "2023-01-26T17:03:54.438Z",
+      "product_price": "e14931b4-3af5-4568-b1bc-b8c073962be9",
+      "range_start": 0,
+      "range_end": 100,
+      "unit_price": "20.00",
+      "minimum": "1500.00"
+    }
+  },
+  {
+    "model": "jenny.productpricerange",
+    "pk": "8744d5a8-5bd8-457a-a7f2-a9dc9c3576ea",
+    "fields": {
+      "created_on": "2023-01-26T17:04:12.723Z",
+      "updated_on": "2023-01-26T17:04:12.723Z",
+      "product_price": "e14931b4-3af5-4568-b1bc-b8c073962be9",
+      "range_start": 101,
+      "range_end": 500,
+      "unit_price": "15.00",
+      "minimum": "2000.00"
+    }
+  },
+  {
+    "model": "jenny.productpricerange",
+    "pk": "8815f793-7519-45a7-9990-5ce2ecad1e70",
+    "fields": {
+      "created_on": "2023-01-26T16:56:31.987Z",
+      "updated_on": "2023-01-26T16:56:31.987Z",
+      "product_price": "c9b9b4a5-814e-434f-9250-a2becffde3fe",
+      "range_start": 501,
+      "range_end": null,
+      "unit_price": "10.00",
+      "minimum": "7500.00"
+    }
+  },
+  {
+    "model": "jenny.productpricerange",
+    "pk": "8f826689-0815-4c75-94d5-0bd4d745e8b2",
+    "fields": {
+      "created_on": "2023-01-26T17:24:07.466Z",
+      "updated_on": "2023-01-26T17:24:07.466Z",
+      "product_price": "1d90d59d-5e2c-420a-ae14-4bd462b476fe",
+      "range_start": 0,
+      "range_end": 100,
+      "unit_price": "20.00",
+      "minimum": "1500.00"
+    }
+  },
+  {
+    "model": "jenny.productpricerange",
+    "pk": "9cfdf994-a6bd-4e2b-b6ff-895bbe3f0abb",
+    "fields": {
+      "created_on": "2023-01-26T17:24:33.918Z",
+      "updated_on": "2023-01-26T17:24:33.918Z",
+      "product_price": "1d90d59d-5e2c-420a-ae14-4bd462b476fe",
+      "range_start": 501,
+      "range_end": null,
+      "unit_price": "10.00",
+      "minimum": "7500.00"
+    }
+  },
+  {
+    "model": "jenny.productpricerange",
+    "pk": "acbc8c5e-7f05-490f-80e0-906973144459",
+    "fields": {
+      "created_on": "2023-01-26T17:18:25.475Z",
+      "updated_on": "2023-01-26T17:18:25.475Z",
+      "product_price": "cef1af3e-690b-44ab-af5c-fae3c116077b",
+      "range_start": 101,
+      "range_end": 500,
+      "unit_price": "15.00",
+      "minimum": "2000.00"
+    }
+  },
+  {
+    "model": "jenny.productpricerange",
+    "pk": "b9049079-f950-458b-90f7-1255c142f511",
+    "fields": {
+      "created_on": "2023-01-26T16:56:00.432Z",
+      "updated_on": "2023-01-26T16:56:00.432Z",
+      "product_price": "c9b9b4a5-814e-434f-9250-a2becffde3fe",
+      "range_start": 0,
+      "range_end": 100,
+      "unit_price": "20.00",
+      "minimum": "1500.00"
+    }
+  },
+  {
+    "model": "jenny.productpricerange",
+    "pk": "c4de32df-a461-40cd-ac72-061dd134b6b4",
+    "fields": {
+      "created_on": "2023-01-26T17:04:34.152Z",
+      "updated_on": "2023-01-26T17:04:34.152Z",
+      "product_price": "e14931b4-3af5-4568-b1bc-b8c073962be9",
+      "range_start": 501,
+      "range_end": null,
+      "unit_price": "10.00",
+      "minimum": "7500.00"
+    }
+  },
+  {
+    "model": "jenny.productpricerange",
+    "pk": "e1b23186-470e-4769-9384-50cfff5883dc",
+    "fields": {
+      "created_on": "2023-01-26T17:09:28.311Z",
+      "updated_on": "2023-01-26T17:09:28.311Z",
+      "product_price": "3f64e33d-511e-46d6-a97d-f359d03540d4",
+      "range_start": 501,
+      "range_end": null,
+      "unit_price": "10.00",
+      "minimum": "7500.00"
+    }
+  },
+  {
+    "model": "jenny.productpricerange",
+    "pk": "e43c2c55-526e-4757-9834-b8731c3df5a9",
+    "fields": {
+      "created_on": "2023-01-26T17:18:14.702Z",
+      "updated_on": "2023-01-26T17:18:14.702Z",
+      "product_price": "cef1af3e-690b-44ab-af5c-fae3c116077b",
+      "range_start": 0,
+      "range_end": 100,
+      "unit_price": "20.00",
+      "minimum": "1500.00"
+    }
+  },
+  {
+    "model": "jenny.productpricepackline",
+    "pk": "00a44d49-b023-4b97-b954-7bd295edaaea",
+    "fields": {
+      "created_on": "2023-01-26T17:23:16.934Z",
+      "updated_on": "2023-01-26T17:23:16.934Z",
+      "product_price": "563c1b9f-1026-4ab2-b5d1-fbb6957e6b09",
+      "quantity_type": "flat",
+      "quantity": 1,
+      "included_products": [
+        "f5996bef-90b5-4302-a335-79e1635dbd49"
+      ]
+    }
+  },
+  {
+    "model": "jenny.productpricepackline",
+    "pk": "01119604-6cb3-43d4-8340-0b3d7f24369c",
+    "fields": {
+      "created_on": "2023-01-26T17:14:06.493Z",
+      "updated_on": "2023-01-26T17:14:06.493Z",
+      "product_price": "947033a7-da8d-4e75-b603-6efde31ae086",
+      "quantity_type": "flat",
+      "quantity": 1,
+      "included_products": [
+        "f5996bef-90b5-4302-a335-79e1635dbd49"
+      ]
+    }
+  },
+  {
+    "model": "jenny.productpricepackline",
+    "pk": "39fddeb3-f06c-4fb9-9ce8-22fff5ee15a1",
+    "fields": {
+      "created_on": "2023-01-26T17:13:08.177Z",
+      "updated_on": "2023-01-26T17:13:08.177Z",
+      "product_price": "bbd3eafd-edbf-4911-ac0a-956a74688ec2",
+      "quantity_type": "flat",
+      "quantity": 1,
+      "included_products": [
+        "4922f06a-d225-4dba-b2ed-44c03e1c6553"
+      ]
+    }
+  },
+  {
+    "model": "jenny.productpricepackline",
+    "pk": "44760a73-da37-408f-abe7-c40df57b722e",
+    "fields": {
+      "created_on": "2023-01-26T17:17:22.747Z",
+      "updated_on": "2023-01-26T17:17:22.747Z",
+      "product_price": "9d7da49d-f48b-4c8f-a7df-d0a5381c16d7",
+      "quantity_type": "flat",
+      "quantity": 1,
+      "included_products": [
+        "f5996bef-90b5-4302-a335-79e1635dbd49"
+      ]
+    }
+  },
+  {
+    "model": "jenny.productpricepackline",
+    "pk": "5627bb58-b029-42f5-84c1-cd38801d2a15",
+    "fields": {
+      "created_on": "2023-01-26T17:12:12.869Z",
+      "updated_on": "2023-01-26T17:12:12.869Z",
+      "product_price": "32e4e4e5-ad77-49c9-b868-d13a0b277b83",
+      "quantity_type": "flat",
+      "quantity": 1,
+      "included_products": [
+        "f5996bef-90b5-4302-a335-79e1635dbd49"
+      ]
+    }
+  },
+  {
+    "model": "jenny.productpricepackline",
+    "pk": "680dc72a-847a-4655-b29d-338aeca5dd61",
+    "fields": {
+      "created_on": "2023-01-26T17:06:51.714Z",
+      "updated_on": "2023-01-26T17:06:51.714Z",
+      "product_price": "cef7b6ff-07ca-46c9-b83a-d42032a51e46",
+      "quantity_type": "unlimited",
+      "quantity": null,
+      "included_products": [
+        "ec19e66a-0615-44cc-8f68-2d6db7af49e8"
+      ]
+    }
+  },
+  {
+    "model": "jenny.productpricepackline",
+    "pk": "7d24dc67-fc3b-48af-9e91-bbfba05b2e57",
+    "fields": {
+      "created_on": "2023-01-26T17:13:56.091Z",
+      "updated_on": "2023-01-26T17:13:56.091Z",
+      "product_price": "947033a7-da8d-4e75-b603-6efde31ae086",
+      "quantity_type": "flat",
+      "quantity": 1,
+      "included_products": [
+        "4922f06a-d225-4dba-b2ed-44c03e1c6553"
+      ]
+    }
+  },
+  {
+    "model": "jenny.productpricepackline",
+    "pk": "8c6f6594-2ac8-44a9-97fd-e699d0fd8087",
+    "fields": {
+      "created_on": "2023-01-26T17:13:19.051Z",
+      "updated_on": "2023-01-26T17:13:19.051Z",
+      "product_price": "bbd3eafd-edbf-4911-ac0a-956a74688ec2",
+      "quantity_type": "flat",
+      "quantity": 1,
+      "included_products": [
+        "f5996bef-90b5-4302-a335-79e1635dbd49"
+      ]
+    }
+  },
+  {
+    "model": "jenny.productpricepackline",
+    "pk": "c04c99d0-8ee2-4609-af9a-84a0456a15b0",
+    "fields": {
+      "created_on": "2023-01-26T17:06:41.919Z",
+      "updated_on": "2023-01-26T17:06:41.919Z",
+      "product_price": "cef7b6ff-07ca-46c9-b83a-d42032a51e46",
+      "quantity_type": "flat",
+      "quantity": 35,
+      "included_products": [
+        "2dbfb788-5308-4acc-b226-5922429d62f5",
+        "4922f06a-d225-4dba-b2ed-44c03e1c6553",
+        "782e1abd-dd8d-44eb-8104-dba2bd5fd1c3",
+        "ff86cac9-d44f-4fbe-8bb5-a4c76410eef5"
+      ]
+    }
+  },
+  {
+    "model": "jenny.productpricepackline",
+    "pk": "cfe156ca-822a-4460-9d64-f07e4edf6c9b",
+    "fields": {
+      "created_on": "2023-01-26T17:12:00.918Z",
+      "updated_on": "2023-01-26T17:12:02.749Z",
+      "product_price": "32e4e4e5-ad77-49c9-b868-d13a0b277b83",
+      "quantity_type": "flat",
+      "quantity": 1,
+      "included_products": [
+        "4922f06a-d225-4dba-b2ed-44c03e1c6553"
+      ]
+    }
+  },
+  {
+    "model": "jenny.productpricepackline",
+    "pk": "edc41642-0acb-4ea2-a820-9e42ed473a61",
+    "fields": {
+      "created_on": "2023-01-26T16:50:43.388Z",
+      "updated_on": "2023-01-26T16:50:43.388Z",
+      "product_price": "1555a13a-b6c7-4982-afaa-7f3057c681bc",
+      "quantity_type": "flat",
+      "quantity": 2,
+      "included_products": [
+        "2dbfb788-5308-4acc-b226-5922429d62f5",
+        "4922f06a-d225-4dba-b2ed-44c03e1c6553",
+        "782e1abd-dd8d-44eb-8104-dba2bd5fd1c3",
+        "ff86cac9-d44f-4fbe-8bb5-a4c76410eef5"
+      ]
+    }
+  },
+  {
+    "model": "jenny.productpricepackline",
+    "pk": "eeacc6ce-5d0e-41ad-8ac1-962672ca44eb",
+    "fields": {
+      "created_on": "2023-01-26T17:01:09.883Z",
+      "updated_on": "2023-01-26T17:01:09.883Z",
+      "product_price": "22f1d5dd-ce58-4657-bd19-0015cba46748",
+      "quantity_type": "flat",
+      "quantity": 10,
+      "included_products": [
+        "2dbfb788-5308-4acc-b226-5922429d62f5",
+        "4922f06a-d225-4dba-b2ed-44c03e1c6553",
+        "782e1abd-dd8d-44eb-8104-dba2bd5fd1c3",
+        "ff86cac9-d44f-4fbe-8bb5-a4c76410eef5"
+      ]
+    }
+  },
+  {
+    "model": "jenny.productpricepackline",
+    "pk": "f0be60e7-3081-469b-8e37-a60e1ce28214",
+    "fields": {
+      "created_on": "2023-01-26T17:23:02.189Z",
+      "updated_on": "2023-01-26T17:23:02.189Z",
+      "product_price": "563c1b9f-1026-4ab2-b5d1-fbb6957e6b09",
+      "quantity_type": "flat",
+      "quantity": 1,
+      "included_products": [
+        "4922f06a-d225-4dba-b2ed-44c03e1c6553"
+      ]
+    }
+  },
+  {
+    "model": "jenny.productpricepackline",
+    "pk": "fec845cf-29f1-4460-a648-dfb58dc5131b",
+    "fields": {
+      "created_on": "2023-01-26T17:17:12.553Z",
+      "updated_on": "2023-01-26T17:17:12.553Z",
+      "product_price": "9d7da49d-f48b-4c8f-a7df-d0a5381c16d7",
+      "quantity_type": "flat",
+      "quantity": 1,
+      "included_products": [
+        "4922f06a-d225-4dba-b2ed-44c03e1c6553"
+      ]
+    }
+  }
+]

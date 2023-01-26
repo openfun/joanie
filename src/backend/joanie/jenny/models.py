@@ -78,57 +78,111 @@ class CourseSubmission(BaseModel):
 
 class Pricing(BaseModel):
     name = models.CharField(max_length=255, verbose_name=_("Name"))
-    level = models.PositiveSmallIntegerField(
-        verbose_name=_("Level"), null=True, blank=True
-    )
-    price = models.DecimalField(
-        max_digits=10, decimal_places=2, verbose_name=_("Price")
-    )
-    year = models.PositiveSmallIntegerField(
-        verbose_name=_("Year"), validators=[MinValueValidator(2023)]
-    )
-    course_quantity = models.PositiveSmallIntegerField(
-        verbose_name=_("Course quantity")
-    )
+    # MEMBERSHIP_LEVEL_1
+    # MEMBERSHIP_LEVEL_2
+    # MEMBERSHIP_LEVEL_3
+    # PARTNER
+    # PUBLIC_WO_PERSON
 
-    double_display_included = models.BooleanField(
-        verbose_name=_("Double display included")
-    )
-    double_display_unit_price = models.PositiveSmallIntegerField(
-        verbose_name=_("Double display unit price"), null=True, blank=True
-    )
-    course_over_unit_price = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        verbose_name=_("Out of package course unit price"),
-    )
-    course_archived_open_unit_price = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        verbose_name=_("Out of package archived open course unit price"),
-    )
-    campus_new_unit_price = models.DecimalField(
-        max_digits=10, decimal_places=2, verbose_name=_("Campus new course unit price")
-    )
-    campus_learner_price = models.DecimalField(
-        max_digits=10, decimal_places=2, verbose_name=_("Campus unit price by learner")
-    )
-    fpc_fun_percent = models.PositiveSmallIntegerField(
-        verbose_name=_("FUN percentage on Continuous Professionnal Formation"),
-        validators=[MinValueValidator(0), MaxValueValidator(100)],
-    )
-    fpc_fun_mini = models.DecimalField(
-        max_digits=10, decimal_places=2, verbose_name=_("FPC minimum price")
-    )
-    fpc_certificate = models.DecimalField(
-        max_digits=10, decimal_places=2, verbose_name=_("FPC price by certificate")
-    )
+    def __str__(self):
+        return self.name
 
 
-class PricingFPCbyOrg(BaseModel):
+class Product(BaseModel):
+    name = models.CharField(max_length=255, verbose_name=_("Name"))
+    code = models.CharField(max_length=255, verbose_name=_("Code"))
+
+    def __str__(self):
+        return self.name
+    # MEMBERSHIP_LEVEL_1
+    # MEMBERSHIP_LEVEL_2
+    # MEMBERSHIP_LEVEL_3
+    # MOOC_STANDARD
+    # MOOC_SELF_PACED
+    # MOOC_OPEN_ARCHIVE
+    # SPOCA_INSTANCIATION
+    # SPOCA_LEARNERS
+    # SPOCC_FUN
+    # SPOCC_ORG
+    # DOUBLE_DISPLAY
+    # CERT
+
+
+class ProductPrice(BaseModel):
     pricing = models.ForeignKey(
         Pricing,
         verbose_name=_("Pricing"),
+        on_delete=models.PROTECT,
+    )
+    product = models.ForeignKey(
+        Product,
+        verbose_name=_('Product'),
+        on_delete=models.PROTECT,
+    )
+    year = models.PositiveSmallIntegerField(
+        verbose_name=_("Year"), validators=[MinValueValidator(2022)]
+    )
+
+    FLAT = 'flat'
+    RANGE = 'range'
+    PERCENT = 'percent'
+    PACKLINES = 'packlines'
+    PRICE_TYPE_CHOICES = [
+        (FLAT, _('flat')),
+        (RANGE, _('range')),
+        (PERCENT, _('percent')),
+        (PACKLINES, _('packlines')),
+    
+    ]
+    price_type = models.CharField(
+        verbose_name=_("Price type"),
+        max_length=max([len(e[0]) for e in PRICE_TYPE_CHOICES]),
+        choices=PRICE_TYPE_CHOICES,
+    )
+    price_flat = models.DecimalField(
+        max_digits=10, decimal_places=2, verbose_name=_("Price"),
+        null=True,
+        default=None,
+        blank=True,
+    )
+
+    price_percent = models.PositiveSmallIntegerField(
+        verbose_name=_("Percent"), validators=[MinValueValidator(0), MaxValueValidator(100)],
+        null=True,
+        default=None,
+        blank=True,
+    )
+    price_percent_minimum = models.DecimalField(
+        max_digits=10, decimal_places=2, verbose_name=_("Price percent minimum"),
+        null=True,
+        default=None,
+        blank=True,
+    )
+
+    YEAR = "year"
+    COURSE = 'course'
+    LEARNER = 'learner'
+    REVENUE = 'revenue'
+    UNIT_CHOICES = [
+        (YEAR, _('Year')),
+        (COURSE, _('Course')),
+        (LEARNER, _('Learner')),
+        (REVENUE, _('Revenue')),
+    ]
+    unit = models.CharField(
+        verbose_name=_("Unit"),
+        max_length=max([len(e[0]) for e in UNIT_CHOICES]),
+        choices=UNIT_CHOICES,
+    )
+    
+    def __str__(self):
+        return f"{self.pricing} {self.product}"
+
+
+class ProductPriceRange(BaseModel):
+    product_price = models.ForeignKey(
+        ProductPrice,
+        verbose_name=_("Product price"),
         on_delete=models.PROTECT,
     )
     range_start = models.PositiveSmallIntegerField(
@@ -142,11 +196,38 @@ class PricingFPCbyOrg(BaseModel):
         blank=True,
     )
     unit_price = models.DecimalField(
-        max_digits=10, decimal_places=2, verbose_name=_("Price by learner")
+        max_digits=10, decimal_places=2, verbose_name=_("Unit price")
     )
     minimum = models.DecimalField(
         max_digits=10, decimal_places=2, verbose_name=_("Range minimum price")
     )
+    
+
+class ProductPricePackLine(BaseModel):
+    product_price = models.ForeignKey(
+        ProductPrice,
+        verbose_name=_('Product price'),
+        on_delete=models.CASCADE,
+        related_name="pack_lines",
+    )
+    FLAT = 'flat'
+    UNLIMITED = 'unlimited'
+    QUANTITY_TYPE_CHOICES = [
+        (FLAT, _('Flat')),
+        (UNLIMITED, _('Unlimited')),
+    ]
+    quantity_type = models.CharField(
+        verbose_name=_("Quantity type"),
+        max_length=max([len(e[0]) for e in QUANTITY_TYPE_CHOICES]),
+        choices=QUANTITY_TYPE_CHOICES,
+    )
+    quantity = models.PositiveSmallIntegerField(
+        verbose_name=_("Quantity"),
+        null=True,
+        default=None,
+        blank=True,
+    )
+    included_products = models.ManyToManyField(Product)
 
 
 def contract_upload_to(instance, filename):

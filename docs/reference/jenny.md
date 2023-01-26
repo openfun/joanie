@@ -5,7 +5,6 @@ Here are described some important relations in our models.
 ## Relations 
 
 ```mermaid
-
 erDiagram
 
 CourseSubmission{
@@ -42,35 +41,45 @@ DateTimeField updated_on
 
 CharField name
 
-PositiveSmallIntegerField level
+}
 
-DecimalField price
+Product{
 
-PositiveSmallIntegerField year
+UUIDField id
 
-PositiveSmallIntegerField course_quantity
+DateTimeField created_on
 
-BooleanField double_display_included
+DateTimeField updated_on
 
-PositiveSmallIntegerField double_display_unit_price
+CharField name
 
-DecimalField course_over_unit_price
-
-DecimalField course_archived_open_unit_price
-
-DecimalField campus_new_unit_price
-
-DecimalField campus_learner_price
-
-PositiveSmallIntegerField fpc_fun_percent
-
-DecimalField fpc_fun_mini
-
-DecimalField fpc_certificate
+CharField code
 
 }
 
-PricingFPCbyOrg{
+ProductPrice{
+
+UUIDField id
+
+DateTimeField created_on
+
+DateTimeField updated_on
+
+PositiveSmallIntegerField year
+
+CharField price_type
+
+DecimalField price_flat
+
+PositiveSmallIntegerField price_percent
+
+DecimalField price_percent_minimum
+
+CharField unit
+
+}
+
+ProductPriceRange{
 
 UUIDField id
 
@@ -85,6 +94,26 @@ PositiveSmallIntegerField range_end
 DecimalField unit_price
 
 DecimalField minimum
+
+}
+
+ProductPricePackLine_included_products{
+
+AutoField id
+
+}
+
+ProductPricePackLine{
+
+UUIDField id
+
+DateTimeField created_on
+
+DateTimeField updated_on
+
+CharField quantity_type
+
+PositiveSmallIntegerField quantity
 
 }
 
@@ -280,11 +309,31 @@ CourseSubmission||--|{User : user
 
 CourseSubmission||--|{Organization : organization
 
-Pricing||--|{PricingFPCbyOrg : pricingfpcbyorg
+Pricing||--|{ProductPrice : productprice
 
 Pricing||--|{Contract : contract
 
-PricingFPCbyOrg||--|{Pricing : pricing
+Product||--|{ProductPrice : productprice
+
+Product}|--|{ProductPricePackLine : productpricepackline
+
+ProductPrice||--|{ProductPriceRange : productpricerange
+
+ProductPrice||--|{ProductPricePackLine : pack_lines
+
+ProductPrice||--|{Pricing : pricing
+
+ProductPrice||--|{Product : product
+
+ProductPriceRange||--|{ProductPrice : product_price
+
+ProductPricePackLine_included_products||--|{ProductPricePackLine : productpricepackline
+
+ProductPricePackLine_included_products||--|{Product : product
+
+ProductPricePackLine||--|{ProductPrice : product_price
+
+ProductPricePackLine}|--|{Product : included_products
 
 Contract||--|{Transaction : transaction
 
@@ -337,5 +386,6 @@ Organization||--|{Organization : parent
 Course||--|{User : lead_teacher
 
 Course}|--|{Organization : organizations
+
 
 ```
