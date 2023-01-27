@@ -148,10 +148,17 @@ class UserAdmin(auth_admin.UserAdmin):
         ),
         (_("Important dates"), {"fields": ("last_login", "date_joined")}),
     )
-    readonly_fields = (
-        "username",
-        "language",
-    )
+    readonly_fields = ("language",)
+    readonly_update_fields = ("username",)
+
+    def get_readonly_fields(self, request, obj=None):
+        """
+        Make some fields readonly on update to avoid changing them by mistake
+        """
+        if obj is None:
+            return self.readonly_fields
+
+        return self.readonly_fields + self.readonly_update_fields
 
 
 class ProductTargetCourseRelationInline(SortableInlineAdminMixin, admin.TabularInline):
