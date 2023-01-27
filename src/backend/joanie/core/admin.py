@@ -107,6 +107,27 @@ class CourseRunAdmin(TranslatableAdmin):
     """Admin class for the CourseRun model"""
 
     list_display = ("title", "resource_link", "start", "end", "state", "is_gradable")
+    readonly_fields = ("id",)
+    fieldsets = (
+        (
+            _("Main information"),
+            {
+                "fields": (
+                    "id",
+                    "course",
+                    "title",
+                    "resource_link",
+                    "is_gradable",
+                    "is_listed",
+                    "languages",
+                    "enrollment_start",
+                    "enrollment_end",
+                    "start",
+                    "end",
+                )
+            },
+        ),
+    )
     actions = ("mark_as_gradable",)
 
     @admin.action(description=_("Mark course run as gradable"))
