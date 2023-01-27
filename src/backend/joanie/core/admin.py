@@ -205,6 +205,7 @@ class ProductAdmin(
             _("Main information"),
             {
                 "fields": (
+                    "id",
                     "type",
                     "title",
                     "description",
@@ -218,7 +219,10 @@ class ProductAdmin(
     )
 
     inlines = (ProductTargetCourseRelationInline,)
-    readonly_fields = ("related_courses",)
+    readonly_fields = (
+        "id",
+        "related_courses",
+    )
     actions = (ACTION_NAME_GENERATE_CERTIFICATES,)
     change_actions = (ACTION_NAME_GENERATE_CERTIFICATES,)
 
