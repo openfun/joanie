@@ -29,51 +29,13 @@ class CourseSubmission(BaseModel):
     title = models.CharField(
         verbose_name=_("Title"), max_length=255, null=False, blank=False
     )
-    start_date = models.DateField(verbose_name=_("Course start date"))
-    double_display = models.BooleanField(
-        default=False,
-        verbose_name=_("Double display"),
-    )
+    date = models.DateField(verbose_name=_("Course start date"))
 
-    MOOC = "MOOC"
-    SPOCA = "SPOCA"
-    SPOCC = "SPOCC"
-    KIND_CHOICES = [
-        (MOOC, _("MOOC")),
-        (SPOCA, _("Academic SPOC")),
-        (SPOCC, _("Corporate SPOC")),
-    ]
-    kind = models.CharField(
-        verbose_name=_("Kind"),
-        max_length=max([len(e[0]) for e in KIND_CHOICES]),
-        choices=KIND_CHOICES,
-        default=None,
-        null=True,
-    )
-    STANDARD = "STANDARD"
-    OPEN_ARCHIVE = "OPEN_ARCHIVE"
-    SELF_PACED = "SELF_PACED"
 
-    MOOC_KIND_CHOICES = [
-        (STANDARD, _("Standard")),
-        (OPEN_ARCHIVE, _("Archivé ouvert")),
-        (SELF_PACED, _("Self-paced")),
-    ]
-    mooc_kind = models.CharField(
-        verbose_name=_("Mooc kind"),
-        choices=MOOC_KIND_CHOICES,
-        max_length=max([len(e[0]) for e in MOOC_KIND_CHOICES]),
-        blank=True,
-        default=STANDARD,
-        null=True,
-    )
-    spoc_learner_quantity = models.PositiveIntegerField(
-        verbose_name=_("Learner quantity"), null=True, blank=True
-    )
-    spocc_certificate = models.BooleanField(
-        default=False,
-        verbose_name=_("SPOC Corporate Certificate"),
-    )
+class CourseSubmissionProduct(BaseModel):
+    couse_submission = models.ForeignKey(CourseSubmission, verbose_name=_('Course submission'), on_delete=models.PROTECT)
+    product = models.ForeignKey('Product', verbose_name=_('Product'), on_delete=models.PROTECT)
+    quantity = models.PositiveSmallIntegerField(verbose_name=_('quantity'), null=True, default=None)
 
 
 class Pricing(BaseModel):
@@ -91,6 +53,8 @@ class Pricing(BaseModel):
 class Product(BaseModel):
     name = models.CharField(max_length=255, verbose_name=_("Name"))
     code = models.CharField(max_length=255, verbose_name=_("Code"))
+    submission_enabled = models.BooleanField(default=False, verbose_name=_('Enabled in course submission wizard'))
+    submission_option_of = models.ForeignKey('self', verbose_name=_('This product is an option of'), on_delete=models.PROTECT, null=True, default=None, blank=True)
 
     def __str__(self):
         return self.name
@@ -261,13 +225,9 @@ class Contract(BaseModel):
 
 
 class Transaction(BaseModel):
-    debit = models.PositiveIntegerField(
-        verbose_name=_("Debit"),
-    )
-    credit = models.PositiveIntegerField(verbose_name=_("Credit"))
-    contract = models.ForeignKey(
-        Contract,
-        verbose_name=_("contract"),
+    invoice = models.ForeignKey(
+        "Invoice",
+        verbose_name=_("invoice"),
         on_delete=models.CASCADE,
         help_text=_("source of credit"),
     )
@@ -277,6 +237,12 @@ class Transaction(BaseModel):
         help_text=_("source of debit"),
         on_delete=models.PROTECT,
     )
+    products = models.ManyToManyField(Product)
+    debit = models.PositiveIntegerField(
+        verbose_name=_("Debit"),
+    )
+    credit = models.PositiveIntegerField(verbose_name=_("Credit"))
+    unlimited_credit = models.BooleanField(null=True, default=None, verbose_name=_('Unlimited credit'))
 
 
 class Quote(BaseModel):
@@ -285,13 +251,18 @@ class Quote(BaseModel):
         verbose_name=_("Organization"),
         on_delete=models.PROTECT,
     )
-    pep_number = models.CharField(max_length=255, verbose_name=_("Quote number in PEP"))
+    external_ref = models.CharField(max_length=255, verbose_name=_("External Reference"))
 
 
 class QuoteLine(BaseModel):
     quote = models.ForeignKey(
         Quote,
         verbose_name=_("Organization"),
+        on_delete=models.PROTECT,
+    )
+    product = models.ForeignKey(
+        Product,
+        verbose_name=_('Product'),
         on_delete=models.PROTECT,
     )
     label = models.TextField(verbose_name=_("Label"))
@@ -309,13 +280,18 @@ class Invoice(BaseModel):
         verbose_name=_("Organization"),
         on_delete=models.PROTECT,
     )
-    pep_number = models.CharField(max_length=255, verbose_name=_("Quote number in PEP"))
+    external_ref = models.CharField(max_length=255, verbose_name=_("External Reference"))
 
 
 class InvoiceLine(BaseModel):
-    quote = models.ForeignKey(
+    invoice = models.ForeignKey(
         Invoice,
         verbose_name=_("Organization"),
+        on_delete=models.PROTECT,
+    )
+    product = models.ForeignKey(
+        Product,
+        verbose_name=_('Product'),
         on_delete=models.PROTECT,
     )
     label = models.TextField(verbose_name=_("Label"))

@@ -17,17 +17,19 @@ DateTimeField updated_on
 
 CharField title
 
-DateField start_date
+DateField date
 
-BooleanField double_display
+}
 
-CharField kind
+CourseSubmissionProduct{
 
-CharField mooc_kind
+UUIDField id
 
-PositiveIntegerField spoc_learner_quantity
+DateTimeField created_on
 
-BooleanField spocc_certificate
+DateTimeField updated_on
+
+PositiveSmallIntegerField quantity
 
 }
 
@@ -54,6 +56,8 @@ DateTimeField updated_on
 CharField name
 
 CharField code
+
+BooleanField submission_enabled
 
 }
 
@@ -133,6 +137,12 @@ FileField file
 
 }
 
+Transaction_products{
+
+AutoField id
+
+}
+
 Transaction{
 
 UUIDField id
@@ -145,6 +155,8 @@ PositiveIntegerField debit
 
 PositiveIntegerField credit
 
+BooleanField unlimited_credit
+
 }
 
 Quote{
@@ -155,7 +167,7 @@ DateTimeField created_on
 
 DateTimeField updated_on
 
-CharField pep_number
+CharField external_ref
 
 }
 
@@ -183,7 +195,7 @@ DateTimeField created_on
 
 DateTimeField updated_on
 
-CharField pep_number
+CharField external_ref
 
 }
 
@@ -307,6 +319,12 @@ CourseSubmission||--|{User : user
 
 CourseSubmission||--|{Organization : organization
 
+CourseSubmissionProduct||--|{CourseSubmission : couse_submission
+
+CourseSubmissionProduct||--|{Product : product
+
+Product||--|{Product : submission_option_of
+
 ProductPrice||--|{Pricing : pricing
 
 ProductPrice||--|{Product : product
@@ -325,17 +343,27 @@ Contract||--|{Organization : organization
 
 Contract||--|{Pricing : pricing
 
-Transaction||--|{Contract : contract
+Transaction_products||--|{Transaction : transaction
+
+Transaction_products||--|{Product : product
+
+Transaction||--|{Invoice : invoice
 
 Transaction||--|{CourseSubmission : course_submission
+
+Transaction}|--|{Product : products
 
 Quote||--|{Organization : organization
 
 QuoteLine||--|{Quote : quote
 
+QuoteLine||--|{Product : product
+
 Invoice||--|{Organization : organization
 
-InvoiceLine||--|{Invoice : quote
+InvoiceLine||--|{Invoice : invoice
+
+InvoiceLine||--|{Product : product
 
 User}|--|{Organization : teaches_in
 
@@ -346,5 +374,4 @@ Organization||--|{Organization : parent
 Course||--|{User : lead_teacher
 
 Course}|--|{Organization : organizations
-
 ```
