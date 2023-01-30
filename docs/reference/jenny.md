@@ -19,6 +19,8 @@ CharField title
 
 DateField date
 
+CharField state
+
 }
 
 CourseSubmissionProduct{
@@ -169,6 +171,8 @@ DateTimeField updated_on
 
 CharField external_ref
 
+CharField state
+
 }
 
 QuoteLine{
@@ -196,6 +200,8 @@ DateTimeField created_on
 DateTimeField updated_on
 
 CharField external_ref
+
+CharField state
 
 }
 
@@ -257,10 +263,6 @@ CharField language
 
 CharField password
 
-BooleanField is_teacher
-
-FileField signature
-
 ManyToManyField groups
 
 ManyToManyField user_permissions
@@ -282,6 +284,10 @@ DateTimeField created_on
 DateTimeField updated_on
 
 CharField code
+
+CharField representative
+
+FileField signature
 
 FileField logo
 
@@ -323,8 +329,6 @@ CourseSubmissionProduct||--|{CourseSubmission : couse_submission
 
 CourseSubmissionProduct||--|{Product : product
 
-Product||--|{Product : submission_option_of
-
 ProductPrice||--|{Pricing : pricing
 
 ProductPrice||--|{Product : product
@@ -365,13 +369,10 @@ InvoiceLine||--|{Invoice : invoice
 
 InvoiceLine||--|{Product : product
 
-User}|--|{Organization : teaches_in
-
 Organization||--|{User : representative_user
 
 Organization||--|{Organization : parent
 
-Course||--|{User : lead_teacher
-
 Course}|--|{Organization : organizations
+
 ```
