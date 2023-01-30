@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Pricing, Product, ProductPrice, ProductPriceRange, ProductPricePackLine, Transaction, Quote, Invoice, CourseSubmission, Contract, InvoiceLine, QuoteLine
+from .models import Pricing, Product, ProductPrice, ProductPriceRange, ProductPricePackLine, Transaction, Quote, Invoice, CourseSubmission, Contract, InvoiceLine, QuoteLine, CourseSubmissionProduct
 
 class InvoiceLineInline(admin.TabularInline):
     model = InvoiceLine
@@ -13,6 +13,9 @@ class QuoteLineInline(admin.TabularInline):
     model = QuoteLine
     extra = 0
 
+class CourseSubmissionProductInline(admin.TabularInline):
+    model = CourseSubmissionProduct
+    extra = 0
 
 class QuoteAdmin(admin.ModelAdmin):
     inlines = [QuoteLineInline]
@@ -42,6 +45,8 @@ class ProductAdmin(admin.ModelAdmin):
     list_display = ('code', 'name')
     search_fields = ('code', 'name')
     
+class CourseSubmissionAdmin(admin.ModelAdmin):
+    inlines=[CourseSubmissionProductInline]
 
 
 admin.site.register(Pricing, PricingAdmin)
@@ -53,4 +58,4 @@ admin.site.register(Transaction)
 admin.site.register(Contract)
 admin.site.register(Invoice, InvoiceAdmin)
 admin.site.register(Quote, QuoteAdmin)
-admin.site.register(CourseSubmission)
+admin.site.register(CourseSubmission, CourseSubmissionAdmin)
