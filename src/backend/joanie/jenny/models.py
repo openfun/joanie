@@ -9,6 +9,8 @@ from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import MaxValueValidator, MinValueValidator
 
+from django_fsm import FSMField
+
 from ..core.models import BaseModel, Organization
 
 
@@ -30,6 +32,20 @@ class CourseSubmission(BaseModel):
         verbose_name=_("Title"), max_length=255, null=False, blank=False
     )
     date = models.DateField(verbose_name=_("Course start date"))
+    state = FSMField(default='new')
+    # new -> org_approval_sent
+    # org_approval_sent -> org_approval_received
+    # org_approval_received -> final_validation_pending
+    # new -> quote_sent
+    # quote_sent -> order_received
+    # order_received -> final_validation_pending
+    # final_validation_pending -> accepted
+    # new -> refused
+    # org_approval_sent -> refused
+    # org_approval_received -> refused
+    # final_validation_pending -> refused
+    # quote_sent -> refused
+    # order_received -> refused
 
 
 class CourseSubmissionProduct(BaseModel):
@@ -54,7 +70,6 @@ class Product(BaseModel):
     name = models.CharField(max_length=255, verbose_name=_("Name"))
     code = models.CharField(max_length=255, verbose_name=_("Code"))
     submission_enabled = models.BooleanField(default=False, verbose_name=_('Enabled in course submission wizard'))
-    submission_option_of = models.ForeignKey('self', verbose_name=_('This product is an option of'), on_delete=models.PROTECT, null=True, default=None, blank=True)
 
     def __str__(self):
         return self.name
@@ -227,13 +242,13 @@ class Contract(BaseModel):
 class Transaction(BaseModel):
     invoice = models.ForeignKey(
         "Invoice",
-        verbose_name=_("invoice"),
+        verbose_name=_("Invoice"),
         on_delete=models.CASCADE,
         help_text=_("source of credit"),
     )
     course_submission = models.ForeignKey(
         CourseSubmission,
-        verbose_name=_("precours"),
+        verbose_name=_("Course submission"),
         help_text=_("source of debit"),
         on_delete=models.PROTECT,
     )
@@ -252,6 +267,11 @@ class Quote(BaseModel):
         on_delete=models.PROTECT,
     )
     external_ref = models.CharField(max_length=255, verbose_name=_("External Reference"))
+    state = FSMField(default='to_send')
+    # to_send -> sent
+    # sent -> order_received
+    # sent -> cancelled
+    # to_send -> cancelled
 
 
 class QuoteLine(BaseModel):
@@ -281,6 +301,9 @@ class Invoice(BaseModel):
         on_delete=models.PROTECT,
     )
     external_ref = models.CharField(max_length=255, verbose_name=_("External Reference"))
+    state = FSMField(default='to_send')
+    # to_send -> sent
+    # to_send -> cancelled
 
 
 class InvoiceLine(BaseModel):
