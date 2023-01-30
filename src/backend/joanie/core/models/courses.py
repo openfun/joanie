@@ -148,6 +148,13 @@ class Organization(parler_models.TranslatableModel, BaseModel):
         null=True,
         blank=True,
     )
+    representative = models.CharField(
+        _("representative"),
+        help_text=_("representative fullname (to sign certificate for example)"),
+        max_length=100,
+        blank=True,
+    )
+    signature = models.ImageField(_("signature"), blank=True)
     logo = models.ImageField(_("logo"), blank=True)
 
     # see https://fr.wikipedia.org/wiki/Liste_des_%C3%A9tablissements_publics_%C3%A0_caract%C3%A8re_scientifique,_culturel_et_professionnel#Liste_des_regroupements_universitaires
@@ -194,18 +201,6 @@ class Course(parler_models.TranslatableModel, BaseModel):
         related_name="courses",
         verbose_name=_("products"),
         blank=True,
-    )
-    lead_teacher = models.ForeignKey(
-        to=User,
-        verbose_name=_("lead teacher"),
-        on_delete=models.PROTECT,
-        limit_choices_to={"is_teacher": True},
-        default=None,
-        null=True,
-        blank=True,
-        help_text=_(
-            "the user (that is_teacher is True) that asked the creation of this course"
-        ),
     )
 
     class Meta:
