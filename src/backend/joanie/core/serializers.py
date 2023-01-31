@@ -438,8 +438,15 @@ class EnrollmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Enrollment
-        fields = ["id", "course_run", "is_active", "state", "was_created_by_order"]
-        read_only_fields = ["id", "course_run", "state"]
+        fields = [
+            "id",
+            "course_run",
+            "created_on",
+            "is_active",
+            "state",
+            "was_created_by_order",
+        ]
+        read_only_fields = ["id", "course_run", "created_on", "state"]
 
     def create(self, validated_data, **kwargs):
         """

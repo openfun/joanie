@@ -138,6 +138,9 @@ class EnrollmentApiTest(BaseAPITestCase):
                                 .replace("+00:00", "Z"),
                             },
                         },
+                        "created_on": enrollment.created_on.isoformat().replace(
+                            "+00:00", "Z"
+                        ),
                         "is_active": enrollment.is_active,
                         "state": enrollment.state,
                         "was_created_by_order": enrollment.was_created_by_order,
@@ -196,6 +199,9 @@ class EnrollmentApiTest(BaseAPITestCase):
                                 .replace("+00:00", "Z"),
                             },
                         },
+                        "created_on": other_enrollment.created_on.isoformat().replace(
+                            "+00:00", "Z"
+                        ),
                         "is_active": other_enrollment.is_active,
                         "state": other_enrollment.state,
                         "was_created_by_order": other_enrollment.was_created_by_order,
@@ -258,6 +264,9 @@ class EnrollmentApiTest(BaseAPITestCase):
                                 .replace("+00:00", "Z"),
                             },
                         },
+                        "created_on": enrollment_1.created_on.isoformat().replace(
+                            "+00:00", "Z"
+                        ),
                         "is_active": enrollment_1.is_active,
                         "state": enrollment_1.state,
                         "was_created_by_order": enrollment_1.was_created_by_order,
@@ -393,6 +402,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         .replace("+00:00", "Z"),
                     },
                 },
+                "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": enrollment.is_active,
                 "state": enrollment.state,
                 "was_created_by_order": enrollment.was_created_by_order,
@@ -443,6 +453,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             "course_run": str(course_run.id),
             "is_active": is_active,
             "was_created_by_order": False,
+            "created_on": "2000-01-01T09:00:00+00:00",
         }
         token = self.get_user_token("panoramix")
 
@@ -483,11 +494,13 @@ class EnrollmentApiTest(BaseAPITestCase):
                         .replace("+00:00", "Z"),
                     },
                 },
+                "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": is_active,
                 "state": "set",
                 "was_created_by_order": False,
             },
         )
+        self.assertNotIn("2000", content["created_on"])
 
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment", return_value=True)
     def test_models_enrollment_duplicate_course_run_with_order(self, _mock_set):
@@ -593,6 +606,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         .replace("+00:00", "Z"),
                     },
                 },
+                "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": is_active,
                 "state": "failed",
                 "was_created_by_order": False,
@@ -666,6 +680,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         .replace("+00:00", "Z"),
                     },
                 },
+                "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": is_active,
                 "state": "failed",
                 "was_created_by_order": False,
@@ -899,6 +914,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         .replace("+00:00", "Z"),
                     },
                 },
+                "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": is_active,
                 "state": "set",
                 "was_created_by_order": False,
@@ -1150,6 +1166,9 @@ class EnrollmentApiTest(BaseAPITestCase):
                             .replace("+00:00", "Z"),
                         },
                     },
+                    "created_on": enrollment.created_on.isoformat().replace(
+                        "+00:00", "Z"
+                    ),
                     "is_active": is_active_new,
                     "state": "set",
                     "was_created_by_order": False,
@@ -1183,6 +1202,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             "id": uuid.uuid4(),
             "user": other_user.username,
             "course_run": course_run.id,
+            "created_on": "2000-01-01T09:00:00+00:00",
             "state": "failed",
             "was_created_by_order": False,
         }
@@ -1274,9 +1294,9 @@ class EnrollmentApiTest(BaseAPITestCase):
         self._check_api_enrollment_update_detail(enrollment, user, 200)
 
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment", return_value="enrolled")
-    def test_api_enrollment_unroll_authenticated_owner(self, _):
+    def test_api_enrollment_unenroll_authenticated_owner(self, _):
         """
-        An authenticated user should be allowed to update its enrollment to unroll.
+        An authenticated user should be allowed to update its enrollment to unenroll.
         """
         user = factories.UserFactory()
         user_token = self.get_user_token(user.username)
@@ -1323,6 +1343,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         .replace("+00:00", "Z"),
                     },
                 },
+                "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": False,
                 "state": "set",
                 "was_created_by_order": False,
@@ -1386,6 +1407,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         .replace("+00:00", "Z"),
                     },
                 },
+                "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": False,
                 "state": "set",
                 "was_created_by_order": False,
@@ -1436,6 +1458,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         .replace("+00:00", "Z"),
                     },
                 },
+                "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": True,
                 "state": "set",
                 "was_created_by_order": True,
@@ -1502,6 +1525,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         .replace("+00:00", "Z"),
                     },
                 },
+                "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": True,
                 "state": "set",
                 "was_created_by_order": True,
@@ -1552,6 +1576,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         .replace("+00:00", "Z"),
                     },
                 },
+                "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": True,
                 "state": "set",
                 "was_created_by_order": True,
