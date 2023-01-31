@@ -76,7 +76,7 @@ class CourseRunViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
 
     lookup_field = "id"
     permissions_classes = [permissions.AllowAny]
-    queryset = models.CourseRun.objects.filter(is_listed=True)
+    queryset = models.CourseRun.objects.filter(is_listed=True).select_related("course")
     serializer_class = serializers.CourseRunSerializer
 
 

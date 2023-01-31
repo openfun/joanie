@@ -319,83 +319,16 @@ class CourseSerializer(serializers.ModelSerializer):
     Serialize all information about a course.
     """
 
-    organizations = OrganizationSerializer(many=True, read_only=True)
-    products = serializers.SerializerMethodField("get_products")
-
     class Meta:
         model = models.Course
         fields = [
             "code",
-            "organizations",
             "title",
-            "products",
         ]
         read_only_fields = [
             "code",
-            "organizations",
             "title",
-            "products",
         ]
-
-    def get_products(self, instance):
-        """Compute the serialized value for the "target_courses" field."""
-        context = self.context.copy()
-        context["course_code"] = instance.code
-
-        return ProductSerializer(
-            instance.products.prefetch_related(
-                Prefetch(
-                    "course_relations",
-                    queryset=models.CourseProductRelation.objects.filter(
-                        course=instance
-                    ).prefetch_related("organizations"),
-                    to_attr="annotated_course_relations",
-                ),
-            ),
-            many=True,
-            read_only=True,
-            context=context,
-        ).data
-
-    def get_orders(self, instance):
-        """
-        If a user is authenticated, retrieves its orders related to the serializer
-        Course instance else return None
-        """
-
-        try:
-            username = self.context["username"]
-            orders = models.Order.objects.filter(
-                state=ORDER_STATE_VALIDATED,
-                owner__username=username,
-                course=instance,
-            ).select_related("product")
-
-            return OrderLiteSerializer(orders, many=True).data
-        except KeyError:
-            return None
-
-    def to_representation(self, instance):
-        """
-        Cache the serializer representation that does not vary from user to user
-        then, if user is authenticated, add private information to the representation
-        """
-        cache_key = utils.get_resource_cache_key(
-            "course", instance.code, is_language_sensitive=True
-        )
-        representation = cache.get(cache_key)
-
-        if representation is None:
-            representation = super().to_representation(instance)
-            cache.set(
-                cache_key,
-                representation,
-                settings.JOANIE_ANONYMOUS_SERIALIZER_DEFAULT_CACHE_TTL,
-            )
-
-        representation["orders"] = self.get_orders(instance)
-
-        return representation
 
 
 class CourseRunSerializer(serializers.ModelSerializer):
@@ -403,9 +336,12 @@ class CourseRunSerializer(serializers.ModelSerializer):
     Serialize all information about a course run
     """
 
+    course = CourseSerializer(read_only=True)
+
     class Meta:
         model = models.CourseRun
         fields = [
+            "course",
             "end",
             "enrollment_end",
             "enrollment_start",
@@ -416,6 +352,7 @@ class CourseRunSerializer(serializers.ModelSerializer):
             "state",
         ]
         read_only_fields = [
+            "course",
             "end",
             "enrollment_end",
             "enrollment_start",

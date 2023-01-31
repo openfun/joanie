@@ -44,6 +44,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 start=self.now - timedelta(hours=1),
                 end=self.now + timedelta(hours=2),
                 enrollment_end=self.now + timedelta(hours=1),
+                course__organizations=[factories.OrganizationFactory()],
                 **kwargs,
             )
 
@@ -51,6 +52,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             start=self.now - timedelta(hours=1),
             end=self.now + timedelta(hours=2),
             enrollment_end=self.now + timedelta(hours=1),
+            course__organizations=[factories.OrganizationFactory()],
             **kwargs,
         )
 
@@ -113,6 +115,10 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "id": str(enrollment.id),
                         "course_run": {
                             "id": str(enrollment.course_run.id),
+                            "course": {
+                                "code": str(enrollment.course_run.course.code),
+                                "title": str(enrollment.course_run.course.title),
+                            },
                             "resource_link": enrollment.course_run.resource_link,
                             "title": enrollment.course_run.title,
                             "enrollment_start": enrollment.course_run.enrollment_start.isoformat().replace(  # noqa pylint: disable=line-too-long
@@ -170,6 +176,10 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "id": str(other_enrollment.id),
                         "course_run": {
                             "id": str(other_enrollment.course_run.id),
+                            "course": {
+                                "code": str(other_enrollment.course_run.course.code),
+                                "title": str(other_enrollment.course_run.course.title),
+                            },
                             "resource_link": other_enrollment.course_run.resource_link,
                             "title": other_enrollment.course_run.title,
                             "enrollment_start": other_enrollment.course_run.enrollment_start.isoformat().replace(  # noqa pylint: disable=line-too-long
@@ -225,7 +235,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         # Retrieve user's enrollment related to the first course_run
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(8):
             response = self.client.get(
                 f"/api/v1.0/enrollments/?course_run={str(course_run_1.id)}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -244,6 +254,10 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "course_run": {
                             "id": str(course_run_1.id),
                             "resource_link": course_run_1.resource_link,
+                            "course": {
+                                "code": str(course_run_1.course.code),
+                                "title": str(course_run_1.course.title),
+                            },
                             "title": course_run_1.title,
                             "enrollment_start": course_run_1.enrollment_start.isoformat().replace(  # noqa pylint: disable=line-too-long
                                 "+00:00", "Z"
@@ -310,7 +324,9 @@ class EnrollmentApiTest(BaseAPITestCase):
         )
 
         # Create an enrollment created by an order
-        course = factories.CourseFactory()
+        course = factories.CourseFactory(
+            organizations=[factories.OrganizationFactory()]
+        )
         cr3 = self.create_opened_course_run(2, course=course)[0]
         product = factories.ProductFactory(target_courses=[course])
         factories.OrderFactory(owner=user, product=product)
@@ -318,7 +334,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             user=user, course_run=cr3, was_created_by_order=True
         )
 
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(9):
             response = self.client.get(
                 "/api/v1.0/enrollments/?was_created_by_order=false",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -328,7 +344,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         content = response.json()
         self.assertEqual(content["count"], 2)
 
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(8):
             response = self.client.get(
                 "/api/v1.0/enrollments/?was_created_by_order=true",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -381,6 +397,10 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "id": str(enrollment.id),
                 "course_run": {
                     "id": str(enrollment.course_run.id),
+                    "course": {
+                        "code": str(enrollment.course_run.course.code),
+                        "title": str(enrollment.course_run.course.title),
+                    },
                     "resource_link": enrollment.course_run.resource_link,
                     "title": enrollment.course_run.title,
                     "enrollment_start": enrollment.course_run.enrollment_start.isoformat().replace(
@@ -475,6 +495,10 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "id": str(enrollment.id),
                 "course_run": {
                     "id": str(course_run.id),
+                    "course": {
+                        "code": str(course_run.course.code),
+                        "title": str(course_run.course.title),
+                    },
                     "resource_link": course_run.resource_link,
                     "title": course_run.title,
                     "enrollment_start": course_run.enrollment_start.isoformat().replace(
@@ -587,6 +611,10 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "id": str(enrollment.id),
                 "course_run": {
                     "id": str(course_run.id),
+                    "course": {
+                        "code": str(course_run.course.code),
+                        "title": str(course_run.course.title),
+                    },
                     "resource_link": course_run.resource_link,
                     "title": course_run.title,
                     "enrollment_start": course_run.enrollment_start.isoformat().replace(
@@ -661,6 +689,10 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "id": str(enrollment.id),
                 "course_run": {
                     "id": str(course_run.id),
+                    "course": {
+                        "code": str(course_run.course.code),
+                        "title": str(course_run.course.title),
+                    },
                     "resource_link": course_run.resource_link,
                     "title": course_run.title,
                     "enrollment_start": course_run.enrollment_start.isoformat().replace(
@@ -895,6 +927,10 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "id": str(enrollment.id),
                 "course_run": {
                     "id": str(course_run.id),
+                    "course": {
+                        "code": str(course_run.course.code),
+                        "title": str(course_run.course.title),
+                    },
                     "resource_link": course_run.resource_link,
                     "title": course_run.title,
                     "enrollment_start": course_run.enrollment_start.isoformat().replace(
@@ -1141,6 +1177,10 @@ class EnrollmentApiTest(BaseAPITestCase):
                     "id": str(enrollment.id),
                     "course_run": {
                         "id": str(enrollment.course_run.id),
+                        "course": {
+                            "code": str(enrollment.course_run.course.code),
+                            "title": str(enrollment.course_run.course.title),
+                        },
                         "resource_link": enrollment.course_run.resource_link,
                         "title": enrollment.course_run.title,
                         "enrollment_start": enrollment.course_run.enrollment_start.isoformat().replace(  # noqa pylint: disable=line-too-long
@@ -1324,6 +1364,10 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "id": str(enrollment.id),
                 "course_run": {
                     "id": str(course_run.id),
+                    "course": {
+                        "code": str(course_run.course.code),
+                        "title": str(course_run.course.title),
+                    },
                     "resource_link": course_run.resource_link,
                     "title": course_run.title,
                     "enrollment_start": course_run.enrollment_start.isoformat().replace(
@@ -1388,6 +1432,10 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "id": str(enrollment.id),
                 "course_run": {
                     "id": str(course_run.id),
+                    "course": {
+                        "code": str(course_run.course.code),
+                        "title": str(course_run.course.title),
+                    },
                     "resource_link": course_run.resource_link,
                     "title": course_run.title,
                     "enrollment_start": course_run.enrollment_start.isoformat().replace(
@@ -1439,6 +1487,10 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "id": str(enrollment.id),
                 "course_run": {
                     "id": str(course_run.id),
+                    "course": {
+                        "code": str(course_run.course.code),
+                        "title": str(course_run.course.title),
+                    },
                     "resource_link": course_run.resource_link,
                     "title": course_run.title,
                     "enrollment_start": course_run.enrollment_start.isoformat().replace(
@@ -1506,6 +1558,10 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "id": str(enrollment.id),
                 "course_run": {
                     "id": str(course_run.id),
+                    "course": {
+                        "code": str(course_run.course.code),
+                        "title": str(course_run.course.title),
+                    },
                     "resource_link": course_run.resource_link,
                     "title": course_run.title,
                     "enrollment_start": course_run.enrollment_start.isoformat().replace(
@@ -1557,6 +1613,10 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "id": str(enrollment.id),
                 "course_run": {
                     "id": str(course_run.id),
+                    "course": {
+                        "code": str(course_run.course.code),
+                        "title": str(course_run.course.title),
+                    },
                     "resource_link": course_run.resource_link,
                     "title": course_run.title,
                     "enrollment_start": course_run.enrollment_start.isoformat().replace(

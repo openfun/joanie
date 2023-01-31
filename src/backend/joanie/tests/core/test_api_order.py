@@ -827,6 +827,18 @@ class OrderApiTest(BaseAPITestCase):
                         "course_runs": [
                             {
                                 "id": course_run.id,
+                                "course": {
+                                    "code": str(course_run.course.code),
+                                    "organizations": [
+                                        {
+                                            "id": str(organization.id),
+                                            "code": str(organization.code),
+                                            "title": str(organization.title),
+                                        }
+                                        for organization in course_run.course.organizations.all()
+                                    ],
+                                    "title": str(course_run.course.title),
+                                },
                                 "title": course_run.title,
                                 "resource_link": course_run.resource_link,
                                 "state": {
