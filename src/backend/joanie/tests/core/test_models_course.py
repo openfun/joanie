@@ -4,6 +4,7 @@ Test suite for course models
 from datetime import timedelta
 
 from django.core.exceptions import ValidationError
+from django.db.models.deletion import ProtectedError
 from django.test import TestCase
 from django.utils import timezone
 
@@ -203,3 +204,13 @@ class CourseStateModelsTestCase(TestCase):
             state = course.state
         expected_state = CourseState(0, course_run.enrollment_end)
         self.assertEqual(state, expected_state)
+
+    def test_models_course_delete(self):
+        """
+        Confirm course can't be deleted if it has course runs.
+        """
+        course_run = factories.CourseRunFactory()
+        course = factories.CourseFactory(course_runs=[course_run])
+
+        with self.assertRaises(ProtectedError):
+            course.delete()
