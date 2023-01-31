@@ -4,6 +4,7 @@ Declare and configure the models for the courses part
 from collections.abc import Mapping
 from datetime import MAXYEAR, datetime, timezone
 
+from django.contrib.sites.models import Site
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone as django_timezone
@@ -11,11 +12,13 @@ from django.utils.functional import lazy
 from django.utils.translation import gettext_lazy as _
 
 from parler import models as parler_models
+from rest_framework.reverse import reverse
 from url_normalize import url_normalize
 
-from joanie.core import utils
+from joanie.core import enums, utils
 from joanie.core.enums import ALL_LANGUAGES
 from joanie.core.fields.multiselect import MultiSelectField
+from joanie.core.utils import webhooks
 
 from .base import BaseModel
 
@@ -314,25 +317,54 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
             f"[{self.start:%Y-%m-%d} to {self.end:%Y-%m-%d}]"
         )
 
-    def delete(self, using=None):
+    def get_serialized(self, visibility=None):
         """
-        We need to synchronize with webhooks upon deletion. We could have used the signal but it
-        also triggers on query deletes and is being called as many times as there are objects in
-        the query. This would generate many separate calls to the webhook and would not scale. We
-        decided to not provide synchronization for the moment on bulk deletes and leave it up to
-        the developper to handle these cases correctly.
+        Return data for the course run that will be sent to the remote web hooks.
+        Course run visibility can be forced via the eponym argument.
         """
-        super().delete(using)
-        self.synchronize_with_webhooks()
+        site = Site.objects.get_current()
+        resource_path = reverse("course-runs-detail", kwargs={"id": self.id})
+        if (
+            visibility is not None
+            and visibility not in enums.CATALOG_VISIBILITY_CHOICES
+        ):
+            raise ValueError(
+                f"Invalid visibility: {visibility}. Must be one "
+                f"of {enums.CATALOG_VISIBILITY_CHOICES} or None"
+            )
 
-    def synchronize_with_webhooks(self):
-        """Trigger webhook calls to keep remote apps synchronized."""
+        return {
+            "catalog_visibility": visibility
+            or (enums.COURSE_AND_SEARCH if self.is_listed else enums.HIDDEN),
+            "course": self.course.code,
+            "end": self.end.isoformat() if self.end else None,
+            "enrollment_start": self.enrollment_start.isoformat()
+            if self.enrollment_start
+            else None,
+            "enrollment_end": self.enrollment_end.isoformat()
+            if self.enrollment_end
+            else None,
+            "languages": self.languages,
+            "resource_link": f"https://{site.domain:s}{resource_path:s}",
+            "start": self.start.isoformat() if self.start else None,
+        }
+
+    # pylint: disable=invalid-name
+    def get_equivalent_serialized_course_runs_for_related_products(
+        self, visibility=None
+    ):
+        """
+        Returns the equivalent serialized course runs for the products related to the
+        current course run.
+        """
         products = self.course.products.model.objects.filter(
             models.Q(target_course_relations__course_runs__isnull=True)
             | models.Q(target_course_relations__course_runs=self),
             target_course_relations__course=self.course,
         )
-        self.course.products.model.synchronize_products(products)
+        return self.course.products.model.get_equivalent_serialized_course_runs_for_products(
+            products, visibility=visibility
+        )
 
     # pylint: disable=too-many-return-statements
     @staticmethod
@@ -406,3 +438,22 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
                     )
 
         super().clean()
+
+    def delete(self, using=None):
+        """
+        We need to synchronize with webhooks upon deletion. We could have used the signal but it
+        also triggers on query deletes and is being called as many times as there are objects in
+        the query. This would generate many separate calls to the webhook and would not scale. We
+        decided to not provide synchronization for the moment on bulk deletes and leave it up to
+        the developer to handle these cases correctly.
+        """
+        # Course run will be deleted, we synchronize it setting its visibility to hidden
+        serialized_course_runs = [self.get_serialized(visibility=enums.HIDDEN)]
+
+        super().delete(using=using)
+
+        # Now synchronize the related products by recomputing the equivalent serialized course run
+        serialized_course_runs.extend(
+            self.get_equivalent_serialized_course_runs_for_related_products()
+        )
+        webhooks.synchronize_course_runs(serialized_course_runs)

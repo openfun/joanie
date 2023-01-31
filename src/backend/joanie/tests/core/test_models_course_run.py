@@ -4,6 +4,7 @@ Test suite for order models
 import random
 from datetime import datetime, timedelta, timezone
 from unittest import mock
+from zoneinfo import ZoneInfo
 
 from django.core.exceptions import ValidationError
 from django.test import TestCase
@@ -11,6 +12,8 @@ from django.utils import timezone as django_timezone
 
 from joanie.core import factories
 from joanie.core.factories import CourseRunFactory
+
+# pylint: disable=too-many-public-methods
 
 
 class CourseRunModelsTestCase(TestCase):
@@ -412,3 +415,100 @@ class CourseRunModelsTestCase(TestCase):
                 "So you cannot modify its course.']}"
             ),
         )
+
+    def test_model_course_run_get_serialized(self):
+        """
+        Test the get_serialized method of the CourseRun model.
+        catalog_visibility is set to hidden if the course run is not listed
+        """
+        course_run = factories.CourseRunFactory(
+            is_listed=True,
+            start=datetime(2022, 6, 6, 6, 0, tzinfo=ZoneInfo("UTC")),
+            end=datetime(2022, 7, 7, 7, 0, tzinfo=ZoneInfo("UTC")),
+            enrollment_start=datetime(2022, 8, 8, 8, 0, tzinfo=ZoneInfo("UTC")),
+            enrollment_end=datetime(2022, 9, 9, 9, 0, tzinfo=ZoneInfo("UTC")),
+        )
+        self.assertEqual(
+            course_run.get_serialized(),
+            {
+                "course": course_run.course.code,
+                "resource_link": f"https://example.com/api/v1.0/course-runs/{course_run.id!s}/",
+                "start": "2022-06-06T06:00:00+00:00",
+                "end": "2022-07-07T07:00:00+00:00",
+                "enrollment_start": "2022-08-08T08:00:00+00:00",
+                "enrollment_end": "2022-09-09T09:00:00+00:00",
+                "languages": course_run.languages,
+                "catalog_visibility": "course_and_search",
+            },
+        )
+        course_run.is_listed = False
+        course_run.save()
+        self.assertEqual(
+            course_run.get_serialized(),
+            {
+                "course": course_run.course.code,
+                "resource_link": f"https://example.com/api/v1.0/course-runs/{course_run.id!s}/",
+                "start": "2022-06-06T06:00:00+00:00",
+                "end": "2022-07-07T07:00:00+00:00",
+                "enrollment_start": "2022-08-08T08:00:00+00:00",
+                "enrollment_end": "2022-09-09T09:00:00+00:00",
+                "languages": course_run.languages,
+                "catalog_visibility": "hidden",
+            },
+        )
+
+    def test_model_course_run_get_serialized_hidden(self):
+        """
+        Test the get_serialized method of the CourseRun model when
+        the parameter visibility is set to hidden.
+        """
+        course_run = factories.CourseRunFactory(
+            start=datetime(2022, 6, 6, 6, 0, tzinfo=ZoneInfo("UTC")),
+            end=datetime(2022, 7, 7, 7, 0, tzinfo=ZoneInfo("UTC")),
+            enrollment_start=datetime(2022, 8, 8, 8, 0, tzinfo=ZoneInfo("UTC")),
+            enrollment_end=datetime(2022, 9, 9, 9, 0, tzinfo=ZoneInfo("UTC")),
+        )
+
+        self.assertEqual(
+            course_run.get_serialized(visibility="hidden"),
+            {
+                "course": course_run.course.code,
+                "resource_link": f"https://example.com/api/v1.0/course-runs/{course_run.id!s}/",
+                "start": "2022-06-06T06:00:00+00:00",
+                "end": "2022-07-07T07:00:00+00:00",
+                "enrollment_start": "2022-08-08T08:00:00+00:00",
+                "enrollment_end": "2022-09-09T09:00:00+00:00",
+                "languages": course_run.languages,
+                "catalog_visibility": "hidden",
+            },
+        )
+
+    def test_model_course_run_get_serialized_course_only(self):
+        """
+        Test the get_serialized method of the CourseRun model when
+        the parameter visibility is set to course_only, catalog_visibility has the right value
+        """
+        course_run = factories.CourseRunFactory()
+
+        self.assertEqual(
+            course_run.get_serialized(visibility="course_only")["catalog_visibility"],
+            "course_only",
+        )
+
+    def test_model_course_run_get_serialized_with_invalid_visibility(
+        self,
+    ):
+        """
+        Test the get_serialized method of the CourseRun model can only have
+        expected values for visibility
+        """
+        course_run = factories.CourseRunFactory()
+        with self.assertRaises(ValueError) as context:
+            course_run.get_serialized(visibility="invalid_visibility")
+            self.assertEqual(
+                str(context.exception),
+                (
+                    "Invalid visibility value. Must be one of : "
+                    "COURSE_AND_SEARCH, COURSE_ONLY, HIDDEN"
+                ),
+            )

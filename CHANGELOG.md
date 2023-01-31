@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Add synchronization for course runs
 - Add a fsm to handle state of Order model
 - Allow to filter enrollment resource by `was_created_by_order`
 - Add a flag `was_created_by_order` to the Enrollment model

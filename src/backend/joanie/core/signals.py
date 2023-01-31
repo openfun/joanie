@@ -6,6 +6,7 @@ import logging
 from django.core.exceptions import ValidationError
 
 from joanie.core import enums, models
+from joanie.core.utils import webhooks
 
 logger = logging.getLogger(__name__)
 
@@ -14,8 +15,8 @@ def on_change_course_runs_to_product_target_course_relation(
     action, instance, pk_set, **kwargs
 ):
     """
-    Signal triggered when course runs are added to a product course relation.
-    Some checks are processed before course runs are linked to product course relation :
+    Signal triggered when course runs are added to a product / target course relation.
+    Some checks are processed before course runs are linked to product / target course relation :
         1. Check that course runs linked are related to the relation course
     """
     if action == "pre_add":
@@ -49,48 +50,110 @@ def on_change_course_runs_to_product_target_course_relation(
     # Webhooks synchronization
     elif action in ["post_add", "post_remove", "post_clear"]:
         if isinstance(instance, models.ProductTargetCourseRelation):
-            models.Product.synchronize_products([instance.product])
+            serialized_course_runs = (
+                models.Product.get_equivalent_serialized_course_runs_for_products(
+                    [instance.product]
+                )
+            )
         elif isinstance(instance, models.CourseRun):
             if action in ["post_add", "post_remove"]:
-                models.Product.synchronize_products(
-                    models.Product.objects.filter(target_course_relations__in=pk_set)
+                serialized_course_runs = (
+                    models.Product.get_equivalent_serialized_course_runs_for_products(
+                        models.Product.objects.filter(
+                            target_course_relations__in=pk_set
+                        )
+                    )
                 )
             elif action == "post_clear":
                 # Update all products related to this course run's course as we won't be able to
                 # target only the ones that had a restriction for this course run...
-                models.Product.synchronize_products(
-                    models.Product.objects.filter(target_courses__course_runs=instance)
+                serialized_course_runs = (
+                    models.Product.get_equivalent_serialized_course_runs_for_products(
+                        models.Product.objects.filter(
+                            target_courses__course_runs=instance
+                        )
+                    )
                 )
+
+        webhooks.synchronize_course_runs(serialized_course_runs)
 
 
 def on_save_course_run(instance, **kwargs):
-    """Synchronize products related to the course runs being saved."""
-    instance.synchronize_with_webhooks()
+    """Synchronize the course run and products related to the course run being saved."""
+    # Synchronize the course run itself
+    serialized_course_runs = [instance.get_serialized()]
+
+    # Synchronize the related products by recomputing their equivalent serialized course run
+    serialized_course_runs.extend(
+        instance.get_equivalent_serialized_course_runs_for_related_products()
+    )
+    webhooks.synchronize_course_runs(serialized_course_runs)
 
 
 def on_save_product_target_course_relation(instance, **kwargs):
     """
     Synchronize products related to the product target course relation being saved.
     """
-    instance.synchronize_with_webhooks()
+    serialized_course_runs = (
+        models.Product.get_equivalent_serialized_course_runs_for_products(
+            [instance.product]
+        )
+    )
+    webhooks.synchronize_course_runs(serialized_course_runs)
 
 
 def on_change_course_product_relation(action, instance, pk_set, **kwargs):
     """Synchronize products related to the course/product relation being changed."""
-    if action in ["post_add", "post_remove"]:
-        if isinstance(instance, models.Product):
-            models.Product.synchronize_products([instance])
-        elif isinstance(instance, models.Course):
-            models.Product.synchronize_products(
-                models.Product.objects.filter(pk__in=pk_set)
+    if isinstance(instance, models.Course):
+        if action == "post_add":
+            serialized_course_runs = (
+                models.Product.get_equivalent_serialized_course_runs_for_products(
+                    models.Product.objects.filter(pk__in=pk_set), courses=[instance]
+                )
             )
+        elif action == "pre_remove":
+            serialized_course_runs = (
+                models.Product.get_equivalent_serialized_course_runs_for_products(
+                    models.Product.objects.filter(pk__in=pk_set),
+                    courses=[instance],
+                    visibility=enums.HIDDEN,
+                )
+            )
+        elif action in ["pre_clear"]:
+            # When all products are cleared from a course, the only way to have access to this list
+            # of products in order to re-synchronize them is to do it before the clearing
+            serialized_course_runs = (
+                models.Product.get_equivalent_serialized_course_runs_for_products(
+                    instance.products.all(), courses=[instance], visibility=enums.HIDDEN
+                )
+            )
+        else:
+            return
 
-    elif isinstance(instance, models.Course) and action == "pre_clear":
-        # When all products are cleared from a course, the only way to have access to this list
-        # of products in order to re-synchronize them is to do it before the clearing
-        models.Product.synchronize_products(
-            instance.products.all(), visibility=enums.HIDDEN
-        )
+    elif isinstance(instance, models.Product):
+        if action == "post_add":
+            serialized_course_runs = (
+                models.Product.get_equivalent_serialized_course_runs_for_products(
+                    [instance]
+                )
+            )
+        elif action == "pre_clear":
+            serialized_course_runs = (
+                models.Product.get_equivalent_serialized_course_runs_for_products(
+                    [instance], visibility=enums.HIDDEN
+                )
+            )
+        elif action == "pre_remove":
+            serialized_course_runs = (
+                models.Product.get_equivalent_serialized_course_runs_for_products(
+                    [instance],
+                    models.Course.objects.filter(pk__in=pk_set),
+                    visibility=enums.HIDDEN,
+                )
+            )
+        else:
+            return
+    else:
+        return
 
-    elif isinstance(instance, models.Product) and action == "post_clear":
-        models.Product.synchronize_products([instance])
+    webhooks.synchronize_course_runs(serialized_course_runs)
