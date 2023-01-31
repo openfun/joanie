@@ -49,7 +49,7 @@ class TargetCourseSerializerTestCase(TestCase):
         factories.CourseRunFactory.create_batch(2, course=target_course)
         product = factories.ProductFactory(target_courses=[target_course])
 
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(6):
             representation = TargetCourseSerializer(
                 context={"resource": product}
             ).to_representation(target_course)
@@ -73,7 +73,7 @@ class TargetCourseSerializerTestCase(TestCase):
         product = factories.ProductFactory(target_courses=[target_course])
         order = factories.OrderFactory(product=product)
 
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(6):
             representation = TargetCourseSerializer(
                 context={"resource": order}
             ).to_representation(target_course)

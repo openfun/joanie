@@ -12,10 +12,15 @@ and this project adheres to
 
 - Add synchronization for course runs
 
+### Changed
+
+- Include course information into course runs representation
+
 ### Fixed
 
 - Fix a bug that raise an error when user is automatically enrolled to
   a course run on which they have already an inactive enrollment
+
 
 ## [1.0.0] - 2023-01-31
 

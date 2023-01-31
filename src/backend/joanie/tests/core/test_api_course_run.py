@@ -55,6 +55,10 @@ class CourseRunApiTest(BaseAPITestCase):
             {
                 "id": str(course_run.id),
                 "resource_link": course_run.resource_link,
+                "course": {
+                    "code": str(course_run.course.code),
+                    "title": str(course_run.course.title),
+                },
                 "title": course_run.title,
                 "state": {
                     "priority": course_run.state["priority"],
