@@ -153,7 +153,7 @@ class ProductModelsTestCase(TestCase):
             },
         )
 
-    def test_model_product_get_equivalent_course_run_data_type_enrollment_no_course(
+    def test_model_productget_equivalent_course_run_data_type_enrollment_no_course(
         self,
     ):
         """
@@ -225,7 +225,7 @@ class ProductModelsTestCase(TestCase):
             target_courses=[cr.course for cr in course_runs]
         )
 
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(2):
             data = product.get_equivalent_course_run_data()
 
         languages = data.pop("languages")
@@ -242,7 +242,7 @@ class ProductModelsTestCase(TestCase):
             all(lang in languages for cr in course_runs for lang in cr.languages)
         )
 
-    def test_model_product_equivalent_course_run_languages(self):
+    def test_model_product_get_equivalent_course_run_languages(self):
         """Check that the lists of languages are merged"""
         courses = (
             factories.CourseRunFactory(
@@ -252,6 +252,6 @@ class ProductModelsTestCase(TestCase):
         )
         product = factories.ProductFactory.create(target_courses=courses)
         self.assertCountEqual(
-            product.equivalent_course_run_languages,
+            product.get_equivalent_course_run_languages(),
             ["tr", "ast", "ne", "it", "af", "ro", "fr"],
         )

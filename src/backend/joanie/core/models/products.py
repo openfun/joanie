@@ -1,10 +1,7 @@
 """
 Declare and configure the models for the productorder_s part
 """
-import hashlib
-import hmac
 import itertools
-import json
 import logging
 from decimal import Decimal as D
 
@@ -30,6 +27,7 @@ from urllib3.util import Retry
 from joanie.core import enums
 from joanie.core.exceptions import EnrollmentError, GradeError
 from joanie.core.models.certifications import Certificate
+from joanie.core.utils import webhooks
 from joanie.lms_handler import LMSHandler
 
 from . import accounts as customers_models
@@ -133,7 +131,7 @@ class Product(parler_models.TranslatableModel, BaseModel):
             )
         )
 
-    def get_equivalent_course_run_data(self):
+    def get_equivalent_course_run_data(self, visibility=None):
         """
         Return data for the virtual course run equivalent to this product when, taking
         into account all course runs targeted by the product if any.
@@ -155,10 +153,9 @@ class Product(parler_models.TranslatableModel, BaseModel):
         resource_path = reverse("products-detail", kwargs={"id": self.id})
         return {
             "resource_link": f"https://{site.domain:s}{resource_path:s}",
-            "catalog_visibility": enums.COURSE_AND_SEARCH
-            if any(aggregate.values())
-            else enums.HIDDEN,
-            "languages": self.equivalent_course_run_languages,
+            "catalog_visibility": visibility
+            or (enums.COURSE_AND_SEARCH if any(aggregate.values()) else enums.HIDDEN),
+            "languages": self.get_equivalent_course_run_languages(),
             # Get dates from aggregate
             **{
                 key.split("__")[0]: value.isoformat() if value else None
@@ -166,8 +163,7 @@ class Product(parler_models.TranslatableModel, BaseModel):
             },
         }
 
-    @property
-    def equivalent_course_run_languages(self):
+    def get_equivalent_course_run_languages(self):
         """Return a list of distinct languages available in alphabetical order."""
         languages = self.target_course_runs.values_list(
             "languages", flat=True
@@ -176,64 +172,29 @@ class Product(parler_models.TranslatableModel, BaseModel):
         return sorted(list(set(itertools.chain.from_iterable(languages))))
 
     @staticmethod
-    def synchronize_products(products, visibility=None):
+    def get_equivalent_serialized_course_runs_for_products(
+        products, courses=None, visibility=None
+    ):
         """
-        Synchronize a product's related course runs by calling remote web hooks.
+        Get the list of products to synchronize a product's related course runs
 
         visibility: [CATALOG_VISIBILITY_CHOICES]:
             If not None, force visibility for the synchronized products. Useful when
             synchronizing a product that does not have anymore course runs and should
             therefore be hidden.
         """
-        if not settings.COURSE_WEB_HOOKS:
-            return
-
         equivalent_course_runs = []
         for product in products:
-            if course_run_dict := product.get_equivalent_course_run_data():
-                if visibility:
-                    course_run_dict["catalog_visibility"] = visibility
-                for course in product.courses.only("code").iterator():
-                    equivalent_course_runs.append(
-                        {**course_run_dict, "course": course.code}
-                    )
-
-        if not equivalent_course_runs:
-            return
-
-        json_equivalent_course_runs = json.dumps(equivalent_course_runs).encode("utf-8")
-        for webhook in settings.COURSE_WEB_HOOKS:
-            signature = hmac.new(
-                str(webhook["secret"]).encode("utf-8"),
-                msg=json_equivalent_course_runs,
-                digestmod=hashlib.sha256,
-            ).hexdigest()
-
-            response = session.post(
-                webhook["url"],
-                json=equivalent_course_runs,
-                headers={"Authorization": f"SIG-HMAC-SHA256 {signature:s}"},
-                verify=bool(webhook.get("verify", True)),
-                timeout=3,
+            course_run_data = product.get_equivalent_course_run_data(
+                visibility=visibility
             )
+            related_courses = courses or product.courses.only("code").iterator()
+            for course in related_courses:
+                equivalent_course_runs.append(
+                    {**course_run_data, "course": course.code}
+                )
 
-            extra = {
-                "sent": json_equivalent_course_runs,
-                "response": response.content,
-            }
-            # pylint: disable=no-member
-            if response.status_code == requests.codes.ok:
-                logger.info(
-                    "Synchronisation succeeded with %s",
-                    webhook["url"],
-                    extra=extra,
-                )
-            else:
-                logger.error(
-                    "Synchronisation failed with %s",
-                    webhook["url"],
-                    extra=extra,
-                )
+        return equivalent_course_runs
 
     def clean(self):
         """
@@ -301,14 +262,14 @@ class ProductTargetCourseRelation(BaseModel):
         also triggers on query deletes and is being called as many times as there are objects in
         the query. This would generate many separate calls to the webhook and would not scale. We
         decided to not provide synchronization for the moment on bulk deletes and leave it up to
-        the developper to handle these cases correctly.
+        the developer to handle these cases correctly.
         """
-        super().delete(using, keep_parents)
-        self.synchronize_with_webhooks()
-
-    def synchronize_with_webhooks(self):
-        """Trigger webhook calls to keep remote apps synchronized."""
-        Product.synchronize_products([self.product])
+        product = self.product
+        super().delete(using=using, keep_parents=keep_parents)
+        serialized_course_runs = (
+            Product.get_equivalent_serialized_course_runs_for_products([product])
+        )
+        webhooks.synchronize_course_runs(serialized_course_runs)
 
 
 class Order(BaseModel):

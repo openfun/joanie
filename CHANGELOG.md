@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Add synchronization for course runs
+
 ### Fixed
 
 - Fix a bug that raise an error when user is automatically enrolled to
