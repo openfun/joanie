@@ -1,8 +1,7 @@
 # Joanie – Power up Richie catalog 👛
 
-Joanie aims to power up [Richie](https://github.com/openfun/richie) catalog
-functionalities by delivering an API able to manage course
-enrollment/subscription, payment and certificates delivery.
+Joanie is a headless ERP for education to manage course enrollment/subscription,
+payment and certificates delivery.
 
 Joanie is built on top of [Django Rest
 Framework](https://www.django-rest-framework.org/).
