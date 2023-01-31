@@ -2,7 +2,6 @@
 
 from django.conf import settings
 from django.core.cache import cache
-from django.db.models import Prefetch
 
 from djmoney.contrib.django_rest_framework import MoneyField
 from rest_framework import serializers
