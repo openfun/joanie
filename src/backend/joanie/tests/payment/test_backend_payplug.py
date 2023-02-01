@@ -465,7 +465,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         backend.handle_notification(request)
 
         # Email has been sent
-        self._check_purchase_order_email_sent(
+        self._check_order_validated_email_sent(
             order.owner.email, order.owner.username, order
         )
 

@@ -12,9 +12,8 @@ if [ ! -d "${DIR_MAILS}"html/ ]; then
   exit;
 fi
 
-for file in "${DIR_MAILS}"html/*.html; 
-    # we don't want unexpected words wrap, we set it to 600 chars
-    do html-to-text --wordwrap=600 < "$file" > "${file%.html}".txt; done; 
+for file in "${DIR_MAILS}"html/*.html;
+    do html-to-text -j ./html-to-text.config.json < "$file" > "${file%.html}".txt; done;
 
 if [ ! -d "${DIR_MAILS}"text/ ]; then
   mkdir -p "${DIR_MAILS}"text/;
