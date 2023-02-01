@@ -17,6 +17,7 @@ Including another URLconf
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import include, path, re_path
 
 from rest_framework import permissions
@@ -54,14 +55,14 @@ if settings.DEBUG:
         + [
             path("__debug__/", include("marion.urls.debug")),
             path(
-                "__debug__/mail/success_payment_html",
+                "__debug__/mail/order_validated_html",
                 DebugMailSuccessPaymentViewHtml.as_view(),
-                name="debug.mail.success_payment_html",
+                name="debug.mail.order_validated_html",
             ),
             path(
-                "__debug__/mail/success_payment_txt",
+                "__debug__/mail/order_validated_txt",
                 DebugMailSuccessPaymentViewTxt.as_view(),
-                name="debug.mail.success_payment_txt",
+                name="debug.mail.order_validated_txt",
             ),
         ]
         + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

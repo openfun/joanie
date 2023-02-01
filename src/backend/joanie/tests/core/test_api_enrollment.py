@@ -296,7 +296,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         # Retrieve user's enrollment related to the first course_run
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
             response = self.client.get(
                 "/api/v1.0/enrollments/?course_run=invalid_course_run_id",
                 HTTP_AUTHORIZATION=f"Bearer {token}",

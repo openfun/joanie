@@ -150,7 +150,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
         order.refresh_from_db()
         self.assertEqual(order.state, ORDER_STATE_VALIDATED)
         # check email has been sent
-        self._check_purchase_order_email_sent("sam@fun-test.fr", "Samantha", order)
+        self._check_order_validated_email_sent("sam@fun-test.fr", "Samantha", order)
 
         mock_logger.assert_called_once_with(
             "Mail is sent to %s from dummy payment", "sam@fun-test.fr"

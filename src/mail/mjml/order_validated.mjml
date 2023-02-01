@@ -1,0 +1,47 @@
+<mjml>
+  <mj-include path="./partial/header.mjml" />
+  <mj-body mj-class="bg--blue-100">
+    <mj-wrapper css-class="wrapper" padding="20px 40px 40px 40px">
+    <mj-section>
+      <mj-column>
+        <mj-image src="{% static 'joanie/images/logo_fun.png' %}" width="200px" align="left" alt="{%trans 'Company logo' %}" />
+      </mj-column>
+    </mj-section>
+      <mj-section mj-class="bg--blue-100" border-radius="6px 6px 0 0" padding="30px 50px 60px 50px">
+        <mj-column>
+          <mj-text padding="0">
+            <p>
+              {%if username%}
+                {% blocktranslate with name=username %}Hello {{ name }}{% endblocktranslate %}
+              {% else %}
+                {%trans "Hello" %}
+              {% endif %}<br/>
+              <strong>{%trans "Thank you very much for your purchase!"%}</strong>
+            </p>
+          </mj-text>
+        </mj-column>
+      </mj-section>
+      <mj-section mj-class="bg--blue-100" padding="0 50px 60px 50px">
+        <mj-column>
+          <mj-text padding="0 0 20px 0">
+            <h1>{%trans "Your order has been confirmed."%}</h1>
+          </mj-text>
+          <mj-text padding="0">
+            {% blocktranslate with title=product.title price=product.price trimmed %}
+              You have bought <strong>{{ title }}</strong>
+              <br />for a price of <strong>{{ price }}</strong>.
+            {% endblocktranslate %}
+          </mj-text>
+        </mj-column>
+      </mj-section>
+      <mj-section mj-class="bg--blue-100" border-radius="0 0 6px 6px" padding="0 50px 30px 50px">
+        <mj-column>
+          <mj-text padding="0">
+            {%trans "We wish you plenty of success in your training. 🎉"%}
+          </mj-text>
+        </mj-column>
+      </mj-section>
+    </mj-wrapper>
+    <mj-include path="./partial/footer.mjml" />
+  </mj-body>
+</mjml>

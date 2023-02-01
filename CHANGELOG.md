@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Changed
+
+- Improve order confirmation email template
+
 ### Added
 
 - Add synchronization for course runs

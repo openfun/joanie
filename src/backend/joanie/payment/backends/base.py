@@ -3,6 +3,7 @@ import smtplib
 from logging import getLogger
 
 from django.conf import settings
+from django.contrib.sites.models import Site
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -70,18 +71,23 @@ class BasePaymentBackend:
     def _send_mail_payment_success(cls, order):
         """Send mail with the current language of the user"""
         try:
-
             with override(order.owner.language):
+                site = Site.objects.get_current()
                 template_vars = {
+                    "title": _("Purchase order confirmed!"),
                     "email": order.owner.email,
                     "username": order.owner.username,
                     "product": order.product,
+                    "site": {
+                        "name": site.name,
+                        "hostname": "https://" + site.domain,
+                    },
                 }
                 msg_html = render_to_string(
-                    "mail/html/purchase_order.html", template_vars
+                    "mail/html/order_validated.html", template_vars
                 )
                 msg_plain = render_to_string(
-                    "mail/text/purchase_order.txt", template_vars
+                    "mail/text/order_validated.txt", template_vars
                 )
                 send_mail(
                     _("Purchase order confirmed!"),

@@ -162,7 +162,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase):
         self.assertEqual(order.state, "validated")
 
         # - Email has been sent
-        self._check_purchase_order_email_sent("sam@fun-test.fr", "Samantha", order)
+        self._check_order_validated_email_sent("sam@fun-test.fr", "Samantha", order)
 
     def test_payment_backend_base_do_on_payment_failure(self):
         """

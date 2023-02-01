@@ -50,7 +50,7 @@ class ProductApiTest(BaseAPITestCase):
             course=course, product=product, organizations=[]
         )
 
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(2):
             response = self.client.get(
                 f"/api/v1.0/products/{product.id}/?course={course.code}"
             )
@@ -69,7 +69,7 @@ class ProductApiTest(BaseAPITestCase):
             course=course, product=product, organizations=[organization]
         )
 
-        with self.assertNumQueries(0):
+        with self.assertNumQueries(1):
             response = self.client.get(f"/api/v1.0/products/{product.id}/")
 
         self.assertEqual(response.status_code, 400)
@@ -89,7 +89,7 @@ class ProductApiTest(BaseAPITestCase):
             course=course, product=product, organizations=[organization]
         )
 
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             response = self.client.get(
                 f"/api/v1.0/products/{product.id}/?course={course.code}"
             )
@@ -204,7 +204,7 @@ class ProductApiTest(BaseAPITestCase):
 
         self.assertEqual(order.state, "pending")
 
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
             response = self.client.get(
                 f"/api/v1.0/products/{product.id}/?course={course.code}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -231,7 +231,7 @@ class ProductApiTest(BaseAPITestCase):
 
         self.assertEqual(order.state, "validated")
 
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
             response = self.client.get(
                 f"/api/v1.0/products/{product.id}/?course={course.code}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -260,7 +260,7 @@ class ProductApiTest(BaseAPITestCase):
 
         self.assertEqual(order.state, "canceled")
 
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
             response = self.client.get(
                 f"/api/v1.0/products/{product.id}/?course={course.code}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -280,7 +280,7 @@ class ProductApiTest(BaseAPITestCase):
             type=enums.PRODUCT_TYPE_CREDENTIAL, courses=[course1]
         )
 
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(2):
             response = self.client.get(
                 f"/api/v1.0/products/{product.id}/?course={course2.code}"
             )
@@ -339,7 +339,7 @@ class ProductApiTest(BaseAPITestCase):
 
         # If user request product only and filter to the first course,
         # it should get only one order into orders property
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
             response = self.client.get(
                 f"/api/v1.0/products/{product.id}/?course={courses[0].code}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
