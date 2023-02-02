@@ -17,9 +17,9 @@ from ..core.models import BaseModel, Organization
 class CourseSubmission(BaseModel):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        verbose_name=_("Manager"),
+        verbose_name=_("Submitter"),
         on_delete=models.PROTECT,
-        related_name="pre_courses",
+        related_name="course_submissions",
     )
     organization = models.ForeignKey(
         Organization,
@@ -270,6 +270,7 @@ class Quote(BaseModel):
     state = FSMField(default='to_send')
     # to_send -> sent
     # sent -> order_received
+    # order_received -> verified
     # sent -> cancelled
     # to_send -> cancelled
 
