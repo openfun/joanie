@@ -27,6 +27,7 @@ services:
     volumes:
       - ./src/backend:/app
       - ./data/media:/data/media
+      - ./data/static:/data/static
     depends_on:
       - postgresql
       - mailcatcher

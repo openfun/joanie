@@ -31,5 +31,5 @@ JOANIE_PAYMENT_BACKEND=joanie.payment.backends.dummy.DummyPaymentBackend
 # OBF_CLIENT_SECRET=
 
 # Mail
-EMAIL_HOST="mailcatcher"
-EMAIL_PORT=1025
+DJANGO_EMAIL_HOST="mailcatcher"
+DJANGO_EMAIL_PORT=1025
