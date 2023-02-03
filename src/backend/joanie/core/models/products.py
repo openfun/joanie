@@ -526,9 +526,9 @@ class Order(BaseModel):
         for course in courses_with_one_course_run:
             course_run = course.course_runs.first()
             try:
-                enrollment = Enrollment.objects.get(
+                enrollment = Enrollment.objects.only("is_active").get(
                     course_run=course_run, user=self.owner
-                ).only("is_active")
+                )
             except Enrollment.DoesNotExist:
                 Enrollment.objects.create(
                     course_run=course_run,

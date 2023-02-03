@@ -160,6 +160,50 @@ class OrderModelsTestCase(TestCase):
 
         self.assertEqual(Enrollment.objects.count(), 1)
 
+    def test_models_order_validate_with_inactive_enrollment(self):
+        """
+        Order has a validate method which is in charge to enroll owner to courses
+        with only one course run if order state is equal to validated. If the user has
+        already an inactive enrollment, it should be activated.
+        """
+        owner = factories.UserFactory()
+        [course, target_course] = factories.CourseFactory.create_batch(2)
+
+        # - Link only one course run to target_course
+        course_run = factories.CourseRunFactory(
+            course=target_course,
+            start=timezone.now() - timedelta(hours=1),
+            end=timezone.now() + timedelta(hours=2),
+            enrollment_end=timezone.now() + timedelta(hours=1),
+        )
+
+        product = factories.ProductFactory(
+            courses=[course], target_courses=[target_course]
+        )
+
+        order = factories.OrderFactory(owner=owner, product=product, course=course)
+
+        # - Create an inactive enrollment for related course run
+        enrollment = factories.EnrollmentFactory(
+            user=owner, course_run=course_run, is_active=False
+        )
+
+        self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
+        self.assertEqual(Enrollment.objects.count(), 1)
+
+        # - Create an invoice to mark order as validated
+        InvoiceFactory(order=order, total=order.total)
+
+        # - Validate the order should automatically enroll user to course run
+        with self.assertNumQueries(22):
+            order.validate()
+
+        enrollment.refresh_from_db()
+        self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
+
+        self.assertEqual(Enrollment.objects.count(), 1)
+        self.assertEqual(enrollment.is_active, True)
+
     def test_models_order_cancel(self):
         """
         Order has a cancel method which is in charge to unroll owner to all active
