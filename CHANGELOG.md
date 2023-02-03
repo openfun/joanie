@@ -12,6 +12,10 @@ and this project adheres to
 
 - Add yarn cli to generate joanie api client in TypeScript
 
+### Removed
+
+- Badge providers now live in the obc python package
+
 ## [1.1.0] - 2023-02-22
 
 ### Changed
@@ -29,13 +33,12 @@ and this project adheres to
 
 ### Fixed
 
-- Catch error if the max retries synchronization webhook gets reached 
+- Catch error if the max retries synchronization webhook gets reached
 - Prevent server error when CourseRun instance has no start and end dates.
 - Prevent to enroll on several opened course runs of the same course
 - Prevent internal server error when certificate document is unprocessable
 - Fix a bug that raise an error when user is automatically enrolled to
   a course run on which they have already an inactive enrollment
-
 
 ## [1.0.0] - 2023-01-31
 
