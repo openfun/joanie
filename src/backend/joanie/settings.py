@@ -347,7 +347,7 @@ class Base(Configuration):
         Return languages for Parler computed from the LANGUAGES and LANGUAGE_CODE settings.
         """
         return {
-            self.SITE_ID: tuple(dict(code=code) for code, _name in self.LANGUAGES),
+            self.SITE_ID: tuple({"code": code} for code, _name in self.LANGUAGES),
             "default": {
                 "fallbacks": [self.LANGUAGE_CODE],
                 "hide_untranslated": False,
