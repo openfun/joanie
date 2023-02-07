@@ -21,7 +21,6 @@ class CourseProductRelationAdminForm(forms.ModelForm):
     )
 
     class Meta:
-
         fields = ["course", "product", "organizations"]
         model = models.CourseProductRelation
 
@@ -43,7 +42,6 @@ class ProductTargetCourseRelationAdminForm(forms.ModelForm):
     )
 
     class Meta:
-
         fields = ["course", "product", "position", "course_runs"]
         model = models.ProductTargetCourseRelation
 
