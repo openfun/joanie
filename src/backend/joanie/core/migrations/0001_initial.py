@@ -21,7 +21,6 @@ import joanie.core.fields.multiselect
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
