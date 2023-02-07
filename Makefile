@@ -170,6 +170,12 @@ superuser: ## create a Django superuser
 	@$(MANAGE) createsuperuser
 .PHONY: superuser
 
+# -- Database
+
+dbshell: ## connect to database shell
+	docker-compose exec app-dev python manage.py dbshell
+.PHONY: dbshell
+
 # -- Internationalization
 
 env.d/development/crowdin:

@@ -11,6 +11,7 @@ and this project adheres to
 ### Added
 
 - Add synchronization for course runs
+- Add make dbshell cmd to access database in cli
 
 ### Changed
 
