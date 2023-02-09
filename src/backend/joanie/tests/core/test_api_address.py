@@ -3,8 +3,10 @@ Test suite for addresses API
 """
 import json
 import uuid
+from unittest import mock
 
 import arrow
+from rest_framework.pagination import PageNumberPagination
 
 from joanie.core import factories, models
 from joanie.tests.base import BaseAPITestCase
@@ -71,12 +73,21 @@ class AddressAPITestCase(BaseAPITestCase):
         """If we try to get addresses for a user not in db, we create a new user first"""
         username = "panoramix"
         token = self.get_user_token(username)
+
         response = self.client.get(
             "/api/v1.0/addresses/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
+
         self.assertEqual(response.status_code, 200)
-        addresses_data = response.data
-        self.assertEqual(len(addresses_data), 0)
+        self.assertEqual(
+            response.json(),
+            {
+                "count": 0,
+                "next": None,
+                "previous": None,
+                "results": [],
+            },
+        )
         self.assertEqual(models.User.objects.get(username=username).username, username)
 
     def test_api_address_get_addresses(self):
@@ -89,17 +100,69 @@ class AddressAPITestCase(BaseAPITestCase):
             "/api/v1.0/addresses/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "count": 2,
+                "next": None,
+                "previous": None,
+                "results": [
+                    {
+                        "id": str(address.id),
+                        "address": address.address,
+                        "city": address.city,
+                        "country": str(address.country),
+                        "first_name": address.first_name,
+                        "is_main": address.is_main,
+                        "last_name": address.last_name,
+                        "postcode": address.postcode,
+                        "title": address.title,
+                    }
+                    for address in [address1, address2]
+                ],
+            },
+        )
 
-        addresses_data = response.data
-        self.assertEqual(len(addresses_data), 2)
-        self.assertEqual(addresses_data[0]["title"], "Office")
-        self.assertEqual(addresses_data[0]["first_name"], address1.first_name)
-        self.assertEqual(addresses_data[0]["last_name"], address1.last_name)
-        self.assertEqual(addresses_data[0]["id"], str(address1.id))
-        self.assertEqual(addresses_data[1]["title"], "Home")
-        self.assertEqual(addresses_data[1]["first_name"], address2.first_name)
-        self.assertEqual(addresses_data[1]["last_name"], address2.last_name)
-        self.assertEqual(addresses_data[1]["id"], str(address2.id))
+    @mock.patch.object(PageNumberPagination, "get_page_size", return_value=2)
+    def test_api_address_list_pagination(self, _mock_page_size):
+        """Pagination should work as expected."""
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+
+        addresses = factories.AddressFactory.create_batch(3, owner=user)
+        address_ids = [str(address.id) for address in addresses]
+
+        response = self.client.get(
+            "/api/v1.0/addresses/", HTTP_AUTHORIZATION=f"Bearer {token}"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 3)
+        self.assertEqual(
+            content["next"], "http://testserver/api/v1.0/addresses/?page=2"
+        )
+        self.assertIsNone(content["previous"])
+
+        self.assertEqual(len(content["results"]), 2)
+        for item in content["results"]:
+            address_ids.remove(item["id"])
+
+        # Get page 2
+        response = self.client.get(
+            "/api/v1.0/addresses/?page=2", HTTP_AUTHORIZATION=f"Bearer {token}"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+
+        self.assertEqual(content["count"], 3)
+        self.assertIsNone(content["next"])
+        self.assertEqual(content["previous"], "http://testserver/api/v1.0/addresses/")
+
+        self.assertEqual(len(content["results"]), 1)
+        address_ids.remove(content["results"][0]["id"])
+        self.assertEqual(address_ids, [])
 
     def test_api_address_create_without_authorization(self):
         """Create/update user addresses not allowed without HTTP AUTH"""

@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Changed
 
+- Activate pagination by default on all endpoints (20 items per page)
 - Use user fullname instead of username in order confirmation email
 
 ## Added
@@ -51,6 +52,6 @@ and this project adheres to
 - First working version serving sellable micro-credentials for multiple
   organizations synchronized to a remote catalog
 
-[unreleased]: https://github.com/openfun/joanie/compare/v1.1.0...master
+[unreleased]: https://github.com/openfun/joanie/compare/v1.1.0...main
 [1.1.0]: https://github.com/openfun/joanie/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/openfun/joanie/compare/695965575b80d45c2600a1bcaf84d78bebaec1e7...v1.0.0
