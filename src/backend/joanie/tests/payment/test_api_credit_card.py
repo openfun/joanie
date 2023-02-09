@@ -1,9 +1,12 @@
 """
 Test suite for the Credit Card API
 """
+from unittest import mock
+
 from django.test.utils import override_settings
 
 import arrow
+from rest_framework.pagination import PageNumberPagination
 
 from joanie.core.factories import UserFactory
 from joanie.core.models import User
@@ -55,20 +58,76 @@ class CreditCardAPITestCase(BaseAPITestCase):
             "/api/v1.0/credit-cards/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), 0)
+        self.assertEqual(
+            response.json(), {"count": 0, "next": None, "previous": None, "results": []}
+        )
         self.assertTrue(User.objects.filter(username=username).exists())
 
     def test_api_credit_card_get_credit_cards_list(self):
         """Retrieve all authenticated user's credit cards is allowed."""
         user = UserFactory()
         token = self.get_user_token(user.username)
-        CreditCardFactory.create_batch(2, owner=user)
+        cards = CreditCardFactory.create_batch(2, owner=user)
 
         response = self.client.get(
             "/api/v1.0/credit-cards/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), 2)
+        content = response.json()
+        results = content.pop("results")
+        self.assertEqual(
+            [result["id"] for result in results], [str(card.id) for card in cards]
+        )
+        self.assertEqual(
+            content,
+            {
+                "count": 2,
+                "next": None,
+                "previous": None,
+            },
+        )
+
+    @mock.patch.object(PageNumberPagination, "get_page_size", return_value=2)
+    def test_api_credit_card_read_list_pagination(self, _mock_page_size):
+        """Pagination should work as expected."""
+        user = UserFactory()
+        token = self.get_user_token(user.username)
+        cards = CreditCardFactory.create_batch(3, owner=user)
+        card_ids = [str(card.id) for card in cards]
+
+        response = self.client.get(
+            "/api/v1.0/credit-cards/", HTTP_AUTHORIZATION=f"Bearer {token}"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 3)
+        self.assertEqual(
+            content["next"], "http://testserver/api/v1.0/credit-cards/?page=2"
+        )
+        self.assertIsNone(content["previous"])
+
+        self.assertEqual(len(content["results"]), 2)
+        for item in content["results"]:
+            card_ids.remove(item["id"])
+
+        # Get page 2
+        response = self.client.get(
+            "/api/v1.0/credit-cards/?page=2", HTTP_AUTHORIZATION=f"Bearer {token}"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+
+        self.assertEqual(content["count"], 3)
+        self.assertIsNone(content["next"])
+        self.assertEqual(
+            content["previous"], "http://testserver/api/v1.0/credit-cards/"
+        )
+
+        self.assertEqual(len(content["results"]), 1)
+        card_ids.remove(content["results"][0]["id"])
+        self.assertEqual(card_ids, [])
 
     def test_api_credit_card_get_credit_card(self):
         """Retrieve authenticated user's credit card by its id is allowed."""

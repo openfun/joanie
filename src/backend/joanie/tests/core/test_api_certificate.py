@@ -2,8 +2,10 @@
 import json
 import uuid
 from io import BytesIO
+from unittest import mock
 
 from pdfminer.high_level import extract_text as pdf_extract_text
+from rest_framework.pagination import PageNumberPagination
 
 from joanie.core.enums import PRODUCT_TYPE_CERTIFICATE
 from joanie.core.factories import (
@@ -53,8 +55,64 @@ class CertificateApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, 200)
 
-        content = json.loads(response.content)
-        self.assertEqual(content, [{"id": str(certificate.id)}])
+        self.assertEqual(
+            response.json(),
+            {
+                "count": 1,
+                "next": None,
+                "previous": None,
+                "results": [{"id": str(certificate.id)}],
+            },
+        )
+
+    @mock.patch.object(PageNumberPagination, "get_page_size", return_value=2)
+    def test_api_certificate_read_list_pagination(self, _mock_page_size):
+        """Pagination should work as expected."""
+        user = UserFactory()
+        token = self.get_user_token(user.username)
+
+        orders = [
+            OrderFactory(
+                owner=user, product=ProductFactory(type=PRODUCT_TYPE_CERTIFICATE)
+            )
+            for _ in range(3)
+        ]
+        certificates = [CertificateFactory(order=order) for order in orders]
+        certificate_ids = [str(certificate.id) for certificate in certificates]
+
+        response = self.client.get(
+            "/api/v1.0/certificates/", HTTP_AUTHORIZATION=f"Bearer {token}"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 3)
+        self.assertEqual(
+            content["next"], "http://testserver/api/v1.0/certificates/?page=2"
+        )
+        self.assertIsNone(content["previous"])
+
+        self.assertEqual(len(content["results"]), 2)
+        for item in content["results"]:
+            certificate_ids.remove(item["id"])
+
+        # Get page 2
+        response = self.client.get(
+            "/api/v1.0/certificates/?page=2", HTTP_AUTHORIZATION=f"Bearer {token}"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+
+        self.assertEqual(content["count"], 3)
+        self.assertIsNone(content["next"])
+        self.assertEqual(
+            content["previous"], "http://testserver/api/v1.0/certificates/"
+        )
+
+        self.assertEqual(len(content["results"]), 1)
+        certificate_ids.remove(content["results"][0]["id"])
+        self.assertEqual(certificate_ids, [])
 
     def test_api_certificate_read_anonymous(self):
         """
