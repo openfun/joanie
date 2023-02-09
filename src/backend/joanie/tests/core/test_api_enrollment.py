@@ -44,7 +44,6 @@ class EnrollmentApiTest(BaseAPITestCase):
                 start=self.now - timedelta(hours=1),
                 end=self.now + timedelta(hours=2),
                 enrollment_end=self.now + timedelta(hours=1),
-                course__organizations=[factories.OrganizationFactory()],
                 **kwargs,
             )
 
@@ -52,7 +51,6 @@ class EnrollmentApiTest(BaseAPITestCase):
             start=self.now - timedelta(hours=1),
             end=self.now + timedelta(hours=2),
             enrollment_end=self.now + timedelta(hours=1),
-            course__organizations=[factories.OrganizationFactory()],
             **kwargs,
         )
 
@@ -324,9 +322,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         )
 
         # Create an enrollment created by an order
-        course = factories.CourseFactory(
-            organizations=[factories.OrganizationFactory()]
-        )
+        course = factories.CourseFactory()
         cr3 = self.create_opened_course_run(2, course=course)[0]
         product = factories.ProductFactory(target_courses=[course])
         factories.OrderFactory(owner=user, product=product)
