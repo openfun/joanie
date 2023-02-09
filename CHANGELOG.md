@@ -15,6 +15,7 @@ and this project adheres to
 
 ## Added
 
+- Allow on-demand page size on the order and enrollment endpoints
 - Add yarn cli to generate joanie api client in TypeScript
 
 ### Removed
