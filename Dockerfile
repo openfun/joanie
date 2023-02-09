@@ -105,6 +105,11 @@ FROM core as development
 # Switch back to the root user to install development dependencies
 USER root:root
 
+# Install psql
+RUN apt-get update && \
+    apt-get install -y postgresql-client default-mysql-client && \
+    rm -rf /var/lib/apt/lists/*
+
 # Uninstall joanie and re-install it in editable mode along with development
 # dependencies
 RUN pip uninstall -y joanie
