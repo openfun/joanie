@@ -220,6 +220,57 @@ class EnrollmentApiTest(BaseAPITestCase):
             },
         )
 
+    def test_api_enrollment_read_list_pagination(self):
+        """Pagination should work as expected."""
+        user = factories.UserFactory()
+        enrollments = [
+            factories.EnrollmentFactory(
+                user=user, course_run=self.create_opened_course_run(is_listed=True)
+            )
+            for _ in range(3)
+        ]
+        enrollment_ids = [str(enrollment.id) for enrollment in enrollments]
+
+        # The user can see his/her enrollment
+        token = self.get_user_token(user.username)
+
+        response = self.client.get(
+            "/api/v1.0/enrollments/?page_size=2",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 3)
+        self.assertEqual(
+            content["next"],
+            "http://testserver/api/v1.0/enrollments/?page=2&page_size=2",
+        )
+        self.assertIsNone(content["previous"])
+
+        self.assertEqual(len(content["results"]), 2)
+        for item in content["results"]:
+            enrollment_ids.remove(item["id"])
+
+        # Get page 2
+        response = self.client.get(
+            "/api/v1.0/enrollments/?page_size=2&page=2",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+
+        self.assertEqual(content["count"], 3)
+        self.assertIsNone(content["next"])
+        self.assertEqual(
+            content["previous"], "http://testserver/api/v1.0/enrollments/?page_size=2"
+        )
+
+        self.assertEqual(len(content["results"]), 1)
+        enrollment_ids.remove(content["results"][0]["id"])
+        self.assertEqual(enrollment_ids, [])
+
     def test_api_enrollment_read_list_filtered_by_course_run_id(self):
         """
         Authenticated users retrieving the list of enrollments should be able to filter

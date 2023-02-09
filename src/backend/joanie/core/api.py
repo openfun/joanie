@@ -47,7 +47,8 @@ class Pagination(pagination.PageNumberPagination):
     """Pagination to display no more than 100 objects per page sorted by creation date."""
 
     ordering = "-created_on"
-    page_size = 100
+    max_page_size = 100
+    page_size_query_param = "page_size"
 
 
 class CourseRunViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):

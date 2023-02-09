@@ -127,6 +127,50 @@ class OrderApiTest(BaseAPITestCase):
             },
         )
 
+    def test_api_order_read_list_pagination(self):
+        """Pagination should work as expected."""
+        user = factories.UserFactory()
+        orders = factories.OrderFactory.create_batch(3, owner=user)
+        order_ids = [str(order.id) for order in orders]
+
+        # The owner can see his/her order
+        token = self.get_user_token(user.username)
+
+        response = self.client.get(
+            "/api/v1.0/orders/?page_size=2",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 3)
+        self.assertEqual(
+            content["next"], "http://testserver/api/v1.0/orders/?page=2&page_size=2"
+        )
+        self.assertIsNone(content["previous"])
+
+        self.assertEqual(len(content["results"]), 2)
+        for item in content["results"]:
+            order_ids.remove(item["id"])
+
+        # Get page 2
+        response = self.client.get(
+            "/api/v1.0/orders/?page_size=2&page=2", HTTP_AUTHORIZATION=f"Bearer {token}"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+
+        self.assertEqual(content["count"], 3)
+        self.assertIsNone(content["next"])
+        self.assertEqual(
+            content["previous"], "http://testserver/api/v1.0/orders/?page_size=2"
+        )
+
+        self.assertEqual(len(content["results"]), 1)
+        order_ids.remove(content["results"][0]["id"])
+        self.assertEqual(order_ids, [])
+
     def test_api_order_read_list_filtered_by_product_id(self):
         """Authenticated user should be able to filter their orders by product id."""
         [product_1, product_2] = factories.ProductFactory.create_batch(2)
