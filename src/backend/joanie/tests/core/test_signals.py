@@ -24,7 +24,8 @@ class SignalsTestCase(TestCase):
         the equivalent course run of related products and the course run itself.
         """
         course_run = factories.CourseRunFactory(
-            start=datetime(2022, 7, 7, 7, 0, tzinfo=ZoneInfo("UTC"))
+            start=datetime(2022, 7, 7, 7, 0, tzinfo=ZoneInfo("UTC")),
+            is_listed=True,
         )
         products = factories.ProductFactory.create_batch(
             2, target_courses=[course_run.course]
@@ -64,8 +65,10 @@ class SignalsTestCase(TestCase):
         When a course run restriction is in place, synchronize_course_runs should
         only be triggered for course runs declared in the restriction list.
         """
-        course_run = factories.CourseRunFactory()
-        course_run_excluded = factories.CourseRunFactory(course=course_run.course)
+        course_run = factories.CourseRunFactory(is_listed=True)
+        course_run_excluded = factories.CourseRunFactory(
+            course=course_run.course, is_listed=True
+        )
         product = factories.ProductFactory()
         factories.ProductTargetCourseRelationFactory(
             product=product, course=course_run.course, course_runs=[course_run]

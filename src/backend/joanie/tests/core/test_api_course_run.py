@@ -42,9 +42,9 @@ class CourseRunApiTest(BaseAPITestCase):
 
     def test_api_course_run_read_detail(self):
         """
-        Any users should be allowed to retrieve a course run with minimal db access.
+        Any users should be allowed to retrieve a listed course run with minimal db access.
         """
-        course_run = factories.CourseRunFactory()
+        course_run = factories.CourseRunFactory(is_listed=True)
 
         with self.assertNumQueries(1):
             response = self.client.get(f"/api/v1.0/course-runs/{course_run.id}/")
