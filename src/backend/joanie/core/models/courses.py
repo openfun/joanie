@@ -299,7 +299,7 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
     is_gradable = models.BooleanField(_("is gradable"), default=False)
     is_listed = models.BooleanField(
         _("is listed"),
-        default=True,
+        default=False,
         help_text=_(
             "If checked the course run will be included in the list of course runs "
             "available for enrollment on the related course page."

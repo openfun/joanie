@@ -45,6 +45,7 @@ class EnrollmentModelsTestCase(TestCase):
             enrollment_end=self.now + timedelta(hours=1),
             title="my run",
             resource_link=resource_link,
+            is_listed=True,
         )
 
         enrollment = factories.EnrollmentFactory(
@@ -92,6 +93,7 @@ class EnrollmentModelsTestCase(TestCase):
             start=self.now - timedelta(hours=1),
             end=self.now + timedelta(hours=2),
             enrollment_end=self.now + timedelta(hours=1),
+            is_listed=True,
         )
         enrollment = factories.EnrollmentFactory(course_run=course_run, is_active=False)
 
@@ -115,6 +117,7 @@ class EnrollmentModelsTestCase(TestCase):
             end=self.now + timedelta(hours=2),
             enrollment_end=self.now + timedelta(hours=1),
             course=factories.CourseFactory(),
+            is_listed=True,
         )
         enrollment = factories.EnrollmentFactory(course_run=cr1, is_active=True)
 
@@ -271,6 +274,7 @@ class EnrollmentModelsTestCase(TestCase):
             end=self.now + timedelta(hours=2),
             enrollment_end=self.now + timedelta(hours=1),
             resource_link=resource_link,
+            is_listed=True,
         )
         enrollment = factories.EnrollmentFactory(course_run=course_run)
 
@@ -303,6 +307,7 @@ class EnrollmentModelsTestCase(TestCase):
             end=self.now + timedelta(hours=2),
             enrollment_end=self.now + timedelta(hours=1),
             resource_link=resource_link,
+            is_listed=True,
         )
         enrollment = factories.EnrollmentFactory(course_run=course_run)
 

@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Changed
 
+- Set CourseRun `is_listed` to False by default
 - Improve order confirmation email template
 
 ### Added

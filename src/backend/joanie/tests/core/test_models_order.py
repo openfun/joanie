@@ -153,7 +153,7 @@ class OrderModelsTestCase(TestCase):
         InvoiceFactory(order=order, total=order.total)
 
         # - Validate the order should automatically enroll user to course run
-        with self.assertNumQueries(16):
+        with self.assertNumQueries(17):
             order.validate()
 
         self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
@@ -175,6 +175,7 @@ class OrderModelsTestCase(TestCase):
             start=timezone.now() - timedelta(hours=1),
             end=timezone.now() + timedelta(hours=2),
             enrollment_end=timezone.now() + timedelta(hours=1),
+            is_listed=True,
         )
 
         product = factories.ProductFactory(
@@ -302,6 +303,7 @@ class OrderModelsTestCase(TestCase):
             start=timezone.now() - timedelta(hours=1),
             end=timezone.now() + timedelta(hours=2),
             enrollment_end=timezone.now() + timedelta(hours=1),
+            is_listed=True,
         )[0]
 
         # - Create one product which relies on the same course
