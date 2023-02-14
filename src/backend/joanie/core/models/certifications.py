@@ -1,6 +1,8 @@
 """
 Declare and configure the models for the certifications part
 """
+import logging
+
 from django.conf import settings
 from django.db import models
 from django.utils.module_loading import import_string
@@ -13,6 +15,8 @@ from parler.utils import get_language_settings
 from joanie.core.utils import image_to_base64, merge_dict
 
 from .base import BaseModel
+
+logger = logging.getLogger(__name__)
 
 
 class CertificateDefinition(parler_models.TranslatableModel, BaseModel):
@@ -87,7 +91,15 @@ class Certificate(BaseModel):
         Get the document related to the certificate instance.
         """
         document_issuer = import_string(self.certificate_definition.template)
-        context = self.get_document_context()
+        try:
+            context = self.get_document_context()
+        except ValueError as exception:
+            logger.error(
+                "Cannot get document context to generate certificate.",
+                exc_info=exception,
+            )
+            return None
+
         document = document_issuer(identifier=self.id, context_query=context)
         return document.create(persist=False)
 

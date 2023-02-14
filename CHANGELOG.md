@@ -12,18 +12,16 @@ and this project adheres to
 
 - Set CourseRun `is_listed` to False by default
 - Improve order confirmation email template
+- Include course information into course runs representation
 
 ### Added
 
 - Add synchronization for course runs
 - Add make dbshell cmd to access database in cli
 
-### Changed
-
-- Include course information into course runs representation
-
 ### Fixed
 
+- Prevent internal server error when certificate document is unprocessable
 - Fix a bug that raise an error when user is automatically enrolled to
   a course run on which they have already an inactive enrollment
 
