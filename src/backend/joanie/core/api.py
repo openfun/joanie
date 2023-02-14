@@ -404,9 +404,14 @@ class CertificateViewSet(
                 {"detail": f"No certificate found with id {pk}."}, status=404
             )
 
-        response = HttpResponse(
-            certificate.document, content_type="application/pdf", status=200
-        )
+        document = certificate.document
+
+        if not document:
+            return Response(
+                {"detail": f"Unable to generate certificate {pk}."}, status=422
+            )
+
+        response = HttpResponse(document, content_type="application/pdf", status=200)
 
         response["Content-Disposition"] = f"attachment; filename={pk}.pdf;"
 

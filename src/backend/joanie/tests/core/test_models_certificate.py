@@ -116,3 +116,42 @@ class CertificateModelTestCase(TestCase):
                 "\n", ""
             )
             self.assertRegex(document_text, r"Joanie Cunningham.*University X")
+
+    def test_models_certification_document_with_incomplete_information(self):
+        """
+        If the certificate context is incomplete, the certificate document should not
+        be created.
+        """
+
+        organization = OrganizationFactory(
+            title="University X",
+            representative="Joanie Cunningham",
+            logo=None,
+            signature=None,
+        )
+
+        course = CourseFactory()
+        product = ProductFactory(
+            courses=[],
+            title="Graded product",
+            type=PRODUCT_TYPE_CERTIFICATE,
+        )
+        CourseProductRelationFactory(
+            course=course, product=product, organizations=[organization]
+        )
+
+        order = OrderFactory(product=product, organization=organization)
+        certificate = CertificateFactory(order=order)
+
+        # - Retrieve the document context should raise a ValueError
+        with self.assertRaises(ValueError) as context:
+            certificate.get_document_context()
+
+        self.assertEqual(
+            str(context.exception),
+            "The 'signature' attribute has no file associated with it.",
+        )
+
+        # - But try to create the document should return None
+        document = certificate.document
+        self.assertIsNone(document)

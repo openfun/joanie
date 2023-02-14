@@ -9,7 +9,9 @@ from joanie.core.enums import PRODUCT_TYPE_CERTIFICATE
 from joanie.core.factories import (
     CertificateDefinitionFactory,
     CertificateFactory,
+    CourseProductRelationFactory,
     OrderFactory,
+    OrganizationFactory,
     ProductFactory,
     UserFactory,
 )
@@ -169,6 +171,39 @@ class CertificateApiTest(BaseAPITestCase):
 
         document_text = pdf_extract_text(BytesIO(response.content)).replace("\n", "")
         self.assertRegex(document_text, r"CERTIFICATE")
+
+    def test_api_certificate_download_unprocessable_entity(self):
+        """
+        If the server is not able to create the certificate document, it should return
+        a 422 error.
+        """
+        user = UserFactory()
+        organization = OrganizationFactory(
+            title="University X", representative="Joanie Cunningham", logo=None
+        )
+
+        product = ProductFactory(
+            courses=[],
+            title="Graded product",
+            type=PRODUCT_TYPE_CERTIFICATE,
+        )
+        CourseProductRelationFactory(product=product, organizations=[organization])
+
+        order = OrderFactory(product=product, organization=organization, owner=user)
+        certificate = CertificateFactory(order=order)
+
+        token = self.get_user_token(user.username)
+
+        response = self.client.get(
+            f"/api/v1.0/certificates/{certificate.id}/download/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 422)
+        self.assertEqual(
+            response.json(),
+            {"detail": f"Unable to generate certificate {str(certificate.id)}."},
+        )
 
     def test_api_certificate_create(self):
         """
