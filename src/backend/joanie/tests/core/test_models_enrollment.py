@@ -122,7 +122,9 @@ class EnrollmentModelsTestCase(TestCase):
         enrollment = factories.EnrollmentFactory(course_run=cr1, is_active=True)
 
         with self.assertRaises(ValidationError) as context:
-            factories.EnrollmentFactory(course_run=cr2, user=enrollment.user)
+            factories.EnrollmentFactory(
+                course_run=cr2, user=enrollment.user, is_active=True
+            )
 
         self.assertEqual(
             (
@@ -130,6 +132,71 @@ class EnrollmentModelsTestCase(TestCase):
                 f'for the course "{cr2.course.title}".\']}}'
             ),
             str(context.exception),
+        )
+
+        enrollment.is_active = False
+        enrollment.save()
+
+        # If the first enrollment is not active anymore, user should be able to enroll
+        # to another course run for the same course
+        factories.EnrollmentFactory(
+            course_run=cr2, user=enrollment.user, is_active=True
+        )
+
+        # And finally it should not be able to re-enroll to the first course run
+        with self.assertRaises(ValidationError) as context:
+            factories.EnrollmentFactory(
+                course_run=cr1, user=enrollment.user, is_active=True
+            )
+
+        self.assertEqual(
+            (
+                "{'user': ['You are already enrolled to an opened course run "
+                f'for the course "{cr1.course.title}".\']}}'
+            ),
+            str(context.exception),
+        )
+
+    def test_models_enrollment_not_unique_course_run_per_course_and_user(self):
+        """
+        A user can have multiple enrollments for a same course from the moment only one
+        is currently opened.
+        """
+        user = factories.UserFactory()
+        course = factories.CourseFactory()
+
+        with mock.patch.object(
+            timezone, "now", return_value=self.now - timedelta(days=7)
+        ):
+            # Go back in the past to enroll user to a course run that was opened.
+            factories.EnrollmentFactory(
+                user=user,
+                is_active=True,
+                course_run=factories.CourseRunFactory(
+                    course=course,
+                    end=timezone.now() + timedelta(hours=2),
+                    enrollment_end=timezone.now() + timedelta(hours=1),
+                    is_listed=True,
+                ),
+            )
+
+        # Now create a course run currently opened now
+        course_run = factories.CourseRunFactory(
+            course=course,
+            start=self.now - timedelta(hours=1),
+            end=self.now + timedelta(hours=2),
+            enrollment_end=self.now + timedelta(hours=1),
+            is_listed=True,
+        )
+
+        # User should be able to enroll to this course run
+        factories.EnrollmentFactory(user=user, course_run=course_run, is_active=True)
+
+        # So User should have two active enrollments for the same course
+        user.refresh_from_db()
+        self.assertEqual(
+            user.enrollments.filter(course_run__course=course, is_active=True).count(),
+            2,
         )
 
     def test_models_enrollment_forbid_for_non_listed_course_run(self):
