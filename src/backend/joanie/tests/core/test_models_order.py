@@ -196,7 +196,7 @@ class OrderModelsTestCase(TestCase):
         InvoiceFactory(order=order, total=order.total)
 
         # - Validate the order should automatically enroll user to course run
-        with self.assertNumQueries(22):
+        with self.assertNumQueries(24):
             order.validate()
 
         enrollment.refresh_from_db()

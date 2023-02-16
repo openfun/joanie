@@ -22,6 +22,7 @@ and this project adheres to
 
 ### Fixed
 
+- Prevent to enroll on several opened course runs of the same course
 - Prevent internal server error when certificate document is unprocessable
 - Fix a bug that raise an error when user is automatically enrolled to
   a course run on which they have already an inactive enrollment

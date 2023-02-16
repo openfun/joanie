@@ -737,12 +737,14 @@ class Enrollment(BaseModel):
 
         # The user should not be enrolled in another opened course run of the same course.
         if (
-            self.created_on is None
-            and self.user.enrollments.filter(
+            self.is_active
+            and self.user.enrollments.exclude(id=self.id)
+            .filter(
                 course_run__course=self.course_run.course,
                 course_run__end__gte=timezone.now(),
                 is_active=True,
-            ).exists()
+            )
+            .exists()
         ):
             message = _(
                 "You are already enrolled to an opened course run "

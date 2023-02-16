@@ -557,7 +557,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         self.assertTrue(models.Enrollment.objects.filter(is_active=True).exists())
         data = {
             "course_run": course_run2.id,
-            "is_active": random.choice([True, False]),
+            "is_active": True,
             "was_created_by_order": True,
         }
         token = self.get_user_token(user.username)
@@ -1575,8 +1575,8 @@ class EnrollmentApiTest(BaseAPITestCase):
         self.assertEqual(enrollment.is_active, True)
         self.assertEqual(enrollment.was_created_by_order, True)
 
-        # User unrolls and tried to update the was_created_by_order field but it should
-        # not be updated because enrollment is active.
+        # User unenrolls and tried to update the was_created_by_order field, but it
+        # should not be updated because enrollment is active.
         response = self.client.put(
             f"/api/v1.0/enrollments/{enrollment.id}/",
             data={
