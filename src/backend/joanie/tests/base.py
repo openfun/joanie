@@ -67,6 +67,7 @@ class BaseAPITestCase(TestCase):
                 "iat": issued_at,
                 "language": user.language,
                 "username": user.username,
+                "fullname": user.get_full_name(),
             }
         )
         return token

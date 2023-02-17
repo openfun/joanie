@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Changed
 
+- Store full name in user profile through firstname field
 - Set CourseRun `is_listed` to False by default
 - Improve order confirmation email template
 - Include course information into course runs representation

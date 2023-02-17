@@ -37,8 +37,6 @@ class UserFactory(factory.django.DjangoModelFactory):
     email = factory.Faker("email")
     language = factory.fuzzy.FuzzyChoice([lang[0] for lang in settings.LANGUAGES])
     password = make_password("password")
-    first_name = factory.Faker("first_name")
-    last_name = factory.Faker("last_name")
 
 
 class CertificateDefinitionFactory(factory.django.DjangoModelFactory):

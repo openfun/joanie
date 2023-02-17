@@ -51,7 +51,13 @@ class User(BaseModel, auth_models.AbstractUser):
 
         user = User.objects.update_or_create(
             username=request_user.username,
-            defaults={"email": request_user.email, "language": language},
+            defaults={
+                # Currently, the authentication backend only provide full_name,
+                # so we save it in the first_name field
+                "first_name": getattr(request_user, "full_name", None) or "",
+                "email": request_user.email,
+                "language": language,
+            },
         )[0]
 
         return user

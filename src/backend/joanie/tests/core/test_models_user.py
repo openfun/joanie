@@ -70,7 +70,7 @@ class UserModelTestCase(TestCase):
     def test_models_create_or_update_from_request(self):
         """
         Check using the method create_or_update_from_request, a user
-        is created if non existing or else updated
+        is created if non-existing or else updated
         """
         user = UserFactory(username="Sam", email="mail@fun-test.fr")
 
@@ -78,6 +78,7 @@ class UserModelTestCase(TestCase):
         request.username = "Sam"
         request.email = "sam@fun-test.fr"
         request.language = "fr"
+        request.full_name = "Samy Fonzarelli"
 
         User.update_or_create_from_request_user(request)
         user.refresh_from_db()
@@ -85,6 +86,8 @@ class UserModelTestCase(TestCase):
         # email has been updated
         self.assertEqual(user.email, "sam@fun-test.fr")
         self.assertEqual(user.language, "fr-fr")
+        self.assertEqual(user.first_name, "Samy Fonzarelli")
+        self.assertEqual(user.get_full_name(), "Samy Fonzarelli")
         # no new object has been created
         self.assertEqual(User.objects.count(), 1)
 
@@ -100,7 +103,7 @@ class UserModelTestCase(TestCase):
     def test_models_create_or_update_from_request_language(self):
         """
         Check using the method create_or_update_from_request, the language
-        is set depending of the values of the language available in the
+        is set depending on the values of the language available in the
         settings and understood in different ways
         """
         request = RequestFactory()
