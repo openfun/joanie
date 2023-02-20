@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Changed
 
+- Encode image in base64 in order validated mail template
 - Store full name in user profile through firstname field
 - Set CourseRun `is_listed` to False by default
 - Improve order confirmation email template
