@@ -22,6 +22,7 @@ and this project adheres to
 
 ### Fixed
 
+- Prevent server error when CourseRun instance has no start and end dates.
 - Prevent to enroll on several opened course runs of the same course
 - Prevent internal server error when certificate document is unprocessable
 - Fix a bug that raise an error when user is automatically enrolled to

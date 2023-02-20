@@ -56,10 +56,7 @@ class EnrollmentModelsTestCase(TestCase):
 
         self.assertEqual(
             str(enrollment),
-            (
-                "[active][set] Françoise for my run "
-                f"[{course_run.start:%Y-%m-%d} to {course_run.end:%Y-%m-%d}]"
-            ),
+            ("[active][set] Françoise for my run " f"[{course_run.state['text']}]"),
         )
 
     def test_models_enrollment_str_inactive(self):
@@ -81,7 +78,7 @@ class EnrollmentModelsTestCase(TestCase):
             str(enrollment),
             (
                 "[inactive][failed] Françoise for my run "
-                f"[{course_run.start:%Y-%m-%d} to {course_run.end:%Y-%m-%d}]"
+                f"[{course_run.state['text']}]"
             ),
         )
 

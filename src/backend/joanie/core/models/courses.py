@@ -314,7 +314,7 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
     def __str__(self):
         return (
             f"{self.safe_translation_getter('title', any_language=True)} "
-            f"[{self.start:%Y-%m-%d} to {self.end:%Y-%m-%d}]"
+            f"[{self.state.get('text')}]"
         )
 
     def get_serialized(self, visibility=None):
