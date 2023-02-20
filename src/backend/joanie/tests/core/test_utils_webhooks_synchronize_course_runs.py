@@ -145,7 +145,7 @@ class SynchronizeCourseRunsUtilsTestCase(TestCase):
             rsp = rsps.post(
                 re.compile("http://richie.education/webhook"),
                 body="{}",
-                status=random.choice(["404", "500", "301"]),
+                status=random.choice([404, 301]),
                 content_type="application/json",
             )
 
