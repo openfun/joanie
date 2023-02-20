@@ -454,6 +454,10 @@ class Test(Base):
         }
     )
 
+    def __init__(self):
+        # pylint: disable=invalid-name
+        self.INSTALLED_APPS += ["joanie.tests"]
+
 
 class ContinuousIntegration(Test):
     """
