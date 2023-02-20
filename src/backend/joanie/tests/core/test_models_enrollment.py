@@ -171,7 +171,9 @@ class EnrollmentModelsTestCase(TestCase):
                 is_active=True,
                 course_run=factories.CourseRunFactory(
                     course=course,
+                    start=timezone.now() - timedelta(hours=1),
                     end=timezone.now() + timedelta(hours=2),
+                    enrollment_start=timezone.now() - timedelta(hours=2),
                     enrollment_end=timezone.now() + timedelta(hours=1),
                     is_listed=True,
                 ),
@@ -182,6 +184,7 @@ class EnrollmentModelsTestCase(TestCase):
             course=course,
             start=self.now - timedelta(hours=1),
             end=self.now + timedelta(hours=2),
+            enrollment_start=self.now - timedelta(hours=2),
             enrollment_end=self.now + timedelta(hours=1),
             is_listed=True,
         )
