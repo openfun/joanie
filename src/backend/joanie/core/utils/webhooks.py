@@ -40,28 +40,35 @@ def synchronize_course_runs(serialized_course_runs):
             digestmod=hashlib.sha256,
         ).hexdigest()
 
-        response = session.post(
-            webhook["url"],
-            json=serialized_course_runs,
-            headers={"Authorization": f"SIG-HMAC-SHA256 {signature:s}"},
-            verify=bool(webhook.get("verify", True)),
-            timeout=3,
-        )
-
-        extra = {
-            "sent": json_course_runs,
-            "response": response.content,
-        }
-        # pylint: disable=no-member
-        if response.status_code == requests.codes.ok:
-            logger.info(
-                "Synchronization succeeded with %s",
+        try:
+            response = session.post(
                 webhook["url"],
-                extra=extra,
+                json=serialized_course_runs,
+                headers={"Authorization": f"SIG-HMAC-SHA256 {signature:s}"},
+                verify=bool(webhook.get("verify", True)),
+                timeout=3,
+            )
+
+        except requests.exceptions.RetryError:
+            logger.error(
+                "Synchronization failed due to max retries exceeded with url %s",
+                webhook["url"],
             )
         else:
-            logger.error(
-                "Synchronization failed with %s",
-                webhook["url"],
-                extra=extra,
-            )
+            extra = {
+                "sent": json_course_runs,
+                "response": response.content,
+            }
+            # pylint: disable=no-member
+            if response.status_code == requests.codes.ok:
+                logger.info(
+                    "Synchronization succeeded with %s",
+                    webhook["url"],
+                    extra=extra,
+                )
+            else:
+                logger.error(
+                    "Synchronization failed with %s",
+                    webhook["url"],
+                    extra=extra,
+                )

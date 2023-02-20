@@ -145,7 +145,7 @@ class SynchronizeCourseRunsUtilsTestCase(TestCase):
             rsp = rsps.post(
                 re.compile("http://richie.education/webhook"),
                 body="{}",
-                status=random.choice([404, 301]),
+                status=random.choice([404, 502, 301]),
                 content_type="application/json",
             )
 
@@ -239,6 +239,64 @@ class SynchronizeCourseRunsUtilsTestCase(TestCase):
                 mock_info.call_args_list[0][0],
                 (
                     "Synchronization succeeded with %s",
+                    "http://richie.education/webhook",
+                ),
+            )
+
+    @mock.patch.object(Logger, "error")
+    def test_utils_synchronize_course_runs_max_retries_exceeded(self, mock_error):
+        """Course runs synchronization supports retries has exceeded max retries."""
+        with override_settings(
+            COURSE_WEB_HOOKS=[
+                {"url": "http://richie.education/webhook", "secret": "abc"},
+            ]
+        ), responses.RequestsMock() as rsps:
+            # Simulate webhook failure using "responses":
+            rsp = rsps.post(
+                re.compile("http://richie.education/webhook"),
+                body="{}",
+                status=500,
+                content_type="application/json",
+            )
+
+            webhooks.synchronize_course_runs([self._get_serialized_course_run(1)])
+
+            self.assertEqual(rsp.call_count, 5)
+            # Webhook urls called
+            self.assertEqual(
+                rsps.calls[0].request.url, "http://richie.education/webhook"
+            )
+
+            # Payload sent to webhooks
+            expected_payload = [
+                {
+                    "resource_link": "https://example.com/products/1",
+                    "start": "2022-12-01T09:00:00+00:00",
+                    "end": "2022-12-01T19:00:00+00:00",
+                    "enrollment_start": "2022-11-01T08:00:00+00:00",
+                    "enrollment_end": "2022-12-01T10:00:00+00:00",
+                    "catalog_visibility": "course_and_search",
+                    "course": "1",
+                },
+            ]
+            payload = json.loads(rsps.calls[0].request.body)
+            self.assertCountEqual(payload, expected_payload)
+
+            # Signature
+            expected_signature = (
+                "SIG-HMAC-SHA256 "
+                "22c2e3fac8557ed4035d47c2b7ab4e2a2671eafc2725251dd55269747474d091"
+            )
+            self.assertEqual(
+                rsps.calls[0].request.headers["Authorization"], expected_signature
+            )
+
+            # Logger
+            self.assertEqual(mock_error.call_count, 1)
+            self.assertEqual(
+                mock_error.call_args_list[0][0],
+                (
+                    "Synchronization failed due to max retries exceeded with url %s",
                     "http://richie.education/webhook",
                 ),
             )
