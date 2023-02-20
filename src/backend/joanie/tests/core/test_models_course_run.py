@@ -23,6 +23,15 @@ class CourseRunModelsTestCase(TestCase):
         super().setUp()
         self.now = django_timezone.now()
 
+    def test_models_course_run_string_representation(self):
+        """
+        The string representation of a course run should be built with its title
+        and its state text.
+        """
+
+        course_run = factories.CourseRunFactory()
+        self.assertEqual(str(course_run), f"{course_run.title} [{course_run.state}]")
+
     def test_models_course_run_normalized(self):
         """
         The resource_link field should be normalized on save.
