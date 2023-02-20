@@ -22,6 +22,7 @@ and this project adheres to
 
 ### Fixed
 
+- Catch error if the max retries synchronization webhook gets reached 
 - Prevent server error when CourseRun instance has no start and end dates.
 - Prevent to enroll on several opened course runs of the same course
 - Prevent internal server error when certificate document is unprocessable
