@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: joanie\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-21 11:30+0000\n"
-"PO-Revision-Date: 2023-02-22 10:18\n"
+"POT-Creation-Date: 2023-02-22 13:33+0000\n"
+"PO-Revision-Date: 2023-02-22 13:41\n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
 "Language: es_ES\n"
@@ -155,7 +155,7 @@ msgstr ""
 msgid "Enrollment"
 msgstr ""
 
-#: joanie/core/enums.py:29 joanie/core/models/certifications.py:78
+#: joanie/core/enums.py:29 joanie/core/models/certifications.py:82
 msgid "Certificate"
 msgstr ""
 
@@ -240,55 +240,55 @@ msgstr ""
 msgid "Users"
 msgstr ""
 
-#: joanie/core/models/accounts.py:63 joanie/core/models/certifications.py:25
+#: joanie/core/models/accounts.py:69 joanie/core/models/certifications.py:29
 #: joanie/core/models/courses.py:141 joanie/core/models/courses.py:171
 #: joanie/core/models/courses.py:282 joanie/core/models/products.py:62
 #: joanie/payment/models.py:378
 msgid "title"
 msgstr ""
 
-#: joanie/core/models/accounts.py:64
+#: joanie/core/models/accounts.py:70
 msgid "address"
 msgstr ""
 
-#: joanie/core/models/accounts.py:65
+#: joanie/core/models/accounts.py:71
 msgid "postcode"
 msgstr ""
 
-#: joanie/core/models/accounts.py:66
+#: joanie/core/models/accounts.py:72
 msgid "city"
 msgstr ""
 
-#: joanie/core/models/accounts.py:67
+#: joanie/core/models/accounts.py:73
 msgid "country"
 msgstr ""
 
-#: joanie/core/models/accounts.py:68
+#: joanie/core/models/accounts.py:74
 msgid "first name"
 msgstr ""
 
-#: joanie/core/models/accounts.py:69
+#: joanie/core/models/accounts.py:75
 msgid "last name"
 msgstr ""
 
-#: joanie/core/models/accounts.py:72 joanie/core/models/products.py:319
+#: joanie/core/models/accounts.py:78 joanie/core/models/products.py:319
 #: joanie/payment/models.py:387
 msgid "owner"
 msgstr ""
 
-#: joanie/core/models/accounts.py:76 joanie/payment/models.py:391
+#: joanie/core/models/accounts.py:82 joanie/payment/models.py:391
 msgid "main"
 msgstr ""
 
-#: joanie/core/models/accounts.py:80
+#: joanie/core/models/accounts.py:86
 msgid "Address"
 msgstr ""
 
-#: joanie/core/models/accounts.py:81
+#: joanie/core/models/accounts.py:87
 msgid "Addresses"
 msgstr ""
 
-#: joanie/core/models/accounts.py:108
+#: joanie/core/models/accounts.py:114
 msgid "Demote a main address is forbidden"
 msgstr ""
 
@@ -316,45 +316,45 @@ msgstr ""
 msgid "date and time at which a record was last updated"
 msgstr ""
 
-#: joanie/core/models/certifications.py:23
+#: joanie/core/models/certifications.py:27
 msgid "name"
 msgstr ""
 
-#: joanie/core/models/certifications.py:26 joanie/core/models/products.py:63
+#: joanie/core/models/certifications.py:30 joanie/core/models/products.py:63
 msgid "description"
 msgstr ""
 
-#: joanie/core/models/certifications.py:30
+#: joanie/core/models/certifications.py:34
 msgid "template to generate pdf"
 msgstr ""
 
-#: joanie/core/models/certifications.py:38
-#: joanie/core/models/certifications.py:56
+#: joanie/core/models/certifications.py:42
+#: joanie/core/models/certifications.py:60
 msgid "Certificate definition"
 msgstr ""
 
-#: joanie/core/models/certifications.py:39
+#: joanie/core/models/certifications.py:43
 msgid "Certificate definitions"
 msgstr ""
 
-#: joanie/core/models/certifications.py:51
+#: joanie/core/models/certifications.py:55
 msgid "Date of issuance"
 msgstr ""
 
-#: joanie/core/models/certifications.py:66 joanie/core/models/products.py:603
+#: joanie/core/models/certifications.py:70 joanie/core/models/products.py:603
 #: joanie/payment/models.py:54
 msgid "order"
 msgstr ""
 
-#: joanie/core/models/certifications.py:71 joanie/payment/models.py:75
+#: joanie/core/models/certifications.py:75 joanie/payment/models.py:75
 msgid "context"
 msgstr ""
 
-#: joanie/core/models/certifications.py:72
+#: joanie/core/models/certifications.py:76
 msgid "Localized data that needs to be frozen on certificate creation"
 msgstr ""
 
-#: joanie/core/models/certifications.py:79
+#: joanie/core/models/certifications.py:83
 msgid "Certificates"
 msgstr ""
 
@@ -639,19 +639,19 @@ msgstr ""
 msgid "You are not allowed to enroll to a course run not opened for enrollment."
 msgstr ""
 
-#: joanie/core/models/products.py:748
+#: joanie/core/models/products.py:750
 msgid "You are already enrolled to an opened course run "
 msgstr ""
 
-#: joanie/core/models/products.py:759
+#: joanie/core/models/products.py:761
 msgid "You cannot enroll to a non-listed course run out of the scope of an order."
 msgstr ""
 
-#: joanie/core/models/products.py:776
+#: joanie/core/models/products.py:778
 msgid "Course run \"{self.course_run.id!s}\" requires a valid order to enroll."
 msgstr ""
 
-#: joanie/core/models/products.py:781
+#: joanie/core/models/products.py:783
 msgid "You are not allowed to enroll to a course run not listed."
 msgstr ""
 
@@ -667,9 +667,7 @@ msgid "Hello %(name)s"
 msgstr ""
 
 #: joanie/core/templates/mail/html/order_validated.html:192
-#: joanie/core/templates/mail/html/purchase_order.html:187
 #: joanie/core/templates/mail/text/order_validated.txt:5
-#: joanie/core/templates/mail/text/purchase_order.txt:6
 msgid "Hello"
 msgstr ""
 
@@ -679,9 +677,7 @@ msgid "Thank you very much for your purchase!"
 msgstr ""
 
 #: joanie/core/templates/mail/html/order_validated.html:220
-#: joanie/core/templates/mail/html/purchase_order.html:192
 #: joanie/core/templates/mail/text/order_validated.txt:9
-#: joanie/core/templates/mail/text/purchase_order.txt:7
 msgid "Your order has been confirmed."
 msgstr ""
 
@@ -698,41 +694,6 @@ msgstr ""
 #: joanie/core/templates/mail/html/order_validated.html:282
 #, python-format
 msgid "This mail has been sent to %(email)s by <a href=\"%(href)s\">%(name)s</a>"
-msgstr ""
-
-#: joanie/core/templates/mail/html/purchase_order.html:123
-#: joanie/core/templates/mail/text/purchase_order.txt:2
-msgid "Thank you very much for your purchase."
-msgstr ""
-
-#: joanie/core/templates/mail/html/purchase_order.html:187
-#: joanie/core/templates/mail/text/purchase_order.txt:6
-msgid "Hello,"
-msgstr ""
-
-#: joanie/core/templates/mail/html/purchase_order.html:192
-#: joanie/core/templates/mail/text/purchase_order.txt:7
-msgid "You have bought "
-msgstr ""
-
-#: joanie/core/templates/mail/html/purchase_order.html:192
-#: joanie/core/templates/mail/text/purchase_order.txt:7
-msgid "for a price of"
-msgstr ""
-
-#: joanie/core/templates/mail/html/purchase_order.html:236
-#: joanie/core/templates/mail/text/purchase_order.txt:11
-msgid "We wish you plenty of success in your training!"
-msgstr ""
-
-#: joanie/core/templates/mail/html/purchase_order.html:268
-#: joanie/core/templates/mail/text/purchase_order.txt:13
-msgid "This mail has been sent to"
-msgstr ""
-
-#: joanie/core/templates/mail/html/purchase_order.html:268
-#: joanie/core/templates/mail/text/purchase_order.txt:13
-msgid "by Joanie"
 msgstr ""
 
 #: joanie/core/templates/mail/text/order_validated.txt:11
