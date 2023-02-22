@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [1.1.0] - 2023-02-22
+
 ### Changed
 
 - Encode image in base64 in order validated mail template
@@ -38,5 +40,6 @@ and this project adheres to
 - First working version serving sellable micro-credentials for multiple
   organizations synchronized to a remote catalog
 
-[unreleased]: https://github.com/openfun/joanie/compare/v1.0.0...master
+[unreleased]: https://github.com/openfun/joanie/compare/v1.1.0...master
+[1.1.0]: https://github.com/openfun/joanie/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/openfun/joanie/compare/695965575b80d45c2600a1bcaf84d78bebaec1e7...v1.0.0
