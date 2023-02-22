@@ -310,8 +310,8 @@ class BasePaymentBackendTestCase(BasePaymentTestCase):
 
         # - Email has been sent
         email_content = " ".join(mail.outbox[0].body.split())
-        self.assertIn("Votre achat a été confirmé.", email_content)
+        self.assertIn("Votre commande a été confirmée.", email_content)
         self.assertNotIn("Your order has been confirmed.", email_content)
 
         # - Check it's the right object
-        self.assertEqual(mail.outbox[0].subject, "Commande validée !")
+        self.assertEqual(mail.outbox[0].subject, "Commande confirmée !")
