@@ -7,6 +7,8 @@ import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import { NextPage } from "next";
 import createEmotionCache from "@/utils/createEmotionCache";
+import { TranslationsProvider } from "@/contexts/i18n/TranslationsProvider/TranslationsProvider";
+import { LocalesEnum } from "@/types/i18n/LocalesEnum";
 
 type NextPageWithLayout = NextPage & {
   getLayout?: (page: React.ReactElement) => React.ReactNode;
@@ -20,8 +22,10 @@ const clientSideEmotionCache = createEmotionCache();
 
 export default function App({ Component, pageProps }: MyAppProps) {
   return (
-    <CacheProvider value={clientSideEmotionCache}>
-      <Component {...pageProps} />
-    </CacheProvider>
+    <TranslationsProvider locale={LocalesEnum.FRENCH}>
+      <CacheProvider value={clientSideEmotionCache}>
+        <Component {...pageProps} />
+      </CacheProvider>
+    </TranslationsProvider>
   );
 }

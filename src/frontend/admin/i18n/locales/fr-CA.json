@@ -1,0 +1,30 @@
+{
+  "hooks.useDashboardAddressForm.isMainInputLabel": {
+    "description": "Label of the \"is_main\" input",
+    "message": "TITI"
+  },
+  "layouts.dashboard.nav.config.certificatesNavTitle": {
+    "description": "bar",
+    "message": "Certificates"
+  },
+  "layouts.dashboard.nav.config.courseNavTitle": {
+    "description": "bar",
+    "message": "Courses"
+  },
+  "layouts.dashboard.nav.config.courseRunsNavTitle": {
+    "description": "bar",
+    "message": "Courses runs"
+  },
+  "layouts.dashboard.nav.config.managementSubHeader": {
+    "description": "bar",
+    "message": "Management"
+  },
+  "layouts.dashboard.nav.config.organizationNavTitle": {
+    "description": "bar",
+    "message": "Organization"
+  },
+  "layouts.dashboard.nav.config.productNavTitle": {
+    "description": "bar",
+    "message": "Products"
+  }
+}
