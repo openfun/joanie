@@ -26,9 +26,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
-.idea
 .DS_Store
-*.iml
 .next/
 
 # Translations	# Translations
@@ -70,7 +68,7 @@ db.sqlite3
 /data/
 src/backend/joanie/static/joanie/
 
-# # IDEs
+# IDEs
 .idea/
 .vscode/
 *.iml
