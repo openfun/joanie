@@ -240,9 +240,78 @@ jobs:
             - ./node_modules
           key: v1-mail-dependencies-{{ .Revision }}
 
+  # ---- frontend admin jobs ----
+  build-front-admin:
+    docker:
+      - image: cimg/node:16.15
+        auth:
+          username: $DOCKER_HUB_USER
+          password: $DOCKER_HUB_PASSWORD
+    working_directory: ~/joanie/src/frontend/admin
+    steps:
+      - checkout:
+          path: ~/joanie
+      - restore_cache:
+          keys:
+            - v0-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
+            - v0-frontend-admin-dependencies-
+      - run:
+          name: Install front-end dependencies
+          command: yarn install
+      - run:
+          name: Build admin application
+          command: yarn build
+      - run:
+          name: Use format-js cli to generate frontend.json file
+          command: yarn i18n:extract
+      - persist_to_workspace:
+          root: ~/joanie
+          paths:
+            - src/frontend/admin/i18n/frontend.json
+      - save_cache:
+          paths:
+            - ./node_modules
+          key: v0-frontend-admin-dependencies-{{ checksum "yarn.lock" }}
+
+  lint-front-admin:
+    docker:
+      - image: cimg/node:16.15
+        auth:
+          username: $DOCKER_HUB_USER
+          password: $DOCKER_HUB_PASSWORD
+    working_directory: ~/joanie/src/frontend/admin
+    steps:
+      - checkout:
+          path: ~/joanie
+      - restore_cache:
+          keys:
+            - v0-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
+            - v0-frontend-admin-dependencies-
+      - run:
+          name: Run lint command
+          command: yarn lint
+
+  test-front-admin:
+    docker:
+      - image: cimg/node:16.15
+        auth:
+          username: $DOCKER_HUB_USER
+          password: $DOCKER_HUB_PASSWORD
+    working_directory: ~/joanie/src/frontend/admin
+    steps:
+      - checkout:
+          path: ~/joanie
+      - restore_cache:
+          keys:
+            - v0-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
+            - v0-frontend-admin-dependencies-
+      - run:
+          name: Run test command
+          command: yarn test
+
 
   # ---- Internationalization jobs ----
-  build-i18n:
+  build-back-i18n:
     docker:
       - image: cimg/python:3.10
         auth:
@@ -541,15 +610,35 @@ workflows:
           requires:
             - build-back
             - build-mails
-            - build-i18n
+            - build-back-i18n
           filters:
             tags:
               only: /.*/
 
+      # Frontend admin jobs
+      #
+      # Build, lint and test frontend admin application
+      - build-front-admin:
+          filters:
+            tags:
+              only: /.*/
+      - lint-front-admin:
+          filters:
+            tags:
+              only: /.*/
+          requires:
+            - build-front-admin
+      - test-front-admin:
+          filters:
+            tags:
+              only: /.*/
+          requires:
+            - build-front-admin
+
       # Internationalization jobs
       #
       # Extract strings and upload them to our translation management platform
-      - build-i18n:
+      - build-back-i18n:
           requires:
             - build-back
             - build-mails
@@ -558,7 +647,8 @@ workflows:
               only: /.*/
       - upload-i18n-strings:
           requires:
-            - build-i18n
+            - build-back-i18n
+            - build-front-admin
           filters:
             branches:
               only: main
