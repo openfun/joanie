@@ -26,6 +26,10 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+.idea
+.DS_Store
+*.iml
+.next/
 
 # Translations	# Translations
 *.pot
