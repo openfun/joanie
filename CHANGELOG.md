@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Changed
+
+- Use user fullname instead of username in order confirmation email
+
 ## Added
 
 - Add yarn cli to generate joanie api client in TypeScript

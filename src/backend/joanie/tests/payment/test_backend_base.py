@@ -279,6 +279,46 @@ class BasePaymentBackendTestCase(BasePaymentTestCase):
         )
         self.assertIsInstance(mock_logger.call_args.args[2], smtplib.SMTPException)
 
+    def test_payment_backend_base_payment_success_email_with_fullname(self):
+        """Check fullname is used in email if available"""
+
+        backend = TestBasePaymentBackend()
+        owner = UserFactory(
+            email="sam@fun-test.fr",
+            username="Samantha",
+            first_name="Samantha",
+            last_name="Smith",
+        )
+        order = OrderFactory(owner=owner)
+        billing_address = BillingAddressDictFactory()
+        payment = {
+            "id": "pay_0",
+            "amount": order.total.amount,
+            "billing_address": billing_address,
+        }
+
+        backend.call_do_on_payment_success(order, payment)
+
+        # - Payment transaction has been registered
+        self.assertEqual(
+            Transaction.objects.filter(reference="pay_0", total=order.total).count(),
+            1,
+        )
+
+        # - Invoice has been created
+        self.assertEqual(Invoice.objects.filter(order=order).count(), 1)
+
+        # - Order has been validated
+        self.assertEqual(order.state, "validated")
+
+        # - Email has been sent
+        email_content = " ".join(mail.outbox[0].body.split())
+        self.assertIn("Your order has been confirmed.", email_content)
+        self.assertIn("Hello Samantha Smith", email_content)
+
+        # - Check it's the right object
+        self.assertEqual(mail.outbox[0].subject, "Purchase order confirmed!")
+
     def test_payment_backend_base_payment_success_email_language(self):
         """Check language of the user is taken into account for the email"""
 
@@ -311,6 +351,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase):
         # - Email has been sent
         email_content = " ".join(mail.outbox[0].body.split())
         self.assertIn("Votre commande a été confirmée.", email_content)
+        self.assertIn("Bonjour Samantha", email_content)
         self.assertNotIn("Your order has been confirmed.", email_content)
 
         # - Check it's the right object

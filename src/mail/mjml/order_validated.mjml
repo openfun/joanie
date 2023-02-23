@@ -11,8 +11,8 @@
         <mj-column>
           <mj-text padding="0">
             <p>
-              {%if username%}
-                {% blocktranslate with name=username %}Hello {{ name }}{% endblocktranslate %}
+              {%if fullname%}
+                {% blocktranslate with name=fullname %}Hello {{ name }}{% endblocktranslate %}
               {% else %}
                 {%trans "Hello" %}
               {% endif %}<br/>
