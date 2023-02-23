@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+## Added
+
+- Add yarn cli to generate joanie api client in TypeScript
+
 ## [1.1.0] - 2023-02-22
 
 ### Changed
