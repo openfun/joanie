@@ -394,3 +394,14 @@ class AddressAdmin(admin.ModelAdmin):
         "is_main",
         "owner",
     )
+
+
+@admin.register(models.CourseWish)
+class CourseWishAdmin(admin.ModelAdmin):
+    """Admin class for the CourseWish model"""
+
+    list_display = (
+        "course",
+        "owner",
+    )
+    readonly_fields = ("id",)

@@ -9,6 +9,7 @@ from rest_framework import serializers
 from joanie.core import models, utils
 
 from .enums import ORDER_STATE_PENDING, ORDER_STATE_VALIDATED
+from .models import Course
 
 
 class CertificationDefinitionSerializer(serializers.ModelSerializer):
@@ -544,4 +545,20 @@ class CertificateSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Certificate
         fields = ["id"]
+        read_only_fields = ["id"]
+
+
+class CourseWishSerializer(serializers.ModelSerializer):
+    """
+    CourseWish model serializer
+    """
+
+    id = serializers.CharField(read_only=True, required=False)
+    course = serializers.SlugRelatedField(
+        slug_field="code", queryset=Course.objects.all()
+    )
+
+    class Meta:
+        model = models.CourseWish
+        fields = ["id", "course"]
         read_only_fields = ["id"]

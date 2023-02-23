@@ -390,3 +390,13 @@ class CertificateFactory(factory.django.DjangoModelFactory):
         Return the order product certificate definition.
         """
         return self.order.product.certificate_definition
+
+
+class CourseWishFactory(factory.django.DjangoModelFactory):
+    """A factory to create an user wish"""
+
+    class Meta:
+        model = models.CourseWish
+
+    course = factory.SubFactory(CourseFactory)
+    owner = factory.SubFactory(UserFactory)

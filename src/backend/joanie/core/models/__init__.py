@@ -6,3 +6,4 @@ from .accounts import *
 from .certifications import *
 from .courses import *
 from .products import *
+from .wishlist import *

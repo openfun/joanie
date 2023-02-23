@@ -36,6 +36,7 @@ and this project adheres to
 
 - Add synchronization for course runs
 - Add make dbshell cmd to access database in cli
+- Add model and endpoints for wishlist feature
 
 ### Fixed
 

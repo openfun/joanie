@@ -38,6 +38,7 @@ router.register("enrollments", api.EnrollmentViewSet, basename="enrollments")
 router.register("orders", api.OrderViewSet, basename="orders")
 router.register("course-runs", api.CourseRunViewSet, basename="course-runs")
 router.register("products", api.ProductViewSet, basename="products")
+router.register("wishlist", api.CourseWishViewSet, basename="wishlists")
 
 API_VERSION = "v1.0"
 

@@ -417,3 +417,49 @@ class CertificateViewSet(
         response["Content-Disposition"] = f"attachment; filename={pk}.pdf;"
 
         return response
+
+
+class CourseWishViewSet(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
+    """
+    API view allows to get all wishlists or create a new one for a user.
+
+    GET /api/wishlist/
+        Return list of all wishes for a user
+
+    GET /api/wishlist/?course_code=<course_code>
+        Return list of wishes for a user filter by the course_code
+
+    GET /api/wishlist/<course_wish_id>/
+        Return selected wish
+
+    POST /api/wishlist/ with expected data:
+        - course: str course_code
+        Return new wish just created
+
+    DELETE /api/wishlist/<course_wish_id>/
+        Delete selected wish
+    """
+
+    lookup_field = "id"
+    serializer_class = serializers.CourseWishSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        """Custom queryset to get user addresses"""
+        user = User.update_or_create_from_request_user(request_user=self.request.user)
+        queryset = user.wishlists.all()
+        course_code = self.request.query_params.get("course_code")
+        if course_code is not None:
+            queryset = queryset.filter(course__code=course_code)
+        return queryset
+
+    def perform_create(self, serializer):
+        """Create a new address for user authenticated"""
+        user = User.update_or_create_from_request_user(request_user=self.request.user)
+        serializer.save(owner=user)
