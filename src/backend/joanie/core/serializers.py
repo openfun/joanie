@@ -534,6 +534,25 @@ class AddressSerializer(serializers.ModelSerializer):
         ]
 
 
+class AddressCreateSerializer(serializers.ModelSerializer):
+    """
+    Address create model serializer
+    """
+
+    class Meta:
+        model = models.Address
+        fields = [
+            "address",
+            "city",
+            "country",
+            "first_name",
+            "last_name",
+            "is_main",
+            "postcode",
+            "title",
+        ]
+
+
 class CertificateSerializer(serializers.ModelSerializer):
     """
     Certificate model serializer
