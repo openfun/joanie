@@ -15,7 +15,7 @@ class DebugMailSuccessPayment(TemplateView):
         context = super().get_context_data(**kwargs)
         context["title"] = "👨‍💻Development email preview"
         context["email"] = order.owner.email
-        context["username"] = order.owner.username
+        context["fullname"] = order.owner.get_full_name() or order.owner.username
         context["product"] = order.product
         context["site"] = {
             "name": site.name,

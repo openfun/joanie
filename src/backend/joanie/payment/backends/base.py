@@ -76,7 +76,7 @@ class BasePaymentBackend:
                 template_vars = {
                     "title": _("Purchase order confirmed!"),
                     "email": order.owner.email,
-                    "username": order.owner.username,
+                    "fullname": order.owner.get_full_name() or order.owner.username,
                     "product": order.product,
                     "site": {
                         "name": site.name,
