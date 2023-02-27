@@ -288,6 +288,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase):
             username="Samantha",
             first_name="Samantha",
             last_name="Smith",
+            language="en-us",
         )
         order = OrderFactory(owner=owner)
         billing_address = BillingAddressDictFactory()
