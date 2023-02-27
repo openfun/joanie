@@ -6,6 +6,8 @@ from django.db import IntegrityError, transaction
 from django.http import HttpResponse
 from django.utils.translation import gettext_lazy as _
 
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, pagination, permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError as DRFValidationError
@@ -110,6 +112,14 @@ class ProductViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
             context.update({"course_code": course})
 
         return context
+
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter("course", in_=openapi.IN_QUERY, type=openapi.TYPE_STRING)
+        ],
+    )
+    def retrieve(self, *args, **kwargs):
+        return super().retrieve(*args, **kwargs)
 
 
 # pylint: disable=too-many-ancestors
