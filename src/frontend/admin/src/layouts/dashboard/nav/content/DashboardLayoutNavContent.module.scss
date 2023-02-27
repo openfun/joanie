@@ -1,0 +1,22 @@
+.navSubHeader {
+  background-color: transparent;
+  padding-left: 10px;
+  margin-bottom: 12px;
+}
+
+.navItemIcon {
+  min-width: 32px;
+  svg {
+    font-size: 22px;
+  }
+}
+
+.navItemButton {
+  border-right: 10px solid transparent;
+  padding: 8px 16px 8px 28px;
+
+
+}
+.navItemActive {
+  border-right: 5px solid;
+}

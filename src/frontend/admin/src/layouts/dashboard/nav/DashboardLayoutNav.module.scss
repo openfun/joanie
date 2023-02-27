@@ -1,0 +1,12 @@
+@use "@/styles/abstracts/" as *;
+
+
+.headerContent {
+  background-color: var(--color-toto);;
+  display: flex;
+  margin-bottom: 10px;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+}
+
