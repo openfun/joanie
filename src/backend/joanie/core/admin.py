@@ -404,4 +404,6 @@ class CourseWishAdmin(admin.ModelAdmin):
         "course",
         "owner",
     )
-    readonly_fields = ("id",)
+    readonly_fields = (
+        "id",
+    )

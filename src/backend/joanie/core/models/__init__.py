@@ -7,3 +7,4 @@ from .certifications import *
 from .courses import *
 from .products import *
 from .wishlist import *
+from .notifications import *

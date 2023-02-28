@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 
 from django.conf import settings
 from django.contrib.auth.hashers import make_password
+from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone as django_timezone
 
 import factory.fuzzy
@@ -400,3 +401,19 @@ class CourseWishFactory(factory.django.DjangoModelFactory):
 
     course = factory.SubFactory(CourseFactory)
     owner = factory.SubFactory(UserFactory)
+
+
+class NotificationFactory(factory.django.DjangoModelFactory):
+    """A factory to create an user wish"""
+
+    class Meta:
+        model = models.Notification
+        exclude = ['notif_subject, notif_object']
+
+    owner = factory.SubFactory(UserFactory)
+
+    notif_subject_id = factory.SelfAttribute('notif_subject.id')
+    notif_subject_ctype = factory.LazyAttribute(lambda o: ContentType.objects.get_for_model(o.notif_subject))
+
+    notif_object_id = factory.SelfAttribute('notif_object.id')
+    notif_object_ctype = factory.LazyAttribute(lambda o: ContentType.objects.get_for_model(o.notif_object))
