@@ -545,3 +545,27 @@ class CertificateSerializer(serializers.ModelSerializer):
         model = models.Certificate
         fields = ["id"]
         read_only_fields = ["id"]
+
+
+class OrderCreateBodySerializer(OrderSerializer):
+    billing_address = AddressSerializer(required=False)
+
+    class Meta(OrderSerializer.Meta):
+        fields = OrderSerializer.Meta.fields + ["billing_address"]
+        read_only_fields = OrderSerializer.Meta.fields + ["billing_address"]
+
+
+class PaymentSerializer(serializers.Serializer):
+    payment_id = serializers.CharField(required=True)
+    provider = serializers.CharField(required=True)
+    url = serializers.CharField(required=True)
+    is_paid = serializers.BooleanField(required=False)
+
+
+class OrderCreateResponseSerializer(OrderSerializer):
+    id = serializers.CharField(required=True)
+    payment_info = PaymentSerializer(required=False)
+
+    class Meta(OrderSerializer.Meta):
+        fields = OrderSerializer.Meta.fields + ["payment_info"]
+        read_only_fields = OrderSerializer.Meta.fields + ["payment_info"]

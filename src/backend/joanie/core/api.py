@@ -186,6 +186,10 @@ class OrderViewSet(
         owner = User.update_or_create_from_request_user(request_user=self.request.user)
         serializer.save(owner=owner)
 
+    @swagger_auto_schema(
+        request_body=serializers.OrderCreateBodySerializer,
+        responses={200: serializers.OrderCreateResponseSerializer()},
+    )
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         """Try to create an order and a related payment if the payment is fee."""
@@ -257,7 +261,10 @@ class OrderViewSet(
 
             # Return the fresh new order with payment_info
             return Response(
-                {**serializer.data, "payment_info": payment_info}, status=201
+                serializers.OrderCreateResponseSerializer(
+                    {**serializer.data, "payment_info": payment_info}
+                ),
+                status=201,
             )
 
         # Else return the fresh new order
