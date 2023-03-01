@@ -11,7 +11,7 @@ from joanie.tests.base import BaseAPITestCase
 
 def get_payload(wish):
     """
-    According to an CourseWish object, return a valid payload required by
+    According to a CourseWish object, return a valid payload required by
     create wish api routes.
     """
     return {
@@ -64,15 +64,18 @@ class CourseWishAPITestCase(BaseAPITestCase):
         """If we try to get wish for a user not in db, we create a new user first"""
         username = "panoramix"
         token = self.get_user_token(username)
+
+        self.assertFalse(models.User.objects.filter(username=username).exists())
+
         response = self.client.get(
             "/api/v1.0/wishlist/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
         self.assertEqual(response.status_code, 200)
         results = response.data["results"]
         self.assertEqual(len(results), 0)
-        self.assertEqual(models.User.objects.get(username=username).username, username)
+        self.assertTrue(models.User.objects.filter(username=username).exists())
 
-    def test_api_wish_get_wish(self):
+    def test_api_wish_get_wishes(self):
         """Get wish for a user in db with two wish linked to him"""
         user = factories.UserFactory()
         course1 = factories.CourseFactory()
@@ -91,6 +94,42 @@ class CourseWishAPITestCase(BaseAPITestCase):
         self.assertEqual(results[0]["id"], str(wish1.id))
         self.assertEqual(results[1]["course"], course2.code)
         self.assertEqual(results[1]["id"], str(wish2.id))
+
+    def test_api_wish_get_wishes_filter_by_code(self):
+        """Get wish for a user in db with two wish linked to him"""
+        user = factories.UserFactory()
+        course = factories.CourseFactory()
+        token = self.get_user_token(user.username)
+        wish = factories.CourseWishFactory.create(owner=user, course=course)
+        factories.CourseWishFactory.create(owner=user)
+
+        get_url = f"/api/v1.0/wishlist/?course_code={course.code}"
+        response = self.client.get(
+            get_url, HTTP_AUTHORIZATION=f"Bearer {token}"
+        )
+        self.assertEqual(response.status_code, 200)
+
+        results = response.data["results"]
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]["course"], course.code)
+        self.assertEqual(results[0]["id"], str(wish.id))
+
+    def test_api_wish_get_wish(self):
+        """Get wish for a user in db with two wish linked to him"""
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+        wish = factories.CourseWishFactory.create(owner=user)
+        factories.CourseWishFactory.create(owner=user)
+
+        get_url = f"/api/v1.0/wishlist/{wish.id}/"
+        response = self.client.get(
+            get_url, HTTP_AUTHORIZATION=f"Bearer {token}"
+        )
+        self.assertEqual(response.status_code, 200)
+
+        data = response.data
+        self.assertEqual(data["course"], wish.course.code)
+        self.assertEqual(data["id"], str(wish.id))
 
     def test_api_wish_create_without_authorization(self):
         """Create/update user wish not allowed without HTTP AUTH"""
