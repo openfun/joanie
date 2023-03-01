@@ -147,7 +147,8 @@ test: \
 .PHONY: test
 
 test-back: ## run back-end tests
-	bin/pytest
+	@args="$(filter-out $@,$(MAKECMDGOALS))" && \
+	bin/pytest $${args:-${1}}
 .PHONY: test-back
 
 
@@ -169,6 +170,10 @@ superuser: ## create a Django superuser
 	@echo "$(BOLD)Creating a Django superuser$(RESET)"
 	@$(MANAGE) createsuperuser
 .PHONY: superuser
+
+shell: ## connect to database shell
+	@$(MANAGE) shell_plus
+.PHONY: dbshell
 
 # -- Database
 
