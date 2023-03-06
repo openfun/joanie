@@ -81,6 +81,7 @@ class Certificate(BaseModel):
         db_table = "joanie_certificate"
         verbose_name = _("Certificate")
         verbose_name_plural = _("Certificates")
+        ordering = ["-created_on"]
 
     def __str__(self):
         return f"{self.order.owner}'s certificate for course {self.order.course}"

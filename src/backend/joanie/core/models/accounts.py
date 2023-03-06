@@ -85,6 +85,7 @@ class Address(BaseModel):
         db_table = "joanie_address"
         verbose_name = _("Address")
         verbose_name_plural = _("Addresses")
+        ordering = ["-created_on"]
         constraints = [
             models.UniqueConstraint(
                 condition=models.Q(is_main=True),

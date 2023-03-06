@@ -118,7 +118,7 @@ class AddressAPITestCase(BaseAPITestCase):
                         "postcode": address.postcode,
                         "title": address.title,
                     }
-                    for address in [address1, address2]
+                    for address in [address2, address1]
                 ],
             },
         )

@@ -75,6 +75,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         self.assertEqual(response.status_code, 200)
         content = response.json()
         results = content.pop("results")
+        cards.sort(key=lambda card: card.created_on, reverse=True)
         self.assertEqual(
             [result["id"] for result in results], [str(card.id) for card in cards]
         )
