@@ -394,6 +394,7 @@ class CreditCard(BaseModel):
         db_table = "joanie_credit_card"
         verbose_name = "credit card"
         verbose_name_plural = "credit cards"
+        ordering = ["-created_on"]
         constraints = [
             models.UniqueConstraint(
                 condition=models.Q(is_main=True),
