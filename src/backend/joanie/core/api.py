@@ -352,7 +352,27 @@ class AddressViewSet(
 
     lookup_field = "id"
     serializer_class = serializers.AddressSerializer
+    # serializer_classes = {
+    #     "default": serializers.AddressSerializer,
+    #     "create": serializers.AddressCreateSerializer,
+    #     # ... other actions
+    # }
+    action_serializer_classes = {
+        "create": serializers.AddressCreateSerializer,
+        "update": serializers.AddressSerializer,
+        "retrieve": serializers.AddressSerializer,
+        "list": serializers.AddressSerializer,
+        "partial_update": serializers.AddressSerializer,
+    }
+
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_serializer_class(self):
+        try:
+            return self.action_serializer_classes[self.action]
+        except (KeyError, AttributeError):
+            # error_logger.error("---Exception occurred---")
+            return super(AddressViewSet, self).get_serializer_class()
 
     def get_queryset(self):
         """Custom queryset to get user addresses"""
