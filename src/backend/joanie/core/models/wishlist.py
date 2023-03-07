@@ -16,7 +16,7 @@ class CourseWish(BaseModel):
     owner = models.ForeignKey(
         to=User,
         verbose_name=_("Owner"),
-        related_name="wishlists",
+        related_name="wishlist",
         on_delete=models.PROTECT,
     )
 

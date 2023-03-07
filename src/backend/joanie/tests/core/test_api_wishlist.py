@@ -76,7 +76,7 @@ class CourseWishAPITestCase(BaseAPITestCase):
         self.assertTrue(models.User.objects.filter(username=username).exists())
 
     def test_api_wish_get_wishes(self):
-        """Get wish for a user in db with two wish linked to him"""
+        """Get wish for a user in db with two wishes linked to him"""
         user = factories.UserFactory()
         course1 = factories.CourseFactory()
         course2 = factories.CourseFactory()
@@ -96,7 +96,7 @@ class CourseWishAPITestCase(BaseAPITestCase):
         self.assertEqual(results[1]["id"], str(wish2.id))
 
     def test_api_wish_get_wishes_filter_by_code(self):
-        """Get wish for a user in db with two wish linked to him"""
+        """Get wish for a user in db with two wishes linked to him"""
         user = factories.UserFactory()
         course = factories.CourseFactory()
         token = self.get_user_token(user.username)
@@ -104,9 +104,7 @@ class CourseWishAPITestCase(BaseAPITestCase):
         factories.CourseWishFactory.create(owner=user)
 
         get_url = f"/api/v1.0/wishlist/?course_code={course.code}"
-        response = self.client.get(
-            get_url, HTTP_AUTHORIZATION=f"Bearer {token}"
-        )
+        response = self.client.get(get_url, HTTP_AUTHORIZATION=f"Bearer {token}")
         self.assertEqual(response.status_code, 200)
 
         results = response.data["results"]
@@ -115,16 +113,14 @@ class CourseWishAPITestCase(BaseAPITestCase):
         self.assertEqual(results[0]["id"], str(wish.id))
 
     def test_api_wish_get_wish(self):
-        """Get wish for a user in db with two wish linked to him"""
+        """Get wish for a user in db with two wishes linked to him"""
         user = factories.UserFactory()
         token = self.get_user_token(user.username)
         wish = factories.CourseWishFactory.create(owner=user)
         factories.CourseWishFactory.create(owner=user)
 
         get_url = f"/api/v1.0/wishlist/{wish.id}/"
-        response = self.client.get(
-            get_url, HTTP_AUTHORIZATION=f"Bearer {token}"
-        )
+        response = self.client.get(get_url, HTTP_AUTHORIZATION=f"Bearer {token}")
         self.assertEqual(response.status_code, 200)
 
         data = response.data

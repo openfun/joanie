@@ -451,15 +451,15 @@ class CourseWishViewSet(
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        """Custom queryset to get user addresses"""
+        """Custom queryset to get user wishlist"""
         user = User.update_or_create_from_request_user(request_user=self.request.user)
-        queryset = user.wishlists.all()
+        queryset = user.wishlist.all()
         course_code = self.request.query_params.get("course_code")
         if course_code is not None:
             queryset = queryset.filter(course__code=course_code)
         return queryset
 
     def perform_create(self, serializer):
-        """Create a new address for user authenticated"""
+        """Create a new wish for user authenticated"""
         user = User.update_or_create_from_request_user(request_user=self.request.user)
         serializer.save(owner=user)

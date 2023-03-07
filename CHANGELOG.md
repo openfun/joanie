@@ -17,6 +17,7 @@ and this project adheres to
 
 - Allow on-demand page size on the order and enrollment endpoints
 - Add yarn cli to generate joanie api client in TypeScript
+- Add model and endpoints for wishlist feature
 
 ### Removed
 
@@ -36,7 +37,6 @@ and this project adheres to
 
 - Add synchronization for course runs
 - Add make dbshell cmd to access database in cli
-- Add model and endpoints for wishlist feature
 
 ### Fixed
 
