@@ -21,6 +21,21 @@ class CoreConfig(AppConfig):
             dispatch_uid="save_course_run",
         )
         post_save.connect(
+            signals.post_save_course_run_notification,
+            sender=models.CourseRun,
+            dispatch_uid="post_save_course_run_notification",
+        )
+        post_save.connect(
+            signals.post_save_product_target_course_relation_notification,
+            sender=models.ProductTargetCourseRelation,
+            dispatch_uid="post_save_product_target_course_relation_notification",
+        )
+        m2m_changed.connect(
+            signals.post_add_m2m_product_target_course_notification,
+            sender=models.Product.target_courses.through,
+            dispatch_uid="post_add_m2m_product_target_course_notification",
+        )
+        post_save.connect(
             signals.on_save_product_target_course_relation,
             sender=models.ProductTargetCourseRelation,
             dispatch_uid="save_product_target_course_relation",

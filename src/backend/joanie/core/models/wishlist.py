@@ -10,7 +10,7 @@ from .base import BaseModel
 
 class CourseWish(BaseModel):
     """
-    CourseWish represents and records a user wish to participate at a course
+    CourseWish represents and records a user wish to participate to a course
     """
 
     owner = models.ForeignKey(

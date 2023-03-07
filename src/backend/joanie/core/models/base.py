@@ -7,6 +7,7 @@ checks and validation that go further than what Django is doing.
 import uuid
 from itertools import chain
 
+from django.contrib.contenttypes.fields import GenericForeignKey
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -52,7 +53,8 @@ class BaseModel(models.Model):
         opts = self._meta
         data = {}
         for field in chain(opts.concrete_fields, opts.private_fields):
-            data[field.name] = field.value_from_object(self)
+            if not isinstance(field, GenericForeignKey):
+                data[field.name] = field.value_from_object(self)
         for field in opts.many_to_many:
             data[field.name] = [related.id for related in field.value_from_object(self)]
         return data

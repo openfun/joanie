@@ -3,6 +3,7 @@ Helpers that can be useful throughout Joanie's core app
 """
 import logging
 
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 
 from joanie.core import enums, models
@@ -157,3 +158,57 @@ def on_change_course_product_relation(action, instance, pk_set, **kwargs):
         return
 
     webhooks.synchronize_course_runs(serialized_course_runs)
+
+
+def base_create_notification(instance, course_wishes, action=None):
+    """
+    Create a notification instance to each user who has a course_wish to participate to
+    the course related to the saved instance
+    """
+    for course_wish in course_wishes:
+        course_wish_ctype = ContentType.objects.get_for_model(course_wish._meta.model)
+        instance_ctype = ContentType.objects.get_for_model(instance._meta.model)
+
+        notif_data = {
+            "owner": course_wish.owner,
+            "notif_subject_ctype": course_wish_ctype,
+            "notif_subject_id": course_wish.id,
+            "notif_object_ctype": instance_ctype,
+            "notif_object_id": instance.id,
+        }
+        if action:
+            notif_data["action"] = action
+
+        models.Notification.objects.get_or_create(
+            **notif_data
+        )
+
+
+def post_save_course_run_notification(instance, created, **kwargs):
+    """
+    Create a notification instance to each user who has a course_wish to participate to
+    the course of the saved course run.
+    """
+    if created:
+        course_wishes = instance.course.wished_in_wishlists.all()
+        base_create_notification(instance, course_wishes, models.Notification.NOTIF_ACTION_CREATE)
+
+
+def post_save_product_target_course_relation_notification(instance, created, **kwargs):
+    """
+    Create a notification instance to each user who has a course_wish to participate to
+    the course of the saved course run.
+    """
+    if created:
+        course_wishes = instance.course.wished_in_wishlists.all()
+        base_create_notification(instance.product, course_wishes, models.Notification.NOTIF_ACTION_CREATE)
+
+
+def post_add_m2m_product_target_course_notification(action, instance, pk_set, **kwargs):
+    """
+    Create a notification instance to each user who has a course_wish to participate to
+    a target_course of the saved product.
+    """
+    if action == "post_add":
+        course_wishes = models.CourseWish.objects.filter(course__id__in=pk_set)
+        base_create_notification(instance, course_wishes, models.Notification.NOTIF_ACTION_ADD)
