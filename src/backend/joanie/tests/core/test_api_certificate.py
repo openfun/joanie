@@ -61,7 +61,31 @@ class CertificateApiTest(BaseAPITestCase):
                 "count": 1,
                 "next": None,
                 "previous": None,
-                "results": [{"id": str(certificate.id)}],
+                "results": [
+                    {
+                        "id": str(certificate.id),
+                        "certificate_definition": {
+                            "description": certificate.certificate_definition.description,
+                            "name": certificate.certificate_definition.name,
+                            "title": certificate.certificate_definition.title,
+                        },
+                        "issued_on": certificate.issued_on.isoformat().replace(
+                            "+00:00", "Z"
+                        ),
+                        "order": {
+                            "id": str(certificate.order.id),
+                            "course": {
+                                "code": certificate.order.course.code,
+                                "title": certificate.order.course.title,
+                            },
+                            "organization": {
+                                "id": str(certificate.order.organization.id),
+                                "code": certificate.order.organization.code,
+                                "title": certificate.order.organization.title,
+                            },
+                        },
+                    },
+                ],
             },
         )
 
@@ -163,7 +187,30 @@ class CertificateApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, 200)
 
         content = json.loads(response.content)
-        self.assertEqual(content, {"id": str(certificate.id)})
+        self.assertEqual(
+            content,
+            {
+                "id": str(certificate.id),
+                "certificate_definition": {
+                    "description": certificate.certificate_definition.description,
+                    "name": certificate.certificate_definition.name,
+                    "title": certificate.certificate_definition.title,
+                },
+                "issued_on": certificate.issued_on.isoformat().replace("+00:00", "Z"),
+                "order": {
+                    "id": str(certificate.order.id),
+                    "course": {
+                        "code": certificate.order.course.code,
+                        "title": certificate.order.course.title,
+                    },
+                    "organization": {
+                        "id": str(certificate.order.organization.id),
+                        "code": certificate.order.organization.code,
+                        "title": certificate.order.organization.title,
+                    },
+                },
+            },
+        )
 
     def test_api_certificate_download_anonymous(self):
         """
