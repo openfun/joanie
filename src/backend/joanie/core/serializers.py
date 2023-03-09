@@ -138,7 +138,7 @@ class ProductSerializer(serializers.ModelSerializer):
     """
 
     id = serializers.CharField(read_only=True)
-    certificate = CertificationDefinitionSerializer(
+    certificate_definition = CertificationDefinitionSerializer(
         read_only=True, source="certificate_definition"
     )
     organizations = serializers.SerializerMethodField("get_organizations")
@@ -155,7 +155,7 @@ class ProductSerializer(serializers.ModelSerializer):
         model = models.Product
         fields = [
             "call_to_action",
-            "certificate",
+            "certificate_definition",
             "id",
             "organizations",
             "price",
@@ -166,7 +166,7 @@ class ProductSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "call_to_action",
-            "certificate",
+            "certificate_definition",
             "id",
             "organizations",
             "price",

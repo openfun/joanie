@@ -99,7 +99,7 @@ class ProductApiTest(BaseAPITestCase):
             response.json(),
             {
                 "call_to_action": product.call_to_action,
-                "certificate": {
+                "certificate_definition": {
                     "description": product.certificate_definition.description,
                     "name": product.certificate_definition.name,
                     "title": product.certificate_definition.title,

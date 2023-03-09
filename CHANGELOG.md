@@ -12,6 +12,7 @@ and this project adheres to
 
 - Activate pagination by default on all endpoints (20 items per page)
 - Use user fullname instead of username in order confirmation email
+- Rename certificate field into certificate_definition for the ProductSerializer
 
 ## Added
 
