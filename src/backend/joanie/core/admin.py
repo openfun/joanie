@@ -60,11 +60,40 @@ class CertificateAdmin(admin.ModelAdmin):
         return obj.order.owner
 
 
-class CourseProductRelationInline(admin.TabularInline):
+class CourseProductRelationInline(admin.StackedInline):
     """Admin class for the CourseProductRelation model"""
 
     form = forms.CourseProductRelationAdminForm
     model = models.Course.products.through
+    extra = 0
+
+
+class CourseCourseRunsInline(admin.TabularInline):
+    """Admin class for the CourseCourseRunsInline"""
+
+    model = models.CourseRun
+    show_change_link = True
+
+    readonly_fields = (
+        "title",
+        "resource_link",
+        "enrollment_start",
+        "enrollment_end",
+        "start",
+        "end",
+        "is_listed",
+        "is_gradable",
+    )
+    fields = (
+        "title",
+        "resource_link",
+        "enrollment_start",
+        "enrollment_end",
+        "start",
+        "end",
+        "is_listed",
+        "is_gradable",
+    )
     extra = 0
 
 
@@ -76,10 +105,19 @@ class CourseAdmin(DjangoObjectActions, TranslatableAdmin):
     change_actions = (ACTION_NAME_GENERATE_CERTIFICATES,)
     change_form_template = "joanie/admin/translatable_change_form_with_actions.html"
     list_display = ("code", "title", "state")
+    readonly_fields = ("course_runs",)
     filter_horizontal = ("products",)
-    inlines = (CourseProductRelationInline,)
+    inlines = (CourseCourseRunsInline, CourseProductRelationInline)
     fieldsets = (
-        (_("Main information"), {"fields": ("code", "title")}),
+        (
+            _("Main information"),
+            {
+                "fields": (
+                    "code",
+                    "title",
+                )
+            },
+        ),
         (
             _("Organizations"),
             {
@@ -106,7 +144,15 @@ class CourseAdmin(DjangoObjectActions, TranslatableAdmin):
 class CourseRunAdmin(TranslatableAdmin):
     """Admin class for the CourseRun model"""
 
-    list_display = ("title", "resource_link", "start", "end", "state", "is_gradable")
+    list_display = (
+        "title",
+        "resource_link",
+        "start",
+        "end",
+        "state",
+        "is_gradable",
+        "is_listed",
+    )
     readonly_fields = ("id",)
     fieldsets = (
         (
