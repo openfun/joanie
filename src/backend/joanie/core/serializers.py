@@ -2,6 +2,7 @@
 
 from django.conf import settings
 from django.core.cache import cache
+from django.utils.translation import get_language
 
 from djmoney.contrib.django_rest_framework import MoneyField
 from rest_framework import serializers
@@ -138,9 +139,7 @@ class ProductSerializer(serializers.ModelSerializer):
     """
 
     id = serializers.CharField(read_only=True)
-    certificate_definition = CertificationDefinitionSerializer(
-        read_only=True, source="certificate_definition"
-    )
+    certificate_definition = CertificationDefinitionSerializer(read_only=True)
     organizations = serializers.SerializerMethodField("get_organizations")
     price = MoneyField(
         coerce_to_string=False,
@@ -534,14 +533,38 @@ class AddressSerializer(serializers.ModelSerializer):
         ]
 
 
+class CertificateOrderSerializer(serializers.ModelSerializer):
+    """
+    Order model serializer for the Certificate model
+    """
+
+    id = serializers.CharField(read_only=True, required=False)
+    course = CourseSerializer(read_only=True)
+    organization = OrganizationSerializer(read_only=True)
+
+    class Meta:
+        model = models.Order
+        fields = ["id", "course", "organization"]
+        read_only_fields = ["id", "course", "organization"]
+
+
 class CertificateSerializer(serializers.ModelSerializer):
     """
     Certificate model serializer
     """
 
     id = serializers.CharField(read_only=True, required=False)
+    certificate_definition = CertificationDefinitionSerializer(read_only=True)
+    order = CertificateOrderSerializer(read_only=True)
 
     class Meta:
         model = models.Certificate
-        fields = ["id"]
-        read_only_fields = ["id"]
+        fields = ["id", "certificate_definition", "issued_on", "order"]
+        read_only_fields = ["id", "certificate_definition", "issued_on", "order"]
+
+    def get_context(self, certificate):
+        """
+        Compute the serialized value for the "context" field.
+        """
+        language = self.context["request"].LANGUAGE_CODE or get_language()
+        return certificate.localized_context[language]

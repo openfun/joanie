@@ -380,6 +380,7 @@ class CertificateViewSet(
     """
 
     lookup_field = "pk"
+    pagination_class = Pagination
     serializer_class = serializers.CertificateSerializer
     permission_classes = [permissions.IsAuthenticated]
 
