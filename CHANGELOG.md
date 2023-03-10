@@ -23,6 +23,7 @@ and this project adheres to
 ### Removed
 
 - Badge providers now live in the obc python package
+- Remove unused `OrderLiteSerializer`
 
 ## [1.1.0] - 2023-02-22
 
