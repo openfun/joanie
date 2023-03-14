@@ -408,6 +408,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         order = OrderFactory(product=product)
         backend = PayplugBackend(self.configuration)
         billing_address = BillingAddressDictFactory()
+        del billing_address["title"]
         payplug_billing_address = billing_address.copy()
         payplug_billing_address["address1"] = payplug_billing_address["address"]
         del payplug_billing_address["address"]
@@ -485,6 +486,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         order = OrderFactory(product=product)
         backend = PayplugBackend(self.configuration)
         billing_address = BillingAddressDictFactory()
+        del billing_address["title"]
         payplug_billing_address = billing_address.copy()
         payplug_billing_address["address1"] = payplug_billing_address["address"]
         del payplug_billing_address["address"]

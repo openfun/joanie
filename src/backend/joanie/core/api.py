@@ -6,6 +6,8 @@ from django.db import IntegrityError, transaction
 from django.http import HttpResponse
 from django.utils.translation import gettext_lazy as _
 
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, pagination, permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError as DRFValidationError
@@ -14,6 +16,10 @@ from rest_framework.views import exception_handler as drf_exception_handler
 
 from joanie.core import models
 from joanie.core.enums import ORDER_STATE_PENDING
+from joanie.core.viewsets import (
+    RequestResponseSerializersViewSetMixin,
+    ActionSerializerType,
+)
 from joanie.payment import get_payment_backend
 from joanie.payment.models import Invoice
 
@@ -111,6 +117,12 @@ class ProductViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
 
         return context
 
+    @swagger_auto_schema(
+        query_serializer=serializers.ProductRetrieveQuerySerializer,
+    )
+    def retrieve(self, *args, **kwargs):
+        return super().retrieve(*args, **kwargs)
+
 
 # pylint: disable=too-many-ancestors
 class EnrollmentViewSet(
@@ -141,6 +153,7 @@ class EnrollmentViewSet(
 
 # pylint: disable=too-many-ancestors
 class OrderViewSet(
+    RequestResponseSerializersViewSetMixin,
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
     mixins.CreateModelMixin,
@@ -163,6 +176,12 @@ class OrderViewSet(
     pagination_class = Pagination
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = serializers.OrderSerializer
+    action_serializers = {
+        "create": {
+            "request": serializers.OrderCreateSerializer,
+            "response": serializers.OrderCreateResponseSerializer,
+        }
+    }
     filterset_class = filters.OrderViewSetFilter
     ordering = ["-created_on"]
 
@@ -171,21 +190,22 @@ class OrderViewSet(
         user = User.update_or_create_from_request_user(request_user=self.request.user)
         return user.orders.all().select_related("owner", "product", "certificate")
 
-    def perform_create(self, serializer):
+    def perform_create(self, validated_data):
         """Force the order's "owner" field to the logged-in user."""
         owner = User.update_or_create_from_request_user(request_user=self.request.user)
-        serializer.save(owner=owner)
+        return models.Order.objects.create(**validated_data, owner=owner)
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         """Try to create an order and a related payment if the payment is fee."""
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_request_serializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=400)
 
         product = serializer.validated_data.get("product")
         course = serializer.validated_data.get("course")
-        billing_address = serializer.initial_data.get("billing_address")
+        billing_address = serializer.validated_data.get("billing_address")
+        credit_card_id = serializer.validated_data.get("credit_card_id")
 
         # Populate organization field if it is not set and there is only one
         # on the product
@@ -210,7 +230,13 @@ class OrderViewSet(
 
         # - Validate data then create an order
         try:
-            self.perform_create(serializer)
+            order_validated_data = {**serializer.validated_data}
+            if billing_address:
+                order_validated_data.pop("billing_address")
+            if credit_card_id:
+                order_validated_data.pop("credit_card_id")
+            # FIXME this pop stuff should be done in OrderCreateSerializer.save
+            order = self.perform_create(order_validated_data)
         except (DRFValidationError, IntegrityError):
             return Response(
                 (
@@ -222,10 +248,7 @@ class OrderViewSet(
 
         # Once order has been created, if product is not free, create a payment
         if product.price.amount > 0:
-            order = serializer.instance
             payment_backend = get_payment_backend()
-            credit_card_id = serializer.initial_data.get("credit_card_id")
-
             # if payment in one click
             if credit_card_id:
                 try:
@@ -245,14 +268,22 @@ class OrderViewSet(
                     request=request, order=order, billing_address=billing_address
                 )
 
-            # Return the fresh new order with payment_info
-            return Response(
-                {**serializer.data, "payment_info": payment_info}, status=201
+            response_serializer = self.get_response_serializer(
+                instance=order,
+                context={
+                    "payment_info": payment_info,
+                },
             )
+            return Response(response_serializer.data, status=201)
 
         # Else return the fresh new order
-        return Response(serializer.data, status=201)
+        response_serializer = self.get_response_serializer(instance=order)
+        return Response(response_serializer.data, status=201)
 
+    @swagger_auto_schema(
+        request_body=serializers.OrderAbortBodySerializer,
+        responses={204: serializers.EmptyResponseSerializer},
+    )
     @action(detail=True, methods=["POST"])
     def abort(self, request, pk=None):  # pylint: disable=no-self-use, invalid-name
         """Abort a pending order and the related payment if there is one."""
@@ -277,6 +308,17 @@ class OrderViewSet(
 
         return Response(status=204)
 
+    @swagger_auto_schema(
+        query_serializer=serializers.OrderInvoiceQuerySerializer,
+        responses={
+            200: openapi.Response(
+                "File Attachment", schema=openapi.Schema(type=openapi.TYPE_FILE)
+            ),
+            400: serializers.ErrorResponseSerializer,
+            404: serializers.ErrorResponseSerializer,
+        },
+        produces="application/pdf",
+    )
     @action(detail=True, methods=["GET"])
     def invoice(self, request, pk=None):  # pylint: disable=no-self-use, invalid-name
         """
@@ -391,6 +433,16 @@ class CertificateViewSet(
         user = User.update_or_create_from_request_user(request_user=self.request.user)
         return models.Certificate.objects.filter(order__owner=user)
 
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response(
+                "File Attachment", schema=openapi.Schema(type=openapi.TYPE_FILE)
+            ),
+            404: serializers.ErrorResponseSerializer,
+            422: serializers.ErrorResponseSerializer,
+        },
+        produces="application/pdf",
+    )
     @action(detail=True, methods=["GET"])
     def download(self, request, pk=None):  # pylint: disable=no-self-use, invalid-name
         """

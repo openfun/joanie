@@ -405,13 +405,14 @@ class Development(Base):
     # e.g: For API routes which requires a jwt token to authenticate user, you can
     # fulfill this field with `Bearer <USER_JWT_TOKEN>`
     SWAGGER_SETTINGS = {
+        "DEFAULT_AUTO_SCHEMA_CLASS": "joanie.core.schema.CustomAutoSchema",
         "SECURITY_DEFINITIONS": {
             "Bearer": {
                 "type": "apiKey",
                 "name": "Authorization",
                 "in": "header",
             }
-        }
+        },
     }
 
     def __init__(self):
