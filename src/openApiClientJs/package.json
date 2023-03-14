@@ -4,7 +4,7 @@
   "private": true,
   "description": "Tool to generate Typescript api client for joanie",
   "scripts": {
-    "generate:api:client:local": "./scripts/openapi-typescript-codegen/generate_api_client_local.sh $1"
+    "generate:api:client:local": "./scripts/openapi-typescript-codegen/generate_api_client_local.sh"
   },
   "repository": {
     "type": "git",
