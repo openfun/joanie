@@ -17,17 +17,22 @@ export class ProductsService {
    */
   public productsRead({
     id,
+    course,
   }: {
     /**
      * primary key for the record as UUID
      */
     id: string,
+    course: string,
   }): CancelablePromise<Product> {
     return this.httpRequest.request({
       method: 'GET',
       url: '/products/{id}/',
       path: {
         'id': id,
+      },
+      query: {
+        'course': course,
       },
     });
   }

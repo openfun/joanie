@@ -2,6 +2,9 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Order } from '../models/Order';
+import type { OrderAbortBody } from '../models/OrderAbortBody';
+import type { OrderCreate } from '../models/OrderCreate';
+import type { OrderCreateResponse } from '../models/OrderCreateResponse';
 
 import type { CancelablePromise } from '../core/CancelablePromise';
 import type { BaseHttpRequest } from '../core/BaseHttpRequest';
@@ -62,14 +65,14 @@ export class OrdersService {
 
   /**
    * Try to create an order and a related payment if the payment is fee.
-   * @returns Order
+   * @returns OrderCreateResponse
    * @throws ApiError
    */
   public ordersCreate({
     data,
   }: {
-    data: Order,
-  }): CancelablePromise<Order> {
+    data: OrderCreate,
+  }): CancelablePromise<OrderCreateResponse> {
     return this.httpRequest.request({
       method: 'POST',
       url: '/orders/',
@@ -106,7 +109,7 @@ export class OrdersService {
 
   /**
    * Abort a pending order and the related payment if there is one.
-   * @returns Order
+   * @returns void
    * @throws ApiError
    */
   public ordersAbort({
@@ -114,8 +117,8 @@ export class OrdersService {
     data,
   }: {
     id: string,
-    data: Order,
-  }): CancelablePromise<Order> {
+    data: OrderAbortBody,
+  }): CancelablePromise<void> {
     return this.httpRequest.request({
       method: 'POST',
       url: '/orders/{id}/abort/',
@@ -129,19 +132,24 @@ export class OrdersService {
   /**
    * Retrieve an invoice through its reference if it is related to
    * the order instance and owned by the authenticated user.
-   * @returns Order
+   * @returns binary File Attachment
    * @throws ApiError
    */
   public ordersInvoice({
     id,
+    reference,
   }: {
     id: string,
-  }): CancelablePromise<Order> {
+    reference: string,
+  }): CancelablePromise<Blob> {
     return this.httpRequest.request({
       method: 'GET',
       url: '/orders/{id}/invoice/',
       path: {
         'id': id,
+      },
+      query: {
+        'reference': reference,
       },
     });
   }

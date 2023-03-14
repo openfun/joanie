@@ -16,9 +16,15 @@ export type { CertificationDefinition } from './models/CertificationDefinition';
 export type { Course } from './models/Course';
 export type { CourseRun } from './models/CourseRun';
 export type { CreditCard } from './models/CreditCard';
+export type { EmptyResponse } from './models/EmptyResponse';
 export { Enrollment } from './models/Enrollment';
+export type { ErrorResponse } from './models/ErrorResponse';
 export { Order } from './models/Order';
+export type { OrderAbortBody } from './models/OrderAbortBody';
+export type { OrderCreate } from './models/OrderCreate';
+export { OrderCreateResponse } from './models/OrderCreateResponse';
 export type { Organization } from './models/Organization';
+export type { Payment } from './models/Payment';
 export { Product } from './models/Product';
 
 export { AddressesService } from './services/AddressesService';

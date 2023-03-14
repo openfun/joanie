@@ -2,7 +2,9 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type Order = {
+import type { Payment } from './Payment';
+
+export type OrderCreateResponse = {
   course: string;
   /**
    * date and time at which a record was created
@@ -17,11 +19,12 @@ export type Order = {
   readonly total?: number;
   readonly total_currency?: string;
   product: string;
-  readonly state?: Order.state;
+  readonly state?: OrderCreateResponse.state;
   readonly target_courses?: string;
+  payment_info?: Payment;
 };
 
-export namespace Order {
+export namespace OrderCreateResponse {
 
   export enum state {
     PENDING = 'pending',
