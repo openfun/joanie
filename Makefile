@@ -36,6 +36,7 @@ DOCKER_USER          = $(DOCKER_UID):$(DOCKER_GID)
 COMPOSE              = DOCKER_USER=$(DOCKER_USER) docker-compose
 COMPOSE_RUN          = $(COMPOSE) run --rm
 COMPOSE_RUN_APP      = $(COMPOSE_RUN) app-dev
+COMPOSE_RUN_FRONT_ADMIN = $(COMPOSE_RUN) app-dev-front-admin
 COMPOSE_RUN_CROWDIN  = $(COMPOSE_RUN) crowdin crowdin
 COMPOSE_RUN_MAIL_YARN= $(COMPOSE_RUN) mail-generator yarn
 COMPOSE_TEST_RUN     = $(COMPOSE_RUN)
@@ -67,7 +68,9 @@ bootstrap: \
 	migrate \
 	i18n-compile \
 	install-mails \
-	build-mails
+	build-mails \
+	front-admin-install \
+	front-admin-build
 .PHONY: bootstrap
 
 # -- Docker/compose
@@ -171,6 +174,14 @@ superuser: ## create a Django superuser
 	@$(MANAGE) createsuperuser
 .PHONY: superuser
 
+back-i18n-compile: ## compile the gettext files
+	@$(MANAGE) compilemessages --ignore="venv/**/*"
+.PHONY: back-i18n-compile
+
+back-i18n-generate: ## create the .pot files used for i18n
+	@$(MANAGE) makemessages -a --keep-pot
+.PHONY: back-i18n-generate
+
 shell: ## connect to database shell
 	@$(MANAGE) shell_plus
 .PHONY: dbshell
@@ -180,6 +191,35 @@ shell: ## connect to database shell
 dbshell: ## connect to database shell
 	docker-compose exec app-dev python manage.py dbshell
 .PHONY: dbshell
+
+# -- Frontend admin
+front-admin-install: ## Install node_modules
+	@${COMPOSE_RUN_FRONT_ADMIN} yarn install
+.PHONY: front-admin-install
+
+front-admin-lint: ## Lint frontend admin app
+	@${COMPOSE_RUN_FRONT_ADMIN} yarn lint
+.PHONY: front-admin-lint
+
+front-admin-test: ## Test frontend admin app
+	@${COMPOSE_RUN_FRONT_ADMIN} yarn test
+.PHONY: front-admin-test
+
+front-admin-build: ## Build frontend admin app
+	@${COMPOSE_RUN_FRONT_ADMIN} yarn build
+.PHONY: front-admin-build
+
+front-admin-dev: ## Launch frontend admin app in development mode
+	@${COMPOSE_RUN_FRONT_ADMIN} yarn dev
+.PHONY: front-admin-dev
+
+front-admin-i18n-extract: ## Extract translations of frontend admin app
+	@${COMPOSE_RUN_FRONT_ADMIN} yarn i18n:extract
+.PHONY: front-admin-i18n-extract
+
+front-admin-i18n-compile: ## Compile translations of frontend admin app
+	@${COMPOSE_RUN_FRONT_ADMIN} yarn i18n:compile
+.PHONY: front-admin-i18n-compile
 
 # -- Internationalization
 
@@ -194,19 +234,23 @@ crowdin-upload: ## Upload source translations to crowdin
 	@$(COMPOSE_RUN_CROWDIN) upload sources -c crowdin/config.yml
 .PHONY: crowdin-upload
 
-i18n-compile: ## compile the gettext files
-	@$(MANAGE) compilemessages --ignore="venv/**/*"
+i18n-compile: ## compile all translations
+i18n-compile: \
+	back-i18n-compile \
+	front-admin-i18n-compile
 .PHONY: i18n-compile
+
+i18n-generate: ## create the .pot files and extract frontend messages
+i18n-generate: \
+	back-i18n-generate \
+	front-admin-i18n-extract
+.PHONY: i18n-generate
 
 i18n-download-and-compile: ## download all translated messages and compile them to be used by all applications
 i18n-download-and-compile: \
   crowdin-download \
   i18n-compile
 .PHONY: i18n-download-and-compile
-
-i18n-generate: ## create the .pot files used for i18n
-	@$(MANAGE) makemessages -a --keep-pot
-.PHONY: i18n-generate
 
 i18n-generate-and-upload: ## generate source translations for all applications and upload them to crowdin
 i18n-generate-and-upload: \

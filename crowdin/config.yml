@@ -19,5 +19,10 @@ files: [
   source : "/backend/locale/django.pot",
   dest: "/backend.pot",
   translation : "/backend/locale/%locale_with_underscore%/LC_MESSAGES/django.po"
+ },
+ {
+  source : "/frontend/admin/i18n/frontend.json",
+  dest: "/admin/frontend.json",
+  translation : "/frontend/admin/i18n/locales/%locale%.json"
  }
 ]
