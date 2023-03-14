@@ -30,7 +30,10 @@
   "plugins": ["formatjs", "@typescript-eslint"],
   /* Disable some rules to be iso with tslint which was previously used */
   "rules": {
-    "@typescript-eslint/explicit-member-accessibility": ["error", { "accessibility": "no-public" }],
+    "@typescript-eslint/explicit-member-accessibility": [
+      "error",
+      { "accessibility": "no-public" }
+    ],
     "@typescript-eslint/lines-between-class-members": "off",
     "@typescript-eslint/no-use-before-define": "off",
     "arrow-parens": "error",
@@ -46,7 +49,14 @@
     "import/order": [
       "error",
       {
-        "groups": ["builtin", "external", "internal", "parent", "sibling", "index"],
+        "groups": [
+          "builtin",
+          "external",
+          "internal",
+          "parent",
+          "sibling",
+          "index"
+        ],
         "alphabetize": { "order": "ignore" }
       }
     ],
