@@ -17,6 +17,8 @@ and this project adheres to
 
 ## Added
 
+- CRUD admin API for organizations, products, course runs,
+  certificate definitions, courses and retrieve enabled languages
 - Allow on-demand page size on the order and enrollment endpoints
 - Add yarn cli to generate joanie api client in TypeScript
 - Display course runs into the admin course change view

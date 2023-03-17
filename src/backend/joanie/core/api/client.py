@@ -1,7 +1,6 @@
 """
-API endpoints
+Client API endpoints
 """
-from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import IntegrityError, transaction
 from django.http import HttpResponse
 from django.utils.translation import gettext_lazy as _
@@ -10,37 +9,11 @@ from rest_framework import mixins, pagination, permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework.response import Response
-from rest_framework.views import exception_handler as drf_exception_handler
 
-from joanie.core import models
+from joanie.core import filters, models, serializers
 from joanie.core.enums import ORDER_STATE_PENDING
 from joanie.payment import get_payment_backend
-from joanie.payment.models import Invoice
-
-from ..core import filters
-from ..core.models import User
-from ..payment.models import CreditCard
-from . import serializers
-
-
-def exception_handler(exc, context):
-    """Handle Django ValidationError as an accepted exception.
-
-    For the parameters, see ``exception_handler``
-    This code comes from twidi's gist:
-    https://gist.github.com/twidi/9d55486c36b6a51bdcb05ce3a763e79f
-    """
-    if isinstance(exc, DjangoValidationError):
-        if hasattr(exc, "message_dict"):
-            detail = exc.message_dict
-        elif hasattr(exc, "message"):
-            detail = exc.message
-        elif hasattr(exc, "messages"):
-            detail = exc.messages
-
-        exc = DRFValidationError(detail=detail)
-
-    return drf_exception_handler(exc, context)
+from joanie.payment.models import CreditCard, Invoice
 
 
 class Pagination(pagination.PageNumberPagination):
@@ -130,12 +103,16 @@ class EnrollmentViewSet(
 
     def get_queryset(self):
         """Custom queryset to limit to orders owned by the logged-in user."""
-        user = User.update_or_create_from_request_user(request_user=self.request.user)
+        user = models.User.update_or_create_from_request_user(
+            request_user=self.request.user
+        )
         return user.enrollments.all().select_related("course_run")
 
     def perform_create(self, serializer):
         """Force the enrollment's "owner" field to the logged-in user."""
-        user = User.update_or_create_from_request_user(request_user=self.request.user)
+        user = models.User.update_or_create_from_request_user(
+            request_user=self.request.user
+        )
         serializer.save(user=user)
 
 
@@ -168,12 +145,16 @@ class OrderViewSet(
 
     def get_queryset(self):
         """Custom queryset to limit to orders owned by the logged-in user."""
-        user = User.update_or_create_from_request_user(request_user=self.request.user)
+        user = models.User.update_or_create_from_request_user(
+            request_user=self.request.user
+        )
         return user.orders.all().select_related("owner", "product", "certificate")
 
     def perform_create(self, serializer):
         """Force the order's "owner" field to the logged-in user."""
-        owner = User.update_or_create_from_request_user(request_user=self.request.user)
+        owner = models.User.update_or_create_from_request_user(
+            request_user=self.request.user
+        )
         serializer.save(owner=owner)
 
     @transaction.atomic
@@ -356,12 +337,16 @@ class AddressViewSet(
 
     def get_queryset(self):
         """Custom queryset to get user addresses"""
-        user = User.update_or_create_from_request_user(request_user=self.request.user)
+        user = models.User.update_or_create_from_request_user(
+            request_user=self.request.user
+        )
         return user.addresses.all()
 
     def perform_create(self, serializer):
         """Create a new address for user authenticated"""
-        user = User.update_or_create_from_request_user(request_user=self.request.user)
+        user = models.User.update_or_create_from_request_user(
+            request_user=self.request.user
+        )
         serializer.save(owner=user)
 
 
@@ -388,7 +373,9 @@ class CertificateViewSet(
         """
         Custom queryset to get user certificates
         """
-        user = User.update_or_create_from_request_user(request_user=self.request.user)
+        user = models.User.update_or_create_from_request_user(
+            request_user=self.request.user
+        )
         return models.Certificate.objects.filter(order__owner=user)
 
     @action(detail=True, methods=["GET"])

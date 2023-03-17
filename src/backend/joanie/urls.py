@@ -23,7 +23,8 @@ from django.urls import include, path, re_path
 from rest_framework import permissions
 from rest_framework.routers import DefaultRouter
 
-from joanie.core import api
+from joanie.core.api import admin as api_admin
+from joanie.core.api import client as api_client
 from joanie.core.views import (
     DebugMailSuccessPaymentViewHtml,
     DebugMailSuccessPaymentViewTxt,
@@ -32,12 +33,25 @@ from joanie.lms_handler.urls import urlpatterns as lms_urlpatterns
 from joanie.payment.urls import urlpatterns as payment_urlpatterns
 
 router = DefaultRouter()
-router.register("addresses", api.AddressViewSet, basename="addresses")
-router.register("certificates", api.CertificateViewSet, basename="certificates")
-router.register("enrollments", api.EnrollmentViewSet, basename="enrollments")
-router.register("orders", api.OrderViewSet, basename="orders")
-router.register("course-runs", api.CourseRunViewSet, basename="course-runs")
-router.register("products", api.ProductViewSet, basename="products")
+router.register("addresses", api_client.AddressViewSet, basename="addresses")
+router.register("certificates", api_client.CertificateViewSet, basename="certificates")
+router.register("enrollments", api_client.EnrollmentViewSet, basename="enrollments")
+router.register("orders", api_client.OrderViewSet, basename="orders")
+router.register("course-runs", api_client.CourseRunViewSet, basename="course-runs")
+router.register("products", api_client.ProductViewSet, basename="products")
+
+admin_router = DefaultRouter()
+admin_router.register(
+    "organizations", api_admin.OrganizationViewSet, basename="organizations"
+)
+admin_router.register("products", api_admin.ProductViewSet, basename="products")
+admin_router.register("courses", api_admin.CourseViewSet, basename="courses")
+admin_router.register("course-runs", api_admin.CourseRunViewSet, basename="course-runs")
+admin_router.register(
+    "certificate-definitions",
+    api_admin.CertificateDefinitionViewSet,
+    basename="certificate-definitions",
+)
 
 API_VERSION = "v1.0"
 
@@ -46,6 +60,10 @@ urlpatterns = [
     path(
         f"api/{API_VERSION}/",
         include([*router.urls, *lms_urlpatterns, *payment_urlpatterns]),
+    ),
+    path(
+        f"api/{API_VERSION}/admin/",
+        include([*admin_router.urls]),
     ),
 ]
 
