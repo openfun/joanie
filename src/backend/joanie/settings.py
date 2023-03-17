@@ -401,6 +401,9 @@ class Development(Base):
     DEBUG = True
     NGROK_ENDPOINT = values.Value(None, "NGROK_ENDPOINT", environ_prefix=None)
 
+    LOGIN_URL = "/admin/login/"
+    LOGOUT_URL = "/admin/logout/"
+
     # Swagger security settings
     # e.g: For API routes which requires a jwt token to authenticate user, you can
     # fulfill this field with `Bearer <USER_JWT_TOKEN>`
