@@ -20,6 +20,7 @@ and this project adheres to
 - Allow on-demand page size on the order and enrollment endpoints
 - Add yarn cli to generate joanie api client in TypeScript
 - Display course runs into the admin course change view
+- Add course query param to openapi schema on route products.retrieve
 
 ### Removed
 

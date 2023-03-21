@@ -1,15 +1,15 @@
-"""Serializers for api."""
+"""Serializers for core.models"""
 
 from django.conf import settings
 from django.core.cache import cache
 from django.utils.translation import get_language
+from drf_yasg.utils import swagger_serializer_method
 
 from djmoney.contrib.django_rest_framework import MoneyField
 from rest_framework import serializers
 
 from joanie.core import models, utils
-
-from .enums import ORDER_STATE_PENDING, ORDER_STATE_VALIDATED
+from joanie.core.enums import ORDER_STATE_PENDING, ORDER_STATE_VALIDATED
 
 
 class CertificationDefinitionSerializer(serializers.ModelSerializer):
@@ -361,15 +361,40 @@ class EnrollmentSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
+class AddressSerializer(serializers.ModelSerializer):
+    """
+    Address model serializer
+    """
+
+    id = serializers.CharField(read_only=True, required=False)
+
+    class Meta:
+        model = models.Address
+        fields = [
+            "address",
+            "city",
+            "country",
+            "first_name",
+            "last_name",
+            "id",
+            "is_main",
+            "postcode",
+            "title",
+        ]
+        read_only_fields = [
+            "id",
+        ]
+
+
+# TODO (rlecellier): this serializer is used as default:
+# response order serializer, it mean's same mandatory fields as Order model.
 class OrderSerializer(serializers.ModelSerializer):
     """
     Order model serializer
     """
 
-    id = serializers.CharField(read_only=True, required=False)
-    owner = serializers.CharField(
-        source="owner.username", read_only=True, required=False
-    )
+    id = serializers.CharField()
+    owner = serializers.CharField(source="owner.username")
     course = serializers.SlugRelatedField(
         queryset=models.Course.objects.all(), slug_field="code"
     )
@@ -413,7 +438,6 @@ class OrderSerializer(serializers.ModelSerializer):
             "certificate",
             "created_on",
             "enrollments",
-            "id",
             "main_invoice",
             "owner",
             "total",
@@ -451,29 +475,54 @@ class OrderSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
-class AddressSerializer(serializers.ModelSerializer):
-    """
-    Address model serializer
-    """
-
-    id = serializers.CharField(read_only=True, required=False)
+# a order seriliazer use for order creation
+# TODO: the save() method should handle validated_data cleaning (credit_card_id and billing_address)
+class OrderCreateSerializer(serializers.ModelSerializer):
+    credit_card_id = serializers.CharField(required=False)
+    billing_address = AddressSerializer(required=False)
+    course = serializers.SlugRelatedField(
+        queryset=models.Course.objects.all(), slug_field="code"
+    )
+    organization = serializers.SlugRelatedField(
+        queryset=models.Organization.objects.all(), slug_field="id", required=False
+    )
 
     class Meta:
-        model = models.Address
+        model = models.Order
         fields = [
-            "address",
-            "city",
-            "country",
-            "first_name",
-            "last_name",
-            "id",
-            "is_main",
-            "postcode",
-            "title",
+            "credit_card_id",
+            "course",
+            "organization",
+            "product",
+            "billing_address",
         ]
-        read_only_fields = [
-            "id",
-        ]
+
+
+class PaymentSerializer(serializers.Serializer):
+    payment_id = serializers.CharField(required=True)
+    provider = serializers.CharField(required=True)
+    url = serializers.CharField(required=True)
+    is_paid = serializers.BooleanField(required=False)
+
+
+# a order seriliazer use for order creation reponse
+# TODO: there a serializer that does not change ou api signature.
+# I would prefer a serializer with:
+#   order: OrderSeriliazer
+#   payment: PaymentSerializer
+# This way model.Order type will be generate in typescript
+class OrderCreateResponseSerializer(OrderSerializer):
+    id = serializers.CharField(required=True)
+    payment_info = serializers.SerializerMethodField(required=False)
+
+    class Meta(OrderSerializer.Meta):
+        fields = OrderSerializer.Meta.fields + ["payment_info"]
+
+    @swagger_serializer_method(serializer_or_field=PaymentSerializer)
+    def get_payment_info(self, obj):
+        if "payment_info" in self.context:
+            return PaymentSerializer(self.context["payment_info"]).data
+        return None
 
 
 class CertificateOrderSerializer(serializers.ModelSerializer):

@@ -83,6 +83,9 @@ class BillingAddressDictFactory(factory.DictFactory):
     Return a billing address dictionary
     """
 
+    title = factory.LazyAttribute(
+        lambda o: f"{o.first_name} {o.last_name} - {o.country}/{o.city}"
+    )
     address = factory.Faker("street_address")
     city = factory.Faker("city")
     country = factory.Faker("country_code")
