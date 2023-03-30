@@ -66,11 +66,11 @@ bootstrap: \
 	build \
 	run \
 	migrate \
+	front-admin-install \
+	front-admin-build \
 	i18n-compile \
 	install-mails \
-	build-mails \
-	front-admin-install \
-	front-admin-build
+	build-mails
 .PHONY: bootstrap
 
 # -- Docker/compose
