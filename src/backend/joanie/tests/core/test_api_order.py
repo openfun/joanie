@@ -3,6 +3,7 @@
 import json
 import random
 import uuid
+from collections import defaultdict
 from io import BytesIO
 from unittest import mock
 
@@ -768,10 +769,11 @@ class OrderApiTest(BaseAPITestCase):
             1,
         )
 
-    def test_api_order_create_authenticated_organization_not_passed_several(self):
+    def test_api_order_create_authenticated_organization_passed_several(self):
         """
-        It should not be possible to create an order without passing an organization if there are
+        It should be possible to create an order without passing an organization if there are
         several linked to the product.
+        The one with the least active order count should be allocated.
         """
         course = factories.CourseFactory()
         organizations = factories.OrganizationFactory.create_batch(2)
@@ -784,6 +786,20 @@ class OrderApiTest(BaseAPITestCase):
         factories.CourseProductRelationFactory(
             course=course, product=product, organizations=organizations
         )
+
+        # Randomly create 9 orders for both organizations with random state and count
+        # the number of active orders for each organization
+        counter = defaultdict(lambda: 0)
+        for _ in range(9):
+            order = factories.OrderFactory(
+                organization=random.choice(organizations),
+                course=course,
+                product=product,
+                state=random.choice(enums.ORDER_STATE_CHOICES)[0],
+            )
+
+            if order.state != enums.ORDER_STATE_CANCELED:
+                counter[str(order.organization.id)] += 1
 
         data = {
             "course": course.code,
@@ -798,14 +814,11 @@ class OrderApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 400)
-        self.assertFalse(models.Order.objects.exists())
-        self.assertEqual(
-            response.json(),
-            {
-                "organization": ["This field cannot be null."],
-            },
-        )
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(models.Order.objects.count(), 10)  # 9 + 1
+        # The organization with the least active order count should have been allocated
+        expected_organization_id = min(counter, key=counter.get)
+        self.assertEqual(response.json()["organization"], expected_organization_id)
 
     def test_api_order_create_has_read_only_fields(self):
         """
