@@ -8,13 +8,6 @@ and this project adheres to
 
 ## [Unreleased]
 
-### Changed
-
-- Activate pagination by default on all endpoints (20 items per page)
-- Use user fullname instead of username in order confirmation email
-- Rename certificate field into certificate_definition for the ProductSerializer
-- Improve certificate serializer
-
 ## Added
 
 - CRUD admin API for organizations, products, course runs,
@@ -23,6 +16,15 @@ and this project adheres to
 - Add yarn cli to generate joanie api client in TypeScript
 - Display course runs into the admin course change view
 - Display password field into admin user change view
+- Automatically allocate organization equitably on order creation according to
+  their active order count per organization for the course/product couple
+
+### Changed
+
+- Activate pagination by default on all endpoints (20 items per page)
+- Use user fullname instead of username in order confirmation email
+- Rename certificate field into certificate_definition for the ProductSerializer
+- Improve certificate serializer
 
 ### Removed
 

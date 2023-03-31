@@ -2,6 +2,7 @@
 Client API endpoints
 """
 from django.db import IntegrityError, transaction
+from django.db.models import Count, Q
 from django.http import HttpResponse
 from django.utils.translation import gettext_lazy as _
 
@@ -11,7 +12,7 @@ from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework.response import Response
 
 from joanie.core import filters, models, serializers
-from joanie.core.enums import ORDER_STATE_PENDING
+from joanie.core.enums import ORDER_STATE_CANCELED, ORDER_STATE_PENDING
 from joanie.payment import get_payment_backend
 from joanie.payment.models import CreditCard, Invoice
 
@@ -157,6 +158,35 @@ class OrderViewSet(
         )
         serializer.save(owner=owner)
 
+    def _get_organization_with_least_active_orders(self, product, course):
+        """
+        Return the organization with the least not canceled order count
+        for a given product and course.
+        """
+        order_count = Count(
+            "order",
+            filter=Q(
+                Q(order__product=product, order__course=course),
+                ~Q(order__state=ORDER_STATE_CANCELED),
+            ),
+        )
+
+        try:
+            course_relation = product.course_relations.get(course=course)
+        except models.CourseProductRelation.DoesNotExist:
+            return None
+
+        try:
+            organizations = (
+                course_relation.organizations.annotate(order_count=order_count)
+                .order_by("order_count")
+                .first()
+            )
+        except models.Organization.DoesNotExist:
+            return None
+
+        return organizations
+
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         """Try to create an order and a related payment if the payment is fee."""
@@ -168,21 +198,12 @@ class OrderViewSet(
         course = serializer.validated_data.get("course")
         billing_address = serializer.initial_data.get("billing_address")
 
-        # Populate organization field if it is not set and there is only one
-        # on the product
+        # Populate organization field if it is not set
         if not serializer.validated_data.get("organization"):
-            try:
-                organization = product.course_relations.get(
-                    course=course
-                ).organizations.get()
-            except (
-                models.Course.DoesNotExist,
-                models.Organization.DoesNotExist,
-                models.Organization.MultipleObjectsReturned,
-            ):
-                pass
-            else:
-                serializer.validated_data["organization"] = organization
+            organization = self._get_organization_with_least_active_orders(
+                product, course
+            )
+            serializer.validated_data["organization"] = organization
 
         # If product is not free, we have to create a payment.
         # To create one, a billing address is mandatory
