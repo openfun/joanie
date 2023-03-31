@@ -199,7 +199,7 @@ class UserAdmin(auth_admin.UserAdmin):
         "language",
     )
     fieldsets = (
-        (None, {"fields": ("username",)}),
+        (None, {"fields": ("username", "password")}),
         (_("Personal info"), {"fields": ("email", "language")}),
         (
             _("Permissions"),
