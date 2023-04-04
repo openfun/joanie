@@ -401,6 +401,8 @@ class Development(Base):
     DEBUG = True
     NGROK_ENDPOINT = values.Value(None, "NGROK_ENDPOINT", environ_prefix=None)
 
+    SESSION_COOKIE_NAME = "joanie_sessionid"
+
     LOGIN_URL = "/admin/login/"
     LOGOUT_URL = "/admin/logout/"
 
