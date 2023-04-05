@@ -32,14 +32,31 @@ from joanie.core.views import (
 from joanie.lms_handler.urls import urlpatterns as lms_urlpatterns
 from joanie.payment.urls import urlpatterns as payment_urlpatterns
 
+API_VERSION = "v1.0"
+
+# 1) Client API
+
+# - Main endpoints
 router = DefaultRouter()
 router.register("addresses", api_client.AddressViewSet, basename="addresses")
 router.register("certificates", api_client.CertificateViewSet, basename="certificates")
+router.register("course-runs", api_client.CourseRunViewSet, basename="course-runs")
 router.register("enrollments", api_client.EnrollmentViewSet, basename="enrollments")
 router.register("orders", api_client.OrderViewSet, basename="orders")
-router.register("course-runs", api_client.CourseRunViewSet, basename="course-runs")
+router.register(
+    "organizations", api_client.OrganizationViewSet, basename="organizations"
+)
 router.register("products", api_client.ProductViewSet, basename="products")
 
+# - Routes nested under an organization
+organization_related_router = DefaultRouter()
+organization_related_router.register(
+    "accesses",
+    api_client.OrganizationAccessViewSet,
+    basename="organization_accesses",
+)
+
+# 2) Admin API
 admin_router = DefaultRouter()
 admin_router.register(
     "organizations", api_admin.OrganizationViewSet, basename="organizations"
@@ -53,17 +70,19 @@ admin_router.register(
     basename="certificate-definitions",
 )
 
-API_VERSION = "v1.0"
-
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path(
+        f"api/{API_VERSION}/admin/",
+        include([*admin_router.urls]),
+    ),
     path(
         f"api/{API_VERSION}/",
         include([*router.urls, *lms_urlpatterns, *payment_urlpatterns]),
     ),
     path(
-        f"api/{API_VERSION}/admin/",
-        include([*admin_router.urls]),
+        f"api/{API_VERSION}/organizations/<uuid:organization_id>/",
+        include(organization_related_router.urls),
     ),
 ]
 

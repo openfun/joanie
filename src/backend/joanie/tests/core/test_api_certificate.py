@@ -55,6 +55,7 @@ class CertificateApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, 200)
 
+        order = certificate.order
         self.assertEqual(
             response.json(),
             {
@@ -73,15 +74,21 @@ class CertificateApiTest(BaseAPITestCase):
                             "+00:00", "Z"
                         ),
                         "order": {
-                            "id": str(certificate.order.id),
+                            "id": str(order.id),
                             "course": {
-                                "code": certificate.order.course.code,
-                                "title": certificate.order.course.title,
+                                "code": order.course.code,
+                                "title": order.course.title,
                             },
                             "organization": {
-                                "id": str(certificate.order.organization.id),
-                                "code": certificate.order.organization.code,
-                                "title": certificate.order.organization.title,
+                                "id": str(order.organization.id),
+                                "code": order.organization.code,
+                                "logo": {
+                                    "filename": order.organization.logo.name,
+                                    "url": f"http://testserver{order.organization.logo.url}",
+                                    "width": 1,
+                                    "height": 1,
+                                },
+                                "title": order.organization.title,
                             },
                         },
                     },
@@ -206,6 +213,12 @@ class CertificateApiTest(BaseAPITestCase):
                     "organization": {
                         "id": str(certificate.order.organization.id),
                         "code": certificate.order.organization.code,
+                        "logo": {
+                            "filename": certificate.order.organization.logo.name,
+                            "url": f"http://testserver{certificate.order.organization.logo.url}",
+                            "width": 1,
+                            "height": 1,
+                        },
                         "title": certificate.order.organization.title,
                     },
                 },

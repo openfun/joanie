@@ -3,12 +3,13 @@
 from django.conf import settings
 from django.core.cache import cache
 from django.utils.translation import get_language
+from django.utils.translation import gettext_lazy as _
 
 from djmoney.contrib.django_rest_framework import MoneyField
-from rest_framework import serializers
+from rest_framework import exceptions, serializers
 
-from joanie.core import models, utils
-from joanie.core.enums import ORDER_STATE_PENDING, ORDER_STATE_VALIDATED
+from joanie.core import enums, models, utils
+from joanie.core.serializers.fields import ImageDetailField
 
 
 class AddressSerializer(serializers.ModelSerializer):
@@ -52,10 +53,72 @@ class OrganizationSerializer(serializers.ModelSerializer):
     Serialize all non-sensitive information about an organization
     """
 
+    logo = ImageDetailField(required=False)
+
     class Meta:
         model = models.Organization
-        fields = ["id", "code", "title"]
-        read_only_fields = ["id", "code", "title"]
+        fields = ["id", "code", "logo", "title"]
+        read_only_fields = ["id", "code", "logo", "title"]
+
+
+class OrganizationAccessSerializer(serializers.ModelSerializer):
+    """Serialize Organization accesses for the API."""
+
+    class Meta:
+        model = models.OrganizationAccess
+        fields = ["id", "user", "role"]
+        read_only_fields = ["id"]
+
+    def update(self, instance, validated_data):
+        """Make "user" and "organization" fields readonly but only on update."""
+        validated_data.pop("user", None)
+        return super().update(instance, validated_data)
+
+    # pylint: disable=too-many-boolean-expressions
+    def validate(self, attrs):
+        """
+        Check access rights specific to writing (create/update)
+        """
+        username = self.context["request"].user.username
+
+        if not models.OrganizationAccess.objects.filter(
+            organization=self.context["organization_id"],
+            user__username=username,
+            role__in=[enums.OWNER, enums.ADMIN],
+        ).exists():
+            raise exceptions.PermissionDenied(
+                _(
+                    "You must be administrator or owner of an organization to manage its accesses."
+                )
+            )
+
+        if (
+            # Update
+            self.instance
+            and (
+                attrs.get("role") == enums.OWNER
+                and not self.instance.organization.accesses.filter(
+                    user__username=username, role=enums.OWNER
+                ).exists()
+                or self.instance.role == enums.OWNER
+                and not self.instance.user.username == username
+            )
+        ) or (
+            # Create
+            not self.instance
+            and attrs.get("role") == enums.OWNER
+            and not models.OrganizationAccess.objects.filter(
+                organization=self.context["organization_id"],
+                user__username=username,
+                role=enums.OWNER,
+            ).exists()
+        ):
+            raise exceptions.PermissionDenied(
+                "Only owners of an organization can assign other users as owners."
+            )
+
+        attrs["organization_id"] = self.context["organization_id"]
+        return attrs
 
 
 class CertificateOrderSerializer(serializers.ModelSerializer):
@@ -475,7 +538,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
         try:
             orders = models.Order.objects.filter(
-                state__in=(ORDER_STATE_VALIDATED, ORDER_STATE_PENDING),
+                state__in=(enums.ORDER_STATE_VALIDATED, enums.ORDER_STATE_PENDING),
                 product=instance,
                 **filters,
             ).only("pk")

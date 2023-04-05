@@ -13,6 +13,7 @@ from rest_framework.response import Response
 
 from joanie.core import filters, models, serializers
 from joanie.core.enums import ORDER_STATE_CANCELED, ORDER_STATE_PENDING
+from joanie.core.permissions import OrganizationAccessPermission
 from joanie.payment import get_payment_backend
 from joanie.payment.models import CreditCard, Invoice
 
@@ -426,3 +427,99 @@ class CertificateViewSet(
         response["Content-Disposition"] = f"attachment; filename={pk}.pdf;"
 
         return response
+
+
+class OrganizationViewSet(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet,
+):
+    """
+    API ViewSet for all interactions with organizations.
+
+    GET /api/organizations/:organization_id
+        Return list of all organizations related to the logged-in user or one organization
+        if an id is provided.
+    """
+
+    lookup_field = "pk"
+    pagination_class = Pagination
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = serializers.OrganizationSerializer
+
+    def get_queryset(self):
+        """
+        Custom queryset to get user organizations
+        """
+        user = models.User.update_or_create_from_request_user(
+            request_user=self.request.user
+        )
+        return models.Organization.objects.filter(accesses__user=user)
+
+
+class OrganizationAccessViewSet(
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
+):
+    """
+    API ViewSet for all interactions with organization accesses.
+
+    GET /api/organization/<organization_id>/accesses/:<organization_access_id>
+        Return list of all organization accesses related to the logged-in user or one
+        organization access if an id is provided.
+
+    POST /api/<organization_id>/accesses/ with expected data:
+        - user: str
+        - role: str [owner|admin|member]
+        Return newly created organization access
+
+    PUT /api/<organization_id>/accesses/<organization_access_id>/ with expected data:
+        - role: str [owner|admin|member]
+        Return updated organization access
+
+    PATCH /api/<organization_id>/accesses/<organization_access_id>/ with expected data:
+        - role: str [owner|admin|member]
+        Return partially updated organization access
+
+    DELETE /api/<organization_id>/accesses/<organization_access_id>/
+        Delete targeted organization access
+    """
+
+    lookup_field = "pk"
+    pagination_class = Pagination
+    permission_classes = [OrganizationAccessPermission]
+    queryset = models.OrganizationAccess.objects.all()
+    serializer_class = serializers.OrganizationAccessSerializer
+
+    def get_permissions(self):
+        """User only needs to be authenticated to list organization accesses"""
+        if self.action == "list":
+            permission_classes = [permissions.IsAuthenticated]
+        else:
+            return super().get_permissions()
+
+        return [permission() for permission in permission_classes]
+
+    def get_serializer_context(self):
+        """Extra context provided to the serializer class."""
+        context = super().get_serializer_context()
+        context["organization_id"] = self.kwargs["organization_id"]
+        return context
+
+    def get_queryset(self):
+        """Return the queryset according to the action."""
+        queryset = super().get_queryset()
+        queryset = queryset.filter(organization=self.kwargs["organization_id"])
+
+        if self.action == "list":
+            # Limit to accesses that are linked to an organization THAT has an access
+            # for the logged-in user (not filtering the only access linked to the
+            # logged-in user)
+            queryset = queryset.filter(
+                organization__accesses__user__username=self.request.user.username,
+            ).distinct()
+        return queryset
