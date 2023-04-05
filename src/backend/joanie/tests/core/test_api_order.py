@@ -3,7 +3,6 @@
 import json
 import random
 import uuid
-from collections import defaultdict
 from io import BytesIO
 from unittest import mock
 

@@ -5,10 +5,11 @@ from collections.abc import Mapping
 from datetime import MAXYEAR, datetime, timezone
 
 from django.contrib.sites.models import Site
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import models
 from django.utils import timezone as django_timezone
 from django.utils.functional import lazy
+from django.utils.text import capfirst
 from django.utils.translation import gettext_lazy as _
 
 from parler import models as parler_models
@@ -16,10 +17,10 @@ from rest_framework.reverse import reverse
 from url_normalize import url_normalize
 
 from joanie.core import enums, utils
-from joanie.core.enums import ALL_LANGUAGES
 from joanie.core.fields.multiselect import MultiSelectField
 from joanie.core.utils import webhooks
 
+from .accounts import User
 from .base import BaseModel
 
 MAX_DATE = datetime(MAXYEAR, 12, 31, tzinfo=timezone.utc)
@@ -160,6 +161,60 @@ class Organization(parler_models.TranslatableModel, BaseModel):
         )
 
 
+class OrganizationAccess(BaseModel):
+    """Link table between organizations and users"""
+
+    ROLE_CHOICES = (
+        (enums.OWNER, _("owner")),
+        (enums.ADMIN, _("administrator")),
+        (enums.MEMBER, _("member")),
+    )
+
+    organization = models.ForeignKey(
+        Organization,
+        on_delete=models.CASCADE,
+        related_name="accesses",
+    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="accesses")
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default=enums.MEMBER)
+
+    class Meta:
+        db_table = "joanie_organization_access"
+        verbose_name = _("Organization access")
+        verbose_name_plural = _("Organization accesses")
+        unique_together = ("organization", "user")
+
+    def __str__(self):
+        role = capfirst(self.get_role_display())
+        return (
+            f"{role:s} role for {self.user.username:s} on {self.organization.title:s}"
+        )
+
+    def save(self, *args, **kwargs):
+        """Make sure we keep at least one owner for the organization."""
+        if self.pk and self.role != enums.OWNER:
+            accesses = self._meta.model.objects.filter(
+                organization=self.organization, role=enums.OWNER
+            ).only("pk")
+            if len(accesses) == 1 and accesses[0].pk == self.pk:
+                raise PermissionDenied(
+                    "An organization should keep at least one owner."
+                )
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        """Disallow deleting the last owner."""
+        if (
+            self.role == enums.OWNER
+            and self._meta.model.objects.filter(
+                organization=self.organization, role=enums.OWNER
+            ).count()
+            == 1
+        ):
+            raise PermissionDenied("An organization should keep at least one owner.")
+        return super().delete(*args, **kwargs)
+
+
 class Course(parler_models.TranslatableModel, BaseModel):
     """
     Course model represents and records a course in the cms catalog.
@@ -293,7 +348,7 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
         # Language choices are made lazy so that we can override them in our tests.
         # When set directly, they are evaluated too early and can't be changed with the
         # "override_settings" utility.
-        choices=lazy(lambda: ALL_LANGUAGES, tuple)(),
+        choices=lazy(lambda: enums.ALL_LANGUAGES, tuple)(),
         help_text=_("The list of languages in which the course content is available."),
     )
     is_gradable = models.BooleanField(_("is gradable"), default=False)

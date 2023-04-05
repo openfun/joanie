@@ -108,6 +108,12 @@ class ProductApiTest(BaseAPITestCase):
                     {
                         "id": str(organization.id),
                         "code": organization.code,
+                        "logo": {
+                            "filename": organization.logo.name,
+                            "url": organization.logo.url,
+                            "width": 1,
+                            "height": 1,
+                        },
                         "title": organization.title,
                     }
                 ],

@@ -65,6 +65,31 @@ class OrganizationFactory(factory.django.DjangoModelFactory):
         filename="logo.png", format="png", width=1, height=1
     )
 
+    @factory.post_generation
+    def users(self, create, extracted, **kwargs):
+        """Add users to organization from a given list of users."""
+        if create and extracted:
+            for item in extracted:
+                if isinstance(item, models.User):
+                    UserOrganizationAccessFactory(organization=self, user=item)
+                else:
+                    UserOrganizationAccessFactory(
+                        organization=self, user=item[0], role=item[1]
+                    )
+
+
+class UserOrganizationAccessFactory(factory.django.DjangoModelFactory):
+    """Create fake organization user accesses for testing."""
+
+    class Meta:
+        model = models.OrganizationAccess
+
+    organization = factory.SubFactory(OrganizationFactory)
+    user = factory.SubFactory(UserFactory)
+    role = factory.fuzzy.FuzzyChoice(
+        [r[0] for r in models.OrganizationAccess.ROLE_CHOICES]
+    )
+
 
 class CourseFactory(factory.django.DjangoModelFactory):
     """A factory to create a course"""
