@@ -788,7 +788,7 @@ class OrderApiTest(BaseAPITestCase):
 
         # Randomly create 9 orders for both organizations with random state and count
         # the number of active orders for each organization
-        counter = defaultdict(lambda: 0)
+        counter = {str(org.id): 0 for org in organizations}
         for _ in range(9):
             order = factories.OrderFactory(
                 organization=random.choice(organizations),
@@ -815,9 +815,9 @@ class OrderApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(models.Order.objects.count(), 10)  # 9 + 1
-        # The organization with the least active order count should have been allocated
-        expected_organization_id = min(counter, key=counter.get)
-        self.assertEqual(response.json()["organization"], expected_organization_id)
+        # The chosen organization should be one of the organizations with the lowest order count
+        organization_id = response.json()["organization"]
+        self.assertEqual(counter[organization_id], min(counter.values()))
 
     def test_api_order_create_has_read_only_fields(self):
         """
