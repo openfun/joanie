@@ -1,5 +1,5 @@
 """
-Tests organization access API endpoints with groups in Joanie's core app.
+Tests organization access API endpoints in Joanie's core app.
 """
 import random
 from unittest import mock

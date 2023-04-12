@@ -67,7 +67,7 @@ class OrganizationFactory(factory.django.DjangoModelFactory):
 
     @factory.post_generation
     def users(self, create, extracted, **kwargs):
-        """Add users to organization from a given list of users."""
+        """Add users to organization from a given list of users with or without roles."""
         if create and extracted:
             for item in extracted:
                 if isinstance(item, models.User):
@@ -136,6 +136,27 @@ class CourseFactory(factory.django.DjangoModelFactory):
             return
 
         self.course_runs.set(extracted)
+
+    @factory.post_generation
+    def users(self, create, extracted, **kwargs):
+        """Add users to course from a given list of users with or without roles."""
+        if create and extracted:
+            for item in extracted:
+                if isinstance(item, models.User):
+                    UserCourseAccessFactory(course=self, user=item)
+                else:
+                    UserCourseAccessFactory(course=self, user=item[0], role=item[1])
+
+
+class UserCourseAccessFactory(factory.django.DjangoModelFactory):
+    """Create fake course user accesses for testing."""
+
+    class Meta:
+        model = models.CourseAccess
+
+    course = factory.SubFactory(CourseFactory)
+    user = factory.SubFactory(UserFactory)
+    role = factory.fuzzy.FuzzyChoice([r[0] for r in models.CourseAccess.ROLE_CHOICES])
 
 
 class CourseRunFactory(factory.django.DjangoModelFactory):

@@ -48,6 +48,66 @@ class CourseSerializer(serializers.ModelSerializer):
         read_only_fields = ("code", "title")
 
 
+class CourseAccessSerializer(serializers.ModelSerializer):
+    """Serialize course accesses for the API."""
+
+    class Meta:
+        model = models.CourseAccess
+        fields = ["id", "user", "role"]
+        read_only_fields = ["id"]
+
+    def update(self, instance, validated_data):
+        """Make "user" field readonly but only on update."""
+        validated_data.pop("user", None)
+        return super().update(instance, validated_data)
+
+    # pylint: disable=too-many-boolean-expressions
+    def validate(self, attrs):
+        """
+        Check access rights specific to writing (create/update)
+        """
+        username = self.context["request"].user.username
+
+        if not models.CourseAccess.objects.filter(
+            course=self.context["course_id"],
+            user__username=username,
+            role__in=[enums.OWNER, enums.ADMIN],
+        ).exists():
+            raise exceptions.PermissionDenied(
+                _(
+                    "You must be administrator or owner of a course to manage its accesses."
+                )
+            )
+
+        if (
+            # Update
+            self.instance
+            and (
+                attrs.get("role") == enums.OWNER
+                and not self.instance.course.accesses.filter(
+                    user__username=username, role=enums.OWNER
+                ).exists()
+                or self.instance.role == enums.OWNER
+                and not self.instance.user.username == username
+            )
+        ) or (
+            # Create
+            not self.instance
+            and attrs.get("role") == enums.OWNER
+            and not models.CourseAccess.objects.filter(
+                course=self.context["course_id"],
+                user__username=username,
+                role=enums.OWNER,
+            ).exists()
+        ):
+            raise exceptions.PermissionDenied(
+                "Only owners of a course can assign other users as owners."
+            )
+
+        attrs["course_id"] = self.context["course_id"]
+        return attrs
+
+
 class OrganizationSerializer(serializers.ModelSerializer):
     """
     Serialize all non-sensitive information about an organization

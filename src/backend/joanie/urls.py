@@ -48,6 +48,14 @@ router.register(
 )
 router.register("products", api_client.ProductViewSet, basename="products")
 
+# - Routes nested under a course
+course_related_router = DefaultRouter()
+course_related_router.register(
+    "accesses",
+    api_client.CourseAccessViewSet,
+    basename="course_accesses",
+)
+
 # - Routes nested under an organization
 organization_related_router = DefaultRouter()
 organization_related_router.register(
@@ -79,6 +87,10 @@ urlpatterns = [
     path(
         f"api/{API_VERSION}/",
         include([*router.urls, *lms_urlpatterns, *payment_urlpatterns]),
+    ),
+    path(
+        f"api/{API_VERSION}/courses/<uuid:course_id>/",
+        include(course_related_router.urls),
     ),
     path(
         f"api/{API_VERSION}/organizations/<uuid:organization_id>/",

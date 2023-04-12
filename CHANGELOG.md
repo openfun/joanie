@@ -10,7 +10,7 @@ and this project adheres to
 
 ## Added
 
-- Add organization accesses with roles
+- Add course and organization accesses with roles
 - CRUD admin API for organizations, products, course runs,
   certificate definitions, courses and retrieve enabled languages
 - Allow on-demand page size on the order and enrollment endpoints

@@ -175,7 +175,9 @@ class OrganizationAccess(BaseModel):
         on_delete=models.CASCADE,
         related_name="accesses",
     )
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="accesses")
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="organization_accesses"
+    )
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default=enums.MEMBER)
 
     class Meta:
@@ -277,6 +279,61 @@ class Course(parler_models.TranslatableModel, BaseModel):
         # Normalize the code by slugifying and capitalizing it
         self.code = utils.normalize_code(self.code)
         return super().clean()
+
+
+class CourseAccess(BaseModel):
+    """Link table between courses and users"""
+
+    ROLE_CHOICES = (
+        (enums.OWNER, _("owner")),
+        (enums.ADMIN, _("administrator")),
+        (enums.INSTRUCTOR, _("instructor")),
+        (enums.MANAGER, _("manager")),
+    )
+
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name="accesses",
+    )
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="course_accesses"
+    )
+    role = models.CharField(
+        max_length=20, choices=ROLE_CHOICES, default=enums.INSTRUCTOR
+    )
+
+    class Meta:
+        db_table = "joanie_course_access"
+        verbose_name = _("Course access")
+        verbose_name_plural = _("Course accesses")
+        unique_together = ("course", "user")
+
+    def __str__(self):
+        role = capfirst(self.get_role_display())
+        return f"{role:s} role for {self.user.username:s} on {self.course.title:s}"
+
+    def save(self, *args, **kwargs):
+        """Make sure we keep at least one owner for the course."""
+        if self.pk and self.role != enums.OWNER:
+            accesses = self._meta.model.objects.filter(
+                course=self.course, role=enums.OWNER
+            ).only("pk")
+            if len(accesses) == 1 and accesses[0].pk == self.pk:
+                raise PermissionDenied("A course should keep at least one owner.")
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        """Disallow deleting the last owner."""
+        if (
+            self.role == enums.OWNER
+            and self._meta.model.objects.filter(
+                course=self.course, role=enums.OWNER
+            ).count()
+            == 1
+        ):
+            raise PermissionDenied("A course should keep at least one owner.")
+        return super().delete(*args, **kwargs)
 
 
 class CourseProductRelation(BaseModel):
