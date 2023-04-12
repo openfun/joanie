@@ -6,14 +6,14 @@ from django.db.models import Count, Q
 from django.http import HttpResponse
 from django.utils.translation import gettext_lazy as _
 
-from rest_framework import mixins, pagination, permissions, viewsets
+from rest_framework import mixins, pagination
+from rest_framework import permissions as drf_permissions
+from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework.response import Response
 
-from joanie.core import filters, models, serializers
-from joanie.core.enums import ORDER_STATE_CANCELED, ORDER_STATE_PENDING
-from joanie.core.permissions import OrganizationAccessPermission
+from joanie.core import enums, filters, models, permissions, serializers
 from joanie.payment import get_payment_backend
 from joanie.payment.models import CreditCard, Invoice
 
@@ -30,7 +30,7 @@ class CourseRunViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     """API ViewSet for all interactions with course runs."""
 
     lookup_field = "id"
-    permissions_classes = [permissions.AllowAny]
+    permissions_classes = [drf_permissions.AllowAny]
     queryset = models.CourseRun.objects.filter(is_listed=True).select_related("course")
     serializer_class = serializers.CourseRunSerializer
 
@@ -39,7 +39,7 @@ class ProductViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     """API ViewSet for all interactions with products."""
 
     lookup_field = "id"
-    permissions_classes = [permissions.AllowAny]
+    permissions_classes = [drf_permissions.AllowAny]
     filterset_class = filters.ProductViewSetFilter
     queryset = models.Product.objects.all()
     serializer_class = serializers.ProductSerializer
@@ -99,7 +99,7 @@ class EnrollmentViewSet(
 
     lookup_field = "id"
     pagination_class = Pagination
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [drf_permissions.IsAuthenticated]
     serializer_class = serializers.EnrollmentSerializer
     filterset_class = filters.EnrollmentViewSetFilter
 
@@ -140,7 +140,7 @@ class OrderViewSet(
 
     lookup_field = "pk"
     pagination_class = Pagination
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [drf_permissions.IsAuthenticated]
     serializer_class = serializers.OrderSerializer
     filterset_class = filters.OrderViewSetFilter
     ordering = ["-created_on"]
@@ -168,7 +168,7 @@ class OrderViewSet(
             "order",
             filter=Q(
                 Q(order__product=product, order__course=course),
-                ~Q(order__state=ORDER_STATE_CANCELED),
+                ~Q(order__state=enums.ORDER_STATE_CANCELED),
             ),
         )
 
@@ -269,7 +269,7 @@ class OrderViewSet(
                 f'No order found with id "{pk}" owned by {username}.', status=404
             )
 
-        if order.state != ORDER_STATE_PENDING:
+        if order.state != enums.ORDER_STATE_PENDING:
             return Response("Cannot abort a not pending order.", status=403)
 
         if payment_id:
@@ -355,7 +355,7 @@ class AddressViewSet(
 
     lookup_field = "id"
     serializer_class = serializers.AddressSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [drf_permissions.IsAuthenticated]
 
     def get_queryset(self):
         """Custom queryset to get user addresses"""
@@ -389,7 +389,7 @@ class CertificateViewSet(
     lookup_field = "pk"
     pagination_class = Pagination
     serializer_class = serializers.CertificateSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [drf_permissions.IsAuthenticated]
 
     def get_queryset(self):
         """
@@ -444,7 +444,7 @@ class OrganizationViewSet(
 
     lookup_field = "pk"
     pagination_class = Pagination
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [drf_permissions.IsAuthenticated]
     serializer_class = serializers.OrganizationSerializer
 
     def get_queryset(self):
@@ -491,14 +491,14 @@ class OrganizationAccessViewSet(
 
     lookup_field = "pk"
     pagination_class = Pagination
-    permission_classes = [OrganizationAccessPermission]
+    permission_classes = [permissions.OrganizationAccessPermission]
     queryset = models.OrganizationAccess.objects.all()
     serializer_class = serializers.OrganizationAccessSerializer
 
     def get_permissions(self):
         """User only needs to be authenticated to list organization accesses"""
         if self.action == "list":
-            permission_classes = [permissions.IsAuthenticated]
+            permission_classes = [drf_permissions.IsAuthenticated]
         else:
             return super().get_permissions()
 
@@ -521,5 +521,73 @@ class OrganizationAccessViewSet(
             # logged-in user)
             queryset = queryset.filter(
                 organization__accesses__user__username=self.request.user.username,
+            ).distinct()
+        return queryset
+
+
+class CourseAccessViewSet(
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
+):
+    """
+    API ViewSet for all interactions with course accesses.
+
+    GET /api/course/<course_id>/accesses/:<course_access_id>
+        Return list of all course accesses related to the logged-in user or one
+        course access if an id is provided.
+
+    POST /api/<course_id>/accesses/ with expected data:
+        - user: str
+        - role: str [owner|admin|member]
+        Return newly created course access
+
+    PUT /api/<course_id>/accesses/<course_access_id>/ with expected data:
+        - role: str [owner|admin|member]
+        Return updated course access
+
+    PATCH /api/<course_id>/accesses/<course_access_id>/ with expected data:
+        - role: str [owner|admin|member]
+        Return partially updated course access
+
+    DELETE /api/<course_id>/accesses/<course_access_id>/
+        Delete targeted course access
+    """
+
+    lookup_field = "pk"
+    pagination_class = Pagination
+    permission_classes = [permissions.CourseAccessPermission]
+    queryset = models.CourseAccess.objects.all()
+    serializer_class = serializers.CourseAccessSerializer
+
+    def get_permissions(self):
+        """User only needs to be authenticated to list course accesses"""
+        if self.action == "list":
+            permission_classes = [drf_permissions.IsAuthenticated]
+        else:
+            return super().get_permissions()
+
+        return [permission() for permission in permission_classes]
+
+    def get_serializer_context(self):
+        """Extra context provided to the serializer class."""
+        context = super().get_serializer_context()
+        context["course_id"] = self.kwargs["course_id"]
+        return context
+
+    def get_queryset(self):
+        """Return the queryset according to the action."""
+        queryset = super().get_queryset()
+        queryset = queryset.filter(course=self.kwargs["course_id"])
+
+        if self.action == "list":
+            # Limit to accesses that are linked to a course THAT has an access
+            # for the logged-in user (not filtering the only access linked to the
+            # logged-in user)
+            queryset = queryset.filter(
+                course__accesses__user__username=self.request.user.username,
             ).distinct()
         return queryset

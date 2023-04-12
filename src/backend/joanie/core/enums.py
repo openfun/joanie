@@ -8,6 +8,8 @@ from django.utils.translation import pgettext_lazy
 # Roles
 OWNER = "owner"
 ADMIN = "administrator"
+INSTRUCTOR = "instructor"
+MANAGER = "manager"
 MEMBER = "member"
 
 # Django sets `LANGUAGES` by default with all supported languages. We can use it for example for
