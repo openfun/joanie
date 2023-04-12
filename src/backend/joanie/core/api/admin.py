@@ -1,9 +1,10 @@
 """
 Admin API Endpoints
 """
+import django_filters.rest_framework
 from rest_framework import authentication, permissions, viewsets
 
-from joanie.core import models, serializers
+from joanie.core import filters, models, serializers
 
 
 # pylint: disable=too-many-ancestors
@@ -21,6 +22,8 @@ class OrganizationViewSet(AdminViewSet):
 
     serializer_class = serializers.AdminOrganizationSerializer
     queryset = models.Organization.objects.all()
+    filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
+    filterset_class = filters.OrganizationAdminFilterSet
 
 
 class ProductViewSet(AdminViewSet):
@@ -39,6 +42,8 @@ class CourseViewSet(AdminViewSet):
 
     serializer_class = serializers.AdminCourseSerializer
     queryset = models.Course.objects.all().prefetch_related("organizations", "products")
+    filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
+    filterset_class = filters.CourseAdminFilterSet
 
 
 class CourseRunViewSet(AdminViewSet):
@@ -48,6 +53,8 @@ class CourseRunViewSet(AdminViewSet):
 
     serializer_class = serializers.AdminCourseRunSerializer
     queryset = models.CourseRun.objects.all().select_related("course")
+    filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
+    filterset_class = filters.CourseRunAdminFilterSet
 
 
 class CertificateDefinitionViewSet(AdminViewSet):
@@ -57,3 +64,5 @@ class CertificateDefinitionViewSet(AdminViewSet):
 
     serializer_class = serializers.AdminCertificateDefinitionSerializer
     queryset = models.CertificateDefinition.objects.all()
+    filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
+    filterset_class = filters.CertificateDefinitionAdminFilterSet

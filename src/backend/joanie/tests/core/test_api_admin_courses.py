@@ -55,6 +55,81 @@ class CourseAdminApiTest(TestCase):
         content = response.json()
         self.assertEqual(content["count"], courses_count)
 
+    def test_admin_api_course_list_filtered_by_search(self):
+        """
+        Staff user should be able to get a paginated list of courses filtered through a search text
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        courses_count = random.randint(1, 10)
+        items = factories.CourseFactory.create_batch(courses_count)
+
+        response = self.client.get("/api/v1.0/admin/courses/?search=")
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], courses_count)
+
+        response = self.client.get(f"/api/v1.0/admin/courses/?search={items[0].title}")
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+
+        response = self.client.get(f"/api/v1.0/admin/courses/?search={items[0].code}")
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+
+        course_1 = items[0]
+        self.assertEqual(
+            content,
+            {
+                "count": 1,
+                "next": None,
+                "previous": None,
+                "results": [
+                    {
+                        "id": str(course_1.id),
+                        "code": course_1.code,
+                        "title": course_1.title,
+                        "organizations": [],
+                        "product_relations": [],
+                    }
+                ],
+            },
+        )
+
+    def test_admin_api_course_list_filtered_by_search_language(self):
+        """
+        Staff user should be able to get a paginated list of courses filtered through a search text
+        and with different languages
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        item = factories.CourseFactory(title="Lesson 1")
+        item.translations.create(language_code="fr-fr", title="Leçon 1")
+
+        response = self.client.get("/api/v1.0/admin/courses/?search=lesson")
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+        self.assertEqual(content["results"][0]["title"], "Lesson 1")
+
+        response = self.client.get(
+            "/api/v1.0/admin/courses/?search=Leçon", HTTP_ACCEPT_LANGUAGE="fr-fr"
+        )
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+        self.assertEqual(content["results"][0]["title"], "Leçon 1")
+
+        response = self.client.get(
+            "/api/v1.0/admin/courses/?search=Lesson", HTTP_ACCEPT_LANGUAGE="fr-fr"
+        )
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+        self.assertEqual(content["results"][0]["title"], "Leçon 1")
+
     def test_admin_api_course_get(self):
         """
         Staff user should be able to get a course through its id.

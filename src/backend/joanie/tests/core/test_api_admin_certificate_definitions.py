@@ -57,6 +57,92 @@ class CertificateDefinitionAdminApiTest(TestCase):
         content = response.json()
         self.assertEqual(content["count"], certification_definitions_count)
 
+    def test_admin_api_certificate_definition_list_filtered_by_search(self):
+        """
+        Staff user should be able to get a paginated list of certificates definitions filtered
+        through a search text
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        certification_definitions_count = random.randint(1, 10)
+        items = factories.CertificateDefinitionFactory.create_batch(
+            certification_definitions_count
+        )
+
+        response = self.client.get("/api/v1.0/admin/certificate-definitions/?search=")
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], certification_definitions_count)
+
+        response = self.client.get(
+            f"/api/v1.0/admin/certificate-definitions/?search={items[0].title}"
+        )
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+
+        response = self.client.get(
+            f"/api/v1.0/admin/certificate-definitions/?search={items[0].name}"
+        )
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+
+        certification_definition_1 = items[0]
+        self.assertEqual(
+            content,
+            {
+                "count": 1,
+                "next": None,
+                "previous": None,
+                "results": [
+                    {
+                        "id": str(certification_definition_1.id),
+                        "name": certification_definition_1.name,
+                        "title": certification_definition_1.title,
+                        "description": certification_definition_1.description,
+                        "template": certification_definition_1.template,
+                    }
+                ],
+            },
+        )
+
+    def test_admin_api_certificate_definition_list_filtered_by_search_language(self):
+        """
+        Staff user should be able to get a paginated list of certificates definitions
+        filtered through a search text and with different languages
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        item = factories.CertificateDefinitionFactory(title="Certificate 1")
+        item.translations.create(language_code="fr-fr", title="Certificat 1")
+
+        response = self.client.get(
+            "/api/v1.0/admin/certificate-definitions/?search=Certificate 1"
+        )
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+        self.assertEqual(content["results"][0]["title"], "Certificate 1")
+
+        response = self.client.get(
+            "/api/v1.0/admin/certificate-definitions/?search=Certificat 1",
+            HTTP_ACCEPT_LANGUAGE="fr-fr",
+        )
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+        self.assertEqual(content["results"][0]["title"], "Certificat 1")
+
+        response = self.client.get(
+            "/api/v1.0/admin/certificate-definitions/?search=Certificate 1",
+            HTTP_ACCEPT_LANGUAGE="fr-fr",
+        )
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+        self.assertEqual(content["results"][0]["title"], "Certificat 1")
+
     def test_admin_api_certificate_definition_get(self):
         """
         Staff user should be able to get a certificate definition through its id.

@@ -1,12 +1,12 @@
 """
-API Resource Filters
+Client API Resource Filters
 """
 from typing import List
 
 from django_filters import rest_framework as filters
 
+from ..enums import ORDER_STATE_CHOICES
 from . import models
-from .enums import ORDER_STATE_CHOICES
 
 
 class OrderViewSetFilter(filters.FilterSet):

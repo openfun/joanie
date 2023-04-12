@@ -19,6 +19,7 @@ and this project adheres to
 - Display password field into admin user change view
 - Automatically allocate organization equitably on order creation according to
   their active order count per organization for the course/product couple
+- Add many admin api filters with text search 
 
 ### Changed
 
