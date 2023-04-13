@@ -85,6 +85,99 @@ class OrganizationAdminApiTest(TestCase):
         content = response.json()
         self.assertEqual(content["count"], organization_count)
 
+    def test_admin_api_organization_list_filtered_by_search(self):
+        """
+        Staff user should be able to get a paginated list of organizations filtered
+        through a search text
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        organization_count = random.randint(1, 10)
+        items = factories.OrganizationFactory.create_batch(organization_count)
+
+        response = self.client.get("/api/v1.0/admin/organizations/?search=")
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], organization_count)
+
+        response = self.client.get(
+            f"/api/v1.0/admin/organizations/?search={items[0].title}"
+        )
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+
+        response = self.client.get(
+            f"/api/v1.0/admin/organizations/?search={items[0].code}"
+        )
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+
+        organization_1 = items[0]
+        self.assertEqual(
+            content,
+            {
+                "count": 1,
+                "next": None,
+                "previous": None,
+                "results": [
+                    {
+                        "id": str(organization_1.id),
+                        "code": organization_1.code,
+                        "title": organization_1.title,
+                        "representative": organization_1.representative,
+                        "signature": {
+                            "url": f"http://testserver{organization_1.signature.url}",
+                            "height": organization_1.signature.height,
+                            "width": organization_1.signature.width,
+                            "filename": organization_1.signature.name,
+                        },
+                        "logo": {
+                            "url": f"http://testserver{organization_1.logo.url}",
+                            "height": organization_1.logo.height,
+                            "width": organization_1.logo.width,
+                            "filename": organization_1.logo.name,
+                        },
+                    }
+                ],
+            },
+        )
+
+    def test_admin_api_organization_list_filtered_by_search_language(self):
+        """
+        Staff user should be able to get a paginated list of organizations
+        filtered through a search text and different languages
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        item = factories.OrganizationFactory(title="University")
+        item.translations.create(language_code="fr-fr", title="Université")
+
+        response = self.client.get("/api/v1.0/admin/organizations/?search=university")
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+        self.assertEqual(content["results"][0]["title"], "University")
+
+        response = self.client.get(
+            "/api/v1.0/admin/organizations/?search=Université",
+            HTTP_ACCEPT_LANGUAGE="fr-fr",
+        )
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+        self.assertEqual(content["results"][0]["title"], "Université")
+
+        response = self.client.get(
+            "/api/v1.0/admin/organizations/?search=university",
+            HTTP_ACCEPT_LANGUAGE="fr-fr",
+        )
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+        self.assertEqual(content["results"][0]["title"], "Université")
+
     def test_admin_api_organization_get(self):
         """
         Staff user should be able to get an organization through its id.

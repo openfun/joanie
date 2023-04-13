@@ -55,6 +55,60 @@ class CourseRunAdminApiTest(TestCase):
         content = response.json()
         self.assertEqual(content["count"], course_runs_count)
 
+    def test_admin_api_course_runs_list_filtered_by_search(self):
+        """
+        Staff user should be able to get a paginated list of course runs filtered through
+        a search text
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        course_runs_count = random.randint(1, 10)
+        items = factories.CourseRunFactory.create_batch(course_runs_count)
+
+        response = self.client.get("/api/v1.0/admin/course-runs/?search=")
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], course_runs_count)
+
+        response = self.client.get(
+            f"/api/v1.0/admin/course-runs/?search={items[0].title}"
+        )
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+
+    def test_admin_api_course_runs_list_filtered_by_search_language(self):
+        """
+        Staff user should be able to get a paginated list of course runs filtered through
+        a search text and with different languages
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        item = factories.CourseRunFactory(title="Course run 1")
+        item.translations.create(language_code="fr-fr", title="Session 1")
+
+        response = self.client.get("/api/v1.0/admin/course-runs/?search=Course")
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+        self.assertEqual(content["results"][0]["title"], "Course run 1")
+
+        response = self.client.get(
+            "/api/v1.0/admin/course-runs/?search=Session", HTTP_ACCEPT_LANGUAGE="fr-fr"
+        )
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+        self.assertEqual(content["results"][0]["title"], "Session 1")
+
+        response = self.client.get(
+            "/api/v1.0/admin/course-runs/?search=Course", HTTP_ACCEPT_LANGUAGE="fr-fr"
+        )
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+        self.assertEqual(content["results"][0]["title"], "Session 1")
+
     def test_admin_api_course_runs_get(self):
         """
         Staff user should be able to get a course run through its id.
