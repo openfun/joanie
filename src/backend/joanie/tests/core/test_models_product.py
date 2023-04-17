@@ -29,6 +29,22 @@ class ProductModelsTestCase(TestCase):
         self.assertEqual(product.price.amount, D("23.00"))
         self.assertEqual(product.price.currency, EUR)
 
+    def test_models_product_type_enrollment_no_certificate_definition(self):
+        """A product of type enrollment can not have a certificate definition."""
+        with self.assertRaises(ValidationError) as context:
+            factories.ProductFactory(
+                type="enrollment",
+                certificate_definition=factories.CertificateDefinitionFactory(),
+            )
+
+        self.assertEqual(
+            str(context.exception),
+            (
+                "{'__all__': ['Certificate definition is only allowed for product kinds: "
+                "certificate, credential']}"
+            ),
+        )
+
     def test_models_product_course_runs_unique(self):
         """A product can only be linked once to a given course run."""
         relation = factories.ProductTargetCourseRelationFactory()
@@ -51,34 +67,6 @@ class ProductModelsTestCase(TestCase):
             product.target_courses.order_by("product_target_relations")
         )
         self.assertEqual(ordered_courses, expected_courses)
-
-    def test_model_order_create_certificate(self):
-        """Generate a certificate for a product order"""
-
-        course = factories.CourseFactory()
-        product = factories.ProductFactory(
-            courses=[course],
-            type=enums.PRODUCT_TYPE_CERTIFICATE,
-            certificate_definition=factories.CertificateDefinitionFactory(),
-        )
-        order = factories.OrderFactory(product=product)
-
-        order.create_certificate()
-        self.assertEqual(models.Certificate.objects.count(), 1)
-        certificate = models.Certificate.objects.first()
-        document_context = certificate.get_document_context()
-        blue_square_base64 = (
-            "data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgY"
-            "PgPAAEDAQAIicLsAAAAAElFTkSuQmCC"
-        )
-        self.assertEqual(
-            document_context["organization"]["logo"],
-            blue_square_base64,
-        )
-        self.assertEqual(
-            document_context["organization"]["signature"],
-            blue_square_base64,
-        )
 
     def test_models_product_course_runs_relation_course_runs(self):
         """

@@ -12,7 +12,7 @@ from joanie.lms_handler.backends.dummy import DummyLMSBackend
 class HelpersTestCase(TestCase):
     """Joanie core helpers tests case"""
 
-    def test_helpers_generate_certificate_for_order_needs_graded_courses(self):
+    def test_helpers_get_or_generate_certificate_needs_graded_courses(self):
         """
         If the order relies on a certifying product which does not contain
         graded courses, no certificate should be generated.
@@ -36,10 +36,12 @@ class HelpersTestCase(TestCase):
         certificate_qs = models.Certificate.objects.filter(order=order)
         self.assertEqual(certificate_qs.count(), 0)
 
-        self.assertEqual(helpers.generate_certificate_for_order(order), 0)
+        new_certificate, created = order.get_or_generate_certificate()
+        self.assertFalse(created)
+        self.assertIsNone(new_certificate)
         self.assertEqual(certificate_qs.count(), 0)
 
-    def test_helpers_generate_certificate_for_order_needs_gradable_course_runs(self):
+    def test_helpers_get_or_generate_certificate_needs_gradable_course_runs(self):
         """
         If the order does not rely on gradable course runs,
         no certificate should be generated.
@@ -61,17 +63,21 @@ class HelpersTestCase(TestCase):
         certificate_qs = models.Certificate.objects.filter(order=order)
         self.assertEqual(certificate_qs.count(), 0)
 
-        self.assertEqual(helpers.generate_certificate_for_order(order), 0)
+        new_certificate, created = order.get_or_generate_certificate()
+        self.assertFalse(created)
+        self.assertIsNone(new_certificate)
         self.assertEqual(certificate_qs.count(), 0)
 
         # - Now flag the course run as gradable
         course_run.is_gradable = True
         course_run.save()
 
-        self.assertEqual(helpers.generate_certificate_for_order(order), 1)
+        new_certificate, created = order.get_or_generate_certificate()
+        self.assertTrue(created)
         self.assertEqual(certificate_qs.count(), 1)
+        self.assertEqual(certificate_qs.first(), new_certificate)
 
-    def test_helpers_generate_certificate_for_order_needs_enrollments_has_been_passed(
+    def test_helpers_get_or_generate_certificate_needs_enrollments_has_been_passed(
         self,
     ):
         """
@@ -97,18 +103,20 @@ class HelpersTestCase(TestCase):
         # Simulate that all enrollments are not passed
         with mock.patch.object(DummyLMSBackend, "get_grades") as mock_get_grades:
             mock_get_grades.return_value = {"passed": False}
-            self.assertEqual(helpers.generate_certificate_for_order(order), 0)
-
+            new_certificate, created = order.get_or_generate_certificate()
+        self.assertFalse(created)
+        self.assertIsNone(new_certificate)
         self.assertEqual(certificate_qs.count(), 0)
 
         # Simulate that all enrollments are passed
         with mock.patch.object(DummyLMSBackend, "get_grades") as mock_get_grades:
             mock_get_grades.return_value = {"passed": True}
-            self.assertEqual(helpers.generate_certificate_for_order(order), 1)
-
+            new_certificate, created = order.get_or_generate_certificate()
+        self.assertTrue(created)
         self.assertEqual(certificate_qs.count(), 1)
+        self.assertEqual(certificate_qs.first(), new_certificate)
 
-    def test_helpers_generate_certificate_for_order(self):
+    def test_helpers_get_or_generate_certificate(self):
         """
         If the provided order relies on a certifying product containing graded courses
         with gradable course runs and the owner passed all gradable course runs,
@@ -142,12 +150,14 @@ class HelpersTestCase(TestCase):
 
         # DB queries should be minimized
         with self.assertNumQueries(11):
-            self.assertEqual(helpers.generate_certificate_for_order(order), 1)
+            _certificate, created = order.get_or_generate_certificate()
+        self.assertTrue(created)
         self.assertEqual(certificate_qs.count(), 1)
 
         # But calling it again, should not create a new certificate
-        with self.assertNumQueries(4):
-            self.assertEqual(helpers.generate_certificate_for_order(order), 0)
+        with self.assertNumQueries(1):
+            _certificate, created = order.get_or_generate_certificate()
+        self.assertFalse(created)
         self.assertEqual(certificate_qs.count(), 1)
 
     def test_helpers_generate_certificates_for_orders(self):
