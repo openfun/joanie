@@ -5,8 +5,8 @@ from typing import List
 
 from django_filters import rest_framework as filters
 
+from .. import models
 from ..enums import ORDER_STATE_CHOICES
-from . import models
 
 
 class OrderViewSetFilter(filters.FilterSet):

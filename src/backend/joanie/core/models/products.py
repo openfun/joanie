@@ -531,35 +531,68 @@ class Order(BaseModel):
                     enrollment.is_active = False
                     enrollment.save()
 
-    def create_certificate(self):
+    def get_or_generate_certificate(self):
         """
-        Create a certificate if the related product type is certifying and if one
-        has not been already created.
+        Return the certificate for this order if it exists. Otherwise, check if the
+        order is eligible for certification then generate certificate if it is.
+
+        Eligibility means that order contains
+        one passed enrollment per graded courses.
+
+        Return:
+            instance[Certificate], False: if a certificate pre-existed for the current order
+            instance[Certificate], True: if a certificate has been generated for the current order
+            None, False: if the order is not eligible for certification
         """
-        if self.product.type not in enums.PRODUCT_TYPE_CERTIFICATE_ALLOWED:
-            raise ValidationError(
-                _(
-                    (
-                        "Try to generate a certificate for "
-                        f"a non-certifying product ({self.product})."
-                    )
-                )
-            )
+        try:
+            return Certificate.objects.get(order=self), False
+        except Certificate.DoesNotExist:
+            pass
 
-        if Certificate.objects.filter(order=self).exists():
-            raise ValidationError(
-                _(
-                    (
-                        "A certificate has been already issued for "  # pylint: disable=no-member
-                        f"the order {self.id} "
-                        f"on {self.certificate.issued_on}."
-                    )
-                )
-            )
+        if (
+            not self.product.certificate_definition
+            or self.product.type not in enums.PRODUCT_TYPE_CERTIFICATE_ALLOWED
+        ):
+            return None, False
 
-        Certificate.objects.create(
-            order=self,
-            certificate_definition=self.product.certificate_definition,
+        graded_courses = (
+            self.target_courses.filter(order_relations__is_graded=True)
+            .order_by("order_relations__position")
+            .prefetch_related("course_runs")
+        )
+        graded_courses_count = len(graded_courses)
+
+        if graded_courses_count == 0:
+            return None, False
+
+        # Retrieve all enrollments in one query. Since these enrollments rely on
+        # order course runs, the count will always be pretty small.
+        course_enrollments = Enrollment.objects.filter(
+            course_run__course__in=graded_courses,
+            course_run__is_gradable=True,
+            course_run__start__lte=timezone.now(),
+            is_active=True,
+            user=self.owner,
+        ).select_related("user", "course_run")
+
+        # If we do not have one enrollment per graded course, there is no need to
+        # continue, we are sure that order is not eligible for certification.
+        if len(course_enrollments) != graded_courses_count:
+            return None, False
+
+        # Otherwise, we now need to know if each enrollment has been passed
+        for enrollment in course_enrollments:
+            if enrollment.is_passed is False:
+                # If one enrollment has not been passed, no need to continue,
+                # We are sure that order is not eligible for certification.
+                return None, False
+
+        return (
+            Certificate.objects.create(
+                order=self,
+                certificate_definition=self.product.certificate_definition,
+            ),
+            True,
         )
 
 

@@ -161,13 +161,13 @@ class CreateCertificatesTestCase(TestCase):
         self.assertEqual(certificate_qs.count(), 0)
 
         # A certificate should be generated for the 1st product
-        with self.assertNumQueries(16):
+        with self.assertNumQueries(15):
             call_command("generate_certificates", product=product_1.id)
         self.assertEqual(certificate_qs.filter(order=orders[0]).count(), 1)
         self.assertEqual(certificate_qs.filter(order=orders[1]).count(), 0)
 
         # Then a certificate should be generated for the 2nd product
-        with self.assertNumQueries(16):
+        with self.assertNumQueries(15):
             call_command("generate_certificates", product=product_2.id)
         self.assertEqual(certificate_qs.filter(order=orders[1]).count(), 1)
 
@@ -264,12 +264,12 @@ class CreateCertificatesTestCase(TestCase):
         self.assertEqual(certificate_qs.count(), 0)
 
         # A certificate should be generated for the 1st product
-        with self.assertNumQueries(16):
+        with self.assertNumQueries(15):
             call_command("generate_certificates", product=product_1.id)
         self.assertEqual(certificate_qs.filter(order=orders[0]).count(), 1)
         self.assertEqual(certificate_qs.filter(order=orders[1]).count(), 0)
 
         # Then a certificate should be generated for the 2nd product
-        with self.assertNumQueries(16):
+        with self.assertNumQueries(15):
             call_command("generate_certificates", product=product_2.id)
         self.assertEqual(certificate_qs.filter(order=orders[1]).count(), 1)
