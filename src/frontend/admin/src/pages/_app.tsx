@@ -8,12 +8,16 @@ import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import { NextPage } from "next";
 import { useEffect, useState } from "react";
-import { Experimental_CssVarsProvider as CssVarsProvider } from "@mui/material/styles";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Box, CircularProgress } from "@mui/material";
+import { SnackbarProvider } from "notistack";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import createEmotionCache from "@/utils/createEmotionCache";
 import { DashboardLayout } from "@/layouts/dashboard/DashboardLayout";
 
-import { TranslationsProvider } from "@/components/i18n/TranslationsProvider/TranslationsProvider";
 import { LocalesEnum } from "@/types/i18n/LocalesEnum";
+import { TranslationsProvider } from "@/contexts/i18n/TranslationsProvider/TranslationsProvider";
+import { REACT_QUERY_SETTINGS } from "@/utils/settings";
 
 type NextPageWithLayout = NextPage & {
   getLayout?: (page: React.ReactElement) => React.ReactNode;
@@ -26,6 +30,21 @@ interface MyAppProps extends AppProps {
 const clientSideEmotionCache = createEmotionCache();
 
 export default function App({ Component, pageProps }: MyAppProps) {
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            cacheTime: REACT_QUERY_SETTINGS.cacheTime,
+            staleTime: 60 * 1000, // 1 mi
+            retry: 0,
+            retryOnMount: false,
+            refetchOnWindowFocus: false,
+          },
+        },
+      })
+  );
+
   const [shouldRender, setShouldRender] = useState(
     !(process.env.NEXT_PUBLIC_API_SOURCE === "mocked")
   );
@@ -47,16 +66,32 @@ export default function App({ Component, pageProps }: MyAppProps) {
   }, []);
 
   if (!shouldRender) {
-    return null;
+    return (
+      <Box
+        sx={{ inset: 0 }}
+        position="absolute"
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+      >
+        <CircularProgress />
+      </Box>
+    );
   }
 
   return (
-    <TranslationsProvider locale={LocalesEnum.ENGLISH}>
-      <CacheProvider value={clientSideEmotionCache}>
-        <CssVarsProvider>
-          {getLayout(<Component {...pageProps} />)}
-        </CssVarsProvider>
-      </CacheProvider>
-    </TranslationsProvider>
+    <QueryClientProvider client={queryClient}>
+      <ReactQueryDevtools initialIsOpen={false} />
+      <TranslationsProvider locale={LocalesEnum.ENGLISH}>
+        <CacheProvider value={clientSideEmotionCache}>
+          <SnackbarProvider
+            maxSnack={3}
+            anchorOrigin={{ horizontal: "right", vertical: "top" }}
+          >
+            {getLayout(<Component {...pageProps} />)}
+          </SnackbarProvider>
+        </CacheProvider>
+      </TranslationsProvider>
+    </QueryClientProvider>
   );
 }
