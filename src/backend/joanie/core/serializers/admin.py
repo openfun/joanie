@@ -1,6 +1,5 @@
 """Admin serializers for Joanie Core app."""
 from django.conf import settings
-
 from djmoney.contrib.django_rest_framework import MoneyField
 from rest_framework import serializers
 
