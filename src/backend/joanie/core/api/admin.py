@@ -33,7 +33,7 @@ class ProductViewSet(AdminViewSet):
 
     serializer_class = serializers.AdminProductSerializer
     queryset = models.Product.objects.all()
-
+    filterset_class = filters.ProductAdminFilterSet
 
 class CourseViewSet(AdminViewSet):
     """
@@ -44,6 +44,8 @@ class CourseViewSet(AdminViewSet):
     queryset = models.Course.objects.all().prefetch_related("organizations", "products")
     filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
     filterset_class = filters.CourseAdminFilterSet
+
+
 
 
 class CourseRunViewSet(AdminViewSet):

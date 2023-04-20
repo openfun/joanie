@@ -1,6 +1,5 @@
 """Admin serializers for Joanie Core app."""
 from django.conf import settings
-
 from djmoney.contrib.django_rest_framework import MoneyField
 from rest_framework import serializers
 
@@ -186,6 +185,8 @@ class AdminCourseRunSerializer(serializers.ModelSerializer):
     title = serializers.CharField()
     course = AdminCourseLightSerializer(read_only=True)
     languages = serializers.MultipleChoiceField(choices=ALL_LANGUAGES)
+
+    print(languages)
 
     class Meta:
         model = models.CourseRun

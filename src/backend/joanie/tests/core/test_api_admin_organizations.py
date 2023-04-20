@@ -4,10 +4,9 @@ Test suite for Organization Admin API.
 import random
 import re
 
+import factory.django
 from django.core.files.base import ContentFile
 from django.test import TestCase
-
-import factory.django
 
 from joanie.core import factories
 
@@ -151,10 +150,10 @@ class OrganizationAdminApiTest(TestCase):
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
-        item = factories.OrganizationFactory(title="University")
-        item.translations.create(language_code="fr-fr", title="Université")
+        item = factories.OrganizationFactory(code="Panchnat", title="Nathan Corp")
+        item.translations.create(language_code="fr-fr", title="Nathan society")
 
-        response = self.client.get("/api/v1.0/admin/organizations/?search=university")
+        response = self.client.get("/api/v1.0/admin/organizations/?search=pan")
         self.assertEqual(response.status_code, 200)
         content = response.json()
         self.assertEqual(content["count"], 1)
