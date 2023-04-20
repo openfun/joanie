@@ -5,6 +5,13 @@ export const REACT_QUERY_SETTINGS = {
     // Cache storage throttle time
     throttleTime: 500,
   },
+  queries: {
+    retry: 0,
+    retryOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+  },
   // Cache is garbage collected after this delay
   cacheTime: 24 * 60 * 60 * 1000, // 24h in ms
   // Data are considered as stale after this delay
