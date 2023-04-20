@@ -2,7 +2,6 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-
 }
 
 .openNavigationButton {
@@ -12,6 +11,5 @@
 }
 
 .navigationIsOpen {
-  transform: rotate(0deg)
+  transform: rotate(0deg);
 }
-

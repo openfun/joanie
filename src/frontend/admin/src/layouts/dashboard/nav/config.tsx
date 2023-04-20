@@ -5,6 +5,7 @@ import SchoolRoundedIcon from "@mui/icons-material/SchoolRounded";
 import EventAvailableRoundedIcon from "@mui/icons-material/EventAvailableRounded";
 import TaskRoundedIcon from "@mui/icons-material/TaskRounded";
 import ProductionQuantityLimitsRoundedIcon from "@mui/icons-material/ProductionQuantityLimitsRounded";
+import { PATH_ADMIN } from "@/utils/routes/path";
 
 const navTranslations = defineMessages({
   managementSubHeader: {
@@ -42,6 +43,7 @@ const navTranslations = defineMessages({
 export interface NavConfigItem {
   title: any;
   path: string;
+  prefix: string;
   icon: ReactElement;
 }
 interface NavConfig {
@@ -54,27 +56,32 @@ export const navConfig: NavConfig[] = [
     items: [
       {
         title: navTranslations.organizationNavTitle,
-        path: "/organizations",
+        path: PATH_ADMIN.organizations.list,
+        prefix: PATH_ADMIN.organizations.root,
         icon: <CorporateFareRoundedIcon />,
       },
       {
         title: navTranslations.courseNavTitle,
-        path: "/courses",
+        path: PATH_ADMIN.courses.list,
+        prefix: PATH_ADMIN.courses.root,
         icon: <SchoolRoundedIcon />,
       },
       {
         title: navTranslations.courseRunsNavTitle,
-        path: "/courses-runs",
+        path: PATH_ADMIN.courses_run.list,
+        prefix: PATH_ADMIN.courses_run.root,
         icon: <EventAvailableRoundedIcon />,
       },
       {
         title: navTranslations.certificatesNavTitle,
-        path: "/certificates",
+        path: PATH_ADMIN.certificates.list,
+        prefix: PATH_ADMIN.certificates.root,
         icon: <TaskRoundedIcon />,
       },
       {
         title: navTranslations.productNavTitle,
-        path: "/products",
+        path: PATH_ADMIN.products.list,
+        prefix: PATH_ADMIN.products.root,
         icon: <ProductionQuantityLimitsRoundedIcon />,
       },
     ],

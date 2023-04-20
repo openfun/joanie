@@ -20,6 +20,7 @@ const AppBar = styled(MuiAppBar, {
   }),
   // borderBottom: "1px solid rgb(240, 240, 240);",
   boxShadow: "none",
+  background: "white",
   padding: theme.spacing(1, 2, 1, 1),
   ...(open && {
     [theme.breakpoints.down("sm")]: {

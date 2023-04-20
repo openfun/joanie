@@ -1,11 +1,12 @@
 import * as React from "react";
-import { Box, Menu, MenuItem, Typography } from "@mui/material";
+import { useMemo, useState } from "react";
+import { Avatar, Box, Menu, MenuItem, Typography } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import { defineMessages, useIntl } from "react-intl";
+import { faker } from "@faker-js/faker";
 import styles from "./DashboardLayoutNavAccount.module.scss";
-import { UserAvatar } from "@/components/users/avatar/UserAvatar";
 import { DashboardNavItem } from "@/layouts/dashboard/nav/item/DashboardNavItem";
 import { DashboardNavItemsList } from "@/layouts/dashboard/nav/item/list/DasboardNavItemsList";
 
@@ -23,8 +24,12 @@ const messages = defineMessages({
 });
 
 export function DashboardLayoutNavAccount() {
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const intl = useIntl();
+
+  const avatarUrl = useMemo(() => {
+    return faker.image.cats();
+  }, []);
 
   const handleOpenMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -45,7 +50,7 @@ export function DashboardLayoutNavAccount() {
         />
         <div className={styles.navAvatarContainer}>
           <div className={styles.navAvatar}>
-            <UserAvatar />
+            <Avatar alt="John Doe" src={avatarUrl} />
             <div>
               <Typography>Nathan</Typography>
               <Typography color="text.secondary" variant="caption">
