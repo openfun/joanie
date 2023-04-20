@@ -1,5 +1,5 @@
 import * as React from "react";
-import { PropsWithChildren } from "react";
+import { PropsWithChildren, useState } from "react";
 import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import { DashboardLayoutHeader } from "@/layouts/dashboard/header/DashboardLayoutHeader";
@@ -31,7 +31,7 @@ const Main = styled("main", { shouldForwardProp: (prop) => prop !== "open" })<{
 }));
 
 export function DashboardLayout(props: PropsWithChildren) {
-  const [open, setOpen] = React.useState(true);
+  const [open, setOpen] = useState(true);
 
   const handleToggleDrawer = () => {
     setOpen(!open);

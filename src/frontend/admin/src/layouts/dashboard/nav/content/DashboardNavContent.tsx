@@ -29,12 +29,13 @@ export function DashboardNavContent(props: Props) {
           <DashboardNavItemsList key={subheader} subHeaderTitle={subheader}>
             {config.items.map((item) => {
               const title = intl.formatMessage(item.title);
+              const prefix = item.prefix + "/";
               return (
                 <DashboardNavItem
                   key={`nav-item-${title}`}
                   icon={item.icon}
                   title={title}
-                  isActive={item.path === router.pathname}
+                  isActive={router.pathname.startsWith(prefix)}
                   onClick={() => handleChangeRoute(item.path)}
                 />
               );

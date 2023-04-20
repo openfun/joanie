@@ -19,6 +19,7 @@ const AppBar = styled(MuiAppBar, {
     duration: theme.transitions.duration.leavingScreen,
   }),
   boxShadow: "none",
+  background: "white",
   padding: theme.spacing(1, 2, 1, 1),
   ...(open && {
     [theme.breakpoints.down("sm")]: {

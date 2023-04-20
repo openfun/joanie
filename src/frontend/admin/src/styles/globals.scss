@@ -2,5 +2,15 @@
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: rgb(250, 250, 251);
+  background: white;
+  overflow: auto;
+}
+
+.flex-row {
+  display: flex;
+  flex-direction: row;
+}
+
+.align-center {
+  align-items: center;
 }
