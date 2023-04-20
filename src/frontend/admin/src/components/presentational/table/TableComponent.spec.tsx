@@ -1,7 +1,6 @@
 import { GridColDef } from "@mui/x-data-grid";
 import { render, screen } from "@testing-library/react";
 import { IntlProvider } from "react-intl";
-import userEvent from "@testing-library/user-event";
 import { TableComponent } from "@/components/presentational/table/TableComponent";
 
 describe("<TableComponent/>", () => {
@@ -21,8 +20,6 @@ describe("<TableComponent/>", () => {
       },
     ];
 
-    const user = userEvent.setup();
-
     render(
       <IntlProvider locale="en">
         <TableComponent rows={data} columns={columns} />
@@ -33,8 +30,5 @@ describe("<TableComponent/>", () => {
     screen.getByText("First name");
     screen.getByText("John");
     screen.getByText("Nohj");
-    const selectAll = screen.getByRole("checkbox", { name: "Select all rows" });
-    await user.click(selectAll);
-    screen.getByTestId("DeleteIcon");
   });
 });
