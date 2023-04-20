@@ -1,9 +1,1 @@
-{
-  "hooks.useDashboardAddressForm.isMainInputLabel": "TITI",
-  "layouts.dashboard.nav.config.certificatesNavTitle": "Certificates",
-  "layouts.dashboard.nav.config.courseNavTitle": "Courses",
-  "layouts.dashboard.nav.config.courseRunsNavTitle": "Courses runs",
-  "layouts.dashboard.nav.config.managementSubHeader": "Management",
-  "layouts.dashboard.nav.config.organizationNavTitle": "Organization",
-  "layouts.dashboard.nav.config.productNavTitle": "Products"
-}
+{}
