@@ -1,5 +1,4 @@
 export enum LocalesEnum {
-  FRENCH = "fr-FR",
-  ENGLISH = "en-US",
-  SPANISH = "es-ES",
+  FRENCH = "fr-fr",
+  ENGLISH = "en-us",
 }

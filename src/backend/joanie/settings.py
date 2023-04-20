@@ -108,6 +108,12 @@ class Base(Configuration):
     # Languages
     LANGUAGE_CODE = values.Value("en-us")
 
+    DRF_NESTED_MULTIPART_PARSER = {
+        # output of parser is converted to querydict
+        # if is set to False, dict python is returned
+        "querydict": False,
+    }
+
     # Careful! Languages should be ordered by priority, as this tuple is used to get
     # fallback/default languages throughout the app.
     LANGUAGES = values.SingleNestedTupleValue(
