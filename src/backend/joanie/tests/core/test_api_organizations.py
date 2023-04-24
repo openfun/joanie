@@ -5,6 +5,7 @@ import random
 from unittest import mock
 
 from joanie.core import factories, models
+from joanie.core.serializers import fields
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -89,9 +90,20 @@ class OrganizationApiTest(BaseAPITestCase):
                         "id": str(organization.id),
                         "logo": {
                             "filename": organization.logo.name,
-                            "height": 1,
-                            "url": f"http://testserver{organization.logo.url}",
+                            "src": f"http://testserver{organization.logo.url}.1x1_q85.webp",
+                            "srcset": (
+                                f"http://testserver{organization.logo.url}.1024x1024_q85_crop-smart_upscale.webp "  # noqa pylint: disable=line-too-long
+                                "1024w, "
+                                f"http://testserver{organization.logo.url}.512x512_q85_crop-smart_upscale.webp "  # noqa pylint: disable=line-too-long
+                                "512w, "
+                                f"http://testserver{organization.logo.url}.256x256_q85_crop-smart_upscale.webp "  # noqa pylint: disable=line-too-long
+                                "256w, "
+                                f"http://testserver{organization.logo.url}.128x128_q85_crop-smart_upscale.webp "  # noqa pylint: disable=line-too-long
+                                "128w"
+                            ),
                             "width": 1,
+                            "height": 1,
+                            "size": organization.logo.size,
                         },
                         "title": organization.title,
                     }
@@ -132,7 +144,12 @@ class OrganizationApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json(), {"detail": "Not found."})
 
-    def test_api_organization_get_authenticated_with_access(self):
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_organization_get_authenticated_with_access(self, _):
         """
         Authenticated users should be able to get an organization through its id
         if they have access to it.
@@ -156,12 +173,7 @@ class OrganizationApiTest(BaseAPITestCase):
             {
                 "code": organization.code,
                 "id": str(organization.id),
-                "logo": {
-                    "filename": organization.logo.name,
-                    "height": 1,
-                    "url": f"http://testserver{organization.logo.url}",
-                    "width": 1,
-                },
+                "logo": "_this_field_is_mocked",
                 "title": organization.title,
             },
         )

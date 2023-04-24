@@ -3,6 +3,7 @@ Test suite for Organization Admin API.
 """
 import random
 import re
+from unittest import mock
 
 from django.core.files.base import ContentFile
 from django.test import TestCase
@@ -10,6 +11,7 @@ from django.test import TestCase
 import factory.django
 
 from joanie.core import factories
+from joanie.core.serializers import fields
 
 
 class OrganizationAdminApiTest(TestCase):
@@ -85,7 +87,12 @@ class OrganizationAdminApiTest(TestCase):
         content = response.json()
         self.assertEqual(content["count"], organization_count)
 
-    def test_admin_api_organization_list_filtered_by_search(self):
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_admin_api_organization_list_filtered_by_search(self, _):
         """
         Staff user should be able to get a paginated list of organizations filtered
         through a search text
@@ -128,17 +135,13 @@ class OrganizationAdminApiTest(TestCase):
                         "title": organization_1.title,
                         "representative": organization_1.representative,
                         "signature": {
-                            "url": f"http://testserver{organization_1.signature.url}",
+                            "src": f"http://testserver{organization_1.signature.url}",
                             "height": organization_1.signature.height,
+                            "size": 69,
                             "width": organization_1.signature.width,
                             "filename": organization_1.signature.name,
                         },
-                        "logo": {
-                            "url": f"http://testserver{organization_1.logo.url}",
-                            "height": organization_1.logo.height,
-                            "width": organization_1.logo.width,
-                            "filename": organization_1.logo.name,
-                        },
+                        "logo": "_this_field_is_mocked",
                     }
                 ],
             },
@@ -194,9 +197,20 @@ class OrganizationAdminApiTest(TestCase):
         self.assertEqual(
             content["logo"],
             {
-                "url": f"http://testserver{organization.logo.url}",
+                "src": f"http://testserver{organization.logo.url}.1x1_q85.webp",
                 "height": 1,
                 "width": 1,
+                "size": organization.logo.size,
+                "srcset": (
+                    f"http://testserver{organization.logo.url}.1024x1024_q85_crop-smart_upscale.webp "  # noqa pylint: disable=line-too-long
+                    "1024w, "
+                    f"http://testserver{organization.logo.url}.512x512_q85_crop-smart_upscale.webp "  # noqa pylint: disable=line-too-long
+                    "512w, "
+                    f"http://testserver{organization.logo.url}.256x256_q85_crop-smart_upscale.webp "  # noqa pylint: disable=line-too-long
+                    "256w, "
+                    f"http://testserver{organization.logo.url}.128x128_q85_crop-smart_upscale.webp "  # noqa pylint: disable=line-too-long
+                    "128w"
+                ),
                 "filename": organization.logo.name,
             },
         )
@@ -231,7 +245,7 @@ class OrganizationAdminApiTest(TestCase):
         self.assertIsNotNone(re.search(r"^logo_.*\.png$", content["logo"]["filename"]))
         self.assertIsNotNone(
             re.search(
-                r"^http:\/\/testserver\/media\/logo_.*\.png$", content["logo"]["url"]
+                r"^http:\/\/testserver\/media\/logo_.*\.webp$", content["logo"]["src"]
             )
         )
 

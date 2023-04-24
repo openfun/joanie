@@ -344,6 +344,12 @@ class Base(Configuration):
             "768w": {"size": (768, 432), "crop": "smart", "upscale": True},
             "384w": {"size": (384, 216), "crop": "smart", "upscale": True},
         },
+        "core.Organization.logo": {
+            "1024w": {"size": (1024, 1024), "crop": "smart", "upscale": True},
+            "512w": {"size": (512, 512), "crop": "smart", "upscale": True},
+            "256w": {"size": (256, 256), "crop": "smart", "upscale": True},
+            "128w": {"size": (128, 128), "crop": "smart", "upscale": True},
+        },
     }
 
     # pylint: disable=invalid-name

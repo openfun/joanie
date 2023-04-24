@@ -149,7 +149,7 @@ class Organization(parler_models.TranslatableModel, BaseModel):
         blank=True,
     )
     signature = models.ImageField(_("signature"), blank=True)
-    logo = models.ImageField(_("logo"), blank=True)
+    logo = ThumbnailerImageField(_("logo"), blank=True)
 
     class Meta:
         db_table = "joanie_organization"

@@ -90,12 +90,7 @@ class CertificateApiTest(BaseAPITestCase):
                             "organization": {
                                 "id": str(order.organization.id),
                                 "code": order.organization.code,
-                                "logo": {
-                                    "filename": order.organization.logo.name,
-                                    "url": f"http://testserver{order.organization.logo.url}",
-                                    "width": 1,
-                                    "height": 1,
-                                },
+                                "logo": "_this_field_is_mocked",
                                 "title": order.organization.title,
                             },
                         },
@@ -228,12 +223,7 @@ class CertificateApiTest(BaseAPITestCase):
                     "organization": {
                         "id": str(certificate.order.organization.id),
                         "code": certificate.order.organization.code,
-                        "logo": {
-                            "filename": certificate.order.organization.logo.name,
-                            "url": f"http://testserver{certificate.order.organization.logo.url}",
-                            "width": 1,
-                            "height": 1,
-                        },
+                        "logo": "_this_field_is_mocked",
                         "title": certificate.order.organization.title,
                     },
                 },
