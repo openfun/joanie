@@ -186,6 +186,7 @@ class Base(Configuration):
         "parler",
         "marion",
         "howard",
+        "easy_thumbnails",
         # Joanie
         "joanie.core",
         "joanie.payment",
@@ -332,6 +333,10 @@ class Base(Configuration):
     # e.g:
     # DJANGO_COURSE_WEB_HOOKS=[{"url": "http://example.com", "secret": "secret", "verify": true}]
     COURSE_WEB_HOOKS = JSONValue([])
+
+    # Easy thumbnails
+    THUMBNAIL_EXTENSION= "webp"
+    THUMBNAIL_TRANSPARENCY_EXTENSION = "webp"
 
     # pylint: disable=invalid-name
     @property
