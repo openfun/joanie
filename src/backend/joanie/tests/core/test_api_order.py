@@ -45,6 +45,8 @@ class OrderApiTest(BaseAPITestCase):
             content, {"detail": "Authentication credentials were not provided."}
         )
 
+    
+    @mock.patch.object(Thumbn)
     def test_api_order_read_list_authenticated(self):
         """Authenticated users retrieving the list of orders should only see theirs."""
         course = factories.CourseFactory()

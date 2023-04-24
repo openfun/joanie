@@ -44,6 +44,8 @@ def image_to_base64(file_or_path, close=False):
     pil_parser = PillowImageFile.Parser()
     if hasattr(file_or_path, "read"):
         file = file_or_path
+        if file.closed and hasattr(file, "open"):
+            file_or_path.open()
         file_pos = file.tell()
         file.seek(0)
     else:

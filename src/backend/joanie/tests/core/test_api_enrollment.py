@@ -13,6 +13,7 @@ from django.utils import timezone
 
 from joanie.core import enums, exceptions, factories, models
 from joanie.core.factories import CourseRunFactory
+from joanie.core.serializers import fields
 from joanie.lms_handler.backends.openedx import OpenEdXLMSBackend
 from joanie.payment.factories import InvoiceFactory
 from joanie.tests.base import BaseAPITestCase
@@ -88,7 +89,12 @@ class EnrollmentApiTest(BaseAPITestCase):
             content, {"detail": "Authentication credentials were not provided."}
         )
 
-    def test_api_enrollment_read_list_authenticated(self):
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_enrollment_read_list_authenticated(self, _):
         """Authenticated users retrieving the list of enrollments should only see theirs."""
         enrollment, other_enrollment = factories.EnrollmentFactory.create_batch(
             2, course_run=self.create_opened_course_run(is_listed=True)
@@ -121,6 +127,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                                 "id": str(enrollment.course_run.course.id),
                                 "code": str(enrollment.course_run.course.code),
                                 "title": str(enrollment.course_run.course.title),
+                                "cover": "_this_field_is_mocked",
                             },
                             "resource_link": enrollment.course_run.resource_link,
                             "title": enrollment.course_run.title,
@@ -185,6 +192,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                                 "id": str(enrollment.course_run.course.id),
                                 "code": str(other_enrollment.course_run.course.code),
                                 "title": str(other_enrollment.course_run.course.title),
+                                "cover": "_this_field_is_mocked",
                             },
                             "resource_link": other_enrollment.course_run.resource_link,
                             "title": other_enrollment.course_run.title,
@@ -277,7 +285,12 @@ class EnrollmentApiTest(BaseAPITestCase):
         enrollment_ids.remove(content["results"][0]["id"])
         self.assertEqual(enrollment_ids, [])
 
-    def test_api_enrollment_read_list_filtered_by_course_run_id(self):
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_enrollment_read_list_filtered_by_course_run_id(self, _):
         """
         Authenticated users retrieving the list of enrollments should be able to filter
         by course run id.
@@ -314,6 +327,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                                 "id": str(course_run_1.course.id),
                                 "code": str(course_run_1.course.code),
                                 "title": str(course_run_1.course.title),
+                                "cover": "_this_field_is_mocked",
                             },
                             "title": course_run_1.title,
                             "enrollment_start": course_run_1.enrollment_start.isoformat().replace(  # noqa pylint: disable=line-too-long
@@ -423,7 +437,12 @@ class EnrollmentApiTest(BaseAPITestCase):
             {"detail": "Authentication credentials were not provided."},
         )
 
-    def test_api_enrollment_read_detail_authenticated_owner(self):
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_enrollment_read_detail_authenticated_owner(self, _):
         """Authenticated users should be allowed to retrieve an enrollment they own."""
         user = factories.UserFactory()
         target_courses = factories.CourseFactory.create_batch(2)
@@ -460,6 +479,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "id": str(enrollment.course_run.course.id),
                         "code": str(enrollment.course_run.course.code),
                         "title": str(enrollment.course_run.course.title),
+                        "cover": "_this_field_is_mocked",
                     },
                     "resource_link": enrollment.course_run.resource_link,
                     "title": enrollment.course_run.title,
@@ -520,7 +540,12 @@ class EnrollmentApiTest(BaseAPITestCase):
         )
 
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
-    def test_api_enrollment_create_authenticated_success(self, mock_set):
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_enrollment_create_authenticated_success(self, _, mock_set):
         """Any authenticated user should be able to create an enrollment."""
         resource_link = (
             "http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course"
@@ -561,6 +586,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "id": str(course_run.course.id),
                         "code": str(course_run.course.code),
                         "title": str(course_run.course.title),
+                        "cover": "_this_field_is_mocked",
                     },
                     "resource_link": course_run.resource_link,
                     "title": course_run.title,
@@ -641,7 +667,12 @@ class EnrollmentApiTest(BaseAPITestCase):
 
     @mock.patch.object(Logger, "error")
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
-    def test_api_enrollment_create_authenticated_no_lms(self, mock_set, mock_logger):
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_enrollment_create_authenticated_no_lms(self, _, mock_set, mock_logger):
         """
         If the resource link does not match any LMS, the enrollment should fail.
         """
@@ -680,6 +711,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "id": str(course_run.course.id),
                         "code": str(course_run.course.code),
                         "title": str(course_run.course.title),
+                        "cover": "_this_field_is_mocked",
                     },
                     "resource_link": course_run.resource_link,
                     "title": course_run.title,
@@ -712,8 +744,13 @@ class EnrollmentApiTest(BaseAPITestCase):
 
     @mock.patch.object(Logger, "error")
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
     def test_api_enrollment_create_authenticated_enrollment_error(
-        self, mock_set, mock_logger
+        self, _, mock_set, mock_logger
     ):
         """
         If the enrollment on the LMS fails, the enrollment object should be marked as failed.
@@ -761,6 +798,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "id": str(course_run.course.id),
                         "code": str(course_run.course.code),
                         "title": str(course_run.course.title),
+                        "cover": "_this_field_is_mocked",
                     },
                     "resource_link": course_run.resource_link,
                     "title": course_run.title,
@@ -953,7 +991,12 @@ class EnrollmentApiTest(BaseAPITestCase):
         )
 
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
-    def test_api_enrollment_create_has_read_only_fields(self, mock_set):
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_enrollment_create_has_read_only_fields(self, _, mock_set):
         """
         When user creates an enrollment, it should not be allowed
         to set "id", "state" fields
@@ -1002,6 +1045,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "id": str(course_run.course.id),
                         "code": str(course_run.course.code),
                         "title": str(course_run.course.title),
+                        "cover": "_this_field_is_mocked",
                     },
                     "resource_link": course_run.resource_link,
                     "title": course_run.title,
@@ -1215,7 +1259,12 @@ class EnrollmentApiTest(BaseAPITestCase):
             self.assertEqual(content, {"detail": "Not found."})
 
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment", return_value=True)
-    def test_api_enrollment_update_detail_is_active_owner(self, _mock_set):
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_enrollment_update_detail_is_active_owner(self, _mock_set, _):
         """
         The user should be able to update the "is_active" field on his/her enrollments.
         """
@@ -1253,6 +1302,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                             "id": str(enrollment.course_run.course.id),
                             "code": str(enrollment.course_run.course.code),
                             "title": str(enrollment.course_run.course.title),
+                            "cover": "_this_field_is_mocked",
                         },
                         "resource_link": enrollment.course_run.resource_link,
                         "title": enrollment.course_run.title,
@@ -1422,7 +1472,12 @@ class EnrollmentApiTest(BaseAPITestCase):
         self._check_api_enrollment_update_detail(enrollment, user, 200)
 
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment", return_value="enrolled")
-    def test_api_enrollment_unenroll_authenticated_owner(self, _):
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_enrollment_unenroll_authenticated_owner(self, _, __):
         """
         An authenticated user should be allowed to update its enrollment to unenroll.
         """
@@ -1457,6 +1512,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "id": str(course_run.course.id),
                         "code": str(course_run.course.code),
                         "title": str(course_run.course.title),
+                        "cover": "_this_field_is_mocked",
                     },
                     "resource_link": course_run.resource_link,
                     "title": course_run.title,
@@ -1485,7 +1541,14 @@ class EnrollmentApiTest(BaseAPITestCase):
         )
 
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment", return_value="enrolled")
-    def test_api_enrollment_update_was_created_by_order_on_inactive_enrollment(self, _):
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_enrollment_update_was_created_by_order_on_inactive_enrollment(
+        self, _, __
+    ):
         """
         An authenticated user should be allowed to update the was_created_by_order field
         of one of its enrollment if this one was previously inactive.
@@ -1527,6 +1590,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "id": str(course_run.course.id),
                         "code": str(course_run.course.code),
                         "title": str(course_run.course.title),
+                        "cover": "_this_field_is_mocked",
                     },
                     "resource_link": course_run.resource_link,
                     "title": course_run.title,
@@ -1584,6 +1648,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "id": str(course_run.course.id),
                         "code": str(course_run.course.code),
                         "title": str(course_run.course.title),
+                        "cover": "_this_field_is_mocked",
                     },
                     "resource_link": course_run.resource_link,
                     "title": course_run.title,
@@ -1612,7 +1677,14 @@ class EnrollmentApiTest(BaseAPITestCase):
         )
 
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment", return_value="enrolled")
-    def test_api_enrollment_update_was_created_by_order_on_order_enrollment(self, _):
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_enrollment_update_was_created_by_order_on_order_enrollment(
+        self, _, __
+    ):
         """
         An authenticated user should not be allowed to update the was_created_by_order
         field to false of one of its enrollment if this one was previously created by an
@@ -1663,6 +1735,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "id": str(course_run.course.id),
                         "code": str(course_run.course.code),
                         "title": str(course_run.course.title),
+                        "cover": "_this_field_is_mocked",
                     },
                     "resource_link": course_run.resource_link,
                     "title": course_run.title,
@@ -1720,6 +1793,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "id": str(course_run.course.id),
                         "code": str(course_run.course.code),
                         "title": str(course_run.course.title),
+                        "cover": "_this_field_is_mocked",
                     },
                     "resource_link": course_run.resource_link,
                     "title": course_run.title,

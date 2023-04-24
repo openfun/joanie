@@ -115,6 +115,7 @@ class CourseAdmin(DjangoObjectActions, TranslatableAdmin):
                 "fields": (
                     "code",
                     "title",
+                    "cover",
                 )
             },
         ),

@@ -12,6 +12,7 @@ from django.utils.functional import lazy
 from django.utils.text import capfirst
 from django.utils.translation import gettext_lazy as _
 
+from easy_thumbnails.fields import ThumbnailerImageField
 from parler import models as parler_models
 from rest_framework.reverse import reverse
 from url_normalize import url_normalize
@@ -324,6 +325,7 @@ class Course(parler_models.TranslatableModel, BaseModel):
     """
 
     code = models.CharField(_("code"), max_length=100, unique=True, db_index=True)
+    cover = ThumbnailerImageField(_("cover"), blank=True)
     translations = parler_models.TranslatedFields(
         title=models.CharField(_("title"), max_length=255)
     )
