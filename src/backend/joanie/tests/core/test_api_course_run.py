@@ -1,5 +1,8 @@
 """Test suite for the CourseRun API"""
+from unittest import mock
+
 from joanie.core import factories, models
+from joanie.core.serializers import fields
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -40,7 +43,12 @@ class CourseRunApiTest(BaseAPITestCase):
             status_code=404,
         )
 
-    def test_api_course_run_read_detail(self):
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_course_run_read_detail(self, _):
         """
         Any users should be allowed to retrieve a listed course run with minimal db access.
         """
@@ -59,6 +67,7 @@ class CourseRunApiTest(BaseAPITestCase):
                     "id": str(course_run.course.id),
                     "code": str(course_run.course.code),
                     "title": str(course_run.course.title),
+                    "cover": "_this_field_is_mocked",
                 },
                 "title": course_run.title,
                 "state": {

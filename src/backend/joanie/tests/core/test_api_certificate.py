@@ -17,6 +17,7 @@ from joanie.core.factories import (
     ProductFactory,
     UserFactory,
 )
+from joanie.core.serializers import fields
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -35,7 +36,12 @@ class CertificateApiTest(BaseAPITestCase):
             content, {"detail": "Authentication credentials were not provided."}
         )
 
-    def test_api_certificate_read_list_authenticated(self):
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_certificate_read_list_authenticated(self, _mock_thumbnail):
         """
         When an authenticated user retrieves the list of certificates,
         it should return only his/hers.
@@ -79,6 +85,7 @@ class CertificateApiTest(BaseAPITestCase):
                                 "id": str(order.course.id),
                                 "code": order.course.code,
                                 "title": order.course.title,
+                                "cover": "_this_field_is_mocked",
                             },
                             "organization": {
                                 "id": str(order.organization.id),
@@ -161,7 +168,12 @@ class CertificateApiTest(BaseAPITestCase):
             content, {"detail": "Authentication credentials were not provided."}
         )
 
-    def test_api_certificate_read_authenticated(self):
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_certificate_read_authenticated(self, _mock_thumbnail):
         """
         An authenticated user should only be able to retrieve a certificate
         only if he/she owns it.
@@ -211,6 +223,7 @@ class CertificateApiTest(BaseAPITestCase):
                         "id": str(certificate.order.course.id),
                         "code": certificate.order.course.code,
                         "title": certificate.order.course.title,
+                        "cover": "_this_field_is_mocked",
                     },
                     "organization": {
                         "id": str(certificate.order.organization.id),

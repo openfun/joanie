@@ -90,6 +90,23 @@ class CourseAdminApiTest(TestCase):
                     {
                         "id": str(course_1.id),
                         "code": course_1.code,
+                        "cover": {
+                            "size": course_1.cover.size,
+                            "src": f"http://testserver{course_1.cover.url}.1x1_q85.webp",
+                            "srcset": (
+                                f"http://testserver{course_1.cover.url}.1920x1080_q85_crop-smart_upscale.webp "  # noqa pylint: disable=line-too-long
+                                "1920w, "
+                                f"http://testserver{course_1.cover.url}.1280x720_q85_crop-smart_upscale.webp "  # noqa pylint: disable=line-too-long
+                                "1280w, "
+                                f"http://testserver{course_1.cover.url}.768x432_q85_crop-smart_upscale.webp "  # noqa pylint: disable=line-too-long
+                                "768w, "
+                                f"http://testserver{course_1.cover.url}.384x216_q85_crop-smart_upscale.webp "  # noqa pylint: disable=line-too-long
+                                "384w"
+                            ),
+                            "height": course_1.cover.height,
+                            "width": course_1.cover.width,
+                            "filename": course_1.cover.name,
+                        },
                         "title": course_1.title,
                         "organizations": [],
                         "product_relations": [],

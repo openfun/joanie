@@ -10,9 +10,19 @@ from django.utils import timezone as django_timezone
 
 import factory.fuzzy
 from djmoney.money import Money
+from easy_thumbnails.files import ThumbnailerImageFieldFile, generate_all_aliases
 from faker import Faker
 
 from . import enums, models
+
+
+def generate_thumbnails_for_field(field, include_global=False):
+    """
+    Generate thumbnails for a given field.
+    """
+    if isinstance(field, ThumbnailerImageFieldFile) and field:
+        field.get_thumbnail({"size": (field.width, field.height)})
+        generate_all_aliases(field, include_global=include_global)
 
 
 class UniqueFaker(factory.Faker):
@@ -99,6 +109,17 @@ class CourseFactory(factory.django.DjangoModelFactory):
 
     code = factory.Faker("ean", length=8)
     title = factory.Sequence(lambda n: f"Course {n}")
+    cover = factory.django.ImageField(
+        filename="cover.png", format="png", width=1, height=1
+    )
+
+    @classmethod
+    def _after_postgeneration(cls, instance, create, results=None):
+        """
+        Generate thumbnails for cover after course has been created.
+        """
+        if create:
+            generate_thumbnails_for_field(instance.cover)
 
     @factory.post_generation
     # pylint: disable=unused-argument,no-member

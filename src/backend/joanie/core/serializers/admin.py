@@ -6,7 +6,7 @@ from rest_framework import serializers
 
 from joanie.core import models
 from joanie.core.enums import ALL_LANGUAGES
-from joanie.core.serializers.fields import ImageDetailField
+from joanie.core.serializers.fields import ImageDetailField, ThumbnailDetailField
 
 
 class AdminCertificateDefinitionSerializer(serializers.ModelSerializer):
@@ -102,12 +102,13 @@ class AdminCourseSerializer(serializers.ModelSerializer):
     """Serializer for Course model."""
 
     title = serializers.CharField()
+    cover = ThumbnailDetailField(required=False)
     organizations = AdminOrganizationLightSerializer(many=True, read_only=True)
     product_relations = AdminProductRelationSerializer(many=True, read_only=True)
 
     class Meta:
         model = models.Course
-        fields = ("id", "code", "title", "organizations", "product_relations")
+        fields = ("id", "code", "cover", "title", "organizations", "product_relations")
         read_only_fields = ["id"]
 
     def validate(self, attrs):

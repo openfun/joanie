@@ -327,7 +327,7 @@ class Base(Configuration):
     # Sentry
     SENTRY_DSN = values.Value(None, environ_name="SENTRY_DSN")
 
-    # Richie synchronization
+    # Richie's synchronization
     # COURSE_WEB_HOOKS environment variable should be a stringified JSON array of
     # objects with the following structure:
     # e.g:
@@ -335,8 +335,16 @@ class Base(Configuration):
     COURSE_WEB_HOOKS = JSONValue([])
 
     # Easy thumbnails
-    THUMBNAIL_EXTENSION= "webp"
+    THUMBNAIL_EXTENSION = "webp"
     THUMBNAIL_TRANSPARENCY_EXTENSION = "webp"
+    THUMBNAIL_ALIASES = {
+        "core.Course.cover": {
+            "1920w": {"size": (1920, 1080), "crop": "smart", "upscale": True},
+            "1280w": {"size": (1280, 720), "crop": "smart", "upscale": True},
+            "768w": {"size": (768, 432), "crop": "smart", "upscale": True},
+            "384w": {"size": (384, 216), "crop": "smart", "upscale": True},
+        },
+    }
 
     # pylint: disable=invalid-name
     @property
