@@ -1,7 +1,10 @@
 """Test suite for the Product API"""
+from unittest import mock
+
 from djmoney.money import Money
 
 from joanie.core import enums, factories, models
+from joanie.core.serializers import fields
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -78,7 +81,12 @@ class ProductApiTest(BaseAPITestCase):
             {"course": "You must specify a course code to get product details."},
         )
 
-    def test_api_product_read_detail_with_organization_and_code(self):
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_product_read_detail_with_organization_and_code(self, _):
         """
         Any users should be allowed to retrieve a product with minimal db access.
         """
@@ -108,12 +116,7 @@ class ProductApiTest(BaseAPITestCase):
                     {
                         "id": str(organization.id),
                         "code": organization.code,
-                        "logo": {
-                            "filename": organization.logo.name,
-                            "url": organization.logo.url,
-                            "width": 1,
-                            "height": 1,
-                        },
+                        "logo": "_this_field_is_mocked",
                         "title": organization.title,
                     }
                 ],
@@ -124,7 +127,9 @@ class ProductApiTest(BaseAPITestCase):
                     {
                         "code": target_course.code,
                         "organization": {
+                            "id": str(target_course.organization.id),
                             "code": target_course.organization.code,
+                            "logo": "_this_field_is_mocked",
                             "title": target_course.organization.title,
                         },
                         "course_runs": [

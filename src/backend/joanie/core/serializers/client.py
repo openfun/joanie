@@ -9,7 +9,7 @@ from djmoney.contrib.django_rest_framework import MoneyField
 from rest_framework import exceptions, serializers
 
 from joanie.core import enums, models, utils
-from joanie.core.serializers.fields import ImageDetailField
+from joanie.core.serializers.fields import ThumbnailDetailField
 
 
 class AbilitiesModelSerializer(serializers.ModelSerializer):
@@ -155,7 +155,7 @@ class OrganizationSerializer(AbilitiesModelSerializer):
     Serialize all non-sensitive information about an organization
     """
 
-    logo = ImageDetailField(required=False)
+    logo = ThumbnailDetailField(required=False)
 
     class Meta:
         model = models.Organization
@@ -645,7 +645,12 @@ class ProductSerializer(serializers.ModelSerializer):
             else:
                 organizations = []
 
-        return OrganizationSerializer(organizations, many=True, read_only=True).data
+        return OrganizationSerializer(
+            organizations,
+            context={"request": self.context.get("request")},
+            many=True,
+            read_only=True,
+        ).data
 
     def get_orders(self, instance):
         """

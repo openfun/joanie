@@ -26,6 +26,7 @@ and this project adheres to
 
 ### Changed
 
+- Use ThumbnailImageField instead of ImageField for Organization logo
 - Refactor how the user is authenticated and passed throughout the request
 - Normalize the organization code field
 - Activate pagination by default on all endpoints (20 items per page)

@@ -34,7 +34,7 @@ class AdminOrganizationSerializer(serializers.ModelSerializer):
     """Serializer for Organization model."""
 
     title = serializers.CharField()
-    logo = ImageDetailField(required=False)
+    logo = ThumbnailDetailField(required=False)
     signature = ImageDetailField(required=False)
 
     class Meta:

@@ -75,6 +75,14 @@ class OrganizationFactory(factory.django.DjangoModelFactory):
         filename="logo.png", format="png", width=1, height=1
     )
 
+    @classmethod
+    def _after_postgeneration(cls, instance, create, results=None):
+        """
+        Generate thumbnails for logo after organization has been created.
+        """
+        if create:
+            generate_thumbnails_for_field(instance.logo)
+
     @factory.post_generation
     def users(self, create, extracted, **kwargs):
         """Add users to organization from a given list of users with or without roles."""

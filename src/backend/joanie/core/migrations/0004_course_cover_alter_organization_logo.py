@@ -18,4 +18,11 @@ class Migration(migrations.Migration):
                 blank=True, upload_to="", verbose_name="cover"
             ),
         ),
+        migrations.AlterField(
+            model_name="organization",
+            name="logo",
+            field=easy_thumbnails.fields.ThumbnailerImageField(
+                blank=True, upload_to="", verbose_name="logo"
+            ),
+        ),
     ]
