@@ -151,7 +151,7 @@ class OrderViewSet(
             else self.request.user.username
         )
         return models.Order.objects.filter(owner__username=username).select_related(
-            "owner", "product", "certificate"
+            "owner", "product", "certificate", "course"
         )
 
     def perform_create(self, serializer):
@@ -187,6 +187,7 @@ class OrderViewSet(
 
         return organizations
 
+    # pylint: disable=too-many-return-statements
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         """Try to create an order and a related payment if the payment is fee."""
@@ -195,8 +196,21 @@ class OrderViewSet(
             return Response(serializer.errors, status=400)
 
         product = serializer.validated_data.get("product")
-        course = serializer.validated_data.get("course")
+        course_code = serializer.initial_data.get("course")
         billing_address = serializer.initial_data.get("billing_address")
+
+        # Retrieve course instance from the provided course code
+        if not course_code:
+            return Response({"course": ["This field is required."]}, status=400)
+
+        try:
+            course = models.Course.objects.get(code=course_code)
+        except models.Course.DoesNotExist:
+            return Response(
+                {"course": ["Course with code {course_code} does not exist."]},
+                status=400,
+            )
+        serializer.validated_data["course"] = course
 
         # Populate organization field if it is not set
         if not serializer.validated_data.get("organization"):

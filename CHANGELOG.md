@@ -26,6 +26,7 @@ and this project adheres to
 
 ### Changed
 
+- Update OrderSerializer to bind Course information
 - Use ThumbnailImageField instead of ImageField for Organization logo
 - Refactor how the user is authenticated and passed throughout the request
 - Normalize the organization code field

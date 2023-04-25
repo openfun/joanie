@@ -61,13 +61,25 @@ class AddressSerializer(serializers.ModelSerializer):
 
 class CourseSerializer(AbilitiesModelSerializer):
     """
-    Serialize all information about a course.
+    Serialize all non-sensitive course information. This serializer is read only.
     """
+
+    cover = ThumbnailDetailField()
 
     class Meta:
         model = models.Course
-        fields = ("id", "code", "title")
-        read_only_fields = ("id", "code", "title")
+        fields = [
+            "code",
+            "cover",
+            "id",
+            "title",
+        ]
+        read_only_fields = [
+            "code",
+            "cover",
+            "id",
+            "title",
+        ]
 
 
 class CourseAccessSerializer(AbilitiesModelSerializer):
@@ -486,9 +498,7 @@ class OrderSerializer(serializers.ModelSerializer):
     owner = serializers.CharField(
         source="owner.username", read_only=True, required=False
     )
-    course = serializers.SlugRelatedField(
-        queryset=models.Course.objects.all(), slug_field="code"
-    )
+    course = CourseSerializer(read_only=True, exclude_abilities=True)
     total = MoneyField(
         coerce_to_string=False,
         decimal_places=2,
@@ -511,31 +521,32 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Order
         fields = [
+            "certificate",
             "course",
             "created_on",
-            "certificate",
             "enrollments",
             "id",
             "main_invoice",
             "organization",
             "owner",
-            "total",
-            "total_currency",
             "product",
             "state",
             "target_courses",
+            "total",
+            "total_currency",
         ]
         read_only_fields = [
             "certificate",
             "created_on",
+            "course",
             "enrollments",
             "id",
             "main_invoice",
             "owner",
-            "total",
-            "total_currency",
             "state",
             "target_courses",
+            "total",
+            "total_currency",
         ]
 
     def get_target_courses(self, order):
@@ -648,6 +659,7 @@ class ProductSerializer(serializers.ModelSerializer):
         return OrganizationSerializer(
             organizations,
             context={"request": self.context.get("request")},
+            exclude_abilities=True,
             many=True,
             read_only=True,
         ).data

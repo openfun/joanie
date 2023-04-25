@@ -12,6 +12,7 @@ from djmoney.money import Money
 from pdfminer.high_level import extract_text as pdf_extract_text
 
 from joanie.core import enums, factories, models
+from joanie.core.serializers import fields
 from joanie.payment.backends.dummy import DummyPaymentBackend
 from joanie.payment.exceptions import CreatePaymentFailed
 from joanie.payment.factories import (
@@ -45,9 +46,12 @@ class OrderApiTest(BaseAPITestCase):
             content, {"detail": "Authentication credentials were not provided."}
         )
 
-    
-    @mock.patch.object(Thumbn)
-    def test_api_order_read_list_authenticated(self):
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_order_read_list_authenticated(self, _mock_thumbnail):
         """Authenticated users retrieving the list of orders should only see theirs."""
         course = factories.CourseFactory()
         product = factories.ProductFactory(courses=[course])
@@ -56,7 +60,7 @@ class OrderApiTest(BaseAPITestCase):
         # The owner can see his/her order
         token = self.get_user_token(order.owner.username)
 
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(6):
             response = self.client.get(
                 "/api/v1.0/orders/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -71,7 +75,12 @@ class OrderApiTest(BaseAPITestCase):
                 "previous": None,
                 "results": [
                     {
-                        "course": order.course.code,
+                        "course": {
+                            "code": course.code,
+                            "id": str(course.id),
+                            "title": course.title,
+                            "cover": "_this_field_is_mocked",
+                        },
                         "certificate": None,
                         "created_on": order.created_on.strftime(
                             "%Y-%m-%dT%H:%M:%S.%fZ"
@@ -110,7 +119,12 @@ class OrderApiTest(BaseAPITestCase):
                     {
                         "id": str(other_order.id),
                         "certificate": None,
-                        "course": other_order.course.code,
+                        "course": {
+                            "code": other_order.course.code,
+                            "id": str(other_order.course.id),
+                            "title": other_order.course.title,
+                            "cover": "_this_field_is_mocked",
+                        },
                         "created_on": other_order.created_on.strftime(
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
@@ -172,7 +186,12 @@ class OrderApiTest(BaseAPITestCase):
         order_ids.remove(content["results"][0]["id"])
         self.assertEqual(order_ids, [])
 
-    def test_api_order_read_list_filtered_by_product_id(self):
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_order_read_list_filtered_by_product_id(self, _mock_thumbnail):
         """Authenticated user should be able to filter their orders by product id."""
         [product_1, product_2] = factories.ProductFactory.create_batch(2)
         user = factories.UserFactory()
@@ -202,7 +221,12 @@ class OrderApiTest(BaseAPITestCase):
                     {
                         "id": str(order.id),
                         "certificate": None,
-                        "course": order.course.code,
+                        "course": {
+                            "code": order.course.code,
+                            "id": str(order.course.id),
+                            "title": order.course.title,
+                            "cover": "_this_field_is_mocked",
+                        },
                         "created_on": order.created_on.strftime(
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
@@ -239,7 +263,12 @@ class OrderApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {"product": ["Enter a valid UUID."]})
 
-    def test_api_order_read_list_filtered_by_course_code(self):
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_order_read_list_filtered_by_course_code(self, _mock_thumbnail):
         """Authenticated user should be able to filter their orders by course code."""
         [product_1, product_2] = factories.ProductFactory.create_batch(2)
         user = factories.UserFactory()
@@ -253,7 +282,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         # Retrieve user's order related to the first course linked to the product 1
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(7):
             response = self.client.get(
                 f"/api/v1.0/orders/?course={product_1.courses.first().code}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -270,7 +299,12 @@ class OrderApiTest(BaseAPITestCase):
                     {
                         "id": str(order.id),
                         "certificate": None,
-                        "course": order.course.code,
+                        "course": {
+                            "code": order.course.code,
+                            "id": str(order.course.id),
+                            "title": order.course.title,
+                            "cover": "_this_field_is_mocked",
+                        },
                         "created_on": order.created_on.strftime(
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
@@ -288,7 +322,12 @@ class OrderApiTest(BaseAPITestCase):
             },
         )
 
-    def test_api_order_read_list_filtered_by_state_pending(self):
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_order_read_list_filtered_by_state_pending(self, _mock_thumbnail):
         """Authenticated user should be able to retrieve its pending orders."""
         [product_1, product_2] = factories.ProductFactory.create_batch(2)
         user = factories.UserFactory()
@@ -319,7 +358,12 @@ class OrderApiTest(BaseAPITestCase):
                     {
                         "id": str(order.id),
                         "certificate": None,
-                        "course": order.course.code,
+                        "course": {
+                            "code": order.course.code,
+                            "id": str(order.course.id),
+                            "title": order.course.title,
+                            "cover": "_this_field_is_mocked",
+                        },
                         "created_on": order.created_on.strftime(
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
@@ -337,7 +381,12 @@ class OrderApiTest(BaseAPITestCase):
             },
         )
 
-    def test_api_order_read_list_filtered_by_state_canceled(self):
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_order_read_list_filtered_by_state_canceled(self, _mock_thumbnail):
         """Authenticated user should be able to retrieve its canceled orders."""
         [product_1, product_2] = factories.ProductFactory.create_batch(2)
         user = factories.UserFactory()
@@ -368,7 +417,12 @@ class OrderApiTest(BaseAPITestCase):
                     {
                         "id": str(order.id),
                         "certificate": None,
-                        "course": order.course.code,
+                        "course": {
+                            "code": order.course.code,
+                            "id": str(order.course.id),
+                            "title": order.course.title,
+                            "cover": "_this_field_is_mocked",
+                        },
                         "created_on": order.created_on.strftime(
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
@@ -386,7 +440,12 @@ class OrderApiTest(BaseAPITestCase):
             },
         )
 
-    def test_api_order_read_list_filtered_by_state_validated(self):
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_order_read_list_filtered_by_state_validated(self, _mock_thumbnail):
         """Authenticated user should be able to retrieve its validated orders."""
         [product_1, product_2] = factories.ProductFactory.create_batch(
             2, price=Money(0.00, "EUR")
@@ -421,7 +480,12 @@ class OrderApiTest(BaseAPITestCase):
                     {
                         "id": str(order.id),
                         "certificate": None,
-                        "course": order.course.code,
+                        "course": {
+                            "code": order.course.code,
+                            "id": str(order.course.id),
+                            "title": order.course.title,
+                            "cover": "_this_field_is_mocked",
+                        },
                         "created_on": order.created_on.strftime(
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
@@ -479,7 +543,12 @@ class OrderApiTest(BaseAPITestCase):
             {"detail": "Authentication credentials were not provided."},
         )
 
-    def test_api_order_read_detail_authenticated_owner(self):
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_order_read_detail_authenticated_owner(self, _mock_thumbnail):
         """Authenticated users should be allowed to retrieve an order they own."""
         owner = factories.UserFactory()
         *target_courses, _other_course = factories.CourseFactory.create_batch(3)
@@ -487,7 +556,7 @@ class OrderApiTest(BaseAPITestCase):
         order = factories.OrderFactory(product=product, owner=owner)
         token = self.generate_token_from_user(owner)
 
-        with self.assertNumQueries(14):
+        with self.assertNumQueries(13):
             response = self.client.get(
                 f"/api/v1.0/orders/{order.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -499,7 +568,12 @@ class OrderApiTest(BaseAPITestCase):
             {
                 "id": str(order.id),
                 "certificate": None,
-                "course": order.course.code,
+                "course": {
+                    "code": order.course.code,
+                    "id": str(order.course.id),
+                    "title": order.course.title,
+                    "cover": "_this_field_is_mocked",
+                },
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "state": order.state,
                 "main_invoice": None,
@@ -591,7 +665,12 @@ class OrderApiTest(BaseAPITestCase):
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
 
-    def test_api_order_create_authenticated_success(self):
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_order_create_authenticated_success(self, _mock_thumbnail):
         """Any authenticated user should be able to create an order."""
         target_courses = factories.CourseFactory.create_batch(2)
         product = factories.ProductFactory(
@@ -634,7 +713,12 @@ class OrderApiTest(BaseAPITestCase):
             {
                 "id": str(order.id),
                 "certificate": None,
-                "course": course.code,
+                "course": {
+                    "code": course.code,
+                    "id": str(course.id),
+                    "title": course.title,
+                    "cover": "_this_field_is_mocked",
+                },
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "state": "validated",
                 "main_invoice": None,
@@ -816,7 +900,12 @@ class OrderApiTest(BaseAPITestCase):
         organization_id = response.json()["organization"]
         self.assertEqual(counter[organization_id], min(counter.values()))
 
-    def test_api_order_create_has_read_only_fields(self):
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_order_create_has_read_only_fields(self, _mock_thumbnail):
         """
         If an authenticated user tries to create an order with more fields than
         "product" and "course", it should not be allowed to override these fields.
@@ -863,7 +952,12 @@ class OrderApiTest(BaseAPITestCase):
             {
                 "id": str(order.id),
                 "certificate": None,
-                "course": course.code,
+                "course": {
+                    "code": course.code,
+                    "id": str(course.id),
+                    "title": course.title,
+                    "cover": "_this_field_is_mocked",
+                },
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "state": "validated",
                 "main_invoice": None,
@@ -1024,7 +1118,7 @@ class OrderApiTest(BaseAPITestCase):
 
     def test_api_order_create_authenticated_missing_product_then_course(self):
         """
-        The payload must contain at least a product uid, an organization uid and a course code.
+        The payload must contain at least a product uid and a course code.
         """
         token = self.get_user_token("panoramix")
 
@@ -1039,8 +1133,25 @@ class OrderApiTest(BaseAPITestCase):
         self.assertEqual(
             response.json(),
             {
-                "course": ["This field is required."],
                 "product": ["This field is required."],
+            },
+        )
+
+        product = factories.ProductFactory()
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+            data={"product": str(product.id)},
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+        self.assertFalse(models.Order.objects.exists())
+        self.assertEqual(
+            response.json(),
+            {
+                "course": ["This field is required."],
             },
         )
 
@@ -1128,7 +1239,12 @@ class OrderApiTest(BaseAPITestCase):
         "create_payment",
         side_effect=DummyPaymentBackend().create_payment,
     )
-    def test_api_order_create_payment(self, mock_create_payment):
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_order_create_payment(self, mock_create_payment, _mock_thumbnail):
         """
         Create an order to a fee product should create a payment at the same time and
         bind payment information into the response.
@@ -1165,7 +1281,12 @@ class OrderApiTest(BaseAPITestCase):
             {
                 "id": str(order.id),
                 "certificate": None,
-                "course": course.code,
+                "course": {
+                    "code": course.code,
+                    "id": str(course.id),
+                    "title": course.title,
+                    "cover": "_this_field_is_mocked",
+                },
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "state": "pending",
                 "main_invoice": None,
@@ -1239,8 +1360,15 @@ class OrderApiTest(BaseAPITestCase):
         "create_one_click_payment",
         side_effect=DummyPaymentBackend().create_one_click_payment,
     )
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
     def test_api_order_create_payment_with_registered_credit_card(
-        self, mock_create_one_click_payment
+        self,
+        _mock_thumbnail,
+        mock_create_one_click_payment,
     ):
         """
         Create an order to a fee product should create a payment. If user provides
@@ -1278,7 +1406,12 @@ class OrderApiTest(BaseAPITestCase):
         expected_json = {
             "id": str(order.id),
             "certificate": None,
-            "course": course.code,
+            "course": {
+                "code": course.code,
+                "id": str(course.id),
+                "title": course.title,
+                "cover": "_this_field_is_mocked",
+            },
             "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             "state": "pending",
             "main_invoice": None,
@@ -1413,19 +1546,19 @@ class OrderApiTest(BaseAPITestCase):
         self.assertEqual(
             list(data.keys()),
             [
+                "certificate",
                 "course",
                 "created_on",
-                "certificate",
                 "enrollments",
                 "id",
                 "main_invoice",
                 "organization",
                 "owner",
-                "total",
-                "total_currency",
                 "product",
                 "state",
                 "target_courses",
+                "total",
+                "total_currency",
             ],
         )
         headers = (
@@ -1682,8 +1815,8 @@ class OrderApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, 201)
 
+        self.assertEqual(response.status_code, 201)
         content = json.loads(response.content)
         order = models.Order.objects.get(id=content["id"])
         payment_id = content["payment_info"]["payment_id"]
