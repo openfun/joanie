@@ -116,6 +116,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "course_run": {
                             "id": str(enrollment.course_run.id),
                             "course": {
+                                "id": str(enrollment.course_run.course.id),
                                 "code": str(enrollment.course_run.course.code),
                                 "title": str(enrollment.course_run.course.title),
                             },
@@ -177,6 +178,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "course_run": {
                             "id": str(other_enrollment.course_run.id),
                             "course": {
+                                "id": str(enrollment.course_run.course.id),
                                 "code": str(other_enrollment.course_run.course.code),
                                 "title": str(other_enrollment.course_run.course.title),
                             },
@@ -306,6 +308,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                             "id": str(course_run_1.id),
                             "resource_link": course_run_1.resource_link,
                             "course": {
+                                "id": str(course_run_1.course.id),
                                 "code": str(course_run_1.course.code),
                                 "title": str(course_run_1.course.title),
                             },
@@ -452,6 +455,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "course_run": {
                     "id": str(enrollment.course_run.id),
                     "course": {
+                        "id": str(enrollment.course_run.course.id),
                         "code": str(enrollment.course_run.course.code),
                         "title": str(enrollment.course_run.course.title),
                     },
@@ -552,6 +556,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "course_run": {
                     "id": str(course_run.id),
                     "course": {
+                        "id": str(course_run.course.id),
                         "code": str(course_run.course.code),
                         "title": str(course_run.course.title),
                     },
@@ -670,6 +675,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "course_run": {
                     "id": str(course_run.id),
                     "course": {
+                        "id": str(course_run.course.id),
                         "code": str(course_run.course.code),
                         "title": str(course_run.course.title),
                     },
@@ -750,6 +756,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "course_run": {
                     "id": str(course_run.id),
                     "course": {
+                        "id": str(course_run.course.id),
                         "code": str(course_run.course.code),
                         "title": str(course_run.course.title),
                     },
@@ -990,6 +997,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "course_run": {
                     "id": str(course_run.id),
                     "course": {
+                        "id": str(course_run.course.id),
                         "code": str(course_run.course.code),
                         "title": str(course_run.course.title),
                     },
@@ -1240,6 +1248,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                     "course_run": {
                         "id": str(enrollment.course_run.id),
                         "course": {
+                            "id": str(enrollment.course_run.course.id),
                             "code": str(enrollment.course_run.course.code),
                             "title": str(enrollment.course_run.course.title),
                         },
@@ -1443,6 +1452,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "course_run": {
                     "id": str(course_run.id),
                     "course": {
+                        "id": str(course_run.course.id),
                         "code": str(course_run.course.code),
                         "title": str(course_run.course.title),
                     },
@@ -1512,6 +1522,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "course_run": {
                     "id": str(course_run.id),
                     "course": {
+                        "id": str(course_run.course.id),
                         "code": str(course_run.course.code),
                         "title": str(course_run.course.title),
                     },
@@ -1568,6 +1579,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "course_run": {
                     "id": str(course_run.id),
                     "course": {
+                        "id": str(course_run.course.id),
                         "code": str(course_run.course.code),
                         "title": str(course_run.course.title),
                     },
@@ -1646,6 +1658,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "course_run": {
                     "id": str(course_run.id),
                     "course": {
+                        "id": str(course_run.course.id),
                         "code": str(course_run.course.code),
                         "title": str(course_run.course.title),
                     },
@@ -1702,6 +1715,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "course_run": {
                     "id": str(course_run.id),
                     "course": {
+                        "id": str(course_run.course.id),
                         "code": str(course_run.course.code),
                         "title": str(course_run.course.title),
                     },

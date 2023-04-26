@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Add ID field to the course serializer
 - Add course and organization accesses with roles
 - CRUD admin API for organizations, products, course runs,
   certificate definitions, courses and retrieve enabled languages

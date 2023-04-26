@@ -44,8 +44,8 @@ class CourseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Course
-        fields = ("code", "title")
-        read_only_fields = ("code", "title")
+        fields = ("id", "code", "title")
+        read_only_fields = ("id", "code", "title")
 
 
 class CourseAccessSerializer(serializers.ModelSerializer):
@@ -53,7 +53,7 @@ class CourseAccessSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.CourseAccess
-        fields = ["id", "user", "role"]
+        fields = ["id", "role", "user"]
         read_only_fields = ["id"]
 
     def update(self, instance, validated_data):
@@ -126,7 +126,7 @@ class OrganizationAccessSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.OrganizationAccess
-        fields = ["id", "user", "role"]
+        fields = ["id", "role", "user"]
         read_only_fields = ["id"]
 
     def update(self, instance, validated_data):

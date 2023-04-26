@@ -76,6 +76,7 @@ class CertificateApiTest(BaseAPITestCase):
                         "order": {
                             "id": str(order.id),
                             "course": {
+                                "id": str(order.course.id),
                                 "code": order.course.code,
                                 "title": order.course.title,
                             },
@@ -207,6 +208,7 @@ class CertificateApiTest(BaseAPITestCase):
                 "order": {
                     "id": str(certificate.order.id),
                     "course": {
+                        "id": str(certificate.order.course.id),
                         "code": certificate.order.course.code,
                         "title": certificate.order.course.title,
                     },
