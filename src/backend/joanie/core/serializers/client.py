@@ -12,6 +12,28 @@ from joanie.core import enums, models, utils
 from joanie.core.serializers.fields import ImageDetailField
 
 
+class AbilitiesModelSerializer(serializers.ModelSerializer):
+    """
+    A ModelSerializer that takes an additional `exclude` argument that
+    dynamically controls which fields should be excluded from the serializer.
+    """
+
+    def __init__(self, *args, **kwargs):
+        """Exclude fields after class instanciation."""
+        self.exclude_abilities = kwargs.pop("exclude_abilities", None)
+        super().__init__(*args, **kwargs)
+
+    def to_representation(self, instance):
+        """Add abilities except when the serializer is nested."""
+        representation = super().to_representation(instance)
+        request = self.context.get("request")
+        if request and not self.exclude_abilities:
+            representation["abilities"] = instance.get_abilities(
+                user=request.user, auth=request.auth
+            )
+        return representation
+
+
 class AddressSerializer(serializers.ModelSerializer):
     """
     Address model serializer
@@ -37,7 +59,7 @@ class AddressSerializer(serializers.ModelSerializer):
         ]
 
 
-class CourseSerializer(serializers.ModelSerializer):
+class CourseSerializer(AbilitiesModelSerializer):
     """
     Serialize all information about a course.
     """
@@ -48,7 +70,7 @@ class CourseSerializer(serializers.ModelSerializer):
         read_only_fields = ("id", "code", "title")
 
 
-class CourseAccessSerializer(serializers.ModelSerializer):
+class CourseAccessSerializer(AbilitiesModelSerializer):
     """Serialize course accesses for the API."""
 
     class Meta:
@@ -66,49 +88,63 @@ class CourseAccessSerializer(serializers.ModelSerializer):
         """
         Check access rights specific to writing (create/update)
         """
-        username = self.context["request"].user.username
+        request = self.context["request"]
+        role = attrs.get("role")
 
-        if not models.CourseAccess.objects.filter(
-            course=self.context["course_id"],
-            user__username=username,
-            role__in=[enums.OWNER, enums.ADMIN],
-        ).exists():
-            raise exceptions.PermissionDenied(
-                _(
-                    "You must be administrator or owner of a course to manage its accesses."
+        # Update
+        if self.instance:
+            can_set_role_to = self.instance.get_abilities(
+                user=request.user, auth=request.auth
+            )["set_role_to"]
+
+            if role and role not in can_set_role_to:
+                message = (
+                    _(
+                        "You must be administrator or owner of a course to manage its accesses."
+                    )
+                    if can_set_role_to
+                    else _(
+                        f"You are only allowed to set role to {', '.join(can_set_role_to)}"
+                    )
                 )
+                raise exceptions.PermissionDenied(message)
+
+        # Create
+        else:
+            username = (
+                request.auth["username"]
+                if request.auth
+                else (request.user.username if request.user.is_authenticated else None)
             )
 
-        if (
-            # Update
-            self.instance
-            and (
-                attrs.get("role") == enums.OWNER
-                and not self.instance.course.accesses.filter(
-                    user__username=username, role=enums.OWNER
-                ).exists()
-                or self.instance.role == enums.OWNER
-                and not self.instance.user.username == username
-            )
-        ) or (
-            # Create
-            not self.instance
-            and attrs.get("role") == enums.OWNER
-            and not models.CourseAccess.objects.filter(
+            if not models.CourseAccess.objects.filter(
                 course=self.context["course_id"],
                 user__username=username,
-                role=enums.OWNER,
-            ).exists()
-        ):
-            raise exceptions.PermissionDenied(
-                "Only owners of a course can assign other users as owners."
-            )
+                role__in=[enums.OWNER, enums.ADMIN],
+            ).exists():
+                raise exceptions.PermissionDenied(
+                    _(
+                        "You must be administrator or owner of a course to manage its accesses."
+                    )
+                )
+
+            if (
+                role == enums.OWNER
+                and not models.CourseAccess.objects.filter(
+                    course=self.context["course_id"],
+                    user__username=username,
+                    role=enums.OWNER,
+                ).exists()
+            ):
+                raise exceptions.PermissionDenied(
+                    "Only owners of a course can assign other users as owners."
+                )
 
         attrs["course_id"] = self.context["course_id"]
         return attrs
 
 
-class OrganizationSerializer(serializers.ModelSerializer):
+class OrganizationSerializer(AbilitiesModelSerializer):
     """
     Serialize all non-sensitive information about an organization
     """
@@ -121,7 +157,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "code", "logo", "title"]
 
 
-class OrganizationAccessSerializer(serializers.ModelSerializer):
+class OrganizationAccessSerializer(AbilitiesModelSerializer):
     """Serialize Organization accesses for the API."""
 
     class Meta:
@@ -139,43 +175,59 @@ class OrganizationAccessSerializer(serializers.ModelSerializer):
         """
         Check access rights specific to writing (create/update)
         """
-        username = self.context["request"].user.username
+        request = self.context["request"]
+        role = attrs.get("role")
 
-        if not models.OrganizationAccess.objects.filter(
-            organization=self.context["organization_id"],
-            user__username=username,
-            role__in=[enums.OWNER, enums.ADMIN],
-        ).exists():
-            raise exceptions.PermissionDenied(
-                _(
-                    "You must be administrator or owner of an organization to manage its accesses."
+        # Update
+        if self.instance:
+            can_set_role_to = self.instance.get_abilities(
+                user=request.user, auth=request.auth
+            )["set_role_to"]
+
+            if role and role not in can_set_role_to:
+                message = (
+                    _(
+                        "You must be administrator or owner of a organization "
+                        "to manage its accesses."
+                    )
+                    if can_set_role_to
+                    else _(
+                        f"You are only allowed to set role to {', '.join(can_set_role_to)}"
+                    )
                 )
+                raise exceptions.PermissionDenied(message)
+
+        # Create
+        else:
+            username = (
+                request.auth["username"]
+                if request.auth
+                else (request.user.username if request.user.is_authenticated else None)
             )
 
-        if (
-            # Update
-            self.instance
-            and (
-                attrs.get("role") == enums.OWNER
-                and not self.instance.organization.accesses.filter(
-                    user__username=username, role=enums.OWNER
-                ).exists()
-                or self.instance.role == enums.OWNER
-                and not self.instance.user.username == username
-            )
-        ) or (
-            # Create
-            not self.instance
-            and attrs.get("role") == enums.OWNER
-            and not models.OrganizationAccess.objects.filter(
+            if not models.OrganizationAccess.objects.filter(
                 organization=self.context["organization_id"],
                 user__username=username,
-                role=enums.OWNER,
-            ).exists()
-        ):
-            raise exceptions.PermissionDenied(
-                "Only owners of an organization can assign other users as owners."
-            )
+                role__in=[enums.OWNER, enums.ADMIN],
+            ).exists():
+                raise exceptions.PermissionDenied(
+                    _(
+                        "You must be administrator or owner of an organization "
+                        "to manage its accesses."
+                    )
+                )
+
+            if (
+                role == enums.OWNER
+                and not models.OrganizationAccess.objects.filter(
+                    organization=self.context["organization_id"],
+                    user__username=username,
+                    role=enums.OWNER,
+                ).exists()
+            ):
+                raise exceptions.PermissionDenied(
+                    "Only owners of an organization can assign other users as owners."
+                )
 
         attrs["organization_id"] = self.context["organization_id"]
         return attrs
@@ -187,8 +239,8 @@ class CertificateOrderSerializer(serializers.ModelSerializer):
     """
 
     id = serializers.CharField(read_only=True, required=False)
-    course = CourseSerializer(read_only=True)
-    organization = OrganizationSerializer(read_only=True)
+    course = CourseSerializer(read_only=True, exclude_abilities=True)
+    organization = OrganizationSerializer(read_only=True, exclude_abilities=True)
 
     class Meta:
         model = models.Order
@@ -236,7 +288,7 @@ class CourseRunSerializer(serializers.ModelSerializer):
     Serialize all information about a course run
     """
 
-    course = CourseSerializer(read_only=True)
+    course = CourseSerializer(read_only=True, exclude_abilities=True)
 
     class Meta:
         model = models.CourseRun
@@ -270,7 +322,9 @@ class TargetCourseSerializer(serializers.ModelSerializer):
     """
 
     course_runs = serializers.SerializerMethodField(read_only=True)
-    organizations = OrganizationSerializer(many=True, read_only=True)
+    organizations = OrganizationSerializer(
+        many=True, read_only=True, exclude_abilities=True
+    )
     position = serializers.SerializerMethodField(read_only=True)
     is_graded = serializers.SerializerMethodField(read_only=True)
 
@@ -588,24 +642,26 @@ class ProductSerializer(serializers.ModelSerializer):
         product instance. If a course code has been provided through query
         parameters orders are also filtered by course.
         """
-        try:
-            filters = {"owner__username": self.context["username"]}
-        except KeyError:
-            return None
+        request = self.context["request"]
+        username = (
+            request.auth["username"]
+            if request.auth
+            else (request.user.username if request.user.is_authenticated else None)
+        )
+
+        if username is None:
+            return []
+
+        filters = {"owner__username": username}
 
         if course_code := self.context.get("course_code"):
             filters["course__code"] = course_code
 
-        try:
-            orders = models.Order.objects.filter(
-                state__in=(enums.ORDER_STATE_VALIDATED, enums.ORDER_STATE_PENDING),
-                product=instance,
-                **filters,
-            ).only("pk")
-        except models.Order.DoesNotExist:
-            return None
-
-        return [order.pk for order in orders]
+        return models.Order.objects.filter(
+            state__in=(enums.ORDER_STATE_VALIDATED, enums.ORDER_STATE_PENDING),
+            product=instance,
+            **filters,
+        ).values_list("pk", flat=True)
 
     def to_representation(self, instance):
         """

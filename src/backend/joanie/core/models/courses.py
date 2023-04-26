@@ -168,6 +168,41 @@ class Organization(parler_models.TranslatableModel, BaseModel):
         self.code = utils.normalize_code(self.code)
         return super().clean()
 
+    def get_abilities(self, user=None, auth=None):
+        """
+        Compute and return abilities for a given user taking into account
+        the current state of the object.
+        """
+        is_owner_or_admin = False
+        role = None
+
+        # Avoid hitting the database by checking authentication via the auth token first
+        username = (
+            auth["username"]
+            if auth
+            else (user.username if user and user.is_authenticated else None)
+        )
+        if username:
+            try:
+                role = self.user_role
+            except AttributeError:
+                try:
+                    role = self.accesses.filter(user__username=username).values("role")[
+                        0
+                    ]["role"]
+                except (OrganizationAccess.DoesNotExist, IndexError):
+                    role = None
+
+            is_owner_or_admin = role in [enums.OWNER, enums.ADMIN]
+
+        return {
+            "get": True,
+            "patch": is_owner_or_admin,
+            "put": is_owner_or_admin,
+            "delete": role == enums.OWNER,
+            "manage_accesses": is_owner_or_admin,
+        }
+
 
 class OrganizationAccess(BaseModel):
     """Link table between organizations and users"""
@@ -223,6 +258,61 @@ class OrganizationAccess(BaseModel):
         ):
             raise PermissionDenied("An organization should keep at least one owner.")
         return super().delete(*args, **kwargs)
+
+    def get_abilities(self, user=None, auth=None):
+        """
+        Compute and return abilities for a given user taking into account
+        the current state of the object.
+        """
+        is_organization_owner_or_admin = False
+        role = None
+
+        # Avoid hitting the database by checking authentication via the auth token first
+        username = (
+            auth["username"]
+            if auth
+            else (user.username if user and user.is_authenticated else None)
+        )
+        if username:
+            try:
+                role = self.user_role
+            except AttributeError:
+                try:
+                    role = self._meta.model.objects.filter(
+                        organization=self.organization_id, user__username=username
+                    ).values("role")[0]["role"]
+                except (OrganizationAccess.DoesNotExist, IndexError):
+                    role = None
+
+            is_organization_owner_or_admin = role in [enums.OWNER, enums.ADMIN]
+
+        if self.role == enums.OWNER:
+            can_delete = (
+                username == self.user.username
+                and self.organization.accesses.filter(role=enums.OWNER).count() > 1
+            )
+            set_role_to = [enums.ADMIN, enums.MEMBER] if can_delete else []
+        else:
+            can_delete = is_organization_owner_or_admin
+            set_role_to = []
+            if role == enums.OWNER:
+                set_role_to.append(enums.OWNER)
+            if is_organization_owner_or_admin:
+                set_role_to.extend([enums.ADMIN, enums.MEMBER])
+
+        # Remove the current role as we don't want to propose it as an option
+        try:
+            set_role_to.remove(self.role)
+        except ValueError:
+            pass
+
+        return {
+            "delete": can_delete,
+            "get": bool(role),
+            "patch": bool(set_role_to),
+            "put": bool(set_role_to),
+            "set_role_to": set_role_to,
+        }
 
 
 class Course(parler_models.TranslatableModel, BaseModel):
@@ -288,6 +378,41 @@ class Course(parler_models.TranslatableModel, BaseModel):
         self.code = utils.normalize_code(self.code)
         return super().clean()
 
+    def get_abilities(self, user=None, auth=None):
+        """
+        Compute and return abilities for a given user taking into account
+        the current state of the object.
+        """
+        is_owner_or_admin = False
+        role = None
+
+        # Avoid hitting the database by checking authentication via the auth token first
+        username = (
+            auth["username"]
+            if auth
+            else (user.username if user and user.is_authenticated else None)
+        )
+        if username:
+            try:
+                role = self.user_role
+            except AttributeError:
+                try:
+                    role = self.accesses.filter(user__username=username).values("role")[
+                        0
+                    ]["role"]
+                except (CourseAccess.DoesNotExist, IndexError):
+                    role = None
+
+            is_owner_or_admin = role in [enums.OWNER, enums.ADMIN]
+
+        return {
+            "get": True,
+            "patch": is_owner_or_admin,
+            "put": is_owner_or_admin,
+            "delete": role == enums.OWNER,
+            "manage_accesses": is_owner_or_admin,
+        }
+
 
 class CourseAccess(BaseModel):
     """Link table between courses and users"""
@@ -342,6 +467,63 @@ class CourseAccess(BaseModel):
         ):
             raise PermissionDenied("A course should keep at least one owner.")
         return super().delete(*args, **kwargs)
+
+    def get_abilities(self, user=None, auth=None):
+        """
+        Compute and return abilities for a given user taking into account
+        the current state of the object.
+        """
+        is_course_owner_or_admin = False
+        role = None
+
+        # Avoid hitting the database by checking authentication via the auth token first
+        username = (
+            auth["username"]
+            if auth
+            else (user.username if user and user.is_authenticated else None)
+        )
+        if username:
+            try:
+                role = self.user_role
+            except AttributeError:
+                try:
+                    role = self._meta.model.objects.filter(
+                        course=self.course_id, user__username=username
+                    ).values("role")[0]["role"]
+                except (CourseAccess.DoesNotExist, IndexError):
+                    role = None
+
+            is_course_owner_or_admin = role in [enums.OWNER, enums.ADMIN]
+
+        if self.role == enums.OWNER:
+            can_delete = (
+                username == self.user.username
+                and self.course.accesses.filter(role=enums.OWNER).count() > 1
+            )
+            set_role_to = (
+                [enums.ADMIN, enums.INSTRUCTOR, enums.MANAGER] if can_delete else []
+            )
+        else:
+            can_delete = is_course_owner_or_admin
+            set_role_to = []
+            if role == enums.OWNER:
+                set_role_to.append(enums.OWNER)
+            if is_course_owner_or_admin:
+                set_role_to.extend([enums.ADMIN, enums.INSTRUCTOR, enums.MANAGER])
+
+        # Remove the current role as we don't want to propose it as an option
+        try:
+            set_role_to.remove(self.role)
+        except ValueError:
+            pass
+
+        return {
+            "delete": can_delete,
+            "get": bool(role),
+            "patch": bool(set_role_to),
+            "put": bool(set_role_to),
+            "set_role_to": set_role_to,
+        }
 
 
 class CourseProductRelation(BaseModel):

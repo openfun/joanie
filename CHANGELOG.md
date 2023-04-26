@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Add abilities to courses/organizations and their accesses
 - Add ID field to the course serializer
 - Add course and organization accesses with roles
 - CRUD admin API for organizations, products, course runs,
@@ -24,6 +25,7 @@ and this project adheres to
 
 ### Changed
 
+- Refactor how the user is authenticated and passed throughout the request
 - Normalize the organization code field
 - Activate pagination by default on all endpoints (20 items per page)
 - Use user fullname instead of username in order confirmation email

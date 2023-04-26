@@ -2,7 +2,7 @@
 Client API endpoints
 """
 from django.db import IntegrityError, transaction
-from django.db.models import Count, Q
+from django.db.models import Count, OuterRef, Q, Subquery
 from django.http import HttpResponse
 from django.utils.translation import gettext_lazy as _
 
@@ -78,9 +78,6 @@ class ProductViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         """
         context = super().get_serializer_context()
 
-        if self.request.user.username:
-            context.update({"username": self.request.user.username})
-
         if course := self.request.query_params.get("course"):
             context.update({"course_code": course})
 
@@ -99,23 +96,24 @@ class EnrollmentViewSet(
 
     lookup_field = "id"
     pagination_class = Pagination
-    permission_classes = [drf_permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
     serializer_class = serializers.EnrollmentSerializer
     filterset_class = filters.EnrollmentViewSetFilter
 
     def get_queryset(self):
         """Custom queryset to limit to orders owned by the logged-in user."""
-        user = models.User.update_or_create_from_request_user(
-            request_user=self.request.user
+        username = (
+            self.request.auth["username"]
+            if self.request.auth
+            else self.request.user.username
         )
-        return user.enrollments.all().select_related("course_run")
+        return models.Enrollment.objects.filter(user__username=username).select_related(
+            "course_run__course"
+        )
 
     def perform_create(self, serializer):
         """Force the enrollment's "owner" field to the logged-in user."""
-        user = models.User.update_or_create_from_request_user(
-            request_user=self.request.user
-        )
-        serializer.save(user=user)
+        serializer.save(user=self.request.user)
 
 
 # pylint: disable=too-many-ancestors
@@ -140,24 +138,25 @@ class OrderViewSet(
 
     lookup_field = "pk"
     pagination_class = Pagination
-    permission_classes = [drf_permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
     serializer_class = serializers.OrderSerializer
     filterset_class = filters.OrderViewSetFilter
     ordering = ["-created_on"]
 
     def get_queryset(self):
         """Custom queryset to limit to orders owned by the logged-in user."""
-        user = models.User.update_or_create_from_request_user(
-            request_user=self.request.user
+        username = (
+            self.request.auth["username"]
+            if self.request.auth
+            else self.request.user.username
         )
-        return user.orders.all().select_related("owner", "product", "certificate")
+        return models.Order.objects.filter(owner__username=username).select_related(
+            "owner", "product", "certificate"
+        )
 
     def perform_create(self, serializer):
         """Force the order's "owner" field to the logged-in user."""
-        owner = models.User.update_or_create_from_request_user(
-            request_user=self.request.user
-        )
-        serializer.save(owner=owner)
+        serializer.save(owner=self.request.user)
 
     def _get_organization_with_least_active_orders(self, product, course):
         """
@@ -259,7 +258,7 @@ class OrderViewSet(
     @action(detail=True, methods=["POST"])
     def abort(self, request, pk=None):  # pylint: disable=no-self-use, invalid-name
         """Abort a pending order and the related payment if there is one."""
-        username = request.user.username
+        username = request.auth["username"] if request.auth else request.user.username
         payment_id = request.data.get("payment_id")
 
         try:
@@ -291,11 +290,12 @@ class OrderViewSet(
         if reference is None:
             return Response({"reference": "This parameter is required."}, status=400)
 
+        username = request.auth["username"] if request.auth else request.user.username
         try:
             invoice = Invoice.objects.get(
                 reference=reference,
                 order__id=pk,
-                order__owner__username=request.user.username,
+                order__owner__username=username,
             )
         except Invoice.DoesNotExist:
             return Response(
@@ -355,21 +355,20 @@ class AddressViewSet(
 
     lookup_field = "id"
     serializer_class = serializers.AddressSerializer
-    permission_classes = [drf_permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         """Custom queryset to get user addresses"""
-        user = models.User.update_or_create_from_request_user(
-            request_user=self.request.user
+        username = (
+            self.request.auth["username"]
+            if self.request.auth
+            else self.request.user.username
         )
-        return user.addresses.all()
+        return models.Address.objects.filter(owner__username=username)
 
     def perform_create(self, serializer):
         """Create a new address for user authenticated"""
-        user = models.User.update_or_create_from_request_user(
-            request_user=self.request.user
-        )
-        serializer.save(owner=user)
+        serializer.save(owner=self.request.user)
 
 
 class CertificateViewSet(
@@ -389,26 +388,33 @@ class CertificateViewSet(
     lookup_field = "pk"
     pagination_class = Pagination
     serializer_class = serializers.CertificateSerializer
-    permission_classes = [drf_permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         """
         Custom queryset to get user certificates
         """
-        user = models.User.update_or_create_from_request_user(
-            request_user=self.request.user
+        username = (
+            self.request.auth["username"]
+            if self.request.auth
+            else self.request.user.username
         )
-        return models.Certificate.objects.filter(order__owner=user)
+        return models.Certificate.objects.filter(
+            order__owner__username=username
+        ).select_related(
+            "certificate_definition", "order__course", "order__organization"
+        )
 
     @action(detail=True, methods=["GET"])
     def download(self, request, pk=None):  # pylint: disable=no-self-use, invalid-name
         """
         Retrieve a certificate through its id if it is owned by the authenticated user.
         """
+        username = request.auth["username"] if request.auth else request.user.username
         try:
             certificate = models.Certificate.objects.get(
                 pk=pk,
-                order__owner__username=request.user.username,
+                order__owner__username=username,
             )
         except models.Certificate.DoesNotExist:
             return Response(
@@ -444,17 +450,24 @@ class OrganizationViewSet(
 
     lookup_field = "pk"
     pagination_class = Pagination
-    permission_classes = [drf_permissions.IsAuthenticated]
+    permission_classes = [permissions.AccessPermission]
     serializer_class = serializers.OrganizationSerializer
 
     def get_queryset(self):
         """
         Custom queryset to get user organizations
         """
-        user = models.User.update_or_create_from_request_user(
-            request_user=self.request.user
+        username = (
+            self.request.auth["username"]
+            if self.request.auth
+            else self.request.user.username
         )
-        return models.Organization.objects.filter(accesses__user=user)
+        user_role_query = models.OrganizationAccess.objects.filter(
+            user__username=username, organization=OuterRef("pk")
+        ).values("role")[:1]
+        return models.Organization.objects.filter(
+            accesses__user__username=username
+        ).annotate(user_role=Subquery(user_role_query))
 
 
 class OrganizationAccessViewSet(
@@ -491,14 +504,14 @@ class OrganizationAccessViewSet(
 
     lookup_field = "pk"
     pagination_class = Pagination
-    permission_classes = [permissions.OrganizationAccessPermission]
+    permission_classes = [permissions.AccessPermission]
     queryset = models.OrganizationAccess.objects.all()
     serializer_class = serializers.OrganizationAccessSerializer
 
     def get_permissions(self):
         """User only needs to be authenticated to list organization accesses"""
         if self.action == "list":
-            permission_classes = [drf_permissions.IsAuthenticated]
+            permission_classes = [permissions.IsAuthenticated]
         else:
             return super().get_permissions()
 
@@ -519,9 +532,21 @@ class OrganizationAccessViewSet(
             # Limit to accesses that are linked to an organization THAT has an access
             # for the logged-in user (not filtering the only access linked to the
             # logged-in user)
-            queryset = queryset.filter(
-                organization__accesses__user__username=self.request.user.username,
-            ).distinct()
+            username = (
+                self.request.auth["username"]
+                if self.request.auth
+                else self.request.user.username
+            )
+            user_role_query = models.OrganizationAccess.objects.filter(
+                organization__accesses__user__username=username
+            ).values("role")[:1]
+            queryset = (
+                queryset.filter(
+                    organization__accesses__user__username=username,
+                )
+                .annotate(user_role=Subquery(user_role_query))
+                .distinct()
+            )
         return queryset
 
 
@@ -559,14 +584,14 @@ class CourseAccessViewSet(
 
     lookup_field = "pk"
     pagination_class = Pagination
-    permission_classes = [permissions.CourseAccessPermission]
+    permission_classes = [permissions.AccessPermission]
     queryset = models.CourseAccess.objects.all()
     serializer_class = serializers.CourseAccessSerializer
 
     def get_permissions(self):
         """User only needs to be authenticated to list course accesses"""
         if self.action == "list":
-            permission_classes = [drf_permissions.IsAuthenticated]
+            permission_classes = [permissions.IsAuthenticated]
         else:
             return super().get_permissions()
 
@@ -587,7 +612,19 @@ class CourseAccessViewSet(
             # Limit to accesses that are linked to a course THAT has an access
             # for the logged-in user (not filtering the only access linked to the
             # logged-in user)
-            queryset = queryset.filter(
-                course__accesses__user__username=self.request.user.username,
-            ).distinct()
+            username = (
+                self.request.auth["username"]
+                if self.request.auth
+                else self.request.user.username
+            )
+            user_role_query = models.CourseAccess.objects.filter(
+                course__accesses__user__username=username
+            ).values("role")[:1]
+            queryset = (
+                queryset.filter(
+                    course__accesses__user__username=username,
+                )
+                .annotate(user_role=Subquery(user_role_query))
+                .distinct()
+            )
         return queryset

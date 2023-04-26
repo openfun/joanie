@@ -54,7 +54,7 @@ class OrderApiTest(BaseAPITestCase):
         # The owner can see his/her order
         token = self.get_user_token(order.owner.username)
 
-        with self.assertNumQueries(13):
+        with self.assertNumQueries(7):
             response = self.client.get(
                 "/api/v1.0/orders/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -92,11 +92,10 @@ class OrderApiTest(BaseAPITestCase):
         # The owner of the other order can only see his/her order
         token = self.get_user_token(other_order.owner.username)
 
-        with self.assertNumQueries(12):
-            response = self.client.get(
-                "/api/v1.0/orders/",
-                HTTP_AUTHORIZATION=f"Bearer {token}",
-            )
+        response = self.client.get(
+            "/api/v1.0/orders/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -185,11 +184,10 @@ class OrderApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         # Retrieve user's order related to the product 1
-        with self.assertNumQueries(13):
-            response = self.client.get(
-                f"/api/v1.0/orders/?product={product_1.id}",
-                HTTP_AUTHORIZATION=f"Bearer {token}",
-            )
+        response = self.client.get(
+            f"/api/v1.0/orders/?product={product_1.id}",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -230,7 +228,7 @@ class OrderApiTest(BaseAPITestCase):
 
         # Try to retrieve user's order related with an invalid product id
         # should return a 400 error
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(0):
             response = self.client.get(
                 "/api/v1.0/orders/?product=invalid_product_id",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -253,7 +251,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         # Retrieve user's order related to the first course linked to the product 1
-        with self.assertNumQueries(14):
+        with self.assertNumQueries(8):
             response = self.client.get(
                 f"/api/v1.0/orders/?course={product_1.courses.first().code}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -304,10 +302,9 @@ class OrderApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         # Retrieve user's order related to the product 1
-        with self.assertNumQueries(13):
-            response = self.client.get(
-                "/api/v1.0/orders/?state=pending", HTTP_AUTHORIZATION=f"Bearer {token}"
-            )
+        response = self.client.get(
+            "/api/v1.0/orders/?state=pending", HTTP_AUTHORIZATION=f"Bearer {token}"
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -354,10 +351,9 @@ class OrderApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         # Retrieve user's order related to the product 1
-        with self.assertNumQueries(13):
-            response = self.client.get(
-                "/api/v1.0/orders/?state=canceled", HTTP_AUTHORIZATION=f"Bearer {token}"
-            )
+        response = self.client.get(
+            "/api/v1.0/orders/?state=canceled", HTTP_AUTHORIZATION=f"Bearer {token}"
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -407,11 +403,10 @@ class OrderApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         # Retrieve user's order related to the product 1
-        with self.assertNumQueries(13):
-            response = self.client.get(
-                "/api/v1.0/orders/?state=validated",
-                HTTP_AUTHORIZATION=f"Bearer {token}",
-            )
+        response = self.client.get(
+            "/api/v1.0/orders/?state=validated",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -452,7 +447,7 @@ class OrderApiTest(BaseAPITestCase):
 
         # Try to retrieve user's order related with an invalid product id
         # should return a 400 error
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(0):
             response = self.client.get(
                 "/api/v1.0/orders/?state=invalid_state",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -490,7 +485,7 @@ class OrderApiTest(BaseAPITestCase):
         order = factories.OrderFactory(product=product, owner=owner)
         token = self.generate_token_from_user(owner)
 
-        with self.assertNumQueries(19):
+        with self.assertNumQueries(14):
             response = self.client.get(
                 f"/api/v1.0/orders/{order.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -1150,7 +1145,7 @@ class OrderApiTest(BaseAPITestCase):
             "billing_address": billing_address,
         }
 
-        with self.assertNumQueries(24):
+        with self.assertNumQueries(19):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,

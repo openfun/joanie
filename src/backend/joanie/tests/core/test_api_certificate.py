@@ -49,12 +49,12 @@ class CertificateApiTest(BaseAPITestCase):
 
         token = self.get_user_token(user.username)
 
-        response = self.client.get(
-            "/api/v1.0/certificates/", HTTP_AUTHORIZATION=f"Bearer {token}"
-        )
+        with self.assertNumQueries(2):
+            response = self.client.get(
+                "/api/v1.0/certificates/", HTTP_AUTHORIZATION=f"Bearer {token}"
+            )
 
         self.assertEqual(response.status_code, 200)
-
         order = certificate.order
         self.assertEqual(
             response.json(),

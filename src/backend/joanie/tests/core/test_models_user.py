@@ -1,16 +1,16 @@
 """Test suite for badge models."""
 from django.core.exceptions import ValidationError
-from django.test import RequestFactory, TestCase
 from django.test.utils import override_settings
 
 from joanie.core.factories import UserFactory
 from joanie.core.models import User
+from joanie.tests.base import BaseAPITestCase
 
 
-class UserModelTestCase(TestCase):
+class UserModelTestCase(BaseAPITestCase):
     """Test suite for the User model."""
 
-    def test_model_create(self):
+    def test_models_user_create(self):
         """A simple test to check model consistency."""
 
         UserFactory(username="Sam", email="sam@fun-test.fr", language="fr-fr")
@@ -28,7 +28,7 @@ class UserModelTestCase(TestCase):
         LANGUAGES=(("fr-ca", "Canadian"), ("it", "Italian")),
         LANGUAGE_CODE="fr-ca",
     )
-    def test_model_create_language(self):
+    def test_models_user_create_language(self):
         """Check language is part of the languages
         declared in the settings."""
 
@@ -46,7 +46,7 @@ class UserModelTestCase(TestCase):
         with self.assertRaises(ValidationError):
             UserFactory(username="Sam", email="sam@fun-test.fr", language="en-us")
 
-    def test_models_unique_username(self):
+    def test_models_user_unique_username(self):
         """
         There should be a db constraint forcing uniqueness of username
         """
@@ -59,7 +59,7 @@ class UserModelTestCase(TestCase):
                 str(error.exception),
             )
 
-    def test_models_multiple_emails(self):
+    def test_models_user_multiple_emails(self):
         """
         Multiple users can have the same email
         """
@@ -67,80 +67,78 @@ class UserModelTestCase(TestCase):
         UserFactory(username="Joanie", email="mail@fun-test.fr")
         self.assertEqual(User.objects.filter(email="mail@fun-test.fr").count(), 2)
 
-    def test_models_create_or_update_from_request(self):
+    def test_models_user_create_or_update_from_request_changed(self):
         """
-        Check using the method create_or_update_from_request, a user
-        is created if non-existing or else updated
+        Check that, using the method `update_from_token`, the user
+        values are updated as expected.
         """
-        user = UserFactory(username="Sam", email="mail@fun-test.fr")
+        user = UserFactory()
 
-        request = RequestFactory()
-        request.username = "Sam"
-        request.email = "sam@fun-test.fr"
-        request.language = "fr"
-        request.full_name = "Samy Fonzarelli"
+        new_user_for_data = UserFactory.build()
+        token = self.generate_token_from_user(new_user_for_data)
 
-        User.update_or_create_from_request_user(request)
+        with self.assertNumQueries(1):
+            user.update_from_token(token)
+
         user.refresh_from_db()
+        # user has been updated
+        self.assertNotEqual(user.username, new_user_for_data.username)
+        self.assertEqual(user.email, new_user_for_data.email)
+        self.assertEqual(user.language, new_user_for_data.language)
+        self.assertEqual(user.first_name, new_user_for_data.first_name)
 
-        # email has been updated
-        self.assertEqual(user.email, "sam@fun-test.fr")
-        self.assertEqual(user.language, "fr-fr")
-        self.assertEqual(user.first_name, "Samy Fonzarelli")
-        self.assertEqual(user.get_full_name(), "Samy Fonzarelli")
         # no new object has been created
         self.assertEqual(User.objects.count(), 1)
 
-        request.username = "Sam2"
-        request.language = "en"
-        User.update_or_create_from_request_user(request)
-        # a new object has been created
-        self.assertEqual(User.objects.count(), 2)
-        user2 = User.objects.get(username="Sam2")
-        self.assertEqual(user2.language, "en-us")
-        self.assertEqual(user2.email, "sam@fun-test.fr")
-
-    def test_models_create_or_update_from_request_language(self):
+    def test_models_user_create_or_update_from_request_unchanged(self):
         """
-        Check using the method create_or_update_from_request, the language
+        Check that, using the method `update_from_token`, the user is not
+        updated if no values have changed.
+        """
+        user = UserFactory()
+        token = self.generate_token_from_user(user)
+
+        with self.assertNumQueries(0):
+            user.update_from_token(token)
+
+    def test_models_user_create_or_update_from_request_language(self):
+        """
+        Check that, using the method `update_from_token`, the language
         is set depending on the values of the language available in the
-        settings and understood in different ways
+        settings and understood in different ways.
         """
-        request = RequestFactory()
-        request.username = "Sam"
-        request.email = "sam@fun-test.fr"
+        user = UserFactory()
+        token = self.generate_token_from_user(user)
 
-        # with _
-        request.language = "fr_FR"
-        User.update_or_create_from_request_user(request)
-        user = User.objects.get(username="Sam")
+        token["language"] = "fr_FR"
+        user.update_from_token(token)
         user.refresh_from_db()
         self.assertEqual(user.language, "fr-fr")
 
-        request.language = "en"
-        User.update_or_create_from_request_user(request)
+        token["language"] = "en"
+        user.update_from_token(token)
         user.refresh_from_db()
         self.assertEqual(user.language, "en-us")
 
-        request.language = "en-gb"
-        User.update_or_create_from_request_user(request)
+        token["language"] = "en-gb"
+        user.update_from_token(token)
         user.refresh_from_db()
         self.assertEqual(user.language, "en-us")
 
-        request.language = "fr"
-        User.update_or_create_from_request_user(request)
+        token["language"] = "fr"
+        user.update_from_token(token)
         user.refresh_from_db()
         self.assertEqual(user.language, "fr-fr")
 
         # `it` is not defined in the settings
-        request.language = "it"
-        User.update_or_create_from_request_user(request)
+        token["language"] = "it"
+        user.update_from_token(token)
         user.refresh_from_db()
         # the default language is used
         self.assertEqual(user.language, "en-us")
 
-        request.language = "whatever"
-        User.update_or_create_from_request_user(request)
+        token["language"] = "whatever"
+        user.update_from_token(token)
         user.refresh_from_db()
         # the default language is used
         self.assertEqual(user.language, "en-us")
@@ -149,28 +147,23 @@ class UserModelTestCase(TestCase):
             LANGUAGES=(("fr-ca", "Canadian"), ("it", "Italian"), ("es-ve", "Spain")),
             LANGUAGE_CODE="es-ve",
         ):
-            request.language = "fr_FR"
-            User.update_or_create_from_request_user(request)
+            token["language"] = "fr_FR"
+            user.update_from_token(token)
             user.refresh_from_db()
             self.assertEqual(user.language, "fr-ca")
 
-            request.language = "fr-FR"
-            User.update_or_create_from_request_user(request)
+            token["language"] = "fr"
+            user.update_from_token(token)
             user.refresh_from_db()
             self.assertEqual(user.language, "fr-ca")
 
-            request.language = "fr"
-            User.update_or_create_from_request_user(request)
-            user.refresh_from_db()
-            self.assertEqual(user.language, "fr-ca")
-
-            request.language = "it"
-            User.update_or_create_from_request_user(request)
+            token["language"] = "it"
+            user.update_from_token(token)
             user.refresh_from_db()
             self.assertEqual(user.language, "it")
 
-            request.language = "ru"
-            User.update_or_create_from_request_user(request)
+            token["language"] = "ru"
+            user.update_from_token(token)
             user.refresh_from_db()
-            # default is used
+            # the default language is used
             self.assertEqual(user.language, "es-ve")

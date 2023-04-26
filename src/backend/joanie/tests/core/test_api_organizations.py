@@ -2,6 +2,7 @@
 Test suite for Organization API endpoint.
 """
 import random
+from unittest import mock
 
 from joanie.core import factories, models
 from joanie.tests.base import BaseAPITestCase
@@ -24,7 +25,38 @@ class OrganizationApiTest(BaseAPITestCase):
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
 
-    def test_api_organization_list_authenticated(self):
+    def test_api_organization_list_authenticated_queries(self):
+        """
+        Authenticated users should only see the organizations to which they have access.
+        """
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+
+        factories.OrganizationFactory()
+        organizations = factories.OrganizationFactory.create_batch(3)
+        factories.UserOrganizationAccessFactory(
+            user=user, organization=organizations[0]
+        )
+        factories.UserOrganizationAccessFactory(
+            user=user, organization=organizations[1]
+        )
+
+        with self.assertNumQueries(2):
+            response = self.client.get(
+                "/api/v1.0/organizations/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        results = response.json()["results"]
+        self.assertEqual(len(results), 2)
+        self.assertCountEqual(
+            [item["id"] for item in results],
+            [str(organization.id) for organization in organizations[:2]],
+        )
+        self.assertTrue(all(item["abilities"]["get"] for item in results))
+
+    def test_api_organization_list_authenticated_format(self):
         """
         Authenticated users should only see the organizations to which they have access.
         """
@@ -35,10 +67,13 @@ class OrganizationApiTest(BaseAPITestCase):
         organization = factories.OrganizationFactory()
         factories.UserOrganizationAccessFactory(user=user, organization=organization)
 
-        response = self.client.get(
-            "/api/v1.0/organizations/",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
+        with mock.patch.object(
+            models.Organization, "get_abilities", return_value={"foo": "bar"}
+        ) as mock_abilities:
+            response = self.client.get(
+                "/api/v1.0/organizations/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -49,6 +84,7 @@ class OrganizationApiTest(BaseAPITestCase):
                 "previous": None,
                 "results": [
                     {
+                        "abilities": {"foo": "bar"},
                         "code": organization.code,
                         "id": str(organization.id),
                         "logo": {
@@ -62,6 +98,8 @@ class OrganizationApiTest(BaseAPITestCase):
                 ],
             },
         )
+        self.assertEqual(mock_abilities.call_args_list[0][1]["user"], user)
+        self.assertEqual(str(mock_abilities.call_args_list[0][1]["auth"]), str(token))
 
     def test_api_organization_get_anonymous(self):
         """
@@ -111,8 +149,10 @@ class OrganizationApiTest(BaseAPITestCase):
         )
 
         self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertTrue(content.pop("abilities")["get"])
         self.assertEqual(
-            response.json(),
+            content,
             {
                 "code": organization.code,
                 "id": str(organization.id),

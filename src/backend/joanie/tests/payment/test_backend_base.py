@@ -136,9 +136,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase):
         payment information provided then mark order as validated.
         """
         backend = TestBasePaymentBackend()
-        owner = UserFactory(
-            email="sam@fun-test.fr", language="en-us", username="Samantha"
-        )
+        owner = UserFactory(email="sam@fun-test.fr", language="en-us")
         order = OrderFactory(owner=owner)
         billing_address = BillingAddressDictFactory()
         payment = {
@@ -162,7 +160,9 @@ class BasePaymentBackendTestCase(BasePaymentTestCase):
         self.assertEqual(order.state, "validated")
 
         # - Email has been sent
-        self._check_order_validated_email_sent("sam@fun-test.fr", "Samantha", order)
+        self._check_order_validated_email_sent(
+            "sam@fun-test.fr", owner.get_full_name(), order
+        )
 
     def test_payment_backend_base_do_on_payment_failure(self):
         """
@@ -325,7 +325,10 @@ class BasePaymentBackendTestCase(BasePaymentTestCase):
 
         backend = TestBasePaymentBackend()
         owner = UserFactory(
-            email="sam@fun-test.fr", language="fr-fr", username="Samantha"
+            email="sam@fun-test.fr",
+            language="fr-fr",
+            first_name="Dave",
+            last_name="Bowman",
         )
         order = OrderFactory(owner=owner)
         billing_address = BillingAddressDictFactory()
@@ -352,7 +355,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase):
         # - Email has been sent
         email_content = " ".join(mail.outbox[0].body.split())
         self.assertIn("Votre commande a été confirmée.", email_content)
-        self.assertIn("Bonjour Samantha", email_content)
+        self.assertIn("Bonjour Dave Bowman", email_content)
         self.assertNotIn("Your order has been confirmed.", email_content)
 
         # - Check it's the right object

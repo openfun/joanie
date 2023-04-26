@@ -45,10 +45,12 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         factories.UserCourseAccessFactory(course=course, role="manager")
         factories.UserCourseAccessFactory(course=course, role="owner")
 
-        response = self.client.get(
-            f"/api/v1.0/courses/{course.id!s}/accesses/",
-            HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
-        )
+        with self.assertNumQueries(1):
+            response = self.client.get(
+                f"/api/v1.0/courses/{course.id!s}/accesses/",
+                HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
+            )
+
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["results"], [])
 
@@ -67,7 +69,6 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
                 course=course, user=user, role="instructor"
             ),
             # Accesses for other users
-            factories.UserCourseAccessFactory(course=course),
             factories.UserCourseAccessFactory(course=course, role="administrator"),
             factories.UserCourseAccessFactory(course=course, role="instructor"),
             factories.UserCourseAccessFactory(course=course, role="manager"),
@@ -81,23 +82,25 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             course=other_course, user=user, role="instructor"
         )
         # Accesses for other users
-        factories.UserCourseAccessFactory(course=other_course)
         factories.UserCourseAccessFactory(course=other_course, role="administrator")
         factories.UserCourseAccessFactory(course=other_course, role="instructor")
         factories.UserCourseAccessFactory(course=other_course, role="manager")
         factories.UserCourseAccessFactory(course=other_course, role="owner")
 
-        response = self.client.get(
-            f"/api/v1.0/courses/{course.id!s}/accesses/",
-            HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
-        )
+        with self.assertNumQueries(3):
+            response = self.client.get(
+                f"/api/v1.0/courses/{course.id!s}/accesses/",
+                HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
+            )
+
         self.assertEqual(response.status_code, 200)
         results = response.json()["results"]
-        self.assertEqual(len(results), 6)
+        self.assertEqual(len(results), 5)
         self.assertCountEqual(
             [item["id"] for item in results],
             [str(access.id) for access in course_accesses],
         )
+        self.assertTrue(all(item["abilities"]["get"] for item in results))
 
     def test_api_course_accesses_list_authenticated_manager(self):
         """
@@ -143,6 +146,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             [item["id"] for item in results],
             [str(access.id) for access in course_accesses],
         )
+        self.assertTrue(all(item["abilities"]["get"] for item in results))
 
     def test_api_course_accesses_list_authenticated_administrator(self):
         """
@@ -190,6 +194,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             [item["id"] for item in results],
             [str(access.id) for access in course_accesses],
         )
+        self.assertTrue(all(item["abilities"]["get"] for item in results))
 
     def test_api_course_accesses_list_authenticated_owner(self):
         """
@@ -235,6 +240,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             [item["id"] for item in results],
             [str(access.id) for access in course_accesses],
         )
+        self.assertTrue(all(item["abilities"]["get"] for item in results))
 
     @mock.patch.object(PageNumberPagination, "get_page_size", return_value=2)
     def test_api_course_accesses_list_pagination(self, _mock_page_size):
@@ -333,8 +339,8 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
 
     def test_api_course_accesses_retrieve_authenticated_instructor(self):
         """
-        Authenticated users should not be allowed to retrieve a course access for a
-        course in which they are only instructor.
+        A user who is an instructor of a course should be allowed to retrieve the
+        associated course accessesnly instructor.
         """
         user = factories.UserFactory()
         jwt_token = self.get_user_token(user.username)
@@ -350,16 +356,23 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
                 f"/api/v1.0/courses/{course.id!s}/accesses/{access.id!s}/",
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
-            self.assertEqual(response.status_code, 403)
+
+            self.assertEqual(response.status_code, 200)
+            content = response.json()
+            self.assertTrue(content.pop("abilities")["get"])
             self.assertEqual(
-                response.json(),
-                {"detail": "You do not have permission to perform this action."},
+                content,
+                {
+                    "id": str(access.id),
+                    "user": str(access.user.id),
+                    "role": access.role,
+                },
             )
 
     def test_api_course_accesses_retrieve_authenticated_manager(self):
         """
-        Authenticated users should not be allowed to retrieve a course access for a
-        course in which they are only manager.
+        A user who is a manager of a course should be allowed to retrieve the
+        associated course accesses.
         """
         user = factories.UserFactory()
         jwt_token = self.get_user_token(user.username)
@@ -375,16 +388,23 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
                 f"/api/v1.0/courses/{course.id!s}/accesses/{access.id!s}/",
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
-            self.assertEqual(response.status_code, 403)
+
+            self.assertEqual(response.status_code, 200)
+            content = response.json()
+            self.assertTrue(content.pop("abilities")["get"])
             self.assertEqual(
-                response.json(),
-                {"detail": "You do not have permission to perform this action."},
+                content,
+                {
+                    "id": str(access.id),
+                    "user": str(access.user.id),
+                    "role": access.role,
+                },
             )
 
     def test_api_course_accesses_retrieve_authenticated_administrator(self):
         """
         A user who is a administrator of a course should be allowed to retrieve the
-        associated course accesses
+        associated course accesses.
         """
         user = factories.UserFactory()
         jwt_token = self.get_user_token(user.username)
@@ -400,8 +420,10 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             )
 
             self.assertEqual(response.status_code, 200)
+            content = response.json()
+            self.assertTrue(content.pop("abilities")["get"])
             self.assertEqual(
-                response.json(),
+                content,
                 {
                     "id": str(access.id),
                     "user": str(access.user.id),
@@ -428,8 +450,10 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             )
 
             self.assertEqual(response.status_code, 200)
+            content = response.json()
+            self.assertTrue(content.pop("abilities")["get"])
             self.assertEqual(
-                response.json(),
+                content,
                 {
                     "id": str(access.id),
                     "user": str(access.user.id),
@@ -774,14 +798,21 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         }
 
         for field, value in new_values.items():
+            new_data = {**old_values, field: value}
             response = self.client.put(
                 f"/api/v1.0/courses/{course.id!s}/accesses/{access.id!s}/",
-                data={**old_values, field: value},
+                data=new_data,
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
 
-            self.assertEqual(response.status_code, 200)
+            if (
+                new_data["role"] == old_values["role"]
+            ):  # we are not not really updating the role
+                self.assertEqual(response.status_code, 403)
+            else:
+                self.assertEqual(response.status_code, 200)
+
             access.refresh_from_db()
             updated_values = CourseAccessSerializer(instance=access).data
             if field == "role":
@@ -848,16 +879,19 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         }
 
         for field, value in new_values.items():
+            new_data = {**old_values, field: value}
             response = self.client.put(
                 f"/api/v1.0/courses/{course.id!s}/accesses/{access.id!s}/",
-                data={**old_values, field: value},
+                data=new_data,
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
-            if field == "role":
+            # We are not allowed or not really updating the role
+            if field == "role" or new_data["role"] == old_values["role"]:
                 self.assertEqual(response.status_code, 403)
             else:
                 self.assertEqual(response.status_code, 200)
+
             access.refresh_from_db()
             updated_values = CourseAccessSerializer(instance=access).data
             self.assertEqual(updated_values, old_values)
@@ -885,14 +919,21 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         }
 
         for field, value in new_values.items():
+            new_data = {**old_values, field: value}
             response = self.client.put(
                 f"/api/v1.0/courses/{course.id!s}/accesses/{access.id!s}/",
-                data={**old_values, field: value},
+                data=new_data,
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
 
-            self.assertEqual(response.status_code, 200)
+            if (
+                new_data["role"] == old_values["role"]
+            ):  # we are not really updating the role
+                self.assertEqual(response.status_code, 403)
+            else:
+                self.assertEqual(response.status_code, 200)
+
             access.refresh_from_db()
             updated_values = CourseAccessSerializer(instance=access).data
 
@@ -1116,7 +1157,12 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
 
-            self.assertEqual(response.status_code, 200)
+            if field == "role" and value == old_values["role"]:
+                # We are not really updating the role
+                self.assertEqual(response.status_code, 403)
+            else:
+                self.assertEqual(response.status_code, 200)
+
             access.refresh_from_db()
             updated_values = CourseAccessSerializer(instance=access).data
             if field == "role":
@@ -1155,6 +1201,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
             self.assertEqual(response.status_code, 403)
+
             access.refresh_from_db()
             updated_values = CourseAccessSerializer(instance=access).data
             self.assertEqual(updated_values, old_values)
@@ -1227,7 +1274,12 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
 
-            self.assertEqual(response.status_code, 200)
+            if field == "role" and value == old_values["role"]:
+                # We are not really updating the role
+                self.assertEqual(response.status_code, 403)
+            else:
+                self.assertEqual(response.status_code, 200)
+
             access.refresh_from_db()
             updated_values = CourseAccessSerializer(instance=access).data
 
@@ -1264,6 +1316,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
             self.assertEqual(response.status_code, 403)
+
             access.refresh_from_db()
             updated_values = CourseAccessSerializer(instance=access).data
             self.assertEqual(updated_values, old_values)
