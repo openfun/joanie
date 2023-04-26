@@ -160,6 +160,14 @@ class Organization(parler_models.TranslatableModel, BaseModel):
             f"[{self.code}] {self.safe_translation_getter('title', any_language=True)}"
         )
 
+    def clean(self):
+        """
+        We normalize the code with slugify for better uniqueness
+        """
+        # Normalize the code by slugifying and capitalizing it
+        self.code = utils.normalize_code(self.code)
+        return super().clean()
+
 
 class OrganizationAccess(BaseModel):
     """Link table between organizations and users"""
