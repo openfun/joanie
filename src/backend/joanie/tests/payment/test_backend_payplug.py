@@ -466,7 +466,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
 
         # Email has been sent
         self._check_order_validated_email_sent(
-            order.owner.email, order.owner.username, order
+            order.owner.email, order.owner.get_full_name(), order
         )
 
     @mock.patch.object(BasePaymentBackend, "_do_on_payment_success")

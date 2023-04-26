@@ -12,7 +12,7 @@ from django.test import TestCase
 from djmoney.money import Money
 from moneyed import EUR
 
-from joanie.core import enums, factories, models
+from joanie.core import enums, factories
 
 
 class ProductModelsTestCase(TestCase):

@@ -70,7 +70,7 @@ class AddressAPITestCase(BaseAPITestCase):
         self.assertEqual(content["code"], "token_not_valid")
 
     def test_api_address_get_addresses_for_new_user(self):
-        """If we try to get addresses for a user not in db, we create a new user first"""
+        """If we try to get addresses for a user not in db, the user is not created."""
         username = "panoramix"
         token = self.get_user_token(username)
 
@@ -78,7 +78,9 @@ class AddressAPITestCase(BaseAPITestCase):
             "/api/v1.0/addresses/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
 
-        self.assertEqual(response.status_code, 200)
+        with self.assertNumQueries(0):
+            self.assertEqual(response.status_code, 200)
+
         self.assertEqual(
             response.json(),
             {
@@ -88,7 +90,7 @@ class AddressAPITestCase(BaseAPITestCase):
                 "results": [],
             },
         )
-        self.assertEqual(models.User.objects.get(username=username).username, username)
+        self.assertFalse(models.User.objects.exists())
 
     def test_api_address_get_addresses(self):
         """Get addresses for a user in db with two addresses linked to him"""
@@ -96,9 +98,12 @@ class AddressAPITestCase(BaseAPITestCase):
         token = self.get_user_token(user.username)
         address1 = factories.AddressFactory.create(owner=user, title="Office")
         address2 = factories.AddressFactory.create(owner=user, title="Home")
-        response = self.client.get(
-            "/api/v1.0/addresses/", HTTP_AUTHORIZATION=f"Bearer {token}"
-        )
+
+        with self.assertNumQueries(2):
+            response = self.client.get(
+                "/api/v1.0/addresses/", HTTP_AUTHORIZATION=f"Bearer {token}"
+            )
+
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.json(),

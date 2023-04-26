@@ -6,11 +6,11 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.functional import lazy
-from django.utils.translation import get_supported_language_variant
 from django.utils.translation import gettext_lazy as _
 
 from django_countries.fields import CountryField
 
+from ..authentication import get_user_dict
 from .base import BaseModel
 
 
@@ -39,28 +39,13 @@ class User(BaseModel, auth_models.AbstractUser):
     def __str__(self):
         return self.username
 
-    @staticmethod
-    def update_or_create_from_request_user(request_user):
-        """Create user from token or update it"""
-        try:
-            language = get_supported_language_variant(
-                request_user.language.replace("_", "-")
-            )
-        except LookupError:
-            language = settings.LANGUAGE_CODE
-
-        user = User.objects.update_or_create(
-            username=request_user.username,
-            defaults={
-                # Currently, the authentication backend only provide full_name,
-                # so we save it in the first_name field
-                "first_name": getattr(request_user, "full_name", None) or "",
-                "email": request_user.email,
-                "language": language,
-            },
-        )[0]
-
-        return user
+    def update_from_token(self, token):
+        """Update user from token token."""
+        values = get_user_dict(token)
+        for key, value in values.items():
+            if value != getattr(self, key):
+                User.objects.filter(username=self.username).update(**values)
+                break
 
 
 class Address(BaseModel):

@@ -72,7 +72,6 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
                 organization=organization, user=user, role="member"
             ),
             # Accesses for other users
-            factories.UserOrganizationAccessFactory(organization=organization),
             factories.UserOrganizationAccessFactory(
                 organization=organization, role="member"
             ),
@@ -91,7 +90,6 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             organization=other_organization, user=user, role="member"
         )
         # Accesses for other users
-        factories.UserOrganizationAccessFactory(organization=other_organization)
         factories.UserOrganizationAccessFactory(
             organization=other_organization, role="member"
         )
@@ -102,17 +100,20 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             organization=other_organization, role="owner"
         )
 
-        response = self.client.get(
-            f"/api/v1.0/organizations/{organization.id!s}/accesses/",
-            HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
-        )
+        with self.assertNumQueries(3):
+            response = self.client.get(
+                f"/api/v1.0/organizations/{organization.id!s}/accesses/",
+                HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
+            )
+
         self.assertEqual(response.status_code, 200)
         results = response.json()["results"]
-        self.assertEqual(len(results), 5)
+        self.assertEqual(len(results), 4)
         self.assertCountEqual(
             [item["id"] for item in results],
             [str(access.id) for access in organization_accesses],
         )
+        self.assertTrue(all(item["abilities"]["get"] for item in results))
 
     def test_api_organization_accesses_list_authenticated_administrator(self):
         """
@@ -170,6 +171,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             [item["id"] for item in results],
             [str(access.id) for access in organization_accesses],
         )
+        self.assertTrue(all(item["abilities"]["get"] for item in results))
 
     def test_api_organization_accesses_list_authenticated_owner(self):
         """
@@ -227,6 +229,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             [item["id"] for item in results],
             [str(access.id) for access in organization_accesses],
         )
+        self.assertTrue(all(item["abilities"]["get"] for item in results))
 
     @mock.patch.object(PageNumberPagination, "get_page_size", return_value=2)
     def test_api_organization_accesses_list_pagination(self, _mock_page_size):
@@ -348,15 +351,21 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
                 f"/api/v1.0/organizations/{organization.id!s}/accesses/{access.id!s}/",
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
-            self.assertEqual(response.status_code, 403)
+            self.assertEqual(response.status_code, 200)
+            content = response.json()
+            self.assertTrue(content.pop("abilities")["get"])
             self.assertEqual(
-                response.json(),
-                {"detail": "You do not have permission to perform this action."},
+                content,
+                {
+                    "id": str(access.id),
+                    "user": str(access.user.id),
+                    "role": access.role,
+                },
             )
 
     def test_api_organization_accesses_retrieve_authenticated_administrator(self):
         """
-        A user who is a administrator of an organization should be allowed to retrieve the
+        A user who is an administrator of an organization should be allowed to retrieve the
         associated organization accesses
         """
         user = factories.UserFactory()
@@ -375,8 +384,10 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             )
 
             self.assertEqual(response.status_code, 200)
+            content = response.json()
+            self.assertTrue(content.pop("abilities")["get"])
             self.assertEqual(
-                response.json(),
+                content,
                 {
                     "id": str(access.id),
                     "user": str(access.user.id),
@@ -405,12 +416,14 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             )
 
             self.assertEqual(response.status_code, 200)
+            content = response.json()
+            self.assertTrue(content.pop("abilities")["get"])
             self.assertEqual(
-                response.json(),
+                content,
                 {
                     "id": str(access.id),
-                    "user": str(access.user.id),
                     "role": access.role,
+                    "user": str(access.user.id),
                 },
             )
 
@@ -685,14 +698,21 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         }
 
         for field, value in new_values.items():
+            new_data = {**old_values, field: value}
             response = self.client.put(
                 f"/api/v1.0/organizations/{organization.id!s}/accesses/{access.id!s}/",
-                data={**old_values, field: value},
+                data=new_data,
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
 
-            self.assertEqual(response.status_code, 200)
+            if (
+                new_data["role"] == old_values["role"]
+            ):  # we are not not really updating the role
+                self.assertEqual(response.status_code, 403)
+            else:
+                self.assertEqual(response.status_code, 200)
+
             access.refresh_from_db()
             updated_values = OrganizationAccessSerializer(instance=access).data
             if field == "role":
@@ -763,16 +783,19 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         }
 
         for field, value in new_values.items():
+            new_data = {**old_values, field: value}
             response = self.client.put(
                 f"/api/v1.0/organizations/{organization.id!s}/accesses/{access.id!s}/",
-                data={**old_values, field: value},
+                data=new_data,
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
-            if field == "role":
+            # We are not allowed or not really updating the role
+            if field == "role" or new_data["role"] == old_values["role"]:
                 self.assertEqual(response.status_code, 403)
             else:
                 self.assertEqual(response.status_code, 200)
+
             access.refresh_from_db()
             updated_values = OrganizationAccessSerializer(instance=access).data
             self.assertEqual(updated_values, old_values)
@@ -801,14 +824,21 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         }
 
         for field, value in new_values.items():
+            new_data = {**old_values, field: value}
             response = self.client.put(
                 f"/api/v1.0/organizations/{organization.id!s}/accesses/{access.id!s}/",
-                data={**old_values, field: value},
+                data=new_data,
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
 
-            self.assertEqual(response.status_code, 200)
+            if (
+                new_data["role"] == old_values["role"]
+            ):  # we are not really updating the role
+                self.assertEqual(response.status_code, 403)
+            else:
+                self.assertEqual(response.status_code, 200)
+
             access.refresh_from_db()
             updated_values = OrganizationAccessSerializer(instance=access).data
 
@@ -1006,7 +1036,12 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
 
-            self.assertEqual(response.status_code, 200)
+            if field == "role" and value == old_values["role"]:
+                # We are not really updating the role
+                self.assertEqual(response.status_code, 403)
+            else:
+                self.assertEqual(response.status_code, 200)
+
             access.refresh_from_db()
             updated_values = OrganizationAccessSerializer(instance=access).data
             if field == "role":
@@ -1122,7 +1157,12 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
 
-            self.assertEqual(response.status_code, 200)
+            if field == "role" and value == old_values["role"]:
+                # We are not really updating the role
+                self.assertEqual(response.status_code, 403)
+            else:
+                self.assertEqual(response.status_code, 200)
+
             access.refresh_from_db()
             updated_values = OrganizationAccessSerializer(instance=access).data
 

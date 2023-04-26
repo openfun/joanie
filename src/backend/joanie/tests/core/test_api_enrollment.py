@@ -97,10 +97,12 @@ class EnrollmentApiTest(BaseAPITestCase):
         # The user can see his/her enrollment
         token = self.get_user_token(enrollment.user.username)
 
-        response = self.client.get(
-            "/api/v1.0/enrollments/",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
+        with self.assertNumQueries(2):
+            response = self.client.get(
+                "/api/v1.0/enrollments/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
         self.assertEqual(response.status_code, 200)
         content = json.loads(response.content)
 
@@ -159,10 +161,12 @@ class EnrollmentApiTest(BaseAPITestCase):
         # The user linked to the other enrollment can only see his/her enrollment
         token = self.get_user_token(other_enrollment.user.username)
 
-        response = self.client.get(
-            "/api/v1.0/enrollments/",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
+        with self.assertNumQueries(2):
+            response = self.client.get(
+                "/api/v1.0/enrollments/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
         self.assertEqual(response.status_code, 200)
         content = json.loads(response.content)
 
@@ -288,11 +292,10 @@ class EnrollmentApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         # Retrieve user's enrollment related to the first course_run
-        with self.assertNumQueries(8):
-            response = self.client.get(
-                f"/api/v1.0/enrollments/?course_run={str(course_run_1.id)}",
-                HTTP_AUTHORIZATION=f"Bearer {token}",
-            )
+        response = self.client.get(
+            f"/api/v1.0/enrollments/?course_run={str(course_run_1.id)}",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -352,11 +355,10 @@ class EnrollmentApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         # Retrieve user's enrollment related to the first course_run
-        with self.assertNumQueries(6):
-            response = self.client.get(
-                "/api/v1.0/enrollments/?course_run=invalid_course_run_id",
-                HTTP_AUTHORIZATION=f"Bearer {token}",
-            )
+        response = self.client.get(
+            "/api/v1.0/enrollments/?course_run=invalid_course_run_id",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {"course_run": ["Enter a valid UUID."]})
@@ -386,7 +388,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             user=user, course_run=cr3, was_created_by_order=True
         )
 
-        with self.assertNumQueries(9):
+        with self.assertNumQueries(2):
             response = self.client.get(
                 "/api/v1.0/enrollments/?was_created_by_order=false",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -396,7 +398,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         content = response.json()
         self.assertEqual(content["count"], 2)
 
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(2):
             response = self.client.get(
                 "/api/v1.0/enrollments/?was_created_by_order=true",
                 HTTP_AUTHORIZATION=f"Bearer {token}",

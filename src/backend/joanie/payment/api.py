@@ -9,9 +9,7 @@ from rest_framework import mixins, permissions, viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from joanie.core.models import User
-
-from . import exceptions, get_payment_backend, serializers
+from . import exceptions, get_payment_backend, models, serializers
 
 logger = logging.getLogger(__name__)
 
@@ -62,5 +60,9 @@ class CreditCardViewSet(
 
     def get_queryset(self):
         """Custom queryset to get user's credit cards"""
-        user = User.update_or_create_from_request_user(request_user=self.request.user)
-        return user.credit_cards.all()
+        username = (
+            self.request.auth["username"]
+            if self.request.auth
+            else self.request.user.username
+        )
+        return models.CreditCard.objects.filter(owner__username=username)

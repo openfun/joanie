@@ -159,8 +159,6 @@ class Base(Configuration):
         "django.middleware.csrf.CsrfViewMiddleware",
         "django.contrib.auth.middleware.AuthenticationMiddleware",
         "django.contrib.messages.middleware.MessageMiddleware",
-        "django.contrib.sites.middleware.CurrentSiteMiddleware",
-        "dockerflow.django.middleware.DockerflowMiddleware",
     ]
 
     AUTHENTICATION_BACKENDS = [
@@ -235,7 +233,7 @@ class Base(Configuration):
 
     REST_FRAMEWORK = {
         "DEFAULT_AUTHENTICATION_CLASSES": (
-            "rest_framework_simplejwt.authentication.JWTTokenUserAuthentication",
+            "joanie.core.authentication.DelegatedJWTAuthentication",
         ),
         "DEFAULT_FILTER_BACKENDS": [
             "django_filters.rest_framework.DjangoFilterBackend"
@@ -257,6 +255,15 @@ class Base(Configuration):
         "USER_ID_CLAIM": "username",
         "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
     }
+    JWT_USER_FIELDS_SYNC = values.DictValue(
+        {
+            "email": "email",
+            "first_name": "full_name",
+            "language": "language",
+        },
+        environ_name="JOANIE_JWT_USER_FIELDS_SYNC",
+        environ_prefix=None,
+    )
 
     # Mail
     EMAIL_BACKEND = values.Value("django.core.mail.backends.smtp.EmailBackend")
