@@ -52,6 +52,23 @@ class OrderModelsTestCase(TestCase):
 
         factories.OrderFactory(owner=order.owner, product=product, course=order.course)
 
+    def test_models_order_course_runs_relation_sorted_by_position(self):
+        """The product/course relation should be sorted by position."""
+        courses = factories.CourseFactory.create_batch(5)
+        product = factories.ProductFactory(target_courses=courses)
+
+        # Create an order link to the product
+        order = factories.OrderFactory(product=product)
+
+        target_courses = order.target_courses.order_by("product_target_relations")
+        self.assertCountEqual(target_courses, courses)
+
+        position = 0
+        for target_course in target_courses:
+            course_position = target_course.product_target_relations.get().position
+            self.assertGreaterEqual(course_position, position)
+            position = course_position
+
     def test_models_order_course_in_product_new(self):
         """
         An order's course should be included in the target courses of its related product at
