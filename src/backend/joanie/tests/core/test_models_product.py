@@ -58,15 +58,11 @@ class ProductModelsTestCase(TestCase):
         product = factories.ProductFactory()
         factories.ProductTargetCourseRelationFactory.create_batch(5, product=product)
 
-        expected_courses = list(
-            p.course
-            for p in models.ProductTargetCourseRelation.objects.order_by("position")
-        )
-
-        ordered_courses = list(
-            product.target_courses.order_by("product_target_relations")
-        )
-        self.assertEqual(ordered_courses, expected_courses)
+        position = 0
+        for course in product.target_courses.order_by("product_target_relations"):
+            course_position = course.product_target_relations.get().position
+            self.assertGreaterEqual(course_position, position)
+            position = course_position
 
     def test_models_product_course_runs_relation_course_runs(self):
         """

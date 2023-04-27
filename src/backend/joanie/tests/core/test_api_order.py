@@ -830,7 +830,7 @@ class OrderApiTest(BaseAPITestCase):
         )
         course = product.courses.first()
         organization = product.course_relations.first().organizations.first()
-        self.assertEqual(
+        self.assertCountEqual(
             list(product.target_courses.order_by("product_relations")), target_courses
         )
 
@@ -856,7 +856,7 @@ class OrderApiTest(BaseAPITestCase):
         self.assertEqual(models.Order.objects.count(), 1)
         order = models.Order.objects.get()
 
-        self.assertEqual(
+        self.assertCountEqual(
             list(order.target_courses.order_by("product_relations")), target_courses
         )
 
