@@ -520,11 +520,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         self.assertEqual(response.status_code, 403)
         self.assertEqual(
             response.json(),
-            {
-                "detail": (
-                    "You must be administrator or owner of a course to manage its accesses."
-                )
-            },
+            {"detail": ("You are not allowed to manage accesses for this course.")},
         )
         self.assertFalse(CourseAccess.objects.filter(user=other_user).exists())
 
@@ -552,11 +548,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         self.assertEqual(response.status_code, 403)
         self.assertEqual(
             response.json(),
-            {
-                "detail": (
-                    "You must be administrator or owner of a course to manage its accesses."
-                )
-            },
+            {"detail": ("You are not allowed to manage accesses for this course.")},
         )
         self.assertFalse(CourseAccess.objects.filter(user=other_user).exists())
 
@@ -584,11 +576,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         self.assertEqual(response.status_code, 403)
         self.assertEqual(
             response.json(),
-            {
-                "detail": (
-                    "You must be administrator or owner of a course to manage its accesses."
-                )
-            },
+            {"detail": ("You are not allowed to manage accesses for this course.")},
         )
         self.assertFalse(CourseAccess.objects.filter(user=other_user).exists())
 
