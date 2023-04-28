@@ -486,7 +486,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             response.json(),
             {
                 "detail": (
-                    "You must be administrator or owner of an organization to manage its accesses."
+                    "You are not allowed to manage accesses for this organization."
                 )
             },
         )
@@ -516,7 +516,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             response.json(),
             {
                 "detail": (
-                    "You must be administrator or owner of an organization to manage its accesses."
+                    "You are not allowed to manage accesses for this organization."
                 )
             },
         )
