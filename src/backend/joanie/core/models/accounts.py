@@ -47,6 +47,41 @@ class User(BaseModel, auth_models.AbstractUser):
                 User.objects.filter(username=self.username).update(**values)
                 break
 
+    def get_abilities(self, user):
+        """
+        Compute and return abilities for the user taking into account their
+        roles on other objects.
+        """
+        is_self = user == self
+        abilities = {
+            "delete": False,
+            "get": is_self,
+            "patch": is_self,
+            "put": is_self,
+        }
+
+        if is_self:
+            # Apply `order_by()` to get read of default ordering and allow
+            # the distinct clause to work as expected on the `role` values
+            course_roles = (
+                self.course_accesses.order_by()
+                .values_list("role", flat=True)
+                .distinct()
+            )
+            organization_roles = (
+                self.organization_accesses.order_by()
+                .values_list("role", flat=True)
+                .distinct()
+            )
+            abilities.update(
+                {
+                    "course_roles": course_roles,
+                    "organization_roles": organization_roles,
+                }
+            )
+
+        return abilities
+
 
 class Address(BaseModel):
     """Address model stores address information (to generate bill after payment)"""
