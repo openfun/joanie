@@ -9,6 +9,7 @@ from django.utils.functional import lazy
 from django.utils.translation import gettext_lazy as _
 
 from django_countries.fields import CountryField
+from rest_framework_simplejwt.settings import api_settings
 
 from ..authentication import get_user_dict
 from .base import BaseModel
@@ -44,7 +45,13 @@ class User(BaseModel, auth_models.AbstractUser):
         values = get_user_dict(token)
         for key, value in values.items():
             if value != getattr(self, key):
-                User.objects.filter(username=self.username).update(**values)
+                User.objects.filter(
+                    **{
+                        api_settings.USER_ID_FIELD: getattr(
+                            self, api_settings.USER_ID_FIELD
+                        )
+                    }
+                ).update(**values)
                 break
 
     def get_abilities(self, user):

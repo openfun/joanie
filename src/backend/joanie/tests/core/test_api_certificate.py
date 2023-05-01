@@ -53,7 +53,7 @@ class CertificateApiTest(BaseAPITestCase):
         )
         certificate = CertificateFactory(order=order)
 
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         with self.assertNumQueries(2):
             response = self.client.get(
@@ -103,7 +103,7 @@ class CertificateApiTest(BaseAPITestCase):
     def test_api_certificate_read_list_pagination(self, _mock_page_size):
         """Pagination should work as expected."""
         user = UserFactory()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         orders = [
             OrderFactory(
@@ -180,7 +180,7 @@ class CertificateApiTest(BaseAPITestCase):
         )
         certificate = CertificateFactory(order=order)
 
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         # - Try to retrieve a not owned certificate should return a 404
         response = self.client.get(
@@ -263,7 +263,7 @@ class CertificateApiTest(BaseAPITestCase):
         )
         certificate = CertificateFactory(order=order)
 
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         # - Try to retrieve a not owned certificate should return a 404
         response = self.client.get(
@@ -315,7 +315,7 @@ class CertificateApiTest(BaseAPITestCase):
         order = OrderFactory(product=product, organization=organization, owner=user)
         certificate = CertificateFactory(order=order)
 
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         response = self.client.get(
             f"/api/v1.0/certificates/{certificate.id}/download/",
@@ -333,7 +333,7 @@ class CertificateApiTest(BaseAPITestCase):
         Create a certificate should not be allowed even if user is admin
         """
         user = UserFactory(is_staff=True, is_superuser=True)
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
         response = self.client.post(
             "/api/v1.0/certificates/",
             {"id": uuid.uuid4()},
@@ -349,7 +349,7 @@ class CertificateApiTest(BaseAPITestCase):
         Update a certificate should not be allowed even if user is admin
         """
         user = UserFactory(is_staff=True, is_superuser=True)
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
         certificate = CertificateFactory()
         response = self.client.put(
             f"/api/v1.0/certificates/{certificate.id}/",
@@ -366,7 +366,7 @@ class CertificateApiTest(BaseAPITestCase):
         Delete a certificate should not be allowed even if user is admin
         """
         user = UserFactory(is_staff=True, is_superuser=True)
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
         certificate = CertificateFactory()
         response = self.client.delete(
             f"/api/v1.0/certificates/{certificate.id}/",

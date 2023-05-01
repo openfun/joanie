@@ -28,9 +28,7 @@ class AbilitiesModelSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
         request = self.context.get("request")
         if request and not self.exclude_abilities:
-            representation["abilities"] = instance.get_abilities(
-                user=request.user, auth=request.auth
-            )
+            representation["abilities"] = instance.get_abilities(request.user)
         return representation
 
 
@@ -101,15 +99,12 @@ class CourseAccessSerializer(AbilitiesModelSerializer):
         Check access rights specific to writing (create/update)
         """
         request = self.context.get("request")
-        auth = getattr(request, "auth", None)
         user = getattr(request, "user", None)
         role = attrs.get("role")
 
         # Update
         if self.instance:
-            can_set_role_to = self.instance.get_abilities(user=user, auth=auth)[
-                "set_role_to"
-            ]
+            can_set_role_to = self.instance.get_abilities(user)["set_role_to"]
 
             if role and role not in can_set_role_to:
                 message = (
@@ -123,11 +118,6 @@ class CourseAccessSerializer(AbilitiesModelSerializer):
 
         # Create
         else:
-            username = (
-                auth["username"]
-                if auth
-                else (user.username if user and user.is_authenticated else None)
-            )
             try:
                 course_id = self.context["course_id"]
             except KeyError as exc:
@@ -139,7 +129,7 @@ class CourseAccessSerializer(AbilitiesModelSerializer):
 
             if not models.CourseAccess.objects.filter(
                 course=course_id,
-                user__username=username,
+                user=user,
                 role__in=[enums.OWNER, enums.ADMIN],
             ).exists():
                 raise exceptions.PermissionDenied(
@@ -150,7 +140,7 @@ class CourseAccessSerializer(AbilitiesModelSerializer):
                 role == enums.OWNER
                 and not models.CourseAccess.objects.filter(
                     course=course_id,
-                    user__username=username,
+                    user=user,
                     role=enums.OWNER,
                 ).exists()
             ):
@@ -184,7 +174,7 @@ class OrganizationAccessSerializer(AbilitiesModelSerializer):
         read_only_fields = ["id"]
 
     def update(self, instance, validated_data):
-        """Make "user" and "organization" fields readonly but only on update."""
+        """Make "user" field is readonly but only on update."""
         validated_data.pop("user", None)
         return super().update(instance, validated_data)
 
@@ -194,15 +184,12 @@ class OrganizationAccessSerializer(AbilitiesModelSerializer):
         Check access rights specific to writing (create/update)
         """
         request = self.context.get("request")
-        auth = getattr(request, "auth", None)
         user = getattr(request, "user", None)
         role = attrs.get("role")
 
         # Update
         if self.instance:
-            can_set_role_to = self.instance.get_abilities(user=user, auth=auth)[
-                "set_role_to"
-            ]
+            can_set_role_to = self.instance.get_abilities(user)["set_role_to"]
 
             if role and role not in can_set_role_to:
                 message = (
@@ -216,11 +203,6 @@ class OrganizationAccessSerializer(AbilitiesModelSerializer):
 
         # Create
         else:
-            username = (
-                auth["username"]
-                if auth
-                else (user.username if user and user.is_authenticated else None)
-            )
             try:
                 organization_id = self.context["organization_id"]
             except KeyError as exc:
@@ -233,7 +215,7 @@ class OrganizationAccessSerializer(AbilitiesModelSerializer):
 
             if not models.OrganizationAccess.objects.filter(
                 organization=organization_id,
-                user__username=username,
+                user=user,
                 role__in=[enums.OWNER, enums.ADMIN],
             ).exists():
                 raise exceptions.PermissionDenied(
@@ -244,7 +226,7 @@ class OrganizationAccessSerializer(AbilitiesModelSerializer):
                 role == enums.OWNER
                 and not models.OrganizationAccess.objects.filter(
                     organization=organization_id,
-                    user__username=username,
+                    user=user,
                     role=enums.OWNER,
                 ).exists()
             ):

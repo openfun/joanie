@@ -39,7 +39,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
     def test_models_organization_get_abilities_anonymous(self):
         """Check abilities returned for an anonymous user."""
         organization = factories.OrganizationFactory()
-        abilities = organization.get_abilities(user=AnonymousUser())
+        abilities = organization.get_abilities(AnonymousUser())
 
         self.assertEqual(
             abilities,
@@ -55,7 +55,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
     def test_models_organization_get_abilities_authenticated(self):
         """Check abilities returned for an authenticated user."""
         organization = factories.OrganizationFactory()
-        abilities = organization.get_abilities(user=factories.UserFactory())
+        abilities = organization.get_abilities(factories.UserFactory())
         self.assertEqual(
             abilities,
             {
@@ -70,7 +70,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
     def test_models_organization_get_abilities_owner(self):
         """Check abilities returned for the owner of a organization."""
         access = factories.UserOrganizationAccessFactory(role="owner")
-        abilities = access.organization.get_abilities(user=access.user)
+        abilities = access.organization.get_abilities(access.user)
         self.assertEqual(
             abilities,
             {
@@ -85,7 +85,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
     def test_models_organization_get_abilities_administrator(self):
         """Check abilities returned for the administrator of a organization."""
         access = factories.UserOrganizationAccessFactory(role="administrator")
-        abilities = access.organization.get_abilities(user=access.user)
+        abilities = access.organization.get_abilities(access.user)
         self.assertEqual(
             abilities,
             {
@@ -102,26 +102,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         access = factories.UserOrganizationAccessFactory(role="member")
 
         with self.assertNumQueries(1):
-            abilities = access.organization.get_abilities(user=access.user)
-
-        self.assertEqual(
-            abilities,
-            {
-                "delete": False,
-                "get": True,
-                "patch": False,
-                "put": False,
-                "manage_accesses": False,
-            },
-        )
-
-    def test_models_organization_get_abilities_member_auth(self):
-        """Check abilities returned when passing a token instead of a user."""
-        access = factories.UserOrganizationAccessFactory(role="member")
-        token = self.get_user_token(access.user.username)
-
-        with self.assertNumQueries(1):
-            abilities = access.organization.get_abilities(auth=token)
+            abilities = access.organization.get_abilities(access.user)
 
         self.assertEqual(
             abilities,
@@ -140,7 +121,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         access.organization.user_role = "member"
 
         with self.assertNumQueries(0):
-            abilities = access.organization.get_abilities(user=access.user)
+            abilities = access.organization.get_abilities(access.user)
 
         self.assertEqual(
             abilities,

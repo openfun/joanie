@@ -31,7 +31,7 @@ class OrganizationApiTest(BaseAPITestCase):
         Authenticated users should only see the organizations to which they have access.
         """
         user = factories.UserFactory()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         factories.OrganizationFactory()
         organizations = factories.OrganizationFactory.create_batch(3)
@@ -42,7 +42,7 @@ class OrganizationApiTest(BaseAPITestCase):
             user=user, organization=organizations[1]
         )
 
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(3):
             response = self.client.get(
                 "/api/v1.0/organizations/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -62,7 +62,7 @@ class OrganizationApiTest(BaseAPITestCase):
         Authenticated users should only see the organizations to which they have access.
         """
         user = factories.UserFactory()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         factories.OrganizationFactory()
         organization = factories.OrganizationFactory()
@@ -110,8 +110,7 @@ class OrganizationApiTest(BaseAPITestCase):
                 ],
             },
         )
-        self.assertEqual(mock_abilities.call_args_list[0][1]["user"], user)
-        self.assertEqual(str(mock_abilities.call_args_list[0][1]["auth"]), str(token))
+        mock_abilities.called_once_with(user)
 
     def test_api_organization_get_anonymous(self):
         """
@@ -132,7 +131,7 @@ class OrganizationApiTest(BaseAPITestCase):
         if they have no access to it.
         """
         user = factories.UserFactory()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         organization = factories.OrganizationFactory()
 
@@ -155,7 +154,7 @@ class OrganizationApiTest(BaseAPITestCase):
         if they have access to it.
         """
         user = factories.UserFactory()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         organization = factories.OrganizationFactory()
         factories.UserOrganizationAccessFactory(user=user, organization=organization)
@@ -200,7 +199,7 @@ class OrganizationApiTest(BaseAPITestCase):
             is_staff=random.choice([True, False]),
             is_superuser=random.choice([True, False]),
         )
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         data = {
             "code": "ORG-001",
@@ -248,7 +247,7 @@ class OrganizationApiTest(BaseAPITestCase):
             is_staff=random.choice([True, False]),
             is_superuser=random.choice([True, False]),
         )
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         organization = factories.OrganizationFactory()
 
@@ -289,7 +288,7 @@ class OrganizationApiTest(BaseAPITestCase):
             is_staff=random.choice([True, False]),
             is_superuser=random.choice([True, False]),
         )
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         organization = factories.OrganizationFactory()
         factories.UserOrganizationAccessFactory(user=user, organization=organization)

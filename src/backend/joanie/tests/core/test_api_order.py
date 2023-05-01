@@ -58,7 +58,7 @@ class OrderApiTest(BaseAPITestCase):
         order, other_order = factories.OrderFactory.create_batch(2, product=product)
 
         # The owner can see his/her order
-        token = self.get_user_token(order.owner.username)
+        token = self.generate_token_from_user(order.owner)
 
         with self.assertNumQueries(6):
             response = self.client.get(
@@ -101,7 +101,7 @@ class OrderApiTest(BaseAPITestCase):
         )
 
         # The owner of the other order can only see his/her order
-        token = self.get_user_token(other_order.owner.username)
+        token = self.generate_token_from_user(other_order.owner)
 
         response = self.client.get(
             "/api/v1.0/orders/",
@@ -149,7 +149,7 @@ class OrderApiTest(BaseAPITestCase):
         order_ids = [str(order.id) for order in orders]
 
         # The owner can see his/her order
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         response = self.client.get(
             "/api/v1.0/orders/?page_size=2",
@@ -202,7 +202,7 @@ class OrderApiTest(BaseAPITestCase):
         # User purchases the product 2
         factories.OrderFactory(owner=user, product=product_2)
 
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         # Retrieve user's order related to the product 1
         response = self.client.get(
@@ -250,7 +250,7 @@ class OrderApiTest(BaseAPITestCase):
         should get a 400 error response.
         """
         user = factories.UserFactory()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         # Try to retrieve user's order related with an invalid product id
         # should return a 400 error
@@ -279,7 +279,7 @@ class OrderApiTest(BaseAPITestCase):
         # User purchases the product 2
         factories.OrderFactory(owner=user, product=product_2)
 
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         # Retrieve user's order related to the first course linked to the product 1
         with self.assertNumQueries(7):
@@ -340,7 +340,7 @@ class OrderApiTest(BaseAPITestCase):
             owner=user, product=product_2, state=enums.ORDER_STATE_CANCELED
         )
 
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         # Retrieve user's order related to the product 1
         response = self.client.get(
@@ -399,7 +399,7 @@ class OrderApiTest(BaseAPITestCase):
             owner=user, product=product_2, state=enums.ORDER_STATE_CANCELED
         )
 
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         # Retrieve user's order related to the product 1
         response = self.client.get(
@@ -461,7 +461,7 @@ class OrderApiTest(BaseAPITestCase):
             owner=user, product=product_2, state=enums.ORDER_STATE_CANCELED
         )
 
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         # Retrieve user's order related to the product 1
         response = self.client.get(
@@ -509,7 +509,7 @@ class OrderApiTest(BaseAPITestCase):
         should get a 400 error response.
         """
         user = factories.UserFactory()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         # Try to retrieve user's order related with an invalid product id
         # should return a 400 error
@@ -1505,7 +1505,7 @@ class OrderApiTest(BaseAPITestCase):
         """The order owner should not be able to delete an order."""
         product = factories.ProductFactory()
         order = factories.OrderFactory(product=product)
-        token = self.get_user_token(order.owner.username)
+        token = self.generate_token_from_user(order.owner)
 
         response = self.client.delete(
             f"/api/v1.0/orders/{order.id}/",
@@ -1532,7 +1532,7 @@ class OrderApiTest(BaseAPITestCase):
         *other_target_courses, _other_course = factories.CourseFactory.create_batch(3)
         other_product = factories.ProductFactory(target_courses=other_target_courses)
         other_order = factories.OrderFactory(owner=other_owner, product=other_product)
-        other_owner_token = self.get_user_token(other_owner.username)
+        other_owner_token = self.generate_token_from_user(other_owner)
 
         other_response = self.client.get(
             f"/api/v1.0/orders/{other_order.id}/",
@@ -1562,7 +1562,7 @@ class OrderApiTest(BaseAPITestCase):
             ],
         )
         headers = (
-            {"HTTP_AUTHORIZATION": f"Bearer {self.get_user_token(user.username)}"}
+            {"HTTP_AUTHORIZATION": f"Bearer {self.generate_token_from_user(user)}"}
             if user
             else {}
         )
@@ -1645,7 +1645,7 @@ class OrderApiTest(BaseAPITestCase):
         without reference parameter, it should return a bad request response.
         """
         invoice = InvoiceFactory()
-        token = self.get_user_token(invoice.order.owner.username)
+        token = self.generate_token_from_user(invoice.order.owner)
 
         response = self.client.get(
             f"/api/v1.0/orders/{invoice.order.id}/invoice/",
@@ -1714,7 +1714,7 @@ class OrderApiTest(BaseAPITestCase):
         a related invoice through its reference
         """
         invoice = InvoiceFactory()
-        token = self.get_user_token(invoice.order.owner.username)
+        token = self.generate_token_from_user(invoice.order.owner)
 
         response = self.client.get(
             (

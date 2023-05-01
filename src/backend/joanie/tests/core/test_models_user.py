@@ -185,9 +185,7 @@ class UserModelTestCase(BaseAPITestCase):
         with self.assertNumQueries(1):
             roles = list(user.get_abilities(user)["course_roles"])
 
-        self.assertCountEqual(
-            roles, ["manager", "administrator"]
-        )
+        self.assertCountEqual(roles, ["manager", "administrator"])
 
     def test_models_user_get_abilities_organization_roles(self):
         """Check abilities returned for a user with roles on some organizations."""
@@ -199,6 +197,4 @@ class UserModelTestCase(BaseAPITestCase):
         with self.assertNumQueries(1):
             roles = list(user.get_abilities(user)["organization_roles"])
 
-        self.assertCountEqual(
-            roles, ["member", "administrator"]
-        )
+        self.assertCountEqual(roles, ["member", "administrator"])
