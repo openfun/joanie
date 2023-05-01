@@ -73,8 +73,7 @@ class ProductViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
 
     def get_serializer_context(self):
         """
-        Provide username to the authenticated user (if one is authenticated)
-        and course code to the `ProductSerializer`
+        Provide course code to the `ProductSerializer`
         """
         context = super().get_serializer_context()
 
@@ -546,17 +545,12 @@ class OrganizationAccessViewSet(
             # Limit to accesses that are linked to an organization THAT has an access
             # for the logged-in user (not filtering the only access linked to the
             # logged-in user)
-            username = (
-                self.request.auth["username"]
-                if self.request.auth
-                else self.request.user.username
-            )
             user_role_query = models.OrganizationAccess.objects.filter(
-                organization__accesses__user__username=username
+                organization__accesses__user=self.request.user
             ).values("role")[:1]
             queryset = (
                 queryset.filter(
-                    organization__accesses__user__username=username,
+                    organization__accesses__user=self.request.user,
                 )
                 .annotate(user_role=Subquery(user_role_query))
                 .distinct()
@@ -626,17 +620,12 @@ class CourseAccessViewSet(
             # Limit to accesses that are linked to a course THAT has an access
             # for the logged-in user (not filtering the only access linked to the
             # logged-in user)
-            username = (
-                self.request.auth["username"]
-                if self.request.auth
-                else self.request.user.username
-            )
             user_role_query = models.CourseAccess.objects.filter(
-                course__accesses__user__username=username
+                course__accesses__user=self.request.user
             ).values("role")[:1]
             queryset = (
                 queryset.filter(
-                    course__accesses__user__username=username,
+                    course__accesses__user=self.request.user,
                 )
                 .annotate(user_role=Subquery(user_role_query))
                 .distinct()

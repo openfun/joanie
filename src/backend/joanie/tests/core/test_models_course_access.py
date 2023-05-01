@@ -31,7 +31,7 @@ class CourseAccessModelsTestCase(BaseAPITestCase):
     def test_models_course_access_get_abilities_anonymous(self):
         """Check abilities returned for an anonymous user."""
         access = factories.UserCourseAccessFactory()
-        abilities = access.get_abilities(user=AnonymousUser())
+        abilities = access.get_abilities(AnonymousUser())
 
         self.assertEqual(
             abilities,
@@ -47,7 +47,7 @@ class CourseAccessModelsTestCase(BaseAPITestCase):
     def test_models_course_access_get_abilities_authenticated(self):
         """Check abilities returned for an authenticated user."""
         access = factories.UserCourseAccessFactory()
-        abilities = access.get_abilities(user=factories.UserFactory())
+        abilities = access.get_abilities(factories.UserFactory())
         self.assertEqual(
             abilities,
             {
@@ -70,7 +70,7 @@ class CourseAccessModelsTestCase(BaseAPITestCase):
         factories.UserCourseAccessFactory(
             course=access.course, role="owner"
         )  # another one
-        abilities = access.get_abilities(user=access.user)
+        abilities = access.get_abilities(access.user)
         self.assertEqual(
             abilities,
             {
@@ -88,7 +88,7 @@ class CourseAccessModelsTestCase(BaseAPITestCase):
         only one owner left.
         """
         access = factories.UserCourseAccessFactory(role="owner")
-        abilities = access.get_abilities(user=access.user)
+        abilities = access.get_abilities(access.user)
         self.assertEqual(
             abilities,
             {
@@ -107,7 +107,7 @@ class CourseAccessModelsTestCase(BaseAPITestCase):
         user = factories.UserCourseAccessFactory(
             course=access.course, role="owner"
         ).user
-        abilities = access.get_abilities(user=user)
+        abilities = access.get_abilities(user)
         self.assertEqual(
             abilities,
             {
@@ -126,7 +126,7 @@ class CourseAccessModelsTestCase(BaseAPITestCase):
         user = factories.UserCourseAccessFactory(
             course=access.course, role="owner"
         ).user
-        abilities = access.get_abilities(user=user)
+        abilities = access.get_abilities(user)
         self.assertEqual(
             abilities,
             {
@@ -145,7 +145,7 @@ class CourseAccessModelsTestCase(BaseAPITestCase):
         user = factories.UserCourseAccessFactory(
             course=access.course, role="owner"
         ).user
-        abilities = access.get_abilities(user=user)
+        abilities = access.get_abilities(user)
         self.assertEqual(
             abilities,
             {
@@ -164,7 +164,7 @@ class CourseAccessModelsTestCase(BaseAPITestCase):
         user = factories.UserCourseAccessFactory(
             course=access.course, role="owner"
         ).user
-        abilities = access.get_abilities(user=user)
+        abilities = access.get_abilities(user)
         self.assertEqual(
             abilities,
             {
@@ -185,7 +185,7 @@ class CourseAccessModelsTestCase(BaseAPITestCase):
         user = factories.UserCourseAccessFactory(
             course=access.course, role="administrator"
         ).user
-        abilities = access.get_abilities(user=user)
+        abilities = access.get_abilities(user)
         self.assertEqual(
             abilities,
             {
@@ -206,7 +206,7 @@ class CourseAccessModelsTestCase(BaseAPITestCase):
         user = factories.UserCourseAccessFactory(
             course=access.course, role="administrator"
         ).user
-        abilities = access.get_abilities(user=user)
+        abilities = access.get_abilities(user)
         self.assertEqual(
             abilities,
             {
@@ -225,7 +225,7 @@ class CourseAccessModelsTestCase(BaseAPITestCase):
         user = factories.UserCourseAccessFactory(
             course=access.course, role="administrator"
         ).user
-        abilities = access.get_abilities(user=user)
+        abilities = access.get_abilities(user)
         self.assertEqual(
             abilities,
             {
@@ -244,7 +244,7 @@ class CourseAccessModelsTestCase(BaseAPITestCase):
         user = factories.UserCourseAccessFactory(
             course=access.course, role="administrator"
         ).user
-        abilities = access.get_abilities(user=user)
+        abilities = access.get_abilities(user)
         self.assertEqual(
             abilities,
             {
@@ -265,7 +265,7 @@ class CourseAccessModelsTestCase(BaseAPITestCase):
         user = factories.UserCourseAccessFactory(
             course=access.course, role="instructor"
         ).user
-        abilities = access.get_abilities(user=user)
+        abilities = access.get_abilities(user)
         self.assertEqual(
             abilities,
             {
@@ -284,7 +284,7 @@ class CourseAccessModelsTestCase(BaseAPITestCase):
         user = factories.UserCourseAccessFactory(
             course=access.course, role="instructor"
         ).user
-        abilities = access.get_abilities(user=user)
+        abilities = access.get_abilities(user)
         self.assertEqual(
             abilities,
             {
@@ -303,7 +303,7 @@ class CourseAccessModelsTestCase(BaseAPITestCase):
         user = factories.UserCourseAccessFactory(
             course=access.course, role="instructor"
         ).user
-        abilities = access.get_abilities(user=user)
+        abilities = access.get_abilities(user)
         self.assertEqual(
             abilities,
             {
@@ -322,7 +322,7 @@ class CourseAccessModelsTestCase(BaseAPITestCase):
         user = factories.UserCourseAccessFactory(
             course=access.course, role="instructor"
         ).user
-        abilities = access.get_abilities(user=user)
+        abilities = access.get_abilities(user)
         self.assertEqual(
             abilities,
             {
@@ -343,7 +343,7 @@ class CourseAccessModelsTestCase(BaseAPITestCase):
         user = factories.UserCourseAccessFactory(
             course=access.course, role="manager"
         ).user
-        abilities = access.get_abilities(user=user)
+        abilities = access.get_abilities(user)
         self.assertEqual(
             abilities,
             {
@@ -362,7 +362,7 @@ class CourseAccessModelsTestCase(BaseAPITestCase):
         user = factories.UserCourseAccessFactory(
             course=access.course, role="manager"
         ).user
-        abilities = access.get_abilities(user=user)
+        abilities = access.get_abilities(user)
         self.assertEqual(
             abilities,
             {
@@ -381,7 +381,7 @@ class CourseAccessModelsTestCase(BaseAPITestCase):
         user = factories.UserCourseAccessFactory(
             course=access.course, role="manager"
         ).user
-        abilities = access.get_abilities(user=user)
+        abilities = access.get_abilities(user)
         self.assertEqual(
             abilities,
             {
@@ -402,29 +402,7 @@ class CourseAccessModelsTestCase(BaseAPITestCase):
         ).user
 
         with self.assertNumQueries(1):
-            abilities = access.get_abilities(user=user)
-
-        self.assertEqual(
-            abilities,
-            {
-                "delete": False,
-                "get": True,
-                "patch": False,
-                "put": False,
-                "set_role_to": [],
-            },
-        )
-
-    def test_models_course_access_get_abilities_auth(self):
-        """Check abilities returned when passing a token instead of a user."""
-        access = factories.UserCourseAccessFactory(role="manager")
-        user = factories.UserCourseAccessFactory(
-            course=access.course, role="manager"
-        ).user
-        token = self.get_user_token(user.username)
-
-        with self.assertNumQueries(1):
-            abilities = access.get_abilities(auth=token)
+            abilities = access.get_abilities(user)
 
         self.assertEqual(
             abilities,
@@ -446,7 +424,7 @@ class CourseAccessModelsTestCase(BaseAPITestCase):
         access.user_role = "manager"
 
         with self.assertNumQueries(0):
-            abilities = access.get_abilities(user=user)
+            abilities = access.get_abilities(user)
 
         self.assertEqual(
             abilities,

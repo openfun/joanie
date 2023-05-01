@@ -170,7 +170,7 @@ class Organization(parler_models.TranslatableModel, BaseModel):
         self.code = utils.normalize_code(self.code)
         return super().clean()
 
-    def get_abilities(self, user=None, auth=None):
+    def get_abilities(self, user):
         """
         Compute and return abilities for a given user taking into account
         the current state of the object.
@@ -178,20 +178,12 @@ class Organization(parler_models.TranslatableModel, BaseModel):
         is_owner_or_admin = False
         role = None
 
-        # Avoid hitting the database by checking authentication via the auth token first
-        username = (
-            auth["username"]
-            if auth
-            else (user.username if user and user.is_authenticated else None)
-        )
-        if username:
+        if user.is_authenticated:
             try:
                 role = self.user_role
             except AttributeError:
                 try:
-                    role = self.accesses.filter(user__username=username).values("role")[
-                        0
-                    ]["role"]
+                    role = self.accesses.filter(user=user).values("role")[0]["role"]
                 except (OrganizationAccess.DoesNotExist, IndexError):
                     role = None
 
@@ -262,7 +254,7 @@ class OrganizationAccess(BaseModel):
             raise PermissionDenied("An organization should keep at least one owner.")
         return super().delete(*args, **kwargs)
 
-    def get_abilities(self, user=None, auth=None):
+    def get_abilities(self, user):
         """
         Compute and return abilities for a given user taking into account
         the current state of the object.
@@ -270,19 +262,13 @@ class OrganizationAccess(BaseModel):
         is_organization_owner_or_admin = False
         role = None
 
-        # Avoid hitting the database by checking authentication via the auth token first
-        username = (
-            auth["username"]
-            if auth
-            else (user.username if user and user.is_authenticated else None)
-        )
-        if username:
+        if user.is_authenticated:
             try:
                 role = self.user_role
             except AttributeError:
                 try:
                     role = self._meta.model.objects.filter(
-                        organization=self.organization_id, user__username=username
+                        organization=self.organization_id, user=user
                     ).values("role")[0]["role"]
                 except (OrganizationAccess.DoesNotExist, IndexError):
                     role = None
@@ -291,7 +277,7 @@ class OrganizationAccess(BaseModel):
 
         if self.role == enums.OWNER:
             can_delete = (
-                username == self.user.username
+                user.id == self.user_id
                 and self.organization.accesses.filter(role=enums.OWNER).count() > 1
             )
             set_role_to = [enums.ADMIN, enums.MEMBER] if can_delete else []
@@ -382,7 +368,7 @@ class Course(parler_models.TranslatableModel, BaseModel):
         self.code = utils.normalize_code(self.code)
         return super().clean()
 
-    def get_abilities(self, user=None, auth=None):
+    def get_abilities(self, user):
         """
         Compute and return abilities for a given user taking into account
         the current state of the object.
@@ -390,20 +376,12 @@ class Course(parler_models.TranslatableModel, BaseModel):
         is_owner_or_admin = False
         role = None
 
-        # Avoid hitting the database by checking authentication via the auth token first
-        username = (
-            auth["username"]
-            if auth
-            else (user.username if user and user.is_authenticated else None)
-        )
-        if username:
+        if user.is_authenticated:
             try:
                 role = self.user_role
             except AttributeError:
                 try:
-                    role = self.accesses.filter(user__username=username).values("role")[
-                        0
-                    ]["role"]
+                    role = self.accesses.filter(user=user).values("role")[0]["role"]
                 except (CourseAccess.DoesNotExist, IndexError):
                     role = None
 
@@ -473,7 +451,7 @@ class CourseAccess(BaseModel):
             raise PermissionDenied("A course should keep at least one owner.")
         return super().delete(*args, **kwargs)
 
-    def get_abilities(self, user=None, auth=None):
+    def get_abilities(self, user):
         """
         Compute and return abilities for a given user taking into account
         the current state of the object.
@@ -481,19 +459,13 @@ class CourseAccess(BaseModel):
         is_course_owner_or_admin = False
         role = None
 
-        # Avoid hitting the database by checking authentication via the auth token first
-        username = (
-            auth["username"]
-            if auth
-            else (user.username if user and user.is_authenticated else None)
-        )
-        if username:
+        if user.is_authenticated:
             try:
                 role = self.user_role
             except AttributeError:
                 try:
                     role = self._meta.model.objects.filter(
-                        course=self.course_id, user__username=username
+                        course=self.course_id, user=user
                     ).values("role")[0]["role"]
                 except (CourseAccess.DoesNotExist, IndexError):
                     role = None
@@ -502,7 +474,7 @@ class CourseAccess(BaseModel):
 
         if self.role == enums.OWNER:
             can_delete = (
-                username == self.user.username
+                user.id == self.user_id
                 and self.course.accesses.filter(role=enums.OWNER).count() > 1
             )
             set_role_to = (

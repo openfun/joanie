@@ -31,7 +31,7 @@ class ProductApiTest(BaseAPITestCase):
         """
         factories.ProductFactory()
         user = factories.UserFactory.build()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         response = self.client.get(
             "/api/v1.0/products/", HTTP_AUTHORIZATION=f"Bearer {token}"
@@ -206,7 +206,7 @@ class ProductApiTest(BaseAPITestCase):
         should get the order id within the response
         """
         user = factories.UserFactory()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
         course = factories.CourseFactory()
         product = factories.ProductFactory(
             courses=[course], type=enums.PRODUCT_TYPE_CREDENTIAL
@@ -231,7 +231,7 @@ class ProductApiTest(BaseAPITestCase):
         should get the order id within the response
         """
         user = factories.UserFactory()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
         course = factories.CourseFactory()
         product = factories.ProductFactory(
             courses=[course],
@@ -258,7 +258,7 @@ class ProductApiTest(BaseAPITestCase):
         should not get the order id within the response
         """
         user = factories.UserFactory()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
         course = factories.CourseFactory()
         product = factories.ProductFactory(
             courses=[course],
@@ -342,7 +342,7 @@ class ProductApiTest(BaseAPITestCase):
 
         # Create a user
         user = factories.UserFactory()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         # Purchase certificate for all courses
         order1 = factories.OrderFactory(owner=user, product=product, course=courses[0])
@@ -381,7 +381,7 @@ class ProductApiTest(BaseAPITestCase):
         """
         product = factories.ProductFactory(courses=[])
         user = factories.UserFactory.build()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         response = self.client.get(
             f"/api/v1.0/products/{product.id}/", HTTP_AUTHORIZATION=f"Bearer {token}"
@@ -415,7 +415,7 @@ class ProductApiTest(BaseAPITestCase):
     def test_api_product_create_authenticated(self):
         """Authenticated users should not be allowed to create a product."""
         user = factories.UserFactory.build()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         data = {
             "type": "credential",
@@ -458,7 +458,7 @@ class ProductApiTest(BaseAPITestCase):
         """Authenticated users should not be allowed to update a product."""
         product = factories.ProductFactory(price=100.0)
         user = factories.UserFactory.build()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         data = {
             "type": "credential",
@@ -496,7 +496,7 @@ class ProductApiTest(BaseAPITestCase):
         """Authenticated users should not be allowed to partially update a product."""
         product = factories.ProductFactory(price=100.0)
         user = factories.UserFactory.build()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         data = {
             "price": 1337.00,
@@ -529,7 +529,7 @@ class ProductApiTest(BaseAPITestCase):
         """Authenticated users should not be allowed to delete a product."""
         product = factories.ProductFactory()
         user = factories.UserFactory.build()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         response = self.client.delete(
             f"/api/v1.0/products/{product.id}/", HTTP_AUTHORIZATION=f"Bearer {token}"

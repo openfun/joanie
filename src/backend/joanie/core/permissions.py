@@ -17,7 +17,5 @@ class AccessPermission(IsAuthenticated):
 
     def has_object_permission(self, request, view, obj):
         """Check permission for a given object."""
-        abilities = obj.get_abilities(
-            user=request.user, auth=getattr(request, "auth", None)
-        )
+        abilities = obj.get_abilities(request.user)
         return abilities.get(request.method.lower(), False)

@@ -66,7 +66,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
     def test_api_credit_card_get_credit_cards_list(self):
         """Retrieve all authenticated user's credit cards is allowed."""
         user = UserFactory()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
         cards = CreditCardFactory.create_batch(2, owner=user)
 
         response = self.client.get(
@@ -92,7 +92,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
     def test_api_credit_card_read_list_pagination(self, _mock_page_size):
         """Pagination should work as expected."""
         user = UserFactory()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
         cards = CreditCardFactory.create_batch(3, owner=user)
         card_ids = [str(card.id) for card in cards]
 
@@ -133,7 +133,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
     def test_api_credit_card_get_credit_card(self):
         """Retrieve authenticated user's credit card by its id is allowed."""
         user = UserFactory()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
         card = CreditCardFactory(owner=user)
 
         response = self.client.get(
@@ -158,7 +158,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
     def test_api_credit_card_get_non_existing_credit_card(self):
         """Retrieve a non existing credit card should return a 404."""
         user = UserFactory()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
         card = CreditCardFactory.build(owner=user)
 
         response = self.client.get(
@@ -172,7 +172,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         authenticated user should return a 404.
         """
         user = UserFactory()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
         card = CreditCardFactory()
 
         response = self.client.get(
@@ -203,8 +203,8 @@ class CreditCardAPITestCase(BaseAPITestCase):
     def test_api_credit_card_update_with_expired_token(self):
         """Update a credit card with an expired token is forbidden."""
         user = UserFactory()
-        token = self.get_user_token(
-            username=user.username,
+        token = self.generate_token_from_user(
+            user,
             expires_at=arrow.utcnow().shift(days=-1).datetime,
         )
         card = CreditCardFactory(owner=user)
@@ -222,7 +222,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         Update a credit card with an invalid payload should return a 400 error.
         """
         user = UserFactory()
-        token = self.get_user_token(username=user.username)
+        token = self.generate_token_from_user(user)
         card = CreditCardFactory(owner=user)
         response = self.client.put(
             f"/api/v1.0/credit-cards/{card.id}/",
@@ -244,7 +244,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
     def test_api_credit_card_update_with_bad_user(self):
         """Update a credit card not owned by the authenticated user is forbidden."""
         user = UserFactory()
-        token = self.get_user_token(username=user.username)
+        token = self.generate_token_from_user(user)
         card = CreditCardFactory()
         response = self.client.put(
             f"/api/v1.0/credit-cards/{card.id}/",
@@ -258,7 +258,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
     def test_api_credit_card_demote_credit_card_is_forbidden(self):
         """Demote a main credit card is forbidden"""
         user = UserFactory()
-        token = self.get_user_token(username=user.username)
+        token = self.generate_token_from_user(user)
         card = CreditCardFactory(owner=user)
         response = self.client.put(
             f"/api/v1.0/credit-cards/{card.id}/",
@@ -277,7 +277,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         Promote credit card is allowed and existing credit card should be demoted.
         """
         user = UserFactory()
-        token = self.get_user_token(username=user.username)
+        token = self.generate_token_from_user(user)
         main_card, card = CreditCardFactory.create_batch(2, owner=user)
         response = self.client.put(
             f"/api/v1.0/credit-cards/{card.id}/",
@@ -305,7 +305,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         Only title field should be writable !
         """
         user = UserFactory()
-        token = self.get_user_token(username=user.username)
+        token = self.generate_token_from_user(user)
         card = CreditCardFactory(owner=user)
         response = self.client.put(
             f"/api/v1.0/credit-cards/{card.id}/",
@@ -382,7 +382,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
     def test_api_credit_card_delete(self):
         """Delete a authenticated user's credit card is allowed with a valid token."""
         user = UserFactory()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
         card = CreditCardFactory(owner=user)
         response = self.client.delete(
             f"/api/v1.0/credit-cards/{card.id}/",

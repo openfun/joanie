@@ -95,7 +95,7 @@ class AddressAPITestCase(BaseAPITestCase):
     def test_api_address_get_addresses(self):
         """Get addresses for a user in db with two addresses linked to him"""
         user = factories.UserFactory()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
         address1 = factories.AddressFactory.create(owner=user, title="Office")
         address2 = factories.AddressFactory.create(owner=user, title="Home")
 
@@ -132,7 +132,7 @@ class AddressAPITestCase(BaseAPITestCase):
     def test_api_address_list_pagination(self, _mock_page_size):
         """Pagination should work as expected."""
         user = factories.UserFactory()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         addresses = factories.AddressFactory.create_batch(3, owner=user)
         address_ids = [str(address.id) for address in addresses]
@@ -243,8 +243,8 @@ class AddressAPITestCase(BaseAPITestCase):
         """Create user addresses not allowed with user token expired"""
         # Try to create addresses with expired token
         user = factories.UserFactory()
-        token = self.get_user_token(
-            user.username,
+        token = self.generate_token_from_user(
+            user,
             expires_at=arrow.utcnow().shift(days=-1).datetime,
         )
         address = factories.AddressFactory.build()
@@ -264,8 +264,8 @@ class AddressAPITestCase(BaseAPITestCase):
         """Update user addresses not allowed with user token expired"""
         # Try to update addresses with expired token
         user = factories.UserFactory()
-        token = self.get_user_token(
-            user.username,
+        token = self.generate_token_from_user(
+            user,
             expires_at=arrow.utcnow().shift(days=-1).datetime,
         )
         address = factories.AddressFactory.create(owner=user)
@@ -317,7 +317,7 @@ class AddressAPITestCase(BaseAPITestCase):
     def test_api_address_update_with_bad_payload(self):
         """Update user addresses with valid token but bad data"""
         user = factories.UserFactory()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
         address = factories.AddressFactory.create(owner=user)
         new_address = factories.AddressFactory.build()
         payload = get_payload(new_address)
@@ -379,7 +379,7 @@ class AddressAPITestCase(BaseAPITestCase):
         User should not be able to demote its main address
         """
         user = factories.UserFactory()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
         address = factories.AddressFactory(owner=user, is_main=True)
 
         payload = get_payload(address)
@@ -444,7 +444,7 @@ class AddressAPITestCase(BaseAPITestCase):
         it should not be allowed to set the "id" field
         """
         user = factories.UserFactory()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
         address = factories.AddressFactory.build()
         # - Add an id field to the request body
         payload = get_payload(address)
@@ -501,8 +501,8 @@ class AddressAPITestCase(BaseAPITestCase):
     def test_api_address_delete_with_expired_token(self):
         """Delete address is not allowed with expired token"""
         user = factories.UserFactory()
-        token = self.get_user_token(
-            user.username,
+        token = self.generate_token_from_user(
+            user,
             expires_at=arrow.utcnow().shift(days=-1).datetime,
         )
         address = factories.AddressFactory.create(owner=user)
@@ -527,7 +527,7 @@ class AddressAPITestCase(BaseAPITestCase):
     def test_api_address_delete(self):
         """Delete address is allowed with valid token"""
         user = factories.UserFactory()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
         address = factories.AddressFactory.create(owner=user)
         response = self.client.delete(
             f"/api/v1.0/addresses/{address.id}/",

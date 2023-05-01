@@ -31,7 +31,7 @@ class CourseRunApiTest(BaseAPITestCase):
         """
         factories.CourseRunFactory()
         user = factories.UserFactory.build()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         response = self.client.get(
             "/api/v1.0/course-runs/", HTTP_AUTHORIZATION=f"Bearer {token}"
@@ -111,7 +111,7 @@ class CourseRunApiTest(BaseAPITestCase):
         """
         course_run = factories.CourseRunFactory(is_listed=False)
         user = factories.UserFactory.build()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         response = self.client.get(
             f"/api/v1.0/course-runs/{course_run.id}/",
@@ -144,7 +144,7 @@ class CourseRunApiTest(BaseAPITestCase):
     def test_api_course_run_create_authenticated(self):
         """Authenticated users should not be allowed to create a course run."""
         user = factories.UserFactory.build()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         course = factories.CourseFactory()
         data = {
@@ -196,7 +196,7 @@ class CourseRunApiTest(BaseAPITestCase):
         )
         course = factories.CourseFactory()
         user = factories.UserFactory.build()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         data = {
             "resource_link": "https://perdu.com",
@@ -250,7 +250,7 @@ class CourseRunApiTest(BaseAPITestCase):
             resource_link="https://example.edx:8073/courses/course-v1:edX+DemoX+01/course/"
         )
         user = factories.UserFactory.build()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         data = {
             "resource_link": "https://perdu.com",
@@ -286,7 +286,7 @@ class CourseRunApiTest(BaseAPITestCase):
         """Authenticated users should not be allowed to delete a course run."""
         course_run = factories.CourseRunFactory()
         user = factories.UserFactory.build()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         response = self.client.delete(
             f"/api/v1.0/course-runs/{course_run.id}/",

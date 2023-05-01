@@ -36,7 +36,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         course to which they are not related.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         course = factories.CourseFactory()
         factories.UserCourseAccessFactory(course=course)
@@ -45,7 +45,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         factories.UserCourseAccessFactory(course=course, role="manager")
         factories.UserCourseAccessFactory(course=course, role="owner")
 
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(2):
             response = self.client.get(
                 f"/api/v1.0/courses/{course.id!s}/accesses/",
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
@@ -60,7 +60,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         in which they are only instructor.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         course = factories.CourseFactory()
         course_accesses = (
@@ -108,7 +108,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         in which they are only manager.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         course = factories.CourseFactory()
         course_accesses = (
@@ -154,7 +154,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         in which they are administrator.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         course = factories.CourseFactory()
         course_accesses = (
@@ -202,7 +202,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         in which they are owner.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         course = factories.CourseFactory()
         course_accesses = (
@@ -247,7 +247,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         """Pagination should work as expected."""
 
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         course = factories.CourseFactory()
         accesses = [
@@ -320,7 +320,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         a course to which they are not related.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         course = factories.CourseFactory()
         self.assertEqual(len(CourseAccess.ROLE_CHOICES), 4)
@@ -343,7 +343,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         associated course accessesnly instructor.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         course = factories.CourseFactory(
             users=[(user, "instructor")],
@@ -375,7 +375,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         associated course accesses.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         course = factories.CourseFactory(
             users=[(user, "manager")],
@@ -407,7 +407,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         associated course accesses.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         course = factories.CourseFactory(users=[(user, "administrator")])
         self.assertEqual(len(CourseAccess.ROLE_CHOICES), 4)
@@ -437,7 +437,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         associated course accesses
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         course = factories.CourseFactory(users=[(user, "owner")])
         self.assertEqual(len(CourseAccess.ROLE_CHOICES), 4)
@@ -466,7 +466,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
     ):
         """The course in the url should match the targeted access."""
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         course, other_course = factories.CourseFactory.create_batch(2, users=[user])
         access = factories.UserCourseAccessFactory(course=course)
@@ -505,7 +505,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         user, other_user = factories.UserFactory.create_batch(2)
         course = factories.CourseFactory()
 
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         response = self.client.post(
             f"/api/v1.0/courses/{course.id!s}/accesses/",
@@ -532,7 +532,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         user, other_user = factories.UserFactory.create_batch(2)
         course = factories.CourseFactory(users=[(user, "instructor")])
 
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         response = self.client.post(
             f"/api/v1.0/courses/{course.id!s}/accesses/",
@@ -560,7 +560,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         user, other_user = factories.UserFactory.create_batch(2)
         course = factories.CourseFactory(users=[(user, "manager")])
 
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         response = self.client.post(
             f"/api/v1.0/courses/{course.id!s}/accesses/",
@@ -589,7 +589,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         user, other_user = factories.UserFactory.create_batch(2)
         course = factories.CourseFactory(users=[(user, "administrator")])
 
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         response = self.client.post(
             f"/api/v1.0/courses/{course.id!s}/accesses/",
@@ -611,7 +611,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         user, other_user = factories.UserFactory.create_batch(2)
         course = factories.CourseFactory(users=[(user, "administrator")])
 
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         response = self.client.post(
             f"/api/v1.0/courses/{course.id!s}/accesses/",
@@ -632,7 +632,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         user = factories.UserFactory()
         course = factories.CourseFactory(users=[(user, "owner")])
 
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         for i, role in enumerate(["administrator", "instructor", "manager", "owner"]):
             other_user = factories.UserFactory()
@@ -677,7 +677,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
     def test_api_course_accesses_update_authenticated(self):
         """Authenticated users should not be allowed to update a course access."""
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         access = factories.UserCourseAccessFactory()
         old_values = CourseAccessSerializer(instance=access).data
@@ -707,7 +707,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         a user access for this course.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         course = factories.CourseFactory(users=[(user, "instructor")])
         access = factories.UserCourseAccessFactory(course=course)
@@ -738,7 +738,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         a user access for this course.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         course = factories.CourseFactory(users=[(user, "manager")])
         access = factories.UserCourseAccessFactory(course=course)
@@ -769,7 +769,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         access for this course, as long as s.he does not try to set the role to owner.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         course = factories.CourseFactory(users=[(user, "administrator")])
         access = factories.UserCourseAccessFactory(
@@ -816,7 +816,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         the user access of an owner for this course.
         """
         user, other_user = factories.UserFactory.create_batch(2)
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         course = factories.CourseFactory(users=[(user, "administrator")])
         access = factories.UserCourseAccessFactory(
@@ -849,7 +849,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         the user access of another user when granting ownership.
         """
         user, other_user = factories.UserFactory.create_batch(2)
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         course = factories.CourseFactory(users=[(user, "administrator")])
         access = factories.UserCourseAccessFactory(
@@ -890,7 +890,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         a user access for this course except for existing owner accesses.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         course = factories.CourseFactory(users=[(user, "owner")])
         access = factories.UserCourseAccessFactory(
@@ -938,7 +938,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         an existing owner access for this course.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         course = factories.CourseFactory(users=[(user, "owner")])
         access = factories.UserCourseAccessFactory(course=course, role="owner")
@@ -968,7 +968,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         her own user access provided there are other owners in the course.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         course = factories.CourseFactory()
         access = factories.UserCourseAccessFactory(
@@ -1029,7 +1029,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
     def test_api_course_accesses_patch_authenticated(self):
         """Authenticated users should not be allowed to patch a course access."""
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         access = factories.UserCourseAccessFactory()
         old_values = CourseAccessSerializer(instance=access).data
@@ -1059,7 +1059,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         a user access for this course.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         course = factories.CourseFactory(users=[(user, "instructor")])
         access = factories.UserCourseAccessFactory(course=course)
@@ -1090,7 +1090,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         a user access for this course.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         course = factories.CourseFactory(users=[(user, "manager")])
         access = factories.UserCourseAccessFactory(course=course)
@@ -1121,7 +1121,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         access for this course, as long as s.he does not try to set the role to owner.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         course = factories.CourseFactory(users=[(user, "administrator")])
         access = factories.UserCourseAccessFactory(
@@ -1166,7 +1166,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         the user access of an owner for this course.
         """
         user, other_user = factories.UserFactory.create_batch(2)
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         course = factories.CourseFactory(users=[(user, "administrator")])
         access = factories.UserCourseAccessFactory(
@@ -1200,7 +1200,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         the user access of another user when granting ownership.
         """
         user, other_user = factories.UserFactory.create_batch(2)
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         course = factories.CourseFactory(users=[(user, "administrator")])
         access = factories.UserCourseAccessFactory(
@@ -1238,7 +1238,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         a user access for this course except for existing owner accesses.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         course = factories.CourseFactory(users=[(user, "owner")])
         access = factories.UserCourseAccessFactory(
@@ -1284,7 +1284,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         an existing owner access for this course.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         course = factories.CourseFactory(users=[(user, "owner")])
         access = factories.UserCourseAccessFactory(course=course, role="owner")
@@ -1315,7 +1315,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         her own user access provided there are other owners in the course.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         course = factories.CourseFactory()
         access = factories.UserCourseAccessFactory(
@@ -1367,7 +1367,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         """
         access = factories.UserCourseAccessFactory()
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         response = self.client.delete(
             f"/api/v1.0/courses/{access.course.id!s}/accesses/{access.id!s}/",
@@ -1386,7 +1386,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         course = factories.CourseFactory(users=[(user, "instructor")])
         access = factories.UserCourseAccessFactory(course=course)
 
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         self.assertEqual(CourseAccess.objects.count(), 2)
         self.assertTrue(CourseAccess.objects.filter(user=access.user).exists())
@@ -1407,7 +1407,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         course = factories.CourseFactory(users=[(user, "manager")])
         access = factories.UserCourseAccessFactory(course=course)
 
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         self.assertEqual(CourseAccess.objects.count(), 2)
         self.assertTrue(CourseAccess.objects.filter(user=access.user).exists())
@@ -1430,7 +1430,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             course=course, role=random.choice(["instructor", "administrator"])
         )
 
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         self.assertEqual(CourseAccess.objects.count(), 2)
         self.assertTrue(CourseAccess.objects.filter(user=access.user).exists())
@@ -1453,7 +1453,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             course=course, role=random.choice(["instructor", "administrator"])
         )
 
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         self.assertEqual(CourseAccess.objects.count(), 2)
         self.assertTrue(CourseAccess.objects.filter(user=access.user).exists())
@@ -1474,7 +1474,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         course = factories.CourseFactory(users=[(user, "owner")])
         access = factories.UserCourseAccessFactory(course=course, role="owner")
 
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         self.assertEqual(CourseAccess.objects.count(), 2)
         self.assertTrue(CourseAccess.objects.filter(user=access.user).exists())
@@ -1496,7 +1496,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             course=course, user=user, role="owner"
         )
 
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         self.assertEqual(CourseAccess.objects.count(), 1)
         response = self.client.delete(

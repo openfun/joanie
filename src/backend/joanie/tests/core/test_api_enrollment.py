@@ -101,7 +101,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         )
 
         # The user can see his/her enrollment
-        token = self.get_user_token(enrollment.user.username)
+        token = self.generate_token_from_user(enrollment.user)
 
         with self.assertNumQueries(2):
             response = self.client.get(
@@ -166,7 +166,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         )
 
         # The user linked to the other enrollment can only see his/her enrollment
-        token = self.get_user_token(other_enrollment.user.username)
+        token = self.generate_token_from_user(other_enrollment.user)
 
         with self.assertNumQueries(2):
             response = self.client.get(
@@ -246,7 +246,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         enrollment_ids = [str(enrollment.id) for enrollment in enrollments]
 
         # The user can see his/her enrollment
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         response = self.client.get(
             "/api/v1.0/enrollments/?page_size=2",
@@ -302,7 +302,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         enrollment_1 = factories.EnrollmentFactory(user=user, course_run=course_run_1)
         factories.EnrollmentFactory(user=user, course_run=course_run_2)
 
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         # Retrieve user's enrollment related to the first course_run
         response = self.client.get(
@@ -366,7 +366,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         should get a 400 error response.
         """
         user = factories.UserFactory()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         # Retrieve user's enrollment related to the first course_run
         response = self.client.get(
@@ -383,7 +383,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         by was_created_by_order.
         """
         user = factories.UserFactory()
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         [cr1, cr2] = self.create_opened_course_run(2, is_listed=True)
         factories.EnrollmentFactory(
@@ -460,7 +460,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             is_active=True,
             was_created_by_order=True,
         )
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         response = self.client.get(
             f"/api/v1.0/enrollments/{enrollment.id}/",
@@ -644,7 +644,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             "is_active": True,
             "was_created_by_order": True,
         }
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         response = self.client.post(
             "/api/v1.0/enrollments/",
@@ -934,7 +934,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             "is_active": True,
             "was_created_by_order": True,
         }
-        token = self.get_user_token(order.owner.username)
+        token = self.generate_token_from_user(order.owner)
 
         response = self.client.post(
             "/api/v1.0/enrollments/",
@@ -1076,7 +1076,7 @@ class EnrollmentApiTest(BaseAPITestCase):
     def test_api_enrollment_create_for_closed_course_run(self):
         """An authenticated user should not be allowed to enroll to a closed course run."""
         user = factories.UserFactory()
-        token = self.get_user_token(username=user.username)
+        token = self.generate_token_from_user(user)
         target_course = factories.CourseFactory()
         course_run = self.create_closed_course_run(
             course=target_course,
@@ -1110,7 +1110,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         """An authenticated user should not be allowed to enroll to an unknown course run."""
 
         user = factories.UserFactory()
-        token = self.get_user_token(username=user.username)
+        token = self.generate_token_from_user(user)
         course_run = factories.CourseRunFactory.build()
         data = {
             "course_run": str(course_run.id),
@@ -1166,7 +1166,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             is_staff=random.choice([True, False]),
             is_superuser=random.choice([True, False]),
         )
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
 
         response = self.client.delete(
             f"/api/v1.0/enrollments/{enrollment.id}/",
@@ -1180,7 +1180,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         enrollment = factories.EnrollmentFactory(
             course_run=self.create_opened_course_run(is_listed=True)
         )
-        token = self.get_user_token(enrollment.user.username)
+        token = self.generate_token_from_user(enrollment.user)
 
         response = self.client.delete(
             f"/api/v1.0/enrollments/{enrollment.id}/",
@@ -1231,7 +1231,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             is_staff=random.choice([True, False]),
             is_superuser=random.choice([True, False]),
         )
-        token = self.get_user_token(user.username)
+        token = self.generate_token_from_user(user)
         resource_link = (
             "http://openedx.test/courses/course-v1:edx+{id:05d}+Demo_Course/course"
         )
@@ -1281,7 +1281,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 ),
                 is_active=is_active_old,
             )
-            token = self.get_user_token(enrollment.user.username)
+            token = self.generate_token_from_user(enrollment.user)
 
             response = self.client.patch(
                 f"/api/v1.0/enrollments/{enrollment.id}/",
@@ -1341,7 +1341,7 @@ class EnrollmentApiTest(BaseAPITestCase):
     # pylint: disable=too-many-locals
     def _check_api_enrollment_update_detail(self, enrollment, user, http_code):
         """Nobody should be allowed to update an enrollment."""
-        user_token = self.get_user_token(enrollment.user.username)
+        user_token = self.generate_token_from_user(enrollment.user)
 
         response = self.client.get(
             f"/api/v1.0/enrollments/{enrollment.id}/",
@@ -1370,7 +1370,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             "was_created_by_order": False,
         }
         headers = (
-            {"HTTP_AUTHORIZATION": f"Bearer {self.get_user_token(user.username)}"}
+            {"HTTP_AUTHORIZATION": f"Bearer {self.generate_token_from_user(user)}"}
             if user
             else {}
         )
@@ -1482,7 +1482,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         An authenticated user should be allowed to update its enrollment to unenroll.
         """
         user = factories.UserFactory()
-        user_token = self.get_user_token(user.username)
+        user_token = self.generate_token_from_user(user)
         course_run = self.create_opened_course_run(
             resource_link="http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course",
             is_listed=True,
@@ -1554,7 +1554,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         of one of its enrollment if this one was previously inactive.
         """
         user = factories.UserFactory()
-        user_token = self.get_user_token(user.username)
+        user_token = self.generate_token_from_user(user)
         course_run = self.create_opened_course_run(
             resource_link="http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course",
             is_listed=True,
@@ -1691,7 +1691,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         order and active.
         """
         user = factories.UserFactory()
-        user_token = self.get_user_token(user.username)
+        user_token = self.generate_token_from_user(user)
         target_course = factories.CourseFactory()
         course_run = self.create_opened_course_run(
             course=target_course,

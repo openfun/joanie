@@ -38,7 +38,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         organization to which they are not related.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         organization = factories.OrganizationFactory()
         factories.UserOrganizationAccessFactory(organization=organization)
@@ -63,7 +63,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         in which they are a simple member.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         organization = factories.OrganizationFactory()
         organization_accesses = (
@@ -121,7 +121,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         in which they are administrator.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         organization = factories.OrganizationFactory()
         organization_accesses = (
@@ -179,7 +179,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         in which they are owner.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         organization = factories.OrganizationFactory()
         organization_accesses = (
@@ -236,7 +236,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         """Pagination should work as expected."""
 
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         organization = factories.OrganizationFactory()
         accesses = [
@@ -311,7 +311,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         an organization to which they are not related.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         organization = factories.OrganizationFactory()
         self.assertEqual(len(OrganizationAccess.ROLE_CHOICES), 3)
@@ -336,7 +336,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         organization in which they are a simple member.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         organization = factories.OrganizationFactory(
             users=[(user, "member")],
@@ -369,7 +369,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         associated organization accesses
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         organization = factories.OrganizationFactory(users=[(user, "administrator")])
         self.assertEqual(len(OrganizationAccess.ROLE_CHOICES), 3)
@@ -401,7 +401,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         associated organization accesses
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         organization = factories.OrganizationFactory(users=[(user, "owner")])
         self.assertEqual(len(OrganizationAccess.ROLE_CHOICES), 3)
@@ -432,7 +432,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
     ):
         """The organization in the url should match the targeted access."""
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         organization, other_organization = factories.OrganizationFactory.create_batch(
             2, users=[user]
@@ -471,7 +471,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         user, other_user = factories.UserFactory.create_batch(2)
         organization = factories.OrganizationFactory()
 
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         response = self.client.post(
             f"/api/v1.0/organizations/{organization.id!s}/accesses/",
@@ -500,7 +500,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         user, other_user = factories.UserFactory.create_batch(2)
         organization = factories.OrganizationFactory(users=[(user, "member")])
 
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         response = self.client.post(
             f"/api/v1.0/organizations/{organization.id!s}/accesses/",
@@ -531,7 +531,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         user, other_user = factories.UserFactory.create_batch(2)
         organization = factories.OrganizationFactory(users=[(user, "administrator")])
 
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         response = self.client.post(
             f"/api/v1.0/organizations/{organization.id!s}/accesses/",
@@ -553,7 +553,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         user, other_user = factories.UserFactory.create_batch(2)
         organization = factories.OrganizationFactory(users=[(user, "administrator")])
 
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         response = self.client.post(
             f"/api/v1.0/organizations/{organization.id!s}/accesses/",
@@ -574,7 +574,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         user = factories.UserFactory()
         organization = factories.OrganizationFactory(users=[(user, "owner")])
 
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         for i, role in enumerate(["member", "administrator", "owner"]):
             other_user = factories.UserFactory()
@@ -619,7 +619,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
     def test_api_organization_accesses_update_authenticated(self):
         """Authenticated users should not be allowed to update an organization access."""
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         access = factories.UserOrganizationAccessFactory()
         old_values = OrganizationAccessSerializer(instance=access).data
@@ -649,7 +649,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         a user access for this organization.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         organization = factories.OrganizationFactory(users=[(user, "member")])
         access = factories.UserOrganizationAccessFactory(organization=organization)
@@ -680,7 +680,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         access for this organization, as long as s.he does not try to set the role to owner.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         organization = factories.OrganizationFactory(users=[(user, "administrator")])
         access = factories.UserOrganizationAccessFactory(
@@ -728,7 +728,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         the user access of an owner for this organization.
         """
         user, other_user = factories.UserFactory.create_batch(2)
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         organization = factories.OrganizationFactory(users=[(user, "administrator")])
         access = factories.UserOrganizationAccessFactory(
@@ -763,7 +763,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         the user access of another user when granting ownership.
         """
         user, other_user = factories.UserFactory.create_batch(2)
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         organization = factories.OrganizationFactory(users=[(user, "administrator")])
         access = factories.UserOrganizationAccessFactory(
@@ -806,7 +806,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         a user access for this organization except for existing owner accesses.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         organization = factories.OrganizationFactory(users=[(user, "owner")])
         access = factories.UserOrganizationAccessFactory(
@@ -855,7 +855,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         an existing owner access for this organization.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         organization = factories.OrganizationFactory(users=[(user, "owner")])
         access = factories.UserOrganizationAccessFactory(
@@ -889,7 +889,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         her own user access provided there are other owners in the organization.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         organization = factories.OrganizationFactory()
         access = factories.UserOrganizationAccessFactory(
@@ -950,7 +950,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
     def test_api_organization_accesses_patch_authenticated(self):
         """Authenticated users should not be allowed to patch an organization access."""
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         access = factories.UserOrganizationAccessFactory()
         old_values = OrganizationAccessSerializer(instance=access).data
@@ -980,7 +980,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         a user access for this organization.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         organization = factories.OrganizationFactory(users=[(user, "member")])
         access = factories.UserOrganizationAccessFactory(organization=organization)
@@ -1011,7 +1011,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         access for this organization, as long as s.he does not try to set the role to owner.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         organization = factories.OrganizationFactory(users=[(user, "administrator")])
         access = factories.UserOrganizationAccessFactory(
@@ -1057,7 +1057,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         the user access of an owner for this organization.
         """
         user, other_user = factories.UserFactory.create_batch(2)
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         organization = factories.OrganizationFactory(users=[(user, "administrator")])
         access = factories.UserOrganizationAccessFactory(
@@ -1092,7 +1092,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         the user access of another user when granting ownership.
         """
         user, other_user = factories.UserFactory.create_batch(2)
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         organization = factories.OrganizationFactory(users=[(user, "administrator")])
         access = factories.UserOrganizationAccessFactory(
@@ -1132,7 +1132,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         a user access for this organization except for existing owner accesses.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         organization = factories.OrganizationFactory(users=[(user, "owner")])
         access = factories.UserOrganizationAccessFactory(
@@ -1179,7 +1179,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         an existing owner access for this organization.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         organization = factories.OrganizationFactory(users=[(user, "owner")])
         access = factories.UserOrganizationAccessFactory(
@@ -1213,7 +1213,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         her own user access provided there are other owners in the organization.
         """
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         organization = factories.OrganizationFactory()
         access = factories.UserOrganizationAccessFactory(
@@ -1265,7 +1265,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         """
         access = factories.UserOrganizationAccessFactory()
         user = factories.UserFactory()
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         response = self.client.delete(
             f"/api/v1.0/organizations/{access.organization.id!s}/accesses/{access.id!s}/",
@@ -1284,7 +1284,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         organization = factories.OrganizationFactory(users=[(user, "member")])
         access = factories.UserOrganizationAccessFactory(organization=organization)
 
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         self.assertEqual(OrganizationAccess.objects.count(), 2)
         self.assertTrue(OrganizationAccess.objects.filter(user=access.user).exists())
@@ -1307,7 +1307,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             organization=organization, role=random.choice(["member", "administrator"])
         )
 
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         self.assertEqual(OrganizationAccess.objects.count(), 2)
         self.assertTrue(OrganizationAccess.objects.filter(user=access.user).exists())
@@ -1330,7 +1330,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             organization=organization, role=random.choice(["member", "administrator"])
         )
 
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         self.assertEqual(OrganizationAccess.objects.count(), 2)
         self.assertTrue(OrganizationAccess.objects.filter(user=access.user).exists())
@@ -1353,7 +1353,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             organization=organization, role="owner"
         )
 
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         self.assertEqual(OrganizationAccess.objects.count(), 2)
         self.assertTrue(OrganizationAccess.objects.filter(user=access.user).exists())
@@ -1375,7 +1375,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             organization=organization, user=user, role="owner"
         )
 
-        jwt_token = self.get_user_token(user.username)
+        jwt_token = self.generate_token_from_user(user)
 
         self.assertEqual(OrganizationAccess.objects.count(), 1)
         response = self.client.delete(
