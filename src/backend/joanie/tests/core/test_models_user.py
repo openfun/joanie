@@ -2,8 +2,7 @@
 from django.core.exceptions import ValidationError
 from django.test.utils import override_settings
 
-from joanie.core.factories import UserFactory
-from joanie.core.models import User
+from joanie.core import factories, models
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -13,12 +12,12 @@ class UserModelTestCase(BaseAPITestCase):
     def test_models_user_create(self):
         """A simple test to check model consistency."""
 
-        UserFactory(username="Sam", email="sam@fun-test.fr", language="fr-fr")
-        UserFactory(username="Joanie")
+        factories.UserFactory(username="Sam", email="sam@fun-test.fr", language="fr-fr")
+        factories.UserFactory(username="Joanie")
 
-        self.assertEqual(User.objects.count(), 2)
+        self.assertEqual(models.User.objects.count(), 2)
 
-        user = User.objects.get(username="Sam")
+        user = models.User.objects.get(username="Sam")
         self.assertEqual(user.username, "Sam")
         self.assertEqual(user.email, "sam@fun-test.fr")
         self.assertEqual(user.language, "fr-fr")
@@ -32,11 +31,13 @@ class UserModelTestCase(BaseAPITestCase):
         """Check language is part of the languages
         declared in the settings."""
 
-        UserFactory(username="Sam", email="sam@fun-test.fr", language="fr-ca")
-        UserFactory(username="Sam2", email="sam@fun-test.fr", language="it")
+        factories.UserFactory(username="Sam", email="sam@fun-test.fr", language="fr-ca")
+        factories.UserFactory(username="Sam2", email="sam@fun-test.fr", language="it")
 
         with self.assertRaises(ValidationError) as context:
-            UserFactory(username="Sam3", email="sam@fun-test.fr", language="fr-fr")
+            factories.UserFactory(
+                username="Sam3", email="sam@fun-test.fr", language="fr-fr"
+            )
 
         self.assertEqual(
             "La valeur « 'fr-fr' » n’est pas un choix valide.",
@@ -44,16 +45,18 @@ class UserModelTestCase(BaseAPITestCase):
         )
 
         with self.assertRaises(ValidationError):
-            UserFactory(username="Sam", email="sam@fun-test.fr", language="en-us")
+            factories.UserFactory(
+                username="Sam", email="sam@fun-test.fr", language="en-us"
+            )
 
     def test_models_user_unique_username(self):
         """
         There should be a db constraint forcing uniqueness of username
         """
-        UserFactory(username="Sam", email="sam@fun-test.fr")
+        factories.UserFactory(username="Sam", email="sam@fun-test.fr")
 
         with self.assertRaises(ValidationError) as error:
-            UserFactory(username="Sam")
+            factories.UserFactory(username="Sam")
             self.assertEqual(
                 "{'username': ['A user with that username already exists.']}",
                 str(error.exception),
@@ -63,18 +66,20 @@ class UserModelTestCase(BaseAPITestCase):
         """
         Multiple users can have the same email
         """
-        UserFactory(username="Sam", email="mail@fun-test.fr")
-        UserFactory(username="Joanie", email="mail@fun-test.fr")
-        self.assertEqual(User.objects.filter(email="mail@fun-test.fr").count(), 2)
+        factories.UserFactory(username="Sam", email="mail@fun-test.fr")
+        factories.UserFactory(username="Joanie", email="mail@fun-test.fr")
+        self.assertEqual(
+            models.User.objects.filter(email="mail@fun-test.fr").count(), 2
+        )
 
     def test_models_user_create_or_update_from_request_changed(self):
         """
         Check that, using the method `update_from_token`, the user
         values are updated as expected.
         """
-        user = UserFactory()
+        user = factories.UserFactory()
 
-        new_user_for_data = UserFactory.build()
+        new_user_for_data = factories.UserFactory.build()
         token = self.generate_token_from_user(new_user_for_data)
 
         with self.assertNumQueries(1):
@@ -88,14 +93,14 @@ class UserModelTestCase(BaseAPITestCase):
         self.assertEqual(user.first_name, new_user_for_data.first_name)
 
         # no new object has been created
-        self.assertEqual(User.objects.count(), 1)
+        self.assertEqual(models.User.objects.count(), 1)
 
     def test_models_user_create_or_update_from_request_unchanged(self):
         """
         Check that, using the method `update_from_token`, the user is not
         updated if no values have changed.
         """
-        user = UserFactory()
+        user = factories.UserFactory()
         token = self.generate_token_from_user(user)
 
         with self.assertNumQueries(0):
@@ -107,7 +112,7 @@ class UserModelTestCase(BaseAPITestCase):
         is set depending on the values of the language available in the
         settings and understood in different ways.
         """
-        user = UserFactory()
+        user = factories.UserFactory()
         token = self.generate_token_from_user(user)
 
         token["language"] = "fr_FR"
@@ -167,3 +172,33 @@ class UserModelTestCase(BaseAPITestCase):
             user.refresh_from_db()
             # the default language is used
             self.assertEqual(user.language, "es-ve")
+
+    # get_abilities
+
+    def test_models_user_get_abilities_course_roles(self):
+        """Check abilities returned for a user with roles on some courses."""
+        user = factories.UserFactory()
+        factories.CourseFactory(users=[(user, "manager")])
+        factories.CourseFactory(users=[(user, "administrator")])
+        factories.CourseFactory(users=[(user, "administrator")])
+
+        with self.assertNumQueries(1):
+            roles = list(user.get_abilities(user)["course_roles"])
+
+        self.assertCountEqual(
+            roles, ["manager", "administrator"]
+        )
+
+    def test_models_user_get_abilities_organization_roles(self):
+        """Check abilities returned for a user with roles on some organizations."""
+        user = factories.UserFactory()
+        factories.OrganizationFactory(users=[(user, "member")])
+        factories.OrganizationFactory(users=[(user, "administrator")])
+        factories.OrganizationFactory(users=[(user, "administrator")])
+
+        with self.assertNumQueries(1):
+            roles = list(user.get_abilities(user)["organization_roles"])
+
+        self.assertCountEqual(
+            roles, ["member", "administrator"]
+        )
