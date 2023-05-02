@@ -154,6 +154,7 @@ class Organization(parler_models.TranslatableModel, BaseModel):
         db_table = "joanie_organization"
         verbose_name = _("Organization")
         verbose_name_plural = _("Organizations")
+        ordering = ["-created_on"]
 
     def __str__(self):
         return (
@@ -228,6 +229,7 @@ class OrganizationAccess(BaseModel):
         verbose_name = _("Organization access")
         verbose_name_plural = _("Organization accesses")
         unique_together = ("organization", "user")
+        ordering = ["-created_on"]
 
     def __str__(self):
         role = capfirst(self.get_role_display())
@@ -441,6 +443,7 @@ class CourseAccess(BaseModel):
         verbose_name = _("Course access")
         verbose_name_plural = _("Course accesses")
         unique_together = ("course", "user")
+        ordering = ["-created_on"]
 
     def __str__(self):
         role = capfirst(self.get_role_display())
@@ -612,6 +615,7 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
         db_table = "joanie_course_run"
         verbose_name = _("Course run")
         verbose_name_plural = _("Course runs")
+        ordering = ["-created_on"]
 
     def __str__(self):
         return (
