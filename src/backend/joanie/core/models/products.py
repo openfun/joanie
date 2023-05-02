@@ -95,6 +95,7 @@ class Product(parler_models.TranslatableModel, BaseModel):
         db_table = "joanie_product"
         verbose_name = _("Product")
         verbose_name_plural = _("Products")
+        ordering = ["-created_on"]
 
     def __str__(self):
         return (

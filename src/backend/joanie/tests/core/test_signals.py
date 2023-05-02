@@ -952,7 +952,7 @@ class SignalsTestCase(TestCase):
 
         # Removing
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
-        self.assertEqual(
+        self.assertCountEqual(
             synchronized_course_runs,
             models.Product.get_equivalent_serialized_course_runs_for_products(
                 [product1]
@@ -976,7 +976,7 @@ class SignalsTestCase(TestCase):
 
         # Adding
         synchronized_course_runs = mock_sync.call_args_list[1][0][0]
-        self.assertEqual(
+        self.assertCountEqual(
             synchronized_course_runs,
             models.Product.get_equivalent_serialized_course_runs_for_products(
                 [product2, product3]
@@ -1156,7 +1156,7 @@ class SignalsTestCase(TestCase):
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
         # product2 is also targeted because we are not able to
         # target only the ones that had a restriction for this course run...
-        self.assertEqual(
+        self.assertCountEqual(
             synchronized_course_runs,
             models.Product.get_equivalent_serialized_course_runs_for_products(
                 [product1, product2]
@@ -1169,7 +1169,7 @@ class SignalsTestCase(TestCase):
                 f"https://example.com/api/v1.0/products/{product2.id}/",
             ],
         )
-        self.assertEqual(
+        self.assertCountEqual(
             [course_run["course"] for course_run in synchronized_course_runs],
             [product1.courses.first().code, product2.courses.first().code],
         )

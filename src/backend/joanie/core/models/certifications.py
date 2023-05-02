@@ -41,6 +41,7 @@ class CertificateDefinition(parler_models.TranslatableModel, BaseModel):
         db_table = "joanie_certificate_definition"
         verbose_name = _("Certificate definition")
         verbose_name_plural = _("Certificate definitions")
+        ordering = ["-created_on"]
 
     def __str__(self):
         return self.safe_translation_getter("title", any_language=True)
