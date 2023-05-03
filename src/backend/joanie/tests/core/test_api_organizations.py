@@ -4,7 +4,7 @@ Test suite for Organization API endpoint.
 import random
 from unittest import mock
 
-from joanie.core import factories, models
+from joanie.core import enums, factories, models
 from joanie.core.serializers import fields
 from joanie.tests.base import BaseAPITestCase
 
@@ -239,9 +239,9 @@ class OrganizationApiTest(BaseAPITestCase):
         for key, value in data.items():
             self.assertNotEqual(value, getattr(organization, key))
 
-    def test_api_organization_update_authenticated(self):
+    def test_api_organization_update_authenticated_no_access(self):
         """
-        Authenticated users should be able to update an organization.
+        Authenticated users should not be able to update an organization.
         """
         user = factories.UserFactory(
             is_staff=random.choice([True, False]),
@@ -250,6 +250,42 @@ class OrganizationApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
 
         organization = factories.OrganizationFactory()
+
+        data = {
+            "code": "ORG-001",
+            "title": "Organization 001",
+        }
+
+        response = self.client.put(
+            f"/api/v1.0/organizations/{organization.id}/",
+            data=data,
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.json(), {"detail": 'Method "PUT" not allowed.'})
+
+        organization.refresh_from_db()
+        for key, value in data.items():
+            self.assertNotEqual(value, getattr(organization, key))
+
+    def test_api_organization_update_authenticated_with_access(self):
+        """
+        Authenticated users with owner role should not be
+        able to update an organization.
+        """
+        user = factories.UserFactory(
+            is_staff=random.choice([True, False]),
+            is_superuser=random.choice([True, False]),
+        )
+        token = self.generate_token_from_user(user)
+
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(
+            user=user,
+            organization=organization,
+            role=enums.OWNER,
+        )
 
         data = {
             "code": "ORG-001",
@@ -280,7 +316,7 @@ class OrganizationApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, 401)
         self.assertEqual(models.Organization.objects.count(), 1)
 
-    def test_api_organization_delete_authenticated(self):
+    def test_api_organization_delete_authenticated_no_access(self):
         """
         Authenticated users should not be able to delete an organization.
         """
@@ -291,7 +327,32 @@ class OrganizationApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
 
         organization = factories.OrganizationFactory()
-        factories.UserOrganizationAccessFactory(user=user, organization=organization)
+
+        response = self.client.delete(
+            f"/api/v1.0/organizations/{organization.id}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 405)
+        self.assertEqual(models.Organization.objects.count(), 1)
+
+    def test_api_organization_delete_authenticated_with_access(self):
+        """
+        Authenticated users with owner role should not be able
+        to delete an organization.
+        """
+        user = factories.UserFactory(
+            is_staff=random.choice([True, False]),
+            is_superuser=random.choice([True, False]),
+        )
+        token = self.generate_token_from_user(user)
+
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(
+            user=user,
+            organization=organization,
+            role=enums.OWNER,
+        )
 
         response = self.client.delete(
             f"/api/v1.0/organizations/{organization.id}/",

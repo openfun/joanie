@@ -40,6 +40,7 @@ API_VERSION = "v1.0"
 router = DefaultRouter()
 router.register("addresses", api_client.AddressViewSet, basename="addresses")
 router.register("certificates", api_client.CertificateViewSet, basename="certificates")
+router.register("courses", api_client.CourseViewSet, basename="courses")
 router.register("course-runs", api_client.CourseRunViewSet, basename="course-runs")
 router.register("enrollments", api_client.EnrollmentViewSet, basename="enrollments")
 router.register("orders", api_client.OrderViewSet, basename="orders")
