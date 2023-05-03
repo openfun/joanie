@@ -57,7 +57,7 @@ class AddressSerializer(serializers.ModelSerializer):
         ]
 
 
-class CourseSerializer(AbilitiesModelSerializer):
+class CourseLightSerializer(AbilitiesModelSerializer):
     """
     Serialize all non-sensitive course information. This serializer is read only.
     """
@@ -244,7 +244,7 @@ class CertificateOrderSerializer(serializers.ModelSerializer):
     """
 
     id = serializers.CharField(read_only=True, required=False)
-    course = CourseSerializer(read_only=True, exclude_abilities=True)
+    course = CourseLightSerializer(read_only=True, exclude_abilities=True)
     organization = OrganizationSerializer(read_only=True, exclude_abilities=True)
 
     class Meta:
@@ -293,7 +293,7 @@ class CourseRunSerializer(serializers.ModelSerializer):
     Serialize all information about a course run
     """
 
-    course = CourseSerializer(read_only=True, exclude_abilities=True)
+    course = CourseLightSerializer(read_only=True, exclude_abilities=True)
 
     class Meta:
         model = models.CourseRun
@@ -480,7 +480,7 @@ class OrderSerializer(serializers.ModelSerializer):
     owner = serializers.CharField(
         source="owner.username", read_only=True, required=False
     )
-    course = CourseSerializer(read_only=True, exclude_abilities=True)
+    course = CourseLightSerializer(read_only=True, exclude_abilities=True)
     total = MoneyField(
         coerce_to_string=False,
         decimal_places=2,
