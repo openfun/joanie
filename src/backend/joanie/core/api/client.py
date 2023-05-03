@@ -631,3 +631,38 @@ class CourseAccessViewSet(
                 .distinct()
             )
         return queryset
+
+
+class CourseViewSet(
+    mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet
+):
+    """
+    API ViewSet for all interactions with courses.
+
+    GET /api/courses/
+        Return list of all courses related to the logged-in user.
+
+    GET /api/courses/:<course_id>
+        Return one course if an id is provided.
+    """
+
+    lookup_field = "pk"
+    pagination_class = Pagination
+    permission_classes = [permissions.AccessPermission]
+    serializer_class = serializers.CourseSerializer
+
+    def get_queryset(self):
+        """
+        Custom queryset to get user courses
+        """
+        username = (
+            self.request.auth["username"]
+            if self.request.auth
+            else self.request.user.username
+        )
+        user_role_query = models.CourseAccess.objects.filter(
+            user__username=username, course=OuterRef("pk")
+        ).values("role")[:1]
+        return models.Course.objects.filter(accesses__user__username=username).annotate(
+            user_role=Subquery(user_role_query)
+        )

@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Add courses client api endpoint
 - Add ThumbnailImageField "cover" to Course model
 - Add abilities to courses/organizations and their accesses
 - Add ID field to the course serializer
