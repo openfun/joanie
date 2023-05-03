@@ -38,7 +38,7 @@ class CourseApiTest(BaseAPITestCase):
         factories.UserCourseAccessFactory(user=user, course=courses[0])
         factories.UserCourseAccessFactory(user=user, course=courses[1])
 
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(14):
             response = self.client.get(
                 "/api/v1.0/courses/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -88,15 +88,32 @@ class CourseApiTest(BaseAPITestCase):
                     {
                         "abilities": {"foo": "bar"},
                         "code": course.code,
-                        "cover": "_this_field_is_mocked",
                         "id": str(course.id),
+                        "cover": "_this_field_is_mocked",
                         "title": course.title,
+                        "organizations": [
+                            {
+                                "code": organization.code,
+                                "id": str(organization.id),
+                                "logo": "_this_field_is_mocked",
+                                "title": organization.title,
+                            }
+                            for organization in course.organizations.all()
+                        ],
+                        "selling_organizations": [],
+                        "products": [
+                            str(product.id) for product in course.products.all()
+                        ],
+                        "course_runs": [
+                            str(course_run.id)
+                            for course_run in course.course_runs.all()
+                        ],
+                        "state": course.state,
                     }
                 ],
             },
         )
-        self.assertEqual(mock_abilities.call_args_list[0][1]["user"], user)
-        self.assertEqual(str(mock_abilities.call_args_list[0][1]["auth"]), str(token))
+        mock_abilities.called_once_with(user)
 
     def test_api_course_get_anonymous(self):
         """
@@ -144,11 +161,17 @@ class CourseApiTest(BaseAPITestCase):
 
         course = factories.CourseFactory()
         factories.UserCourseAccessFactory(user=user, course=course)
-
-        response = self.client.get(
-            f"/api/v1.0/courses/{course.id}/",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
+        factories.CourseProductRelationFactory(
+            course=course,
+            product=factories.ProductFactory(),
+            organizations=factories.OrganizationFactory.create_batch(2),
         )
+
+        with self.assertNumQueries(8):
+            response = self.client.get(
+                f"/api/v1.0/courses/{course.id}/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
 
         self.assertEqual(response.status_code, 200)
         content = response.json()
@@ -160,6 +183,29 @@ class CourseApiTest(BaseAPITestCase):
                 "id": str(course.id),
                 "cover": "_this_field_is_mocked",
                 "title": course.title,
+                "organizations": [
+                    {
+                        "code": organization.code,
+                        "id": str(organization.id),
+                        "logo": "_this_field_is_mocked",
+                        "title": organization.title,
+                    }
+                    for organization in course.organizations.all()
+                ],
+                "selling_organizations": [
+                    {
+                        "code": organization.code,
+                        "id": str(organization.id),
+                        "logo": "_this_field_is_mocked",
+                        "title": organization.title,
+                    }
+                    for organization in course.get_selling_organizations()
+                ],
+                "products": [str(product.id) for product in course.products.all()],
+                "course_runs": [
+                    str(course_run.id) for course_run in course.course_runs.all()
+                ],
+                "state": course.state,
             },
         )
 

@@ -108,8 +108,16 @@ class AdminCourseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Course
-        fields = ("id", "code", "cover", "title", "organizations", "product_relations")
-        read_only_fields = ["id"]
+        fields = (
+            "id",
+            "code",
+            "cover",
+            "title",
+            "organizations",
+            "product_relations",
+            "state",
+        )
+        read_only_fields = ["id", "state"]
 
     def validate(self, attrs):
         """

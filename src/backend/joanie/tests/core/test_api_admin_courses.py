@@ -110,6 +110,7 @@ class CourseAdminApiTest(TestCase):
                         "title": course_1.title,
                         "organizations": [],
                         "product_relations": [],
+                        "state": course_1.state,
                     }
                 ],
             },

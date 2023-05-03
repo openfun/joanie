@@ -696,3 +696,51 @@ class ProductSerializer(serializers.ModelSerializer):
         representation["orders"] = self.get_orders(instance)
 
         return representation
+
+
+class CourseSerializer(AbilitiesModelSerializer):
+    """
+    Serialize all non-sensitive course information. This serializer is read only.
+    """
+
+    cover = ThumbnailDetailField()
+    organizations = OrganizationSerializer(many=True, read_only=True)
+    products = serializers.SlugRelatedField(many=True, read_only=True, slug_field="id")
+    course_runs = serializers.SlugRelatedField(
+        many=True, read_only=True, slug_field="id"
+    )
+    selling_organizations = serializers.SerializerMethodField(
+        "get_selling_organizations"
+    )
+
+    class Meta:
+        model = models.Course
+        fields = [
+            "code",
+            "course_runs",
+            "cover",
+            "id",
+            "organizations",
+            "selling_organizations",
+            "products",
+            "state",
+            "title",
+        ]
+        read_only_fields = [
+            "code",
+            "course_runs",
+            "cover",
+            "id",
+            "organizations",
+            "selling_organizations",
+            "products",
+            "state",
+            "title",
+        ]
+
+    def get_selling_organizations(self, instance):
+        """Get the course selling organizations."""
+        return OrganizationSerializer(
+            instance=instance.get_selling_organizations(),
+            many=True,
+        ).data
