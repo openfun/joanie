@@ -1,6 +1,7 @@
 """
 Declare and configure the models for the courses part
 """
+import itertools
 from collections.abc import Mapping
 from datetime import MAXYEAR, datetime, timezone
 
@@ -343,15 +344,16 @@ class Course(parler_models.TranslatableModel, BaseModel):
         """
         The state of the course carrying information on what to display on a course glimpse.
 
-        The game is to find the highest priority state for this course among its course runs.
+        The game is to find the highest priority state for this course among
+        its course runs and its products.
         """
-        # The default state is for a course that has no course runs
+        # The default state is for a course that has no course runs or products
         best_state = CourseState(CourseState.TO_BE_SCHEDULED)
+        course_runs = self.course_runs.all()
+        products = self.products.all()
 
-        for course_run in self.course_runs.only(
-            "start", "end", "enrollment_start", "enrollment_end"
-        ):
-            state = course_run.state
+        for instance in itertools.chain(course_runs, products):
+            state = instance.state
             if state < best_state:
                 best_state = state
             if state["priority"] == CourseState.ONGOING_OPEN:
@@ -666,7 +668,7 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
 
     # pylint: disable=too-many-return-statements
     @staticmethod
-    def compute_state(start, end, enrollment_start, enrollment_end):
+    def compute_state(start=None, end=None, enrollment_start=None, enrollment_end=None):
         """
         Compute at the current time the state of a course run that would have the dates
         passed in argument.

@@ -40,6 +40,16 @@ class CourseModelsTestCase(BaseAPITestCase):
             models.Course.objects.filter(code="THE-UNIQUE-CODE").count(), 1
         )
 
+    def test_models_course_delete(self):
+        """
+        Confirm course can't be deleted if it has course runs.
+        """
+        course_run = factories.CourseRunFactory()
+        course = factories.CourseFactory(course_runs=[course_run])
+
+        with self.assertRaises(ProtectedError):
+            course.delete()
+
     # get_abilities
 
     def test_models_course_get_abilities_anonymous(self):
@@ -240,7 +250,7 @@ class CourseStateModelsTestCase(TestCase):
         Confirm course state result when there is no course runs at all.
         """
         course = factories.CourseFactory()
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(2):
             state = course.state
         self.assertEqual(state, CourseState(7))
 
@@ -250,7 +260,7 @@ class CourseStateModelsTestCase(TestCase):
         """
         course = factories.CourseFactory()
         self.create_run_archived_closed(course)
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(2):
             state = course.state
         self.assertEqual(state, CourseState(6))
 
@@ -260,7 +270,7 @@ class CourseStateModelsTestCase(TestCase):
         """
         course = factories.CourseFactory()
         course_run = self.create_run_archived_open(course)
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(2):
             state = course.state
         self.assertEqual(state, CourseState(2, course_run.enrollment_end))
 
@@ -271,7 +281,7 @@ class CourseStateModelsTestCase(TestCase):
         """
         course = factories.CourseFactory()
         self.create_run_ongoing_closed(course)
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(2):
             state = course.state
         self.assertEqual(state, CourseState(5))
 
@@ -282,7 +292,7 @@ class CourseStateModelsTestCase(TestCase):
         """
         course = factories.CourseFactory()
         course_run = self.create_run_future_not_yet_open(course)
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(2):
             state = course.state
         expected_state = CourseState(3, course_run.start)
         self.assertEqual(state, expected_state)
@@ -294,7 +304,7 @@ class CourseStateModelsTestCase(TestCase):
         """
         course = factories.CourseFactory()
         self.create_run_future_closed(course)
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(2):
             state = course.state
         expected_state = CourseState(4)
         self.assertEqual(state, expected_state)
@@ -305,7 +315,7 @@ class CourseStateModelsTestCase(TestCase):
         """
         course = factories.CourseFactory()
         course_run = self.create_run_future_open(course)
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(2):
             state = course.state
         expected_state = CourseState(1, course_run.start)
         self.assertEqual(state, expected_state)
@@ -316,20 +326,25 @@ class CourseStateModelsTestCase(TestCase):
         """
         course = factories.CourseFactory()
         course_run = self.create_run_ongoing_open(course)
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(1):
             state = course.state
         expected_state = CourseState(0, course_run.enrollment_end)
         self.assertEqual(state, expected_state)
 
-    def test_models_course_delete(self):
+    def test_models_course_state_with_products(self):
         """
-        Confirm course can't be deleted if it has course runs.
+        Confirm course state takes course's products in account
         """
-        course_run = factories.CourseRunFactory()
-        course = factories.CourseFactory(course_runs=[course_run])
+        target_course = factories.CourseFactory()
+        target_course_run = self.create_run_ongoing_open(target_course)
+        product = factories.ProductFactory(target_courses=[target_course])
+        course = factories.CourseFactory(products=[product])
 
-        with self.assertRaises(ProtectedError):
-            course.delete()
+        with self.assertNumQueries(3):
+            state = course.state
+
+        expected_state = CourseState(0, target_course_run.enrollment_end)
+        self.assertEqual(state, expected_state)
 
     def test_models_course_get_selling_organizations_all(self):
         """

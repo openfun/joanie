@@ -8,6 +8,7 @@ from decimal import Decimal as D
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.test import TestCase
+from django.utils import timezone as django_timezone
 
 from djmoney.money import Money
 from moneyed import EUR
@@ -239,3 +240,47 @@ class ProductModelsTestCase(TestCase):
             product.get_equivalent_course_run_languages(),
             ["tr", "ast", "ne", "it", "af", "ro", "fr"],
         )
+
+    def test_model_product_get_equivalent_course_run_dates(self):
+        """
+        Check that product dates are processed
+        by aggregating target course runs dates as expected.
+        """
+        earliest_start_date = django_timezone.now() - timedelta(days=1)
+        latest_end_date = django_timezone.now() + timedelta(days=2)
+        latest_enrollment_start_date = django_timezone.now() - timedelta(days=2)
+        earliest_enrollment_end_date = django_timezone.now() + timedelta(days=1)
+
+        courses = (
+            factories.CourseRunFactory(
+                start=earliest_start_date,
+                end=latest_end_date,
+                enrollment_start=latest_enrollment_start_date - timedelta(days=1),
+                enrollment_end=earliest_enrollment_end_date + timedelta(days=1),
+            ).course,
+            factories.CourseRunFactory(
+                start=earliest_start_date + timedelta(days=1),
+                end=latest_end_date - timedelta(days=1),
+                enrollment_start=latest_enrollment_start_date,
+                enrollment_end=earliest_enrollment_end_date,
+            ).course,
+        )
+        product = factories.ProductFactory(target_courses=courses)
+
+        self.assertEqual(
+            product.get_equivalent_course_run_dates(),
+            {
+                "start": earliest_start_date,
+                "end": latest_end_date,
+                "enrollment_start": latest_enrollment_start_date,
+                "enrollment_end": earliest_enrollment_end_date,
+            },
+        )
+
+    def test_model_product_state(self):
+        """
+        Check that the state property returns the expected value.
+        """
+        course_run = factories.CourseRunFactory()
+        product = factories.ProductFactory(target_courses=[course_run.course])
+        self.assertEqual(product.state, course_run.state)
