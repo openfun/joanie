@@ -28,6 +28,7 @@ and this project adheres to
 
 ### Changed
 
+- Take products in account to process Course state
 - Update OrderSerializer to bind Course information
 - Use ThumbnailImageField instead of ImageField for Organization logo
 - Refactor how the user is authenticated and passed throughout the request
