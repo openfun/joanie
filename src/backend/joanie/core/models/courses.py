@@ -368,6 +368,24 @@ class Course(parler_models.TranslatableModel, BaseModel):
         self.code = utils.normalize_code(self.code)
         return super().clean()
 
+    def get_selling_organizations(self, product=None):
+        """
+        Return the list of organizations selling a product for the course.
+        If no product is provided, return the list of organizations selling
+        any product for the course.
+        """
+
+        if product is None:
+            qs = self.product_relations.all()
+        else:
+            qs = self.product_relations.filter(product=product)
+
+        return Organization.objects.filter(
+            id__in=qs.distinct()
+            .only("organizations")
+            .values_list("organizations", flat=True)
+        )
+
     def get_abilities(self, user):
         """
         Compute and return abilities for a given user taking into account
