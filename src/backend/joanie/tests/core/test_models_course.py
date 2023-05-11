@@ -330,3 +330,43 @@ class CourseStateModelsTestCase(TestCase):
 
         with self.assertRaises(ProtectedError):
             course.delete()
+
+    def test_models_course_get_selling_organizations_all(self):
+        """
+        The method `get_selling_organizations` should return all organizations
+        included in product_relations of the course.
+        """
+
+        course = factories.CourseFactory()
+        organization = factories.OrganizationFactory()
+        factories.CourseProductRelationFactory.create_batch(
+            2, course=course, organizations=[organization]
+        )
+
+        organizations = course.get_selling_organizations()
+
+        with self.assertNumQueries(1):
+            self.assertEqual(organizations.count(), 1)
+
+    def test_models_course_get_selling_organizations_with_product(self):
+        """
+        The method `get_selling_organizations` should return all organizations
+        included in product_relations of the course and a provided product.
+        """
+
+        course = factories.CourseFactory()
+        product = factories.ProductFactory()
+        factories.CourseProductRelationFactory(
+            course=course,
+            organizations=factories.OrganizationFactory.create_batch(1),
+        )
+        factories.CourseProductRelationFactory(
+            course=course,
+            product=product,
+            organizations=factories.OrganizationFactory.create_batch(2),
+        )
+
+        organizations = course.get_selling_organizations(product=product)
+
+        with self.assertNumQueries(1):
+            self.assertEqual(organizations.count(), 2)
