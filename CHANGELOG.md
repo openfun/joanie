@@ -36,6 +36,7 @@ and this project adheres to
 - Use user fullname instead of username in order confirmation email
 - Rename certificate field into certificate_definition for the ProductSerializer
 - Improve certificate serializer
+- Upgrade to Django 4.2
 
 ### Removed
 

@@ -208,7 +208,7 @@ class InvoiceModelTestCase(TestCase):
 
         self.assertEqual(
             str(context.exception),
-            "{'__all__': ['Credit note must have a parent invoice.']}",
+            "{'__all__': ['Credit note should have a parent invoice.']}",
         )
 
     def test_models_invoice_without_parent_unique_per_order(self):
@@ -219,15 +219,12 @@ class InvoiceModelTestCase(TestCase):
 
         InvoiceFactory(order=order, total=200.00)
 
-        with self.assertRaises(IntegrityError) as context:
+        with self.assertRaises(ValidationError) as context:
             InvoiceFactory(order=order, total=100.00)
 
-        self.assertRegex(
+        self.assertEqual(
             str(context.exception),
-            (
-                "^duplicate key value violates unique constraint "
-                '"only_one_invoice_without_parent_per_order"'
-            ),
+            "{'__all__': ['A main invoice already exists for this order.']}",
         )
 
     def test_models_invoice_update_invoice_relying_on_order_with_a_negative_amount(

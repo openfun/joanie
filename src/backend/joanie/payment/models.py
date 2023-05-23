@@ -88,11 +88,13 @@ class Invoice(BaseModel):
                     | models.Q(parent__isnull=False)
                 ),
                 name="main_invoice_should_have_a_positive_amount",
+                violation_error_message="Credit note should have a parent invoice.",
             ),
             models.UniqueConstraint(
                 condition=models.Q(parent__isnull=True),
                 fields=["order"],
                 name="only_one_invoice_without_parent_per_order",
+                violation_error_message="A main invoice already exists for this order.",
             ),
         ]
 
@@ -282,11 +284,9 @@ class Invoice(BaseModel):
             self.recipient_address = self.parent.recipient_address
 
         if self.type == payment_enums.INVOICE_TYPE_CREDIT_NOTE:
-            if not self.parent:
-                raise ValidationError(_("Credit note must have a parent invoice."))
-
             if (
-                self.total.amount * -1  # pylint: disable=no-member
+                self.parent
+                and self.total.amount * -1  # pylint: disable=no-member
                 > self.parent.invoiced_balance.amount  # pylint: disable=no-member
             ):
                 raise ValidationError(

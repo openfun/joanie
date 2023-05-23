@@ -6,7 +6,6 @@ from datetime import timedelta
 from unittest import mock
 
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError
 from django.test import TestCase
 from django.utils import timezone
 
@@ -31,12 +30,21 @@ class OrderModelsTestCase(TestCase):
         product = factories.ProductFactory(courses=[course])
         order = factories.OrderFactory(product=product)
 
-        with self.assertRaises(IntegrityError):
+        with self.assertRaises(ValidationError) as context:
             factories.OrderFactory(
                 owner=order.owner,
                 product=product,
                 course=course,
             )
+
+        self.assertEqual(
+            str(context.exception),
+            (
+                "{'__all__': ['"
+                "An order for this product and course already exists."
+                "']}"
+            ),
+        )
 
     @staticmethod
     def test_models_order_course_owner_product_unique_canceled():
@@ -172,7 +180,7 @@ class OrderModelsTestCase(TestCase):
         InvoiceFactory(order=order, total=order.total)
 
         # - Validate the order should automatically enroll user to course run
-        with self.assertNumQueries(17):
+        with self.assertNumQueries(18):
             order.validate()
 
         self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
@@ -215,7 +223,7 @@ class OrderModelsTestCase(TestCase):
         InvoiceFactory(order=order, total=order.total)
 
         # - Validate the order should automatically enroll user to course run
-        with self.assertNumQueries(24):
+        with self.assertNumQueries(25):
             order.validate()
 
         enrollment.refresh_from_db()
@@ -302,7 +310,7 @@ class OrderModelsTestCase(TestCase):
         self.assertEqual(Enrollment.objects.filter(is_active=True).count(), 1)
 
         # - When order is canceled, user should not be unenrolled to related enrollments
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(9):
             order.cancel()
         self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
         self.assertEqual(Enrollment.objects.count(), 1)
@@ -341,7 +349,7 @@ class OrderModelsTestCase(TestCase):
         self.assertEqual(Enrollment.objects.filter(is_active=True).count(), 1)
 
         # - When order is canceled, user should not be unenrolled to related enrollments
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(7):
             order.cancel()
         self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
         self.assertEqual(Enrollment.objects.count(), 1)

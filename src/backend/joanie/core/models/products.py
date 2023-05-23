@@ -336,6 +336,7 @@ class Order(BaseModel):
                 fields=["course", "owner", "product"],
                 condition=~models.Q(state=enums.ORDER_STATE_CANCELED),
                 name="unique_owner_product_not_canceled",
+                violation_error_message="An order for this product and course already exists.",
             )
         ]
         verbose_name = _("Order")
