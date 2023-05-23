@@ -118,7 +118,7 @@ class UserModelTestCase(BaseAPITestCase):
         token["language"] = "fr_FR"
         user.update_from_token(token)
         user.refresh_from_db()
-        self.assertEqual(user.language, "fr-fr")
+        self.assertEqual(user.language, "fr-FR")
 
         token["language"] = "en"
         user.update_from_token(token)

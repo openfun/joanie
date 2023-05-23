@@ -422,7 +422,7 @@ class Build(Base):
     """
 
     SECRET_KEY = values.Value("DummyKey")
-    STATICFILES_STORAGE = values.Value(
+    STORAGES_STATICFILES_BACKEND = values.Value(
         "whitenoise.storage.CompressedManifestStaticFilesStorage"
     )
 
@@ -546,7 +546,7 @@ class Production(Base):
     # For static files in production, we want to use a backend that includes a hash in
     # the filename, that is calculated from the file content, so that browsers always
     # get the updated version of each file.
-    STATICFILES_STORAGE = values.Value(
+    STORAGES_STATICFILES_BACKEND = values.Value(
         "whitenoise.storage.CompressedManifestStaticFilesStorage"
     )
 

@@ -9,9 +9,7 @@
       "matchManagers": [
         "setup-cfg"
       ],
-      "matchPackageNames": [
-        "django"
-      ]
+      "matchPackageNames": []
     },
     {
       "enabled": false,

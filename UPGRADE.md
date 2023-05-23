@@ -15,3 +15,6 @@ the following command inside your docker container:
 (Note : in your development environment, you can `make migrate`.)
 
 ## [Unreleased]
+
+- `DJANGO_STATICFILES_STORAGE` environment variable is not used anymore. You have to replace it
+  by `DJANGO_STORAGES_STATICFILES_BACKEND`.

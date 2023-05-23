@@ -1185,10 +1185,7 @@ class OrderApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.json(),
-            (
-                f"Cannot create order related to the product {product.id} "
-                f"and course {course.code}"
-            ),
+            {"__all__": ["An order for this product and course already exists."]},
         )
 
         # But if we cancel the first order, user should be able to create a new order
@@ -1263,7 +1260,7 @@ class OrderApiTest(BaseAPITestCase):
             "billing_address": billing_address,
         }
 
-        with self.assertNumQueries(19):
+        with self.assertNumQueries(20):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
