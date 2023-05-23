@@ -28,7 +28,7 @@ const createJestConfig = nextJest({
 });
 
 module.exports = async (...args) => {
-  const createConfig= createJestConfig(customJestConfig);
+  const createConfig = createJestConfig(customJestConfig);
   const config = await createConfig(...args);
 
   config.transformIgnorePatterns = customJestConfig.transformIgnorePatterns;

@@ -12,9 +12,10 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 import json
 import os
 
+from django.utils.translation import gettext_lazy as _
+
 import sentry_sdk
 from configurations import Configuration, values
-from django.utils.translation import gettext_lazy as _
 from sentry_sdk.integrations.django import DjangoIntegration
 
 from .core.utils import JSONValue
@@ -244,9 +245,9 @@ class Base(Configuration):
         "DEFAULT_FILTER_BACKENDS": [
             "django_filters.rest_framework.DjangoFilterBackend"
         ],
-        'DEFAULT_PARSER_CLASSES': [
-            'rest_framework.parsers.JSONParser',
-            'nested_multipart_parser.drf.DrfNestedParser'
+        "DEFAULT_PARSER_CLASSES": [
+            "rest_framework.parsers.JSONParser",
+            "nested_multipart_parser.drf.DrfNestedParser",
         ],
         "EXCEPTION_HANDLER": "joanie.core.api.exception_handler",
         "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
@@ -435,7 +436,7 @@ class Development(Base):
 
     ALLOWED_HOSTS = ["*"]
     CORS_ALLOW_ALL_ORIGINS = True
-    CSRF_TRUSTED_ORIGINS = ['http://localhost:3000']
+    CSRF_TRUSTED_ORIGINS = ["http://localhost:3000"]
     DEBUG = True
     NGROK_ENDPOINT = values.Value(None, "NGROK_ENDPOINT", environ_prefix=None)
 

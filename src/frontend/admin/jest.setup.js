@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/extend-expect";
 import "whatwg-fetch";
-import {server} from "./mocks/server";
-import {QueryCache} from "@tanstack/react-query";
+import { server } from "./mocks/server";
+import { QueryCache } from "@tanstack/react-query";
 
 const queryCache = new QueryCache();
 

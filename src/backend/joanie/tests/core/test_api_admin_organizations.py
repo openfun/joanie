@@ -5,9 +5,10 @@ import random
 import re
 from unittest import mock
 
-import factory.django
 from django.core.files.base import ContentFile
 from django.test import TestCase
+
+import factory.django
 
 from joanie.core import factories
 from joanie.core.serializers import fields

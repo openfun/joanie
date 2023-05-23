@@ -4,6 +4,7 @@ Admin API Resource Filters
 from typing import List
 
 from django.db.models import Q
+
 from django_filters import rest_framework as filters
 
 from joanie.core import models
@@ -38,7 +39,8 @@ class ProductAdminFilterSet(filters.FilterSet):
 
     def filter_search(self, queryset, _name, value):
         """
-        Filter resource by looking for title which contains provided value in search query parameter.
+        Filter resource by looking for title which contains provided value in search
+        query parameter.
         """
         return queryset.filter(translations__title__icontains=value).distinct()
 
