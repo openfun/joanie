@@ -30,19 +30,19 @@ DB_PORT            = 5432
 
 # -- Docker
 # Get the current user ID to use for docker run and docker exec commands
-DOCKER_UID           = $(shell id -u)
-DOCKER_GID           = $(shell id -g)
-DOCKER_USER          = $(DOCKER_UID):$(DOCKER_GID)
-COMPOSE              = DOCKER_USER=$(DOCKER_USER) docker-compose
-COMPOSE_RUN          = $(COMPOSE) run --rm
-COMPOSE_RUN_APP      = $(COMPOSE_RUN) app-dev
+DOCKER_UID          = $(shell id -u)
+DOCKER_GID          = $(shell id -g)
+DOCKER_USER         = $(DOCKER_UID):$(DOCKER_GID)
+COMPOSE             = DOCKER_USER=$(DOCKER_USER) docker-compose
+COMPOSE_RUN         = $(COMPOSE) run --rm
+COMPOSE_RUN_APP     = $(COMPOSE_RUN) app-dev
 COMPOSE_RUN_ADMIN   = $(COMPOSE_RUN) admin-dev
 COMPOSE_RUN_MAIL    = $(COMPOSE_RUN) mail-generator
-COMPOSE_RUN_CROWDIN  = $(COMPOSE_RUN) crowdin crowdin
-COMPOSE_TEST_RUN     = $(COMPOSE_RUN)
-COMPOSE_TEST_RUN_APP = $(COMPOSE_TEST_RUN) app-dev
-MANAGE               = $(COMPOSE_RUN_APP) python manage.py
-WAIT_DB              = @$(COMPOSE_RUN) dockerize -wait tcp://$(DB_HOST):$(DB_PORT) -timeout 60s
+COMPOSE_RUN_CROWDIN = $(COMPOSE_RUN) crowdin crowdin
+WAIT_DB             = @$(COMPOSE_RUN) dockerize -wait tcp://$(DB_HOST):$(DB_PORT) -timeout 60s
+
+# -- Backend
+MANAGE                 = $(COMPOSE_RUN_APP) python manage.py
 
 # -- Frontend
 MAIL_YARN = $(COMPOSE_RUN_MAIL) yarn
@@ -122,32 +122,32 @@ lint: \
 
 lint-bandit: ## lint back-end python sources with bandit
 	@echo 'lint:bandit started…'
-	@$(COMPOSE_TEST_RUN_APP) bandit -c .banditrc -qr .
+	@$(COMPOSE_RUN_APP) bandit -c .banditrc -qr .
 .PHONY: lint-bandit
 
 lint-black: ## lint back-end python sources with black
 	@echo 'lint:black started…'
-	@$(COMPOSE_TEST_RUN_APP) black .
+	@$(COMPOSE_RUN_APP) black .
 .PHONY: lint-black
 
 lint-flake8: ## lint back-end python sources with flake8
 	@echo 'lint:flake8 started…'
-	@$(COMPOSE_TEST_RUN_APP) flake8 .
+	@$(COMPOSE_RUN_APP) flake8 .
 .PHONY: lint-flake8
 
 lint-isort: ## automatically re-arrange python imports in back-end code base
 	@echo 'lint:isort started…'
-	@$(COMPOSE_TEST_RUN_APP) isort --atomic .
+	@$(COMPOSE_RUN_APP) isort --atomic .
 .PHONY: lint-isort
 
 lint-mypy: ## type check back-end python sources with mypy
 	@echo 'lint:mypy started…'
-	@$(COMPOSE_TEST_RUN_APP) mypy .
+	@$(COMPOSE_RUN_APP) mypy .
 .PHONY: lint-mypy
 
 lint-pylint: ## lint back-end python sources with pylint
 	@echo 'lint:pylint started…'
-	@$(COMPOSE_TEST_RUN_APP) pylint joanie
+	@$(COMPOSE_RUN_APP) pylint joanie
 .PHONY: lint-pylint
 
 test: ## run project tests
