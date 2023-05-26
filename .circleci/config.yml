@@ -230,7 +230,7 @@ jobs:
           command: yarn install --frozen-lockfile
       - run:
           name: Build mails
-          command: yarn build-mails
+          command: yarn build
       - persist_to_workspace:
           root: ~/joanie
           paths:

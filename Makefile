@@ -37,14 +37,15 @@ COMPOSE              = DOCKER_USER=$(DOCKER_USER) docker-compose
 COMPOSE_RUN          = $(COMPOSE) run --rm
 COMPOSE_RUN_APP      = $(COMPOSE_RUN) app-dev
 COMPOSE_RUN_ADMIN   = $(COMPOSE_RUN) admin-dev
+COMPOSE_RUN_MAIL    = $(COMPOSE_RUN) mail-generator
 COMPOSE_RUN_CROWDIN  = $(COMPOSE_RUN) crowdin crowdin
-COMPOSE_RUN_MAIL_YARN= $(COMPOSE_RUN) mail-generator yarn
 COMPOSE_TEST_RUN     = $(COMPOSE_RUN)
 COMPOSE_TEST_RUN_APP = $(COMPOSE_TEST_RUN) app-dev
 MANAGE               = $(COMPOSE_RUN_APP) python manage.py
 WAIT_DB              = @$(COMPOSE_RUN) dockerize -wait tcp://$(DB_HOST):$(DB_PORT) -timeout 60s
 
 # -- Frontend
+MAIL_YARN = $(COMPOSE_RUN_MAIL) yarn
 ADMIN_YARN = $(COMPOSE_RUN_ADMIN) yarn
 
 # ==============================================================================
@@ -73,8 +74,8 @@ bootstrap: \
 	run \
 	migrate \
 	i18n-compile \
-	install-mails \
-	build-mails
+	mails-install \
+	mails-build
 .PHONY: bootstrap
 
 # -- Docker/compose
@@ -265,21 +266,21 @@ i18n-generate-and-upload: \
 
 # -- Mail generator
 
-build-mails: ## Convert mjml files to html and text
-	@$(COMPOSE_RUN_MAIL_YARN) build-mails
-.PHONY: build-mails
+mails-build: ## Convert mjml files to html and text
+	@$(MAIL_YARN) build
+.PHONY: mails-build
 
-build-mails-html-to-plain-text: ## Convert html files to text
-	@$(COMPOSE_RUN_MAIL_YARN) build-mails-html-to-plain-text
-.PHONY: build-mails-html-to-plain-text
+mails-build-html-to-plain-text: ## Convert html files to text
+	@$(MAIL_YARN) build-html-to-plain-text
+.PHONY: mails-build-html-to-plain-text
 
-build-mjml-to-html:	## Convert mjml files to html and text
-	@$(COMPOSE_RUN_MAIL_YARN) build-mjml-to-html
-.PHONY: build-mjml-to-html
+mails-build-mjml-to-html:	## Convert mjml files to html and text
+	@$(MAIL_YARN) build-mjml-to-html
+.PHONY: mails-build-mjml-to-html
 
-install-mails: ## mail-generator yarn install
-	@$(COMPOSE_RUN_MAIL_YARN) install
-.PHONY: install-mails
+mails-install: ## mail-generator yarn install
+	@$(MAIL_YARN) install
+.PHONY: mails-install
 
 
 # -- Misc
