@@ -36,13 +36,16 @@ DOCKER_USER          = $(DOCKER_UID):$(DOCKER_GID)
 COMPOSE              = DOCKER_USER=$(DOCKER_USER) docker-compose
 COMPOSE_RUN          = $(COMPOSE) run --rm
 COMPOSE_RUN_APP      = $(COMPOSE_RUN) app-dev
-COMPOSE_RUN_FRONT_ADMIN = $(COMPOSE_RUN) app-dev-front-admin
+COMPOSE_RUN_ADMIN   = $(COMPOSE_RUN) admin-dev
 COMPOSE_RUN_CROWDIN  = $(COMPOSE_RUN) crowdin crowdin
 COMPOSE_RUN_MAIL_YARN= $(COMPOSE_RUN) mail-generator yarn
 COMPOSE_TEST_RUN     = $(COMPOSE_RUN)
 COMPOSE_TEST_RUN_APP = $(COMPOSE_TEST_RUN) app-dev
 MANAGE               = $(COMPOSE_RUN_APP) python manage.py
 WAIT_DB              = @$(COMPOSE_RUN) dockerize -wait tcp://$(DB_HOST):$(DB_PORT) -timeout 60s
+
+# -- Frontend
+ADMIN_YARN = $(COMPOSE_RUN_ADMIN) yarn
 
 # ==============================================================================
 # RULES
@@ -63,11 +66,12 @@ bootstrap: \
 	data/media \
 	data/static \
 	env.d/development/crowdin \
+	frontend/admin/env \
 	build \
+	admin-install \
+	admin-build \
 	run \
 	migrate \
-	front-admin-install \
-	front-admin-build \
 	i18n-compile \
 	install-mails \
 	build-mails
@@ -89,6 +93,7 @@ logs: ## display app-dev logs (follow mode)
 run: ## start the wsgi (production) and development server
 	@$(COMPOSE) up --force-recreate -d nginx
 	@$(COMPOSE) up --force-recreate -d app-dev
+	@$(COMPOSE) up --force-recreate -d admin-dev
 	@echo "Wait for postgresql to be up..."
 	@$(WAIT_DB)
 .PHONY: run
@@ -193,33 +198,32 @@ dbshell: ## connect to database shell
 .PHONY: dbshell
 
 # -- Frontend admin
-front-admin-install: ## Install node_modules
-	@${COMPOSE_RUN_FRONT_ADMIN} yarn install
-.PHONY: front-admin-install
+frontend/admin/env:
+	cp src/frontend/admin/.env.example src/frontend/admin/.env
 
-front-admin-lint: ## Lint frontend admin app
-	@${COMPOSE_RUN_FRONT_ADMIN} yarn lint
-.PHONY: front-admin-lint
+admin-install: ## Install node_modules
+	@${ADMIN_YARN} install
+.PHONY: admin-install
 
-front-admin-test: ## Test frontend admin app
-	@${COMPOSE_RUN_FRONT_ADMIN} yarn test
-.PHONY: front-admin-test
+admin-lint: ## Lint frontend admin app
+	@${ADMIN_YARN} lint
+.PHONY: admin-lint
 
-front-admin-build: ## Build frontend admin app
-	@${COMPOSE_RUN_FRONT_ADMIN} yarn build
-.PHONY: front-admin-build
+admin-test: ## Test frontend admin app
+	@${ADMIN_YARN} test
+.PHONY: admin-test
 
-front-admin-dev: ## Launch frontend admin app in development mode
-	@${COMPOSE_RUN_FRONT_ADMIN} yarn dev
-.PHONY: front-admin-dev
+admin-build: ## Build frontend admin app
+	@${ADMIN_YARN} build
+.PHONY: admin-build
 
-front-admin-i18n-extract: ## Extract translations of frontend admin app
-	@${COMPOSE_RUN_FRONT_ADMIN} yarn i18n:extract
-.PHONY: front-admin-i18n-extract
+admin-i18n-extract: ## Extract translations of frontend admin app
+	@${ADMIN_YARN} i18n:extract
+.PHONY: admin-i18n-extract
 
-front-admin-i18n-compile: ## Compile translations of frontend admin app
-	@${COMPOSE_RUN_FRONT_ADMIN} yarn i18n:compile
-.PHONY: front-admin-i18n-compile
+admin-i18n-compile: ## Compile translations of frontend admin app
+	@${ADMIN_YARN} i18n:compile
+.PHONY: admin-i18n-compile
 
 # -- Internationalization
 
@@ -237,13 +241,13 @@ crowdin-upload: ## Upload source translations to crowdin
 i18n-compile: ## compile all translations
 i18n-compile: \
 	back-i18n-compile \
-	front-admin-i18n-compile
+	admin-i18n-compile
 .PHONY: i18n-compile
 
 i18n-generate: ## create the .pot files and extract frontend messages
 i18n-generate: \
 	back-i18n-generate \
-	front-admin-i18n-extract
+	admin-i18n-extract
 .PHONY: i18n-generate
 
 i18n-download-and-compile: ## download all translated messages and compile them to be used by all applications
