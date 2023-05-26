@@ -100,7 +100,7 @@ services:
       - "./src/frontend/admin:/app"
     working_dir: /app
     ports:
-      - "8072:3000"
+      - "8072:8072"
     depends_on:
       - app-dev
 
