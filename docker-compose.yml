@@ -84,13 +84,18 @@ services:
 
   mail-generator:
     image: node:16.15
+    user: "${DOCKER_USER:-1000}"
+    environment:
+      HOME: /tmp
     volumes:
       - ".:/app"
     working_dir: /app/src/mail
 
   app-dev-front-admin:
     image: node:16.15
-    user: ${DOCKER_USER:-1000}
+    user: "${DOCKER_USER:-1000}"
+    environment:
+      HOME: /tmp
     volumes:
       - "./src/frontend/admin:/app"
     working_dir: /app
