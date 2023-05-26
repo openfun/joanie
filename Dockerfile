@@ -31,7 +31,7 @@ COPY ./src/mail /mail/app
 WORKDIR /mail/app
 
 RUN yarn install --frozen-lockfile && \
-    yarn build-mails
+    yarn build
 
 
 # ---- static link collector ----
