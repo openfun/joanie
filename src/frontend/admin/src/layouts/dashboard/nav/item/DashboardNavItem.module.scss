@@ -1,0 +1,8 @@
+@use "@/styles/abstracts/" as *;
+
+.dashboardNavItem {
+  min-width: 32px;
+  svg {
+    font-size: rem-calc(18px);
+  }
+}

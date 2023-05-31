@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: joanie\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 13:33+0000\n"
-"PO-Revision-Date: 2023-02-22 13:41\n"
+"POT-Creation-Date: 2023-03-30 09:04+0000\n"
+"PO-Revision-Date: 2023-03-30 13:19\n"
 "Last-Translator: \n"
 "Language-Team: French, Canada\n"
 "Language: fr_CA\n"
@@ -107,39 +107,39 @@ msgid_plural "{:d} certificates have been generated."
 msgstr[0] ""
 msgstr[1] ""
 
-#: joanie/core/admin.py:82 joanie/core/admin.py:113 joanie/core/admin.py:205
+#: joanie/core/admin.py:113 joanie/core/admin.py:159 joanie/core/admin.py:251
 msgid "Main information"
 msgstr ""
 
-#: joanie/core/admin.py:84 joanie/core/models/courses.py:155
+#: joanie/core/admin.py:122 joanie/core/models/courses.py:155
 msgid "Organizations"
 msgstr ""
 
-#: joanie/core/admin.py:86
+#: joanie/core/admin.py:124
 msgid "Select organizations that author this course."
 msgstr ""
 
-#: joanie/core/admin.py:133
+#: joanie/core/admin.py:179
 msgid "Mark course run as gradable"
 msgstr ""
 
-#: joanie/core/admin.py:157
+#: joanie/core/admin.py:203
 msgid "Personal info"
 msgstr ""
 
-#: joanie/core/admin.py:159
+#: joanie/core/admin.py:205
 msgid "Permissions"
 msgstr ""
 
-#: joanie/core/admin.py:170
+#: joanie/core/admin.py:216
 msgid "Important dates"
 msgstr ""
 
-#: joanie/core/admin.py:346
+#: joanie/core/admin.py:392
 msgid "Cancel selected orders"
 msgstr ""
 
-#: joanie/core/api.py:84
+#: joanie/core/api/client.py:58
 msgid "You must specify a course code to get product details."
 msgstr ""
 
@@ -288,7 +288,7 @@ msgstr ""
 msgid "Addresses"
 msgstr ""
 
-#: joanie/core/models/accounts.py:114
+#: joanie/core/models/accounts.py:115
 msgid "Demote a main address is forbidden"
 msgstr ""
 
@@ -814,7 +814,7 @@ msgstr ""
 msgid "last 4 numbers"
 msgstr ""
 
-#: joanie/payment/models.py:420
+#: joanie/payment/models.py:421
 msgid "Demote a main credit card is forbidden"
 msgstr ""
 

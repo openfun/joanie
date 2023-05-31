@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: joanie\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 13:33+0000\n"
-"PO-Revision-Date: 2023-02-22 13:41\n"
+"POT-Creation-Date: 2023-03-30 09:04+0000\n"
+"PO-Revision-Date: 2023-03-30 13:19\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -107,39 +107,39 @@ msgid_plural "{:d} certificates have been generated."
 msgstr[0] "{:d} certificat a été généré."
 msgstr[1] "{:d} certificats ont été générés."
 
-#: joanie/core/admin.py:82 joanie/core/admin.py:113 joanie/core/admin.py:205
+#: joanie/core/admin.py:113 joanie/core/admin.py:159 joanie/core/admin.py:251
 msgid "Main information"
 msgstr "Information principale"
 
-#: joanie/core/admin.py:84 joanie/core/models/courses.py:155
+#: joanie/core/admin.py:122 joanie/core/models/courses.py:155
 msgid "Organizations"
 msgstr "Organisations"
 
-#: joanie/core/admin.py:86
+#: joanie/core/admin.py:124
 msgid "Select organizations that author this course."
 msgstr "Sélectionnez les organisations qui ont créées ce cours."
 
-#: joanie/core/admin.py:133
+#: joanie/core/admin.py:179
 msgid "Mark course run as gradable"
 msgstr "Marquez la session de cours comme étant disponible à la notation"
 
-#: joanie/core/admin.py:157
+#: joanie/core/admin.py:203
 msgid "Personal info"
 msgstr "Information personnelle"
 
-#: joanie/core/admin.py:159
+#: joanie/core/admin.py:205
 msgid "Permissions"
 msgstr "Permissions"
 
-#: joanie/core/admin.py:170
+#: joanie/core/admin.py:216
 msgid "Important dates"
 msgstr "Dates importantes"
 
-#: joanie/core/admin.py:346
+#: joanie/core/admin.py:392
 msgid "Cancel selected orders"
 msgstr "Annuler les commandes sélectionnées"
 
-#: joanie/core/api.py:84
+#: joanie/core/api/client.py:58
 msgid "You must specify a course code to get product details."
 msgstr "Vous devez spécifier un code de cours pour obtenir les détails du produit."
 
@@ -288,7 +288,7 @@ msgstr "Adresse"
 msgid "Addresses"
 msgstr "Adresses"
 
-#: joanie/core/models/accounts.py:114
+#: joanie/core/models/accounts.py:115
 msgid "Demote a main address is forbidden"
 msgstr "Rétrograder une adresse principale est interdit"
 
@@ -814,7 +814,7 @@ msgstr "année d'expiration"
 msgid "last 4 numbers"
 msgstr "4 derniers chiffres"
 
-#: joanie/payment/models.py:420
+#: joanie/payment/models.py:421
 msgid "Demote a main credit card is forbidden"
 msgstr "Rétrograder une carte bancaire principale est interdit"
 

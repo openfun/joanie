@@ -1,0 +1,14 @@
+.headerContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.openNavigationButton {
+  border-radius: 5px;
+  transform: rotate(180deg);
+}
+
+.navigationIsOpen {
+  transform: rotate(0deg);
+}

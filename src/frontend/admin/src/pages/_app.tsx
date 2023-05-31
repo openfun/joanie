@@ -1,11 +1,23 @@
 import "@/styles/globals.scss";
-import { NextPage } from "next";
-import { AppProps } from "next/app";
-import { useEffect, useState } from "react";
+import type { AppProps } from "next/app";
+
 import { CacheProvider } from "@emotion/react";
+import "@fontsource/roboto/300.css";
+import "@fontsource/roboto/400.css";
+import "@fontsource/roboto/500.css";
+import "@fontsource/roboto/700.css";
+import { NextPage } from "next";
+import { useEffect, useState } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Box, CircularProgress } from "@mui/material";
+import { SnackbarProvider } from "notistack";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import createEmotionCache from "@/utils/createEmotionCache";
-import { TranslationsProvider } from "@/contexts/i18n/TranslationsProvider/TranslationsProvider";
+import { DashboardLayout } from "@/layouts/dashboard/DashboardLayout";
+
 import { LocalesEnum } from "@/types/i18n/LocalesEnum";
+import { TranslationsProvider } from "@/contexts/i18n/TranslationsProvider/TranslationsProvider";
+import { REACT_QUERY_SETTINGS } from "@/utils/settings";
 
 type NextPageWithLayout = NextPage & {
   getLayout?: (page: React.ReactElement) => React.ReactNode;
@@ -18,9 +30,28 @@ interface MyAppProps extends AppProps {
 const clientSideEmotionCache = createEmotionCache();
 
 export default function App({ Component, pageProps }: MyAppProps) {
-  const [shouldRender, setShouldRender] = useState(
-    !(process.env.NEXT_PUBLIC_API_MOCKING === "enabled")
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            cacheTime: REACT_QUERY_SETTINGS.cacheTime,
+            staleTime: 60 * 1000, // 1 mi
+            retry: 0,
+            retryOnMount: false,
+            refetchOnWindowFocus: false,
+          },
+        },
+      })
   );
+
+  const [shouldRender, setShouldRender] = useState(
+    !(process.env.NEXT_PUBLIC_API_SOURCE === "mocked")
+  );
+
+  const getLayout =
+    Component.getLayout ??
+    ((page) => <DashboardLayout>{page}</DashboardLayout>);
 
   useEffect(() => {
     async function initMsw() {
@@ -29,20 +60,38 @@ export default function App({ Component, pageProps }: MyAppProps) {
       setShouldRender(true);
     }
 
-    if (process.env.NEXT_PUBLIC_API_MOCKING === "enabled") {
+    if (process.env.NEXT_PUBLIC_API_SOURCE === "mocked") {
       initMsw();
     }
   }, []);
 
   if (!shouldRender) {
-    return null;
+    return (
+      <Box
+        sx={{ inset: 0 }}
+        position="absolute"
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+      >
+        <CircularProgress />
+      </Box>
+    );
   }
 
   return (
-    <TranslationsProvider locale={LocalesEnum.FRENCH}>
-      <CacheProvider value={clientSideEmotionCache}>
-        <Component {...pageProps} />
-      </CacheProvider>
-    </TranslationsProvider>
+    <QueryClientProvider client={queryClient}>
+      <ReactQueryDevtools initialIsOpen={false} />
+      <TranslationsProvider locale={LocalesEnum.ENGLISH}>
+        <CacheProvider value={clientSideEmotionCache}>
+          <SnackbarProvider
+            maxSnack={3}
+            anchorOrigin={{ horizontal: "right", vertical: "top" }}
+          >
+            {getLayout(<Component {...pageProps} />)}
+          </SnackbarProvider>
+        </CacheProvider>
+      </TranslationsProvider>
+    </QueryClientProvider>
   );
 }

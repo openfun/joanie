@@ -109,6 +109,12 @@ class Base(Configuration):
     # Languages
     LANGUAGE_CODE = values.Value("en-us")
 
+    DRF_NESTED_MULTIPART_PARSER = {
+        # output of parser is converted to querydict
+        # if is set to False, dict python is returned
+        "querydict": False,
+    }
+
     # Careful! Languages should be ordered by priority, as this tuple is used to get
     # fallback/default languages throughout the app.
     LANGUAGES = values.SingleNestedTupleValue(
@@ -239,6 +245,10 @@ class Base(Configuration):
         "DEFAULT_FILTER_BACKENDS": [
             "django_filters.rest_framework.DjangoFilterBackend"
         ],
+        "DEFAULT_PARSER_CLASSES": [
+            "rest_framework.parsers.JSONParser",
+            "nested_multipart_parser.drf.DrfNestedParser",
+        ],
         "EXCEPTION_HANDLER": "joanie.core.api.exception_handler",
         "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
         "PAGE_SIZE": 20,
@@ -320,6 +330,8 @@ class Base(Configuration):
     }
 
     # CORS
+
+    CORS_ALLOW_CREDENTIALS = True
     CORS_ALLOW_ALL_ORIGINS = values.BooleanValue(False)
     CORS_ALLOWED_ORIGINS = values.ListValue([])
     CORS_ALLOWED_ORIGIN_REGEXES = values.ListValue([])
@@ -424,6 +436,7 @@ class Development(Base):
 
     ALLOWED_HOSTS = ["*"]
     CORS_ALLOW_ALL_ORIGINS = True
+    CSRF_TRUSTED_ORIGINS = ["http://localhost:3000", "http://localhost:8072"]
     DEBUG = True
     NGROK_ENDPOINT = values.Value(None, "NGROK_ENDPOINT", environ_prefix=None)
 

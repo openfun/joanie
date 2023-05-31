@@ -154,10 +154,10 @@ class OrganizationAdminApiTest(TestCase):
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
-        item = factories.OrganizationFactory(title="University")
+        item = factories.OrganizationFactory(code="Univ", title="University")
         item.translations.create(language_code="fr-fr", title="Université")
 
-        response = self.client.get("/api/v1.0/admin/organizations/?search=university")
+        response = self.client.get("/api/v1.0/admin/organizations/?search=Uni")
         self.assertEqual(response.status_code, 200)
         content = response.json()
         self.assertEqual(content["count"], 1)

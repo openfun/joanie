@@ -33,6 +33,7 @@ class ProductViewSet(AdminViewSet):
 
     serializer_class = serializers.AdminProductSerializer
     queryset = models.Product.objects.all()
+    filterset_class = filters.ProductAdminFilterSet
 
 
 class CourseViewSet(AdminViewSet):

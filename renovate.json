@@ -20,7 +20,8 @@
         "npm"
       ],
       "matchPackageNames": [
-        "node"
+        "node",
+        "typescript"
       ]
     }
   ]

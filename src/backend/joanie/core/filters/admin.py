@@ -23,10 +23,29 @@ class OrganizationAdminFilterSet(filters.FilterSet):
         """
         return queryset.filter(
             Q(code__icontains=value) | Q(translations__title__icontains=value)
-        )
+        ).distinct()
 
     class Meta:
         model = models.Organization
+        fields: List[str] = ["search"]
+
+
+class ProductAdminFilterSet(filters.FilterSet):
+    """
+    ProductAdminFilterSet allows to filter this resource with an insensitive search by title.
+    """
+
+    search = filters.CharFilter(method="filter_search")
+
+    def filter_search(self, queryset, _name, value):
+        """
+        Filter resource by looking for title which contains provided value in search
+        query parameter.
+        """
+        return queryset.filter(translations__title__icontains=value).distinct()
+
+    class Meta:
+        model = models.Product
         fields: List[str] = ["search"]
 
 
@@ -44,7 +63,7 @@ class CourseRunAdminFilterSet(filters.FilterSet):
         """
         construct the full expression for search query param.
         """
-        return queryset.filter(translations__title__icontains=value)
+        return queryset.filter(translations__title__icontains=value).distinct()
 
     class Meta:
         model = models.CourseRun
@@ -64,7 +83,7 @@ class CourseAdminFilterSet(filters.FilterSet):
         """
         return queryset.filter(
             Q(code__icontains=value) | Q(translations__title__icontains=value)
-        )
+        ).distinct()
 
     class Meta:
         model = models.Course
@@ -86,7 +105,7 @@ class CertificateDefinitionAdminFilterSet(filters.FilterSet):
 
         return queryset.filter(
             Q(name__icontains=value) | Q(translations__title__icontains=value)
-        )
+        ).distinct()
 
     class Meta:
         model = models.CertificateDefinition
