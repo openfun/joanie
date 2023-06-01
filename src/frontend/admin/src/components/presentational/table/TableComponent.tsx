@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useState } from "react";
-import { DataGrid, GridColDef, GridSelectionModel } from "@mui/x-data-grid";
+import { DataGrid, GridColDef, GridRowSelectionModel } from "@mui/x-data-grid";
 import {
   Box,
   CircularProgress,
@@ -22,7 +22,7 @@ interface Props<T> {
   onEditClick?: (row: T) => void;
   onRemoveClick?: (row: T) => void;
   getEntityName?: (row: T) => string;
-  onSelectRows?: (ids: GridSelectionModel) => void;
+  onSelectRows?: (ids: GridRowSelectionModel) => void;
   onSearch?: (term: string) => void;
   multiSelectActions?: React.ReactElement;
   loading?: boolean;
@@ -32,7 +32,7 @@ interface Props<T> {
 export function TableComponent<T>({ enableEdit = true, ...props }: Props<T>) {
   const intl = useIntl();
   const [pageSize, setPageSize] = useState(25);
-  const [selectedRows, setSelectedRow] = useState<GridSelectionModel>([]);
+  const [selectedRows, setSelectedRow] = useState<GridRowSelectionModel>([]);
 
   const getColumns = (): GridColDef[] => {
     const columns = [...props.columns];
@@ -132,21 +132,27 @@ export function TableComponent<T>({ enableEdit = true, ...props }: Props<T>) {
           columns={getColumns()}
           columnBuffer={props?.columnBuffer ?? 3}
           loading={props.loading}
-          pageSize={pageSize}
+          initialState={{
+            pagination: {
+              paginationModel: {
+                pageSize,
+              },
+            },
+          }}
           autoHeight={true}
           localeText={{
             noRowsLabel: intl.formatMessage(tableTranslations.noRows),
             footerRowSelected: (count) =>
               intl.formatMessage(tableTranslations.rowsSelected, { count }),
           }}
-          onPageSizeChange={(size) => setPageSize(size)}
-          rowsPerPageOptions={[5, 10, 25, 50, 75]}
-          onSelectionModelChange={(ids) => {
+          onPaginationModelChange={(size) => setPageSize(size.pageSize)}
+          pageSizeOptions={[5, 10, 25, 50, 75]}
+          onRowSelectionModelChange={(ids) => {
             setSelectedRow(ids);
             props.onSelectRows?.(ids);
           }}
           checkboxSelection={false}
-          disableSelectionOnClick
+          disableRowSelectionOnClick
         />
       </Box>
     </SimpleCard>
