@@ -198,6 +198,12 @@ dbshell: ## connect to database shell
 	docker-compose exec app-dev python manage.py dbshell
 .PHONY: dbshell
 
+resetdb: ## flush database
+	@echo "$(BOLD)Flush database$(RESET)"
+	@$(MANAGE) flush
+	@$(MANAGE) createsuperuser --username admin --email admin@example.com --noinput
+.PHONY: resetdb
+
 # -- Frontend admin
 frontend/admin/env:
 	cp src/frontend/admin/.env.example src/frontend/admin/.env
