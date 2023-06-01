@@ -1,6 +1,6 @@
 import * as React from "react";
 import { PropsWithChildren, useEffect, useState } from "react";
-import { Box, Tab, Tabs } from "@mui/material";
+import { Box, Tab, Tabs, useTheme } from "@mui/material";
 import { TabContext } from "@mui/lab";
 import { TRANSLATE_CONTENT_LANGUAGE } from "@/utils/constants";
 import { LocalesEnum } from "@/types/i18n/LocalesEnum";
@@ -10,8 +10,9 @@ interface Props {
   onSelectLang: (lang: string) => void;
 }
 
-export function TranslatableContent(props: PropsWithChildren<Props>) {
+export function TranslatableContent({ ...props }: PropsWithChildren<Props>) {
   const [value, setValue] = useState(getAcceptLanguage());
+  const theme = useTheme();
 
   const a11yProps = (index: number) => {
     return {
@@ -33,7 +34,12 @@ export function TranslatableContent(props: PropsWithChildren<Props>) {
 
   return (
     <TabContext value={value}>
-      <Box mb={2}>
+      <Box
+        mb={2}
+        sx={{
+          backgroundColor: theme.palette.grey[50],
+        }}
+      >
         <Tabs
           value={value}
           onChange={handleChange}
