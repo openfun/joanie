@@ -4,6 +4,9 @@ import { defineMessages, IntlShape } from "react-intl";
 import { Box, IconButton } from "@mui/material";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { CourseRun } from "@/services/api/models/CourseRun";
+import { PATH_ADMIN } from "@/utils/routes/path";
+import { CustomLink } from "@/components/presentational/link/CustomLink";
+import { commonTranslations } from "@/translations/common/commonTranslations";
 
 const messages = defineMessages({
   resourceLink: {
@@ -41,19 +44,29 @@ const messages = defineMessages({
 
 export const getCoursesRunsListColumns = (
   intl: IntlShape
-): GridColDef<any, CourseRun>[] => {
+): GridColDef<CourseRun>[] => {
   return [
     {
       field: "title",
       headerName: intl.formatMessage(messages.title),
       minWidth: 300,
+      renderCell: (cell) => {
+        return (
+          <CustomLink
+            href={PATH_ADMIN.courses_run.edit(cell.row.id)}
+            title={intl.formatMessage(commonTranslations.edit)}
+          >
+            {cell.row.title}
+          </CustomLink>
+        );
+      },
     },
     {
       field: "resource_link",
       headerName: intl.formatMessage(messages.resourceLink),
       minWidth: 400,
       flex: 1,
-      renderCell: (params: GridRenderCellParams<any, CourseRun>) => {
+      renderCell: (params) => {
         return (
           <Box
             sx={{

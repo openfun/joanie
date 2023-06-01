@@ -2,14 +2,15 @@ import * as React from "react";
 import { useState } from "react";
 import { defineMessages, useIntl } from "react-intl";
 import { useRouter } from "next/router";
-import { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
+import { GridColDef } from "@mui/x-data-grid";
 import { useDebouncedCallback } from "use-debounce";
 import { TableComponent } from "@/components/presentational/table/TableComponent";
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { Course } from "@/services/api/models/Course";
-import { CourseRun } from "@/services/api/models/CourseRun";
 import { Maybe } from "@/types/utils";
 import { useCourses } from "@/hooks/useCourses/useCourses";
+import { CustomLink } from "@/components/presentational/link/CustomLink";
+import { commonTranslations } from "@/translations/common/commonTranslations";
 
 const messages = defineMessages({
   codeHeader: {
@@ -39,19 +40,32 @@ export function CoursesList() {
     setSearch(term);
   }, 300);
 
-  const columns: GridColDef[] = [
+  const columns: GridColDef<Course>[] = [
     {
       field: "code",
       headerName: intl.formatMessage(messages.codeHeader),
       minWidth: 150,
       maxWidth: 250,
     },
-    { field: "title", headerName: intl.formatMessage(messages.title), flex: 1 },
+    {
+      field: "title",
+      headerName: intl.formatMessage(messages.title),
+      flex: 1,
+      renderCell: (cell) => {
+        return (
+          <CustomLink
+            href={PATH_ADMIN.courses.edit(cell.row.id)}
+            title={intl.formatMessage(commonTranslations.edit)}
+          >
+            {cell.row.title}
+          </CustomLink>
+        );
+      },
+    },
     {
       field: "state",
       headerName: intl.formatMessage(messages.state),
-      renderCell: (params: GridRenderCellParams<any, CourseRun>) =>
-        params.row.state?.text,
+      renderCell: (params) => params.row.state?.text,
     },
   ];
 

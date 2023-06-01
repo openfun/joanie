@@ -9,6 +9,8 @@ import { TableComponent } from "@/components/presentational/table/TableComponent
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { useOrganizations } from "@/hooks/useOrganizations/useOrganizations";
 import { Maybe } from "@/types/utils";
+import { CustomLink } from "@/components/presentational/link/CustomLink";
+import { commonTranslations } from "@/translations/common/commonTranslations";
 
 const messages = defineMessages({
   codeHeader: {
@@ -37,7 +39,21 @@ export function OrganizationsList() {
       headerName: intl.formatMessage(messages.codeHeader),
       maxWidth: 200,
     },
-    { field: "title", headerName: intl.formatMessage(messages.title), flex: 1 },
+    {
+      field: "title",
+      headerName: intl.formatMessage(messages.title),
+      flex: 1,
+      renderCell: (cell) => {
+        return (
+          <CustomLink
+            href={PATH_ADMIN.organizations.edit(cell.row.id)}
+            title={intl.formatMessage(commonTranslations.edit)}
+          >
+            {cell.row.title}
+          </CustomLink>
+        );
+      },
+    },
   ];
 
   return (
