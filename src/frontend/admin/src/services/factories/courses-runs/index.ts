@@ -7,7 +7,7 @@ import {
 
 const build = (): CourseRun => {
   return {
-    id: faker.datatype.uuid(),
+    id: faker.string.uuid(),
     title: faker.company.name(),
     course: CourseFactory(),
     resource_link: faker.internet.url(),

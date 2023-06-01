@@ -6,9 +6,9 @@ import { CourseRelationToProduct } from "@/services/api/models/Relations";
 
 const build = (): Course => {
   return {
-    id: faker.datatype.uuid(),
+    id: faker.string.uuid(),
     title: faker.company.name(),
-    code: faker.company.companySuffix(),
+    code: faker.company.name().substring(0, 3),
     organizations: OrganizationFactory(2),
     product_relations: CourseRelationsToProductFactory(3),
     state: CourseStateFactory(),

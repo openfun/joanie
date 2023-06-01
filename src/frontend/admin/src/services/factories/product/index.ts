@@ -4,7 +4,7 @@ import { CertificateDefinitionFactory } from "@/services/factories/certificate-d
 
 const build = (): Product => {
   return {
-    id: faker.datatype.uuid(),
+    id: faker.string.uuid(),
     title: faker.company.name(),
     type: ProductType.CREDENTIAL,
     description: faker.lorem.lines(2),
