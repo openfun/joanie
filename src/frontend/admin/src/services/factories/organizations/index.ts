@@ -4,9 +4,9 @@ import { ThumbnailDetailFactory } from "@/services/factories/images";
 
 const build = (): Organization => {
   return {
-    id: faker.datatype.uuid(),
+    id: faker.string.uuid(),
     title: faker.company.name(),
-    code: faker.company.companySuffix(),
+    code: faker.company.name().substring(0, 3),
     representative: faker.internet.email(),
     signature: ThumbnailDetailFactory(),
     logo: ThumbnailDetailFactory(),

@@ -6,7 +6,7 @@ const build = (): ThumbnailDetailField => {
     filename: faker.lorem.words(),
     width: 128,
     height: 128,
-    src: faker.image.abstract(),
+    src: faker.image.urlLoremFlickr({ category: "abstract" }),
     size: 837,
   };
 };

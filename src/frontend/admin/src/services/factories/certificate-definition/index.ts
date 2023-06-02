@@ -3,8 +3,8 @@ import { CertificateDefinition } from "@/services/api/models/CertificateDefiniti
 
 const build = () => {
   return {
-    id: faker.datatype.uuid(),
-    name: faker.datatype.string(30),
+    id: faker.string.uuid(),
+    name: faker.string.sample(30),
     template: "template.pdf",
     title: faker.company.name(),
     description: faker.lorem.lines(2),
