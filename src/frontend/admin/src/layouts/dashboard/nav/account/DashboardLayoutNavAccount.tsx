@@ -1,17 +1,11 @@
 import * as React from "react";
 import { useRef, useState } from "react";
-import {
-  Avatar,
-  Box,
-  Menu,
-  MenuItem,
-  Typography,
-  useTheme,
-} from "@mui/material";
+import { Avatar, Box, Menu, MenuItem, Typography } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import { defineMessages, useIntl } from "react-intl";
+import { useTheme } from "@mui/material/styles";
 import { DashboardNavItem } from "@/layouts/dashboard/nav/item/DashboardNavItem";
 import { DashboardNavItemsList } from "@/layouts/dashboard/nav/item/list/DasboardNavItemsList";
 
