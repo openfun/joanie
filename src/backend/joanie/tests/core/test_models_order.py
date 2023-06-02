@@ -180,7 +180,7 @@ class OrderModelsTestCase(TestCase):
         InvoiceFactory(order=order, total=order.total)
 
         # - Validate the order should automatically enroll user to course run
-        with self.assertNumQueries(18):
+        with self.assertNumQueries(19):
             order.validate()
 
         self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
@@ -223,7 +223,7 @@ class OrderModelsTestCase(TestCase):
         InvoiceFactory(order=order, total=order.total)
 
         # - Validate the order should automatically enroll user to course run
-        with self.assertNumQueries(25):
+        with self.assertNumQueries(26):
             order.validate()
 
         enrollment.refresh_from_db()
@@ -310,7 +310,7 @@ class OrderModelsTestCase(TestCase):
         self.assertEqual(Enrollment.objects.filter(is_active=True).count(), 1)
 
         # - When order is canceled, user should not be unenrolled to related enrollments
-        with self.assertNumQueries(9):
+        with self.assertNumQueries(10):
             order.cancel()
         self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
         self.assertEqual(Enrollment.objects.count(), 1)
@@ -349,7 +349,7 @@ class OrderModelsTestCase(TestCase):
         self.assertEqual(Enrollment.objects.filter(is_active=True).count(), 1)
 
         # - When order is canceled, user should not be unenrolled to related enrollments
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(8):
             order.cancel()
         self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
         self.assertEqual(Enrollment.objects.count(), 1)

@@ -437,16 +437,21 @@ class Order(BaseModel):
 
     def clean(self):
         """Clean instance fields and raise a ValidationError in case of issue."""
+        course_product_relation = (
+            courses_models.CourseProductRelation.objects.filter(
+                course=self.course_id,
+                product=self.product_id,
+                organizations=self.organization_id,
+            )
+            .only("max_validated_orders")
+            .first()
+        )
         if (
             not self.created_on
             and self.course_id
             and self.product_id
             and self.organization_id
-            and not courses_models.CourseProductRelation.objects.filter(
-                course=self.course_id,
-                product=self.product_id,
-                organizations=self.organization_id,
-            ).exists()
+            and course_product_relation is None
         ):
             # pylint: disable=no-member
             message = _(
@@ -454,6 +459,32 @@ class Order(BaseModel):
                 f'should be linked for organization "{self.organization.title}".'
             )
             raise ValidationError({"__all__": [message]})
+        if course_product_relation is not None:
+            max_validated_orders = course_product_relation.max_validated_orders
+        else:
+            max_validated_orders = 0
+        if max_validated_orders > 0:
+            annotation = (
+                Order.objects.filter(
+                    product=self.product,
+                    course=self.course,
+                    state__in=(enums.ORDER_STATE_VALIDATED, enums.ORDER_STATE_PENDING),
+                )
+                .annotate(
+                    orders_count=models.Count("id", distinct=True),
+                )
+                .values("orders_count")
+                .first()
+                or {}
+            )
+            validated_order_count = annotation.get("orders_count", 0)
+            if validated_order_count >= max_validated_orders:
+                # pylint: disable=no-member
+                message = _(
+                    f"Maximum number of orders reached for product {self.product.title}"
+                    f" and course {self.course.code}"
+                )
+                raise ValidationError({"max_validated_orders": [message]})
 
         if not self.created_on:
             self.total = self.product.price
