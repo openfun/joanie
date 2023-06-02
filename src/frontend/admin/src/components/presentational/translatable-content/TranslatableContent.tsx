@@ -1,7 +1,10 @@
 import * as React from "react";
 import { PropsWithChildren, useEffect, useState } from "react";
-import { Box, Tab, Tabs, useTheme } from "@mui/material";
+import Box from "@mui/material/Box";
+import Tab from "@mui/material/Tab";
+import Tabs from "@mui/material/Tabs";
 import { TabContext } from "@mui/lab";
+import { useTheme } from "@mui/material/styles";
 import { TRANSLATE_CONTENT_LANGUAGE } from "@/utils/constants";
 import { LocalesEnum } from "@/types/i18n/LocalesEnum";
 import { getAcceptLanguage } from "@/services/http/HttpService";

@@ -1,5 +1,6 @@
 import { Controller, useFormContext } from "react-hook-form";
-import { Autocomplete, AutocompleteProps, TextField } from "@mui/material";
+import Autocomplete, { AutocompleteProps } from "@mui/material/Autocomplete";
+import TextField from "@mui/material/TextField";
 
 export interface RHFAutocompleteProps<
   T,

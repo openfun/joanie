@@ -1,6 +1,10 @@
 import * as React from "react";
 import { useRef, useState } from "react";
-import { Avatar, Box, Menu, MenuItem, Typography } from "@mui/material";
+import Avatar from "@mui/material/Avatar";
+import Box from "@mui/material/Box";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
+import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import NotificationsIcon from "@mui/icons-material/Notifications";

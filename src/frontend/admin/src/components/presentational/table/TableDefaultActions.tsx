@@ -1,13 +1,11 @@
 import * as React from "react";
 import { ReactElement, useMemo } from "react";
 import MoreVertOutlinedIcon from "@mui/icons-material/MoreVertOutlined";
-import {
-  IconButton,
-  ListItemIcon,
-  ListItemText,
-  MenuItem,
-  MenuList,
-} from "@mui/material";
+import IconButton from "@mui/material/IconButton";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
+import MenuItem from "@mui/material/MenuItem";
+import MenuList from "@mui/material/MenuList";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import { useIntl } from "react-intl";

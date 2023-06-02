@@ -6,7 +6,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import Grid from "@mui/material/Unstable_Grid2";
 import { useIntl } from "react-intl";
 import { useSnackbar } from "notistack";
-import { Box } from "@mui/material";
+import Box from "@mui/material/Box";
 import { RHFProvider } from "@/components/presentational/hook-form/RHFProvider";
 import { RHFTextField } from "@/components/presentational/hook-form/RHFTextField";
 import { RHFUpload } from "@/components/presentational/hook-form/RHFUpload";

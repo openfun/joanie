@@ -2,7 +2,7 @@ import * as React from "react";
 import { ReactElement } from "react";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
-import { Typography } from "@mui/material";
+import Typography from "@mui/material/Typography";
 import styles from "./DashboardNavItem.module.scss";
 import { StyledItem } from "@/layouts/dashboard/nav/item/StyledItem";
 

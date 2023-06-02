@@ -1,5 +1,6 @@
 import * as React from "react";
-import { Button, DialogContentText } from "@mui/material";
+import Button from "@mui/material/Button";
+import DialogContentText from "@mui/material/DialogContentText";
 import { defineMessages, useIntl } from "react-intl";
 import {
   CustomModal,

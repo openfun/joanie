@@ -1,6 +1,7 @@
 import * as React from "react";
 import { useState } from "react";
-import { Autocomplete, AutocompleteProps, TextField } from "@mui/material";
+import Autocomplete, { AutocompleteProps } from "@mui/material/Autocomplete";
+import TextField from "@mui/material/TextField";
 
 export interface ControlledSelectProps<T>
   extends Omit<AutocompleteProps<T, false, false, false>, "renderInput"> {

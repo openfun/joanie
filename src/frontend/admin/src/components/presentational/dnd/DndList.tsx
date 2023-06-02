@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useState } from "react";
 import { DragDropContext, DropResult } from "react-beautiful-dnd";
-import { Box } from "@mui/material";
+import Box from "@mui/material/Box";
 import { StrictModeDroppable } from "@/components/presentational/dnd/StrictModeDroppable";
 import { DndItem } from "@/components/presentational/dnd/DndItem";
 

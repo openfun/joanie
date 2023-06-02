@@ -1,5 +1,5 @@
 import { styled } from "@mui/material/styles";
-import { Box, BoxProps } from "@mui/material";
+import Box, { BoxProps } from "@mui/material/Box";
 
 type StyledDndItemContainerProps = BoxProps & {
   showHandle?: boolean;

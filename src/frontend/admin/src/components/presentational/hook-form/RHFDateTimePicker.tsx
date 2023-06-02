@@ -1,6 +1,6 @@
 import { Controller, useFormContext } from "react-hook-form";
 import { DateTimePicker, DateTimePickerProps } from "@mui/x-date-pickers";
-import { FormHelperText } from "@mui/material";
+import FormHelperText from "@mui/material/FormHelperText";
 
 type Props = DateTimePickerProps<any> & {
   name: string;

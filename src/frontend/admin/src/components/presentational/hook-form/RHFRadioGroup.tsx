@@ -1,13 +1,10 @@
 import { Controller, useFormContext } from "react-hook-form";
-import {
-  FormControl,
-  FormControlLabel,
-  FormHelperText,
-  FormLabel,
-  Radio,
-  RadioGroup,
-  RadioGroupProps,
-} from "@mui/material";
+import FormControl from "@mui/material/FormControl";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import FormHelperText from "@mui/material/FormHelperText";
+import FormLabel from "@mui/material/FormLabel";
+import Radio from "@mui/material/Radio";
+import RadioGroup, { RadioGroupProps } from "@mui/material/RadioGroup";
 
 type Props = RadioGroupProps & {
   name: string;

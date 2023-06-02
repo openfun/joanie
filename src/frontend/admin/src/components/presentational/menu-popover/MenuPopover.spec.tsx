@@ -1,5 +1,8 @@
 import { render, screen } from "@testing-library/react";
-import { Button, ListItemText, MenuItem, MenuList } from "@mui/material";
+import Button from "@mui/material/Button";
+import ListItemText from "@mui/material/ListItemText";
+import MenuItem from "@mui/material/MenuItem";
+import MenuList from "@mui/material/MenuList";
 import userEvent from "@testing-library/user-event";
 import {
   MenuPopover,

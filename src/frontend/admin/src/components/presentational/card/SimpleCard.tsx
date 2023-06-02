@@ -1,6 +1,6 @@
 import * as React from "react";
 import { PropsWithChildren } from "react";
-import { Paper } from "@mui/material";
+import Paper from "@mui/material/Paper";
 
 export function SimpleCard(props: PropsWithChildren) {
   return (

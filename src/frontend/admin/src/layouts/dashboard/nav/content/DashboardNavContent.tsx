@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Box } from "@mui/material";
+import Box from "@mui/material/Box";
 import { useIntl } from "react-intl";
 import { useRouter } from "next/router";
 import { navConfig } from "@/layouts/dashboard/nav/config";
