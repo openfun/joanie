@@ -9,6 +9,8 @@ import { PATH_ADMIN } from "@/utils/routes/path";
 import { CertificateDefinition } from "@/services/api/models/CertificateDefinition";
 import { useCertificateDefinitions } from "@/hooks/useCertificateDefinitions/useCertificateDefinitions";
 import { Maybe } from "@/types/utils";
+import { CustomLink } from "@/components/presentational/link/CustomLink";
+import { commonTranslations } from "@/translations/common/commonTranslations";
 
 const messages = defineMessages({
   nameHeader: {
@@ -31,16 +33,36 @@ export function CertificatesDefinitionsList() {
 
   const debouncedSetSearch = useDebouncedCallback(setSearch, 300);
 
-  const columns: GridColDef[] = [
+  const columns: GridColDef<CertificateDefinition>[] = [
     {
       field: "name",
       headerName: intl.formatMessage(messages.nameHeader),
       minWidth: 400,
+      renderCell: (cell) => {
+        return (
+          <CustomLink
+            href={PATH_ADMIN.certificates.edit(cell.row.id)}
+            title={intl.formatMessage(commonTranslations.edit)}
+          >
+            {cell.row.name}
+          </CustomLink>
+        );
+      },
     },
     {
       field: "title",
       headerName: intl.formatMessage(messages.titleHeader),
       flex: 1,
+      renderCell: (cell) => {
+        return (
+          <CustomLink
+            href={PATH_ADMIN.certificates.edit(cell.row.id)}
+            title={intl.formatMessage(commonTranslations.edit)}
+          >
+            {cell.row.title}
+          </CustomLink>
+        );
+      },
     },
   ];
 
