@@ -1842,3 +1842,86 @@ class OrderApiTest(BaseAPITestCase):
         # - and its related payment should have been aborted.
         mock_abort_payment.assert_called_once_with(payment_id)
         self.assertIsNone(cache.get(payment_id))
+
+    def test_api_order_create_too_many_orders(self):
+        """
+        The number of allowed orders on a product should not be above the limit
+        set by max_validated_orders
+        """
+        user = factories.UserFactory()
+        course = factories.CourseFactory()
+        product = factories.ProductFactory()
+        relation = factories.CourseProductRelationFactory(
+            course=course,
+            product=product,
+            organizations=factories.OrganizationFactory.create_batch(2),
+            max_validated_orders=1,
+        )
+        billing_address = BillingAddressDictFactory()
+        factories.OrderFactory(product=product, course=course)
+        data = {
+            "course": course.code,
+            "organization": str(relation.organizations.first().id),
+            "product": str(product.id),
+            "billing_address": billing_address,
+        }
+        token = self.generate_token_from_user(user)
+
+        with self.assertNumQueries(15):
+            response = self.client.post(
+                "/api/v1.0/orders/",
+                data=data,
+                content_type="application/json",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json(),
+            (
+                {
+                    "max_validated_orders": [
+                        f"Maximum number of orders reached for product {product.title}"
+                        f" and course {course.code}"
+                    ]
+                }
+            ),
+        )
+        self.assertEqual(
+            models.Order.objects.filter(course=course, product=product).count(), 1
+        )
+
+    def test_api_order_create_no_limit(self):
+        """
+        If max_validated_orders is set to 0, there should be no limit
+        to the number of orders
+        """
+        user = factories.UserFactory()
+        course = factories.CourseFactory()
+        product = factories.ProductFactory()
+        relation = factories.CourseProductRelationFactory(
+            course=course,
+            product=product,
+            organizations=factories.OrganizationFactory.create_batch(2),
+            max_validated_orders=0,
+        )
+        billing_address = BillingAddressDictFactory()
+        factories.OrderFactory.create_batch(size=100, product=product, course=course)
+        data = {
+            "course": course.code,
+            "organization": str(relation.organizations.first().id),
+            "product": str(product.id),
+            "billing_address": billing_address,
+        }
+        token = self.generate_token_from_user(user)
+
+        with self.assertNumQueries(20):
+            response = self.client.post(
+                "/api/v1.0/orders/",
+                data=data,
+                content_type="application/json",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+        self.assertEqual(
+            models.Order.objects.filter(product=product, course=course).count(), 101
+        )
+        self.assertEqual(response.status_code, 201)

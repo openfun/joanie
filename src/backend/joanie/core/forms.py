@@ -21,7 +21,7 @@ class CourseProductRelationAdminForm(forms.ModelForm):
     )
 
     class Meta:
-        fields = ["course", "product", "organizations"]
+        fields = ["course", "product", "organizations", "max_validated_orders"]
         model = models.CourseProductRelation
 
 
