@@ -716,6 +716,7 @@ class CourseSerializer(AbilitiesModelSerializer):
     class Meta:
         model = models.Course
         fields = [
+            "created_on",
             "code",
             "course_runs",
             "cover",
@@ -727,6 +728,7 @@ class CourseSerializer(AbilitiesModelSerializer):
             "title",
         ]
         read_only_fields = [
+            "created_on",
             "code",
             "course_runs",
             "cover",
@@ -744,3 +746,25 @@ class CourseSerializer(AbilitiesModelSerializer):
             instance=instance.get_selling_organizations(),
             many=True,
         ).data
+
+
+class CourseProductRelationSerializer(serializers.ModelSerializer):
+    """
+    Serialize a course product relation.
+    """
+
+    course = CourseSerializer(read_only=True)
+    product = ProductSerializer(read_only=True)
+
+    class Meta:
+        model = models.CourseProductRelation
+        fields = [
+            "created_on",
+            "course",
+            "product",
+        ]
+        read_only_fields = [
+            "created_on",
+            "course",
+            "product",
+        ]

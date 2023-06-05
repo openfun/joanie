@@ -154,10 +154,12 @@ class ProductApiTest(BaseAPITestCase):
                                     "+00:00", "Z"
                                 ),
                                 "enrollment_start": course_run.enrollment_start.isoformat().replace(  # noqa pylint: disable=line-too-long
-                                    "+00:00", "Z"
+                                    "+00:00",
+                                    "Z",
                                 ),
                                 "enrollment_end": course_run.enrollment_end.isoformat().replace(  # noqa pylint: disable=line-too-long
-                                    "+00:00", "Z"
+                                    "+00:00",
+                                    "Z",
                                 ),
                             }
                             for course_run in target_course.course_runs.all().order_by(
