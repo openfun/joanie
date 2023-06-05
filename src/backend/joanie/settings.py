@@ -197,6 +197,7 @@ class Base(Configuration):
         "joanie.core",
         "joanie.payment",
         "joanie.badges",
+        "joanie.demo",
     ]
 
     # Joanie

@@ -2,6 +2,7 @@
 Core application factories
 """
 import random
+import uuid
 from datetime import datetime, timedelta, timezone
 
 from django.conf import settings
@@ -43,7 +44,7 @@ class UserFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = settings.AUTH_USER_MODEL
 
-    username = UniqueFaker("user_name")
+    username = factory.Sequence(lambda n: f"user{n!s}")
     email = factory.Faker("email")
     language = factory.fuzzy.FuzzyChoice([lang[0] for lang in settings.LANGUAGES])
     password = make_password("password")
@@ -66,7 +67,7 @@ class OrganizationFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.Organization
 
-    code = factory.Faker("ean", length=8)
+    code = factory.Sequence(lambda n: n)
     title = factory.Sequence(lambda n: f"Organization {n}")
     signature = factory.django.ImageField(
         filename="signature.png", format="png", width=1, height=1
@@ -115,7 +116,7 @@ class CourseFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.Course
 
-    code = factory.Faker("ean", length=8)
+    code = factory.Sequence(lambda n: n)
     title = factory.Sequence(lambda n: f"Course {n}")
     cover = factory.django.ImageField(
         filename="cover.png", format="png", width=1, height=1
@@ -197,7 +198,6 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
         model = models.CourseRun
 
     course = factory.SubFactory(CourseFactory)
-    resource_link = factory.Faker("uri")
     title = factory.Sequence(lambda n: f"Course run {n}")
 
     # pylint: disable=no-self-use
@@ -214,9 +214,17 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
         ]
 
     @factory.lazy_attribute
+    def resource_link(self):
+        """Generate a resource link that looks like an OpenEdX course url."""
+        code = self.course.code if self.course else "0001"
+        return (
+            f"http://openedx.test/courses/course-v1:edx+{code!s}/{str(uuid.uuid4())}/"
+        )
+
+    @factory.lazy_attribute
     def start(self):  # pylint: disable=no-self-use
         """
-        A start datetime for the course run is chosen randomly in the future (it can
+        A start datetime for the course run is chosen randomly in the short past/future (it can
         of course be forced if we want something else), then the other significant dates
         for the course run are chosen randomly in periods that make sense with this start date.
         """
@@ -325,7 +333,8 @@ class ProductFactory(factory.django.DjangoModelFactory):
         - otherwise create a random course and link it
         """
         if extracted is None:
-            CourseProductRelationFactory(product=self, course=CourseFactory())
+            if create:
+                CourseProductRelationFactory(product=self, course=CourseFactory())
             return
 
         for course in extracted:
@@ -338,7 +347,7 @@ class ProductFactory(factory.django.DjangoModelFactory):
         Link target courses to the product after its creation:
         - link the list of courses passed in "extracted" if any
         """
-        if not extracted:
+        if not extracted or not create:
             return
 
         for position, course in enumerate(extracted):

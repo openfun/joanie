@@ -45,6 +45,13 @@ Note that if you need to run them afterwards, you can use the eponym Make rule:
 $ make run
 ```
 
+### Adding content
+
+You can create a basic demo site by running:
+
+    $ make demo
+
+
 Now, you should be able to access the API overview interface at
 [http://localhost:8071/api/](http://localhost:8071/api/).
 
