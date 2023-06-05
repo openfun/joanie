@@ -34,6 +34,8 @@ DOCKER_UID          = $(shell id -u)
 DOCKER_GID          = $(shell id -g)
 DOCKER_USER         = $(DOCKER_UID):$(DOCKER_GID)
 COMPOSE             = DOCKER_USER=$(DOCKER_USER) docker-compose
+COMPOSE_EXEC        = $(COMPOSE) exec
+COMPOSE_EXEC_APP    = $(COMPOSE_EXEC) app-dev
 COMPOSE_RUN         = $(COMPOSE) run --rm
 COMPOSE_RUN_APP     = $(COMPOSE_RUN) app-dev
 COMPOSE_RUN_ADMIN   = $(COMPOSE_RUN) admin-dev
@@ -108,6 +110,17 @@ stop: ## stop the development server using Docker
 .PHONY: stop
 
 # -- Backend
+
+demo: ## create a demo if app container is running
+	@echo "Check app container is running..."
+	@if [ $(shell docker container inspect -f '{{.State.Running}}' "$(shell $(COMPOSE) ps -q app)") = "false" ] ; then\
+		echo "❌ App must be up and running to create demo site.";\
+		exit 1;\
+	fi
+	@$(MANAGE) flush --no-input
+	@$(COMPOSE_EXEC_APP) python manage.py create_demo
+	@${MAKE} superuser
+.PHONY: demo
 
 # Nota bene: Black should come after isort just in case they don't agree...
 lint: ## lint back-end python sources
