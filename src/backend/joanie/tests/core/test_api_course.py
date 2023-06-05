@@ -86,6 +86,9 @@ class CourseApiTest(BaseAPITestCase):
                 "previous": None,
                 "results": [
                     {
+                        "created_on": course.created_on.isoformat().replace(
+                            "+00:00", "Z"
+                        ),
                         "abilities": {"foo": "bar"},
                         "code": course.code,
                         "id": str(course.id),
@@ -179,6 +182,7 @@ class CourseApiTest(BaseAPITestCase):
         self.assertEqual(
             content,
             {
+                "created_on": course.created_on.isoformat().replace("+00:00", "Z"),
                 "code": course.code,
                 "id": str(course.id),
                 "cover": "_this_field_is_mocked",

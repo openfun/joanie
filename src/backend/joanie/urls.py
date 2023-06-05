@@ -48,6 +48,11 @@ router.register(
     "organizations", api_client.OrganizationViewSet, basename="organizations"
 )
 router.register("products", api_client.ProductViewSet, basename="products")
+router.register(
+    "course-product-relations",
+    api_client.CourseProductRelationViewSet,
+    basename="course-product-relations",
+)
 
 # - Routes nested under a course
 course_related_router = DefaultRouter()

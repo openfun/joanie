@@ -557,6 +557,7 @@ class CourseProductRelation(BaseModel):
         unique_together = ("product", "course")
         verbose_name = _("Course relation to a product")
         verbose_name_plural = _("Courses relations to products")
+        ordering = ["-created_on"]
 
     def __str__(self):
         return f"{self.course}: {self.product}"

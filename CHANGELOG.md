@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Add api endpoint to retrieve the list of course product relations
 - Add `get_selling_organizations` method to Course model
 - Add courses client api endpoint
 - Add ThumbnailImageField "cover" to Course model
