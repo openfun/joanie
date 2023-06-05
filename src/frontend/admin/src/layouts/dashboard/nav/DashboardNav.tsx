@@ -3,7 +3,6 @@ import Drawer from "@mui/material/Drawer";
 import { useTheme } from "@mui/material/styles";
 import { DashboardNavHeader } from "@/layouts/dashboard/nav/header/DashboardNavHeader";
 import { DashboardNavContent } from "@/layouts/dashboard/nav/content/DashboardNavContent";
-import { NAVIGATION_WIDTH } from "@/layouts/dashboard/config";
 
 interface Props {
   open: boolean;
@@ -16,14 +15,14 @@ export function DashboardNav(props: Props) {
     <>
       <Drawer
         sx={{
-          width: NAVIGATION_WIDTH,
+          width: theme.navigation.width,
           padding: theme.spacing(2),
           display: { xs: "none", sm: "block" },
           flexShrink: 0,
           "& .MuiDrawer-paper": {
             borderRight: "1px solid rgb(240, 240, 240)",
-            backgroundColor: theme.palette.grey["50"],
-            width: NAVIGATION_WIDTH,
+            backgroundColor: theme.palette.grey[50],
+            width: theme.navigation.width,
             boxSizing: "border-box",
           },
         }}
@@ -37,11 +36,11 @@ export function DashboardNav(props: Props) {
       </Drawer>
       <Drawer
         sx={{
-          width: NAVIGATION_WIDTH,
+          width: theme.navigation.width,
           display: { xs: "block", sm: "none" },
           flexShrink: 0,
           "& .MuiDrawer-paper": {
-            width: NAVIGATION_WIDTH,
+            width: theme.navigation.width,
             boxSizing: "border-box",
           },
         }}

@@ -4,7 +4,6 @@ import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import { DashboardLayoutHeader } from "@/layouts/dashboard/header/DashboardLayoutHeader";
 import { DashboardNav } from "@/layouts/dashboard/nav/DashboardNav";
-import { NAVIGATION_WIDTH } from "@/layouts/dashboard/config";
 
 const Main = styled("main", { shouldForwardProp: (prop) => prop !== "open" })<{
   open?: boolean;
@@ -16,7 +15,7 @@ const Main = styled("main", { shouldForwardProp: (prop) => prop !== "open" })<{
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
   }),
-  marginLeft: `-${NAVIGATION_WIDTH}px`,
+  marginLeft: `-${theme.navigation.width}px`,
   [theme.breakpoints.down("sm")]: {
     transition: "none",
     marginLeft: 0,
@@ -32,7 +31,6 @@ const Main = styled("main", { shouldForwardProp: (prop) => prop !== "open" })<{
 
 export function DashboardLayout(props: PropsWithChildren) {
   const [open, setOpen] = useState(true);
-
   const handleToggleDrawer = () => {
     setOpen(!open);
   };
