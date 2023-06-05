@@ -1,7 +1,8 @@
 import { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import * as React from "react";
 import { defineMessages, IntlShape } from "react-intl";
-import { Box, IconButton } from "@mui/material";
+import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { CourseRun } from "@/services/api/models/CourseRun";
 import { PATH_ADMIN } from "@/utils/routes/path";

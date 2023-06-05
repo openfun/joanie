@@ -1,7 +1,9 @@
 import * as React from "react";
 import { PropsWithChildren } from "react";
 import { Controller, useFieldArray, useFormContext } from "react-hook-form";
-import { Box, FormHelperText, FormLabel } from "@mui/material";
+import Box from "@mui/material/Box";
+import FormHelperText from "@mui/material/FormHelperText";
+import FormLabel from "@mui/material/FormLabel";
 import {
   DndList,
   DndListProps,

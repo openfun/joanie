@@ -1,6 +1,6 @@
 import * as React from "react";
 import Drawer from "@mui/material/Drawer";
-import { useTheme } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import { DashboardNavHeader } from "@/layouts/dashboard/nav/header/DashboardNavHeader";
 import { DashboardNavContent } from "@/layouts/dashboard/nav/content/DashboardNavContent";
 import { NAVIGATION_WIDTH } from "@/layouts/dashboard/config";

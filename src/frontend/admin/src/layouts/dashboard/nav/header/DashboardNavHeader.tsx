@@ -1,9 +1,7 @@
 import * as React from "react";
-import { styled } from "@mui/material/styles";
+import { styled, useTheme } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import Image from "next/image";
-import { useTheme } from "@mui/material";
-
 import logo from "@/../public/images/logo/logo-fun.svg";
 
 const DrawerHeader = styled("div")(({ theme }) => {

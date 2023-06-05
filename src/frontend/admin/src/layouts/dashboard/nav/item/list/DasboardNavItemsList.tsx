@@ -1,6 +1,8 @@
 import * as React from "react";
 import { PropsWithChildren } from "react";
-import { List, ListSubheader, Typography } from "@mui/material";
+import List from "@mui/material/List";
+import ListSubheader from "@mui/material/ListSubheader";
+import Typography from "@mui/material/Typography";
 import styles from "./DashboardNavItemsList.module.scss";
 
 interface Props {

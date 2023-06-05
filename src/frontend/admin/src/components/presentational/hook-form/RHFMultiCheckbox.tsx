@@ -1,12 +1,11 @@
-import {
-  Checkbox,
-  FormControl,
-  FormControlLabel,
+import Checkbox from "@mui/material/Checkbox";
+import FormControl from "@mui/material/FormControl";
+import FormControlLabel, {
   FormControlLabelProps,
-  FormGroup,
-  FormHelperText,
-  FormLabel,
-} from "@mui/material";
+} from "@mui/material/FormControlLabel";
+import FormGroup from "@mui/material/FormGroup";
+import FormHelperText from "@mui/material/FormHelperText";
+import FormLabel from "@mui/material/FormLabel";
 import { Controller, useFormContext } from "react-hook-form";
 import classNames from "classnames";
 

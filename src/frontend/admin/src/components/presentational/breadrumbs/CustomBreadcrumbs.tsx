@@ -1,5 +1,8 @@
 import * as React from "react";
-import { Box, Breadcrumbs, Link, Typography } from "@mui/material";
+import Box from "@mui/material/Box";
+import Breadcrumbs from "@mui/material/Breadcrumbs";
+import Link from "@mui/material/Link";
+import Typography from "@mui/material/Typography";
 import NextLink from "next/link";
 import { BreadcrumbsLinkProps } from "@/components/presentational/breadrumbs/type";
 

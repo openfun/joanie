@@ -1,5 +1,8 @@
 import { PropsWithChildren, ReactElement } from "react";
-import { Box, CircularProgress, Container, Typography } from "@mui/material";
+import Box from "@mui/material/Box";
+import CircularProgress from "@mui/material/CircularProgress";
+import Container from "@mui/material/Container";
+import Typography from "@mui/material/Typography";
 import { DashboardLayoutHeaderActions } from "@/layouts/dashboard/header/actions/DashboardLayoutHeaderActions";
 import { CustomBreadcrumbs } from "@/components/presentational/breadrumbs/CustomBreadcrumbs";
 import { BreadcrumbsLinkProps } from "@/components/presentational/breadrumbs/type";

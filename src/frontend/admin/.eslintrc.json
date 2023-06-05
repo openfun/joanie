@@ -34,6 +34,13 @@
       "error",
       { "accessibility": "no-public" }
     ],
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": ["@mui/material"],
+        "patterns": ["@mui/material/*/*"]
+      }
+    ],
     "@typescript-eslint/lines-between-class-members": "off",
     "@typescript-eslint/no-use-before-define": "off",
     "arrow-parens": "error",

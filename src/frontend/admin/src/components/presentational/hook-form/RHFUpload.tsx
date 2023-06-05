@@ -1,10 +1,11 @@
 import * as React from "react";
 import { useState } from "react";
 import { Controller, useFormContext } from "react-hook-form";
-import { Box, Button, Collapse, FormLabel } from "@mui/material";
-
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Collapse from "@mui/material/Collapse";
+import FormLabel from "@mui/material/FormLabel";
 import { TransitionGroup } from "react-transition-group";
-
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { FileThumbnail } from "@/components/presentational/files/thumbnail/FileThumbnail";
 

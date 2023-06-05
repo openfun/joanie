@@ -2,7 +2,7 @@ import * as React from "react";
 import { PropsWithChildren } from "react";
 import * as ReactDOM from "react-dom";
 import { Draggable } from "react-beautiful-dnd";
-import { Box } from "@mui/material";
+import Box from "@mui/material/Box";
 import DragIndicatorRoundedIcon from "@mui/icons-material/DragIndicatorRounded";
 import { StyledDndItemContainer } from "@/components/presentational/dnd/StyledDndItemContainer";
 

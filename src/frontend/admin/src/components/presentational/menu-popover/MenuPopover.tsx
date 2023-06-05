@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useState } from "react";
-import { Popover, PopoverOrigin, PopoverProps } from "@mui/material";
+import Popover, { PopoverOrigin, PopoverProps } from "@mui/material/Popover";
 import { MenuPopoverArrowValue } from "@/components/presentational/menu-popover/types";
 import getPosition from "@/components/presentational/menu-popover/getPosition";
 

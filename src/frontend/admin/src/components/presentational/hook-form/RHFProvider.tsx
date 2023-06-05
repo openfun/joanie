@@ -2,7 +2,7 @@ import * as React from "react";
 import { MutableRefObject } from "react";
 import { FormProvider, UseFormReturn } from "react-hook-form";
 import { FieldValues } from "react-hook-form/dist/types/fields";
-import { Box } from "@mui/material";
+import Box from "@mui/material/Box";
 import { defineMessages, useIntl } from "react-intl";
 import LoadingButton from "@mui/lab/LoadingButton";
 

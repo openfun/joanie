@@ -1,5 +1,7 @@
 import * as React from "react";
-import { Box, IconButton, Typography } from "@mui/material";
+import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
+import Typography from "@mui/material/Typography";
 import { grey } from "@mui/material/colors";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 

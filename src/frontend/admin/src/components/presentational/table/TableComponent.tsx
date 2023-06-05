@@ -1,13 +1,11 @@
 import * as React from "react";
 import { useState } from "react";
 import { DataGrid, GridColDef, GridRowSelectionModel } from "@mui/x-data-grid";
-import {
-  Box,
-  CircularProgress,
-  IconButton,
-  InputAdornment,
-  TextField,
-} from "@mui/material";
+import Box from "@mui/material/Box";
+import CircularProgress from "@mui/material/CircularProgress";
+import IconButton from "@mui/material/IconButton";
+import InputAdornment from "@mui/material/InputAdornment";
+import TextField from "@mui/material/TextField";
 import { Delete, SearchOutlined } from "@mui/icons-material";
 import { useIntl } from "react-intl";
 import { useDebouncedCallback } from "use-debounce";

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { PropsWithChildren } from "react";
-import { Link, LinkProps } from "@mui/material";
+import Link, { LinkProps } from "@mui/material/Link";
 import NextLink from "next/link";
 
 type Props = LinkProps;

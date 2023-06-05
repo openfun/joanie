@@ -1,5 +1,6 @@
-import { styled } from "@mui/material/styles";
-import { alpha, ListItemButton, ListItemProps } from "@mui/material";
+import { alpha, styled } from "@mui/material/styles";
+import ListItemButton from "@mui/material/ListItemButton";
+import { ListItemProps } from "@mui/material/ListItem";
 
 type StyledItemProps = ListItemProps & {
   isActive?: boolean;

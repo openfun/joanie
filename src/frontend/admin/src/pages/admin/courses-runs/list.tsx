@@ -1,5 +1,5 @@
 import { defineMessages, useIntl } from "react-intl";
-import { Button } from "@mui/material";
+import Button from "@mui/material/Button";
 import { useRouter } from "next/router";
 import { DashboardLayoutPage } from "@/layouts/dashboard/page/DashboardLayoutPage";
 import { CoursesRunsList } from "@/components/templates/courses-runs/list/CoursesRunsList";
