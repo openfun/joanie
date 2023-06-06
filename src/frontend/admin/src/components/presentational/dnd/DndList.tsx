@@ -48,9 +48,9 @@ export function DndList<TRowProps extends Row>({
                 <DndItem
                   isDisabled={props.disableDnd}
                   isDragging={snapshot.isDraggingOver}
-                  id={`${props.droppableId}-${index}`}
+                  id={`${props.droppableId}`}
                   index={index}
-                  key={`key-${props.droppableId}-${index}`}
+                  key={`key-${props.droppableId}`}
                 >
                   {props.renderRow(item, index)}
                 </DndItem>

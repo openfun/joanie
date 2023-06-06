@@ -21,7 +21,7 @@ export function CoursesRunsList() {
 
   const columns: GridColDef[] = useMemo(
     () => getCoursesRunsListColumns(intl),
-    []
+    [intl]
   );
 
   return (

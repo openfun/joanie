@@ -26,7 +26,7 @@ export const useResourcesOmniscient = <
   const [data, setData] = useState<TData[]>([]);
   const actualMessages = useMemo(
     () => ({ ...messages, ...props.messages }),
-    [messages, props.messages]
+    [props.messages]
   );
   const filter = useCallback(() => {
     // The following condition is important, let's illustrate it with the following situation:
@@ -76,11 +76,7 @@ export const useResourcesOmniscient = <
       return;
     }
     filter();
-  }, [
-    useResources.states.fetching,
-    useResources.items,
-    JSON.stringify(filters),
-  ]);
+  }, [useResources.states.fetching, useResources.items, filter]);
 
   return { ...useResources, items: data };
 };

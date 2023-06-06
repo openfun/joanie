@@ -47,7 +47,7 @@ export function TableDefaultActions(props: Props) {
         onClick: deleteModal.handleOpen,
       },
     ];
-  }, []);
+  }, [deleteModal.handleOpen, props.onEdit]);
 
   return (
     <>
