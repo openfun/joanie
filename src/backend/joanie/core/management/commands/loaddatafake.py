@@ -16,21 +16,36 @@ class Command(BaseCommand):
 
     help = "Create some fake products, courses and course runs"
 
-    def create_course(self, user, organization, batch_size=1):
+    def create_course(self, user, organization, batch_size=1, with_course_runs=False):
         """Create courses for given user and organization."""
+
         if batch_size == 1:
+            course_runs = []
+            if with_course_runs:
+                course_runs = factories.CourseRunFactory.create_batch(2, is_listed=True)
             return factories.CourseFactory(
-                organizations=[organization], users=[[user, enums.OWNER]]
+                organizations=[organization],
+                users=[[user, enums.OWNER]],
+                course_runs=course_runs,
             )
 
-        return factories.CourseFactory.create_batch(
+        courses = factories.CourseFactory.create_batch(
             batch_size, organizations=[organization], users=[[user, enums.OWNER]]
         )
+
+        if with_course_runs:
+            for course in courses:
+                factories.CourseRunFactory.create_batch(
+                    2, course=course, is_listed=True
+                )
+        return courses
 
     def _create_product(self, user, organization):
         """Create a single product for given user and organization."""
         course = self.create_course(user, organization)
-        target_courses = self.create_course(user, organization, 3)
+        target_courses = self.create_course(
+            user, organization, batch_size=3, with_course_runs=True
+        )
         return factories.ProductFactory(
             courses=[course],
             target_courses=target_courses,
@@ -125,7 +140,9 @@ class Command(BaseCommand):
         )
 
         # We need some pagination going on, let's create few more courses and products
-        self.create_course(admin_user, organization, 10)
-        self.create_product(admin_user, organization, 10)
+        self.create_course(
+            admin_user, organization, batch_size=10, with_course_runs=True
+        )
+        self.create_product(admin_user, organization, batch_size=10)
 
         self.stdout.write(self.style.SUCCESS("Successfully fake data creation"))
