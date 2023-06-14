@@ -690,6 +690,7 @@ class CourseViewSet(
     """
 
     lookup_field = "pk"
+    filterset_class = filters.CourseViewSetFilter
     pagination_class = Pagination
     permission_classes = [permissions.AccessPermission]
     serializer_class = serializers.CourseSerializer
