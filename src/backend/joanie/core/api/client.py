@@ -11,6 +11,7 @@ from rest_framework import mixins, pagination
 from rest_framework import permissions as drf_permissions
 from rest_framework import viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import NotFound
 from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework.response import Response
 
@@ -27,13 +28,32 @@ class Pagination(pagination.PageNumberPagination):
     page_size_query_param = "page_size"
 
 
-class CourseRunViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class CourseRunViewSet(
+    mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet
+):
     """API ViewSet for all interactions with course runs."""
 
     lookup_field = "id"
+    pagination_class = Pagination
     permissions_classes = [drf_permissions.AllowAny]
     queryset = models.CourseRun.objects.filter(is_listed=True).select_related("course")
     serializer_class = serializers.CourseRunSerializer
+    ordering = ["-created_on"]
+
+    def get_queryset(self):
+        """
+        Allow to get a list of course runs only from the nested route under a course.
+        """
+        queryset = super().get_queryset()
+        course_id = self.kwargs.get("course_id")
+
+        if self.action == "list" and not course_id:
+            raise NotFound("The requested resource was not found on this server.")
+
+        if course_id:
+            queryset.filter(course_id=self.kwargs["course_id"])
+
+        return queryset
 
 
 class CourseProductRelationViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):

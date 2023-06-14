@@ -48,6 +48,64 @@ class CourseRunApiTest(BaseAPITestCase):
         "to_representation",
         return_value="_this_field_is_mocked",
     )
+    def test_api_course_run_read_list_authenticated_with_nested_course(self, _):
+        """
+        It should be possible to retrieve a list of course runs for a given course
+        through the nested course route.
+        """
+        course = factories.CourseFactory()
+        course_run = factories.CourseRunFactory(course=course, is_listed=True)
+        # Not listed course run should be excluded
+        factories.CourseRunFactory(course=course, is_listed=False)
+        user = factories.UserFactory.build()
+        token = self.generate_token_from_user(user)
+
+        response = self.client.get(
+            f"/api/v1.0/courses/{course.id}/course-runs/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+        self.assertEqual(
+            content["results"][0],
+            {
+                "id": str(course_run.id),
+                "resource_link": course_run.resource_link,
+                "course": {
+                    "id": str(course_run.course.id),
+                    "code": str(course_run.course.code),
+                    "title": str(course_run.course.title),
+                    "cover": "_this_field_is_mocked",
+                },
+                "title": course_run.title,
+                "state": {
+                    "priority": course_run.state["priority"],
+                    "datetime": course_run.state["datetime"]
+                    .isoformat()
+                    .replace("+00:00", "Z")
+                    if course_run.state["datetime"]
+                    else None,
+                    "call_to_action": course_run.state["call_to_action"],
+                    "text": course_run.state["text"],
+                },
+                "enrollment_start": course_run.enrollment_start.isoformat().replace(
+                    "+00:00", "Z"
+                ),
+                "enrollment_end": course_run.enrollment_end.isoformat().replace(
+                    "+00:00", "Z"
+                ),
+                "start": course_run.start.isoformat().replace("+00:00", "Z"),
+                "end": course_run.end.isoformat().replace("+00:00", "Z"),
+            },
+        )
+
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
     def test_api_course_run_read_detail(self, _):
         """
         Any users should be allowed to retrieve a listed course run with minimal db access.
@@ -56,6 +114,58 @@ class CourseRunApiTest(BaseAPITestCase):
 
         with self.assertNumQueries(1):
             response = self.client.get(f"/api/v1.0/course-runs/{course_run.id}/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "id": str(course_run.id),
+                "resource_link": course_run.resource_link,
+                "course": {
+                    "id": str(course_run.course.id),
+                    "code": str(course_run.course.code),
+                    "title": str(course_run.course.title),
+                    "cover": "_this_field_is_mocked",
+                },
+                "title": course_run.title,
+                "state": {
+                    "priority": course_run.state["priority"],
+                    "datetime": course_run.state["datetime"]
+                    .isoformat()
+                    .replace("+00:00", "Z")
+                    if course_run.state["datetime"]
+                    else None,
+                    "call_to_action": course_run.state["call_to_action"],
+                    "text": course_run.state["text"],
+                },
+                "enrollment_start": course_run.enrollment_start.isoformat().replace(
+                    "+00:00", "Z"
+                ),
+                "enrollment_end": course_run.enrollment_end.isoformat().replace(
+                    "+00:00", "Z"
+                ),
+                "start": course_run.start.isoformat().replace("+00:00", "Z"),
+                "end": course_run.end.isoformat().replace("+00:00", "Z"),
+            },
+        )
+
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_course_run_read_detail_with_nested_course(self, _):
+        """
+        Any users should be allowed to retrieve a listed course run
+        with minimal db access through the nested course route.
+        """
+        course = factories.CourseFactory()
+        course_run = factories.CourseRunFactory(course=course, is_listed=True)
+
+        with self.assertNumQueries(1):
+            response = self.client.get(
+                f"/api/v1.0/courses/{course.id}/course-runs/{course_run.id}/"
+            )
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -136,8 +246,8 @@ class CourseRunApiTest(BaseAPITestCase):
 
         self.assertContains(
             response,
-            "The requested resource was not found on this server.",
-            status_code=404,
+            'Method \\"POST\\" not allowed.',
+            status_code=405,
         )
         self.assertEqual(models.CourseRun.objects.count(), 0)
 
@@ -158,8 +268,8 @@ class CourseRunApiTest(BaseAPITestCase):
 
         self.assertContains(
             response,
-            "The requested resource was not found on this server.",
-            status_code=404,
+            'Method \\"POST\\" not allowed.',
+            status_code=405,
         )
         self.assertEqual(models.CourseRun.objects.count(), 0)
 
