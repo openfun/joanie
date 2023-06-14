@@ -46,3 +46,27 @@ class EnrollmentViewSetFilter(filters.FilterSet):
     class Meta:
         model = models.Enrollment
         fields: List[str] = []
+
+
+class CourseViewSetFilter(filters.FilterSet):
+    """
+    CourseViewSetFilter allows to filter this resource according to if it has related
+    course runs or not.
+    """
+
+    has_listed_course_runs = filters.BooleanFilter(
+        method="filter_has_listed_course_runs"
+    )
+
+    class Meta:
+        model = models.Course
+        fields: List[str] = ["has_listed_course_runs"]
+
+    def filter_has_listed_course_runs(self, queryset, _name, value):
+        """
+        Filter resource by looking for course runs which are listed.
+        """
+        if value is True:
+            return queryset.filter(course_runs__is_listed=True)
+
+        return queryset.exclude(course_runs__is_listed=True)

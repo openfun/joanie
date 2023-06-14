@@ -118,6 +118,54 @@ class CourseApiTest(BaseAPITestCase):
         )
         mock_abilities.called_once_with(user)
 
+    def test_api_course_list_filter_has_listed_course_runs(self):
+        """
+        Authenticated users should be able to filter courses by whether they have
+        listed course runs if they have access to it.
+        """
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+
+        # Create 3 courses :
+        # - course_0 has 2 course runs, one listed and one not listed
+        # - course_1 has 1 course run, not listed
+        # - course_2 has no course run
+        courses = factories.CourseFactory.create_batch(3)
+        factories.CourseRunFactory(course=courses[0], is_listed=False)
+        factories.CourseRunFactory(course=courses[0], is_listed=True)
+        factories.CourseRunFactory(course=courses[1], is_listed=False)
+
+        # Give user access to all courses
+        for course in courses:
+            factories.UserCourseAccessFactory(user=user, course=course)
+
+        # Retrieve courses with listed course runs
+        response = self.client.get(
+            "/api/v1.0/courses/?has_listed_course_runs=true",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        # It should return courses[0] only
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+        self.assertEqual(content["results"][0]["id"], str(courses[0].id))
+
+        # Retrieve courses without listed course runs
+        response = self.client.get(
+            "/api/v1.0/courses/?has_listed_course_runs=false",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        # It should return courses[1] and courses[2]
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 2)
+        self.assertCountEqual(
+            [result["id"] for result in content["results"]],
+            [str(courses[1].id), str(courses[2].id)],
+        )
+
     def test_api_course_get_anonymous(self):
         """
         Anonymous users should not be allowed to get a course through its id.

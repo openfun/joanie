@@ -27,6 +27,7 @@ and this project adheres to
   their active order count per organization for the course/product couple
 - Add many admin api filters with text search 
 - Add a nested endpoint to retrieve all the course runs of a course
+- Filter courses according to whether they have listed course runs or not
 
 ### Changed
 
