@@ -61,6 +61,11 @@ course_related_router.register(
     api_client.CourseAccessViewSet,
     basename="course_accesses",
 )
+course_related_router.register(
+    "course-runs",
+    api_client.CourseRunViewSet,
+    basename="course_course_runs",
+)
 
 # - Routes nested under an organization
 organization_related_router = DefaultRouter()

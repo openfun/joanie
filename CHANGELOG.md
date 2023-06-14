@@ -26,6 +26,7 @@ and this project adheres to
 - Automatically allocate organization equitably on order creation according to
   their active order count per organization for the course/product couple
 - Add many admin api filters with text search 
+- Add a nested endpoint to retrieve all the course runs of a course
 
 ### Changed
 
