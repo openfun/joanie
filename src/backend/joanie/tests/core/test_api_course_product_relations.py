@@ -71,11 +71,10 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         )
         factories.ProductFactory.create_batch(2)
 
-        with self.assertNumQueries(14):
-            response = self.client.get(
-                "/api/v1.0/course-product-relations/",
-                HTTP_AUTHORIZATION=f"Bearer {token}",
-            )
+        response = self.client.get(
+            "/api/v1.0/course-product-relations/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
 
         self.assertEqual(response.status_code, 200)
         content = response.json()
@@ -83,6 +82,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertEqual(
             content["results"][0],
             {
+                "id": str(relation.id),
                 "created_on": relation.created_on.isoformat().replace("+00:00", "Z"),
                 "course": {
                     "created_on": course.created_on.isoformat().replace("+00:00", "Z"),
@@ -202,8 +202,8 @@ class CourseProductRelationApiTest(BaseAPITestCase):
 
         self.assertContains(
             response,
-            "The requested resource was not found on this server.",
-            status_code=404,
+            "Authentication credentials were not provided.",
+            status_code=401,
         )
 
     def test_api_course_product_relation_read_detail_authenticated(self):
@@ -226,14 +226,19 @@ class CourseProductRelationApiTest(BaseAPITestCase):
 
         self.assertContains(
             response,
-            "The requested resource was not found on this server.",
+            "Not found.",
             status_code=404,
         )
 
-    def test_api_course_product_relation_read_detail_with_accesses(self):
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_course_product_relation_read_detail_with_accesses(self, _):
         """
-        Authenticated users with course access should not be able to retrieve
-        a single course product relation.
+        Authenticated users with course access should be able to retrieve
+        a single course product relation through its id.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -244,15 +249,122 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         )
         factories.UserCourseAccessFactory(user=user, course=course)
 
-        response = self.client.get(
-            f"/api/v1.0/course-product-relations/{relation.id}/",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
+        with self.assertNumQueries(13):
+            response = self.client.get(
+                f"/api/v1.0/course-product-relations/{relation.id}/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
 
-        self.assertContains(
-            response,
-            "The requested resource was not found on this server.",
-            status_code=404,
+        self.assertEqual(response.status_code, 200)
+
+        content = response.json()
+        self.assertEqual(
+            content,
+            {
+                "id": str(relation.id),
+                "created_on": relation.created_on.isoformat().replace("+00:00", "Z"),
+                "course": {
+                    "created_on": course.created_on.isoformat().replace("+00:00", "Z"),
+                    "abilities": course.get_abilities(user),
+                    "code": course.code,
+                    "id": str(course.id),
+                    "cover": "_this_field_is_mocked",
+                    "title": course.title,
+                    "organizations": [
+                        {
+                            "code": organization.code,
+                            "id": str(organization.id),
+                            "logo": "_this_field_is_mocked",
+                            "title": organization.title,
+                        }
+                        for organization in course.organizations.all()
+                    ],
+                    "selling_organizations": [
+                        {
+                            "id": str(organization.id),
+                            "code": organization.code,
+                            "logo": "_this_field_is_mocked",
+                            "title": organization.title,
+                        }
+                        for organization in relation.organizations.all()
+                    ],
+                    "products": [str(product.id) for product in course.products.all()],
+                    "course_runs": [
+                        str(course_run.id) for course_run in course.course_runs.all()
+                    ],
+                    "state": dict(course.state),
+                },
+                "product": {
+                    "call_to_action": relation.product.call_to_action,
+                    "certificate_definition": {
+                        "description": relation.product.certificate_definition.description,
+                        "name": relation.product.certificate_definition.name,
+                        "title": relation.product.certificate_definition.title,
+                    },
+                    "organizations": [],
+                    "id": str(relation.product.id),
+                    "price": float(relation.product.price.amount),
+                    "price_currency": str(relation.product.price.currency),
+                    "target_courses": [
+                        {
+                            "code": target_course.code,
+                            "organization": {
+                                "id": str(target_course.organization.id),
+                                "code": target_course.organization.code,
+                                "logo": "_this_field_is_mocked",
+                                "title": target_course.organization.title,
+                            },
+                            "course_runs": [
+                                {
+                                    "id": course_run.id,
+                                    "title": course_run.title,
+                                    "resource_link": course_run.resource_link,
+                                    "state": {
+                                        "priority": course_run.state["priority"],
+                                        "datetime": course_run.state["datetime"]
+                                        .isoformat()
+                                        .replace("+00:00", "Z"),
+                                        "call_to_action": course_run.state[
+                                            "call_to_action"
+                                        ],
+                                        "text": course_run.state["text"],
+                                    },
+                                    "start": course_run.start.isoformat().replace(
+                                        "+00:00", "Z"
+                                    ),
+                                    "end": course_run.end.isoformat().replace(
+                                        "+00:00", "Z"
+                                    ),
+                                    "enrollment_start": course_run.enrollment_start.isoformat().replace(  # noqa pylint: disable=line-too-long
+                                        "+00:00",
+                                        "Z",
+                                    ),
+                                    "enrollment_end": course_run.enrollment_end.isoformat().replace(  # noqa pylint: disable=line-too-long
+                                        "+00:00",
+                                        "Z",
+                                    ),
+                                }
+                                for course_run in target_course.course_runs.all().order_by(
+                                    "start"
+                                )
+                            ],
+                            "position": target_course.product_relations.get(
+                                product=relation.product
+                            ).position,
+                            "is_graded": target_course.product_relations.get(
+                                product=relation.product
+                            ).is_graded,
+                            "title": target_course.title,
+                        }
+                        for target_course in relation.product.target_courses.all().order_by(
+                            "product_target_relations__position"
+                        )
+                    ],
+                    "title": relation.product.title,
+                    "type": relation.product.type,
+                    "orders": [],
+                },
+            },
         )
 
     def test_api_course_product_relation_create_anonymous(self):
@@ -325,8 +437,8 @@ class CourseProductRelationApiTest(BaseAPITestCase):
 
         self.assertContains(
             response,
-            "The requested resource was not found on this server.",
-            status_code=404,
+            "Authentication credentials were not provided.",
+            status_code=401,
         )
 
     def test_api_course_product_relation_update_authenticated(self):
@@ -355,8 +467,8 @@ class CourseProductRelationApiTest(BaseAPITestCase):
 
         self.assertContains(
             response,
-            "The requested resource was not found on this server.",
-            status_code=404,
+            'Method \\"PUT\\" not allowed.',
+            status_code=405,
         )
 
     def test_api_course_product_relation_update_with_accesses(self):
@@ -386,8 +498,8 @@ class CourseProductRelationApiTest(BaseAPITestCase):
 
         self.assertContains(
             response,
-            "The requested resource was not found on this server.",
-            status_code=404,
+            'Method \\"PUT\\" not allowed.',
+            status_code=405,
         )
 
     def test_api_course_product_relation_partially_update_anonymous(self):
@@ -411,8 +523,8 @@ class CourseProductRelationApiTest(BaseAPITestCase):
 
         self.assertContains(
             response,
-            "The requested resource was not found on this server.",
-            status_code=404,
+            "Authentication credentials were not provided.",
+            status_code=401,
         )
 
     def test_api_course_product_relation_partially_update_authenticated(self):
@@ -440,8 +552,8 @@ class CourseProductRelationApiTest(BaseAPITestCase):
 
         self.assertContains(
             response,
-            "The requested resource was not found on this server.",
-            status_code=404,
+            'Method \\"PATCH\\" not allowed.',
+            status_code=405,
         )
 
     def test_api_course_product_relation_partially_update_with_accesses(self):
@@ -470,8 +582,8 @@ class CourseProductRelationApiTest(BaseAPITestCase):
 
         self.assertContains(
             response,
-            "The requested resource was not found on this server.",
-            status_code=404,
+            'Method \\"PATCH\\" not allowed.',
+            status_code=405,
         )
 
     def test_api_course_product_relation_delete_anonymous(self):
@@ -492,8 +604,8 @@ class CourseProductRelationApiTest(BaseAPITestCase):
 
         self.assertContains(
             response,
-            "The requested resource was not found on this server.",
-            status_code=404,
+            "Authentication credentials were not provided.",
+            status_code=401,
         )
         self.assertEqual(models.CourseProductRelation.objects.count(), 1)
 
@@ -519,8 +631,8 @@ class CourseProductRelationApiTest(BaseAPITestCase):
 
         self.assertContains(
             response,
-            "The requested resource was not found on this server.",
-            status_code=404,
+            'Method \\"DELETE\\" not allowed.',
+            status_code=405,
         )
         self.assertEqual(models.CourseProductRelation.objects.count(), 1)
 
@@ -547,7 +659,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
 
         self.assertContains(
             response,
-            "The requested resource was not found on this server.",
-            status_code=404,
+            'Method \\"DELETE\\" not allowed.',
+            status_code=405,
         )
         self.assertEqual(models.CourseProductRelation.objects.count(), 1)

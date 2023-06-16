@@ -3,7 +3,6 @@ Client API endpoints
 """
 from django.db import IntegrityError, transaction
 from django.db.models import Count, OuterRef, Q, Subquery
-from django.db.models.query import EmptyQuerySet
 from django.http import HttpResponse
 from django.utils.translation import gettext_lazy as _
 
@@ -56,26 +55,30 @@ class CourseRunViewSet(
         return queryset
 
 
-class CourseProductRelationViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+class CourseProductRelationViewSet(
+    mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet
+):
     """API ViewSet for all interactions with course-product relations."""
 
     lookup_field = "id"
     permission_classes = [permissions.IsAuthenticated]
-    queryset = EmptyQuerySet
     serializer_class = serializers.CourseProductRelationSerializer
     ordering = ["-created_on"]
 
     def get_queryset(self):
         """
-        List action should only return relations related to courses for which their
-        authenticated user has accesses.
+        Custom queryset to limit access to course product relation objects
+        to users who have access to the related course.
         """
-        if self.action == "list":
-            return models.CourseProductRelation.objects.filter(
-                course__accesses__user=self.request.user
-            ).select_related("course", "product")
+        username = (
+            self.request.auth["username"]
+            if self.request.auth
+            else self.request.user.username
+        )
 
-        return super().get_queryset()
+        return models.CourseProductRelation.objects.filter(
+            course__accesses__user__username=username
+        ).select_related("course", "product")
 
 
 class ProductViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):

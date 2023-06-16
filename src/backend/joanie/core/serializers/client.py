@@ -759,11 +759,13 @@ class CourseProductRelationSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.CourseProductRelation
         fields = [
+            "id",
             "created_on",
             "course",
             "product",
         ]
         read_only_fields = [
+            "id",
             "created_on",
             "course",
             "product",
