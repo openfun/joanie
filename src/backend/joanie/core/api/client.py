@@ -51,7 +51,7 @@ class CourseRunViewSet(
             raise NotFound("The requested resource was not found on this server.")
 
         if course_id:
-            queryset.filter(course_id=self.kwargs["course_id"])
+            queryset = queryset.filter(course=course_id)
 
         return queryset
 

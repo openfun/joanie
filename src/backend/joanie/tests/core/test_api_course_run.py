@@ -53,15 +53,16 @@ class CourseRunApiTest(BaseAPITestCase):
         It should be possible to retrieve a list of course runs for a given course
         through the nested course route.
         """
-        course = factories.CourseFactory()
-        course_run = factories.CourseRunFactory(course=course, is_listed=True)
-        # Not listed course run should be excluded
-        factories.CourseRunFactory(course=course, is_listed=False)
+        courses = factories.CourseFactory.create_batch(2)
+        course_run = factories.CourseRunFactory(course=courses[0], is_listed=True)
+        factories.CourseRunFactory(course=courses[0], is_listed=False)
+        factories.CourseRunFactory(course=courses[1], is_listed=True)
+        factories.CourseRunFactory(course=courses[1], is_listed=False)
         user = factories.UserFactory.build()
         token = self.generate_token_from_user(user)
 
         response = self.client.get(
-            f"/api/v1.0/courses/{course.id}/course-runs/",
+            f"/api/v1.0/courses/{courses[0].id}/course-runs/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -159,12 +160,15 @@ class CourseRunApiTest(BaseAPITestCase):
         Any users should be allowed to retrieve a listed course run
         with minimal db access through the nested course route.
         """
-        course = factories.CourseFactory()
-        course_run = factories.CourseRunFactory(course=course, is_listed=True)
+        courses = factories.CourseFactory.create_batch(2)
+        course_run = factories.CourseRunFactory(course=courses[0], is_listed=True)
+        factories.CourseRunFactory(course=courses[0], is_listed=False)
+        factories.CourseRunFactory(course=courses[1], is_listed=True)
+        factories.CourseRunFactory(course=courses[1], is_listed=False)
 
         with self.assertNumQueries(1):
             response = self.client.get(
-                f"/api/v1.0/courses/{course.id}/course-runs/{course_run.id}/"
+                f"/api/v1.0/courses/{courses[0].id}/course-runs/{course_run.id}/"
             )
 
         self.assertEqual(response.status_code, 200)
