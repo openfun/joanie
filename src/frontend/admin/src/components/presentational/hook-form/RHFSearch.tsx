@@ -26,16 +26,16 @@ export function RHFSearch<T>({ items, onFilter, ...props }: RHFSearchProps<T>) {
 
   useEffect(() => {
     setSelectedOptions(getValues(props.name));
-  }, []);
+  }, [getValues, props.name]);
 
   useEffect(() => {
     const isArray = Array.isArray(selectedOptions);
-
-    const result = isArray
-      ? selectedOptions
-      : selectedOptions !== null && selectedOptions !== undefined
-      ? [selectedOptions]
-      : [];
+    let result: T[] = [];
+    if (isArray) {
+      result = selectedOptions;
+    } else if (selectedOptions !== null && selectedOptions !== undefined) {
+      result = [selectedOptions];
+    }
 
     if (search === "") {
       setOptions(result);

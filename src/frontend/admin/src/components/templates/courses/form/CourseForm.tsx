@@ -173,7 +173,7 @@ export function CourseForm({ course, ...props }: Props) {
               <Stack spacing={1}>
                 {productsArray.fields.map((product, index) => (
                   <DndDefaultRow
-                    key={`${product.product.title}-${index}`}
+                    key={`${product.product.title}-${product.id}`}
                     onDelete={() => productsArray.remove(index)}
                     mainTitle={product.product.title}
                     rightActions={

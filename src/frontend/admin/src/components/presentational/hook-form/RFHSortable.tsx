@@ -39,7 +39,7 @@ export function RHFSortable<T extends Row>({
   useEffect(() => {
     searchSelect.setSelectedOptions(props.rows);
     setValue(name, props.rows);
-  }, [props.rows]);
+  }, [name, props.rows, searchSelect, setValue]);
 
   const onSelectItem = (item: T): void => {
     if (item === null) {

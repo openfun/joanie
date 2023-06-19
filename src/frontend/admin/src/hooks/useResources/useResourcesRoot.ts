@@ -79,6 +79,7 @@ const emptyArray: never[] = [];
  * @param queryOptions - Pass custom options to react-query.
  * @param localized - Is the resource local-dependent ? If so, the query will be invalidated on locale change.
  * @param resourceMessages - Custom messages to use for this resource.
+ * @param onMutationSuccess
  */
 export const useResourcesRoot = <
   TData extends Resource,
@@ -101,7 +102,7 @@ export const useResourcesRoot = <
 
   const actualMessages = useMemo(
     () => ({ ...messages, ...resourceMessages }),
-    [messages, resourceMessages]
+    [resourceMessages]
   );
 
   const COMMON_QUERY_KEY = frozenQueryKey
@@ -115,7 +116,7 @@ export const useResourcesRoot = <
 
   const queryFn: () => Promise<any> = useCallback(
     () => api.get(filters),
-    [api, JSON.stringify(filters)]
+    [api, filters]
   );
   queryOptions = {
     onError: () => setError(intl.formatMessage(actualMessages.errorGet)),
