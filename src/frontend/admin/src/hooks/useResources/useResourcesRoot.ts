@@ -7,6 +7,7 @@ import {
 import { useCallback, useMemo, useState } from "react";
 import { defineMessages, useIntl } from "react-intl";
 import { MutateOptions } from "@tanstack/query-core/src/types";
+import { useSnackbar } from "notistack";
 import {
   ApiResourceInterface,
   PaginatedResponse,
@@ -53,6 +54,12 @@ export const messages = defineMessages({
     defaultMessage:
       "An error occurred while creating a resource. Please retry later.",
   },
+  postSuccess: {
+    id: "hooks.useResources.postSuccess",
+    description:
+      "Success message shown to the user when resource was created / updated / deleted",
+    defaultMessage: "Operation completed successfully.",
+  },
 });
 
 type MutateFunc<TApiMethod extends Maybe<(...args: any[]) => any>> =
@@ -96,6 +103,7 @@ export const useResourcesRoot = <
   messages: resourceMessages,
   onMutationSuccess,
 }: UseResourcesProps<TData, TResourceQuery, TApiResource>) => {
+  const snackbar = useSnackbar();
   const queryClient = useQueryClient();
   const [error, setError] = useState<Maybe<string>>();
   const intl = useIntl();
@@ -118,8 +126,19 @@ export const useResourcesRoot = <
     () => api.get(filters),
     [api, filters]
   );
+
+  const updateError = (newError: Maybe<string>) => {
+    setError(newError);
+    if (newError) {
+      snackbar.enqueueSnackbar(newError, {
+        variant: "error",
+        preventDuplicate: true,
+      });
+    }
+  };
+
   queryOptions = {
-    onError: () => setError(intl.formatMessage(actualMessages.errorGet)),
+    onError: () => updateError(intl.formatMessage(actualMessages.errorGet)),
     ...queryOptions,
   };
 
@@ -159,7 +178,11 @@ export const useResourcesRoot = <
   };
 
   const onSuccess = async () => {
-    setError(undefined);
+    snackbar.enqueueSnackbar(intl.formatMessage(messages.postSuccess), {
+      variant: "success",
+      preventDuplicate: true,
+    });
+    updateError(undefined);
     await invalidate();
     await onMutationSuccess?.(queryClient);
   };
@@ -174,21 +197,21 @@ export const useResourcesRoot = <
       ? mutation(api.create, {
           onSuccess,
           onError: () =>
-            setError(intl.formatMessage(actualMessages.errorCreate)),
+            updateError(intl.formatMessage(actualMessages.errorCreate)),
         })
       : undefined,
     update: api.update
       ? mutation(api.update, {
           onSuccess,
           onError: () =>
-            setError(intl.formatMessage(actualMessages.errorUpdate)),
+            updateError(intl.formatMessage(actualMessages.errorUpdate)),
         })
       : undefined,
     delete: api.delete
       ? mutation(api.delete, {
           onSuccess,
           onError: () =>
-            setError(intl.formatMessage(actualMessages.errorDelete)),
+            updateError(intl.formatMessage(actualMessages.errorDelete)),
         })
       : undefined,
   };
@@ -248,7 +271,7 @@ export const useResourcesRoot = <
       delete: (writeHandlers.delete
         ? writeHandlers.delete.mutate
         : noop) as unknown as MutateFunc<TApiResource["delete"]>,
-      setError,
+      setError: updateError,
     },
     states: {
       fetching: readHandler.fetchStatus === "fetching",

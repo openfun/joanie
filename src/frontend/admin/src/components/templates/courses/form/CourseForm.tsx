@@ -9,7 +9,6 @@ import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useIntl } from "react-intl";
-import { useSnackbar } from "notistack";
 import {
   Course,
   CourseFormValue,
@@ -39,7 +38,6 @@ interface Props {
 export function CourseForm({ course, ...props }: Props) {
   const intl = useIntl();
   const courses = useCourses({}, { enabled: false });
-  const { enqueueSnackbar } = useSnackbar();
 
   const relationToProductModal = useModal();
   const [editRelationToProduct, setEditRelationToProduct] =
@@ -95,7 +93,6 @@ export function CourseForm({ course, ...props }: Props) {
       courses.methods.update(payload, {
         onSuccess: (updatedCourse) => {
           props.afterSubmit?.(updatedCourse);
-          enqueueSnackbar("Success", { variant: "success" });
         },
         onError: (error) => updateFormError(error.data),
       });

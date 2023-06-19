@@ -13,6 +13,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
 import { SnackbarProvider } from "notistack";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { useTheme } from "@mui/material/styles";
 import createEmotionCache from "@/utils/createEmotionCache";
 import { DashboardLayout } from "@/layouts/dashboard/DashboardLayout";
 
@@ -31,6 +32,7 @@ interface MyAppProps extends AppProps {
 const clientSideEmotionCache = createEmotionCache();
 
 export default function App({ Component, pageProps }: MyAppProps) {
+  const theme = useTheme();
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -86,6 +88,9 @@ export default function App({ Component, pageProps }: MyAppProps) {
       <TranslationsProvider locale={LocalesEnum.ENGLISH}>
         <CacheProvider value={clientSideEmotionCache}>
           <SnackbarProvider
+            style={{
+              fontFamily: theme.typography.fontFamily,
+            }}
             maxSnack={3}
             anchorOrigin={{ horizontal: "right", vertical: "top" }}
           >

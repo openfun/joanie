@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import Grid from "@mui/material/Unstable_Grid2";
 import { useIntl } from "react-intl";
-import { useSnackbar } from "notistack";
 import Box from "@mui/material/Box";
 import { RHFProvider } from "@/components/presentational/hook-form/RHFProvider";
 import { RHFTextField } from "@/components/presentational/hook-form/RHFTextField";
@@ -36,7 +35,6 @@ interface Props {
 
 export function OrganizationForm(props: Props) {
   const intl = useIntl();
-  const snackbar = useSnackbar();
   const org = useOrganizations({}, { enabled: false });
 
   const getDefaultValues = () => {
@@ -64,18 +62,19 @@ export function OrganizationForm(props: Props) {
     genericUpdateFormError(errors, methods.setError);
   };
 
-  useEffect(() => {
-    if (org.states.error) {
-      snackbar.enqueueSnackbar(org.states.error, { variant: "error" });
-    }
-  }, [org.states.error]);
-
   const onSubmit = (values: FormValues): void => {
     const payload: DTOOrganization = {
       ...values,
       logo: values.logo?.[0],
       signature: values.signature?.[0],
     };
+
+    if (values.logo?.[0] === undefined) {
+      delete payload.logo;
+    }
+    if (values.signature?.[0] === undefined) {
+      delete payload.signature;
+    }
 
     if (props.organization) {
       payload.id = props.organization.id;
