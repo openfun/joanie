@@ -5,7 +5,6 @@ import IconButton from "@mui/material/IconButton";
 import classNames from "classnames";
 import MenuOpenIcon from "@mui/icons-material/MenuOpen";
 import styles from "./DashboardLayoutHeader.module.scss";
-import { NAVIGATION_WIDTH } from "@/layouts/dashboard/config";
 
 interface AppBarProps extends MuiAppBarProps {
   open?: boolean;
@@ -27,7 +26,7 @@ const AppBar = styled(MuiAppBar, {
       marginLeft: 0,
     },
     [theme.breakpoints.up("sm")]: {
-      width: `calc(100% - ${NAVIGATION_WIDTH}px)`,
+      width: `calc(100% - ${theme.navigation.width}px)`,
       marginLeft: `0px`,
     },
 
