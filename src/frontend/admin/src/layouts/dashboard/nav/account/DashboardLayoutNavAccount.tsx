@@ -45,10 +45,6 @@ export function DashboardLayoutNavAccount() {
       <DashboardNavItemsList
         subHeaderTitle={intl.formatMessage(messages.settingsSubHeader)}
       >
-        <DashboardNavItem
-          icon={<NotificationsIcon />}
-          title={intl.formatMessage(messages.notificationNav)}
-        />
         <Box
           sx={{
             display: "flex",
@@ -91,6 +87,10 @@ export function DashboardLayoutNavAccount() {
             <MenuItem onClick={handleCloseMenu}>My account</MenuItem>
           </Menu>
         </Box>
+        <DashboardNavItem
+          icon={<NotificationsIcon />}
+          title={intl.formatMessage(messages.notificationNav)}
+        />
       </DashboardNavItemsList>
     </Box>
   );
