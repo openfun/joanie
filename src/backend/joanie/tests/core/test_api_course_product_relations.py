@@ -83,6 +83,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             content["results"][0],
             {
                 "id": str(relation.id),
+                "max_validated_orders": 0,
                 "created_on": relation.created_on.isoformat().replace("+00:00", "Z"),
                 "course": {
                     "created_on": course.created_on.isoformat().replace("+00:00", "Z"),
@@ -245,7 +246,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         course = factories.CourseFactory()
         product = factories.ProductFactory(type=enums.PRODUCT_TYPE_CREDENTIAL)
         relation = factories.CourseProductRelationFactory(
-            course=course, product=product
+            course=course, product=product, max_validated_orders=2,
         )
         factories.UserCourseAccessFactory(user=user, course=course)
 
@@ -262,6 +263,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             content,
             {
                 "id": str(relation.id),
+                "max_validated_orders": 2,
                 "created_on": relation.created_on.isoformat().replace("+00:00", "Z"),
                 "course": {
                     "created_on": course.created_on.isoformat().replace("+00:00", "Z"),

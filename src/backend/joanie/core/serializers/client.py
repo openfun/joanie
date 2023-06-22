@@ -760,12 +760,14 @@ class CourseProductRelationSerializer(serializers.ModelSerializer):
         model = models.CourseProductRelation
         fields = [
             "id",
+            "max_validated_orders",
             "created_on",
             "course",
             "product",
         ]
         read_only_fields = [
             "id",
+            "max_validated_orders",
             "created_on",
             "course",
             "product",
