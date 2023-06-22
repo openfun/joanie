@@ -596,6 +596,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "price_currency",
             "target_courses",
             "title",
+            "description",
             "type",
         ]
         read_only_fields = [
@@ -607,6 +608,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "price_currency",
             "target_courses",
             "title",
+            "description",
             "type",
         ]
 

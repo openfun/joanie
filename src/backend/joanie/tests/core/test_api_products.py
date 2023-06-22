@@ -106,7 +106,13 @@ class ProductApiTest(BaseAPITestCase):
         self.assertEqual(
             response.json(),
             {
+                "id": str(product.id),
+                "type": product.type,
+                "title": product.title,
+                "description": product.description,
                 "call_to_action": product.call_to_action,
+                "price": float(product.price.amount),
+                "price_currency": str(product.price.currency),
                 "certificate_definition": {
                     "description": product.certificate_definition.description,
                     "name": product.certificate_definition.name,
@@ -120,9 +126,6 @@ class ProductApiTest(BaseAPITestCase):
                         "title": organization.title,
                     }
                 ],
-                "id": str(product.id),
-                "price": float(product.price.amount),
-                "price_currency": str(product.price.currency),
                 "target_courses": [
                     {
                         "code": target_course.code,
@@ -178,8 +181,6 @@ class ProductApiTest(BaseAPITestCase):
                         "product_target_relations__position"
                     )
                 ],
-                "title": product.title,
-                "type": product.type,
                 "orders": [],
             },
         )
@@ -402,6 +403,7 @@ class ProductApiTest(BaseAPITestCase):
             "price": 1337.00,
             "price_currency": "EUR",
             "title": "A lambda product",
+            "description": "A lambda product description",
             "call_to_action": "Purchase now!",
         }
 
@@ -424,6 +426,7 @@ class ProductApiTest(BaseAPITestCase):
             "price": 1337.00,
             "price_currency": "EUR",
             "title": "A lambda product",
+            "description": "A lambda product description",
             "call_to_action": "Purchase now!",
         }
 
@@ -447,6 +450,7 @@ class ProductApiTest(BaseAPITestCase):
             "price": 1337.00,
             "price_currency": "EUR",
             "title": "A lambda product",
+            "description": "A lambda product description",
             "call_to_action": "Purchase now!",
         }
 
@@ -467,6 +471,7 @@ class ProductApiTest(BaseAPITestCase):
             "price": 1337.00,
             "price_currency": "EUR",
             "title": "A lambda product",
+            "description": "A lambda product description",
             "call_to_action": "Purchase now!",
         }
 

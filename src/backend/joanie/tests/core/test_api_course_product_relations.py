@@ -117,16 +117,19 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "state": dict(course.state),
                 },
                 "product": {
+                    "id": str(relation.product.id),
+                    "type": relation.product.type,
+                    "title": relation.product.title,
+                    "description": relation.product.description,
                     "call_to_action": relation.product.call_to_action,
+                    "price": float(relation.product.price.amount),
+                    "price_currency": str(relation.product.price.currency),
                     "certificate_definition": {
                         "description": relation.product.certificate_definition.description,
                         "name": relation.product.certificate_definition.name,
                         "title": relation.product.certificate_definition.title,
                     },
                     "organizations": [],
-                    "id": str(relation.product.id),
-                    "price": float(relation.product.price.amount),
-                    "price_currency": str(relation.product.price.currency),
                     "target_courses": [
                         {
                             "code": target_course.code,
@@ -182,8 +185,6 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                             "product_target_relations__position"
                         )
                     ],
-                    "title": relation.product.title,
-                    "type": relation.product.type,
                     "orders": [],
                 },
             },
@@ -297,16 +298,19 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "state": dict(course.state),
                 },
                 "product": {
+                    "id": str(relation.product.id),
+                    "type": relation.product.type,
+                    "title": relation.product.title,
+                    "description": relation.product.description,
                     "call_to_action": relation.product.call_to_action,
+                    "price": float(relation.product.price.amount),
+                    "price_currency": str(relation.product.price.currency),
                     "certificate_definition": {
                         "description": relation.product.certificate_definition.description,
                         "name": relation.product.certificate_definition.name,
                         "title": relation.product.certificate_definition.title,
                     },
                     "organizations": [],
-                    "id": str(relation.product.id),
-                    "price": float(relation.product.price.amount),
-                    "price_currency": str(relation.product.price.currency),
                     "target_courses": [
                         {
                             "code": target_course.code,
@@ -362,8 +366,6 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                             "product_target_relations__position"
                         )
                     ],
-                    "title": relation.product.title,
-                    "type": relation.product.type,
                     "orders": [],
                 },
             },
