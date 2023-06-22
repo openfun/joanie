@@ -590,27 +590,41 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = [
             "call_to_action",
             "certificate_definition",
+            "description",
             "id",
             "organizations",
             "price",
             "price_currency",
             "target_courses",
             "title",
-            "description",
             "type",
         ]
         read_only_fields = [
             "call_to_action",
             "certificate_definition",
+            "description",
             "id",
             "organizations",
             "price",
             "price_currency",
             "target_courses",
             "title",
-            "description",
             "type",
         ]
+
+    def get_course_relation(self, instance):
+        """
+        Return the course relation for the current product instance.
+        """
+        try:
+            return instance.annotated_course_relations[0]
+        except AttributeError:
+            if self.context.get("course_code"):
+                return models.CourseProductRelation.objects.get(
+                    course__code=self.context["course_code"], product=instance
+                )
+
+        return None
 
     def get_target_courses(self, product):
         """
@@ -630,15 +644,8 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def get_organizations(self, instance):
         """Get related organizations when in the context of a course."""
-        try:
-            organizations = instance.annotated_course_relations[0].organizations.all()
-        except AttributeError:
-            if self.context.get("course_code"):
-                organizations = models.CourseProductRelation.objects.get(
-                    course__code=self.context["course_code"], product=instance
-                ).organizations.all()
-            else:
-                organizations = []
+        relation = self.get_course_relation(instance)
+        organizations = relation.organizations.all() if relation else []
 
         return OrganizationSerializer(
             organizations,
@@ -675,6 +682,26 @@ class ProductSerializer(serializers.ModelSerializer):
             **filters,
         ).values_list("pk", flat=True)
 
+    def get_remaining_order_count(self, instance):
+        """
+        Process the remaining order count for the current product.
+        If there is no limit, return None.
+        """
+        relation = self.get_course_relation(instance)
+        max_validated_orders = relation.max_validated_orders if relation else 0
+
+        if max_validated_orders == 0:
+            return None
+
+        orders_count = models.Order.objects.filter(
+            state__in=(enums.ORDER_STATE_VALIDATED, enums.ORDER_STATE_PENDING),
+            product=instance,
+            course__code=self.context.get("course_code"),
+        ).count()
+
+        remaining_order_count = max_validated_orders - orders_count
+        return remaining_order_count if remaining_order_count >= 0 else 0
+
     def to_representation(self, instance):
         """
         Cache the serializer representation that does not vary from user to user
@@ -695,7 +722,11 @@ class ProductSerializer(serializers.ModelSerializer):
                 settings.JOANIE_ANONYMOUS_SERIALIZER_DEFAULT_CACHE_TTL,
             )
 
+        # Then insert not cached information
         representation["orders"] = self.get_orders(instance)
+        representation["remaining_order_count"] = self.get_remaining_order_count(
+            instance
+        )
 
         return representation
 

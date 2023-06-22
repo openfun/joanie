@@ -124,6 +124,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "call_to_action": relation.product.call_to_action,
                     "price": float(relation.product.price.amount),
                     "price_currency": str(relation.product.price.currency),
+                    "remaining_order_count": None,
                     "certificate_definition": {
                         "description": relation.product.certificate_definition.description,
                         "name": relation.product.certificate_definition.name,
@@ -247,7 +248,9 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         course = factories.CourseFactory()
         product = factories.ProductFactory(type=enums.PRODUCT_TYPE_CREDENTIAL)
         relation = factories.CourseProductRelationFactory(
-            course=course, product=product, max_validated_orders=2,
+            course=course,
+            product=product,
+            max_validated_orders=2,
         )
         factories.UserCourseAccessFactory(user=user, course=course)
 
@@ -305,6 +308,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "call_to_action": relation.product.call_to_action,
                     "price": float(relation.product.price.amount),
                     "price_currency": str(relation.product.price.currency),
+                    "remaining_order_count": None,
                     "certificate_definition": {
                         "description": relation.product.certificate_definition.description,
                         "name": relation.product.certificate_definition.name,

@@ -1,4 +1,5 @@
 """Test suite for the Product API"""
+import random
 from unittest import mock
 
 from djmoney.money import Money
@@ -97,7 +98,7 @@ class ProductApiTest(BaseAPITestCase):
             course=course, product=product, organizations=[organization]
         )
 
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             response = self.client.get(
                 f"/api/v1.0/products/{product.id}/?course={course.code}"
             )
@@ -113,6 +114,7 @@ class ProductApiTest(BaseAPITestCase):
                 "call_to_action": product.call_to_action,
                 "price": float(product.price.amount),
                 "price_currency": str(product.price.currency),
+                "remaining_order_count": None,
                 "certificate_definition": {
                     "description": product.certificate_definition.description,
                     "name": product.certificate_definition.name,
@@ -187,7 +189,7 @@ class ProductApiTest(BaseAPITestCase):
 
         # Product response should have been cached,
         # so db queries should be reduced if we request the resource again.
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(2):
             response = self.client.get(
                 f"/api/v1.0/products/{product.id}/?course={course.code}"
             )
@@ -195,7 +197,7 @@ class ProductApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, 200)
 
         # But cache should be language sensitive
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(8):
             response = self.client.get(
                 f"/api/v1.0/products/{product.id}/?course={course.code}",
                 HTTP_ACCEPT_LANGUAGE="fr-fr",
@@ -203,7 +205,7 @@ class ProductApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, 200)
 
-    def test_api_product_detail_with_pending_order(self):
+    def test_api_product_read_detail_with_pending_order(self):
         """
         An authenticated user with a pending order related to the product resource
         should get the order id within the response
@@ -218,7 +220,7 @@ class ProductApiTest(BaseAPITestCase):
 
         self.assertEqual(order.state, "pending")
 
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
             response = self.client.get(
                 f"/api/v1.0/products/{product.id}/?course={course.code}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -228,7 +230,7 @@ class ProductApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertListEqual(content["orders"], [str(order.id)])
 
-    def test_api_product_detail_with_validated_order(self):
+    def test_api_product_read_detail_with_validated_order(self):
         """
         An authenticated user with a validated order related to the product resource
         should get the order id within the response
@@ -245,7 +247,7 @@ class ProductApiTest(BaseAPITestCase):
 
         self.assertEqual(order.state, "validated")
 
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
             response = self.client.get(
                 f"/api/v1.0/products/{product.id}/?course={course.code}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -255,7 +257,7 @@ class ProductApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertListEqual(content["orders"], [str(order.id)])
 
-    def test_api_product_detail_with_cancel_order(self):
+    def test_api_product_read_detail_with_cancel_order(self):
         """
         An authenticated user with a canceled order related to the product resource
         should not get the order id within the response
@@ -274,7 +276,7 @@ class ProductApiTest(BaseAPITestCase):
 
         self.assertEqual(order.state, "canceled")
 
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
             response = self.client.get(
                 f"/api/v1.0/products/{product.id}/?course={course.code}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -283,6 +285,97 @@ class ProductApiTest(BaseAPITestCase):
         content = response.json()
         self.assertEqual(response.status_code, 200)
         self.assertListEqual(content["orders"], [])
+
+    def test_api_product_read_detail_remaining_order_count_not_limited(self):
+        """
+        When a product has no limit on the number of orders,
+        the remaining order count should be None.
+        """
+        course = factories.CourseFactory()
+        product = factories.ProductFactory(
+            courses=[],
+            type=enums.PRODUCT_TYPE_CREDENTIAL,
+            price=Money(0.00, "EUR"),
+        )
+        factories.CourseProductRelationFactory(
+            product=product,
+            course=course,
+            max_validated_orders=0,
+        )
+
+        with self.assertNumQueries(5):
+            response = self.client.get(
+                f"/api/v1.0/products/{product.id}/?course={course.code}",
+            )
+
+        content = response.json()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(content["remaining_order_count"], None)
+
+    def test_api_product_read_detail_remaining_order_count_not_reached(self):
+        """
+        When a product has a limit on the number of orders and this limit is not
+        reached, the remaining order count should be equal to the difference between
+        this limit and the active order count.
+        """
+        course = factories.CourseFactory()
+        product = factories.ProductFactory(
+            courses=[],
+            type=enums.PRODUCT_TYPE_CREDENTIAL,
+            price=Money(0.00, "EUR"),
+        )
+        factories.CourseProductRelationFactory(
+            product=product,
+            course=course,
+            max_validated_orders=3,
+        )
+
+        # Create 2 order, 1 canceled and 1 considered as active
+        factories.OrderFactory(product=product, state=enums.ORDER_STATE_CANCELED)
+        factories.OrderFactory(
+            product=product,
+            state=random.choice(
+                [enums.ORDER_STATE_PENDING, enums.ORDER_STATE_VALIDATED]
+            ),
+        )
+
+        response = self.client.get(
+            f"/api/v1.0/products/{product.id}/?course={course.code}",
+        )
+
+        content = response.json()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(content["remaining_order_count"], 2)
+
+    def test_api_product_read_detail_remaining_order_count_reached(self):
+        """
+        When a product has a limit on the number of orders and this limit is reached,
+        the remaining order count should be equal 0.
+        """
+        course = factories.CourseFactory()
+        product = factories.ProductFactory(
+            courses=[],
+            type=enums.PRODUCT_TYPE_CREDENTIAL,
+            price=Money(0.00, "EUR"),
+        )
+        factories.CourseProductRelationFactory(
+            product=product,
+            course=course,
+            max_validated_orders=3,
+        )
+
+        # Create too much orders, to reach the product maximum order count limit
+        factories.OrderFactory.create_batch(
+            4, product=product, state=enums.ORDER_STATE_VALIDATED
+        )
+
+        response = self.client.get(
+            f"/api/v1.0/products/{product.id}/?course={course.code}",
+        )
+
+        content = response.json()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(content["remaining_order_count"], 0)
 
     def test_api_product_filtered_by_an_invalid_course(self):
         """
@@ -319,7 +412,7 @@ class ProductApiTest(BaseAPITestCase):
             factories.OrganizationFactory()
         )
 
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             response = self.client.get(
                 f"/api/v1.0/products/{product.id}/?course={course2.code}"
             )
@@ -353,7 +446,7 @@ class ProductApiTest(BaseAPITestCase):
 
         # If user request product only and filter to the first course,
         # it should get only one order into orders property
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
             response = self.client.get(
                 f"/api/v1.0/products/{product.id}/?course={courses[0].code}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",

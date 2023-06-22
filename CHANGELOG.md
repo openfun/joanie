@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Add `remaining_order_count` property to CourseProductRelation model
 - Add `max_validated_orders` field to CourseProductRelation model
 - Add api endpoint to retrieve course product relations
 - Add `get_selling_organizations` method to Course model
