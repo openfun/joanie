@@ -74,6 +74,16 @@ organization_related_router.register(
     api_client.OrganizationAccessViewSet,
     basename="organization_accesses",
 )
+organization_related_router.register(
+    "course-product-relations",
+    api_client.CourseProductRelationViewSet,
+    basename="course_product_relations_per_organization",
+)
+organization_related_router.register(
+    "courses",
+    api_client.CourseViewSet,
+    basename="course_per_organization",
+)
 
 # 2) Admin API
 admin_router = DefaultRouter()
