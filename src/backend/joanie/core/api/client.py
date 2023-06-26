@@ -58,7 +58,15 @@ class CourseRunViewSet(
 class CourseProductRelationViewSet(
     mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet
 ):
-    """API ViewSet for all interactions with course-product relations."""
+    """
+    API ViewSet for all interactions with course-product relations.
+    Can be accessed through multiple URLs
+    GET /courses/
+        Return all courses the user has access to
+    GET /organizations/<organization_id>/courses/
+        Return all courses from the specified organization if user
+        has access to the organization
+    """
 
     lookup_field = "id"
     permission_classes = [permissions.IsAuthenticated]
@@ -75,10 +83,16 @@ class CourseProductRelationViewSet(
             if self.request.auth
             else self.request.user.username
         )
-
-        return models.CourseProductRelation.objects.filter(
-            course__accesses__user__username=username
-        ).select_related("course", "product")
+        queryset = models.CourseProductRelation.objects
+        organization_id = self.kwargs.get("organization_id", None)
+        if organization_id:
+            queryset = queryset.filter(
+                organizations__id=organization_id,
+                organizations__accesses__user__username=username,
+            )
+        else:
+            queryset = queryset.filter(course__accesses__user__username=username)
+        return queryset.select_related("course", "product")
 
 
 class ProductViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
@@ -711,6 +725,15 @@ class CourseViewSet(
         user_role_query = models.CourseAccess.objects.filter(
             user__username=username, course=OuterRef("pk")
         ).values("role")[:1]
-        return models.Course.objects.filter(accesses__user__username=username).annotate(
-            user_role=Subquery(user_role_query)
+        courses = models.Course.objects
+        organization_id = self.kwargs.get("organization_id", None)
+        if organization_id:
+            courses = courses.filter(
+                organizations__id=organization_id,
+                organizations__accesses__user__username=username,
+            )
+        else:
+            courses = courses.filter(accesses__user__username=username)
+        return courses.annotate(user_role=Subquery(user_role_query)).prefetch_related(
+            "organizations", "products", "course_runs"
         )

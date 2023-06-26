@@ -38,7 +38,7 @@ class CourseApiTest(BaseAPITestCase):
         factories.UserCourseAccessFactory(user=user, course=courses[0])
         factories.UserCourseAccessFactory(user=user, course=courses[1])
 
-        with self.assertNumQueries(16):
+        with self.assertNumQueries(9):
             response = self.client.get(
                 "/api/v1.0/courses/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -218,7 +218,7 @@ class CourseApiTest(BaseAPITestCase):
             organizations=factories.OrganizationFactory.create_batch(2),
         )
 
-        with self.assertNumQueries(10):
+        with self.assertNumQueries(8):
             response = self.client.get(
                 f"/api/v1.0/courses/{course.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
