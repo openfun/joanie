@@ -2,16 +2,42 @@
 Payment application admin
 """
 from django.contrib import admin
+from django.contrib.admin.options import csrf_protect_m
 from django.urls import reverse
 from django.utils.html import format_html
+from django.utils.translation import gettext_lazy as _
+
+from admin_auto_filters.filters import AutocompleteFilter
 
 from . import enums, models
+
+
+class InvoiceFilter(AutocompleteFilter):
+    """Filter on an "invoice" foreign key."""
+
+    title = _("Invoice")
+    field_name = "invoice"
+
+
+class RequiredOwnerFilter(AutocompleteFilter):
+    """Filter on an "owner" foreign key."""
+
+    title = _("Owner")
+    field_name = "owner"
+
+    def queryset(self, request, queryset):
+        """Don't return any results until a value is selected in the filter."""
+        if self.value():
+            return super().queryset(request, queryset)
+
+        return super().queryset(request, queryset).none()
 
 
 @admin.register(models.Invoice)
 class InvoiceAdmin(admin.ModelAdmin):
     """Admin class for the Invoice model."""
 
+    autocomplete_fields = ["order", "parent"]
     list_display = ("type", "reference", "recipient_name", "total", "balance")
     readonly_fields = (
         "balance",
@@ -24,6 +50,7 @@ class InvoiceAdmin(admin.ModelAdmin):
         "type",
         "updated_on",
     )
+    search_fields = ["reference", "recipient_name", "parent__reference"]
     fieldsets = (
         (
             None,
@@ -122,7 +149,9 @@ class InvoiceAdmin(admin.ModelAdmin):
 class TransactionAdmin(admin.ModelAdmin):
     """Admin class for the transaction model."""
 
+    autocomplete_fields = ["invoice"]
     list_display = ("reference", "total", "created_on")
+    list_filter = [InvoiceFilter]
 
     def get_readonly_fields(self, request, obj=None):
         """Return readonly fields according if obj exists or not."""
@@ -136,7 +165,10 @@ class TransactionAdmin(admin.ModelAdmin):
 class CreditCardAdmin(admin.ModelAdmin):
     """Admin class for the credit card model."""
 
+    autocomplete_fields = ["owner"]
     list_display = ("owner", "title", "numbers", "expiration_date", "is_main")
+    list_filter = [RequiredOwnerFilter, "is_main"]
+    list_select_related = ["owner"]
 
     @staticmethod
     def numbers(credit_card):
@@ -153,3 +185,13 @@ class CreditCardAdmin(admin.ModelAdmin):
         """
 
         return f"{credit_card.expiration_month:02d}/{credit_card.expiration_year:02d}"
+
+    @csrf_protect_m
+    def changelist_view(self, request, extra_context=None):
+        """
+        Add instruction to explain that, due to the RequiredOwnerFilter, no results will be
+        shown until the view is filtered for a specific owner.
+        """
+        extra_context = extra_context or {}
+        extra_context["subtitle"] = _("To get results, choose an owner on the right")
+        return super().changelist_view(request, extra_context=extra_context)

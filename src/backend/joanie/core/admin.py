@@ -3,6 +3,7 @@ Core application admin
 """
 
 from django.contrib import admin, messages
+from django.contrib.admin.options import csrf_protect_m
 from django.contrib.auth import admin as auth_admin
 from django.http import HttpResponseRedirect
 from django.urls import re_path, reverse
@@ -10,6 +11,7 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import ngettext_lazy
 
+from admin_auto_filters.filters import AutocompleteFilter
 from adminsortable2.admin import SortableAdminBase, SortableInlineAdminMixin
 from django_object_actions import DjangoObjectActions, takes_instance_or_queryset
 from parler.admin import TranslatableAdmin
@@ -41,6 +43,72 @@ def summarize_certification_to_user(request, count):
         )
 
 
+# Admin filters
+
+
+class RequiredFilterMixin:
+    """Make filter required ie don't show any results until it has a value."""
+
+    def queryset(self, request, queryset):
+        """Don't return any results until a value is selected in the filter."""
+        if self.value():
+            return super().queryset(request, queryset)
+
+        return super().queryset(request, queryset).none()
+
+
+class CourseFilter(AutocompleteFilter):
+    """Filter on a "course" foreign key."""
+
+    title = _("Course")
+    field_name = "course"
+
+
+class ProductFilter(AutocompleteFilter):
+    """Filter on a "product" foreign key."""
+
+    title = _("Product")
+    field_name = "product"
+
+
+class OrganizationFilter(AutocompleteFilter):
+    """Filter on an "organization" foreign key."""
+
+    title = _("Organization")
+    field_name = "organization"
+
+
+class OwnerFilter(AutocompleteFilter):
+    """Filter on an "owner" foreign key."""
+
+    title = _("Owner")
+    field_name = "owner"
+
+
+class RequiredOwnerFilter(RequiredFilterMixin, AutocompleteFilter):
+    """Required filter on an "owner" foreign key."""
+
+    title = _("Owner")
+    field_name = "owner"
+
+
+class RequiredUserFilter(RequiredFilterMixin, AutocompleteFilter):
+    """Required filter on an "user" foreign key."""
+
+    title = _("User")
+    field_name = "user"
+
+
+class CourseRunFilter(AutocompleteFilter):
+    """Filter on a "course_run" foreign key."""
+
+    title = _("Course run")
+    field_name = "course_run"
+
+
+# Admin registers
+
+
 @admin.register(models.CertificateDefinition)
 class CertificateDefinitionAdmin(TranslatableAdmin):
     """Admin class for the CertificateDefinition model"""
@@ -66,6 +134,7 @@ class CourseProductRelationInline(admin.StackedInline):
     form = forms.CourseProductRelationAdminForm
     model = models.Course.products.through
     extra = 0
+    autocomplete_fields = ["product"]
 
 
 class CourseCourseRunsInline(admin.TabularInline):
@@ -102,6 +171,7 @@ class CourseAdmin(DjangoObjectActions, TranslatableAdmin):
     """Admin class for the Course model"""
 
     actions = (ACTION_NAME_GENERATE_CERTIFICATES,)
+    autocomplete_fields = ["organizations"]
     change_actions = (ACTION_NAME_GENERATE_CERTIFICATES,)
     change_form_template = "joanie/admin/translatable_change_form_with_actions.html"
     list_display = ("code", "title", "state")
@@ -127,6 +197,7 @@ class CourseAdmin(DjangoObjectActions, TranslatableAdmin):
             },
         ),
     )
+    search_fields = ["code", "title"]
 
     @takes_instance_or_queryset
     def generate_certificates(self, request, queryset):  # pylint: disable no-self-use
@@ -145,16 +216,8 @@ class CourseAdmin(DjangoObjectActions, TranslatableAdmin):
 class CourseRunAdmin(TranslatableAdmin):
     """Admin class for the CourseRun model"""
 
-    list_display = (
-        "title",
-        "resource_link",
-        "start",
-        "end",
-        "state",
-        "is_gradable",
-        "is_listed",
-    )
-    readonly_fields = ("id",)
+    actions = ("mark_as_gradable",)
+    autocomplete_fields = ["course"]
     fieldsets = (
         (
             _("Main information"),
@@ -175,7 +238,18 @@ class CourseRunAdmin(TranslatableAdmin):
             },
         ),
     )
-    actions = ("mark_as_gradable",)
+    list_display = (
+        "title",
+        "resource_link",
+        "start",
+        "end",
+        "state",
+        "is_gradable",
+        "is_listed",
+    )
+    list_filter = [CourseFilter, "is_gradable", "is_listed"]
+    readonly_fields = ("id",)
+    search_fields = ["resource_link", "title", "course__code", "course__title"]
 
     @admin.action(description=_("Mark course run as gradable"))
     def mark_as_gradable(self, request, queryset):  # pylint: disable=no-self-use
@@ -188,6 +262,7 @@ class OrganizationAdmin(TranslatableAdmin):
     """Admin class for the Organization model"""
 
     list_display = ("code", "title")
+    search_fields = ["code", "title"]
 
 
 @admin.register(models.User)
@@ -232,6 +307,7 @@ class UserAdmin(auth_admin.UserAdmin):
 class ProductTargetCourseRelationInline(SortableInlineAdminMixin, admin.TabularInline):
     """Admin class for the ProductTargetCourseRelation model"""
 
+    autocomplete_fields = ["course"]
     form = forms.ProductTargetCourseRelationAdminForm
     model = models.Product.target_courses.through
     extra = 0
@@ -264,14 +340,15 @@ class ProductAdmin(
             },
         ),
     )
-
     inlines = (ProductTargetCourseRelationInline,)
+    list_filter = ["type"]
     readonly_fields = (
         "id",
         "related_courses",
     )
     actions = (ACTION_NAME_GENERATE_CERTIFICATES,)
     change_actions = (ACTION_NAME_GENERATE_CERTIFICATES,)
+    search_fields = ["title"]
 
     def get_change_actions(self, request, object_id, form_url):
         """
@@ -385,10 +462,13 @@ class ProductAdmin(
 class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
     """Admin class for the Order model"""
 
-    list_display = ("id", "organization", "owner", "product", "state")
-    readonly_fields = ("state", "total", "invoice", "certificate")
-    change_actions = (ACTION_NAME_GENERATE_CERTIFICATES,)
     actions = (ACTION_NAME_CANCEL, ACTION_NAME_GENERATE_CERTIFICATES)
+    autocomplete_fields = ["course", "organization", "owner", "product"]
+    change_actions = (ACTION_NAME_GENERATE_CERTIFICATES,)
+    list_display = ("id", "organization", "owner", "product", "state")
+    list_filter = [OwnerFilter, OrganizationFilter, ProductFilter, "state"]
+    readonly_fields = ("state", "total", "invoice", "certificate")
+    search_fields = ["course__title", "organization__title"]
 
     @admin.action(description=_("Cancel selected orders"))
     def cancel(self, request, queryset):  # pylint: disable=no-self-use
@@ -424,13 +504,27 @@ class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
 class EnrollmentAdmin(admin.ModelAdmin):
     """Admin class for the Enrollment model"""
 
+    autocomplete_fields = ["course_run", "user"]
     list_display = ("user", "course_run", "state")
+    list_filter = [RequiredUserFilter, CourseRunFilter, "state"]
+    list_select_related = ("user", "course_run")
+
+    @csrf_protect_m
+    def changelist_view(self, request, extra_context=None):
+        """
+        Add instruction to explain that, due to the RequiredUserFilter, no results will be
+        shown until the view is filtered for a specific user.
+        """
+        extra_context = extra_context or {}
+        extra_context["subtitle"] = _("To get results, choose a user on the right")
+        return super().changelist_view(request, extra_context=extra_context)
 
 
 @admin.register(models.Address)
 class AddressAdmin(admin.ModelAdmin):
     """Admin class for the Address model"""
 
+    autocomplete_fields = ["owner"]
     list_display = (
         "title",
         "full_name",
@@ -441,3 +535,16 @@ class AddressAdmin(admin.ModelAdmin):
         "is_main",
         "owner",
     )
+    list_filter = [RequiredOwnerFilter, "is_main"]
+    list_select_related = ["owner"]
+    search_fields = ["title", "first_name", "last_name", "address", "postcode", "city"]
+
+    @csrf_protect_m
+    def changelist_view(self, request, extra_context=None):
+        """
+        Add instruction to explain that, due to the RequiredOwnerFilter, no results will be
+        shown until the view is filtered for a specific owner.
+        """
+        extra_context = extra_context or {}
+        extra_context["subtitle"] = _("To get results, choose an owner on the right")
+        return super().changelist_view(request, extra_context=extra_context)
