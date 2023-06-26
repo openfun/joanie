@@ -181,6 +181,7 @@ class Base(Configuration):
         "django.contrib.messages",
         "django.contrib.staticfiles",
         # Third party apps
+        "admin_auto_filters",
         "django_object_actions",
         "django_fsm",
         "adminsortable2",
