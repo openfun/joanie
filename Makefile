@@ -190,7 +190,7 @@ migrate:  ## run django migrations for the joanie project.
 
 superuser: ## Create an admin superuser with password "admin"
 	@echo "$(BOLD)Creating a Django superuser$(RESET)"
-	@$(MANAGE) shell -c "from joanie.core.models import User; not User.objects.filter(username='admin').exists() and User.objects.create_superuser('admin', 'admin@example.com', 'admin')"
+	@$(MANAGE) createsuperuser --username admin --email admin@example.com --no-input
 .PHONY: superuser
 
 back-i18n-compile: ## compile the gettext files
