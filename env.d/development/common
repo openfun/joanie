@@ -1,7 +1,8 @@
 # Django
-DJANGO_SETTINGS_MODULE=joanie.settings
-DJANGO_SECRET_KEY=ThisIsAnExampleKeyForDevPurposeOnly
 DJANGO_ALLOWED_HOSTS=*
+DJANGO_SECRET_KEY=ThisIsAnExampleKeyForDevPurposeOnly
+DJANGO_SETTINGS_MODULE=joanie.settings
+DJANGO_SUPERUSER_PASSWORD=admin
 
 # Python
 PYTHONPATH=/app/src/backend
