@@ -551,13 +551,6 @@ class CourseProductRelation(BaseModel):
         related_name="product_relations",
         verbose_name=_("organizations"),
     )
-    max_validated_orders = models.PositiveSmallIntegerField(
-        default=0,
-        verbose_name=_("max validated orders"),
-        help_text=_(
-            "The maximum amount of orders that can be validated for a given product"
-        ),
-    )
 
     class Meta:
         db_table = "joanie_course_product_relation"
@@ -611,6 +604,16 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
             "If checked the course run will be included in the list of course runs "
             "available for enrollment on the related course page."
         ),
+    )
+    max_enrollments = models.PositiveSmallIntegerField(
+        verbose_name=_("max enrollments"),
+        default=0,
+        help_text=_("Maximum number of enrollments for this course run"),
+    )
+    enrollment_count = models.PositiveSmallIntegerField(
+        verbose_name=_("enrollment count"),
+        default=0,
+        help_text=_("Number of enrollments associated to this course run"),
     )
 
     class Meta:

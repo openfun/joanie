@@ -199,6 +199,7 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
 
     course = factory.SubFactory(CourseFactory)
     title = factory.Sequence(lambda n: f"Course run {n}")
+    max_enrollments = 0
 
     # pylint: disable=no-self-use
     @factory.lazy_attribute

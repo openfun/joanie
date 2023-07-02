@@ -3,10 +3,12 @@
 import json
 import random
 import uuid
+from datetime import timedelta
 from io import BytesIO
 from unittest import mock
 
 from django.core.cache import cache
+from django.utils import timezone
 
 from djmoney.money import Money
 from pdfminer.high_level import extract_text as pdf_extract_text
@@ -29,6 +31,25 @@ class OrderApiTest(BaseAPITestCase):
     def setUp(self):
         """Clear cache after each tests"""
         cache.clear()
+
+    def create_opened_course_run(self, count=1, **kwargs):
+        """Create course runs opened for enrollment."""
+        now = timezone.now()
+        if count > 1:
+            return factories.CourseRunFactory.create_batch(
+                count,
+                start=now - timedelta(hours=1),
+                end=now + timedelta(hours=2),
+                enrollment_end=now + timedelta(hours=1),
+                **kwargs,
+            )
+
+        return factories.CourseRunFactory(
+            start=now - timedelta(hours=1),
+            end=now + timedelta(hours=2),
+            enrollment_end=now + timedelta(hours=1),
+            **kwargs,
+        )
 
     def test_api_order_read_list_anonymous(self):
         """It should not be possible to retrieve the list of orders for anonymous users."""
@@ -1260,7 +1281,7 @@ class OrderApiTest(BaseAPITestCase):
             "billing_address": billing_address,
         }
 
-        with self.assertNumQueries(20):
+        with self.assertNumQueries(22):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -1843,31 +1864,135 @@ class OrderApiTest(BaseAPITestCase):
         mock_abort_payment.assert_called_once_with(payment_id)
         self.assertIsNone(cache.get(payment_id))
 
-    def test_api_order_create_too_many_orders(self):
+    def test_api_order_create_under_enrollment_limit(self):
         """
-        The number of allowed orders on a product should not be above the limit
-        set by max_validated_orders
+        Any authenticated user should be able to create an order.
         """
-        user = factories.UserFactory()
-        course = factories.CourseFactory()
-        product = factories.ProductFactory()
-        relation = factories.CourseProductRelationFactory(
-            course=course,
-            product=product,
-            organizations=factories.OrganizationFactory.create_batch(2),
-            max_validated_orders=1,
+
+        users = factories.UserFactory.create_batch(3)
+        tokens = [self.generate_token_from_user(user) for user in users]
+        target_course = factories.CourseFactory.create()
+        self.create_opened_course_run(max_enrollments=2, course=target_course)
+        product = factories.ProductFactory(
+            target_courses=[target_course], price=Money(0.00, "EUR")
         )
-        billing_address = BillingAddressDictFactory()
-        factories.OrderFactory(product=product, course=course)
+        course = product.courses.first()
+        organization = product.course_relations.first().organizations.first()
+
         data = {
             "course": course.code,
-            "organization": str(relation.organizations.first().id),
+            "organization": str(organization.id),
             "product": str(product.id),
-            "billing_address": billing_address,
         }
-        token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(15):
+        with self.assertNumQueries(61):
+            response = self.client.post(
+                "/api/v1.0/orders/",
+                data=data,
+                content_type="application/json",
+                HTTP_AUTHORIZATION=f"Bearer {tokens[0]}",
+            )
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(models.Order.objects.count(), 1)
+        with self.assertNumQueries(61):
+            response = self.client.post(
+                "/api/v1.0/orders/",
+                data=data,
+                content_type="application/json",
+                HTTP_AUTHORIZATION=f"Bearer {tokens[1]}",
+            )
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(models.Order.objects.count(), 2)
+
+    def test_api_order_create_above_enrollment_limit(self):
+        """
+        Any authenticated user should be able to create an order.
+        """
+
+        users = factories.UserFactory.create_batch(3)
+        tokens = [self.generate_token_from_user(user) for user in users]
+        target_course = factories.CourseFactory.create()
+        self.create_opened_course_run(max_enrollments=2, course=target_course)
+        product = factories.ProductFactory(
+            target_courses=[target_course], price=Money(0.00, "EUR")
+        )
+        course = product.courses.first()
+        organization = product.course_relations.first().organizations.first()
+
+        data = {
+            "course": course.code,
+            "organization": str(organization.id),
+            "product": str(product.id),
+        }
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {tokens[0]}",
+        )
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {tokens[1]}",
+        )
+
+        with self.assertNumQueries(42):
+            response = self.client.post(
+                "/api/v1.0/orders/",
+                data=data,
+                content_type="application/json",
+                HTTP_AUTHORIZATION=f"Bearer {tokens[2]}",
+            )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json(),
+            (
+                {
+                    "__all__": [
+                        (
+                            "The related course run has already"
+                            " reached the maximum number of enrollments allowed."
+                        )
+                    ]
+                }
+            ),
+        )
+
+    def test_api_order_create_above_enrollment_limit_multiple_course_run(self):
+        """
+        Cannot create orders if there are no course runs with open slots
+        """
+
+        user = factories.UserFactory.create()
+        token = self.generate_token_from_user(user)
+        target_course = factories.CourseFactory.create()
+        course_runs = self.create_opened_course_run(
+            count=2, max_enrollments=1, course=target_course, is_listed=True
+        )
+        product = factories.ProductFactory(
+            target_courses=[target_course],
+            price=Money(0.00, "EUR"),
+            courses=[target_course],
+        )
+        organization = product.course_relations.first().organizations.first()
+
+        data = {
+            "course": target_course.code,
+            "organization": str(organization.id),
+            "product": str(product.id),
+        }
+
+        factories.EnrollmentFactory(
+            user=factories.UserFactory.create(), course_run=course_runs[0]
+        )
+        factories.EnrollmentFactory(
+            user=factories.UserFactory.create(), course_run=course_runs[1]
+        )
+
+        with self.assertNumQueries(16):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -1877,51 +2002,5 @@ class OrderApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.json(),
-            (
-                {
-                    "max_validated_orders": [
-                        f"Maximum number of orders reached for product {product.title}"
-                        f" and course {course.code}"
-                    ]
-                }
-            ),
+            ({"__all__": [("All course runs for this product are full")]}),
         )
-        self.assertEqual(
-            models.Order.objects.filter(course=course, product=product).count(), 1
-        )
-
-    def test_api_order_create_no_limit(self):
-        """
-        If max_validated_orders is set to 0, there should be no limit
-        to the number of orders
-        """
-        user = factories.UserFactory()
-        course = factories.CourseFactory()
-        product = factories.ProductFactory()
-        relation = factories.CourseProductRelationFactory(
-            course=course,
-            product=product,
-            organizations=factories.OrganizationFactory.create_batch(2),
-            max_validated_orders=0,
-        )
-        billing_address = BillingAddressDictFactory()
-        factories.OrderFactory.create_batch(size=100, product=product, course=course)
-        data = {
-            "course": course.code,
-            "organization": str(relation.organizations.first().id),
-            "product": str(product.id),
-            "billing_address": billing_address,
-        }
-        token = self.generate_token_from_user(user)
-
-        with self.assertNumQueries(20):
-            response = self.client.post(
-                "/api/v1.0/orders/",
-                data=data,
-                content_type="application/json",
-                HTTP_AUTHORIZATION=f"Bearer {token}",
-            )
-        self.assertEqual(
-            models.Order.objects.filter(product=product, course=course).count(), 101
-        )
-        self.assertEqual(response.status_code, 201)

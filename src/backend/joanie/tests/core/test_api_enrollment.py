@@ -8,6 +8,7 @@ from datetime import timedelta
 from logging import Logger
 from unittest import mock
 
+from django.core.exceptions import ValidationError
 from django.test.utils import override_settings
 from django.utils import timezone
 
@@ -1820,3 +1821,45 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "was_created_by_order": True,
             },
         )
+
+    def test_models_enrollment_create_under_limit(self):
+        """
+        Enrollment can be created if the max number
+        of enrollments on course has not been reached
+        and number of enrollment is updated
+        """
+        user = factories.UserFactory()
+        target_course = factories.CourseFactory()
+        course_run = self.create_opened_course_run(
+            max_enrollments=2, course=target_course
+        )
+        product = factories.ProductFactory(target_courses=[target_course], price="0.00")
+        factories.OrderFactory(owner=user, product=product)
+        self.assertEqual(
+            models.Enrollment.objects.filter(
+                course_run__id=course_run.id, user__id=user.id
+            ).count(),
+            1,
+        )
+        course_run.refresh_from_db()
+        self.assertEqual(course_run.enrollment_count, 1)
+        factories.OrderFactory(product=product)
+        course_run.refresh_from_db()
+        self.assertEqual(course_run.enrollment_count, 2)
+        models.Enrollment.objects.first().delete()
+        course_run.refresh_from_db()
+        self.assertEqual(course_run.enrollment_count, 1)
+
+    def test_models_enrollment_create_above_limit(self):
+        """
+        If the maximum number of enrollments on a course run has
+        been reached, creating new enrollment is impossible
+        """
+        users = factories.UserFactory.create_batch(2)
+        target_course = factories.CourseFactory()
+        self.create_opened_course_run(max_enrollments=2, course=target_course)
+        product = factories.ProductFactory(target_courses=[target_course], price="0.00")
+        for user in users:
+            factories.OrderFactory(owner=user, product=product)
+        with self.assertRaises(ValidationError):
+            factories.OrderFactory(product=product)

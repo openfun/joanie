@@ -437,21 +437,16 @@ class Order(BaseModel):
 
     def clean(self):
         """Clean instance fields and raise a ValidationError in case of issue."""
-        course_product_relation = (
-            courses_models.CourseProductRelation.objects.filter(
-                course=self.course_id,
-                product=self.product_id,
-                organizations=self.organization_id,
-            )
-            .only("max_validated_orders")
-            .first()
-        )
         if (
             not self.created_on
             and self.course_id
             and self.product_id
             and self.organization_id
-            and course_product_relation is None
+            and not courses_models.CourseProductRelation.objects.filter(
+                course=self.course_id,
+                product=self.product_id,
+                organizations=self.organization_id,
+            ).exists()
         ):
             # pylint: disable=no-member
             message = _(
@@ -459,36 +454,24 @@ class Order(BaseModel):
                 f'should be linked for organization "{self.organization.title}".'
             )
             raise ValidationError({"__all__": [message]})
-        if course_product_relation is not None:
-            max_validated_orders = course_product_relation.max_validated_orders
-        else:
-            max_validated_orders = 0
-        if max_validated_orders > 0:
-            annotation = (
-                Order.objects.filter(
-                    product=self.product,
-                    course=self.course,
-                    state__in=(enums.ORDER_STATE_VALIDATED, enums.ORDER_STATE_PENDING),
-                )
-                .annotate(
-                    orders_count=models.Count("id", distinct=True),
-                )
-                .values("orders_count")
-                .first()
-                or {}
-            )
-            validated_order_count = annotation.get("orders_count", 0)
-            if validated_order_count >= max_validated_orders:
-                # pylint: disable=no-member
-                message = _(
-                    f"Maximum number of orders reached for product {self.product.title}"
-                    f" and course {self.course.code}"
-                )
-                raise ValidationError({"max_validated_orders": [message]})
 
         if not self.created_on:
             self.total = self.product.price
-
+            courses_from_product = self.product.courses.filter(
+                course_runs__enrollment_end__gt=timezone.now()
+            )
+            if not courses_from_product.filter(course_runs__max_enrollments=0).exists():
+                courses_from_product = courses_from_product.aggregate(
+                    max_enrollments_total=models.Sum("course_runs__max_enrollments"),
+                    enrollment_count_total=models.Sum("course_runs__enrollment_count"),
+                )
+                if (
+                    courses_from_product["max_enrollments_total"] is not None
+                    and courses_from_product.get("enrollment_count_total", 0)
+                    >= courses_from_product["max_enrollments_total"]
+                ):
+                    message = _("All course runs for this product are full")
+                    raise ValidationError({"__all__": [message]})
         return super().clean()
 
     def save(self, *args, **kwargs):
@@ -881,6 +864,28 @@ class Enrollment(BaseModel):
                 )
                 raise ValidationError({"was_created_by_order": [message]})
 
+        # Forbids the creation of an enrollment if max number of enrollments for the
+        # course run has been reached
+        course_run_to_check = self.course_run
+        instance = None
+        if self.created_on:
+            instance = self.__class__.objects.get(pk=self.pk)
+            if instance.course_run.pk != self.course_run.pk:
+                course_run_to_check = instance.course_run
+        if (
+            (instance is None or self.course_run.pk != instance.course_run.pk)
+            and course_run_to_check.max_enrollments != 0
+            and course_run_to_check.enrollment_count
+            >= course_run_to_check.max_enrollments
+        ):
+            message = _(
+                (
+                    "The related course run has already reached the maximum "
+                    "number of enrollments allowed."
+                )
+            )
+            raise ValidationError({"__all__": [message]})
+
         return super().clean()
 
     def set(self):
@@ -913,4 +918,22 @@ class Enrollment(BaseModel):
         """Call full clean before saving instance."""
         self.full_clean()
         self.set()
+        if self.created_on:
+            instance = self.__class__.objects.get(pk=self.pk)
+            if instance.course_run.pk != self.course_run.pk:
+                instance.course_run.enrollment_count -= 1
+                instance.course_run.save()
+                self.course_run.enrollment_count += 1
+                self.course_run.save()
+        else:
+            self.course_run.enrollment_count += 1
+            self.course_run.save()
         models.Model.save(self, *args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        """
+        Remove self from course run enrollment count before deleting
+        """
+        self.course_run.enrollment_count -= 1
+        self.course_run.save()
+        models.Model.delete(self, *args, **kwargs)
