@@ -51,6 +51,7 @@ and this project adheres to
 
 ### Removed
 
+- Product API endpoint
 - Remove djmoney and Moneyfields
 - Badge providers now live in the obc python package
 - Remove unused `OrderLiteSerializer`
