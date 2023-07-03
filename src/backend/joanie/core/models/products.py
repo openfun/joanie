@@ -1,5 +1,5 @@
 """
-Declare and configure the models for the productorder_s part
+Declare and configure the models for the product / order part
 """
 import itertools
 import logging
@@ -19,7 +19,6 @@ import requests
 from django_fsm import FSMField, TransitionNotAllowed, transition
 from django_fsm.signals import post_transition
 from parler import models as parler_models
-from rest_framework.reverse import reverse
 from urllib3.util import Retry
 
 from joanie.core import enums
@@ -140,7 +139,8 @@ class Product(parler_models.TranslatableModel, BaseModel):
         an equivalent course run with null dates and hidden visibility.
         """
         site = Site.objects.get_current()
-        resource_path = reverse("products-detail", kwargs={"id": self.id})
+        # TODO : Migrate all course run normalization logic to the CourseProductRelation model
+        resource_path = f"/api/v1.0/products/{self.id}/"
         dates = self.get_equivalent_course_run_dates()
 
         return {
