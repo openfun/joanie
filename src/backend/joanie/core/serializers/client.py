@@ -1,5 +1,4 @@
 """Client serializers for Joanie Core app."""
-
 from django.conf import settings
 from django.core.cache import cache
 from django.utils.translation import get_language
@@ -320,98 +319,99 @@ class CourseRunSerializer(serializers.ModelSerializer):
         ]
 
 
-class TargetCourseSerializer(serializers.ModelSerializer):
+class CourseRunLightSerializer(serializers.ModelSerializer):
     """
-    Serialize all information about a target course.
+    Serialize all information about a course run
     """
-
-    course_runs = serializers.SerializerMethodField(read_only=True)
-    organizations = OrganizationSerializer(
-        many=True, read_only=True, exclude_abilities=True
-    )
-    position = serializers.SerializerMethodField(read_only=True)
-    is_graded = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
-        model = models.Course
+        model = models.CourseRun
         fields = [
-            "code",
-            "course_runs",
-            "is_graded",
-            "organizations",
-            "position",
+            "end",
+            "enrollment_end",
+            "enrollment_start",
+            "id",
+            "resource_link",
+            "start",
             "title",
+            "state",
         ]
         read_only_fields = [
-            "code",
-            "course_runs",
-            "is_graded",
-            "organizations",
-            "position",
+            "end",
+            "enrollment_end",
+            "enrollment_start",
+            "id",
+            "resource_link",
+            "start",
             "title",
+            "state",
         ]
 
-    @property
-    def context_resource(self):
-        """
-        Retrieve the product/order resource provided in context.
-        If no product/order is provided, it raises a ValidationError.
-        """
-        try:
-            resource = self.context["resource"]
-        except KeyError as exception:
-            raise serializers.ValidationError(
-                'TargetCourseSerializer context must contain a "resource" property.'
-            ) from exception
 
-        if not isinstance(resource, (models.Order, models.Product)):
-            raise serializers.ValidationError(
-                "TargetCourseSerializer context resource property must be instance of "
-                "Product or Order."
-            )
+class ProductTargetCourseRelationSerializer(serializers.ModelSerializer):
+    """
+    Serializer for ProductTargetCourseRelation model
+    """
 
-        return resource
+    position = serializers.IntegerField(read_only=True)
+    is_graded = serializers.BooleanField(read_only=True)
+    course_runs = serializers.SerializerMethodField("get_course_runs")
+    title = serializers.SerializerMethodField()
+    code = serializers.SerializerMethodField()
 
-    def get_target_course_relation(self, target_course):
-        """
-        Return the relevant target course relation depending on whether the resource context
-        is a product or an order.
-        """
-        if isinstance(self.context_resource, models.Order):
-            return target_course.order_relations.get(order=self.context_resource)
+    class Meta:
+        model = models.ProductTargetCourseRelation
+        fields = ("code", "course_runs", "is_graded", "position", "title")
+        read_only_fields = fields
 
-        if isinstance(self.context_resource, models.Product):
-            return target_course.product_target_relations.get(
-                product=self.context_resource
-            )
-
-        return None
-
-    def get_position(self, target_course):
-        """
-        Retrieve the position of the course related to its product/order relation
-        """
-        relation = self.get_target_course_relation(target_course)
-
-        return relation.position
-
-    def get_is_graded(self, target_course):
-        """
-        Retrieve the `is_graded` state of the course related to its product/order relation
-        """
-        relation = self.get_target_course_relation(target_course)
-
-        return relation.is_graded
-
-    def get_course_runs(self, target_course):
-        """
-        Return related course runs ordered by start date asc
-        """
-        course_runs = self.context_resource.target_course_runs.filter(
-            course=target_course
+    def get_course_runs(self, relation):
+        """Return all course runs for courses targeted by the product."""
+        queryset = relation.product.target_course_runs.filter(
+            course=relation.course
         ).order_by("start")
 
-        return CourseRunSerializer(course_runs, many=True).data
+        return CourseRunLightSerializer(queryset, many=True).data
+
+    def get_code(self, relation):
+        """Return the code of the targeted course"""
+        return relation.course.code
+
+    def get_title(self, relation):
+        """Return the title of the targeted course"""
+        return relation.course.title
+
+
+class OrderTargetCourseRelationSerializer(serializers.ModelSerializer):
+    """
+    Serializer for OrderTargetCourseRelation model
+    """
+
+    position = serializers.IntegerField(read_only=True)
+    is_graded = serializers.BooleanField(read_only=True)
+    course_runs = serializers.SerializerMethodField("get_course_runs")
+    title = serializers.SerializerMethodField()
+    code = serializers.SerializerMethodField()
+
+    class Meta:
+        model = models.OrderTargetCourseRelation
+        fields = ("code", "course_runs", "is_graded", "position", "title")
+        read_only_fields = fields
+
+    def get_course_runs(self, relation):
+        """Return all course runs targeted by the order."""
+        queryset = relation.order.target_course_runs.filter(
+            course=relation.course
+        ).order_by("start")
+
+        return CourseRunLightSerializer(queryset, many=True).data
+
+    def get_code(self, relation):
+        """Return the code of the targeted course"""
+        return relation.course.code
+
+    def get_title(self, relation):
+        """Return the title of the targeted course"""
+        return relation.course.title
 
 
 class EnrollmentSerializer(serializers.ModelSerializer):
@@ -531,7 +531,9 @@ class OrderSerializer(serializers.ModelSerializer):
         queryset=models.Product.objects.all(), slug_field="id"
     )
     enrollments = serializers.SerializerMethodField(read_only=True)
-    target_courses = serializers.SerializerMethodField(read_only=True)
+    target_courses = OrderTargetCourseRelationSerializer(
+        read_only=True, many=True, source="course_relations"
+    )
     main_invoice = serializers.SlugRelatedField(read_only=True, slug_field="reference")
     certificate = serializers.SlugRelatedField(read_only=True, slug_field="id")
 
@@ -565,17 +567,6 @@ class OrderSerializer(serializers.ModelSerializer):
             "total",
             "total_currency",
         ]
-
-    def get_target_courses(self, order):
-        """Compute the serialized value for the "target_courses" field."""
-        context = self.context.copy()
-        context["resource"] = order
-
-        return TargetCourseSerializer(
-            instance=order.target_courses.all().order_by("order_relations__position"),
-            many=True,
-            context=context,
-        ).data
 
     def get_enrollments(self, order):
         """
@@ -616,7 +607,6 @@ class ProductSerializer(serializers.ModelSerializer):
 
     id = serializers.CharField(read_only=True)
     certificate_definition = CertificationDefinitionSerializer(read_only=True)
-    organizations = serializers.SerializerMethodField("get_organizations")
     price = serializers.DecimalField(
         coerce_to_string=False,
         decimal_places=2,
@@ -624,8 +614,10 @@ class ProductSerializer(serializers.ModelSerializer):
         min_value=0,
         read_only=True,
     )
-    target_courses = serializers.SerializerMethodField(read_only=True)
     price_currency = serializers.SerializerMethodField(read_only=True)
+    target_courses = ProductTargetCourseRelationSerializer(
+        read_only=True, many=True, source="target_course_relations"
+    )
 
     class Meta:
         model = models.Product
@@ -633,9 +625,9 @@ class ProductSerializer(serializers.ModelSerializer):
             "call_to_action",
             "certificate_definition",
             "id",
-            "organizations",
             "price",
             "price_currency",
+            "state",
             "target_courses",
             "title",
             "type",
@@ -644,81 +636,17 @@ class ProductSerializer(serializers.ModelSerializer):
             "call_to_action",
             "certificate_definition",
             "id",
-            "organizations",
             "price",
             "price_currency",
+            "state",
             "target_courses",
             "title",
             "type",
         ]
 
-    def get_target_courses(self, product):
-        """
-        For the current product, retrieve its related courses.
-        """
-
-        context = self.context.copy()
-        context["resource"] = product
-
-        return TargetCourseSerializer(
-            instance=product.target_courses.all().order_by(
-                "product_target_relations__position"
-            ),
-            many=True,
-            context=context,
-        ).data
-
-    def get_organizations(self, instance):
-        """Get related organizations when in the context of a course."""
-        try:
-            organizations = instance.annotated_course_relations[0].organizations.all()
-        except AttributeError:
-            if self.context.get("course_code"):
-                organizations = models.CourseProductRelation.objects.get(
-                    course__code=self.context["course_code"], product=instance
-                ).organizations.all()
-            else:
-                organizations = []
-
-        return OrganizationSerializer(
-            organizations,
-            context={"request": self.context.get("request")},
-            exclude_abilities=True,
-            many=True,
-            read_only=True,
-        ).data
-
-    def get_orders(self, instance):
-        """
-        If a user is authenticated, it retrieves valid or pending orders related to the
-        product instance. If a course code has been provided through query
-        parameters, orders are also filtered by course.
-        """
-        request = self.context["request"]
-        username = (
-            request.auth["username"]
-            if request.auth
-            else (request.user.username if request.user.is_authenticated else None)
-        )
-
-        if username is None:
-            return []
-
-        filters = {"owner__username": username}
-
-        if course_code := self.context.get("course_code"):
-            filters["course__code"] = course_code
-
-        return models.Order.objects.filter(
-            state__in=(enums.ORDER_STATE_VALIDATED, enums.ORDER_STATE_PENDING),
-            product=instance,
-            **filters,
-        ).values_list("pk", flat=True)
-
     def to_representation(self, instance):
         """
-        Cache the serializer representation that does not vary from user to user
-        then, if user is authenticated, add private information to the representation
+        Cache the serializer representation for the current instance.
         """
         cache_key = utils.get_resource_cache_key(
             "product_for_course",
@@ -734,8 +662,6 @@ class ProductSerializer(serializers.ModelSerializer):
                 representation,
                 settings.JOANIE_ANONYMOUS_SERIALIZER_DEFAULT_CACHE_TTL,
             )
-
-        representation["orders"] = self.get_orders(instance)
 
         return representation
 
@@ -755,9 +681,6 @@ class CourseSerializer(AbilitiesModelSerializer):
     course_runs = serializers.SlugRelatedField(
         many=True, read_only=True, slug_field="id"
     )
-    selling_organizations = serializers.SerializerMethodField(
-        "get_selling_organizations"
-    )
 
     class Meta:
         model = models.Course
@@ -768,7 +691,6 @@ class CourseSerializer(AbilitiesModelSerializer):
             "cover",
             "id",
             "organizations",
-            "selling_organizations",
             "products",
             "state",
             "title",
@@ -780,18 +702,10 @@ class CourseSerializer(AbilitiesModelSerializer):
             "cover",
             "id",
             "organizations",
-            "selling_organizations",
             "products",
             "state",
             "title",
         ]
-
-    def get_selling_organizations(self, instance):
-        """Get the course selling organizations."""
-        return OrganizationSerializer(
-            instance=instance.get_selling_organizations(),
-            many=True,
-        ).data
 
 
 class CourseProductRelationSerializer(serializers.ModelSerializer):
@@ -799,21 +713,26 @@ class CourseProductRelationSerializer(serializers.ModelSerializer):
     Serialize a course product relation.
     """
 
-    course = CourseSerializer(read_only=True)
+    course = CourseLightSerializer(read_only=True, exclude_abilities=True)
     product = ProductSerializer(read_only=True)
+    organizations = OrganizationSerializer(
+        many=True, read_only=True, exclude_abilities=True
+    )
 
     class Meta:
         model = models.CourseProductRelation
         fields = [
-            "id",
-            "created_on",
             "course",
+            "created_on",
+            "id",
+            "organizations",
             "product",
         ]
         read_only_fields = [
-            "id",
-            "created_on",
             "course",
+            "created_on",
+            "id",
+            "organizations",
             "product",
         ]
 

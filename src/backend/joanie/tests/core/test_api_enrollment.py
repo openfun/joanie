@@ -243,8 +243,8 @@ class EnrollmentApiTest(BaseAPITestCase):
     )
     def test_api_enrollment_read_list_authenticated_with_certificate_products(self, _):
         """
-        When the related course run has certificate products (and the logged-in user
-        eventually has orders for these products), they should be included in the response.
+        When the related course run has certificate products they should be
+        included in the response.
         """
         course_run, other_course_run = self.create_opened_course_run(
             count=2, is_listed=True
@@ -253,37 +253,6 @@ class EnrollmentApiTest(BaseAPITestCase):
         product1, product2 = factories.ProductFactory.create_batch(
             2, type="certificate", courses=[course_run.course, other_course_run.course]
         )
-
-        # - Create orders
-        pending_order = factories.OrderFactory(
-            product=product1,
-            course=course_run.course,
-            owner=enrollment.user,
-            state="pending",
-        )
-        validated_order = factories.OrderFactory(
-            product=product2,
-            course=course_run.course,
-            owner=enrollment.user,
-            state="validated",
-        )
-        # Order from other user
-        factories.OrderFactory(product=product1, course=course_run.course)
-        # Order for the other course (it should be filtered out from results thanks
-        # to the coursecode passed in the serializer context)
-        factories.OrderFactory(
-            product=product1, course=other_course_run.course, owner=enrollment.user
-        )
-
-        for ignored_state, _name in enums.ORDER_STATE_CHOICES:
-            if ignored_state in ["failed", "pending", "validated"]:
-                continue
-            factories.OrderFactory(
-                product=product1,
-                course=course_run.course,
-                owner=enrollment.user,
-                state=ignored_state,
-            )
 
         # Product types that should not be listed under an enrollment
         for ignored_type, _name in enums.PRODUCT_TYPE_CHOICES:
@@ -304,14 +273,14 @@ class EnrollmentApiTest(BaseAPITestCase):
         # The user can see his/her enrollment
         token = self.generate_token_from_user(enrollment.user)
 
-        with self.assertNumQueries(18):
+        with self.assertNumQueries(12):
             self.client.get(
                 "/api/v1.0/enrollments/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
         # A second call to the url should benefit from caching on the product serializer
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(3):
             response = self.client.get(
                 "/api/v1.0/enrollments/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -332,17 +301,18 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "title": str(product2.certificate_definition.title),
                     },
                     "id": str(product2.id),
-                    "orders": [str(validated_order.id)],
-                    "organizations": [
-                        {
-                            "code": validated_order.organization.code,
-                            "id": str(validated_order.organization.id),
-                            "logo": "_this_field_is_mocked",
-                            "title": validated_order.organization.title,
-                        }
-                    ],
                     "price": float(product2.price),
                     "price_currency": "EUR",
+                    "state": {
+                        "priority": product2.state["priority"],
+                        "datetime": product2.state["datetime"]
+                        .isoformat()
+                        .replace("+00:00", "Z")
+                        if product2.state["datetime"]
+                        else None,
+                        "call_to_action": product2.state["call_to_action"],
+                        "text": product2.state["text"],
+                    },
                     "target_courses": [],
                     "title": product2.title,
                     "type": "certificate",
@@ -354,16 +324,17 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "name": str(product1.certificate_definition.name),
                         "title": str(product1.certificate_definition.title),
                     },
+                    "state": {
+                        "priority": product1.state["priority"],
+                        "datetime": product1.state["datetime"]
+                        .isoformat()
+                        .replace("+00:00", "Z")
+                        if product1.state["datetime"]
+                        else None,
+                        "call_to_action": product1.state["call_to_action"],
+                        "text": product1.state["text"],
+                    },
                     "id": str(product1.id),
-                    "orders": [str(pending_order.id)],
-                    "organizations": [
-                        {
-                            "code": pending_order.organization.code,
-                            "id": str(pending_order.organization.id),
-                            "logo": "_this_field_is_mocked",
-                            "title": pending_order.organization.title,
-                        }
-                    ],
                     "price": float(product1.price),
                     "price_currency": "EUR",
                     "target_courses": [],

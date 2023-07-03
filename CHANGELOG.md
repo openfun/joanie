@@ -37,6 +37,8 @@ and this project adheres to
 
 ### Changed
 
+- Allow to get course product relation anonymously
+  through a course id / product id pair
 - Take products in account to process Course state
 - Update OrderSerializer to bind Course information
 - Use ThumbnailImageField instead of ImageField for Organization logo

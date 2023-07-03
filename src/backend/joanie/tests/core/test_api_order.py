@@ -554,7 +554,7 @@ class OrderApiTest(BaseAPITestCase):
         order = factories.OrderFactory(product=product, owner=owner)
         token = self.generate_token_from_user(owner)
 
-        with self.assertNumQueries(13):
+        with self.assertNumQueries(9):
             response = self.client.get(
                 f"/api/v1.0/orders/{order.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -584,7 +584,6 @@ class OrderApiTest(BaseAPITestCase):
                 "target_courses": [
                     {
                         "code": target_course.code,
-                        "organizations": [],
                         "course_runs": [
                             {
                                 "id": course_run.id,
@@ -727,7 +726,6 @@ class OrderApiTest(BaseAPITestCase):
                 "target_courses": [
                     {
                         "code": target_course.code,
-                        "organizations": [],
                         "course_runs": [
                             {
                                 "id": course_run.id,
@@ -962,7 +960,6 @@ class OrderApiTest(BaseAPITestCase):
                 "target_courses": [
                     {
                         "code": target_course.code,
-                        "organizations": [],
                         "course_runs": [
                             {
                                 "id": course_run.id,

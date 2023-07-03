@@ -3,10 +3,13 @@ Client API endpoints
 """
 import uuid
 
+from django.conf import settings
 from django.db import IntegrityError, transaction
 from django.db.models import Count, OuterRef, Prefetch, Q, Subquery
 from django.http import HttpResponse
-from django.utils.translation import gettext_lazy as _
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_headers
 
 from rest_framework import mixins, pagination
 from rest_framework import permissions as drf_permissions
@@ -71,79 +74,119 @@ class CourseProductRelationViewSet(
         has access to the organization
     """
 
-    lookup_field = "id"
+    lookup_field = "pk"
+    lookup_url_kwarg = "pk_or_product_id"
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = serializers.CourseProductRelationSerializer
     ordering = ["-created_on"]
+    queryset = models.CourseProductRelation.objects.filter(
+        organizations__isnull=False,
+    ).select_related(
+        "course",
+        "product",
+        "product__certificate_definition",
+    )
 
-    def get_queryset(self):
+    @property
+    def course_lookup_filter(self):
         """
-        Custom queryset to limit access to course product relation objects
-        to users who have access to the related course.
+        Return the filter field to use to get the course object.
         """
-        username = (
+        try:
+            uuid.UUID(self.kwargs["course_id"])
+        except ValueError:
+            lookup_filter = "course__code__iexact"
+        else:
+            lookup_filter = "course__pk"
+
+        return lookup_filter
+
+    def get_object(self):
+        """
+        The retrieve action is used to get a single course product relation.
+        There are two cases to handle :
+        1. Retrieve the relation through its id
+        2. Retrieve the relation through its course id and product id
+        """
+        queryset = self.filter_queryset(self.get_queryset())
+
+        # Perform the lookup filtering.
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+
+        if course_id := self.kwargs.get("course_id"):
+            # 1. Request through a nested course route, we want to retrieve
+            # a relation through its course id and product id
+            filter_kwargs = {
+                self.course_lookup_filter: course_id,
+                "product__id": self.kwargs[lookup_url_kwarg],
+            }
+        else:
+            # 2. Request through the course product relation route, we want to retrieve
+            # a relation through its id
+            filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
+        obj = get_object_or_404(queryset, **filter_kwargs)
+
+        # May raise a permission denied
+        self.check_object_permissions(self.request, obj)
+
+        return obj
+
+    @method_decorator(cache_page(settings.JOANIE_ANONYMOUS_API_DEFAULT_CACHE_TTL))
+    @method_decorator(vary_on_headers("Accept-Language"))
+    def retrieve_through_nested_course(self, request, *args, **kwargs):
+        """
+        Retrieve relation through its course id and product id should be cached
+        per language.
+        """
+        return super().retrieve(request, *args, **kwargs)
+
+    def retrieve(self, request, *args, **kwargs):
+        """
+        The retrieve action is used to get a single course product relation.
+        The response is cached per language.
+        """
+        if self.kwargs.get("course_id"):
+            return self.retrieve_through_nested_course(request, *args, **kwargs)
+
+        return super().retrieve(request, *args, **kwargs)
+
+    @property
+    def username(self):
+        """Get the authenticated username from the request."""
+        return (
             self.request.auth["username"]
             if self.request.auth
             else self.request.user.username
         )
-        queryset = models.CourseProductRelation.objects
-        organization_id = self.kwargs.get("organization_id", None)
-        if organization_id:
+
+    def get_queryset(self):
+        """
+        The queryset filter depends on the action as to list course product relation we
+        only want to list course product relation to which the user has access.
+        """
+        queryset = super().get_queryset()
+
+        if course_id := self.kwargs.get("course_id"):
+            queryset = queryset.filter(**{self.course_lookup_filter: course_id})
+
+        if organization_id := self.kwargs.get("organization_id"):
             queryset = queryset.filter(
                 organizations__id=organization_id,
-                organizations__accesses__user__username=username,
+                organizations__accesses__user__username=self.username,
             )
+        elif self.action == "list" or self.action == "retrieve" and not course_id:
+            queryset = queryset.filter(course__accesses__user__username=self.username)
+
+        return queryset
+
+    def get_permissions(self):
+        """Anonymous user should be able to retrieve a course product relation."""
+        if self.action == "retrieve" and self.kwargs.get("course_id"):
+            permission_classes = [drf_permissions.AllowAny]
         else:
-            queryset = queryset.filter(course__accesses__user__username=username)
-        return queryset.select_related("course", "product")
+            return super().get_permissions()
 
-
-class ProductViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
-    """API ViewSet for all interactions with products."""
-
-    lookup_field = "id"
-    permissions_classes = [drf_permissions.AllowAny]
-    filterset_class = filters.ProductViewSetFilter
-    queryset = models.Product.objects.all()
-    serializer_class = serializers.ProductSerializer
-
-    def filter_queryset(self, queryset):
-        """
-        Custom queryset to limit to products actually related to the course given in querystring.
-        """
-        queryset = super().filter_queryset(queryset)
-
-        if self.action == "retrieve":
-            try:
-                course_code = self.request.query_params["course"]
-            except KeyError as exc:
-                raise DRFValidationError(
-                    {
-                        "course": _(
-                            "You must specify a course code to get product details."
-                        )
-                    }
-                ) from exc
-
-            queryset = queryset.filter(
-                course_relations__course__code=course_code,
-                course_relations__organizations__isnull=False,
-            )
-        else:
-            queryset = queryset.filter(course_relations__isnull=False)
-
-        return queryset.select_related("certificate_definition").distinct()
-
-    def get_serializer_context(self):
-        """
-        Provide course code to the `ProductSerializer`
-        """
-        context = super().get_serializer_context()
-
-        if course := self.request.query_params.get("course"):
-            context.update({"course_code": course})
-
-        return context
+        return [permission() for permission in permission_classes]
 
 
 # pylint: disable=too-many-ancestors
