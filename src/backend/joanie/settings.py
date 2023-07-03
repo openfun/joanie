@@ -134,6 +134,7 @@ class Base(Configuration):
     TEMPLATES = [
         {
             "BACKEND": "django.template.backends.django.DjangoTemplates",
+            "APP_DIRS": True,
             "DIRS": [os.path.join(BASE_DIR, "templates")],
             "OPTIONS": {
                 "context_processors": [
@@ -145,10 +146,6 @@ class Base(Configuration):
                     "django.template.context_processors.media",
                     "django.template.context_processors.request",
                     "django.template.context_processors.tz",
-                ],
-                "loaders": [
-                    "django.template.loaders.filesystem.Loader",
-                    "django.template.loaders.app_directories.Loader",
                 ],
             },
         },
@@ -165,6 +162,7 @@ class Base(Configuration):
         "django.middleware.csrf.CsrfViewMiddleware",
         "django.contrib.auth.middleware.AuthenticationMiddleware",
         "django.contrib.messages.middleware.MessageMiddleware",
+        "debug_toolbar.middleware.DebugToolbarMiddleware",
     ]
 
     AUTHENTICATION_BACKENDS = [
@@ -194,6 +192,7 @@ class Base(Configuration):
         "marion",
         "howard",
         "easy_thumbnails",
+        "debug_toolbar",
         # Joanie
         "joanie.core",
         "joanie.payment",
@@ -446,6 +445,36 @@ class Development(Base):
 
     LOGIN_URL = "/admin/login/"
     LOGOUT_URL = "/admin/logout/"
+
+    INTERNAL_IPS = (
+        "127.0.0.1",
+        "0.0.0.0",
+        "localhost",
+    )
+
+    DEBUG_TOOLBAR_PANELS = [
+        "debug_toolbar.panels.versions.VersionsPanel",
+        "debug_toolbar.panels.timer.TimerPanel",
+        "debug_toolbar.panels.settings.SettingsPanel",
+        "debug_toolbar.panels.headers.HeadersPanel",
+        "debug_toolbar.panels.request.RequestPanel",
+        "debug_toolbar.panels.sql.SQLPanel",
+        "debug_toolbar.panels.staticfiles.StaticFilesPanel",
+        "debug_toolbar.panels.templates.TemplatesPanel",
+        "debug_toolbar.panels.cache.CachePanel",
+        "debug_toolbar.panels.signals.SignalsPanel",
+        "debug_toolbar.panels.logging.LoggingPanel",
+        "debug_toolbar.panels.redirects.RedirectsPanel",
+    ]
+
+    if DEBUG:
+        import socket  # only if you haven't already imported this
+
+        hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
+        INTERNAL_IPS = [ip[: ip.rfind(".")] + ".1" for ip in ips] + [
+            "127.0.0.1",
+            "10.0.2.2",
+        ]
 
     # Swagger security settings
     # e.g: For API routes which requires a jwt token to authenticate user, you can

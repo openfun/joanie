@@ -20,15 +20,12 @@ from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import include, path, re_path
 
+import debug_toolbar
 from rest_framework import permissions
 from rest_framework.routers import DefaultRouter
 
 from joanie.core.api import admin as api_admin
 from joanie.core.api import client as api_client
-from joanie.core.views import (
-    DebugMailSuccessPaymentViewHtml,
-    DebugMailSuccessPaymentViewTxt,
-)
 from joanie.lms_handler.urls import urlpatterns as lms_urlpatterns
 from joanie.payment.urls import urlpatterns as payment_urlpatterns
 
@@ -113,17 +110,7 @@ if settings.DEBUG:
     urlpatterns = (
         urlpatterns
         + [
-            path("__debug__/", include("marion.urls.debug")),
-            path(
-                "__debug__/mail/order_validated_html",
-                DebugMailSuccessPaymentViewHtml.as_view(),
-                name="debug.mail.order_validated_html",
-            ),
-            path(
-                "__debug__/mail/order_validated_txt",
-                DebugMailSuccessPaymentViewTxt.as_view(),
-                name="debug.mail.order_validated_txt",
-            ),
+            path("__debug__/", include(debug_toolbar.urls)),
         ]
         + staticfiles_urlpatterns()
         + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
