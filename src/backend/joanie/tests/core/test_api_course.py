@@ -38,7 +38,7 @@ class CourseApiTest(BaseAPITestCase):
         factories.UserCourseAccessFactory(user=user, course=courses[0])
         factories.UserCourseAccessFactory(user=user, course=courses[1])
 
-        with self.assertNumQueries(9):
+        with self.assertNumQueries(7):
             response = self.client.get(
                 "/api/v1.0/courses/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -103,7 +103,6 @@ class CourseApiTest(BaseAPITestCase):
                             }
                             for organization in course.organizations.all()
                         ],
-                        "selling_organizations": [],
                         "products": [
                             str(product.id) for product in course.products.all()
                         ],
@@ -220,7 +219,7 @@ class CourseApiTest(BaseAPITestCase):
             organizations=factories.OrganizationFactory.create_batch(2),
         )
 
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(7):
             response = self.client.get(
                 f"/api/v1.0/courses/{course.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -245,15 +244,6 @@ class CourseApiTest(BaseAPITestCase):
                         "title": organization.title,
                     }
                     for organization in course.organizations.all()
-                ],
-                "selling_organizations": [
-                    {
-                        "code": organization.code,
-                        "id": str(organization.id),
-                        "logo": "_this_field_is_mocked",
-                        "title": organization.title,
-                    }
-                    for organization in course.get_selling_organizations()
                 ],
                 "products": [str(product.id) for product in course.products.all()],
                 "course_runs": [
@@ -284,7 +274,7 @@ class CourseApiTest(BaseAPITestCase):
             organizations=[factories.OrganizationFactory()],
         )
 
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(7):
             response = self.client.get(
                 "/api/v1.0/courses/mycode-0088/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",

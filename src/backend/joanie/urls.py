@@ -66,6 +66,11 @@ course_related_router.register(
     api_client.CourseRunViewSet,
     basename="course_course_runs",
 )
+course_related_router.register(
+    "products",
+    api_client.CourseProductRelationViewSet,
+    basename="course_product_relations",
+)
 
 # - Routes nested under an organization
 organization_related_router = DefaultRouter()
@@ -132,15 +137,21 @@ urlpatterns = [
     ),
     path(
         f"api/{API_VERSION}/",
-        include([*router.urls, *lms_urlpatterns, *payment_urlpatterns]),
-    ),
-    path(
-        f"api/{API_VERSION}/courses/<uuid:course_id>/",
-        include(course_related_router.urls),
-    ),
-    path(
-        f"api/{API_VERSION}/organizations/<uuid:organization_id>/",
-        include(organization_related_router.urls),
+        include(
+            [
+                *router.urls,
+                *lms_urlpatterns,
+                *payment_urlpatterns,
+                re_path(
+                    r"^courses/(?P<course_id>[0-9a-z-]*)/",
+                    include(course_related_router.urls),
+                ),
+                path(
+                    "organizations/<uuid:organization_id>/",
+                    include(organization_related_router.urls),
+                ),
+            ]
+        ),
     ),
 ]
 
