@@ -569,6 +569,21 @@ class CourseProductRelation(BaseModel):
     def __str__(self):
         return f"{self.course}: {self.product}"
 
+    def get_read_detail_api_url(self):
+        """
+        Build the api url to get the detail of the provided course product relation.
+        """
+        site = Site.objects.get_current()
+        resource_path = reverse(
+            "course_product_relations-detail",
+            kwargs={
+                "course_id": self.course.code,  # pylint: disable=no-member
+                "pk_or_product_id": self.product_id,  # pylint: disable=no-member
+            },
+        )
+
+        return f"https://{site.domain:s}{resource_path:s}"
+
 
 class CourseRun(parler_models.TranslatableModel, BaseModel):
     """
@@ -670,6 +685,7 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
             | models.Q(target_course_relations__course_runs=self),
             target_course_relations__course=self.course,
         )
+
         return self.course.products.model.get_equivalent_serialized_course_runs_for_products(
             products, visibility=visibility
         )

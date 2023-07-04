@@ -129,7 +129,6 @@ class ProductModelsTestCase(TestCase):
                 "enrollment_end": None,
                 "enrollment_start": None,
                 "languages": [],
-                "resource_link": f"https://example.com/api/v1.0/products/{product.id!s}/",
                 "start": None,
             },
         )
@@ -144,7 +143,6 @@ class ProductModelsTestCase(TestCase):
         self.assertEqual(
             product.get_equivalent_course_run_data(),
             {
-                "resource_link": f"https://example.com/api/v1.0/products/{product.id!s}/",
                 "start": None,
                 "end": None,
                 "enrollment_start": None,
@@ -211,7 +209,6 @@ class ProductModelsTestCase(TestCase):
 
         languages = data.pop("languages")
         expected_data = {
-            "resource_link": f"https://example.com/api/v1.0/products/{product.id}/",
             "start": "2022-12-01T09:00:00+00:00",
             "end": "2022-12-15T19:00:00+00:00",
             "enrollment_start": "2022-11-20T09:00:00+00:00",
@@ -271,6 +268,110 @@ class ProductModelsTestCase(TestCase):
                 "enrollment_start": latest_enrollment_start_date,
                 "enrollment_end": earliest_enrollment_end_date,
             },
+        )
+
+    def test_model_product_get_equivalent_serialized_course_runs_for_products(
+        self,
+    ):
+        """
+        Product model implements a static method to get equivalent
+        serialized course runs for a list of products.
+        """
+        course = factories.CourseFactory(code="00000")
+        course_run = factories.CourseRunFactory(
+            enrollment_end=django_timezone.now() + timedelta(hours=1),
+            enrollment_start=django_timezone.now() - timedelta(hours=1),
+            start=django_timezone.now() - timedelta(hours=1),
+            end=django_timezone.now() + timedelta(hours=2),
+            languages=["fr"],
+        )
+        product = factories.ProductFactory(
+            target_courses=[course_run.course], courses=[course]
+        )
+        relation = product.course_relations.first()
+
+        self.assertEqual(
+            product.get_equivalent_serialized_course_runs_for_products([product]),
+            [
+                {
+                    "catalog_visibility": "course_and_search",
+                    "end": course_run.end.isoformat(),
+                    "enrollment_end": course_run.enrollment_end.isoformat(),
+                    "enrollment_start": course_run.enrollment_start.isoformat(),
+                    "start": course_run.start.isoformat(),
+                    "languages": ["fr"],
+                    "course": "00000",
+                    "resource_link": (
+                        "https://example.com/api/v1.0/"
+                        f"courses/{relation.course.code}/products/{relation.product.id}/"
+                    ),
+                }
+            ],
+        )
+
+    def test_model_product_get_equivalent_serialized_course_runs_for_products_with_visibility(  # noqa pylint: disable=line-too-long
+        self,
+    ):
+        """
+        Product model implements a static method to get equivalent
+        serialized course runs for a list of products which accepts a visibility
+        parameter to enforce the catalog visibility of the course run.
+        """
+        course = factories.CourseFactory(code="00000")
+        course_run = factories.CourseRunFactory(
+            enrollment_end=django_timezone.now() + timedelta(hours=1),
+            enrollment_start=django_timezone.now() - timedelta(hours=1),
+            start=django_timezone.now() - timedelta(hours=1),
+            end=django_timezone.now() + timedelta(hours=2),
+            languages=["fr"],
+        )
+        product = factories.ProductFactory(
+            target_courses=[course_run.course], courses=[course]
+        )
+        relation = product.course_relations.first()
+
+        self.assertEqual(
+            product.get_equivalent_serialized_course_runs_for_products(
+                [product], visibility=enums.HIDDEN
+            ),
+            [
+                {
+                    "catalog_visibility": "hidden",
+                    "end": course_run.end.isoformat(),
+                    "enrollment_end": course_run.enrollment_end.isoformat(),
+                    "enrollment_start": course_run.enrollment_start.isoformat(),
+                    "start": course_run.start.isoformat(),
+                    "languages": ["fr"],
+                    "course": "00000",
+                    "resource_link": (
+                        "https://example.com/api/v1.0/"
+                        f"courses/{relation.course.code}/products/{relation.product.id}/"
+                    ),
+                }
+            ],
+        )
+
+    def test_model_product_get_equivalent_serialized_course_runs_for_products_without_course_relations(  # noqa pylint: disable=line-too-long
+        self,
+    ):
+        """
+        Product model implements a static method to get equivalent
+        serialized course runs for a list of products which returns an empty list if
+        product has no course relations.
+        """
+        course_run = factories.CourseRunFactory(
+            enrollment_end=django_timezone.now() + timedelta(hours=1),
+            enrollment_start=django_timezone.now() - timedelta(hours=1),
+            start=django_timezone.now() - timedelta(hours=1),
+            end=django_timezone.now() + timedelta(hours=2),
+            languages=["fr"],
+        )
+        product = factories.ProductFactory(
+            target_courses=[course_run.course], courses=[]
+        )
+
+        self.assertEqual(
+            product.get_equivalent_serialized_course_runs_for_products([product]), []
         )
 
     def test_model_product_state(self):

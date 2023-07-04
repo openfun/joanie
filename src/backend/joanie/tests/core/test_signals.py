@@ -30,6 +30,7 @@ class SignalsTestCase(TestCase):
         products = factories.ProductFactory.create_batch(
             2, target_courses=[course_run.course]
         )
+        relations = models.CourseProductRelation.objects.filter(product__in=products)
         mock_sync.reset_mock()
 
         course_run.save()
@@ -40,16 +41,22 @@ class SignalsTestCase(TestCase):
             [course_run["resource_link"] for course_run in synchronized_course_runs],
             [
                 f"https://example.com/api/v1.0/course-runs/{course_run.id}/",
-                f"https://example.com/api/v1.0/products/{products[0].id}/",
-                f"https://example.com/api/v1.0/products/{products[1].id}/",
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{relations[0].course.code}/products/{relations[0].product.id}/"
+                ),
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{relations[1].course.code}/products/{relations[1].product.id}/"
+                ),
             ],
         )
         self.assertCountEqual(
             [course_run["course"] for course_run in synchronized_course_runs],
             [
                 course_run.course.code,
-                products[0].courses.first().code,
-                products[1].courses.first().code,
+                relations[0].course.code,
+                relations[1].course.code,
             ],
         )
         self.assertEqual(
@@ -70,6 +77,7 @@ class SignalsTestCase(TestCase):
             course=course_run.course, is_listed=True
         )
         product = factories.ProductFactory()
+        relation = product.course_relations.first()
         factories.ProductTargetCourseRelationFactory(
             product=product, course=course_run.course, course_runs=[course_run]
         )
@@ -84,21 +92,26 @@ class SignalsTestCase(TestCase):
         self.assertEqual(len(synchronized_course_runs), 2)
         self.assertCountEqual(
             synchronized_course_runs,
-            models.Product.get_equivalent_serialized_course_runs_for_products([product])
+            models.Product.get_equivalent_serialized_course_runs_for_products(
+                [product],
+            )
             + [course_run.get_serialized()],
         )
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
             [
                 f"https://example.com/api/v1.0/course-runs/{course_run.id}/",
-                f"https://example.com/api/v1.0/products/{product.id}/",
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{relation.course.code}/products/{relation.product.id}/"
+                ),
             ],
         )
         self.assertCountEqual(
             [course_run["course"] for course_run in synchronized_course_runs],
             [
                 course_run.course.code,
-                product.courses.first().code,
+                relation.course.code,
             ],
         )
         for course_run_dict in synchronized_course_runs:
@@ -148,6 +161,7 @@ class SignalsTestCase(TestCase):
         products = factories.ProductFactory.create_batch(
             2, target_courses=[course_run.course]
         )
+        relations = models.CourseProductRelation.objects.filter(product__in=products)
         mock_sync.reset_mock()
 
         course_run.delete()
@@ -160,8 +174,14 @@ class SignalsTestCase(TestCase):
             [course_run["resource_link"] for course_run in synchronized_course_runs],
             [
                 f"https://example.com/api/v1.0/course-runs/{cr_id:s}/",
-                f"https://example.com/api/v1.0/products/{products[0].id!s}/",
-                f"https://example.com/api/v1.0/products/{products[1].id!s}/",
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{relations[0].course.code}/products/{relations[0].product.id}/"
+                ),
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{relations[1].course.code}/products/{relations[1].product.id}/"
+                ),
             ],
         )
         self.assertCountEqual(
@@ -204,6 +224,7 @@ class SignalsTestCase(TestCase):
         """
         course_run = factories.CourseRunFactory()
         product, other_product = factories.ProductFactory.create_batch(2)
+        relation = product.course_relations.first()
         ptcr = factories.ProductTargetCourseRelationFactory(
             product=product, course=course_run.course
         )
@@ -218,11 +239,14 @@ class SignalsTestCase(TestCase):
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
         self.assertEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
-            [f"https://example.com/api/v1.0/products/{product.id}/"],
+            [
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{relation.course.code}/products/{relation.product.id}/"
+                )
+            ],
         )
-        self.assertEqual(
-            synchronized_course_runs[0]["course"], product.courses.first().code
-        )
+        self.assertEqual(synchronized_course_runs[0]["course"], relation.course.code)
         self.assertIsNotNone(synchronized_course_runs[0]["start"])
         self.assertEqual(
             synchronized_course_runs[0]["catalog_visibility"],
@@ -236,6 +260,7 @@ class SignalsTestCase(TestCase):
         """
         course_run = factories.CourseRunFactory()
         product, other_product = factories.ProductFactory.create_batch(2)
+        relation = product.course_relations.first()
         ptcr = factories.ProductTargetCourseRelationFactory(
             product=product, course=course_run.course
         )
@@ -250,12 +275,15 @@ class SignalsTestCase(TestCase):
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
-            [f"https://example.com/api/v1.0/products/{product.id}/"],
+            [
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{relation.course.code}/products/{relation.product.id}/"
+                )
+            ],
         )
         self.assertIsNone(synchronized_course_runs[0]["start"])
-        self.assertEqual(
-            synchronized_course_runs[0]["course"], product.courses.first().code
-        )
+        self.assertEqual(synchronized_course_runs[0]["course"], relation.course.code)
         self.assertEqual(synchronized_course_runs[0]["catalog_visibility"], "hidden")
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
@@ -294,12 +322,20 @@ class SignalsTestCase(TestCase):
         mock_sync.reset_mock()
 
         course.products.add(product2)
+        relation = models.CourseProductRelation.objects.get(
+            course=course, product=product2
+        )
 
         self.assertEqual(mock_sync.call_count, 1)
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
-            [f"https://example.com/api/v1.0/products/{product2.id}/"],
+            [
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{relation.course.code}/products/{relation.product.id}/"
+                )
+            ],
         )
         for course_run in synchronized_course_runs:
             self.assertIsNotNone(course_run["start"])
@@ -317,6 +353,11 @@ class SignalsTestCase(TestCase):
             3, target_courses=[course_run.course]
         )
         course = factories.CourseFactory(products=[previous_product])
+        previous_relation = models.CourseProductRelation.objects.get(
+            course=course, product=previous_product
+        )
+        previous_relation_product = previous_relation.product.id
+        previous_relation_course = previous_relation.course.code
         mock_sync.reset_mock()
 
         course.products.set(products)
@@ -327,7 +368,12 @@ class SignalsTestCase(TestCase):
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
-            [f"https://example.com/api/v1.0/products/{previous_product.id}/"],
+            [
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{previous_relation_course}/products/{previous_relation_product}/"
+                )
+            ],
         )
         for course_run in synchronized_course_runs:
             self.assertIsNotNone(course_run["start"])
@@ -336,11 +382,20 @@ class SignalsTestCase(TestCase):
 
         # added
         synchronized_course_runs = mock_sync.call_args_list[1][0][0]
+        relations = models.CourseProductRelation.objects.filter(
+            course=course, product__in=[products[0], products[1]]
+        )
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
             [
-                f"https://example.com/api/v1.0/products/{products[0].id}/",
-                f"https://example.com/api/v1.0/products/{products[1].id}/",
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{relations[0].course.code}/products/{relations[0].product.id}/"
+                ),
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{relations[1].course.code}/products/{relations[1].product.id}/"
+                ),
             ],
         )
         for course_run in synchronized_course_runs:
@@ -362,9 +417,17 @@ class SignalsTestCase(TestCase):
 
         self.assertEqual(mock_sync.call_count, 1)
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
+        relation = models.CourseProductRelation.objects.get(
+            course=course, product=new_product
+        )
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
-            [f"https://example.com/api/v1.0/products/{new_product.id}/"],
+            [
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{relation.course.code}/products/{relation.product.id}/"
+                ),
+            ],
         )
         for course_run in synchronized_course_runs:
             self.assertIsNone(
@@ -383,13 +446,21 @@ class SignalsTestCase(TestCase):
         )
         mock_sync.reset_mock()
 
+        relation = models.CourseProductRelation.objects.get(
+            course=course, product=products[0]
+        )
         course.products.remove(products[0])
 
         self.assertEqual(mock_sync.call_count, 1)
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
-            [f"https://example.com/api/v1.0/products/{products[0].id}/"],
+            [
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{relation.course.code}/products/{relation.product.id}/"
+                )
+            ],
         )
         for course_run in synchronized_course_runs:
             self.assertIsNotNone(course_run["start"])
@@ -402,6 +473,11 @@ class SignalsTestCase(TestCase):
         product1 = factories.ProductFactory(target_courses=[course_run1.course])
         product2 = factories.ProductFactory(target_courses=[course_run2.course])
         course = factories.CourseFactory(products=[product1, product2])
+        clear_relations = list(
+            models.CourseProductRelation.objects.values_list(
+                "course__code", "product__id"
+            ).filter(course=course)
+        )
 
         with mock.patch.object(webhooks, "synchronize_course_runs") as mock_sync:
             course.products.clear()
@@ -411,8 +487,14 @@ class SignalsTestCase(TestCase):
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
             [
-                f"https://example.com/api/v1.0/products/{product1.id}/",
-                f"https://example.com/api/v1.0/products/{product2.id}/",
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{clear_relations[0][0]}/products/{clear_relations[0][1]}/"
+                ),
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{clear_relations[1][0]}/products/{clear_relations[1][1]}/"
+                ),
             ],
         )
         for course_run in synchronized_course_runs:
@@ -428,6 +510,7 @@ class SignalsTestCase(TestCase):
         product, _other_product = factories.ProductFactory.create_batch(
             2, courses=[course1], target_courses=[course_run.course]
         )
+        relations = product.course_relations.all()
         mock_sync.reset_mock()
 
         product.courses.add(course2)
@@ -442,7 +525,16 @@ class SignalsTestCase(TestCase):
         )
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
-            [f"https://example.com/api/v1.0/products/{product.id}/"] * 2,
+            [
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{relations[0].course.code}/products/{relations[0].product.id}/"
+                ),
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{relations[1].course.code}/products/{relations[1].product.id}/"
+                ),
+            ],
         )
         self.assertCountEqual(
             [course_run["course"] for course_run in synchronized_course_runs],
@@ -466,7 +558,19 @@ class SignalsTestCase(TestCase):
         factories.ProductFactory(courses=[course1, course2, old_course])
         mock_sync.reset_mock()
 
+        old_relation = list(
+            models.CourseProductRelation.objects.values_list(
+                "course__code",
+                "product__id",
+            ).get(course=old_course, product=product)
+        )
         product.courses.set([course1, course2])
+        new_relations = list(
+            models.CourseProductRelation.objects.values_list(
+                "course__code",
+                "product__id",
+            ).filter(course__in=[course1, course2], product=product)
+        )
 
         self.assertEqual(mock_sync.call_count, 2)
 
@@ -474,7 +578,12 @@ class SignalsTestCase(TestCase):
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
-            [f"https://example.com/api/v1.0/products/{product.id}/"],
+            [
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{old_relation[0]}/products/{old_relation[1]}/"
+                ),
+            ],
         )
         self.assertIsNotNone(synchronized_course_runs[0]["start"])
         self.assertEqual(synchronized_course_runs[0]["course"], old_course.code)
@@ -485,8 +594,14 @@ class SignalsTestCase(TestCase):
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
             [
-                f"https://example.com/api/v1.0/products/{product.id}/",
-                f"https://example.com/api/v1.0/products/{product.id}/",
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{new_relations[0][0]}/products/{new_relations[0][1]}/"
+                ),
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{new_relations[1][0]}/products/{new_relations[1][1]}/"
+                ),
             ],
         )
         self.assertCountEqual(
@@ -508,6 +623,7 @@ class SignalsTestCase(TestCase):
         mock_sync.reset_mock()
 
         product.courses.create(code="123")
+        relations = product.course_relations.all()
 
         self.assertEqual(mock_sync.call_count, 1)
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
@@ -519,7 +635,16 @@ class SignalsTestCase(TestCase):
         )
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
-            [f"https://example.com/api/v1.0/products/{product.id}/"] * 2,
+            [
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{relations[0].course.code}/products/{relations[0].product.id}/"
+                ),
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{relations[1].course.code}/products/{relations[1].product.id}/"
+                ),
+            ],
         )
         self.assertCountEqual(
             [course_run["course"] for course_run in synchronized_course_runs],
@@ -539,13 +664,23 @@ class SignalsTestCase(TestCase):
         )
         mock_sync.reset_mock()
 
+        old_relation = list(
+            models.CourseProductRelation.objects.values_list(
+                "course__code", "product__id"
+            ).get(course=courses[0], product=products[0])
+        )
         products[0].courses.remove(courses[0])
 
         self.assertEqual(mock_sync.call_count, 1)
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
-            [f"https://example.com/api/v1.0/products/{products[0].id}/"],
+            [
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{old_relation[0]}/products/{old_relation[1]}/"
+                ),
+            ],
         )
         self.assertIsNotNone(synchronized_course_runs[0]["start"])
         self.assertEqual(synchronized_course_runs[0]["course"], courses[0].code)
@@ -561,6 +696,9 @@ class SignalsTestCase(TestCase):
         )
         mock_sync.reset_mock()
 
+        old_relations = list(
+            product.course_relations.values_list("course__code", "product__id").all()
+        )
         product.courses.clear()
 
         self.assertEqual(mock_sync.call_count, 1)
@@ -568,8 +706,14 @@ class SignalsTestCase(TestCase):
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
             [
-                f"https://example.com/api/v1.0/products/{product.id}/",
-                f"https://example.com/api/v1.0/products/{product.id}/",
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{old_relations[0][0]}/products/{old_relations[0][1]}/"
+                ),
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{old_relations[1][0]}/products/{old_relations[1][1]}/"
+                ),
             ],
         )
         self.assertCountEqual(
@@ -619,10 +763,15 @@ class SignalsTestCase(TestCase):
                 [product1]
             ),
         )
+        product_relation = product1.course_relations.first()
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
             [
-                f"https://example.com/api/v1.0/products/{product1.id}/",
+                (
+                    "https://example.com/api/v1.0"
+                    f"/courses/{product_relation.course.code}"
+                    f"/products/{product_relation.product.id}/"
+                ),
             ],
         )
         self.assertEqual(
@@ -669,11 +818,18 @@ class SignalsTestCase(TestCase):
 
         # Removing
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
+        relations = product.course_relations.all()
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
             [
-                f"https://example.com/api/v1.0/products/{product.id}/",
-                f"https://example.com/api/v1.0/products/{product.id}/",
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{relations[0].course.code}/products/{relations[0].product.id}/"
+                ),
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{relations[1].course.code}/products/{relations[1].product.id}/"
+                ),
             ],
         )
         self.assertCountEqual(
@@ -689,8 +845,14 @@ class SignalsTestCase(TestCase):
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
             [
-                f"https://example.com/api/v1.0/products/{product.id}/",
-                f"https://example.com/api/v1.0/products/{product.id}/",
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{relations[0].course.code}/products/{relations[0].product.id}/"
+                ),
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{relations[1].course.code}/products/{relations[1].product.id}/"
+                ),
             ],
         )
         self.assertCountEqual(
@@ -740,6 +902,7 @@ class SignalsTestCase(TestCase):
         # 2- a second time when the course run is attached to the product/target course relation
         self.assertEqual(mock_sync.call_args_list[1][1], {})
         synchronized_course_runs = mock_sync.call_args_list[1][0][0]
+        relations = product.course_relations.all()
         self.assertEqual(
             synchronized_course_runs,
             models.Product.get_equivalent_serialized_course_runs_for_products(
@@ -749,7 +912,10 @@ class SignalsTestCase(TestCase):
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
             [
-                f"https://example.com/api/v1.0/products/{product.id}/",
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{relations[0].course.code}/products/{relations[0].product.id}/"
+                ),
             ],
         )
         self.assertEqual(
@@ -797,10 +963,14 @@ class SignalsTestCase(TestCase):
                 [product]
             ),
         )
+        relation = product.course_relations.first()
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
             [
-                f"https://example.com/api/v1.0/products/{product.id}/",
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{relation.course.code}/products/{relation.product.id}/"
+                ),
             ],
         )
         self.assertEqual(
@@ -848,15 +1018,17 @@ class SignalsTestCase(TestCase):
                 [product]
             ),
         )
+        relation = product.course_relations.first()
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
             [
-                f"https://example.com/api/v1.0/products/{product.id}/",
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{relation.course.code}/products/{relation.product.id}/"
+                ),
             ],
         )
-        self.assertEqual(
-            synchronized_course_runs[0]["course"], product.courses.first().code
-        )
+        self.assertEqual(synchronized_course_runs[0]["course"], relation.course.code)
         self.assertEqual(
             synchronized_course_runs[0]["start"], "2022-07-07T07:00:00+00:00"
         )
@@ -894,6 +1066,7 @@ class SignalsTestCase(TestCase):
 
         self.assertEqual(mock_sync.call_count, 1)
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
+        relations = product1.course_relations.all()
         self.assertEqual(
             synchronized_course_runs,
             models.Product.get_equivalent_serialized_course_runs_for_products(
@@ -903,11 +1076,14 @@ class SignalsTestCase(TestCase):
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
             [
-                f"https://example.com/api/v1.0/products/{product1.id}/",
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{relations[0].course.code}/products/{relations[0].product.id}/"
+                ),
             ],
         )
         self.assertEqual(
-            synchronized_course_runs[0]["course"], product1.courses.first().code
+            synchronized_course_runs[0]["course"], relations[0].course.code
         )
         self.assertEqual(
             synchronized_course_runs[0]["start"], "2022-08-08T08:00:00+00:00"
@@ -952,6 +1128,7 @@ class SignalsTestCase(TestCase):
 
         # Removing
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
+        relations = product1.course_relations.all()
         self.assertCountEqual(
             synchronized_course_runs,
             models.Product.get_equivalent_serialized_course_runs_for_products(
@@ -961,11 +1138,14 @@ class SignalsTestCase(TestCase):
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
             [
-                f"https://example.com/api/v1.0/products/{product1.id}/",
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{relations[0].course.code}/products/{relations[0].product.id}/"
+                ),
             ],
         )
         self.assertEqual(
-            synchronized_course_runs[0]["course"], product1.courses.first().code
+            synchronized_course_runs[0]["course"], relations[0].course.code
         )
         self.assertEqual(
             synchronized_course_runs[0]["start"], "2022-07-07T07:00:00+00:00"
@@ -976,6 +1156,9 @@ class SignalsTestCase(TestCase):
 
         # Adding
         synchronized_course_runs = mock_sync.call_args_list[1][0][0]
+        relations = models.CourseProductRelation.objects.filter(
+            product__in=[product2, product3]
+        )
         self.assertCountEqual(
             synchronized_course_runs,
             models.Product.get_equivalent_serialized_course_runs_for_products(
@@ -985,8 +1168,14 @@ class SignalsTestCase(TestCase):
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
             [
-                f"https://example.com/api/v1.0/products/{product2.id}/",
-                f"https://example.com/api/v1.0/products/{product3.id}/",
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{relations[0].course.code}/products/{relations[0].product.id}/"
+                ),
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{relations[1].course.code}/products/{relations[1].product.id}/"
+                ),
             ],
         )
         self.assertCountEqual(
@@ -1031,10 +1220,14 @@ class SignalsTestCase(TestCase):
         # 2- a second time when the course run is attached to the product/target course relation
         self.assertEqual(mock_sync.call_count, 2)
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
+        relations = product2.course_relations.all()
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
             [
-                f"https://example.com/api/v1.0/products/{product2.id}/",
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{relations[0].course.code}/products/{relations[0].product.id}/"
+                ),
             ],
         )
         self.assertEqual(
@@ -1057,11 +1250,14 @@ class SignalsTestCase(TestCase):
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
             [
-                f"https://example.com/api/v1.0/products/{product2.id}/",
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{relations[0].course.code}/products/{relations[0].product.id}/"
+                ),
             ],
         )
         self.assertEqual(
-            synchronized_course_runs[0]["course"], product2.courses.first().code
+            synchronized_course_runs[0]["course"], relations[0].course.code
         )
         self.assertEqual(
             synchronized_course_runs[0]["start"], "2022-08-08T08:00:00+00:00"
@@ -1101,6 +1297,7 @@ class SignalsTestCase(TestCase):
 
         self.assertEqual(mock_sync.call_count, 1)
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
+        relations = product1.course_relations.all()
         self.assertEqual(
             synchronized_course_runs,
             models.Product.get_equivalent_serialized_course_runs_for_products(
@@ -1110,11 +1307,14 @@ class SignalsTestCase(TestCase):
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
             [
-                f"https://example.com/api/v1.0/products/{product1.id}/",
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{relations[0].course.code}/products/{relations[0].product.id}/"
+                ),
             ],
         )
         self.assertEqual(
-            synchronized_course_runs[0]["course"], product1.courses.first().code
+            synchronized_course_runs[0]["course"], relations[0].course.code
         )
         self.assertEqual(
             synchronized_course_runs[0]["start"], "2022-07-07T07:00:00+00:00"
@@ -1154,19 +1354,28 @@ class SignalsTestCase(TestCase):
 
         self.assertEqual(mock_sync.call_count, 1)
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
+        relations = models.CourseProductRelation.objects.filter(
+            product__in=[product1, product2]
+        )
         # product2 is also targeted because we are not able to
         # target only the ones that had a restriction for this course run...
         self.assertCountEqual(
             synchronized_course_runs,
             models.Product.get_equivalent_serialized_course_runs_for_products(
-                [product1, product2]
+                [product1, product2],
             ),
         )
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
             [
-                f"https://example.com/api/v1.0/products/{product1.id}/",
-                f"https://example.com/api/v1.0/products/{product2.id}/",
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{relations[0].course.code}/products/{relations[0].product.id}/"
+                ),
+                (
+                    "https://example.com/api/v1.0/"
+                    f"courses/{relations[1].course.code}/products/{relations[1].product.id}/"
+                ),
             ],
         )
         self.assertCountEqual(
