@@ -5,7 +5,6 @@ import itertools
 import logging
 
 from django.conf import settings
-from django.contrib.sites.models import Site
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core.validators import MinValueValidator
@@ -138,13 +137,9 @@ class Product(parler_models.TranslatableModel, BaseModel):
         If a product has no target courses or no related course runs, it will still return
         an equivalent course run with null dates and hidden visibility.
         """
-        site = Site.objects.get_current()
-        # TODO : Migrate all course run normalization logic to the CourseProductRelation model
-        resource_path = f"/api/v1.0/products/{self.id}/"
         dates = self.get_equivalent_course_run_dates()
 
         return {
-            "resource_link": f"https://{site.domain:s}{resource_path:s}",
             "catalog_visibility": visibility
             or (enums.COURSE_AND_SEARCH if any(dates.values()) else enums.HIDDEN),
             "languages": self.get_equivalent_course_run_languages(),
@@ -198,10 +193,18 @@ class Product(parler_models.TranslatableModel, BaseModel):
             course_run_data = product.get_equivalent_course_run_data(
                 visibility=visibility
             )
-            related_courses = courses or product.courses.only("code").iterator()
-            for course in related_courses:
+
+            course_relations = product.course_relations.select_related("course")
+            if courses:
+                course_relations = course_relations.filter(course__in=courses)
+
+            for relation in course_relations.iterator():
                 equivalent_course_runs.append(
-                    {**course_run_data, "course": course.code}
+                    {
+                        **course_run_data,
+                        "resource_link": relation.get_read_detail_api_url(),
+                        "course": relation.course.code,
+                    }
                 )
 
         return equivalent_course_runs
