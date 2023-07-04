@@ -4,5 +4,6 @@
 
 from .accounts import *
 from .certifications import *
+from .course_wishes import *
 from .courses import *
 from .products import *
