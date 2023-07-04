@@ -44,6 +44,7 @@ and this project adheres to
 - Rename certificate field into certificate_definition for the ProductSerializer
 - Improve certificate serializer
 - Upgrade to Django 4.2
+- Add model and API endpoint for course wishes
 
 ### Removed
 

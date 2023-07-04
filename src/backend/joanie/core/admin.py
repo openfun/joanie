@@ -548,3 +548,22 @@ class AddressAdmin(admin.ModelAdmin):
         extra_context = extra_context or {}
         extra_context["subtitle"] = _("To get results, choose an owner on the right")
         return super().changelist_view(request, extra_context=extra_context)
+
+
+@admin.register(models.CourseWish)
+class CourseWishAdmin(admin.ModelAdmin):
+    """Admin class for the CourseWish model"""
+
+    list_display = (
+        "course",
+        "owner",
+    )
+    list_filter = [CourseFilter, OwnerFilter]
+    readonly_fields = ("id",)
+    search_fields = [
+        "owner__last_name",
+        "owner__username",
+        "owner__email",
+        "course__code",
+        "course__title",
+    ]

@@ -629,24 +629,24 @@ class CourseAccessViewSet(
     """
     API ViewSet for all interactions with course accesses.
 
-    GET /api/course/<course_id>/accesses/:<course_access_id>
+    GET /api/courses/<course_id>/accesses/:<course_access_id>
         Return list of all course accesses related to the logged-in user or one
         course access if an id is provided.
 
-    POST /api/<course_id>/accesses/ with expected data:
+    POST /api/courses/<course_id>/accesses/ with expected data:
         - user: str
         - role: str [owner|admin|member]
         Return newly created course access
 
-    PUT /api/<course_id>/accesses/<course_access_id>/ with expected data:
+    PUT /api/courses/<course_id>/accesses/<course_access_id>/ with expected data:
         - role: str [owner|admin|member]
         Return updated course access
 
-    PATCH /api/<course_id>/accesses/<course_access_id>/ with expected data:
+    PATCH /api/courses/<course_id>/accesses/<course_access_id>/ with expected data:
         - role: str [owner|admin|member]
         Return partially updated course access
 
-    DELETE /api/<course_id>/accesses/<course_access_id>/
+    DELETE /api/courses/<course_id>/accesses/<course_access_id>/
         Delete targeted course access
     """
 
@@ -704,9 +704,19 @@ class CourseViewSet(
 
     GET /api/courses/:<course_id>
         Return one course if an id is provided.
+
+    GET /api/courses/:<course_id>/wish
+        Return wish status on this course for the authenticated user
+
+    POST /api/courses/:<course_id>/wish
+        Confirm a wish on this course for the authenticated user
+
+    DELETE /api/courses/:<course_id>/wish
+        Delete any existing wish on this course for the authenticated user
     """
 
     lookup_field = "pk"
+    lookup_value_regex = "[0-9a-z-]*"
     filterset_class = filters.CourseViewSetFilter
     pagination_class = Pagination
     permission_classes = [permissions.AccessPermission]
@@ -737,3 +747,22 @@ class CourseViewSet(
         return courses.annotate(user_role=Subquery(user_role_query)).prefetch_related(
             "organizations", "products", "course_runs"
         )
+
+    @action(
+        detail=True,
+        methods=["post", "get", "delete"],
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    # pylint: disable=invalid-name
+    def wish(self, request, pk=None):
+        """Action to handle the wish on this course for the logged-in user."""
+        params = {"course": models.Course(pk=pk), "owner": request.user}
+        if request.method == "POST":
+            models.CourseWish.objects.get_or_create(**params)
+            is_wished = True
+        elif request.method == "DELETE":
+            models.CourseWish.objects.filter(**params).delete()
+            is_wished = False
+        else:
+            is_wished = models.CourseWish.objects.filter(**params).exists()
+        return Response({"status": is_wished})
