@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Add admin endpoint to search users
 - Add endpoints to get course product relations and courses from organization
 - Add `max_validated_orders` field to CourseProductRelation model
 - Add api endpoint to retrieve course product relations

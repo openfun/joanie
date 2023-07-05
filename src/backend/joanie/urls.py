@@ -98,6 +98,7 @@ admin_router.register(
     api_admin.CertificateDefinitionViewSet,
     basename="certificate-definitions",
 )
+admin_router.register("users", api_admin.UserViewSet, basename="user")
 
 urlpatterns = [
     path("admin/", admin.site.urls),
