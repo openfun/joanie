@@ -233,3 +233,14 @@ class AdminCourseRunSerializer(serializers.ModelSerializer):
                 )
 
         return validated_data
+
+
+class AdminUserSerializer(serializers.ModelSerializer):
+    """Serializer for User model."""
+
+    full_name = serializers.CharField(source="get_full_name")
+
+    class Meta:
+        model = models.User
+        fields = ["username", "full_name"]
+        read_only_fields = ["username", "full_name"]

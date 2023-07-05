@@ -110,3 +110,24 @@ class CertificateDefinitionAdminFilterSet(filters.FilterSet):
         return queryset.filter(
             Q(name__icontains=value) | Q(translations__title__icontains=value)
         ).distinct()
+
+
+class UserAdminFilterSet(filters.FilterSet):
+    """
+    UserAdminFilter allows to filter this resource with a search for username,
+    first name, last name and email.
+    """
+
+    search = filters.CharFilter(method="filter_search")
+
+    def filter_search(self, queryset, _name, value):
+        """
+        Construct the full expression for search query param.
+        """
+
+        return queryset.filter(
+            Q(username__icontains=value)
+            | Q(first_name__icontains=value)
+            | Q(last_name__icontains=value)
+            | Q(email__icontains=value)
+        )
