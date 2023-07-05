@@ -15,6 +15,10 @@ class OrganizationAdminFilterSet(filters.FilterSet):
     OrganizationAdminFilter allows to filter this resource with a search for code and title.
     """
 
+    class Meta:
+        model = models.Organization
+        fields: List[str] = ["search"]
+
     search = filters.CharFilter(method="filter_search")
 
     def filter_search(self, queryset, _name, value):
@@ -25,15 +29,15 @@ class OrganizationAdminFilterSet(filters.FilterSet):
             Q(code__icontains=value) | Q(translations__title__icontains=value)
         ).distinct()
 
-    class Meta:
-        model = models.Organization
-        fields: List[str] = ["search"]
-
 
 class ProductAdminFilterSet(filters.FilterSet):
     """
     ProductAdminFilterSet allows to filter this resource with an insensitive search by title.
     """
+
+    class Meta:
+        model = models.Product
+        fields: List[str] = ["search"]
 
     search = filters.CharFilter(method="filter_search")
 
@@ -44,15 +48,15 @@ class ProductAdminFilterSet(filters.FilterSet):
         """
         return queryset.filter(translations__title__icontains=value).distinct()
 
-    class Meta:
-        model = models.Product
-        fields: List[str] = ["search"]
-
 
 class CourseRunAdminFilterSet(filters.FilterSet):
     """
     CourseRunAdminFilter allows to filter this resource with a search title.
     """
+
+    class Meta:
+        model = models.CourseRun
+        fields: List[str] = ["search"]
 
     search = filters.CharFilter(method="filter_search")
     resource_link = filters.CharFilter(
@@ -65,15 +69,15 @@ class CourseRunAdminFilterSet(filters.FilterSet):
         """
         return queryset.filter(translations__title__icontains=value).distinct()
 
-    class Meta:
-        model = models.CourseRun
-        fields: List[str] = ["search"]
-
 
 class CourseAdminFilterSet(filters.FilterSet):
     """
     CourseAdminFilter allows to filter this resource with a search for code and title.
     """
+
+    class Meta:
+        model = models.Course
+        fields: List[str] = ["search"]
 
     search = filters.CharFilter(method="filter_search")
 
@@ -85,16 +89,16 @@ class CourseAdminFilterSet(filters.FilterSet):
             Q(code__icontains=value) | Q(translations__title__icontains=value)
         ).distinct()
 
-    class Meta:
-        model = models.Course
-        fields: List[str] = ["search"]
-
 
 class CertificateDefinitionAdminFilterSet(filters.FilterSet):
     """
     CertificateDefinitionAdminFilter allows to filter this resource with a search
     for name and title.
     """
+
+    class Meta:
+        model = models.CertificateDefinition
+        fields: List[str] = ["search"]
 
     search = filters.CharFilter(method="filter_search")
 
@@ -106,7 +110,3 @@ class CertificateDefinitionAdminFilterSet(filters.FilterSet):
         return queryset.filter(
             Q(name__icontains=value) | Q(translations__title__icontains=value)
         ).distinct()
-
-    class Meta:
-        model = models.CertificateDefinition
-        fields: List[str] = ["search"]
