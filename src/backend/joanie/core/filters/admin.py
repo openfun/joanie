@@ -4,6 +4,7 @@ Admin API Resource Filters
 from typing import List
 
 from django.db.models import Q
+from django.utils import timezone as django_timezone
 
 from django_filters import rest_framework as filters
 
@@ -56,9 +57,12 @@ class CourseRunAdminFilterSet(filters.FilterSet):
 
     class Meta:
         model = models.CourseRun
-        fields: List[str] = ["query"]
+        fields: List[str] = ["query", "start", "state"]
 
     query = filters.CharFilter(method="filter_by_query")
+    start = filters.IsoDateTimeFilter(field_name="start", lookup_expr="gte")
+    state = filters.NumberFilter(method="filter_by_state")
+
     resource_link = filters.CharFilter(
         field_name="resource_link", lookup_expr="icontains"
     )
@@ -69,6 +73,55 @@ class CourseRunAdminFilterSet(filters.FilterSet):
         "query" query parameter.
         """
         return queryset.filter(translations__title__icontains=value).distinct()
+
+    def filter_by_state(self, queryset, _name, value):
+        """
+        Filter resource by looking for states that match the one provided
+        in the "state" parameter
+        """
+        now = django_timezone.now()
+        if value == models.CourseState.ONGOING_OPEN:
+            queryset = queryset.filter(
+                start__lte=now,
+                end__gt=now,
+                enrollment_start__lte=now,
+                enrollment_end__gt=now,
+            )
+        elif value == models.CourseState.FUTURE_OPEN:
+            queryset = queryset.filter(
+                start__gt=now, enrollment_start__lte=now, enrollment_end__gt=now
+            )
+        elif value == models.CourseState.ARCHIVED_OPEN:
+            queryset = queryset.filter(
+                end__lte=now,
+                enrollment_start__lte=now,
+                enrollment_end__gt=now,
+            )
+        elif value == models.CourseState.FUTURE_NOT_YET_OPEN:
+            queryset = queryset.filter(
+                start__gt=now,
+                enrollment_start__gt=now,
+            )
+        elif value == models.CourseState.FUTURE_CLOSED:
+            queryset = queryset.filter(start__gt=now, enrollment_end__lte=now)
+        elif value == models.CourseState.ONGOING_CLOSED:
+            queryset = queryset.filter(
+                Q(enrollment_end__lte=now) | Q(enrollment_start__gt=now),
+                start__lte=now,
+                end__gt=now,
+            )
+        elif value == models.CourseState.ARCHIVED_CLOSED:
+            queryset = queryset.filter(
+                Q(enrollment_end__lte=now) | Q(enrollment_start__gt=now),
+                end__lte=now,
+            )
+        elif value == models.CourseState.TO_BE_SCHEDULED:
+            queryset = queryset.filter(
+                Q(start__isnull=True) | Q(enrollment_start__isnull=True)
+            )
+        elif value != "":
+            queryset = queryset.none()
+        return queryset
 
 
 class CourseAdminFilterSet(filters.FilterSet):

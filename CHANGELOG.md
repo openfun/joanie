@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Add filters to CourseRun list for a given course on admin api
 - Allow issuing a certificate directly for an enrollment (without an order)
 - Generate certificates for products of type `certificate`
 - Add route detailing current user

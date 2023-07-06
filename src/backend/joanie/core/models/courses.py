@@ -710,7 +710,7 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
         now = django_timezone.now()
         if start < now:
             if end > now:
-                if enrollment_end > now:
+                if enrollment_start <= now < enrollment_end:
                     # ongoing open
                     return CourseState(CourseState.ONGOING_OPEN, enrollment_end)
                 # ongoing closed

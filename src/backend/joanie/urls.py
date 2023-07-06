@@ -112,6 +112,9 @@ admin_course_related_router = DefaultRouter()
 admin_course_related_router.register(
     "accesses", api_admin.CourseAccessViewSet, basename="admin_course_accesses"
 )
+admin_course_related_router.register(
+    "course-runs", api_admin.CourseRunViewSet, basename="course-course-runs"
+)
 
 # Admin API routes nested under an organization
 admin_organization_related_router = DefaultRouter()
@@ -120,6 +123,7 @@ admin_organization_related_router.register(
     api_admin.OrganizationAccessViewSet,
     basename="admin_organization_accesses",
 )
+
 
 urlpatterns = [
     path("admin/", admin.site.urls),

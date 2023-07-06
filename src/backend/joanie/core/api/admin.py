@@ -76,6 +76,19 @@ class CourseRunViewSet(viewsets.ModelViewSet):
     filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
     filterset_class = filters.CourseRunAdminFilterSet
 
+    def get_queryset(self):
+        """
+        Return CourseRun linked to specified course if an id is given or
+        all CourseRuns
+        """
+        queryset = super().get_queryset()
+        course_id = self.kwargs.get("course_id")
+
+        if course_id:
+            queryset = queryset.filter(course=course_id)
+
+        return queryset
+
 
 class CertificateDefinitionViewSet(viewsets.ModelViewSet):
     """
