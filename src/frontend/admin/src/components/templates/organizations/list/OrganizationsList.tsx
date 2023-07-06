@@ -28,10 +28,10 @@ const messages = defineMessages({
 export function OrganizationsList() {
   const intl = useIntl();
   const { push } = useRouter();
-  const [search, setSearch] = useState<Maybe<string>>();
-  const orgs = useOrganizations({ search });
+  const [query, setQuery] = useState<Maybe<string>>();
+  const orgs = useOrganizations({ query });
 
-  const debouncedSetSearch = useDebouncedCallback(setSearch, 300);
+  const debouncedSetQuery = useDebouncedCallback(setQuery, 300);
 
   const columns: GridColDef[] = [
     {
@@ -62,7 +62,7 @@ export function OrganizationsList() {
       loading={orgs.states.isLoading || orgs.states.fetching}
       columns={columns}
       columnBuffer={3}
-      onSearch={debouncedSetSearch}
+      onSearch={debouncedSetQuery}
       onEditClick={(organization: Organization) =>
         push(PATH_ADMIN.organizations.edit(organization.id))
       }

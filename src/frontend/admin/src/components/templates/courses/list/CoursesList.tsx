@@ -33,11 +33,11 @@ const messages = defineMessages({
 export function CoursesList() {
   const intl = useIntl();
   const { push } = useRouter();
-  const [search, setSearch] = useState<Maybe<string>>();
-  const courses = useCourses({ search });
+  const [query, setQuery] = useState<Maybe<string>>();
+  const courses = useCourses({ query });
 
-  const onSearch = useDebouncedCallback((term) => {
-    setSearch(term);
+  const debouncedSetQuery = useDebouncedCallback((term) => {
+    setQuery(term);
   }, 300);
 
   const columns: GridColDef<Course>[] = [
@@ -75,7 +75,7 @@ export function CoursesList() {
       loading={courses.states.isLoading}
       columns={columns}
       columnBuffer={4}
-      onSearch={onSearch}
+      onSearch={debouncedSetQuery}
       getEntityName={(course) => {
         return course.title;
       }}

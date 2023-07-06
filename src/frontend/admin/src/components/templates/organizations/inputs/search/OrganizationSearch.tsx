@@ -11,18 +11,15 @@ import { Maybe } from "@/types/utils";
 export function OrganizationSearch(
   props: RHFAutocompleteSearchProps<Organization>
 ) {
-  const [search, setSearch] = useState("");
-  const organizations = useOrganizations(
-    { search },
-    { enabled: search !== "" }
-  );
+  const [query, setQuery] = useState("");
+  const organizations = useOrganizations({ query }, { enabled: query !== "" });
 
   return (
     <RHFSearch
       {...props}
       items={organizations.items}
       loading={organizations.states.fetching}
-      onFilter={setSearch}
+      onFilter={setQuery}
       getOptionLabel={(option: Maybe<Organization>) => option?.title ?? ""}
       isOptionEqualToValue={(option, value) => option.title === value.title}
     />

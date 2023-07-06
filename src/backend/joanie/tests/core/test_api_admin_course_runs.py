@@ -55,7 +55,7 @@ class CourseRunAdminApiTest(TestCase):
         content = response.json()
         self.assertEqual(content["count"], course_runs_count)
 
-    def test_admin_api_course_runs_list_filtered_by_search(self):
+    def test_admin_api_course_runs_list_filter_by_query(self):
         """
         Staff user should be able to get a paginated list of course runs filtered through
         a search text
@@ -65,19 +65,19 @@ class CourseRunAdminApiTest(TestCase):
         course_runs_count = random.randint(1, 10)
         items = factories.CourseRunFactory.create_batch(course_runs_count)
 
-        response = self.client.get("/api/v1.0/admin/course-runs/?search=")
+        response = self.client.get("/api/v1.0/admin/course-runs/?query=")
         self.assertEqual(response.status_code, 200)
         content = response.json()
         self.assertEqual(content["count"], course_runs_count)
 
         response = self.client.get(
-            f"/api/v1.0/admin/course-runs/?search={items[0].title}"
+            f"/api/v1.0/admin/course-runs/?query={items[0].title}"
         )
         self.assertEqual(response.status_code, 200)
         content = response.json()
         self.assertEqual(content["count"], 1)
 
-    def test_admin_api_course_runs_list_filtered_by_search_language(self):
+    def test_admin_api_course_runs_list_filter_by_query_language(self):
         """
         Staff user should be able to get a paginated list of course runs filtered through
         a search text and with different languages
@@ -87,14 +87,14 @@ class CourseRunAdminApiTest(TestCase):
         item = factories.CourseRunFactory(title="Course run 1")
         item.translations.create(language_code="fr-fr", title="Session 1")
 
-        response = self.client.get("/api/v1.0/admin/course-runs/?search=Course")
+        response = self.client.get("/api/v1.0/admin/course-runs/?query=Course")
         self.assertEqual(response.status_code, 200)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["title"], "Course run 1")
 
         response = self.client.get(
-            "/api/v1.0/admin/course-runs/?search=Session", HTTP_ACCEPT_LANGUAGE="fr-fr"
+            "/api/v1.0/admin/course-runs/?query=Session", HTTP_ACCEPT_LANGUAGE="fr-fr"
         )
         self.assertEqual(response.status_code, 200)
         content = response.json()
@@ -102,7 +102,7 @@ class CourseRunAdminApiTest(TestCase):
         self.assertEqual(content["results"][0]["title"], "Session 1")
 
         response = self.client.get(
-            "/api/v1.0/admin/course-runs/?search=Course", HTTP_ACCEPT_LANGUAGE="fr-fr"
+            "/api/v1.0/admin/course-runs/?query=Course", HTTP_ACCEPT_LANGUAGE="fr-fr"
         )
         self.assertEqual(response.status_code, 200)
         content = response.json()

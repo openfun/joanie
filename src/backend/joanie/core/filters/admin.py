@@ -12,18 +12,18 @@ from joanie.core import models
 
 class OrganizationAdminFilterSet(filters.FilterSet):
     """
-    OrganizationAdminFilter allows to filter this resource with a search for code and title.
+    OrganizationAdminFilter allows to filter this resource with a query for code and title.
     """
 
     class Meta:
         model = models.Organization
-        fields: List[str] = ["search"]
+        fields: List[str] = ["query"]
 
-    search = filters.CharFilter(method="filter_search")
+    query = filters.CharFilter(method="filter_by_query")
 
-    def filter_search(self, queryset, _name, value):
+    def filter_by_query(self, queryset, _name, value):
         """
-        construct the full expression for search query param.
+        Filter the resource through "query" query parameter.
         """
         return queryset.filter(
             Q(code__icontains=value) | Q(translations__title__icontains=value)
@@ -32,58 +32,60 @@ class OrganizationAdminFilterSet(filters.FilterSet):
 
 class ProductAdminFilterSet(filters.FilterSet):
     """
-    ProductAdminFilterSet allows to filter this resource with an insensitive search by title.
+    ProductAdminFilterSet allows to filter this resource with an insensitive query by title.
     """
 
     class Meta:
         model = models.Product
-        fields: List[str] = ["search"]
+        fields: List[str] = ["query"]
 
-    search = filters.CharFilter(method="filter_search")
+    query = filters.CharFilter(method="filter_by_query")
 
-    def filter_search(self, queryset, _name, value):
+    def filter_by_query(self, queryset, _name, value):
         """
-        Filter resource by looking for title which contains provided value in search
-        query parameter.
+        Filter resource by looking for title which contains provided value in
+        "query" query parameter.
         """
         return queryset.filter(translations__title__icontains=value).distinct()
 
 
 class CourseRunAdminFilterSet(filters.FilterSet):
     """
-    CourseRunAdminFilter allows to filter this resource with a search title.
+    CourseRunAdminFilter allows to filter this resource with a query title.
     """
 
     class Meta:
         model = models.CourseRun
-        fields: List[str] = ["search"]
+        fields: List[str] = ["query"]
 
-    search = filters.CharFilter(method="filter_search")
+    query = filters.CharFilter(method="filter_by_query")
     resource_link = filters.CharFilter(
         field_name="resource_link", lookup_expr="icontains"
     )
 
-    def filter_search(self, queryset, _name, value):
+    def filter_by_query(self, queryset, _name, value):
         """
-        construct the full expression for search query param.
+        Filter resource by looking for title which contains provided value in
+        "query" query parameter.
         """
         return queryset.filter(translations__title__icontains=value).distinct()
 
 
 class CourseAdminFilterSet(filters.FilterSet):
     """
-    CourseAdminFilter allows to filter this resource with a search for code and title.
+    CourseAdminFilter allows to filter this resource with a query for code and title.
     """
 
     class Meta:
         model = models.Course
-        fields: List[str] = ["search"]
+        fields: List[str] = ["query"]
 
-    search = filters.CharFilter(method="filter_search")
+    query = filters.CharFilter(method="filter_by_query")
 
-    def filter_search(self, queryset, _name, value):
+    def filter_by_query(self, queryset, _name, value):
         """
-        construct the full expression for search query param.
+        Filter resource by looking for code, title which contains provided value in
+        "query" query parameter.
         """
         return queryset.filter(
             Q(code__icontains=value) | Q(translations__title__icontains=value)
@@ -92,19 +94,20 @@ class CourseAdminFilterSet(filters.FilterSet):
 
 class CertificateDefinitionAdminFilterSet(filters.FilterSet):
     """
-    CertificateDefinitionAdminFilter allows to filter this resource with a search
+    CertificateDefinitionAdminFilter allows to filter this resource with a query
     for name and title.
     """
 
     class Meta:
         model = models.CertificateDefinition
-        fields: List[str] = ["search"]
+        fields: List[str] = ["query"]
 
-    search = filters.CharFilter(method="filter_search")
+    query = filters.CharFilter(method="filter_by_query")
 
-    def filter_search(self, queryset, _name, value):
+    def filter_by_query(self, queryset, _name, value):
         """
-        construct the full expression for search query param.
+        Filter resource by looking for name, title which contains provided value in
+        "query" query parameter.
         """
 
         return queryset.filter(
@@ -114,15 +117,16 @@ class CertificateDefinitionAdminFilterSet(filters.FilterSet):
 
 class UserAdminFilterSet(filters.FilterSet):
     """
-    UserAdminFilter allows to filter this resource with a search for username,
+    UserAdminFilter allows to filter this resource with a query for username,
     first name, last name and email.
     """
 
-    search = filters.CharFilter(method="filter_search")
+    query = filters.CharFilter(method="filter_by_query")
 
-    def filter_search(self, queryset, _name, value):
+    def filter_by_query(self, queryset, _name, value):
         """
-        Construct the full expression for search query param.
+        Filter resource by looking for username, first_name, last_name and email which
+        contains provided value in "query" query parameter.
         """
 
         return queryset.filter(

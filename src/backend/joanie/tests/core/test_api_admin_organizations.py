@@ -92,7 +92,7 @@ class OrganizationAdminApiTest(TestCase):
         "to_representation",
         return_value="_this_field_is_mocked",
     )
-    def test_admin_api_organization_list_filtered_by_search(self, _):
+    def test_admin_api_organization_list_filter_by_query(self, _):
         """
         Staff user should be able to get a paginated list of organizations filtered
         through a search text
@@ -102,20 +102,20 @@ class OrganizationAdminApiTest(TestCase):
         organization_count = random.randint(1, 10)
         items = factories.OrganizationFactory.create_batch(organization_count)
 
-        response = self.client.get("/api/v1.0/admin/organizations/?search=")
+        response = self.client.get("/api/v1.0/admin/organizations/?query=")
         self.assertEqual(response.status_code, 200)
         content = response.json()
         self.assertEqual(content["count"], organization_count)
 
         response = self.client.get(
-            f"/api/v1.0/admin/organizations/?search={items[0].title}"
+            f"/api/v1.0/admin/organizations/?query={items[0].title}"
         )
         self.assertEqual(response.status_code, 200)
         content = response.json()
         self.assertEqual(content["count"], 1)
 
         response = self.client.get(
-            f"/api/v1.0/admin/organizations/?search={items[0].code}"
+            f"/api/v1.0/admin/organizations/?query={items[0].code}"
         )
         self.assertEqual(response.status_code, 200)
         content = response.json()
@@ -147,7 +147,7 @@ class OrganizationAdminApiTest(TestCase):
             },
         )
 
-    def test_admin_api_organization_list_filtered_by_search_language(self):
+    def test_admin_api_organization_list_filter_by_query_language(self):
         """
         Staff user should be able to get a paginated list of organizations
         filtered through a search text and different languages
@@ -157,14 +157,14 @@ class OrganizationAdminApiTest(TestCase):
         item = factories.OrganizationFactory(code="Univ", title="University")
         item.translations.create(language_code="fr-fr", title="Université")
 
-        response = self.client.get("/api/v1.0/admin/organizations/?search=Uni")
+        response = self.client.get("/api/v1.0/admin/organizations/?query=Uni")
         self.assertEqual(response.status_code, 200)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["title"], "University")
 
         response = self.client.get(
-            "/api/v1.0/admin/organizations/?search=Université",
+            "/api/v1.0/admin/organizations/?query=Université",
             HTTP_ACCEPT_LANGUAGE="fr-fr",
         )
         self.assertEqual(response.status_code, 200)
@@ -173,7 +173,7 @@ class OrganizationAdminApiTest(TestCase):
         self.assertEqual(content["results"][0]["title"], "Université")
 
         response = self.client.get(
-            "/api/v1.0/admin/organizations/?search=university",
+            "/api/v1.0/admin/organizations/?query=university",
             HTTP_ACCEPT_LANGUAGE="fr-fr",
         )
         self.assertEqual(response.status_code, 200)

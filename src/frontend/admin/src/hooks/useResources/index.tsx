@@ -8,7 +8,7 @@ import { HttpError } from "@/services/http/HttpError";
 
 export interface ResourcesQuery {
   id?: string;
-  search?: string;
+  query?: string;
 }
 
 export interface Resource {

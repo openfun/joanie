@@ -57,7 +57,7 @@ class CertificateDefinitionAdminApiTest(TestCase):
         content = response.json()
         self.assertEqual(content["count"], certification_definitions_count)
 
-    def test_admin_api_certificate_definition_list_filtered_by_search(self):
+    def test_admin_api_certificate_definition_list_filter_by_query(self):
         """
         Staff user should be able to get a paginated list of certificates definitions filtered
         through a search text
@@ -69,20 +69,20 @@ class CertificateDefinitionAdminApiTest(TestCase):
             certification_definitions_count
         )
 
-        response = self.client.get("/api/v1.0/admin/certificate-definitions/?search=")
+        response = self.client.get("/api/v1.0/admin/certificate-definitions/?query=")
         self.assertEqual(response.status_code, 200)
         content = response.json()
         self.assertEqual(content["count"], certification_definitions_count)
 
         response = self.client.get(
-            f"/api/v1.0/admin/certificate-definitions/?search={items[0].title}"
+            f"/api/v1.0/admin/certificate-definitions/?query={items[0].title}"
         )
         self.assertEqual(response.status_code, 200)
         content = response.json()
         self.assertEqual(content["count"], 1)
 
         response = self.client.get(
-            f"/api/v1.0/admin/certificate-definitions/?search={items[0].name}"
+            f"/api/v1.0/admin/certificate-definitions/?query={items[0].name}"
         )
         self.assertEqual(response.status_code, 200)
         content = response.json()
@@ -107,7 +107,7 @@ class CertificateDefinitionAdminApiTest(TestCase):
             },
         )
 
-    def test_admin_api_certificate_definition_list_filtered_by_search_language(self):
+    def test_admin_api_certificate_definition_list_filter_by_query_language(self):
         """
         Staff user should be able to get a paginated list of certificates definitions
         filtered through a search text and with different languages
@@ -118,7 +118,7 @@ class CertificateDefinitionAdminApiTest(TestCase):
         item.translations.create(language_code="fr-fr", title="Certificat 1")
 
         response = self.client.get(
-            "/api/v1.0/admin/certificate-definitions/?search=Certificate 1"
+            "/api/v1.0/admin/certificate-definitions/?query=Certificate 1"
         )
         self.assertEqual(response.status_code, 200)
         content = response.json()
@@ -126,7 +126,7 @@ class CertificateDefinitionAdminApiTest(TestCase):
         self.assertEqual(content["results"][0]["title"], "Certificate 1")
 
         response = self.client.get(
-            "/api/v1.0/admin/certificate-definitions/?search=Certificat 1",
+            "/api/v1.0/admin/certificate-definitions/?query=Certificat 1",
             HTTP_ACCEPT_LANGUAGE="fr-fr",
         )
         self.assertEqual(response.status_code, 200)
@@ -135,7 +135,7 @@ class CertificateDefinitionAdminApiTest(TestCase):
         self.assertEqual(content["results"][0]["title"], "Certificat 1")
 
         response = self.client.get(
-            "/api/v1.0/admin/certificate-definitions/?search=Certificate 1",
+            "/api/v1.0/admin/certificate-definitions/?query=Certificate 1",
             HTTP_ACCEPT_LANGUAGE="fr-fr",
         )
         self.assertEqual(response.status_code, 200)
