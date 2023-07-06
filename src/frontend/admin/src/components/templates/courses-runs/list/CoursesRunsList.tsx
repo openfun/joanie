@@ -14,10 +14,10 @@ import { useCoursesRuns } from "@/hooks/useCourseRun/useCourseRun";
 export function CoursesRunsList() {
   const intl = useIntl();
   const { push } = useRouter();
-  const [search, setSearch] = useState<Maybe<string>>();
-  const courseRuns = useCoursesRuns({ search });
+  const [query, setQuery] = useState<Maybe<string>>();
+  const courseRuns = useCoursesRuns({ query });
 
-  const debouncedSetSearch = useDebouncedCallback(setSearch, 300);
+  const debouncedSetQuery = useDebouncedCallback(setQuery, 300);
 
   const columns: GridColDef[] = useMemo(
     () => getCoursesRunsListColumns(intl),
@@ -29,7 +29,7 @@ export function CoursesRunsList() {
       rows={courseRuns.items}
       loading={courseRuns.states.isLoading}
       columns={columns}
-      onSearch={debouncedSetSearch}
+      onSearch={debouncedSetQuery}
       columnBuffer={6}
       onEditClick={(courseRun: CourseRun) => {
         if (courseRun.id) {

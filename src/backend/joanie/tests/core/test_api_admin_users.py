@@ -55,7 +55,7 @@ class UserAdminApiTest(TestCase):
         content = response.json()
         self.assertEqual(content["count"], 0)
 
-    def test_admin_api_user_list_filtered_by_search(self):
+    def test_admin_api_user_list_filter_by_query(self):
         """
         Staff user should be able to list users by searching for their username, email
         or full_name.
@@ -83,14 +83,14 @@ class UserAdminApiTest(TestCase):
         )
 
         # An empty search should return no results
-        response = self.client.get("/api/v1.0/admin/users/?search=")
+        response = self.client.get("/api/v1.0/admin/users/?query=")
         self.assertEqual(response.status_code, 200)
         content = response.json()
 
         self.assertEqual(content["count"], 0)
 
         # Search by username
-        response = self.client.get("/api/v1.0/admin/users/?search=fnz")
+        response = self.client.get("/api/v1.0/admin/users/?query=fnz")
         self.assertEqual(response.status_code, 200)
         content = response.json()
         self.assertEqual(content["count"], 1)
@@ -103,13 +103,13 @@ class UserAdminApiTest(TestCase):
         )
 
         # Search by email
-        response = self.client.get("/api/v1.0/admin/users/?search=@example.fr")
+        response = self.client.get("/api/v1.0/admin/users/?query=@example.fr")
         self.assertEqual(response.status_code, 200)
         content = response.json()
         self.assertEqual(content["count"], 3)
 
         # Search by firstname
-        response = self.client.get("/api/v1.0/admin/users/?search=joanie")
+        response = self.client.get("/api/v1.0/admin/users/?query=joanie")
         self.assertEqual(response.status_code, 200)
         content = response.json()
         self.assertEqual(content["count"], 1)
@@ -122,7 +122,7 @@ class UserAdminApiTest(TestCase):
         )
 
         # Search by lastname
-        response = self.client.get("/api/v1.0/admin/users/?search=Cunningham")
+        response = self.client.get("/api/v1.0/admin/users/?query=Cunningham")
         self.assertEqual(response.status_code, 200)
         content = response.json()
         self.assertEqual(content["count"], 2)

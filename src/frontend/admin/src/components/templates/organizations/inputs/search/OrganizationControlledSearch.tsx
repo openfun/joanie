@@ -11,20 +11,17 @@ import ControlledSelect, {
 export function OrganizationControlledSearch(
   props: Omit<ControlledSelectProps<Organization>, "options">
 ) {
-  const [search, setSearch] = useState("");
-  const organizations = useOrganizations(
-    { search },
-    { enabled: search !== "" }
-  );
+  const [query, setQuery] = useState("");
+  const organizations = useOrganizations({ query }, { enabled: query !== "" });
 
-  const debouncedSetSearch = useDebouncedCallback(setSearch, 300);
+  const debouncedSetQuery = useDebouncedCallback(setQuery, 300);
 
   return (
     <ControlledSelect
       {...props}
-      options={search === "" ? [] : organizations.items}
+      options={query === "" ? [] : organizations.items}
       loading={organizations.states.fetching}
-      onFilter={debouncedSetSearch}
+      onFilter={debouncedSetQuery}
       label="Search organization"
       getOptionLabel={(option: Maybe<Organization>) => option?.title ?? ""}
       isOptionEqualToValue={(option, value) => option.code === value.code}

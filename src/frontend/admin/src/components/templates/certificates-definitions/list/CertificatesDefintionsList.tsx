@@ -28,10 +28,10 @@ const messages = defineMessages({
 export function CertificatesDefinitionsList() {
   const intl = useIntl();
   const { push } = useRouter();
-  const [search, setSearch] = useState<Maybe<string>>();
-  const certificateDefinitions = useCertificateDefinitions({ search });
+  const [query, setQuery] = useState<Maybe<string>>();
+  const certificateDefinitions = useCertificateDefinitions({ query });
 
-  const debouncedSetSearch = useDebouncedCallback(setSearch, 300);
+  const debouncedSetQuery = useDebouncedCallback(setQuery, 300);
 
   const columns: GridColDef<CertificateDefinition>[] = [
     {
@@ -71,7 +71,7 @@ export function CertificatesDefinitionsList() {
       rows={certificateDefinitions.items}
       loading={certificateDefinitions.states.fetching}
       columns={columns}
-      onSearch={debouncedSetSearch}
+      onSearch={debouncedSetQuery}
       columnBuffer={3}
       onEditClick={(certificateDefinition: CertificateDefinition) => {
         if (certificateDefinition.id === undefined) {

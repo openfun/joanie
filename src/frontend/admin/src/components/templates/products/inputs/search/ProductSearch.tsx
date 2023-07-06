@@ -9,15 +9,15 @@ import { useProducts } from "@/hooks/useProducts/useProducts";
 import { Product } from "@/services/api/models/Product";
 
 export function ProductSearch(props: RHFAutocompleteSearchProps<Product>) {
-  const [search, setSearch] = useState("");
-  const courses = useProducts({ search }, { enabled: search !== "" });
+  const [query, setQuery] = useState("");
+  const courses = useProducts({ query }, { enabled: query !== "" });
 
   return (
     <RHFSearch
       {...props}
       items={courses.items}
       loading={courses.states.fetching}
-      onFilter={(term) => setSearch(term)}
+      onFilter={setQuery}
       getOptionLabel={(option: Maybe<Product>) => option?.title ?? ""}
       isOptionEqualToValue={(option, value) => option.title === value.title}
     />
