@@ -116,7 +116,7 @@ class CourseFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.Course
 
-    code = factory.Sequence(lambda n: n)
+    code = factory.Sequence(lambda n: f"{n:06d}")
     title = factory.Sequence(lambda n: f"Course {n}")
     cover = factory.django.ImageField(
         filename="cover.png", format="png", width=1, height=1
