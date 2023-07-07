@@ -1,6 +1,8 @@
 """
 Client API endpoints
 """
+import uuid
+
 from django.db import IntegrityError, transaction
 from django.db.models import Count, OuterRef, Q, Subquery
 from django.http import HttpResponse
@@ -12,6 +14,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
 from rest_framework.exceptions import ValidationError as DRFValidationError
+from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
 from joanie.core import enums, filters, models, permissions, serializers
@@ -629,24 +632,24 @@ class CourseAccessViewSet(
     """
     API ViewSet for all interactions with course accesses.
 
-    GET /api/courses/<course_id>/accesses/:<course_access_id>
+    GET /api/courses/<course_id|course_code>/accesses/:<course_access_id>
         Return list of all course accesses related to the logged-in user or one
         course access if an id is provided.
 
-    POST /api/courses/<course_id>/accesses/ with expected data:
+    POST /api/courses/<course_id|course_code>/accesses/ with expected data:
         - user: str
         - role: str [owner|admin|member]
         Return newly created course access
 
-    PUT /api/courses/<course_id>/accesses/<course_access_id>/ with expected data:
+    PUT /api/courses/<course_id|course_code>/accesses/<course_access_id>/ with expected data:
         - role: str [owner|admin|member]
         Return updated course access
 
-    PATCH /api/courses/<course_id>/accesses/<course_access_id>/ with expected data:
+    PATCH /api/courses/<course_id|course_code>/accesses/<course_access_id>/ with expected data:
         - role: str [owner|admin|member]
         Return partially updated course access
 
-    DELETE /api/courses/<course_id>/accesses/<course_access_id>/
+    DELETE /api/courses/<course_id|course_code>/accesses/<course_access_id>/
         Delete targeted course access
     """
 
@@ -702,16 +705,16 @@ class CourseViewSet(
     GET /api/courses/
         Return list of all courses related to the logged-in user.
 
-    GET /api/courses/:<course_id>
+    GET /api/courses/:<course_id|course_code>
         Return one course if an id is provided.
 
-    GET /api/courses/:<course_id>/wish
+    GET /api/courses/:<course_id|course_code>/wish
         Return wish status on this course for the authenticated user
 
-    POST /api/courses/:<course_id>/wish
+    POST /api/courses/:<course_id|course_code>/wish
         Confirm a wish on this course for the authenticated user
 
-    DELETE /api/courses/:<course_id>/wish
+    DELETE /api/courses/:<course_id|course_code>/wish
         Delete any existing wish on this course for the authenticated user
     """
 
@@ -722,6 +725,21 @@ class CourseViewSet(
     permission_classes = [permissions.AccessPermission]
     serializer_class = serializers.CourseSerializer
     ordering = ["-created_on"]
+
+    def get_object(self):
+        """Allow getting a course by its pk or by its code."""
+        queryset = self.filter_queryset(self.get_queryset())
+        try:
+            uuid.UUID(self.kwargs["pk"])
+        except ValueError:
+            filter_field = "code__iexact"
+        else:
+            filter_field = "pk"
+
+        obj = get_object_or_404(queryset, **{filter_field: self.kwargs["pk"]})
+        # May raise a permission denied
+        self.check_object_permissions(self.request, obj)
+        return obj
 
     def get_queryset(self):
         """

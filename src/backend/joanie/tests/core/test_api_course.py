@@ -261,6 +261,37 @@ class CourseApiTest(BaseAPITestCase):
             },
         )
 
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_course_get_authenticated_by_code(self, _):
+        """
+        Authenticated users should be able to get a course through its code
+        if they have access to it.
+        """
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+
+        course = factories.CourseFactory(code="MYCODE-0088")
+        factories.UserCourseAccessFactory(user=user, course=course)
+        factories.CourseProductRelationFactory(
+            course=course,
+            product=factories.ProductFactory(),
+            organizations=[factories.OrganizationFactory()],
+        )
+
+        with self.assertNumQueries(8):
+            response = self.client.get(
+                "/api/v1.0/courses/mycode-0088/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["id"], str(course.id))
+
     def test_api_course_create_anonymous(self):
         """
         Anonymous users should not be able to create a course.
