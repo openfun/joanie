@@ -5,7 +5,7 @@ import random
 
 from django.test import TestCase
 
-from joanie.core import factories
+from joanie.core import factories, models
 
 
 class CertificateDefinitionAdminApiTest(TestCase):
@@ -250,3 +250,63 @@ class CertificateDefinitionAdminApiTest(TestCase):
         )
 
         self.assertEqual(response.status_code, 204)
+
+    def test_admin_api_certificate_definition_bulk_delete(self):
+        """
+        Staff user should be able to delete multiple certificate_definitions.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        certificate_definitions = factories.CertificateDefinitionFactory.create_batch(3)
+        factories.CertificateDefinitionFactory()
+        data = {
+            "id": [
+                str(certificate_definition.id)
+                for certificate_definition in certificate_definitions
+            ]
+        }
+        response = self.client.delete(
+            "/api/v1.0/admin/certificate-definitions/",
+            data=data,
+            content_type="application/json",
+        )
+        content = response.json()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(models.CertificateDefinition.objects.count(), 1)
+        self.assertEqual(len(content["deleted"]), 3)
+        self.assertFalse("error" in content)
+
+    def test_admin_api_certificate_definition_bulk_delete_error(self):
+        """
+        CertificateDefinition linked to a Certificate cannot be deleted.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        certificate_definitions = factories.CertificateDefinitionFactory.create_batch(2)
+        factories.CertificateFactory(certificate_definition=certificate_definitions[0])
+        data = {
+            "id": [
+                str(certificate_definition.id)
+                for certificate_definition in certificate_definitions
+            ]
+        }
+        response = self.client.delete(
+            "/api/v1.0/admin/certificate-definitions/",
+            data=data,
+            content_type="application/json",
+        )
+        content = response.json()
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(
+            models.CertificateDefinition.objects.filter(
+                id=certificate_definitions[0].id
+            ).exists()
+        )
+        self.assertFalse(
+            models.CertificateDefinition.objects.filter(
+                id=certificate_definitions[1].id
+            ).exists()
+        )
+        self.assertEqual(len(content["deleted"]), 1)
+        self.assertEqual(content["deleted"][0], str(certificate_definitions[1].id))
+        self.assertEqual(len(content["error"]), 1)

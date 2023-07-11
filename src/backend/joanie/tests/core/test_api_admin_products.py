@@ -5,7 +5,7 @@ import random
 
 from django.test import TestCase
 
-from joanie.core import factories
+from joanie.core import factories, models
 
 
 class ProductAdminApiTest(TestCase):
@@ -148,3 +148,40 @@ class ProductAdminApiTest(TestCase):
         response = self.client.delete(f"/api/v1.0/admin/products/{product.id}/")
 
         self.assertEqual(response.status_code, 204)
+
+    def test_admin_api_product_bulk_delete(self):
+        """
+        Staff user should be able to delete multiple products.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        products = factories.ProductFactory.create_batch(3)
+        factories.ProductFactory()
+        data = {"id": [str(product.id) for product in products]}
+        response = self.client.delete(
+            "/api/v1.0/admin/products/", data=data, content_type="application/json"
+        )
+        content = response.json()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(models.Product.objects.count(), 1)
+        self.assertEqual(len(content["deleted"]), 3)
+        self.assertFalse("error" in content)
+
+    def test_admin_api_product_bulk_delete_error(self):
+        """
+        Products linked to Order cannot be deleted
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        products = factories.ProductFactory.create_batch(3)
+        factories.OrderFactory(product=products[0])
+        data = {"id": [str(product.id) for product in products]}
+        response = self.client.delete(
+            "/api/v1.0/admin/products/", data=data, content_type="application/json"
+        )
+        content = response.json()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(models.Product.objects.count(), 1)
+        self.assertTrue(models.Product.objects.filter(id=products[0].id).exists())
+        self.assertEqual(len(content["deleted"]), 2)
+        self.assertEqual(len(content["error"]), 1)
