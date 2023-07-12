@@ -10,8 +10,13 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import { defineMessages, useIntl } from "react-intl";
 import { useTheme } from "@mui/material/styles";
+import ListItemText from "@mui/material/ListItemText";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import ExitToAppIcon from "@mui/icons-material/ExitToApp";
 import { DashboardNavItem } from "@/layouts/dashboard/nav/item/DashboardNavItem";
 import { DashboardNavItemsList } from "@/layouts/dashboard/nav/item/list/DasboardNavItemsList";
+import { useAuthContext } from "@/components/auth/context/AuthContext";
 
 const messages = defineMessages({
   settingsSubHeader: {
@@ -24,9 +29,20 @@ const messages = defineMessages({
     defaultMessage: "Notifications",
     description: "Notifications navigation label",
   },
+  profile: {
+    id: "layouts.dashboard.nav.account.profile",
+    defaultMessage: "Profile",
+    description: "Profile nav label",
+  },
+  logout: {
+    id: "layouts.dashboard.nav.account.logout",
+    defaultMessage: "Logout",
+    description: "Logout nav label",
+  },
 });
 
 export function DashboardLayoutNavAccount() {
+  const authContext = useAuthContext();
   const ref = useRef<HTMLButtonElement>(null);
   const [navAccountMenuIsOpen, setNavAccountMenuIsOpen] = useState(false);
   const intl = useIntl();
@@ -38,6 +54,13 @@ export function DashboardLayoutNavAccount() {
 
   const handleCloseMenu = () => {
     setNavAccountMenuIsOpen(false);
+  };
+
+  const logout = () => {
+    authContext.updateUser(null);
+    // AuthRepository.logout(() => {
+    //   authContext.updateUser(null);
+    // });
   };
 
   return (
@@ -83,8 +106,25 @@ export function DashboardLayoutNavAccount() {
             open={navAccountMenuIsOpen}
             onClose={handleCloseMenu}
           >
-            <MenuItem onClick={handleCloseMenu}>Profile</MenuItem>
-            <MenuItem onClick={handleCloseMenu}>My account</MenuItem>
+            <MenuItem onClick={handleCloseMenu}>
+              <ListItemIcon>
+                <AccountCircleIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>
+                {intl.formatMessage(messages.profile)}
+              </ListItemText>
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
+                logout();
+                handleCloseMenu();
+              }}
+            >
+              <ListItemIcon>
+                <ExitToAppIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>{intl.formatMessage(messages.logout)}</ListItemText>
+            </MenuItem>
           </Menu>
         </Box>
         <DashboardNavItem

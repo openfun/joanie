@@ -21,6 +21,7 @@ import { LocalesEnum } from "@/types/i18n/LocalesEnum";
 import { TranslationsProvider } from "@/contexts/i18n/TranslationsProvider/TranslationsProvider";
 import { REACT_QUERY_SETTINGS } from "@/utils/settings";
 import { JoanieThemeProvider } from "@/theme/JoanieThemeProvider";
+import { AuthContextProvider } from "@/components/auth/context/AuthContext";
 
 type NextPageWithLayout = NextPage & {
   getLayout?: (page: React.ReactElement) => React.ReactNode;
@@ -96,7 +97,9 @@ export default function App({ Component, pageProps }: MyAppProps) {
               maxSnack={3}
               anchorOrigin={{ horizontal: "right", vertical: "top" }}
             >
-              {getLayout(<Component {...pageProps} />)}
+              <AuthContextProvider initialUser={{}}>
+                {getLayout(<Component {...pageProps} />)}
+              </AuthContextProvider>
             </SnackbarProvider>
           </JoanieThemeProvider>
         </CacheProvider>

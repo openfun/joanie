@@ -21,4 +21,24 @@ export const commonTranslations = defineMessages({
     defaultMessage: "Language",
     description: "Common language label",
   },
+  username: {
+    id: "translations.common.commonTranslations.username",
+    defaultMessage: "Username",
+    description: "Common username label",
+  },
+  email: {
+    id: "translations.common.commonTranslations.email",
+    defaultMessage: "Email",
+    description: "Common email label",
+  },
+  password: {
+    id: "translations.common.commonTranslations.password",
+    defaultMessage: "Password",
+    description: "Common password label",
+  },
+  login: {
+    id: "translations.common.commonTranslations.login",
+    defaultMessage: "Log in",
+    description: "Common log in label",
+  },
 });

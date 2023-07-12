@@ -33,7 +33,7 @@ export function RHFProvider<T extends FieldValues>({
   const intl = useIntl();
   return (
     <FormProvider {...methods}>
-      <form id={id} onSubmit={onSubmit}>
+      <form style={{ width: "100%" }} id={id} onSubmit={onSubmit}>
         {children}
         <Box mt={2} display="flex" justifyContent="flex-end">
           <LoadingButton

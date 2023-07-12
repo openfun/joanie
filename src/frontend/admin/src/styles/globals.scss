@@ -1,6 +1,11 @@
 @use "abstracts";
 
+html, body, #__next {
+  height: 100%;
+}
+
 body {
+  margin: 0;
   color: rgb(var(--foreground-rgb));
   background: white;
   overflow: auto;

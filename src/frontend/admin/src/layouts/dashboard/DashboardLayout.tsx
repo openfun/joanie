@@ -4,6 +4,7 @@ import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import { DashboardLayoutHeader } from "@/layouts/dashboard/header/DashboardLayoutHeader";
 import { DashboardNav } from "@/layouts/dashboard/nav/DashboardNav";
+import { AuthGuard } from "@/components/auth/guard/AuthGuard";
 
 const Main = styled("main", { shouldForwardProp: (prop) => prop !== "open" })<{
   open?: boolean;
@@ -40,14 +41,16 @@ export function DashboardLayout(props: PropsWithChildren) {
   };
 
   return (
-    <Box sx={{ display: "flex" }}>
-      <DashboardLayoutHeader
-        open={open}
-        onToggleNavigation={handleToggleDrawer}
-      />
-      <DashboardNav open={open} handleClose={handleDrawerClose} />
+    <AuthGuard>
+      <Box sx={{ display: "flex" }}>
+        <DashboardLayoutHeader
+          open={open}
+          onToggleNavigation={handleToggleDrawer}
+        />
+        <DashboardNav open={open} handleClose={handleDrawerClose} />
 
-      <Main open={open}>{props.children}</Main>
-    </Box>
+        <Main open={open}>{props.children}</Main>
+      </Box>
+    </AuthGuard>
   );
 }

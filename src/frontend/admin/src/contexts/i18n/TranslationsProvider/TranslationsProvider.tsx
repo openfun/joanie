@@ -60,7 +60,7 @@ export function TranslationsProvider({
           messages={translations}
           defaultLocale={LocalesEnum.ENGLISH}
         >
-          {allLanguages && <div>{props.children}</div>}
+          {allLanguages && props.children}
         </IntlProvider>
       </LocalizationProvider>
     </LocaleContext.Provider>
