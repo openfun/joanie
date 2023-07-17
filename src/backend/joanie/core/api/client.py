@@ -726,17 +726,25 @@ class CourseViewSet(
     serializer_class = serializers.CourseSerializer
     ordering = ["-created_on"]
 
-    def get_object(self):
-        """Allow getting a course by its pk or by its code."""
-        queryset = self.filter_queryset(self.get_queryset())
+    @property
+    def lookup_filter(self):
+        """
+        Return the filter field to use to get the course object.
+        """
         try:
             uuid.UUID(self.kwargs["pk"])
         except ValueError:
-            filter_field = "code__iexact"
+            lookup_filter = "code__iexact"
         else:
-            filter_field = "pk"
+            lookup_filter = "pk"
 
-        obj = get_object_or_404(queryset, **{filter_field: self.kwargs["pk"]})
+        return lookup_filter
+
+    def get_object(self):
+        """Allow getting a course by its pk or by its code."""
+        queryset = self.filter_queryset(self.get_queryset())
+
+        obj = get_object_or_404(queryset, **{self.lookup_filter: self.kwargs["pk"]})
         # May raise a permission denied
         self.check_object_permissions(self.request, obj)
         return obj
@@ -774,7 +782,13 @@ class CourseViewSet(
     # pylint: disable=invalid-name
     def wish(self, request, pk=None):
         """Action to handle the wish on this course for the logged-in user."""
-        params = {"course": models.Course(pk=pk), "owner": request.user}
+        course = get_object_or_404(
+            models.Course.objects.all(), **{self.lookup_filter: pk}
+        )
+        params = {
+            "course": course,
+            "owner": request.user,
+        }
         if request.method == "POST":
             models.CourseWish.objects.get_or_create(**params)
             is_wished = True

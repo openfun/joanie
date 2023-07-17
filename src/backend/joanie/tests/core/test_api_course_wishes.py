@@ -13,7 +13,7 @@ class CourseWishAPITestCase(BaseAPITestCase):
 
     def test_api_course_wish_get_anonymous(self):
         """An anonymous user should not be able to get a course wish."""
-        course = factories.CourseWishFactory()
+        course = factories.CourseFactory()
         response = self.client.get(f"/api/v1.0/courses/{course.id}/wish/")
 
         self.assertEqual(response.status_code, 401)
@@ -23,7 +23,7 @@ class CourseWishAPITestCase(BaseAPITestCase):
 
     def test_api_course_wish_get_bad_token(self):
         """It should not be possible to get a course wish with a bad user token."""
-        course = factories.CourseWishFactory()
+        course = factories.CourseFactory()
         response = self.client.get(
             f"/api/v1.0/courses/{course.id}/wish/",
             HTTP_AUTHORIZATION="Bearer nawak",
@@ -34,7 +34,7 @@ class CourseWishAPITestCase(BaseAPITestCase):
 
     def test_api_course_wish_get_expired_token(self):
         """Get user wish not allowed with user token expired"""
-        course = factories.CourseWishFactory()
+        course = factories.CourseFactory()
         token = self.get_user_token(
             "panoramix",
             expires_at=arrow.utcnow().shift(days=-1).datetime,
@@ -52,7 +52,7 @@ class CourseWishAPITestCase(BaseAPITestCase):
         """
         If we try to get a course wish for a user not in db, a new user is created first.
         """
-        course = factories.CourseWishFactory()
+        course = factories.CourseFactory()
         username = "panoramix"
         token = self.get_user_token(username)
 
@@ -67,6 +67,24 @@ class CourseWishAPITestCase(BaseAPITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"status": False})
         self.assertTrue(models.User.objects.filter(username=username).exists())
+
+    def test_api_course_wish_unknown_course(self):
+        """Get course wish for an unknown course should return a 404."""
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+        course = factories.CourseFactory.build()
+
+        response = self.client.get(
+            f"/api/v1.0/courses/{course.id}/wish/",
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertContains(
+            response,
+            "Not found.",
+            status_code=404,
+        )
 
     def test_api_course_wish_get_existing(self):
         """Get existing course wish for a user present in db."""
@@ -150,6 +168,21 @@ class CourseWishAPITestCase(BaseAPITestCase):
 
         response = self.client.post(
             f"/api/v1.0/courses/{course.id}/wish/",
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"status": True})
+
+    def test_api_course_wish_create_success_with_course_code(self):
+        """Logged-in users should be able to create a course wish with course code."""
+        course = factories.CourseFactory()
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+
+        response = self.client.post(
+            f"/api/v1.0/courses/{course.code}/wish/",
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
