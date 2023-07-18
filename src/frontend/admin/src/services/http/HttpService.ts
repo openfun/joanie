@@ -51,7 +51,7 @@ interface CheckStatusOptions {
 
 export async function checkStatus(
   response: Response,
-  options: CheckStatusOptions = { fallbackValue: null, ignoredErrorStatus: [] }
+  options: CheckStatusOptions = { fallbackValue: null, ignoredErrorStatus: [] },
 ): Promise<any> {
   if (response.ok) {
     if (response.headers.get("Content-Type") === "application/json") {

@@ -16,7 +16,7 @@ const build = (): Organization => {
 export function OrganizationFactory(): Organization;
 export function OrganizationFactory(count: number): Organization[];
 export function OrganizationFactory(
-  count?: number
+  count?: number,
 ): Organization | Organization[] {
   if (count) return [...Array(count)].map(build);
   return build();

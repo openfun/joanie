@@ -31,7 +31,7 @@ export default function CoursesRunsCreatePage() {
         },
         {
           name: intl.formatMessage(
-            coursesRunsPagesTranslation.createBreadcrumb
+            coursesRunsPagesTranslation.createBreadcrumb,
           ),
           isActive: true,
         },

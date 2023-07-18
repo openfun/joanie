@@ -10,7 +10,7 @@ describe("<CustomBreadcrumb />", () => {
           { name: "Courses" },
           { name: "List", isActive: true },
         ]}
-      />
+      />,
     );
     await screen.findByText("Home");
     screen.getByText("Courses");

@@ -42,10 +42,10 @@ export default function ControlledSelect<T>({
 }
 
 export const useControlledSelect = <T extends unknown>(
-  initialSelectedOptions: T[] = []
+  initialSelectedOptions: T[] = [],
 ) => {
   const [selectedOptions, setSelectedOptions] = useState<T[]>(
-    initialSelectedOptions
+    initialSelectedOptions,
   );
 
   const onSelectItem = (option: T) => {

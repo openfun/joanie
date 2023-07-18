@@ -7,7 +7,7 @@ describe("<CourseProductRelationForm/>", () => {
     render(
       <TestingWrapper>
         <CourseProductRelationForm />
-      </TestingWrapper>
+      </TestingWrapper>,
     );
 
     await screen.findByText("Product");

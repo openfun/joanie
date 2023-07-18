@@ -6,7 +6,7 @@ export interface RHFAutocompleteProps<
   T,
   Multiple extends boolean | undefined,
   DisableClearable extends boolean | undefined = false,
-  FreeSolo extends boolean | undefined = false
+  FreeSolo extends boolean | undefined = false,
 > extends Omit<
     AutocompleteProps<T, Multiple, DisableClearable, FreeSolo>,
     "renderInput"
@@ -20,7 +20,7 @@ export default function RHFAutocomplete<
   T,
   Multiple extends boolean | undefined = false,
   DisableClearable extends boolean | undefined = false,
-  FreeSolo extends boolean | undefined = false
+  FreeSolo extends boolean | undefined = false,
 >({
   name,
   label,

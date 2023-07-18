@@ -27,26 +27,26 @@ export const CertificateDefinitionRepository: AbstractRepository<
 > = class CertificateDefinitionRepository {
   static get(
     id: string,
-    filters?: Maybe<ResourcesQuery>
+    filters?: Maybe<ResourcesQuery>,
   ): Promise<CertificateDefinition> {
     const url = certificateDefinitionRoutes.get(
       id,
-      filters ? `?${queryString.stringify(filters)}` : ""
+      filters ? `?${queryString.stringify(filters)}` : "",
     );
     return fetchApi(url, { method: "GET" }).then(checkStatus);
   }
 
   static getAll(
-    filters: Maybe<ResourcesQuery>
+    filters: Maybe<ResourcesQuery>,
   ): Promise<CertificateDefinition[]> {
     const url = certificateDefinitionRoutes.getAll(
-      filters ? `?${queryString.stringify(filters)}` : ""
+      filters ? `?${queryString.stringify(filters)}` : "",
     );
     return fetchApi(url, { method: "GET" }).then(checkStatus);
   }
 
   static create(
-    payload: DTOCertificateDefinition
+    payload: DTOCertificateDefinition,
   ): Promise<CertificateDefinition> {
     return fetchApi(certificateDefinitionRoutes.create, {
       method: "POST",
@@ -62,7 +62,7 @@ export const CertificateDefinitionRepository: AbstractRepository<
 
   static update(
     id: string,
-    payload: DTOCertificateDefinition
+    payload: DTOCertificateDefinition,
   ): Promise<CertificateDefinition> {
     return fetchApi(certificateDefinitionRoutes.update(id), {
       method: "PATCH",

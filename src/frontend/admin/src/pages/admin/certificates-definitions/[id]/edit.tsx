@@ -28,18 +28,18 @@ export default function EditCertificatePage() {
       breadcrumbs={[
         {
           name: intl.formatMessage(
-            certificateDefinitionsBreadcrumbsTranslation.rootBreadcrumb
+            certificateDefinitionsBreadcrumbsTranslation.rootBreadcrumb,
           ),
         },
         {
           name: intl.formatMessage(
-            certificateDefinitionsBreadcrumbsTranslation.listBreadcrumb
+            certificateDefinitionsBreadcrumbsTranslation.listBreadcrumb,
           ),
           href: PATH_ADMIN.certificates.list,
         },
         {
           name: intl.formatMessage(
-            certificateDefinitionsBreadcrumbsTranslation.editBreadcrumb
+            certificateDefinitionsBreadcrumbsTranslation.editBreadcrumb,
           ),
           isActive: true,
         },

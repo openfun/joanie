@@ -28,14 +28,14 @@ export const CoursesRunsRepository: Repository = class CoursesRunsRepository {
   static get(id: string, filters?: Maybe<ResourcesQuery>): Promise<CourseRun> {
     const url = coursesRunsRoute.get(
       id,
-      filters ? `?${queryString.stringify(filters)}` : ""
+      filters ? `?${queryString.stringify(filters)}` : "",
     );
     return fetchApi(url, { method: "GET" }).then(checkStatus);
   }
 
   static getAll(filters: Maybe<ResourcesQuery>): Promise<CourseRun[]> {
     const url = coursesRunsRoute.getAll(
-      filters ? `?${queryString.stringify(filters)}` : ""
+      filters ? `?${queryString.stringify(filters)}` : "",
     );
     return fetchApi(url, { method: "GET" }).then(checkStatus);
   }

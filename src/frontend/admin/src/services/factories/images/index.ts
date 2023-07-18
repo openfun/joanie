@@ -14,7 +14,7 @@ const build = (): ThumbnailDetailField => {
 export function ThumbnailDetailFactory(): ThumbnailDetailField;
 export function ThumbnailDetailFactory(count: number): ThumbnailDetailField[];
 export function ThumbnailDetailFactory(
-  count?: number
+  count?: number,
 ): ThumbnailDetailField | ThumbnailDetailField[] {
   if (count) return [...Array(count)].map(build);
   return build();

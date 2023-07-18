@@ -16,7 +16,7 @@ import { courseRunFormMessages } from "@/components/templates/courses-runs/form/
 import { CourseSearch } from "@/components/templates/courses/inputs/search/CourseSearch";
 import { Course } from "@/services/api/models/Course";
 import { useCoursesRuns } from "@/hooks/useCourseRun/useCourseRun";
-import { ServerSideErrorForm } from "@/types/utils";
+import { ServerSideErrorForm, ToFormValues } from "@/types/utils";
 import {
   JoanieLanguage,
   RHFSelectLanguage,
@@ -25,7 +25,10 @@ import {
 import { genericUpdateFormError } from "@/utils/forms";
 import { TranslatableContent } from "@/components/presentational/translatable-content/TranslatableContent";
 
-interface FormValues extends Omit<CourseRun, "course" | "languages"> {
+interface FormValues
+  extends ToFormValues<
+    Omit<CourseRun, "course" | "state" | "languages" | "id">
+  > {
   course: Course;
   languages: JoanieLanguage[];
 }
@@ -42,15 +45,15 @@ export function CourseRunForm({ courseRun, ...props }: Props) {
 
   const RegisterSchema = Yup.object().shape({
     title: Yup.string().required(),
-    course: Yup.mixed().required(),
+    course: Yup.mixed<Course>().required(),
     resource_link: Yup.string().required(),
-    languages: Yup.array().of(Yup.mixed()).required(),
-    is_gradable: Yup.boolean(),
-    is_listed: Yup.boolean(),
-    start: Yup.string().required(),
-    end: Yup.string(),
-    enrollment_start: Yup.string(),
-    enrollment_end: Yup.string(),
+    start: Yup.string().nullable(),
+    end: Yup.string().nullable(),
+    enrollment_start: Yup.string().nullable(),
+    enrollment_end: Yup.string().nullable(),
+    languages: Yup.array<JoanieLanguage>().required(),
+    is_gradable: Yup.boolean().required(),
+    is_listed: Yup.boolean().required(),
   });
 
   const getDefaultValues = () => {
@@ -135,7 +138,7 @@ export function CourseRunForm({ courseRun, ...props }: Props) {
               <RHFTextField
                 name="resource_link"
                 label={intl.formatMessage(
-                  courseRunFormMessages.resourceLinkLabel
+                  courseRunFormMessages.resourceLinkLabel,
                 )}
               />
             </Grid>
@@ -149,7 +152,7 @@ export function CourseRunForm({ courseRun, ...props }: Props) {
             <Grid xs={12}>
               <Typography variant="subtitle2">
                 {intl.formatMessage(
-                  courseRunFormMessages.courseRunDatesSubtitle
+                  courseRunFormMessages.courseRunDatesSubtitle,
                 )}
               </Typography>
             </Grid>
@@ -162,7 +165,7 @@ export function CourseRunForm({ courseRun, ...props }: Props) {
             <Grid xs={12}>
               <Typography variant="subtitle2">
                 {intl.formatMessage(
-                  courseRunFormMessages.enrollmentDatesSubtitle
+                  courseRunFormMessages.enrollmentDatesSubtitle,
                 )}
               </Typography>
             </Grid>
@@ -170,7 +173,7 @@ export function CourseRunForm({ courseRun, ...props }: Props) {
               <RHFDateTimePicker
                 name="enrollment_start"
                 label={intl.formatMessage(
-                  courseRunFormMessages.enrollmentStartLabel
+                  courseRunFormMessages.enrollmentStartLabel,
                 )}
               />
             </Grid>
@@ -178,7 +181,7 @@ export function CourseRunForm({ courseRun, ...props }: Props) {
               <RHFDateTimePicker
                 name="enrollment_end"
                 label={intl.formatMessage(
-                  courseRunFormMessages.enrollmentEndLabel
+                  courseRunFormMessages.enrollmentEndLabel,
                 )}
               />
             </Grid>

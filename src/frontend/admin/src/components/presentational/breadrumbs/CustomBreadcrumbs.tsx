@@ -45,7 +45,7 @@ export function CustomBreadcrumbs({ links }: Props) {
           >
             {linkItem.name}
           </Typography>
-        )
+        ),
       )}
     </Breadcrumbs>
   );

@@ -14,7 +14,7 @@ import { OrganizationControlledSearch } from "@/components/templates/organizatio
 import { Product } from "@/services/api/models/Product";
 
 interface FormValues {
-  product?: Product | null;
+  product: Product | null;
   organizations: Organization[];
 }
 
@@ -24,8 +24,8 @@ interface Props {
 }
 
 export const CourseProductRelationFormSchema = Yup.object().shape({
-  product: Yup.mixed().required(),
-  organizations: Yup.array().of(Yup.mixed()).min(1),
+  product: Yup.mixed<Product>().required().nullable(),
+  organizations: Yup.array().required(),
 });
 
 export function CourseProductRelationForm({ relation, onSubmit }: Props) {

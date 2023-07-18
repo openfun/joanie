@@ -8,7 +8,7 @@ describe("<CourseForm/>", () => {
     render(
       <TestingWrapper>
         <CourseForm />
-      </TestingWrapper>
+      </TestingWrapper>,
     );
 
     await screen.findByText("Main information");
@@ -25,7 +25,7 @@ describe("<CourseForm/>", () => {
     render(
       <TestingWrapper>
         <CourseForm course={course} />
-      </TestingWrapper>
+      </TestingWrapper>,
     );
     const title: HTMLInputElement = await screen.findByRole("textbox", {
       name: "Title",

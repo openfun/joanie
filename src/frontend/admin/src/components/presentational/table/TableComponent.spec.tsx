@@ -23,7 +23,7 @@ describe("<TableComponent/>", () => {
     render(
       <IntlProvider locale="en">
         <TableComponent rows={data} columns={columns} />
-      </IntlProvider>
+      </IntlProvider>,
     );
 
     await screen.findByText("Last name");

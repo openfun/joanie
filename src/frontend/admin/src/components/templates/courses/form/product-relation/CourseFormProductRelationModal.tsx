@@ -60,7 +60,7 @@ export function CourseFormProductRelationModal(props: Props) {
   return (
     <CustomModal
       title={intl.formatMessage(
-        mode === Mode.EDIT ? messages.editModalTitle : messages.addModalTitle
+        mode === Mode.EDIT ? messages.editModalTitle : messages.addModalTitle,
       )}
       open={props.open}
       handleClose={props.handleClose}

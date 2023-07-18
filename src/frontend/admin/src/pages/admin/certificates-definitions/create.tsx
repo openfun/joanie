@@ -23,18 +23,18 @@ export default function CreateOrganizationPage() {
       breadcrumbs={[
         {
           name: intl.formatMessage(
-            certificateDefinitionsBreadcrumbsTranslation.rootBreadcrumb
+            certificateDefinitionsBreadcrumbsTranslation.rootBreadcrumb,
           ),
         },
         {
           name: intl.formatMessage(
-            certificateDefinitionsBreadcrumbsTranslation.listBreadcrumb
+            certificateDefinitionsBreadcrumbsTranslation.listBreadcrumb,
           ),
           href: PATH_ADMIN.certificates.list,
         },
         {
           name: intl.formatMessage(
-            certificateDefinitionsBreadcrumbsTranslation.createBreadcrumb
+            certificateDefinitionsBreadcrumbsTranslation.createBreadcrumb,
           ),
           isActive: true,
         },

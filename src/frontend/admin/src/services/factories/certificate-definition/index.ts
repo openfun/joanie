@@ -13,10 +13,10 @@ const build = () => {
 
 export function CertificateDefinitionFactory(): CertificateDefinition;
 export function CertificateDefinitionFactory(
-  count: number
+  count: number,
 ): CertificateDefinition[];
 export function CertificateDefinitionFactory(
-  count?: number
+  count?: number,
 ): CertificateDefinition | CertificateDefinition[] {
   if (count) return [...Array(count)].map(build);
   return build();

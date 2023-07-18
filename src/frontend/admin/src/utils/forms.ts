@@ -6,7 +6,7 @@ import { ServerSideErrorForm } from "@/types/utils";
 export const appendToFormData = (
   key: string,
   value: any,
-  formData: FormData = new FormData()
+  formData: FormData = new FormData(),
 ) => {
   // TODO: Manage FileList
   if (Array.isArray(value)) {
@@ -32,7 +32,7 @@ export const exportToFormData = (payload: any): FormData => {
   const formData = new FormData();
 
   Object.entries(payload).forEach(([key, value]) =>
-    appendToFormData(key, value, formData)
+    appendToFormData(key, value, formData),
   );
 
   return formData;
@@ -40,7 +40,7 @@ export const exportToFormData = (payload: any): FormData => {
 
 export const genericUpdateFormError = <T extends FieldValues>(
   errors: ServerSideErrorForm<T>,
-  setError: UseFormSetError<T>
+  setError: UseFormSetError<T>,
 ) => {
   Object.entries(errors).forEach((entry) => {
     const key: string = entry[0];

@@ -253,8 +253,8 @@ jobs:
           path: ~/joanie
       - restore_cache:
           keys:
-            - v1-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
-            - v1-frontend-admin-dependencies-
+            - v2-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
+            - v2-frontend-admin-dependencies-
       - run:
           name: Install front-end dependencies
           command: yarn install
@@ -271,7 +271,7 @@ jobs:
       - save_cache:
           paths:
             - ./node_modules
-          key: v1-frontend-admin-dependencies-{{ checksum "yarn.lock" }}
+          key: v2-frontend-admin-dependencies-{{ checksum "yarn.lock" }}
 
   lint-front-admin:
     docker:
@@ -285,8 +285,8 @@ jobs:
           path: ~/joanie
       - restore_cache:
           keys:
-            - v1-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
-            - v1-frontend-admin-dependencies-
+            - v2-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
+            - v2-frontend-admin-dependencies-
       - run:
           name: Run lint command
           command: yarn lint
@@ -303,8 +303,8 @@ jobs:
           path: ~/joanie
       - restore_cache:
           keys:
-            - v1-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
-            - v1-frontend-admin-dependencies-
+            - v2-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
+            - v2-frontend-admin-dependencies-
       - run:
           name: Run test command
           command: yarn test -w 3 --shard "$(($CIRCLE_NODE_INDEX + 1))/$CIRCLE_NODE_TOTAL"

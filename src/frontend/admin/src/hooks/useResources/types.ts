@@ -10,7 +10,7 @@ export interface ResourcesQuery {
 
 export interface ApiResourceInterface<
   TData extends Resource,
-  TResourceQuery extends ResourcesQuery = ResourcesQuery
+  TResourceQuery extends ResourcesQuery = ResourcesQuery,
 > {
   get: (filters?: TResourceQuery) => any;
   create?: (payload: any) => Promise<TData>;

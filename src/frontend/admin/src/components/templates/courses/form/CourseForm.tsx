@@ -11,7 +11,7 @@ import Typography from "@mui/material/Typography";
 import { useIntl } from "react-intl";
 import {
   Course,
-  CourseFormValue,
+  CourseFormValues,
   DTOCourse,
   transformCourseToDTO,
 } from "@/services/api/models/Course";
@@ -21,7 +21,6 @@ import { courseFormMessages } from "@/components/templates/courses/form/translat
 import { commonTranslations } from "@/translations/common/commonTranslations";
 import { useModal } from "@/components/presentational/modal/useModal";
 import { CourseFormProductRelationModal } from "@/components/templates/courses/form/product-relation/CourseFormProductRelationModal";
-import { CourseProductRelationFormSchema } from "@/components/templates/courses/form/product-relation/CourseProductRelationForm";
 import { DndDefaultRow } from "@/components/presentational/dnd/DndDefaultRow";
 import { OrganizationSearch } from "@/components/templates/organizations/inputs/search/OrganizationSearch";
 import { CourseRelationToProduct } from "@/services/api/models/Relations";
@@ -29,6 +28,7 @@ import { Maybe, ServerSideErrorForm } from "@/types/utils";
 import { useCourses } from "@/hooks/useCourses/useCourses";
 import { genericUpdateFormError } from "@/utils/forms";
 import { TranslatableContent } from "@/components/presentational/translatable-content/TranslatableContent";
+import { Organization } from "@/services/api/models/Organization";
 
 interface Props {
   afterSubmit?: (course: Course) => void;
@@ -48,8 +48,8 @@ export function CourseForm({ course, ...props }: Props) {
   const RegisterSchema = Yup.object().shape({
     code: Yup.string().required(),
     title: Yup.string().required(),
-    organizations: Yup.array().min(1),
-    product_relations: Yup.array().of(CourseProductRelationFormSchema),
+    organizations: Yup.array<Organization>().min(1).required(),
+    product_relations: Yup.array<CourseRelationToProduct>(),
   });
 
   const getDefaultValues = () => {
@@ -61,7 +61,7 @@ export function CourseForm({ course, ...props }: Props) {
     };
   };
 
-  const methods = useForm<CourseFormValue>({
+  const methods = useForm<CourseFormValues>({
     resolver: yupResolver(RegisterSchema),
     defaultValues: getDefaultValues(),
   });
@@ -73,18 +73,18 @@ export function CourseForm({ course, ...props }: Props) {
 
   const editRelation = (
     relation: CourseRelationToProduct,
-    index: number
+    index: number,
   ): void => {
     setEditRelationToProduct(relation);
     setEditRelationToProductIndex(index);
     relationToProductModal.handleOpen();
   };
 
-  const updateFormError = (errors: ServerSideErrorForm<CourseFormValue>) => {
+  const updateFormError = (errors: ServerSideErrorForm<CourseFormValues>) => {
     genericUpdateFormError(errors, methods.setError);
   };
 
-  const onSubmit = (values: CourseFormValue): void => {
+  const onSubmit = (values: CourseFormValues): void => {
     const payload: DTOCourse = transformCourseToDTO(values);
 
     if (course) {
@@ -144,7 +144,7 @@ export function CourseForm({ course, ...props }: Props) {
                 multiple={true}
                 name="organizations"
                 label={intl.formatMessage(
-                  courseFormMessages.organizationsLabel
+                  courseFormMessages.organizationsLabel,
                 )}
               />
             </Grid>
@@ -161,7 +161,7 @@ export function CourseForm({ course, ...props }: Props) {
                   onClick={relationToProductModal.handleOpen}
                 >
                   {intl.formatMessage(
-                    courseFormMessages.addRelationButtonLabel
+                    courseFormMessages.addRelationButtonLabel,
                   )}
                 </Button>
               </Box>

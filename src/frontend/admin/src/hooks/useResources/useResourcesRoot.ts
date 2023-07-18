@@ -69,7 +69,7 @@ type MutateFunc<TApiMethod extends Maybe<(...args: any[]) => any>> =
       options?: MutateOptions<
         Awaited<ReturnType<NonNullable<TApiMethod>>>,
         HttpError
-      >
+      >,
     ]
   >;
 
@@ -91,7 +91,8 @@ const emptyArray: never[] = [];
 export const useResourcesRoot = <
   TData extends Resource,
   TResourceQuery extends ResourcesQuery = ResourcesQuery,
-  TApiResource extends ApiResourceInterface<TData> = ApiResourceInterface<TData>
+  TApiResource extends
+    ApiResourceInterface<TData> = ApiResourceInterface<TData>,
 >({
   queryKey,
   apiInterface,
@@ -110,7 +111,7 @@ export const useResourcesRoot = <
 
   const actualMessages = useMemo(
     () => ({ ...messages, ...resourceMessages }),
-    [resourceMessages]
+    [resourceMessages],
   );
 
   const COMMON_QUERY_KEY = frozenQueryKey
@@ -124,7 +125,7 @@ export const useResourcesRoot = <
 
   const queryFn: () => Promise<any> = useCallback(
     () => api.get(filters),
-    [api, filters]
+    [api, filters],
   );
 
   const updateError = (newError: Maybe<string>) => {
@@ -279,7 +280,7 @@ export const useResourcesRoot = <
       deleting: writeHandlers.delete?.isLoading,
       updating: writeHandlers.update?.isLoading,
       isLoading: [...Object.values(writeHandlers), readHandler].some(
-        (value) => value?.isLoading
+        (value) => value?.isLoading,
       ),
       isFetched: readHandler.isFetched,
       error,

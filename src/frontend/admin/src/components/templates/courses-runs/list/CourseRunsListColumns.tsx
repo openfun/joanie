@@ -44,7 +44,7 @@ const messages = defineMessages({
 });
 
 export const getCoursesRunsListColumns = (
-  intl: IntlShape
+  intl: IntlShape,
 ): GridColDef<CourseRun>[] => {
   return [
     {
