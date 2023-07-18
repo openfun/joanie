@@ -8,7 +8,7 @@ describe("<CertificateDefinitionForm/>", () => {
     render(
       <TestingWrapper>
         <CertificateDefinitionForm />
-      </TestingWrapper>
+      </TestingWrapper>,
     );
     await screen.findByRole("textbox", { name: "Title" });
     screen.getByRole("textbox", { name: "Name" });
@@ -22,7 +22,7 @@ describe("<CertificateDefinitionForm/>", () => {
     render(
       <TestingWrapper>
         <CertificateDefinitionForm definition={definition} />
-      </TestingWrapper>
+      </TestingWrapper>,
     );
     const title: HTMLInputElement = await screen.findByRole("textbox", {
       name: "Title",

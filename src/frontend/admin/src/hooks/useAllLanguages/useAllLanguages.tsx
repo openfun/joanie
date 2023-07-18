@@ -7,7 +7,7 @@ export const useAllLanguages = () => {
     async () => {
       return CoursesRunsRepository.getAllLanguages();
     },
-    { staleTime: Infinity, cacheTime: Infinity }
+    { staleTime: Infinity, cacheTime: Infinity },
   );
 
   return languages?.data ?? undefined;

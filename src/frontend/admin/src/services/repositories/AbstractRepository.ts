@@ -4,7 +4,7 @@ import { Maybe } from "@/types/utils";
 export interface AbstractRepository<
   T,
   Filters extends ResourcesQuery,
-  DTOData
+  DTOData,
 > {
   getAll: (filters?: Maybe<Filters>) => Promise<T[]>;
 

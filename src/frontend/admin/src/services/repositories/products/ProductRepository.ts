@@ -22,14 +22,14 @@ export const ProductRepository: AbstractRepository<
   static get(id: string, filters?: Maybe<ResourcesQuery>): Promise<Product> {
     const url = productRoute.get(
       id,
-      filters ? `?${queryString.stringify(filters)}` : ""
+      filters ? `?${queryString.stringify(filters)}` : "",
     );
     return fetchApi(url, { method: "GET" }).then(checkStatus);
   }
 
   static getAll(filters: Maybe<ResourcesQuery>): Promise<Product[]> {
     const url = productRoute.getAll(
-      filters ? `?${queryString.stringify(filters)}` : ""
+      filters ? `?${queryString.stringify(filters)}` : "",
     );
     return fetchApi(url, { method: "GET" }).then(checkStatus);
   }

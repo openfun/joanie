@@ -7,7 +7,7 @@ describe("<OrganizationsList/>", () => {
     render(
       <TestingWrapper>
         <OrganizationsList />
-      </TestingWrapper>
+      </TestingWrapper>,
     );
 
     await screen.findByText("Code");

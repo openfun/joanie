@@ -7,7 +7,7 @@ describe("<CoursesList/>", () => {
     render(
       <TestingWrapper>
         <CoursesList />
-      </TestingWrapper>
+      </TestingWrapper>,
     );
 
     await screen.findByText("Code");

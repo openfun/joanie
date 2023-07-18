@@ -24,12 +24,12 @@ export default function CertificatesDefinitionsListPage() {
       breadcrumbs={[
         {
           name: intl.formatMessage(
-            certificateDefinitionsBreadcrumbsTranslation.rootBreadcrumb
+            certificateDefinitionsBreadcrumbsTranslation.rootBreadcrumb,
           ),
         },
         {
           name: intl.formatMessage(
-            certificateDefinitionsBreadcrumbsTranslation.listBreadcrumb
+            certificateDefinitionsBreadcrumbsTranslation.listBreadcrumb,
           ),
         },
       ]}

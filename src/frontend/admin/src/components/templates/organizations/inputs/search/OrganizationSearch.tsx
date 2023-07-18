@@ -9,7 +9,7 @@ import { Organization } from "@/services/api/models/Organization";
 import { Maybe } from "@/types/utils";
 
 export function OrganizationSearch(
-  props: RHFAutocompleteSearchProps<Organization>
+  props: RHFAutocompleteSearchProps<Organization>,
 ) {
   const [query, setQuery] = useState("");
   const organizations = useOrganizations({ query }, { enabled: query !== "" });

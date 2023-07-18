@@ -9,7 +9,7 @@ import ControlledSelect, {
 } from "@/components/presentational/inputs/select/ControlledSelect";
 
 export function OrganizationControlledSearch(
-  props: Omit<ControlledSelectProps<Organization>, "options">
+  props: Omit<ControlledSelectProps<Organization>, "options">,
 ) {
   const [query, setQuery] = useState("");
   const organizations = useOrganizations({ query }, { enabled: query !== "" });

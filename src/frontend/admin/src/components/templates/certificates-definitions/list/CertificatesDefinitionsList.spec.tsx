@@ -7,7 +7,7 @@ describe("<CertificatesDefinitionsList/>", () => {
     render(
       <TestingWrapper>
         <CertificatesDefinitionsList />
-      </TestingWrapper>
+      </TestingWrapper>,
     );
 
     await screen.findByText("Name");

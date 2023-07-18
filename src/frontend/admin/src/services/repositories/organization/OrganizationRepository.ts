@@ -25,18 +25,18 @@ export const OrganizationRepository: AbstractRepository<
 > = class OrganizationRepository {
   static get(
     id: string,
-    filters?: Maybe<ResourcesQuery>
+    filters?: Maybe<ResourcesQuery>,
   ): Promise<Organization> {
     const url = organizationRoute.get(
       id,
-      filters ? `?${queryString.stringify(filters)}` : ""
+      filters ? `?${queryString.stringify(filters)}` : "",
     );
     return fetchApi(url, { method: "GET" }).then(checkStatus);
   }
 
   static getAll(filters: Maybe<ResourcesQuery>): Promise<Organization[]> {
     const url = organizationRoute.getAll(
-      filters ? `?${queryString.stringify(filters)}` : ""
+      filters ? `?${queryString.stringify(filters)}` : "",
     );
     return fetchApi(url, { method: "GET" }).then(checkStatus);
   }

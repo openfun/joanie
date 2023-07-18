@@ -16,7 +16,8 @@ import { ApiResourceInterface } from "@/hooks/useResources/types";
 export const useResourcesOmniscient = <
   TData extends Resource,
   TResourceQuery extends ResourcesQuery = ResourcesQuery,
-  TApiResource extends ApiResourceInterface<TData> = ApiResourceInterface<TData>
+  TApiResource extends
+    ApiResourceInterface<TData> = ApiResourceInterface<TData>,
 >({
   filters,
   ...props
@@ -26,7 +27,7 @@ export const useResourcesOmniscient = <
   const [data, setData] = useState<TData[]>([]);
   const actualMessages = useMemo(
     () => ({ ...messages, ...props.messages }),
-    [props.messages]
+    [props.messages],
   );
   const filter = useCallback(() => {
     // The following condition is important, let's illustrate it with the following situation:
@@ -63,7 +64,7 @@ export const useResourcesOmniscient = <
     }
     if (tmpData.length === 0) {
       useResources.methods.setError(
-        intl.formatMessage(actualMessages.errorNotFound)
+        intl.formatMessage(actualMessages.errorNotFound),
       );
       setData([]);
       return;

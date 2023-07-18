@@ -46,11 +46,11 @@ export default function App({ Component, pageProps }: MyAppProps) {
             refetchOnWindowFocus: false,
           },
         },
-      })
+      }),
   );
 
   const [shouldRender, setShouldRender] = useState(
-    !(process.env.NEXT_PUBLIC_API_SOURCE === "mocked")
+    !(process.env.NEXT_PUBLIC_API_SOURCE === "mocked"),
   );
 
   const getLayout =

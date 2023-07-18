@@ -39,7 +39,7 @@ export const CourseRelationToProductFactory = (): CourseRelationToProduct => {
 };
 
 export const CourseRelationsToProductFactory = (
-  number: number = 10
+  number: number = 10,
 ): CourseRelationToProduct[] => {
   return [...Array(number)].map(() => CourseRelationToProductFactory());
 };

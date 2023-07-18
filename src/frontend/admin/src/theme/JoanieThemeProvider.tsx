@@ -14,7 +14,7 @@ export function JoanieThemeProvider(props: PropsWithChildren<Props>) {
         width: 280,
       },
     }),
-    []
+    [],
   );
 
   const theme = createTheme(themeOptions);

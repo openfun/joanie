@@ -25,7 +25,7 @@ export function TranslationsProvider({
 
   const [currentLocale, setCurrentLocale] = useState<LocalesEnum>(locale);
   const [adapterLocale] = useState<Locale>(
-    locale !== LocalesEnum.FRENCH ? fr : enUS
+    locale !== LocalesEnum.FRENCH ? fr : enUS,
   );
 
   useEffect(() => {}, [allLanguages]);
@@ -46,7 +46,7 @@ export function TranslationsProvider({
         setCurrentLocale(newLocale);
       },
     }),
-    [currentLocale]
+    [currentLocale],
   );
 
   return (

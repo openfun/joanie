@@ -34,7 +34,7 @@
       "error",
       { "accessibility": "no-public" }
     ],
-    "react-hooks/exhaustive-deps":  "off",
+    "react-hooks/exhaustive-deps": "off",
     "no-restricted-imports": [
       "error",
       {

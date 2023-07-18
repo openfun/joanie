@@ -23,7 +23,8 @@ export type QueryOptions<TData extends Resource> = Omit<
 export interface UseResourcesProps<
   TData extends Resource,
   TResourceQuery extends ResourcesQuery = ResourcesQuery,
-  TApiResource extends ApiResourceInterface<TData> = ApiResourceInterface<TData>
+  TApiResource extends
+    ApiResourceInterface<TData> = ApiResourceInterface<TData>,
 > {
   queryKey: QueryKey;
   filters?: TResourceQuery;
@@ -41,9 +42,10 @@ export interface UseResourcesProps<
 export const useResourcesCustom = <
   TData extends Resource,
   TResourceQuery extends ResourcesQuery = ResourcesQuery,
-  TApiResource extends ApiResourceInterface<TData> = ApiResourceInterface<TData>
+  TApiResource extends
+    ApiResourceInterface<TData> = ApiResourceInterface<TData>,
 >(
-  props: UseResourcesProps<TData, TResourceQuery, TApiResource>
+  props: UseResourcesProps<TData, TResourceQuery, TApiResource>,
 ) => {
   if (props.omniscient) {
     // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -57,9 +59,10 @@ export const useResources =
   <
     TData extends Resource,
     TResourceQuery extends ResourcesQuery = ResourcesQuery,
-    TApiResource extends ApiResourceInterface<TData> = ApiResourceInterface<TData>
+    TApiResource extends
+      ApiResourceInterface<TData> = ApiResourceInterface<TData>,
   >(
-    props: UseResourcesProps<TData, TResourceQuery, TApiResource>
+    props: UseResourcesProps<TData, TResourceQuery, TApiResource>,
   ) =>
   (filters?: TResourceQuery, queryOptions?: QueryOptions<TData>) => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -69,20 +72,20 @@ export const useResources =
 export const useResource =
   <
     TData extends Resource,
-    TResourceQuery extends ResourcesQuery = ResourcesQuery
+    TResourceQuery extends ResourcesQuery = ResourcesQuery,
   >(
-    props: UseResourcesProps<TData>
+    props: UseResourcesProps<TData>,
   ) =>
   (
     id?: string,
     filters?: Omit<TResourceQuery, "id">,
-    queryOptions?: QueryOptions<TData>
+    queryOptions?: QueryOptions<TData>,
   ) => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const resources = useResources<TData>(props);
     const res = resources(
       { id, ...filters },
-      { ...queryOptions, enabled: !!id }
+      { ...queryOptions, enabled: !!id },
     );
     const { items, ...subRes } = res;
     return { ...subRes, item: items[0] };
