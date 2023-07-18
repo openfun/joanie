@@ -23,9 +23,9 @@ import { TranslatableContent } from "@/components/presentational/translatable-co
 interface FormValues {
   code: string;
   title: string;
-  representative?: string;
-  signature?: File[];
-  logo?: File[];
+  representative: string | undefined;
+  signature: File[] | undefined;
+  logo: File[] | undefined;
 }
 
 interface Props {
@@ -125,14 +125,14 @@ export function OrganizationForm(props: Props) {
               <RHFTextField
                 name="representative"
                 label={intl.formatMessage(
-                  organizationFormMessages.representativeLabel
+                  organizationFormMessages.representativeLabel,
                 )}
               />
             </Grid>
             <Grid xs={12} md={6}>
               <RHFUpload
                 buttonLabel={intl.formatMessage(
-                  organizationFormMessages.uploadLogoButtonLabel
+                  organizationFormMessages.uploadLogoButtonLabel,
                 )}
                 name="logo"
                 accept="image/*"
@@ -143,11 +143,11 @@ export function OrganizationForm(props: Props) {
               <RHFUpload
                 name="signature"
                 buttonLabel={intl.formatMessage(
-                  organizationFormMessages.uploadSignatureButtonLabel
+                  organizationFormMessages.uploadSignatureButtonLabel,
                 )}
                 accept="image/*"
                 label={intl.formatMessage(
-                  organizationFormMessages.signatureLabel
+                  organizationFormMessages.signatureLabel,
                 )}
               />
             </Grid>

@@ -16,6 +16,7 @@ import { genericUpdateFormError } from "@/utils/forms";
 import { TranslatableContent } from "@/components/presentational/translatable-content/TranslatableContent";
 import {
   CertificateDefinition,
+  CertificateDefinitionFormValues,
   DTOCertificateDefinition,
 } from "@/services/api/models/CertificateDefinition";
 
@@ -51,13 +52,13 @@ export function CertificateDefinitionForm({ definition, ...props }: Props) {
   const intl = useIntl();
   const certificateDefinitions = useCertificateDefinitions(
     {},
-    { enabled: false }
+    { enabled: false },
   );
   const RegisterSchema = Yup.object().shape({
     name: Yup.string().required(),
     title: Yup.string().required(),
     description: Yup.string(),
-    template: Yup.mixed(),
+    template: Yup.string(),
   });
 
   const getDefaultValues = () => {
@@ -69,13 +70,13 @@ export function CertificateDefinitionForm({ definition, ...props }: Props) {
     };
   };
 
-  const methods = useForm<DTOCertificateDefinition>({
+  const methods = useForm<CertificateDefinitionFormValues>({
     resolver: yupResolver(RegisterSchema),
     defaultValues: getDefaultValues(),
   });
 
   const updateFormError = (
-    errors: ServerSideErrorForm<DTOCertificateDefinition>
+    errors: ServerSideErrorForm<DTOCertificateDefinition>,
   ) => {
     genericUpdateFormError(errors, methods.setError);
   };

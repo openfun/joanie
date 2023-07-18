@@ -4,6 +4,7 @@ import {
   DTOCourseRelationToProduct,
 } from "./Relations";
 import { CourseRun } from "./CourseRun";
+import { ToFormValues } from "@/types/utils";
 
 export type Course = {
   id: string;
@@ -15,7 +16,9 @@ export type Course = {
   courses_runs?: CourseRun[];
 };
 
-export type CourseFormValue = Omit<Course, "id">;
+export type CourseFormValues = ToFormValues<
+  Omit<Course, "id" | "state" | "courses_runs">
+>;
 
 export interface DTOCourse {
   id?: string;
@@ -23,16 +26,9 @@ export interface DTOCourse {
   title: string;
   organizations: string[];
   product_relations?: DTOCourseRelationToProduct[];
-  courses_runs?: string[];
 }
 
-export const transformCourseToDTO = (
-  course: Course | CourseFormValue
-): DTOCourse => {
-  const coursesRunsIds = course.courses_runs?.map((item) => {
-    return item.id;
-  });
-
+export const transformCourseToDTO = (course: CourseFormValues): DTOCourse => {
   const organizationIds = course.organizations.map((item) => {
     return item.id;
   });
@@ -51,7 +47,6 @@ export const transformCourseToDTO = (
   return {
     ...course,
     organizations: organizationIds,
-    courses_runs: coursesRunsIds,
     product_relations: productRelations ?? [],
   };
 };

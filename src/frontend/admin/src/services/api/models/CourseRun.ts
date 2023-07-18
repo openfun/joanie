@@ -15,6 +15,7 @@ export type CourseRun = {
   state?: CourseState;
 };
 
-export interface DTOCourseRun extends Omit<CourseRun, "course"> {
+export interface DTOCourseRun extends Omit<CourseRun, "course" | "id"> {
+  id?: string;
   course: string;
 }
