@@ -242,5 +242,5 @@ class AdminUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.User
-        fields = ["username", "full_name"]
-        read_only_fields = ["username", "full_name"]
+        fields = ["id", "username", "full_name"]
+        read_only_fields = ["id", "username", "full_name"]

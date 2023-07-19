@@ -97,6 +97,7 @@ class UserAdminApiTest(TestCase):
         self.assertEqual(
             content["results"][0],
             {
+                "id": str(fonzie.id),
                 "username": fonzie.username,
                 "full_name": fonzie.get_full_name(),
             },
@@ -116,6 +117,7 @@ class UserAdminApiTest(TestCase):
         self.assertEqual(
             content["results"][0],
             {
+                "id": str(joanie.id),
                 "username": joanie.username,
                 "full_name": joanie.get_full_name(),
             },
