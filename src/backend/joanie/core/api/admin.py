@@ -134,3 +134,27 @@ class CourseAccessViewSet(
         context = super().get_serializer_context()
         context["course_id"] = self.kwargs["course_id"]
         return context
+
+
+class OrganizationAccessViewSet(
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
+    """
+    Write only Organization Access ViewSet
+    """
+
+    authentication_classes = [authentication.SessionAuthentication]
+    permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
+    serializer_class = serializers.AdminOrganizationAccessSerializer
+    queryset = models.OrganizationAccess.objects.all().select_related("user")
+
+    def get_serializer_context(self):
+        """
+        Extra context provided to the serializer class.
+        """
+        context = super().get_serializer_context()
+        context["organization_id"] = self.kwargs["organization_id"]
+        return context
