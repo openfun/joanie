@@ -74,18 +74,33 @@ class OrganizationAdminApiTest(TestCase):
 
     def test_admin_api_organization_list(self):
         """
-        Staff user should be able to get a paginated list of organizations
+        Staff user should be able to get a paginated list of organizations with limited
+        information
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
         organization_count = random.randint(1, 10)
-        factories.OrganizationFactory.create_batch(organization_count)
+        organizations = factories.OrganizationFactory.create_batch(organization_count)
 
         response = self.client.get("/api/v1.0/admin/organizations/")
 
         self.assertEqual(response.status_code, 200)
-        content = response.json()
-        self.assertEqual(content["count"], organization_count)
+        self.assertCountEqual(
+            response.json(),
+            {
+                "count": organization_count,
+                "next": None,
+                "previous": None,
+                "results": [
+                    {
+                        "id": str(organization.id),
+                        "code": organization.code,
+                        "title": organization.title,
+                    }
+                    for organization in organizations
+                ],
+            },
+        )
 
     @mock.patch.object(
         fields.ThumbnailDetailField,
@@ -100,7 +115,9 @@ class OrganizationAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
         organization_count = random.randint(1, 10)
-        items = factories.OrganizationFactory.create_batch(organization_count)
+        [organization, *_] = factories.OrganizationFactory.create_batch(
+            organization_count
+        )
 
         response = self.client.get("/api/v1.0/admin/organizations/?query=")
         self.assertEqual(response.status_code, 200)
@@ -108,20 +125,19 @@ class OrganizationAdminApiTest(TestCase):
         self.assertEqual(content["count"], organization_count)
 
         response = self.client.get(
-            f"/api/v1.0/admin/organizations/?query={items[0].title}"
+            f"/api/v1.0/admin/organizations/?query={organization.title}"
         )
         self.assertEqual(response.status_code, 200)
         content = response.json()
         self.assertEqual(content["count"], 1)
 
         response = self.client.get(
-            f"/api/v1.0/admin/organizations/?query={items[0].code}"
+            f"/api/v1.0/admin/organizations/?query={organization.code}"
         )
         self.assertEqual(response.status_code, 200)
         content = response.json()
         self.assertEqual(content["count"], 1)
 
-        organization_1 = items[0]
         self.assertEqual(
             content,
             {
@@ -130,18 +146,9 @@ class OrganizationAdminApiTest(TestCase):
                 "previous": None,
                 "results": [
                     {
-                        "id": str(organization_1.id),
-                        "code": organization_1.code,
-                        "title": organization_1.title,
-                        "representative": organization_1.representative,
-                        "signature": {
-                            "src": f"http://testserver{organization_1.signature.url}",
-                            "height": organization_1.signature.height,
-                            "size": 69,
-                            "width": organization_1.signature.width,
-                            "filename": organization_1.signature.name,
-                        },
-                        "logo": "_this_field_is_mocked",
+                        "id": str(organization.id),
+                        "code": organization.code,
+                        "title": organization.title,
                     }
                 ],
             },
@@ -183,35 +190,66 @@ class OrganizationAdminApiTest(TestCase):
 
     def test_admin_api_organization_get(self):
         """
-        Staff user should be able to get an organization through its id.
+        Staff user should be able to get an organization through its id with detailed
+        information.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
         organization = factories.OrganizationFactory()
 
+        # Add accesses to organization
+        accesses_count = random.randint(0, 5)
+        factories.UserOrganizationAccessFactory.create_batch(
+            accesses_count, organization=organization
+        )
+
         response = self.client.get(f"/api/v1.0/admin/organizations/{organization.id}/")
 
         self.assertEqual(response.status_code, 200)
         content = response.json()
-        self.assertEqual(content["id"], str(organization.id))
         self.assertEqual(
-            content["logo"],
+            content,
             {
-                "src": f"http://testserver{organization.logo.url}.1x1_q85.webp",
-                "height": 1,
-                "width": 1,
-                "size": organization.logo.size,
-                "srcset": (
-                    f"http://testserver{organization.logo.url}.1024x1024_q85_crop-smart_upscale.webp "  # noqa pylint: disable=line-too-long
-                    "1024w, "
-                    f"http://testserver{organization.logo.url}.512x512_q85_crop-smart_upscale.webp "  # noqa pylint: disable=line-too-long
-                    "512w, "
-                    f"http://testserver{organization.logo.url}.256x256_q85_crop-smart_upscale.webp "  # noqa pylint: disable=line-too-long
-                    "256w, "
-                    f"http://testserver{organization.logo.url}.128x128_q85_crop-smart_upscale.webp "  # noqa pylint: disable=line-too-long
-                    "128w"
-                ),
-                "filename": organization.logo.name,
+                "id": str(organization.id),
+                "code": organization.code,
+                "title": organization.title,
+                "representative": organization.representative,
+                "signature": {
+                    "src": f"http://testserver{organization.signature.url}",
+                    "height": organization.signature.height,
+                    "size": 69,
+                    "width": organization.signature.width,
+                    "filename": organization.signature.name,
+                },
+                "logo": {
+                    "src": f"http://testserver{organization.logo.url}.1x1_q85.webp",
+                    "height": 1,
+                    "width": 1,
+                    "size": organization.logo.size,
+                    "srcset": (
+                        f"http://testserver{organization.logo.url}.1024x1024_q85_crop-smart_upscale.webp "  # noqa pylint: disable=line-too-long
+                        "1024w, "
+                        f"http://testserver{organization.logo.url}.512x512_q85_crop-smart_upscale.webp "  # noqa pylint: disable=line-too-long
+                        "512w, "
+                        f"http://testserver{organization.logo.url}.256x256_q85_crop-smart_upscale.webp "  # noqa pylint: disable=line-too-long
+                        "256w, "
+                        f"http://testserver{organization.logo.url}.128x128_q85_crop-smart_upscale.webp "  # noqa pylint: disable=line-too-long
+                        "128w"
+                    ),
+                    "filename": organization.logo.name,
+                },
+                "accesses": [
+                    {
+                        "id": str(access.id),
+                        "user": {
+                            "id": str(access.user.id),
+                            "username": access.user.username,
+                            "full_name": access.user.get_full_name(),
+                        },
+                        "role": access.role,
+                    }
+                    for access in organization.accesses.all()
+                ],
             },
         )
 
