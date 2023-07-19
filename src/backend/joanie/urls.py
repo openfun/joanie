@@ -88,23 +88,35 @@ organization_related_router.register(
 # 2) Admin API
 admin_router = DefaultRouter()
 admin_router.register(
-    "organizations", api_admin.OrganizationViewSet, basename="organizations"
+    "organizations", api_admin.OrganizationViewSet, basename="admin_organizations"
 )
-admin_router.register("products", api_admin.ProductViewSet, basename="products")
-admin_router.register("courses", api_admin.CourseViewSet, basename="courses")
-admin_router.register("course-runs", api_admin.CourseRunViewSet, basename="course-runs")
+admin_router.register("products", api_admin.ProductViewSet, basename="admin_products")
+admin_router.register("courses", api_admin.CourseViewSet, basename="admin_courses")
+admin_router.register(
+    "course-runs", api_admin.CourseRunViewSet, basename="admin_course-runs"
+)
 admin_router.register(
     "certificate-definitions",
     api_admin.CertificateDefinitionViewSet,
-    basename="certificate-definitions",
+    basename="admin_certificate-definitions",
 )
-admin_router.register("users", api_admin.UserViewSet, basename="user")
+admin_router.register("users", api_admin.UserViewSet, basename="admin_user")
+
+# Admin API routes nested under a course
+admin_course_related_router = DefaultRouter()
+admin_course_related_router.register(
+    "accesses", api_admin.CourseAccessViewSet, basename="admin_course_accesses"
+)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path(
         f"api/{API_VERSION}/admin/",
         include([*admin_router.urls]),
+    ),
+    path(
+        f"api/{API_VERSION}/admin/courses/<uuid:course_id>/",
+        include(admin_course_related_router.urls),
     ),
     path(
         f"api/{API_VERSION}/",

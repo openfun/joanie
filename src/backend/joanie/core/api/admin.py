@@ -110,3 +110,27 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             return models.User.objects.none()
 
         return super().get_queryset()
+
+
+class CourseAccessViewSet(
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
+    """
+    Write only Course Access ViewSet
+    """
+
+    authentication_classes = [authentication.SessionAuthentication]
+    permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
+    serializer_class = serializers.AdminCourseAccessSerializer
+    queryset = models.CourseAccess.objects.all().select_related("user")
+
+    def get_serializer_context(self):
+        """
+        Extra context provided to the serializer class.
+        """
+        context = super().get_serializer_context()
+        context["course_id"] = self.kwargs["course_id"]
+        return context

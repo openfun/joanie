@@ -3,6 +3,7 @@ from django.conf import settings
 
 from djmoney.contrib.django_rest_framework import MoneyField
 from rest_framework import serializers
+from rest_framework.generics import get_object_or_404
 
 from joanie.core import models
 from joanie.core.enums import ALL_LANGUAGES
@@ -143,7 +144,7 @@ class AdminProductRelationSerializer(serializers.ModelSerializer):
 class AdminCourseAccessSerializer(serializers.ModelSerializer):
     """Serializer for CourseAccess model."""
 
-    user = AdminUserSerializer()
+    user = AdminUserSerializer(read_only=True)
 
     class Meta:
         model = models.CourseAccess
@@ -152,11 +153,31 @@ class AdminCourseAccessSerializer(serializers.ModelSerializer):
             "user",
             "role",
         )
-        read_only_fields = (
-            "id",
-            "user",
-            "role",
-        )
+        read_only_fields = ("id", "user")
+
+    def validate(self, attrs):
+        """
+        Validate that the course access has at least a user id and a course id provided.
+        """
+        validated_data = super().validate(attrs)
+
+        # Retrieve course instance from context and add it to validated_data
+        course_id = self.context.get("course_id")
+        validated_data["course"] = get_object_or_404(models.Course, id=course_id)
+
+        # Retrieve user instance from context and add it to validated_data
+        user_id = self.initial_data.get("user")
+        if user_id is not None:
+            try:
+                validated_data["user"] = models.User.objects.get(id=user_id)
+            except models.User.DoesNotExist as exception:
+                raise serializers.ValidationError(
+                    {"user": "Resource does not exist."}
+                ) from exception
+        elif self.partial is False and user_id is None:
+            raise serializers.ValidationError({"user": "This field is required."})
+
+        return validated_data
 
 
 class AdminCourseSerializer(serializers.ModelSerializer):
@@ -184,6 +205,8 @@ class AdminCourseSerializer(serializers.ModelSerializer):
             "accesses",
             "id",
             "state",
+            "organizations",
+            "product_relations",
         )
 
     def validate(self, attrs):
