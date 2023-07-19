@@ -45,10 +45,10 @@ class AdminUserSerializer(serializers.ModelSerializer):
 class AdminOrganizationAccessSerializer(serializers.ModelSerializer):
     """Serializer for OrganizationAccess model."""
 
-    user = AdminUserSerializer()
+    user = AdminUserSerializer(read_only=True)
 
     class Meta:
-        model = models.CourseAccess
+        model = models.OrganizationAccess
         fields = (
             "id",
             "user",
@@ -57,8 +57,34 @@ class AdminOrganizationAccessSerializer(serializers.ModelSerializer):
         read_only_fields = (
             "id",
             "user",
-            "role",
         )
+
+    def validate(self, attrs):
+        """
+        Validate that the organization access has at least a user id
+        and an organization id provided.
+        """
+        validated_data = super().validate(attrs)
+
+        # Retrieve organization instance from context and add it to validated_data
+        organization_id = self.context.get("organization_id")
+        validated_data["organization"] = get_object_or_404(
+            models.Organization, id=organization_id
+        )
+
+        # Retrieve user instance from context and add it to validated_data
+        user_id = self.initial_data.get("user")
+        if user_id is not None:
+            try:
+                validated_data["user"] = models.User.objects.get(id=user_id)
+            except models.User.DoesNotExist as exception:
+                raise serializers.ValidationError(
+                    {"user": "Resource does not exist."}
+                ) from exception
+        elif self.partial is False and user_id is None:
+            raise serializers.ValidationError({"user": "This field is required."})
+
+        return validated_data
 
 
 class AdminOrganizationSerializer(serializers.ModelSerializer):
