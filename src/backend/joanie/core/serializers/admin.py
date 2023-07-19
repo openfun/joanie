@@ -26,8 +26,38 @@ class AdminCourseLightSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Course
-        fields = ("code", "title", "id")
-        read_only_fields = ("code", "title", "id")
+        fields = ("code", "title", "id", "state")
+        read_only_fields = ("code", "title", "id", "state")
+
+
+class AdminUserSerializer(serializers.ModelSerializer):
+    """Serializer for User model."""
+
+    full_name = serializers.CharField(source="get_full_name")
+
+    class Meta:
+        model = models.User
+        fields = ["id", "username", "full_name"]
+        read_only_fields = ["id", "username", "full_name"]
+
+
+class AdminOrganizationAccessSerializer(serializers.ModelSerializer):
+    """Serializer for OrganizationAccess model."""
+
+    user = AdminUserSerializer()
+
+    class Meta:
+        model = models.CourseAccess
+        fields = (
+            "id",
+            "user",
+            "role",
+        )
+        read_only_fields = (
+            "id",
+            "user",
+            "role",
+        )
 
 
 class AdminOrganizationSerializer(serializers.ModelSerializer):
@@ -36,11 +66,23 @@ class AdminOrganizationSerializer(serializers.ModelSerializer):
     title = serializers.CharField()
     logo = ThumbnailDetailField(required=False)
     signature = ImageDetailField(required=False)
+    accesses = AdminOrganizationAccessSerializer(many=True, read_only=True)
 
     class Meta:
         model = models.Organization
-        fields = ["id", "code", "title", "representative", "signature", "logo"]
-        read_only_fields = ["id"]
+        fields = (
+            "accesses",
+            "code",
+            "id",
+            "logo",
+            "representative",
+            "signature",
+            "title",
+        )
+        read_only_fields = (
+            "accesses",
+            "id",
+        )
 
 
 class AdminOrganizationLightSerializer(serializers.ModelSerializer):
@@ -48,8 +90,8 @@ class AdminOrganizationLightSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Organization
-        fields = ["code", "title", "id"]
-        read_only_fields = ["code", "title", "id"]
+        fields = ("code", "title", "id")
+        read_only_fields = ("code", "title", "id")
 
 
 class AdminProductSerializer(serializers.ModelSerializer):
@@ -98,6 +140,25 @@ class AdminProductRelationSerializer(serializers.ModelSerializer):
         read_only_fields = ["id"]
 
 
+class AdminCourseAccessSerializer(serializers.ModelSerializer):
+    """Serializer for CourseAccess model."""
+
+    user = AdminUserSerializer()
+
+    class Meta:
+        model = models.CourseAccess
+        fields = (
+            "id",
+            "user",
+            "role",
+        )
+        read_only_fields = (
+            "id",
+            "user",
+            "role",
+        )
+
+
 class AdminCourseSerializer(serializers.ModelSerializer):
     """Serializer for Course model."""
 
@@ -105,19 +166,25 @@ class AdminCourseSerializer(serializers.ModelSerializer):
     cover = ThumbnailDetailField(required=False)
     organizations = AdminOrganizationLightSerializer(many=True, read_only=True)
     product_relations = AdminProductRelationSerializer(many=True, read_only=True)
+    accesses = AdminCourseAccessSerializer(many=True, read_only=True)
 
     class Meta:
         model = models.Course
         fields = (
-            "id",
+            "accesses",
             "code",
             "cover",
-            "title",
+            "id",
             "organizations",
             "product_relations",
             "state",
+            "title",
         )
-        read_only_fields = ["id", "state"]
+        read_only_fields = (
+            "accesses",
+            "id",
+            "state",
+        )
 
     def validate(self, attrs):
         """
@@ -233,14 +300,3 @@ class AdminCourseRunSerializer(serializers.ModelSerializer):
                 )
 
         return validated_data
-
-
-class AdminUserSerializer(serializers.ModelSerializer):
-    """Serializer for User model."""
-
-    full_name = serializers.CharField(source="get_full_name")
-
-    class Meta:
-        model = models.User
-        fields = ["id", "username", "full_name"]
-        read_only_fields = ["id", "username", "full_name"]

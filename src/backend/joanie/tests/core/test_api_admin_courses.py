@@ -47,13 +47,27 @@ class CourseAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
         courses_count = random.randint(1, 10)
-        factories.CourseFactory.create_batch(courses_count)
+        courses = factories.CourseFactory.create_batch(courses_count)
 
         response = self.client.get("/api/v1.0/admin/courses/")
 
         self.assertEqual(response.status_code, 200)
-        content = response.json()
-        self.assertEqual(content["count"], courses_count)
+        self.assertCountEqual(
+            response.json(),
+            {
+                "count": courses_count,
+                "next": None,
+                "previous": None,
+                "results": [
+                    {
+                        "id": str(course.id),
+                        "code": course.code,
+                        "title": course.title,
+                    }
+                    for course in courses
+                ],
+            },
+        )
 
     def test_admin_api_course_list_filter_by_query(self):
         """
@@ -62,59 +76,24 @@ class CourseAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
         courses_count = random.randint(1, 10)
-        items = factories.CourseFactory.create_batch(courses_count)
+        [course, *_] = factories.CourseFactory.create_batch(courses_count)
 
         response = self.client.get("/api/v1.0/admin/courses/?query=")
         self.assertEqual(response.status_code, 200)
         content = response.json()
         self.assertEqual(content["count"], courses_count)
 
-        response = self.client.get(f"/api/v1.0/admin/courses/?query={items[0].title}")
+        response = self.client.get(f"/api/v1.0/admin/courses/?query={course.title}")
         self.assertEqual(response.status_code, 200)
         content = response.json()
         self.assertEqual(content["count"], 1)
+        self.assertEqual(content["results"][0]["id"], str(course.id))
 
-        response = self.client.get(f"/api/v1.0/admin/courses/?query={items[0].code}")
+        response = self.client.get(f"/api/v1.0/admin/courses/?query={course.code}")
         self.assertEqual(response.status_code, 200)
         content = response.json()
         self.assertEqual(content["count"], 1)
-
-        course_1 = items[0]
-        self.assertEqual(
-            content,
-            {
-                "count": 1,
-                "next": None,
-                "previous": None,
-                "results": [
-                    {
-                        "id": str(course_1.id),
-                        "code": course_1.code,
-                        "cover": {
-                            "size": course_1.cover.size,
-                            "src": f"http://testserver{course_1.cover.url}.1x1_q85.webp",
-                            "srcset": (
-                                f"http://testserver{course_1.cover.url}.1920x1080_q85_crop-smart_upscale.webp "  # noqa pylint: disable=line-too-long
-                                "1920w, "
-                                f"http://testserver{course_1.cover.url}.1280x720_q85_crop-smart_upscale.webp "  # noqa pylint: disable=line-too-long
-                                "1280w, "
-                                f"http://testserver{course_1.cover.url}.768x432_q85_crop-smart_upscale.webp "  # noqa pylint: disable=line-too-long
-                                "768w, "
-                                f"http://testserver{course_1.cover.url}.384x216_q85_crop-smart_upscale.webp "  # noqa pylint: disable=line-too-long
-                                "384w"
-                            ),
-                            "height": course_1.cover.height,
-                            "width": course_1.cover.width,
-                            "filename": course_1.cover.name,
-                        },
-                        "title": course_1.title,
-                        "organizations": [],
-                        "product_relations": [],
-                        "state": course_1.state,
-                    }
-                ],
-            },
-        )
+        self.assertEqual(content["results"][0]["id"], str(course.id))
 
     def test_admin_api_course_list_filter_by_query_language(self):
         """
@@ -150,16 +129,68 @@ class CourseAdminApiTest(TestCase):
 
     def test_admin_api_course_get(self):
         """
-        Staff user should be able to get a course through its id.
+        Staff user should be able to get a course through its id
+        with detailed information.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
         course = factories.CourseFactory()
-        response = self.client.get(f"/api/v1.0/admin/courses/{course.id}/")
 
+        # Add course access to the course
+        accesses_count = random.randint(0, 5)
+        factories.UserCourseAccessFactory.create_batch(accesses_count, course=course)
+
+        response = self.client.get(f"/api/v1.0/admin/courses/{course.id}/")
         self.assertEqual(response.status_code, 200)
-        content = response.json()
-        self.assertEqual(content["id"], str(course.id))
+        self.assertEqual(
+            response.json(),
+            {
+                "id": str(course.id),
+                "code": course.code,
+                "cover": {
+                    "size": course.cover.size,
+                    "src": f"http://testserver{course.cover.url}.1x1_q85.webp",
+                    "srcset": (
+                        f"http://testserver{course.cover.url}.1920x1080_q85_crop-smart_upscale.webp "  # noqa pylint: disable=line-too-long
+                        "1920w, "
+                        f"http://testserver{course.cover.url}.1280x720_q85_crop-smart_upscale.webp "  # noqa pylint: disable=line-too-long
+                        "1280w, "
+                        f"http://testserver{course.cover.url}.768x432_q85_crop-smart_upscale.webp "  # noqa pylint: disable=line-too-long
+                        "768w, "
+                        f"http://testserver{course.cover.url}.384x216_q85_crop-smart_upscale.webp "  # noqa pylint: disable=line-too-long
+                        "384w"
+                    ),
+                    "height": course.cover.height,
+                    "width": course.cover.width,
+                    "filename": course.cover.name,
+                },
+                "title": course.title,
+                "organizations": [],
+                "product_relations": [],
+                "state": {
+                    "priority": course.state["priority"],
+                    "datetime": course.state["datetime"]
+                    .isoformat()
+                    .replace("+00:00", "Z")
+                    if course.state["datetime"]
+                    else None,
+                    "call_to_action": course.state["call_to_action"],
+                    "text": course.state["text"],
+                },
+                "accesses": [
+                    {
+                        "id": str(access.id),
+                        "role": access.role,
+                        "user": {
+                            "id": str(access.user.id),
+                            "full_name": access.user.get_full_name(),
+                            "username": access.user.username,
+                        },
+                    }
+                    for access in course.accesses.all()
+                ],
+            },
+        )
 
     def test_admin_api_course_create(self):
         """

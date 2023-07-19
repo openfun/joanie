@@ -20,6 +20,14 @@ class OrganizationViewSet(viewsets.ModelViewSet):
     filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
     filterset_class = filters.OrganizationAdminFilterSet
 
+    def get_serializer_class(self):
+        """
+        Return the serializer class to use depending on the action.
+        """
+        if self.action == "list":
+            return serializers.AdminOrganizationLightSerializer
+        return self.serializer_class
+
 
 class ProductViewSet(viewsets.ModelViewSet):
     """
@@ -44,6 +52,14 @@ class CourseViewSet(viewsets.ModelViewSet):
     queryset = models.Course.objects.all().prefetch_related("organizations", "products")
     filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
     filterset_class = filters.CourseAdminFilterSet
+
+    def get_serializer_class(self):
+        """
+        Return the serializer class to use depending on the action.
+        """
+        if self.action == "list":
+            return serializers.AdminCourseLightSerializer
+        return self.serializer_class
 
 
 class CourseRunViewSet(viewsets.ModelViewSet):
