@@ -67,6 +67,8 @@ class CourseViewSetFilter(filters.FilterSet):
         Filter resource by looking for course runs which are listed.
         """
         if value is True:
-            return queryset.filter(course_runs__is_listed=True)
+            filtered_queryset = queryset.filter(course_runs__is_listed=True)
+        else:
+            filtered_queryset = queryset.exclude(course_runs__is_listed=True)
 
-        return queryset.exclude(course_runs__is_listed=True)
+        return filtered_queryset.distinct()

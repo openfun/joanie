@@ -133,6 +133,8 @@ class CourseApiTest(BaseAPITestCase):
         courses = factories.CourseFactory.create_batch(3)
         factories.CourseRunFactory(course=courses[0], is_listed=False)
         factories.CourseRunFactory(course=courses[0], is_listed=True)
+        factories.CourseRunFactory(course=courses[0], is_listed=True)
+        factories.CourseRunFactory(course=courses[1], is_listed=False)
         factories.CourseRunFactory(course=courses[1], is_listed=False)
 
         # Give user access to all courses
