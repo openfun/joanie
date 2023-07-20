@@ -5,7 +5,7 @@ import random
 
 from django.test import TestCase
 
-from joanie.core import factories
+from joanie.core import factories, models
 
 
 class ProductAdminApiTest(TestCase):
@@ -90,6 +90,125 @@ class ProductAdminApiTest(TestCase):
         content = response.json()
         self.assertIsNotNone(content["id"])
         self.assertEqual(content["title"], "Product 001")
+
+    def test_admin_api_product_create_nested(self):
+        """
+        Staff user should be able to create a product with nested elements.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        organization = factories.OrganizationFactory()
+        course = factories.CourseFactory()
+        data = {
+            "title": "Product 001",
+            "description": "This is a product description",
+            "call_to_action": "Purchase now",
+            "price": "100.00",
+            "price_currency": "EUR",
+            "type": "enrollment",
+            "target_courses": [
+                {
+                    "title": "TargetCourse00",
+                    "code": "TARGETCOURSECODE00",
+                    "organizations": [str(organization.id)],
+                },
+            ],
+            "course_relations": [
+                {
+                    "organizations": [str(organization.id)],
+                    "course": str(course.id),
+                },
+            ],
+        }
+
+        response = self.client.post(
+            "/api/v1.0/admin/products/",
+            data=data,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 201)
+        content = response.json()
+        self.assertIsNotNone(content["id"])
+        self.assertEqual(content["title"], "Product 001")
+        self.assertTrue(
+            models.Course.objects.filter(code="TARGETCOURSECODE00").exists()
+        )
+        self.assertTrue(
+            models.CourseProductRelation.objects.filter(
+                course__id=course.id, organizations=organization.id
+            ).exists()
+        )
+
+    def test_admin_api_product_create_edit_nested(self):
+        """
+        Staff user should be able to create a product with nested elements.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        organization = factories.OrganizationFactory()
+        course = factories.CourseFactory()
+        data = {
+            "title": "Product 001",
+            "description": "This is a product description",
+            "call_to_action": "Purchase now",
+            "price": "100.00",
+            "price_currency": "EUR",
+            "type": "enrollment",
+            "target_courses": [
+                {
+                    "title": "TargetCourse00",
+                    "code": "TARGETCOURSECODE00",
+                    "organizations": [str(organization.id)],
+                },
+            ],
+            "course_relations": [
+                {
+                    "organizations": [str(organization.id)],
+                    "course": str(course.id),
+                },
+            ],
+        }
+
+        response = self.client.post(
+            "/api/v1.0/admin/products/",
+            data=data,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 201)
+        content = response.json()
+        self.assertIsNotNone(content["id"])
+        self.assertEqual(content["title"], "Product 001")
+        target_course = models.Course.objects.get(code="TARGETCOURSECODE00")
+        data = {
+            "title": "Product 001",
+            "description": "This is a product description",
+            "call_to_action": "Purchase now",
+            "price": "100.00",
+            "price_currency": "EUR",
+            "type": "enrollment",
+            "target_courses": [
+                {
+                    "id": str(target_course.id),
+                    "title": "TargetCourse00",
+                    "code": "TARGETCOURSECODE01",
+                    "organizations": [str(organization.id)],
+                },
+            ],
+            "course_relations": [
+                {
+                    "organizations": [str(organization.id)],
+                    "course": str(course.id),
+                },
+            ],
+        }
+        response = self.client.post(
+            "/api/v1.0/admin/products/",
+            data=data,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 201)
+        target_course.refresh_from_db()
+        self.assertEqual(target_course.code, "TARGETCOURSECODE01")
 
     def test_admin_api_product_update(self):
         """

@@ -1,6 +1,7 @@
 """
 Admin API Endpoints
 """
+
 import django_filters.rest_framework
 from rest_framework import authentication, mixins, permissions, viewsets
 
@@ -31,6 +32,25 @@ class ProductViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.AdminProductSerializer
     queryset = models.Product.objects.all()
     filterset_class = filters.ProductAdminFilterSet
+    serializer_action_classes = {
+        "list": serializers.AdminProductListSerializer,
+        "detail": serializers.AdminProductDetailSerializer,
+    }
+    action_serializers = {
+        "create": {
+            "request": serializers.AdminProductSerializer,
+            "response": serializers.AdminProductDetailSerializer,
+        },
+        "list": {
+            "request": serializers.AdminProductListSerializer,
+            "response": serializers.AdminProductListSerializer,
+        },
+    }
+
+    def get_serializer_class(self):
+        if self.action in self.serializer_action_classes:
+            return self.serializer_action_classes[self.action]
+        return self.serializer_class
 
 
 class CourseViewSet(viewsets.ModelViewSet):

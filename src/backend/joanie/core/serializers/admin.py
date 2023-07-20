@@ -79,6 +79,87 @@ class AdminProductSerializer(serializers.ModelSerializer):
             "certificate_definition",
             "target_courses",
         ]
+        read_only_fields = [
+            "id",
+        ]
+
+    def to_representation(self, instance):
+        serializer = AdminProductDetailSerializer(instance)
+        return serializer.data
+
+    def add_target_courses(self, product, target_courses_data):
+        """
+        Create or update target course and add it to the list of target courses
+        associated to the product
+        """
+
+        product.target_courses.clear()
+        for target_course_data in target_courses_data:
+            if "id" in target_course_data:
+                instance = models.Course.objects.get(id=target_course_data.pop("id"))
+                course_serializer = AdminCourseSerializer(
+                    instance=instance, data=target_course_data
+                )
+                course_serializer.is_valid(raise_exception=True)
+                course = course_serializer.update(
+                    instance=instance, validated_data=course_serializer.validated_data
+                )
+            else:
+                course_serializer = AdminCourseSerializer(data=target_course_data)
+                course_serializer.is_valid(raise_exception=True)
+                course = course_serializer.create(
+                    validated_data=course_serializer.validated_data
+                )
+            product.target_courses.add(course)
+
+    def add_course_relations(self, product, course_relations_data):
+        """
+        Create and link CourseProductRelation to the product
+        """
+        models.CourseProductRelation.objects.filter(product__id=product.id).delete()
+        for course_relation_data in course_relations_data:
+            course_id = course_relation_data.pop("course", "")
+            course_relation = models.CourseProductRelation.objects.create(
+                product=product, course=models.Course.objects.get(id=course_id)
+            )
+            organization_ids = course_relation_data.pop("organizations", [])
+            for organization_id in organization_ids:
+                course_relation.organizations.add(organization_id)
+
+    def create(self, validated_data):
+        product = super().create(validated_data)
+        if "target_courses" in self.initial_data:
+            target_courses_data = self.initial_data.pop("target_courses")
+            self.add_target_courses(product, target_courses_data)
+        if "course_relations" in self.initial_data:
+            course_relations_data = self.initial_data.pop("course_relations")
+            self.add_course_relations(product, course_relations_data)
+        return product
+
+    def update(self, instance, validated_data):
+        product = super().update(instance, validated_data)
+        if "target_courses" in self.initial_data:
+            target_courses_data = self.initial_data.pop("target_courses")
+            product.target_courses.clear()
+            self.add_target_courses(product, target_courses_data)
+        if "course_relations" in self.initial_data:
+            course_relations_data = self.initial_data.pop("course_relations")
+            self.add_course_relations(product, course_relations_data)
+        return product
+
+
+class AdminProductListSerializer(serializers.ModelSerializer):
+    """Serializer for listing Product model."""
+
+    class Meta:
+        model = models.Product
+        fields = [
+            "id",
+            "title",
+            "price",
+            "price_currency",
+            "type",
+        ]
         read_only_fields = ["id"]
 
 
@@ -244,3 +325,203 @@ class AdminUserSerializer(serializers.ModelSerializer):
         model = models.User
         fields = ["username", "full_name"]
         read_only_fields = ["username", "full_name"]
+
+
+class AdminCourseRelationForProductSerializer(serializers.ModelSerializer):
+    """Serializer for CourseProductRelation model."""
+
+    class Meta:
+        model = models.CourseProductRelation
+        fields = (
+            "id",
+            "organizations",
+        )
+        read_only_fields = ["id"]
+
+
+class AdminTargetCourseSerializer(serializers.ModelSerializer):
+    """
+    Serialize all information about a target course.
+    """
+
+    course_runs = serializers.SerializerMethodField(read_only=True)
+    position = serializers.SerializerMethodField(read_only=True)
+    is_graded = serializers.SerializerMethodField(read_only=True)
+    organizations = AdminOrganizationLightSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = models.Course
+        fields = [
+            "id",
+            "code",
+            "course_runs",
+            "is_graded",
+            "organizations",
+            "position",
+            "title",
+        ]
+        read_only_fields = [
+            "id",
+            "code",
+            "course_runs",
+            "is_graded",
+            "organizations",
+            "position",
+            "title",
+        ]
+
+    @property
+    def context_resource(self):
+        """
+        Retrieve the product/order resource provided in context.
+        If no product/order is provided, it raises a ValidationError.
+        """
+        try:
+            resource = self.context["resource"]
+        except KeyError as exception:
+            raise serializers.ValidationError(
+                'TargetCourseSerializer context must contain a "resource" property.'
+            ) from exception
+
+        if not isinstance(resource, (models.Order, models.Product)):
+            raise serializers.ValidationError(
+                "TargetCourseSerializer context resource property must be instance of "
+                "Product or Order."
+            )
+
+        return resource
+
+    def get_target_course_relation(self, target_course):
+        """
+        Return the relevant target course relation depending on whether the resource context
+        is a product or an order.
+        """
+        if isinstance(self.context_resource, models.Order):
+            return target_course.order_relations.get(order=self.context_resource)
+
+        if isinstance(self.context_resource, models.Product):
+            return target_course.product_target_relations.get(
+                product=self.context_resource
+            )
+
+        return None
+
+    def get_position(self, target_course):
+        """
+        Retrieve the position of the course related to its product/order relation
+        """
+        relation = self.get_target_course_relation(target_course)
+
+        return relation.position
+
+    def get_is_graded(self, target_course):
+        """
+        Retrieve the `is_graded` state of the course related to its product/order relation
+        """
+        relation = self.get_target_course_relation(target_course)
+
+        return relation.is_graded
+
+    def get_course_runs(self, target_course):
+        """
+        Return related course runs ordered by start date asc
+        """
+        course_runs = self.context_resource.target_course_runs.filter(
+            course=target_course
+        ).order_by("start")
+
+        return AdminCourseRunSerializer(course_runs, many=True).data
+
+
+class AdminCourseNestedSerializer(serializers.ModelSerializer):
+    """Serializer for Course model nested in product."""
+
+    title = serializers.CharField()
+    cover = ThumbnailDetailField(required=False)
+    organizations = AdminOrganizationLightSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = models.Course
+        fields = (
+            "id",
+            "code",
+            "cover",
+            "title",
+            "organizations",
+            "state",
+        )
+        read_only_fields = ["id", "state"]
+
+
+class AdminCourseRelationsSerializer(serializers.ModelSerializer):
+    """
+    Serialize all information about a course relation nested in a product.
+    """
+
+    course = AdminCourseNestedSerializer(read_only=True)
+    organizations = AdminOrganizationLightSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = models.CourseProductRelation
+        fields = [
+            "id",
+            "course",
+            "organizations",
+        ]
+        read_only_fields = [
+            "id",
+            "course",
+            "organizations",
+        ]
+
+
+class AdminProductDetailSerializer(serializers.ModelSerializer):
+    """Serializer for Product details"""
+
+    certificate_definition = AdminCertificateDefinitionSerializer()
+    target_courses = serializers.SerializerMethodField(read_only=True)
+    price = MoneyField(
+        coerce_to_string=False,
+        decimal_places=2,
+        max_digits=9,
+        min_value=0,
+    )
+    course_relations = AdminCourseRelationsSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = models.Product
+        fields = [
+            "id",
+            "title",
+            "description",
+            "call_to_action",
+            "type",
+            "price",
+            "price_currency",
+            "certificate_definition",
+            "target_courses",
+            "course_relations",
+        ]
+        read_only_fields = [
+            "id",
+            "title",
+            "description",
+            "call_to_action",
+            "type",
+            "price",
+            "price_currency",
+            "certificate_definition",
+            "target_courses",
+            "course_relations",
+        ]
+
+    def get_target_courses(self, product):
+        """Compute the serialized value for the "target_courses" field."""
+        context = self.context.copy()
+        context["resource"] = product
+
+        return AdminTargetCourseSerializer(
+            instance=product.target_courses.all().order_by("order_relations__position"),
+            many=True,
+            context=context,
+        ).data
