@@ -1,8 +1,14 @@
 import { faker } from "@faker-js/faker";
-import { Course, CourseState, Priority } from "@/services/api/models/Course";
+import {
+  Course,
+  CourseRoles,
+  CourseState,
+  Priority,
+} from "@/services/api/models/Course";
 import { OrganizationFactory } from "@/services/factories/organizations";
 import { ProductFactory } from "@/services/factories/product";
 import { CourseRelationToProduct } from "@/services/api/models/Relations";
+import { AccessesFactory } from "@/services/factories/accesses";
 
 const build = (): Course => {
   return {
@@ -12,6 +18,7 @@ const build = (): Course => {
     organizations: OrganizationFactory(2),
     product_relations: CourseRelationsToProductFactory(3),
     state: CourseStateFactory(),
+    accesses: AccessesFactory(Object.values(CourseRoles), 3),
   };
 };
 
