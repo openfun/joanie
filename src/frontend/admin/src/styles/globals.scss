@@ -3,7 +3,8 @@
 body {
   color: rgb(var(--foreground-rgb));
   background: white;
-  overflow: auto;
+  overflow: auto !important;
+  margin: 0;
 }
 
 .flex-row {

@@ -11,6 +11,7 @@ import { Maybe } from "@/types/utils";
 import { useCourses } from "@/hooks/useCourses/useCourses";
 import { CustomLink } from "@/components/presentational/link/CustomLink";
 import { commonTranslations } from "@/translations/common/commonTranslations";
+import { SimpleCard } from "@/components/presentational/card/SimpleCard";
 
 const messages = defineMessages({
   codeHeader: {
@@ -70,21 +71,23 @@ export function CoursesList() {
   ];
 
   return (
-    <TableComponent
-      rows={courses.items}
-      loading={courses.states.isLoading}
-      columns={columns}
-      columnBuffer={4}
-      onSearch={debouncedSetQuery}
-      getEntityName={(course) => {
-        return course.title;
-      }}
-      onEditClick={(course: Course) => {
-        if (course.id) {
-          push(PATH_ADMIN.courses.edit(course.id));
-        }
-      }}
-      onRemoveClick={(course: Course) => courses.methods.delete(course.id)}
-    />
+    <SimpleCard>
+      <TableComponent
+        rows={courses.items}
+        loading={courses.states.isLoading}
+        columns={columns}
+        columnBuffer={4}
+        onSearch={debouncedSetQuery}
+        getEntityName={(course) => {
+          return course.title;
+        }}
+        onEditClick={(course: Course) => {
+          if (course.id) {
+            push(PATH_ADMIN.courses.edit(course.id));
+          }
+        }}
+        onRemoveClick={(course: Course) => courses.methods.delete(course.id)}
+      />
+    </SimpleCard>
   );
 }

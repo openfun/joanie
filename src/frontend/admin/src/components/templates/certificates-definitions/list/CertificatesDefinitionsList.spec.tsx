@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { TestingWrapper } from "@/components/testing/TestingWrapper";
-import { CertificatesDefinitionsList } from "@/components/templates/certificates-definitions/list/CertificatesDefintionsList";
+import { CertificatesDefinitionsList } from "@/components/templates/certificates-definitions/list/CertificatesDefinitionsList";
 
 describe("<CertificatesDefinitionsList/>", () => {
   it("renders a CertificatesDefinitionsList component ", async () => {

@@ -21,12 +21,14 @@ interface Props<T extends FieldValues> {
   onSubmit: VoidFunction;
   formRef?: MutableRefObject<HTMLFormElement | undefined>;
   isSubmitting?: boolean;
+  showSubmit?: boolean;
 }
 
 export function RHFProvider<T extends FieldValues>({
   children,
   onSubmit,
   methods,
+  showSubmit = true,
   isSubmitting = false,
   id,
 }: Props<T>) {
@@ -35,15 +37,17 @@ export function RHFProvider<T extends FieldValues>({
     <FormProvider {...methods}>
       <form id={id} onSubmit={onSubmit}>
         {children}
-        <Box mt={2} display="flex" justifyContent="flex-end">
-          <LoadingButton
-            loading={isSubmitting}
-            variant="contained"
-            type="submit"
-          >
-            {intl.formatMessage(messages.submit)}
-          </LoadingButton>
-        </Box>
+        {showSubmit && (
+          <Box mt={2} display="flex" justifyContent="flex-end">
+            <LoadingButton
+              loading={isSubmitting}
+              variant="contained"
+              type="submit"
+            >
+              {intl.formatMessage(messages.submit)}
+            </LoadingButton>
+          </Box>
+        )}
       </form>
     </FormProvider>
   );

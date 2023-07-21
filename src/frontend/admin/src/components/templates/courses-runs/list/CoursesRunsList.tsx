@@ -10,6 +10,7 @@ import { CourseRun } from "@/services/api/models/CourseRun";
 import { getCoursesRunsListColumns } from "@/components/templates/courses-runs/list/CourseRunsListColumns";
 import { Maybe } from "@/types/utils";
 import { useCoursesRuns } from "@/hooks/useCourseRun/useCourseRun";
+import { SimpleCard } from "@/components/presentational/card/SimpleCard";
 
 export function CoursesRunsList() {
   const intl = useIntl();
@@ -25,23 +26,25 @@ export function CoursesRunsList() {
   );
 
   return (
-    <TableComponent
-      rows={courseRuns.items}
-      loading={courseRuns.states.isLoading}
-      columns={columns}
-      onSearch={debouncedSetQuery}
-      columnBuffer={6}
-      onEditClick={(courseRun: CourseRun) => {
-        if (courseRun.id) {
-          push(PATH_ADMIN.courses_run.edit(courseRun?.id));
-        }
-      }}
-      getEntityName={(courseRun) => {
-        return courseRun.title;
-      }}
-      onRemoveClick={(courseRun: CourseRun) => {
-        courseRuns.methods.delete(courseRun.id);
-      }}
-    />
+    <SimpleCard>
+      <TableComponent
+        rows={courseRuns.items}
+        loading={courseRuns.states.isLoading}
+        columns={columns}
+        onSearch={debouncedSetQuery}
+        columnBuffer={6}
+        onEditClick={(courseRun: CourseRun) => {
+          if (courseRun.id) {
+            push(PATH_ADMIN.courses_run.edit(courseRun?.id));
+          }
+        }}
+        getEntityName={(courseRun) => {
+          return courseRun.title;
+        }}
+        onRemoveClick={(courseRun: CourseRun) => {
+          courseRuns.methods.delete(courseRun.id);
+        }}
+      />
+    </SimpleCard>
   );
 }

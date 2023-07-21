@@ -21,11 +21,11 @@ const AppBar = styled(MuiAppBar, {
   background: "white",
   padding: theme.spacing(1, 2, 1, 1),
   ...(open && {
-    [theme.breakpoints.down("sm")]: {
+    [theme.breakpoints.down("md")]: {
       transition: "none",
       marginLeft: 0,
     },
-    [theme.breakpoints.up("sm")]: {
+    [theme.breakpoints.up("md")]: {
       width: `calc(100% - ${theme.navigation.width}px)`,
       marginLeft: `0px`,
     },

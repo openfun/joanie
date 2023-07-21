@@ -11,6 +11,7 @@ import { useOrganizations } from "@/hooks/useOrganizations/useOrganizations";
 import { Maybe } from "@/types/utils";
 import { CustomLink } from "@/components/presentational/link/CustomLink";
 import { commonTranslations } from "@/translations/common/commonTranslations";
+import { SimpleCard } from "@/components/presentational/card/SimpleCard";
 
 const messages = defineMessages({
   codeHeader: {
@@ -57,21 +58,23 @@ export function OrganizationsList() {
   ];
 
   return (
-    <TableComponent
-      rows={orgs.items}
-      loading={orgs.states.isLoading || orgs.states.fetching}
-      columns={columns}
-      columnBuffer={3}
-      onSearch={debouncedSetQuery}
-      onEditClick={(organization: Organization) =>
-        push(PATH_ADMIN.organizations.edit(organization.id))
-      }
-      onRemoveClick={(organization: Organization) => {
-        orgs.methods.delete(organization.id);
-      }}
-      getEntityName={(organization) => {
-        return organization.title;
-      }}
-    />
+    <SimpleCard>
+      <TableComponent
+        rows={orgs.items}
+        loading={orgs.states.isLoading || orgs.states.fetching}
+        columns={columns}
+        columnBuffer={3}
+        onSearch={debouncedSetQuery}
+        onEditClick={(organization: Organization) =>
+          push(PATH_ADMIN.organizations.edit(organization.id))
+        }
+        onRemoveClick={(organization: Organization) => {
+          orgs.methods.delete(organization.id);
+        }}
+        getEntityName={(organization) => {
+          return organization.title;
+        }}
+      />
+    </SimpleCard>
   );
 }

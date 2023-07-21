@@ -11,6 +11,7 @@ import { useCertificateDefinitions } from "@/hooks/useCertificateDefinitions/use
 import { Maybe } from "@/types/utils";
 import { CustomLink } from "@/components/presentational/link/CustomLink";
 import { commonTranslations } from "@/translations/common/commonTranslations";
+import { SimpleCard } from "@/components/presentational/card/SimpleCard";
 
 const messages = defineMessages({
   nameHeader: {
@@ -67,24 +68,26 @@ export function CertificatesDefinitionsList() {
   ];
 
   return (
-    <TableComponent
-      rows={certificateDefinitions.items}
-      loading={certificateDefinitions.states.fetching}
-      columns={columns}
-      onSearch={debouncedSetQuery}
-      columnBuffer={3}
-      onEditClick={(certificateDefinition: CertificateDefinition) => {
-        if (certificateDefinition.id === undefined) {
-          return;
-        }
-        push(PATH_ADMIN.certificates.edit(certificateDefinition.id));
-      }}
-      getEntityName={(certificateDefinition) => {
-        return certificateDefinition.name;
-      }}
-      onRemoveClick={(certificateDefinition: CertificateDefinition) => {
-        certificateDefinitions.methods.delete(certificateDefinition.id);
-      }}
-    />
+    <SimpleCard>
+      <TableComponent
+        rows={certificateDefinitions.items}
+        loading={certificateDefinitions.states.fetching}
+        columns={columns}
+        onSearch={debouncedSetQuery}
+        columnBuffer={3}
+        onEditClick={(certificateDefinition: CertificateDefinition) => {
+          if (certificateDefinition.id === undefined) {
+            return;
+          }
+          push(PATH_ADMIN.certificates.edit(certificateDefinition.id));
+        }}
+        getEntityName={(certificateDefinition) => {
+          return certificateDefinition.name;
+        }}
+        onRemoveClick={(certificateDefinition: CertificateDefinition) => {
+          certificateDefinitions.methods.delete(certificateDefinition.id);
+        }}
+      />
+    </SimpleCard>
   );
 }
