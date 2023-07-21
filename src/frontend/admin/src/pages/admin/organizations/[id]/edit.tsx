@@ -4,7 +4,6 @@ import { DashboardLayoutPage } from "@/layouts/dashboard/page/DashboardLayoutPag
 import { orgBreadcrumbsTranslation } from "@/translations/pages/organizations/breadcrumbsTranslations";
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { OrganizationForm } from "@/components/templates/organizations/form/OrganizationForm";
-import { SimpleCard } from "@/components/presentational/card/SimpleCard";
 import { useOrganization } from "@/hooks/useOrganizations/useOrganizations";
 
 const messages = defineMessages({
@@ -41,9 +40,7 @@ export default function EditOrganizationPage() {
         },
       ]}
     >
-      <SimpleCard>
-        {org.item && <OrganizationForm organization={org.item} />}
-      </SimpleCard>
+      {org.item && <OrganizationForm organization={org.item} />}
     </DashboardLayoutPage>
   );
 }

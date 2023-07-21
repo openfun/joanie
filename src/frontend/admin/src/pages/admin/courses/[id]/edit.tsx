@@ -2,7 +2,6 @@ import { defineMessages, useIntl } from "react-intl";
 import { useRouter } from "next/router";
 import { DashboardLayoutPage } from "@/layouts/dashboard/page/DashboardLayoutPage";
 import { PATH_ADMIN } from "@/utils/routes/path";
-import { SimpleCard } from "@/components/presentational/card/SimpleCard";
 import { coursesPagesTranslation } from "@/translations/pages/courses/breadcrumbsTranslations";
 import { CourseForm } from "@/components/templates/courses/form/CourseForm";
 import { useCourse } from "@/hooks/useCourses/useCourses";
@@ -39,9 +38,7 @@ export default function EditCourseRunPage() {
       ]}
       stretch={false}
     >
-      <SimpleCard>
-        {courseRun.item && <CourseForm course={courseRun.item} />}
-      </SimpleCard>
+      {courseRun.item && <CourseForm course={courseRun.item} />}
     </DashboardLayoutPage>
   );
 }

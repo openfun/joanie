@@ -2,7 +2,6 @@ import { defineMessages, useIntl } from "react-intl";
 import { useRouter } from "next/router";
 import { DashboardLayoutPage } from "@/layouts/dashboard/page/DashboardLayoutPage";
 import { OrganizationForm } from "@/components/templates/organizations/form/OrganizationForm";
-import { SimpleCard } from "@/components/presentational/card/SimpleCard";
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { orgBreadcrumbsTranslation } from "@/translations/pages/organizations/breadcrumbsTranslations";
 
@@ -34,13 +33,11 @@ export default function CreateOrganizationPage() {
         },
       ]}
     >
-      <SimpleCard>
-        <OrganizationForm
-          afterSubmit={(organization) =>
-            router.push(PATH_ADMIN.organizations.edit(organization.id))
-          }
-        />
-      </SimpleCard>
+      <OrganizationForm
+        afterSubmit={(organization) =>
+          router.push(PATH_ADMIN.organizations.edit(organization.id))
+        }
+      />
     </DashboardLayoutPage>
   );
 }

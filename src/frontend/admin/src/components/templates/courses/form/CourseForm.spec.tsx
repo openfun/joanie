@@ -18,6 +18,7 @@ describe("<CourseForm/>", () => {
     screen.getByText("Relation to products");
     screen.getByRole("button", { name: "Add relation" });
     screen.getByRole("button", { name: "Submit" });
+    expect(screen.queryByText("Course members")).not.toBeInTheDocument();
   });
 
   it("renders  a populated form ", async () => {
@@ -36,5 +37,11 @@ describe("<CourseForm/>", () => {
       name: "Code",
     });
     expect(code.value).toBe(course.code);
+    if (course.accesses && course.accesses.length > 0) {
+      await screen.findByText("Course members");
+      course.accesses.forEach((access) => {
+        screen.getByText(access.user.username);
+      });
+    }
   });
 });
