@@ -5,6 +5,7 @@ import {
 } from "./Relations";
 import { CourseRun } from "./CourseRun";
 import { ToFormValues } from "@/types/utils";
+import { Accesses } from "@/services/api/models/Accesses";
 
 export type Course = {
   id: string;
@@ -14,10 +15,18 @@ export type Course = {
   product_relations?: CourseRelationToProduct[];
   state?: CourseState;
   courses_runs?: CourseRun[];
+  accesses?: Accesses<CourseRoles>[];
 };
 
+export enum CourseRoles {
+  OWNER = "owner",
+  ADMIN = "administrator",
+  INSTRUCTOR = "instructor",
+  MANAGER = "manager",
+}
+
 export type CourseFormValues = ToFormValues<
-  Omit<Course, "id" | "state" | "courses_runs">
+  Omit<Course, "accesses" | "id" | "state" | "courses_runs">
 >;
 
 export interface DTOCourse {
