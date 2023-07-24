@@ -5,9 +5,12 @@ import Box from "@mui/material/Box";
 import { DashboardLayoutHeader } from "@/layouts/dashboard/header/DashboardLayoutHeader";
 import { DashboardNav } from "@/layouts/dashboard/nav/DashboardNav";
 
-const Main = styled("main", { shouldForwardProp: (prop) => prop !== "open" })<{
+type Props = {
   open?: boolean;
-}>(({ theme, open }) => ({
+};
+const Main = styled("main", {
+  shouldForwardProp: (prop) => prop !== "open",
+})<Props>(({ theme, open }) => ({
   flexGrow: 1,
   marginTop: theme.spacing(7),
   padding: theme.spacing(3),
