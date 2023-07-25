@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Add route detailing current user
 - Add related certificate products to enrollment API endpoint
 - Add admin endpoints to create/update/delete organization/course accesses
 - Add admin endpoint to search users

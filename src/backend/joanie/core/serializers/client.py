@@ -816,3 +816,36 @@ class CourseProductRelationSerializer(serializers.ModelSerializer):
             "course",
             "product",
         ]
+
+
+class UserSerializer(serializers.ModelSerializer):
+    """Serializer for User model."""
+
+    full_name = serializers.CharField(source="get_full_name")
+    abilities = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = models.User
+        fields = [
+            "id",
+            "username",
+            "full_name",
+            "is_superuser",
+            "is_staff",
+            "abilities",
+        ]
+        read_only_fields = [
+            "id",
+            "username",
+            "full_name",
+            "is_superuser",
+            "is_staff",
+            "abilities",
+        ]
+
+    def get_abilities(self, user):
+        """Return abilities of the logged-in user on itself."""
+        request = self.context.get("request")
+        if request:
+            return request.user.get_abilities(user)
+        return {}

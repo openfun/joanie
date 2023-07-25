@@ -813,3 +813,34 @@ class CourseViewSet(
         else:
             is_wished = models.CourseWish.objects.filter(**params).exists()
         return Response({"status": is_wished})
+
+
+class UserViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    """
+    User ViewSet
+    """
+
+    permission_classes = [permissions.AccessPermission]
+    serializer_class = serializers.UserSerializer
+
+    def get_queryset(self):
+        """
+        Only return users if a query is provided to filter them.
+        """
+        user = self.request.user
+
+        return models.User.objects.get(id=user.id)
+
+    @action(
+        detail=False,
+        methods=["get"],
+        url_name="me",
+        url_path="me",
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    def get_me(self, request):
+        """
+        Return information on currently logged user
+        """
+        context = {"request": request}
+        return Response(self.serializer_class(request.user, context=context).data)

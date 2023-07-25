@@ -182,10 +182,11 @@ class UserModelTestCase(BaseAPITestCase):
         factories.CourseFactory(users=[(user, "administrator")])
         factories.CourseFactory(users=[(user, "administrator")])
 
-        with self.assertNumQueries(1):
-            roles = list(user.get_abilities(user)["course_roles"])
+        with self.assertNumQueries(2):
+            abilities = user.get_abilities(user)
 
-        self.assertCountEqual(roles, ["manager", "administrator"])
+        self.assertTrue(abilities["has_course_access"])
+        self.assertFalse(abilities["has_organization_access"])
 
     def test_models_user_get_abilities_organization_roles(self):
         """Check abilities returned for a user with roles on some organizations."""
@@ -194,7 +195,42 @@ class UserModelTestCase(BaseAPITestCase):
         factories.OrganizationFactory(users=[(user, "administrator")])
         factories.OrganizationFactory(users=[(user, "administrator")])
 
-        with self.assertNumQueries(1):
-            roles = list(user.get_abilities(user)["organization_roles"])
+        with self.assertNumQueries(2):
+            abilities = user.get_abilities(user)
 
-        self.assertCountEqual(roles, ["member", "administrator"])
+        self.assertFalse(abilities["has_course_access"])
+        self.assertTrue(abilities["has_organization_access"])
+
+    def test_models_user_get_other_user_abilities_organization_access(self):
+        """
+        Check abilities returned for a user other than self with
+        roles on some organizations.
+        """
+        user = factories.UserFactory()
+        user_target = factories.UserFactory()
+        factories.OrganizationFactory(users=[(user_target, "member")])
+        factories.OrganizationFactory(users=[(user_target, "administrator")])
+        factories.OrganizationFactory(users=[(user_target, "administrator")])
+
+        with self.assertNumQueries(2):
+            abilities = user.get_abilities(user_target)
+
+        self.assertFalse(abilities["has_course_access"])
+        self.assertTrue(abilities["has_organization_access"])
+
+    def test_models_user_get_other_user_abilities_course_access(self):
+        """
+        Check abilities returned for a user other than self with
+        roles on some courses.
+        """
+        user = factories.UserFactory()
+        user_target = factories.UserFactory()
+        factories.CourseFactory(users=[(user_target, "manager")])
+        factories.CourseFactory(users=[(user_target, "administrator")])
+        factories.CourseFactory(users=[(user_target, "administrator")])
+
+        with self.assertNumQueries(2):
+            abilities = user.get_abilities(user_target)
+
+        self.assertTrue(abilities["has_course_access"])
+        self.assertFalse(abilities["has_organization_access"])
