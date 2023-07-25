@@ -211,3 +211,101 @@ class UserAdminApiTest(TestCase):
             "The requested resource was not found on this server.",
             status_code=404,
         )
+
+    def test_admin_api_user_me_anonymous(self):
+        """
+        Anonymous users should not be able to get user information
+        """
+        factories.UserFactory(is_staff=True, is_superuser=True)
+        response = self.client.get("/api/v1.0/admin/users/me/")
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_admin_api_user_me_no_access(self):
+        """
+        User should see their infos on the /me route
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        response = self.client.get("/api/v1.0/admin/users/me/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "id": str(admin.id),
+                "username": admin.username,
+                "full_name": admin.get_full_name(),
+                "is_superuser": admin.is_superuser,
+                "is_staff": admin.is_staff,
+                "abilities": {
+                    "delete": False,
+                    "get": True,
+                    "patch": True,
+                    "put": True,
+                    "has_course_access": False,
+                    "has_organization_access": False,
+                },
+            },
+        )
+
+    def test_admin_api_user_me_course_access(self):
+        """
+        User should see their infos with the correct course
+        accesses on the /me route
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        factories.UserCourseAccessFactory(user=admin)
+        response = self.client.get("/api/v1.0/admin/users/me/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "id": str(admin.id),
+                "username": admin.username,
+                "full_name": admin.get_full_name(),
+                "is_superuser": admin.is_superuser,
+                "is_staff": admin.is_staff,
+                "abilities": {
+                    "delete": False,
+                    "get": True,
+                    "patch": True,
+                    "put": True,
+                    "has_course_access": True,
+                    "has_organization_access": False,
+                },
+            },
+        )
+
+    def test_admin_api_user_me_organization_access(self):
+        """
+        User should see their infos with the correct organization
+        accesses on the /me route
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        factories.UserOrganizationAccessFactory(user=admin)
+        response = self.client.get("/api/v1.0/admin/users/me/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "id": str(admin.id),
+                "username": admin.username,
+                "full_name": admin.get_full_name(),
+                "is_superuser": admin.is_superuser,
+                "is_staff": admin.is_staff,
+                "abilities": {
+                    "delete": False,
+                    "get": True,
+                    "patch": True,
+                    "put": True,
+                    "has_course_access": False,
+                    "has_organization_access": True,
+                },
+            },
+        )

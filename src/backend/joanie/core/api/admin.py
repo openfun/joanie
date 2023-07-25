@@ -3,6 +3,8 @@ Admin API Endpoints
 """
 import django_filters.rest_framework
 from rest_framework import authentication, mixins, permissions, viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 from joanie.core import filters, models, serializers
 
@@ -96,6 +98,7 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     authentication_classes = [authentication.SessionAuthentication]
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_class = serializers.AdminUserSerializer
+    me_serializer_class = serializers.AdminUserCompleteSerializer
     queryset = models.User.objects.all()
     filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
     filterset_class = filters.UserAdminFilterSet
@@ -110,6 +113,22 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             return models.User.objects.none()
 
         return super().get_queryset()
+
+    @action(
+        detail=False,
+        methods=["get"],
+        url_name="me",
+        url_path="me",
+        permission_classes=[
+            permissions.IsAdminUser & permissions.DjangoModelPermissions
+        ],
+    )
+    def get_me(self, request):
+        """
+        Return information on currently logged user
+        """
+        context = {"request": request}
+        return Response(self.me_serializer_class(request.user, context=context).data)
 
 
 class CourseAccessViewSet(

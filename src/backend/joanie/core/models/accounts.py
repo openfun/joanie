@@ -67,25 +67,14 @@ class User(BaseModel, auth_models.AbstractUser):
             "put": is_self,
         }
 
-        if is_self:
-            # Apply `order_by()` to get read of default ordering and allow
-            # the distinct clause to work as expected on the `role` values
-            course_roles = (
-                self.course_accesses.order_by()
-                .values_list("role", flat=True)
-                .distinct()
-            )
-            organization_roles = (
-                self.organization_accesses.order_by()
-                .values_list("role", flat=True)
-                .distinct()
-            )
-            abilities.update(
-                {
-                    "course_roles": course_roles,
-                    "organization_roles": organization_roles,
-                }
-            )
+        has_course_access = user.course_accesses.exists()
+        has_organization_access = user.organization_accesses.exists()
+        abilities.update(
+            {
+                "has_course_access": has_course_access,
+                "has_organization_access": has_organization_access,
+            }
+        )
 
         return abilities
 

@@ -53,6 +53,7 @@ router.register(
     api_client.CourseProductRelationViewSet,
     basename="course-product-relations",
 )
+router.register("users", api_client.UserViewSet, basename="users")
 
 # - Routes nested under a course
 course_related_router = DefaultRouter()
