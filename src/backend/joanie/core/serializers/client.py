@@ -5,7 +5,6 @@ from django.core.cache import cache
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
-from djmoney.contrib.django_rest_framework import MoneyField
 from rest_framework import exceptions, serializers
 
 from joanie.core import enums, models, utils
@@ -481,7 +480,7 @@ class OrderSerializer(serializers.ModelSerializer):
         source="owner.username", read_only=True, required=False
     )
     course = CourseLightSerializer(read_only=True, exclude_abilities=True)
-    total = MoneyField(
+    total = serializers.DecimalField(
         coerce_to_string=False,
         decimal_places=2,
         max_digits=9,
@@ -489,6 +488,7 @@ class OrderSerializer(serializers.ModelSerializer):
         read_only=True,
         required=False,
     )
+    total_currency = serializers.SerializerMethodField(read_only=True)
     organization = serializers.SlugRelatedField(
         queryset=models.Organization.objects.all(), slug_field="id", required=False
     )
@@ -562,6 +562,12 @@ class OrderSerializer(serializers.ModelSerializer):
         validated_data.pop("product", None)
         return super().update(instance, validated_data)
 
+    def get_total_currency(self, *args, **kwargs):
+        """
+        Return the currency used
+        """
+        return settings.DEFAULT_CURRENCY
+
 
 class ProductSerializer(serializers.ModelSerializer):
     """
@@ -576,7 +582,7 @@ class ProductSerializer(serializers.ModelSerializer):
     id = serializers.CharField(read_only=True)
     certificate_definition = CertificationDefinitionSerializer(read_only=True)
     organizations = serializers.SerializerMethodField("get_organizations")
-    price = MoneyField(
+    price = serializers.DecimalField(
         coerce_to_string=False,
         decimal_places=2,
         max_digits=9,
@@ -584,6 +590,7 @@ class ProductSerializer(serializers.ModelSerializer):
         read_only=True,
     )
     target_courses = serializers.SerializerMethodField(read_only=True)
+    price_currency = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = models.Product
@@ -696,6 +703,10 @@ class ProductSerializer(serializers.ModelSerializer):
         representation["orders"] = self.get_orders(instance)
 
         return representation
+
+    def get_price_currency(self, *args, **kwargs):
+        """Return the code of currency used by the instance"""
+        return settings.DEFAULT_CURRENCY
 
 
 class CourseSerializer(AbilitiesModelSerializer):

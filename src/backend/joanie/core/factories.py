@@ -10,7 +10,6 @@ from django.contrib.auth.hashers import make_password
 from django.utils import timezone as django_timezone
 
 import factory.fuzzy
-from djmoney.money import Money
 from easy_thumbnails.files import ThumbnailerImageFieldFile, generate_all_aliases
 from faker import Faker
 
@@ -311,18 +310,7 @@ class ProductFactory(factory.django.DjangoModelFactory):
     type = enums.PRODUCT_TYPE_ENROLLMENT
     title = factory.Faker("bs")
     call_to_action = "let's go!"
-
-    @factory.lazy_attribute
-    # pylint: disable=no-self-use
-    def price(self):
-        """
-        Return a Money object with a random amount and a random currency from
-        the list of currencies supported by the application.
-        """
-        return Money(
-            amount=Faker().pydecimal(left_digits=3, right_digits=2, min_value=0),
-            currency=random.choice(settings.CURRENCIES),  # nosec
-        )
+    price = Faker().pydecimal(left_digits=3, right_digits=2, min_value=0)
 
     @factory.post_generation
     # pylint: disable=unused-argument,no-member

@@ -283,7 +283,7 @@ class OrderViewSet(
 
         # If product is not free, we have to create a payment.
         # To create one, a billing address is mandatory
-        if product.price.amount > 0 and not billing_address:
+        if product.price > 0 and not billing_address:
             return Response({"billing_address": "This field is required."}, status=400)
 
         # - Validate data then create an order
@@ -299,7 +299,7 @@ class OrderViewSet(
             )
 
         # Once order has been created, if product is not free, create a payment
-        if product.price.amount > 0:
+        if product.price > 0:
             order = serializer.instance
             payment_backend = get_payment_backend()
             credit_card_id = serializer.initial_data.get("credit_card_id")

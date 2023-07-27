@@ -125,7 +125,7 @@ class DummyPaymentBackend(BasePaymentBackend):
         notification_url = self.get_notification_url(request)
         payment_info = {
             "id": payment_id,
-            "amount": int(order.total.amount * 100),
+            "amount": int(order.total * 100),
             "billing_address": billing_address,
             "notification_url": notification_url,
             "metadata": {"order_id": order_id},

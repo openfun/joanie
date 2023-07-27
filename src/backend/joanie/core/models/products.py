@@ -3,12 +3,12 @@ Declare and configure the models for the productorder_s part
 """
 import itertools
 import logging
-from decimal import Decimal as D
 
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.dispatch import receiver
 from django.utils import timezone
@@ -18,8 +18,6 @@ from django.utils.translation import gettext_lazy as _
 import requests
 from django_fsm import FSMField, TransitionNotAllowed, transition
 from django_fsm.signals import post_transition
-from djmoney.models.fields import MoneyField
-from djmoney.models.validators import MinMoneyValidator
 from parler import models as parler_models
 from rest_framework.reverse import reverse
 from urllib3.util import Retry
@@ -71,17 +69,14 @@ class Product(parler_models.TranslatableModel, BaseModel):
         verbose_name=_("target courses"),
         blank=True,
     )
-    price = MoneyField(
+    price = models.DecimalField(
         _("price"),
-        max_digits=9,
         help_text=_("tax included"),
         decimal_places=2,
-        default=D("0.00"),
-        default_currency=settings.DEFAULT_CURRENCY,
+        default=0.00,
+        max_digits=9,
         blank=True,
-        validators=[
-            MinMoneyValidator(0),
-        ],
+        validators=[MinValueValidator(0.0)],
     )
     certificate_definition = models.ForeignKey(
         "CertificateDefinition",
@@ -325,17 +320,15 @@ class Order(BaseModel):
         verbose_name=_("courses"),
         blank=True,
     )
-    total = MoneyField(
-        _("total"),
+    total = models.DecimalField(
+        _("price"),
         editable=False,
-        max_digits=9,
+        help_text=_("tax included"),
         decimal_places=2,
-        default=D("0.00"),
-        default_currency=settings.DEFAULT_CURRENCY,
+        max_digits=9,
+        default=0.00,
         blank=True,
-        validators=[
-            MinMoneyValidator(0),
-        ],
+        validators=[MinValueValidator(0.0)],
     )
     owner = models.ForeignKey(
         to=customers_models.User,
@@ -373,10 +366,7 @@ class Order(BaseModel):
         An order can be validated if the product is free or if it
         has invoices.
         """
-        return (
-            self.total.amount == 0  # pylint: disable=no-member
-            or self.invoices.count() > 0
-        )
+        return self.total == 0 or self.invoices.count() > 0
 
     @transition(
         field="state",

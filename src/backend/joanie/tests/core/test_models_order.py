@@ -10,7 +10,6 @@ from django.test import TestCase
 from django.utils import timezone
 
 from django_fsm import TransitionNotAllowed
-from moneyed import Money
 
 from joanie.core import enums, factories
 from joanie.core.models import Certificate, Enrollment
@@ -251,7 +250,7 @@ class OrderModelsTestCase(TestCase):
         )[0]
 
         product = factories.ProductFactory(
-            courses=[course], target_courses=[target_course], price=Money("0.00", "EUR")
+            courses=[course], target_courses=[target_course], price=0.00
         )
         order = factories.OrderFactory(owner=owner, product=product, course=course)
 
@@ -293,7 +292,7 @@ class OrderModelsTestCase(TestCase):
             2,
             courses=[course],
             target_courses=[target_course],
-            price=Money("0.00", "EUR"),
+            price=0.00,
         )
         # - User purchases the two products
         order = factories.OrderFactory(owner=owner, product=product_1, course=course)
@@ -335,7 +334,7 @@ class OrderModelsTestCase(TestCase):
 
         # - Create one product which relies on the same course
         product = factories.ProductFactory(
-            courses=[course], target_courses=[target_course], price=Money("0.00", "EUR")
+            courses=[course], target_courses=[target_course], price=0.00
         )
         # - User purchases the two products
         order = factories.OrderFactory(owner=owner, product=product, course=course)

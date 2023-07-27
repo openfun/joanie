@@ -2,8 +2,6 @@
 from django.db.models import ProtectedError
 from django.test import TestCase
 
-from djmoney.money import Money
-
 from joanie.core.factories import OrderFactory
 from joanie.payment.factories import InvoiceFactory, TransactionFactory
 
@@ -18,7 +16,7 @@ class TransactionModelTestCase(TestCase):
         If transaction amount is positive, it's string representation should
         contain debit.
         """
-        transaction = TransactionFactory(total=Money("10.00", "EUR"))
+        transaction = TransactionFactory(total=10.00)
         self.assertEqual(
             str(transaction),
             f"Debit transaction ({transaction.total})",
@@ -29,7 +27,7 @@ class TransactionModelTestCase(TestCase):
         If transaction amount is negative, it's string representation should
         contain credit.
         """
-        transaction = TransactionFactory(total=Money("-10.00", "EUR"))
+        transaction = TransactionFactory(total=-10.00)
         self.assertEqual(
             str(transaction),
             f"Credit transaction ({transaction.total})",

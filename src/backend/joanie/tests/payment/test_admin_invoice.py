@@ -3,7 +3,6 @@ from django.test import TestCase
 from django.urls import reverse
 
 import lxml.html
-from djmoney.money import Money
 
 from joanie.core import factories
 from joanie.payment.factories import InvoiceFactory, TransactionFactory
@@ -71,7 +70,7 @@ class InvoiceAdminTestCase(TestCase):
         )[0]
         invoiced_balance_field = html.cssselect(".field-invoiced_balance .readonly")[0]
 
-        null_amount_repr = str(Money("0.00", order.total.currency))
+        null_amount_repr = "0.00"
         self.assertEqual(balance_field.text_content(), null_amount_repr)
         self.assertEqual(transactions_balance_field.text_content(), null_amount_repr)
         self.assertEqual(invoiced_balance_field.text_content(), null_amount_repr)

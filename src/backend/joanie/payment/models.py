@@ -15,8 +15,6 @@ from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
 from babel.numbers import get_currency_symbol
-from djmoney.models.fields import MoneyField
-from djmoney.money import Money
 from howard.issuers import InvoiceDocument
 from parler.utils import get_language_settings
 from parler.utils.context import switch_language
@@ -57,11 +55,10 @@ class Invoice(BaseModel):
         blank=False,
         null=False,
     )
-    total = MoneyField(
+    total = models.DecimalField(
         _("total"),
-        max_digits=9,
         decimal_places=2,
-        default_currency=settings.DEFAULT_CURRENCY,
+        max_digits=9,
         null=False,
         blank=False,
     )
@@ -107,11 +104,8 @@ class Invoice(BaseModel):
         """
         Process the state of the invoice
         """
-        if self.balance.amount >= 0:
-            if (
-                self.invoiced_balance.amount == 0
-                and self.transactions_balance.amount == 0
-            ):
+        if self.balance >= 0:
+            if self.invoiced_balance == 0 and self.transactions_balance == 0:
                 return payment_enums.INVOICE_STATE_REFUNDED
 
             return payment_enums.INVOICE_STATE_PAID
@@ -133,7 +127,7 @@ class Invoice(BaseModel):
         If total amount is positive, invoice type is "invoice"
         otherwise it's "credit_note"
         """
-        if self.total.amount < 0:  # pylint: disable=no-member
+        if self.total < 0:
             return payment_enums.INVOICE_TYPE_CREDIT_NOTE
 
         return payment_enums.INVOICE_TYPE_INVOICE
@@ -151,7 +145,7 @@ class Invoice(BaseModel):
             Q(invoice__in=self.children.all()) | Q(invoice=self)
         ).aggregate(total=models.Sum("total"))["total"] or D(0.00)
 
-        return Money(amount, self.total.currency)  # pylint: disable=no-member
+        return amount
 
     @property
     def invoiced_balance(self):
@@ -163,11 +157,11 @@ class Invoice(BaseModel):
         """
         invoices = [
             self,
-            *self.children.only("total", "total_currency").all(),
+            *self.children.only("total").all(),
         ]
-        amount = sum(invoice.total.amount for invoice in invoices)
+        amount = sum(invoice.total for invoice in invoices)
 
-        return Money(amount, self.total.currency)  # pylint: disable=no-member
+        return amount
 
     @property
     def balance(self):
@@ -214,12 +208,9 @@ class Invoice(BaseModel):
         language_settings = get_language_settings(language_code or get_language())
 
         vat = D(settings.JOANIE_VAT)
-        total_amount = self.total.amount  # pylint: disable=no-member
-        vat_amount = total_amount * vat / 100
-        net_amount = total_amount - vat_amount
-        currency = get_currency_symbol(
-            self.total.currency.code  # pylint: disable=no-member
-        )
+        vat_amount = self.total * vat / 100
+        net_amount = self.total - vat_amount
+        currency = get_currency_symbol(settings.DEFAULT_CURRENCY)
 
         base_context = {
             "metadata": {
@@ -231,7 +222,7 @@ class Invoice(BaseModel):
                 "amount": {
                     "currency": currency,
                     "subtotal": str(net_amount),
-                    "total": str(total_amount),
+                    "total": str(self.total),
                     "vat_amount": str(vat_amount),
                     "vat": str(vat),
                 },
@@ -284,11 +275,7 @@ class Invoice(BaseModel):
             self.recipient_address = self.parent.recipient_address
 
         if self.type == payment_enums.INVOICE_TYPE_CREDIT_NOTE:
-            if (
-                self.parent
-                and self.total.amount * -1  # pylint: disable=no-member
-                > self.parent.invoiced_balance.amount  # pylint: disable=no-member
-            ):
+            if self.parent and self.total * -1 > self.parent.invoiced_balance:
                 raise ValidationError(
                     _(
                         "Credit note amount cannot be greater than its related "
@@ -343,11 +330,10 @@ class Transaction(BaseModel):
         null=False,
     )
 
-    total = MoneyField(
+    total = models.DecimalField(
         _("total"),
-        max_digits=9,
         decimal_places=2,
-        default_currency=settings.DEFAULT_CURRENCY,
+        max_digits=9,
     )
 
     class Meta:
@@ -356,9 +342,7 @@ class Transaction(BaseModel):
         verbose_name_plural = _("Transactions")
 
     def __str__(self):
-        transaction_type = (
-            "Credit" if self.total.amount < 0 else "Debit"  # pylint: disable=no-member
-        )
+        transaction_type = "Credit" if self.total < 0 else "Debit"
         return f"{transaction_type} transaction ({self.total})"
 
 

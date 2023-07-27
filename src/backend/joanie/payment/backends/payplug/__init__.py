@@ -2,6 +2,8 @@
 import logging
 from decimal import Decimal as D
 
+from django.conf import settings
+
 import payplug
 import requests
 from payplug import notifications
@@ -33,8 +35,8 @@ class PayplugBackend(BasePaymentBackend):
         """Build the generic payment object"""
 
         payment_data = {
-            "amount": int(order.total.amount * 100),
-            "currency": order.total.currency.code,
+            "amount": int(order.total * 100),
+            "currency": settings.DEFAULT_CURRENCY,
             "billing": {
                 "first_name": billing_address["first_name"],
                 "last_name": billing_address["last_name"],
