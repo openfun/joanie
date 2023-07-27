@@ -10,9 +10,6 @@ from django.db import transaction
 from django.test import TestCase
 from django.utils import timezone as django_timezone
 
-from djmoney.money import Money
-from moneyed import EUR
-
 from joanie.core import enums, factories
 
 
@@ -26,9 +23,8 @@ class ProductModelsTestCase(TestCase):
         Currency object.
         """
         product = factories.ProductFactory(price=23)
-        self.assertEqual(product.price, Money("23.00", "EUR"))
-        self.assertEqual(product.price.amount, D("23.00"))
-        self.assertEqual(product.price.currency, EUR)
+        self.assertEqual(product.price, 23.00)
+        self.assertEqual(product.price, D("23.00"))
 
     def test_models_product_type_enrollment_no_certificate_definition(self):
         """A product of type enrollment can not have a certificate definition."""

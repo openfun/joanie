@@ -9,7 +9,6 @@ from django.db import IntegrityError
 from django.db.models import ProtectedError
 from django.test import TestCase
 
-from djmoney.money import Money
 from parler.utils.context import switch_language
 from pdfminer.high_level import extract_text as pdf_extract_text
 
@@ -59,7 +58,7 @@ class InvoiceModelTestCase(TestCase):
         InvoiceFactory(order=invoice.order, parent=invoice, total=D(-10.00))
 
         # Invoiced balance should be 110.00 €
-        self.assertEqual(invoice.invoiced_balance.amount, D(110.00))
+        self.assertEqual(invoice.invoiced_balance, D(110.00))
 
         # Credit a credit note greater than invoiced balance should be forbidden
         with self.assertRaises(ValidationError) as context:
@@ -104,26 +103,26 @@ class InvoiceModelTestCase(TestCase):
         invoice = InvoiceFactory(order=order, total=order.total)
 
         # - At beginning, balance should be -500.00
-        self.assertEqual(invoice.balance.amount, D("-500.00"))
+        self.assertEqual(invoice.balance, D("-500.00"))
 
         # - Then we received a payment to pay the full order,
         #   balance should be -500.00 + 500.00 = 0.00
         TransactionFactory(total=product.price, invoice=invoice)
         invoice.refresh_from_db()
-        self.assertEqual(invoice.balance.amount, D("0.00"))
+        self.assertEqual(invoice.balance, D("0.00"))
 
         # - Then we create a credit note to refund a part of the order (100.00)
         credit_note = InvoiceFactory(order=invoice.order, parent=invoice, total=-100)
         invoice.refresh_from_db()
-        self.assertEqual(invoice.balance.amount, D("100.00"))
+        self.assertEqual(invoice.balance, D("100.00"))
 
         # - Then we register the transaction to refund the client (100.00)
         TransactionFactory(
-            total=Money(-100.00, order.total.currency),
+            total=-100.00,
             invoice=credit_note,
         )
         invoice.refresh_from_db()
-        self.assertEqual(invoice.balance.amount, D("0.00"))
+        self.assertEqual(invoice.balance, D("0.00"))
 
     def test_models_invoice_state_paid(self):
         """
@@ -138,7 +137,7 @@ class InvoiceModelTestCase(TestCase):
         with self.assertNumQueries(7):
             self.assertEqual(invoice.invoiced_balance, order.total)
             self.assertEqual(invoice.transactions_balance, order.total)
-            self.assertEqual(invoice.balance.amount, D("0.00"))
+            self.assertEqual(invoice.balance, D("0.00"))
             self.assertEqual(invoice.state, "paid")
 
     def test_models_invoice_state_refunded(self):
@@ -157,9 +156,9 @@ class InvoiceModelTestCase(TestCase):
         TransactionFactory(invoice=invoice, total=-product.price)
 
         with self.assertNumQueries(12):
-            self.assertEqual(invoice.invoiced_balance.amount, D("0.00"))
-            self.assertEqual(invoice.transactions_balance.amount, D("0.00"))
-            self.assertEqual(invoice.balance.amount, D("0.00"))
+            self.assertEqual(invoice.invoiced_balance, D("0.00"))
+            self.assertEqual(invoice.transactions_balance, D("0.00"))
+            self.assertEqual(invoice.balance, D("0.00"))
             self.assertEqual(invoice.state, "refunded")
 
     def test_models_invoice_state_unpaid(self):
@@ -173,7 +172,7 @@ class InvoiceModelTestCase(TestCase):
         TransactionFactory(total=product.price / 2, invoice=invoice)
 
         with self.assertNumQueries(4):
-            self.assertEqual(invoice.balance.amount, D("-50.00"))
+            self.assertEqual(invoice.balance, D("-50.00"))
             self.assertEqual(invoice.state, "unpaid")
 
     def test_models_invoice_child_cannot_relies_on_another_child(self):

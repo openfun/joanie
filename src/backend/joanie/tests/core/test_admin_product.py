@@ -5,6 +5,7 @@ import random
 import uuid
 from unittest import mock
 
+from django.conf import settings
 from django.contrib.messages import get_messages
 from django.urls import reverse
 
@@ -214,8 +215,8 @@ class ProductAdminTestCase(BaseAPITestCase):
             "type": product.type,
             "title": product.title,
             "description": product.description,
-            "price_0": product.price.amount,
-            "price_1": product.price.currency,
+            "price_0": product.price,
+            "price_1": settings.DEFAULT_CURRENCY,
             "call_to_action": product.call_to_action,
             "organizations": str(organization.id),
             "target_course_relations-TOTAL_FORMS": 3,

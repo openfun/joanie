@@ -6,9 +6,9 @@ import uuid
 from io import BytesIO
 from unittest import mock
 
+from django.conf import settings
 from django.core.cache import cache
 
-from djmoney.money import Money
 from pdfminer.high_level import extract_text as pdf_extract_text
 
 from joanie.core import enums, factories, models
@@ -89,8 +89,8 @@ class OrderApiTest(BaseAPITestCase):
                         "id": str(order.id),
                         "organization": str(order.organization.id),
                         "owner": order.owner.username,
-                        "total": float(product.price.amount),
-                        "total_currency": str(product.price.currency),
+                        "total": float(product.price),
+                        "total_currency": settings.DEFAULT_CURRENCY,
                         "product": str(order.product.id),
                         "main_invoice": None,
                         "state": order.state,
@@ -132,8 +132,8 @@ class OrderApiTest(BaseAPITestCase):
                         "main_invoice": None,
                         "organization": str(other_order.organization.id),
                         "owner": other_order.owner.username,
-                        "total": float(other_order.total.amount),
-                        "total_currency": str(other_order.total.currency),
+                        "total": float(other_order.total),
+                        "total_currency": settings.DEFAULT_CURRENCY,
                         "product": str(other_order.product.id),
                         "state": other_order.state,
                         "target_courses": [],
@@ -234,8 +234,8 @@ class OrderApiTest(BaseAPITestCase):
                         "main_invoice": None,
                         "organization": str(order.organization.id),
                         "owner": order.owner.username,
-                        "total": float(order.total.amount),
-                        "total_currency": str(order.total.currency),
+                        "total": float(order.total),
+                        "total_currency": settings.DEFAULT_CURRENCY,
                         "product": str(order.product.id),
                         "state": order.state,
                         "target_courses": [],
@@ -312,8 +312,8 @@ class OrderApiTest(BaseAPITestCase):
                         "main_invoice": None,
                         "organization": str(order.organization.id),
                         "owner": order.owner.username,
-                        "total": float(order.total.amount),
-                        "total_currency": str(order.total.currency),
+                        "total": float(order.total),
+                        "total_currency": settings.DEFAULT_CURRENCY,
                         "product": str(order.product.id),
                         "state": order.state,
                         "target_courses": [],
@@ -371,8 +371,8 @@ class OrderApiTest(BaseAPITestCase):
                         "main_invoice": None,
                         "organization": str(order.organization.id),
                         "owner": order.owner.username,
-                        "total": float(order.total.amount),
-                        "total_currency": str(order.total.currency),
+                        "total": float(order.total),
+                        "total_currency": settings.DEFAULT_CURRENCY,
                         "product": str(order.product.id),
                         "state": order.state,
                         "target_courses": [],
@@ -430,8 +430,8 @@ class OrderApiTest(BaseAPITestCase):
                         "main_invoice": None,
                         "organization": str(order.organization.id),
                         "owner": order.owner.username,
-                        "total": float(order.total.amount),
-                        "total_currency": str(order.total.currency),
+                        "total": float(order.total),
+                        "total_currency": settings.DEFAULT_CURRENCY,
                         "product": str(order.product.id),
                         "state": order.state,
                         "target_courses": [],
@@ -447,9 +447,7 @@ class OrderApiTest(BaseAPITestCase):
     )
     def test_api_order_read_list_filtered_by_state_validated(self, _mock_thumbnail):
         """Authenticated user should be able to retrieve its validated orders."""
-        [product_1, product_2] = factories.ProductFactory.create_batch(
-            2, price=Money(0.00, "EUR")
-        )
+        [product_1, product_2] = factories.ProductFactory.create_batch(2, price=0.00)
         user = factories.UserFactory()
 
         # User purchases the product 1 as its price is equal to 0.00€,
@@ -493,8 +491,8 @@ class OrderApiTest(BaseAPITestCase):
                         "main_invoice": None,
                         "organization": str(order.organization.id),
                         "owner": order.owner.username,
-                        "total": float(order.total.amount),
-                        "total_currency": str(order.total.currency),
+                        "total": float(order.total),
+                        "total_currency": settings.DEFAULT_CURRENCY,
                         "product": str(order.product.id),
                         "state": order.state,
                         "target_courses": [],
@@ -579,8 +577,8 @@ class OrderApiTest(BaseAPITestCase):
                 "main_invoice": None,
                 "organization": str(order.organization.id),
                 "owner": owner.username,
-                "total": float(product.price.amount),
-                "total_currency": str(product.price.currency),
+                "total": float(product.price),
+                "total_currency": settings.DEFAULT_CURRENCY,
                 "product": str(product.id),
                 "enrollments": [],
                 "target_courses": [
@@ -673,9 +671,7 @@ class OrderApiTest(BaseAPITestCase):
     def test_api_order_create_authenticated_success(self, _mock_thumbnail):
         """Any authenticated user should be able to create an order."""
         target_courses = factories.CourseFactory.create_batch(2)
-        product = factories.ProductFactory(
-            target_courses=target_courses, price=Money(0.00, "EUR")
-        )
+        product = factories.ProductFactory(target_courses=target_courses, price=0.00)
         organization = product.course_relations.first().organizations.first()
         course = product.courses.first()
         self.assertEqual(
@@ -724,8 +720,8 @@ class OrderApiTest(BaseAPITestCase):
                 "main_invoice": None,
                 "organization": str(order.organization.id),
                 "owner": "panoramix",
-                "total": float(product.price.amount),
-                "total_currency": str(product.price.currency),
+                "total": float(product.price),
+                "total_currency": settings.DEFAULT_CURRENCY,
                 "product": str(product.id),
                 "enrollments": [],
                 "target_courses": [
@@ -787,7 +783,7 @@ class OrderApiTest(BaseAPITestCase):
         target_course = factories.CourseFactory()
         course = factories.CourseFactory()
         product = factories.ProductFactory(
-            courses=[], target_courses=[target_course], price=Money(0.00, "EUR")
+            courses=[], target_courses=[target_course], price=0.00
         )
         factories.CourseProductRelationFactory(
             course=course, product=product, organizations=[]
@@ -821,9 +817,7 @@ class OrderApiTest(BaseAPITestCase):
         only one linked to the product.
         """
         target_course = factories.CourseFactory()
-        product = factories.ProductFactory(
-            target_courses=[target_course], price=Money(0.00, "EUR")
-        )
+        product = factories.ProductFactory(target_courses=[target_course], price=0.00)
         organization = product.course_relations.first().organizations.first()
         course = product.courses.first()
 
@@ -861,7 +855,7 @@ class OrderApiTest(BaseAPITestCase):
         product = factories.ProductFactory(
             courses=[],
             target_courses=[target_course],
-            price=Money(0.00, "EUR"),
+            price=0.00,
         )
         factories.CourseProductRelationFactory(
             course=course, product=product, organizations=organizations
@@ -911,9 +905,7 @@ class OrderApiTest(BaseAPITestCase):
         "product" and "course", it should not be allowed to override these fields.
         """
         target_courses = factories.CourseFactory.create_batch(2)
-        product = factories.ProductFactory(
-            target_courses=target_courses, price=Money(0.00, "EUR")
-        )
+        product = factories.ProductFactory(target_courses=target_courses, price=0.00)
         course = product.courses.first()
         organization = product.course_relations.first().organizations.first()
         self.assertCountEqual(
@@ -963,8 +955,8 @@ class OrderApiTest(BaseAPITestCase):
                 "main_invoice": None,
                 "organization": str(order.organization.id),
                 "owner": "panoramix",
-                "total": float(product.price.amount),
-                "total_currency": str(product.price.currency),
+                "total": float(product.price),
+                "total_currency": settings.DEFAULT_CURRENCY,
                 "product": str(product.id),
                 "enrollments": [],
                 "target_courses": [
@@ -1025,9 +1017,7 @@ class OrderApiTest(BaseAPITestCase):
     def test_api_order_create_authenticated_invalid_product(self):
         """The course and product passed in payload to create an order should match."""
         organization = factories.OrganizationFactory(title="fun")
-        product = factories.ProductFactory(
-            title="balançoire", price=Money("0.00", "EUR")
-        )
+        product = factories.ProductFactory(title="balançoire", price=0.00)
         cp_relation = factories.CourseProductRelationFactory(
             product=product, organizations=[organization]
         )
@@ -1078,7 +1068,7 @@ class OrderApiTest(BaseAPITestCase):
         course = factories.CourseFactory(title="mathématiques")
         organization = factories.OrganizationFactory(title="fun")
         product = factories.ProductFactory(
-            courses=[course], title="balançoire", price=Money("0.00", "EUR")
+            courses=[course], title="balançoire", price=0.00
         )
         data = {
             "course": course.code,
@@ -1163,7 +1153,7 @@ class OrderApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         course = factories.CourseFactory()
-        product = factories.ProductFactory(courses=[course], price=Money("0.00", "EUR"))
+        product = factories.ProductFactory(courses=[course], price=0.00)
         organization = product.course_relations.first().organizations.first()
 
         # User already owns an order for this product and course
@@ -1289,8 +1279,8 @@ class OrderApiTest(BaseAPITestCase):
                 "main_invoice": None,
                 "organization": str(order.organization.id),
                 "owner": user.username,
-                "total": float(product.price.amount),
-                "total_currency": str(product.price.currency),
+                "total": float(product.price),
+                "total_currency": settings.DEFAULT_CURRENCY,
                 "product": str(product.id),
                 "enrollments": [],
                 "target_courses": [
@@ -1414,8 +1404,8 @@ class OrderApiTest(BaseAPITestCase):
             "main_invoice": None,
             "organization": str(order.organization.id),
             "owner": user.username,
-            "total": float(product.price.amount),
-            "total_currency": str(product.price.currency),
+            "total": float(product.price),
+            "total_currency": settings.DEFAULT_CURRENCY,
             "product": str(product.id),
             "enrollments": [],
             "target_courses": [],
@@ -1768,7 +1758,7 @@ class OrderApiTest(BaseAPITestCase):
         to abort the order if it is not pending.
         """
         user = factories.UserFactory()
-        product = factories.ProductFactory(price=Money("0.00", "EUR"))
+        product = factories.ProductFactory(price=0.00)
         order = factories.OrderFactory(owner=user, product=product)
 
         token = self.generate_token_from_user(user)

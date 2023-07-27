@@ -1,6 +1,8 @@
 """Test suite for the Course Product Relation API."""
 from unittest import mock
 
+from django.conf import settings
+
 from joanie.core import enums, factories, models
 from joanie.core.serializers import fields
 from joanie.tests.base import BaseAPITestCase
@@ -124,8 +126,8 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     },
                     "organizations": [],
                     "id": str(relation.product.id),
-                    "price": float(relation.product.price.amount),
-                    "price_currency": str(relation.product.price.currency),
+                    "price": float(relation.product.price),
+                    "price_currency": settings.DEFAULT_CURRENCY,
                     "target_courses": [
                         {
                             "code": target_course.code,
@@ -303,8 +305,8 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     },
                     "organizations": [],
                     "id": str(relation.product.id),
-                    "price": float(relation.product.price.amount),
-                    "price_currency": str(relation.product.price.currency),
+                    "price": float(relation.product.price),
+                    "price_currency": settings.DEFAULT_CURRENCY,
                     "target_courses": [
                         {
                             "code": target_course.code,

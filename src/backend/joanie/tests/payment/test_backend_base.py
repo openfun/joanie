@@ -141,7 +141,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase):
         billing_address = BillingAddressDictFactory()
         payment = {
             "id": "pay_0",
-            "amount": order.total.amount,
+            "amount": order.total,
             "billing_address": billing_address,
         }
 
@@ -248,7 +248,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase):
         billing_address = BillingAddressDictFactory()
         payment = {
             "id": "pay_0",
-            "amount": order.total.amount,
+            "amount": order.total,
             "billing_address": billing_address,
         }
 
@@ -294,7 +294,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase):
         billing_address = BillingAddressDictFactory()
         payment = {
             "id": "pay_0",
-            "amount": order.total.amount,
+            "amount": order.total,
             "billing_address": billing_address,
         }
 
@@ -334,7 +334,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase):
         billing_address = BillingAddressDictFactory()
         payment = {
             "id": "pay_0",
-            "amount": order.total.amount,
+            "amount": order.total,
             "billing_address": billing_address,
         }
 

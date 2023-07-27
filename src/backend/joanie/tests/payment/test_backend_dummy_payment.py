@@ -74,7 +74,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
             payment,
             {
                 "id": payment_id,
-                "amount": int(order.total.amount * 100),
+                "amount": int(order.total * 100),
                 "billing_address": billing_address,
                 "notification_url": "http://testserver/api/v1.0/payments/notifications",
                 "metadata": {"order_id": str(order.id)},
@@ -143,7 +143,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
             payment,
             {
                 "id": payment_id,
-                "amount": int(order.total.amount * 100),
+                "amount": int(order.total * 100),
                 "billing_address": billing_address,
                 "notification_url": "http://testserver/api/v1.0/payments/notifications",
                 "metadata": {"order_id": str(order.id)},
@@ -302,7 +302,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
 
         payment = {
             "id": payment_id,
-            "amount": order.total.amount,
+            "amount": order.total,
             "billing_address": billing_address,
         }
 
@@ -364,7 +364,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
             data={
                 "id": payment_id,
                 "type": "refund",
-                "amount": int(order.total.amount * 100) + 1,
+                "amount": int(order.total * 100) + 1,
             },
             format="json",
         )
@@ -375,7 +375,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
 
         self.assertEqual(
             str(context.exception),
-            f"Refund amount is greater than payment amount ({order.total.amount})",
+            f"Refund amount is greater than payment amount ({order.total})",
         )
 
     def test_payment_backend_dummy_handle_notification_refund_unknown_payment(self):
@@ -400,7 +400,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
             data={
                 "id": payment_id,
                 "type": "refund",
-                "amount": int(order.total.amount * 100),
+                "amount": int(order.total * 100),
             },
             format="json",
         )
@@ -449,7 +449,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
             data={
                 "id": payment_id,
                 "type": "refund",
-                "amount": int(order.total.amount * 100),
+                "amount": int(order.total * 100),
             },
             format="json",
         )
@@ -460,7 +460,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
         args = mock_refund.call_args.kwargs
 
         self.assertEqual(len(args), 3)
-        self.assertEqual(args["amount"], order.total.amount)
+        self.assertEqual(args["amount"], order.total)
         self.assertEqual(args["invoice"], order.main_invoice)
         self.assertIsNotNone(re.fullmatch(r"ref_\d{10}", args["refund_reference"]))
 

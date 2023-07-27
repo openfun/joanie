@@ -1,12 +1,10 @@
 """
 Payment application factories
 """
-import random
 import string
-from decimal import Decimal as D
 
 import factory.fuzzy
-from djmoney.money import Money
+from faker import Faker
 
 from joanie.core.factories import UserFactory
 
@@ -42,15 +40,7 @@ class InvoiceFactory(factory.django.DjangoModelFactory):
     recipient_address = factory.Faker("address")
     recipient_name = factory.Faker("name")
     order = factory.SubFactory(OrderFactory)
-
-    @factory.lazy_attribute
-    def total(self):
-        """
-        Return a Money object with a random value less than
-        the invoice total amount.
-        """
-        amount = D(random.randrange(int(self.order.total.amount * 100))) / 100  # nosec
-        return Money(amount, self.order.total.currency)
+    total = Faker().pydecimal(left_digits=3, right_digits=2, min_value=0)
 
 
 class TransactionFactory(factory.django.DjangoModelFactory):
@@ -61,21 +51,11 @@ class TransactionFactory(factory.django.DjangoModelFactory):
 
         model = models.Transaction
 
+    total = Faker().pydecimal(left_digits=3, right_digits=2, min_value=0)
     reference = factory.LazyAttributeSequence(
-        lambda t, n: f"{'ref' if t.total.amount < 0 else 'pay'}_{n:05d}"
+        lambda t, n: f"{'ref' if t.total < 0 else 'pay'}_{n:05d}"
     )
     invoice = factory.SubFactory(InvoiceFactory)
-
-    @factory.lazy_attribute
-    def total(self):
-        """
-        Return a Money object with a random value less than
-        the invoice total amount.
-        """
-        amount = (
-            D(random.randrange(int(self.invoice.total.amount * 100))) / 100  # nosec
-        )
-        return Money(amount, self.invoice.total.currency)
 
 
 class BillingAddressDictFactory(factory.DictFactory):

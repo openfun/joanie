@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Remove djmoney and Moneyfields
 - Add admin endpoints to create/update/delete organization/course accesses
 - Add admin endpoint to search users
 - Add endpoints to get course product relations and courses from organization

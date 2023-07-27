@@ -1,7 +1,7 @@
 """Test suite for the Product API"""
 from unittest import mock
 
-from djmoney.money import Money
+from django.conf import settings
 
 from joanie.core import enums, factories, models
 from joanie.core.serializers import fields
@@ -121,8 +121,8 @@ class ProductApiTest(BaseAPITestCase):
                     }
                 ],
                 "id": str(product.id),
-                "price": float(product.price.amount),
-                "price_currency": str(product.price.currency),
+                "price": float(product.price),
+                "price_currency": settings.DEFAULT_CURRENCY,
                 "target_courses": [
                     {
                         "code": target_course.code,
@@ -238,7 +238,7 @@ class ProductApiTest(BaseAPITestCase):
         product = factories.ProductFactory(
             courses=[course],
             type=enums.PRODUCT_TYPE_CREDENTIAL,
-            price=Money(0.00, "EUR"),
+            price=0.00,
         )
         order = factories.OrderFactory(owner=user, product=product)
 
@@ -265,7 +265,7 @@ class ProductApiTest(BaseAPITestCase):
         product = factories.ProductFactory(
             courses=[course],
             type=enums.PRODUCT_TYPE_CREDENTIAL,
-            price=Money(0.00, "EUR"),
+            price=0.00,
         )
         order = factories.OrderFactory(
             owner=user, product=product, state=enums.ORDER_STATE_CANCELED
@@ -339,7 +339,7 @@ class ProductApiTest(BaseAPITestCase):
         product = factories.ProductFactory(
             type=enums.PRODUCT_TYPE_CERTIFICATE,
             courses=courses,
-            price=Money(0.00, "EUR"),
+            price=0.00,
         )
 
         # Create a user
@@ -454,7 +454,7 @@ class ProductApiTest(BaseAPITestCase):
 
         self.assertContains(response, 'Method \\"PUT\\" not allowed.', status_code=405)
         product.refresh_from_db()
-        self.assertEqual(product.price.amount, 100.0)
+        self.assertEqual(product.price, 100.0)
 
     def test_api_product_update_authenticated(self):
         """Authenticated users should not be allowed to update a product."""
@@ -478,7 +478,7 @@ class ProductApiTest(BaseAPITestCase):
 
         self.assertContains(response, 'Method \\"PUT\\" not allowed.', status_code=405)
         product.refresh_from_db()
-        self.assertEqual(product.price.amount, 100.0)
+        self.assertEqual(product.price, 100.0)
 
     def test_api_product_partial_update_anonymous(self):
         """Anonymous users should not be allowed to partially update a product."""
@@ -492,7 +492,7 @@ class ProductApiTest(BaseAPITestCase):
             response, 'Method \\"PATCH\\" not allowed.', status_code=405
         )
         product.refresh_from_db()
-        self.assertEqual(product.price.amount, 100.0)
+        self.assertEqual(product.price, 100.0)
 
     def test_api_product_partial_update_authenticated(self):
         """Authenticated users should not be allowed to partially update a product."""
@@ -514,7 +514,7 @@ class ProductApiTest(BaseAPITestCase):
             response, 'Method \\"PATCH\\" not allowed.', status_code=405
         )
         product.refresh_from_db()
-        self.assertEqual(product.price.amount, 100.0)
+        self.assertEqual(product.price, 100.0)
 
     def test_api_product_delete_anonymous(self):
         """Anonymous users should not be allowed to delete a product."""

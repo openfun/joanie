@@ -1,7 +1,6 @@
 """Admin serializers for Joanie Core app."""
 from django.conf import settings
 
-from djmoney.contrib.django_rest_framework import MoneyField
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
 
@@ -127,13 +126,10 @@ class AdminProductSerializer(serializers.ModelSerializer):
     title = serializers.CharField()
     description = serializers.CharField(required=False)
     call_to_action = serializers.CharField()
-    price = MoneyField(
-        coerce_to_string=False,
-        decimal_places=2,
-        max_digits=9,
-        min_value=0,
+    price = serializers.DecimalField(
+        coerce_to_string=False, decimal_places=2, max_digits=9, min_value=0
     )
-    price_currency = serializers.ChoiceField(choices=settings.CURRENCIES)
+    price_currency = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = models.Product
@@ -149,6 +145,10 @@ class AdminProductSerializer(serializers.ModelSerializer):
             "target_courses",
         ]
         read_only_fields = ["id"]
+
+    def get_price_currency(self, *args, **kwargs):
+        """Return the code of currency used by the instance"""
+        return settings.DEFAULT_CURRENCY
 
 
 class AdminProductRelationSerializer(serializers.ModelSerializer):

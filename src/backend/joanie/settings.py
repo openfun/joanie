@@ -188,7 +188,6 @@ class Base(Configuration):
         "corsheaders",
         "dockerflow.django",
         "django_filters",
-        "djmoney",
         "rest_framework",
         "parler",
         "marion",
