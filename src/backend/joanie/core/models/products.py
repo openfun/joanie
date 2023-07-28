@@ -522,7 +522,10 @@ class Order(BaseModel):
         return Enrollment.objects.filter(**filters)
 
     def enroll_user_to_course_run(self):
-        """Enroll user to course run that are the only one course run of the course"""
+        """
+        Enroll user to course runs that are the unique course run opened
+        for enrollment on their course.
+        """
         courses_with_one_course_run = self.target_courses.annotate(
             course_runs_count=models.Count("course_runs")
         ).filter(
@@ -603,11 +606,14 @@ class Order(BaseModel):
         ):
             return None, False
 
-        graded_courses = (
-            self.target_courses.filter(order_relations__is_graded=True)
-            .order_by("order_relations__position")
-            .prefetch_related("course_runs")
-        )
+        if self.product.type == enums.PRODUCT_TYPE_CERTIFICATE:
+            graded_courses = [self.course_id]
+        else:
+            graded_courses = (
+                self.target_courses.filter(order_relations__is_graded=True)
+                .order_by("order_relations__position")
+                .prefetch_related("course_runs")
+            )
         graded_courses_count = len(graded_courses)
 
         if graded_courses_count == 0:

@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Generate certificates for products of type `certificate`
 - Add route detailing current user
 - Add related certificate products to enrollment API endpoint
 - Add admin endpoints to create/update/delete organization/course accesses
