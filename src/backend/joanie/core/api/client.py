@@ -4,7 +4,7 @@ Client API endpoints
 import uuid
 
 from django.db import IntegrityError, transaction
-from django.db.models import Count, OuterRef, Q, Subquery
+from django.db.models import Count, OuterRef, Prefetch, Q, Subquery
 from django.http import HttpResponse
 from django.utils.translation import gettext_lazy as _
 
@@ -163,14 +163,29 @@ class EnrollmentViewSet(
     filterset_class = filters.EnrollmentViewSetFilter
 
     def get_queryset(self):
-        """Custom queryset to limit to orders owned by the logged-in user."""
+        """
+        Custom queryset to limit to enrollments owned by the logged-in user.
+        We retrieve product relations related to each enrollment in the same
+        query using a prefetch query.
+        """
         username = (
             self.request.auth["username"]
             if self.request.auth
             else self.request.user.username
         )
-        return models.Enrollment.objects.filter(user__username=username).select_related(
-            "course_run__course"
+
+        return (
+            models.Enrollment.objects.filter(user__username=username)
+            .select_related("course_run__course")
+            .prefetch_related(
+                Prefetch(
+                    "course_run__course__product_relations",
+                    queryset=models.CourseProductRelation.objects.select_related(
+                        "product"
+                    ).filter(product__type=enums.PRODUCT_TYPE_CERTIFICATE),
+                    to_attr="certificate_product_relations",
+                )
+            )
         )
 
     def perform_create(self, serializer):
