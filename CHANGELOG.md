@@ -10,7 +10,7 @@ and this project adheres to
 
 ## Added
 
-- Remove djmoney and Moneyfields
+- Add related certificate products to enrollment API endpoint
 - Add admin endpoints to create/update/delete organization/course accesses
 - Add admin endpoint to search users
 - Add endpoints to get course product relations and courses from organization
@@ -50,6 +50,7 @@ and this project adheres to
 
 ### Removed
 
+- Remove djmoney and Moneyfields
 - Badge providers now live in the obc python package
 - Remove unused `OrderLiteSerializer`
 

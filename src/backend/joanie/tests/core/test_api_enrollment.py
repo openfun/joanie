@@ -12,7 +12,7 @@ from django.test.utils import override_settings
 from django.utils import timezone
 
 from joanie.core import enums, exceptions, factories, models
-from joanie.core.factories import CourseRunFactory
+from joanie.core.factories import CourseRunFactory, EnrollmentFactory
 from joanie.core.serializers import fields
 from joanie.lms_handler.backends.openedx import OpenEdXLMSBackend
 from joanie.payment.factories import InvoiceFactory
@@ -94,7 +94,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         "to_representation",
         return_value="_this_field_is_mocked",
     )
-    def test_api_enrollment_read_list_authenticated(self, _):
+    def test_api_enrollment_read_list_authenticated_owned(self, _):
         """Authenticated users retrieving the list of enrollments should only see theirs."""
         enrollment, other_enrollment = factories.EnrollmentFactory.create_batch(
             2, course_run=self.create_opened_course_run(is_listed=True)
@@ -103,7 +103,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         # The user can see his/her enrollment
         token = self.generate_token_from_user(enrollment.user)
 
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(3):
             response = self.client.get(
                 "/api/v1.0/enrollments/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -158,6 +158,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                             "+00:00", "Z"
                         ),
                         "is_active": enrollment.is_active,
+                        "products": [],
                         "state": enrollment.state,
                         "was_created_by_order": enrollment.was_created_by_order,
                     }
@@ -168,7 +169,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         # The user linked to the other enrollment can only see his/her enrollment
         token = self.generate_token_from_user(other_enrollment.user)
 
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(3):
             response = self.client.get(
                 "/api/v1.0/enrollments/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -227,11 +228,149 @@ class EnrollmentApiTest(BaseAPITestCase):
                             "+00:00", "Z"
                         ),
                         "is_active": other_enrollment.is_active,
+                        "products": [],
                         "state": other_enrollment.state,
                         "was_created_by_order": other_enrollment.was_created_by_order,
                     }
                 ],
             },
+        )
+
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_enrollment_read_list_authenticated_with_certificate_products(self, _):
+        """
+        When the related course run has certificate products (and the logged-in user
+        eventually has orders for these products), they should be included in the response.
+        """
+        course_run, other_course_run = self.create_opened_course_run(
+            count=2, is_listed=True
+        )
+        enrollment = factories.EnrollmentFactory(course_run=course_run)
+        product1, product2 = factories.ProductFactory.create_batch(
+            2, type="certificate", courses=[course_run.course, other_course_run.course]
+        )
+
+        # - Create orders
+        pending_order = factories.OrderFactory(
+            product=product1,
+            course=course_run.course,
+            owner=enrollment.user,
+            state="pending",
+        )
+        validated_order = factories.OrderFactory(
+            product=product2,
+            course=course_run.course,
+            owner=enrollment.user,
+            state="validated",
+        )
+        # Order from other user
+        factories.OrderFactory(product=product1, course=course_run.course)
+        # Order for the other course (it should be filtered out from results thanks
+        # to the coursecode passed in the serializer context)
+        factories.OrderFactory(
+            product=product1, course=other_course_run.course, owner=enrollment.user
+        )
+
+        for ignored_state, _name in enums.ORDER_STATE_CHOICES:
+            if ignored_state in ["failed", "pending", "validated"]:
+                continue
+            factories.OrderFactory(
+                product=product1,
+                course=course_run.course,
+                owner=enrollment.user,
+                state=ignored_state,
+            )
+
+        # Product types that should not be listed under an enrollment
+        for ignored_type, _name in enums.PRODUCT_TYPE_CHOICES:
+            if ignored_type == "certificate":
+                continue
+            factories.ProductFactory(type=ignored_type, courses=[course_run.course])
+
+        # Create unrelated enrollments for the user in order to study db queries
+        unrelated_run, unrelated_run_with_product = self.create_opened_course_run(
+            count=2, is_listed=True
+        )
+        factories.ProductFactory(
+            type="certificate", courses=[unrelated_run_with_product.course]
+        )
+        EnrollmentFactory(course_run=unrelated_run, user=enrollment.user)
+        EnrollmentFactory(course_run=unrelated_run_with_product, user=enrollment.user)
+
+        # The user can see his/her enrollment
+        token = self.generate_token_from_user(enrollment.user)
+
+        with self.assertNumQueries(18):
+            self.client.get(
+                "/api/v1.0/enrollments/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        # A second call to the url should benefit from caching on the product serializer
+        with self.assertNumQueries(6):
+            response = self.client.get(
+                "/api/v1.0/enrollments/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        content = json.loads(response.content)
+
+        self.assertEqual(len(content["results"]), 3)
+        self.assertEqual(
+            content["results"][2]["products"],
+            [
+                {
+                    "call_to_action": "let's go!",
+                    "certificate_definition": {
+                        "description": "",
+                        "name": str(product2.certificate_definition.name),
+                        "title": str(product2.certificate_definition.title),
+                    },
+                    "id": str(product2.id),
+                    "orders": [str(validated_order.id)],
+                    "organizations": [
+                        {
+                            "code": validated_order.organization.code,
+                            "id": str(validated_order.organization.id),
+                            "logo": "_this_field_is_mocked",
+                            "title": validated_order.organization.title,
+                        }
+                    ],
+                    "price": float(product2.price),
+                    "price_currency": "EUR",
+                    "target_courses": [],
+                    "title": product2.title,
+                    "type": "certificate",
+                },
+                {
+                    "call_to_action": "let's go!",
+                    "certificate_definition": {
+                        "description": "",
+                        "name": str(product1.certificate_definition.name),
+                        "title": str(product1.certificate_definition.title),
+                    },
+                    "id": str(product1.id),
+                    "orders": [str(pending_order.id)],
+                    "organizations": [
+                        {
+                            "code": pending_order.organization.code,
+                            "id": str(pending_order.organization.id),
+                            "logo": "_this_field_is_mocked",
+                            "title": pending_order.organization.title,
+                        }
+                    ],
+                    "price": float(product1.price),
+                    "price_currency": "EUR",
+                    "target_courses": [],
+                    "title": product1.title,
+                    "type": "certificate",
+                },
+            ],
         )
 
     def test_api_enrollment_read_list_pagination(self):
@@ -353,6 +492,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                             "+00:00", "Z"
                         ),
                         "is_active": enrollment_1.is_active,
+                        "products": [],
                         "state": enrollment_1.state,
                         "was_created_by_order": enrollment_1.was_created_by_order,
                     }
@@ -402,7 +542,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             user=user, course_run=cr3, was_created_by_order=True
         )
 
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(3):
             response = self.client.get(
                 "/api/v1.0/enrollments/?was_created_by_order=false",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -412,7 +552,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         content = response.json()
         self.assertEqual(content["count"], 2)
 
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(3):
             response = self.client.get(
                 "/api/v1.0/enrollments/?was_created_by_order=true",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -504,6 +644,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": enrollment.is_active,
+                "products": [],
                 "state": enrollment.state,
                 "was_created_by_order": enrollment.was_created_by_order,
             },
@@ -609,6 +750,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": is_active,
+                "products": [],
                 "state": "set",
                 "was_created_by_order": False,
             },
@@ -734,6 +876,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": is_active,
+                "products": [],
                 "state": "failed",
                 "was_created_by_order": False,
             },
@@ -821,6 +964,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": is_active,
+                "products": [],
                 "state": "failed",
                 "was_created_by_order": False,
             },
@@ -1068,6 +1212,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": is_active,
+                "products": [],
                 "state": "set",
                 "was_created_by_order": False,
             },
@@ -1333,6 +1478,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "+00:00", "Z"
                     ),
                     "is_active": is_active_new,
+                    "products": [],
                     "state": "set",
                     "was_created_by_order": False,
                 },
@@ -1535,6 +1681,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": False,
+                "products": [],
                 "state": "set",
                 "was_created_by_order": False,
             },
@@ -1613,6 +1760,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": False,
+                "products": [],
                 "state": "set",
                 "was_created_by_order": False,
             },
@@ -1671,6 +1819,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": True,
+                "products": [],
                 "state": "set",
                 "was_created_by_order": True,
             },
@@ -1758,6 +1907,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": True,
+                "products": [],
                 "state": "set",
                 "was_created_by_order": True,
             },
@@ -1816,6 +1966,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": True,
+                "products": [],
                 "state": "set",
                 "was_created_by_order": True,
             },

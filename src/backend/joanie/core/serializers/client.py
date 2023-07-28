@@ -422,6 +422,7 @@ class EnrollmentSerializer(serializers.ModelSerializer):
     id = serializers.CharField(read_only=True, required=False)
     course_run = CourseRunSerializer(read_only=True)
     was_created_by_order = serializers.BooleanField(required=True)
+    products = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = models.Enrollment
@@ -430,6 +431,7 @@ class EnrollmentSerializer(serializers.ModelSerializer):
             "course_run",
             "created_on",
             "is_active",
+            "products",
             "state",
             "was_created_by_order",
         ]
@@ -468,6 +470,39 @@ class EnrollmentSerializer(serializers.ModelSerializer):
             validated_data.pop("was_created_by_order", None)
 
         return super().update(instance, validated_data)
+
+    def get_products(self, instance):
+        """
+        Get products related to the enrollment's course run.
+        """
+        if instance.was_created_by_order:
+            return []
+
+        # Try getting the related products annotated on the instance by the calling
+        # viewset and default to querying the database ourselves
+        try:
+            relations = instance.course_run.course.certificate_product_relations
+        except AttributeError:
+            products = models.Product.objects.filter(
+                type=enums.PRODUCT_TYPE_CERTIFICATE,
+                course_relations__course=instance.course_run.course,
+            )
+        else:
+            products = [relation.product for relation in relations]
+
+        context = self.context.copy()
+        context.update(
+            {
+                "resource": instance,
+                "course_code": instance.course_run.course.code,
+            }
+        )
+
+        return ProductSerializer(
+            products,
+            many=True,
+            context=context,
+        ).data
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -657,7 +692,7 @@ class ProductSerializer(serializers.ModelSerializer):
         """
         If a user is authenticated, it retrieves valid or pending orders related to the
         product instance. If a course code has been provided through query
-        parameters orders are also filtered by course.
+        parameters, orders are also filtered by course.
         """
         request = self.context["request"]
         username = (
