@@ -816,9 +816,9 @@ class CourseViewSet(
             if self.request.auth
             else self.request.user.username
         )
-        user_role_query = models.CourseAccess.objects.filter(
-            user__username=username, course=OuterRef("pk")
-        ).values("role")[:1]
+
+        # Get courses for an organization to which the user has access or courses
+        # to which the user has access if no organization is targeted
         courses = models.Course.objects
         organization_id = self.kwargs.get("organization_id", None)
         if organization_id:
@@ -828,6 +828,11 @@ class CourseViewSet(
             )
         else:
             courses = courses.filter(accesses__user__username=username)
+
+        # Retrieve the role of the logged-in user on each course in the same query
+        user_role_query = models.CourseAccess.objects.filter(
+            user__username=username, course=OuterRef("pk")
+        ).values("role")[:1]
         return courses.annotate(user_role=Subquery(user_role_query)).prefetch_related(
             "organizations", "products", "course_runs"
         )

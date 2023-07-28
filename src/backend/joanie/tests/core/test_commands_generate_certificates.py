@@ -30,8 +30,10 @@ class CreateCertificatesTestCase(TestCase):
         # TypeError: Unknown option(s) should not be raised
         call_command("generate_certificates", **options)
 
-    def test_commands_generate_certificates(self):
+    def test_commands_generate_certificates_for_credential_product(self):
         """
+        The management command should generate certificates for the credential
+        type of product.
         If a certifying product contains graded courses with gradable course runs
         and a user purchased this product and passed all gradable course runs,
         a certificate should be generated
@@ -51,6 +53,40 @@ class CreateCertificatesTestCase(TestCase):
         )
         course = factories.CourseFactory(products=[product])
         order = factories.OrderFactory(product=product, course=course)
+        certificate_qs = models.Certificate.objects.filter(order=order)
+
+        self.assertEqual(certificate_qs.count(), 0)
+
+        # Calling command should generate one certificate
+        call_command("generate_certificates")
+        self.assertEqual(certificate_qs.count(), 1)
+
+        # But call it again, should not create a new certificate
+        call_command("generate_certificates")
+        self.assertEqual(certificate_qs.count(), 1)
+
+    def test_commands_generate_certificates_for_certificate_product(self):
+        """
+        The management command should generate certificates for the certificate
+        type of product.
+        """
+        course_run = factories.CourseRunFactory(
+            enrollment_end=timezone.now() + timedelta(hours=1),
+            enrollment_start=timezone.now() - timedelta(hours=1),
+            is_gradable=True,
+            is_listed=True,
+            start=timezone.now() - timedelta(hours=1),
+        )
+        product = factories.ProductFactory(
+            price="0.00",
+            type="certificate",
+            certificate_definition=factories.CertificateDefinitionFactory(),
+            courses=[course_run.course],
+        )
+        order = factories.OrderFactory(product=product, course=course_run.course)
+        factories.EnrollmentFactory(
+            user=order.owner, course_run=course_run, is_active=True
+        )
         certificate_qs = models.Certificate.objects.filter(order=order)
 
         self.assertEqual(certificate_qs.count(), 0)
