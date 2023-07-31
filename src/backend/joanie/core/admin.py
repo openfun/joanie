@@ -197,7 +197,7 @@ class CourseAdmin(DjangoObjectActions, TranslatableAdmin):
             },
         ),
     )
-    search_fields = ["code", "title"]
+    search_fields = ["code", "translations__title"]
 
     @takes_instance_or_queryset
     def generate_certificates(self, request, queryset):  # pylint: disable no-self-use
@@ -249,7 +249,12 @@ class CourseRunAdmin(TranslatableAdmin):
     )
     list_filter = [CourseFilter, "is_gradable", "is_listed"]
     readonly_fields = ("id",)
-    search_fields = ["resource_link", "title", "course__code", "course__title"]
+    search_fields = [
+        "resource_link",
+        "translations__title",
+        "course__code",
+        "course__translations__title",
+    ]
 
     @admin.action(description=_("Mark course run as gradable"))
     def mark_as_gradable(self, request, queryset):  # pylint: disable=no-self-use
@@ -262,7 +267,7 @@ class OrganizationAdmin(TranslatableAdmin):
     """Admin class for the Organization model"""
 
     list_display = ("code", "title")
-    search_fields = ["code", "title"]
+    search_fields = ["code", "translations__title"]
 
 
 @admin.register(models.User)
@@ -348,7 +353,7 @@ class ProductAdmin(
     )
     actions = (ACTION_NAME_GENERATE_CERTIFICATES,)
     change_actions = (ACTION_NAME_GENERATE_CERTIFICATES,)
-    search_fields = ["title"]
+    search_fields = ["translations__title"]
 
     def get_change_actions(self, request, object_id, form_url):
         """
@@ -468,7 +473,7 @@ class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
     list_display = ("id", "organization", "owner", "product", "state")
     list_filter = [OwnerFilter, OrganizationFilter, ProductFilter, "state"]
     readonly_fields = ("state", "total", "invoice", "certificate")
-    search_fields = ["course__title", "organization__title"]
+    search_fields = ["course__translations__title", "organization__translations__title"]
 
     @admin.action(description=_("Cancel selected orders"))
     def cancel(self, request, queryset):  # pylint: disable=no-self-use
@@ -565,5 +570,5 @@ class CourseWishAdmin(admin.ModelAdmin):
         "owner__username",
         "owner__email",
         "course__code",
-        "course__title",
+        "course__translations__title",
     ]
