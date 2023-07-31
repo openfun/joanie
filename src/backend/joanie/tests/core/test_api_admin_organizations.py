@@ -354,6 +354,8 @@ class OrganizationAdminApiTest(TestCase):
         self.client.login(username=admin.username, password="password")
         organizations = factories.OrganizationFactory.create_batch(3)
         factories.OrganizationFactory()
+        for organization in organizations:
+            factories.UserOrganizationAccessFactory(user=admin, organization=organization, role="owner")
         data = {"id": [str(organization.id) for organization in organizations]}
         response = self.client.delete(
             "/api/v1.0/admin/organizations/",
@@ -365,3 +367,24 @@ class OrganizationAdminApiTest(TestCase):
         self.assertEqual(models.Organization.objects.count(), 1)
         self.assertEqual(len(content["deleted"]), 3)
         self.assertFalse("error" in content)
+
+
+    def test_admin_api_organization_bulk_delete_no_authorization(self):
+        """
+        Unauthorized user should be able to delete multiple organizations.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        organizations = factories.OrganizationFactory.create_batch(3)
+        factories.OrganizationFactory()
+        data = {"id": [str(organization.id) for organization in organizations]}
+        response = self.client.delete(
+            "/api/v1.0/admin/organizations/",
+            data=data,
+            content_type="application/json",
+        )
+        content = response.json()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(models.Organization.objects.count(), 4)
+        self.assertEqual(len(content["error"]), 3)
+        self.assertFalse("deleted" in content)

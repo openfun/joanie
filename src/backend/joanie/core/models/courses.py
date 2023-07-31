@@ -613,6 +613,21 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
         ),
     )
 
+    def get_abilities(self, user):
+        """
+        Compute and return abilities for a given user taking into account
+        the current state of the object.
+        """
+
+        # TODO : Who can delete a CourseRun?
+        return {
+            "delete": True,
+            "get": True,
+            "patch": True,
+            "put": True,
+            "set_role_to": True,
+        }
+
     class Meta:
         db_table = "joanie_course_run"
         verbose_name = _("Course run")

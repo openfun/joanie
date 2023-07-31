@@ -230,6 +230,21 @@ class Product(parler_models.TranslatableModel, BaseModel):
             )
         super().clean()
 
+    def get_abilities(self, user):
+        """
+        Compute and return abilities for a given user taking into account
+        the current state of the object.
+        """
+
+        # TODO : Who can delete a Product?
+        return {
+            "delete": True,
+            "get": True,
+            "patch": True,
+            "put": True,
+            "set_role_to": True,
+        }
+
 
 class ProductTargetCourseRelation(BaseModel):
     """

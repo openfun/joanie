@@ -317,6 +317,8 @@ class CourseAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
         courses = factories.CourseFactory.create_batch(3)
+        for course in courses:
+            factories.UserCourseAccessFactory(user=admin, course=course, role="owner")
         factories.CourseFactory()
         data = {"id": [str(course.id) for course in courses]}
         response = self.client.delete(
@@ -328,6 +330,23 @@ class CourseAdminApiTest(TestCase):
         self.assertEqual(len(content["deleted"]), 3)
         self.assertFalse("error" in content)
 
+    def test_admin_api_course_bulk_delete_no_authorization(self):
+        """
+        Unauthorized user should be able to delete multiple courses.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        courses = factories.CourseFactory.create_batch(3)
+        factories.CourseFactory()
+        data = {"id": [str(course.id) for course in courses]}
+        response = self.client.delete(
+            "/api/v1.0/admin/courses/", data=data, content_type="application/json"
+        )
+        content = response.json()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(models.Course.objects.count(), 4)
+        self.assertEqual(len(content["error"]), 3)
+
     def test_admin_api_course_bulk_delete_error(self):
         """
         Courses with linked CourseRun cannot be deleted.
@@ -335,15 +354,16 @@ class CourseAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
         courses = factories.CourseFactory.create_batch(3)
-        factories.CourseFactory()
         factories.CourseRunFactory(course=courses[0])
+        for course in courses:
+            factories.UserCourseAccessFactory(user=admin, course=course, role="owner")
         data = {"id": [str(course.id) for course in courses]}
         response = self.client.delete(
             "/api/v1.0/admin/courses/", data=data, content_type="application/json"
         )
         content = response.json()
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(models.Course.objects.count(), 2)
+        self.assertEqual(models.Course.objects.count(), 1)
         self.assertEqual(len(content["deleted"]), 2)
         self.assertEqual(len(content["error"]), 1)
         self.assertEqual(content["error"][0]["id"], str(courses[0].id))

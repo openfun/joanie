@@ -45,6 +45,21 @@ class CertificateDefinition(parler_models.TranslatableModel, BaseModel):
 
     def __str__(self):
         return self.safe_translation_getter("title", any_language=True)
+    
+    def get_abilities(self, user):
+        """
+        Compute and return abilities for a given user taking into account
+        the current state of the object.
+        """
+
+        # TODO : Who can delete a CertificateDefinition?
+        return {
+            "delete": True,
+            "get": True,
+            "patch": True,
+            "put": True,
+            "set_role_to": True,
+        }
 
 
 class Certificate(BaseModel):
