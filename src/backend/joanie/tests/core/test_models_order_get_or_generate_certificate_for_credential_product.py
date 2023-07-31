@@ -33,7 +33,6 @@ class CredentialProductGetOrGenerateCertificateOrderModelsTestCase(TestCase):
             certificate_definition=factories.CertificateDefinitionFactory(),
             target_courses=[course_run.course],
         )
-        factories.CourseFactory(products=[product])
         order = factories.OrderFactory(product=product)
 
         new_certificate, created = order.get_or_generate_certificate()
@@ -82,7 +81,6 @@ class CredentialProductGetOrGenerateCertificateOrderModelsTestCase(TestCase):
             certificate_definition=None,  # No certificate definition defined
             target_courses=[course_run.course],
         )
-        factories.CourseFactory(products=[product])
         order = factories.OrderFactory(product=product)
 
         new_certificate, created = order.get_or_generate_certificate()
@@ -114,7 +112,6 @@ class CredentialProductGetOrGenerateCertificateOrderModelsTestCase(TestCase):
             course=course_run.course,
             is_graded=False,  # course is not graded
         )
-        factories.CourseFactory(products=[product])
         order = factories.OrderFactory(product=product)
 
         new_certificate, created = order.get_or_generate_certificate()
@@ -139,7 +136,6 @@ class CredentialProductGetOrGenerateCertificateOrderModelsTestCase(TestCase):
             certificate_definition=factories.CertificateDefinitionFactory(),
             target_courses=[course_run.course],
         )
-        factories.CourseFactory(products=[product])
         order = factories.OrderFactory(product=product)
 
         new_certificate, created = order.get_or_generate_certificate()
@@ -165,7 +161,6 @@ class CredentialProductGetOrGenerateCertificateOrderModelsTestCase(TestCase):
             certificate_definition=factories.CertificateDefinitionFactory(),
             target_courses=[course_run.course],
         )
-        factories.CourseFactory(products=[product])
         order = factories.OrderFactory(product=product)
 
         new_certificate, created = order.get_or_generate_certificate()
@@ -190,7 +185,6 @@ class CredentialProductGetOrGenerateCertificateOrderModelsTestCase(TestCase):
             certificate_definition=factories.CertificateDefinitionFactory(),
             target_courses=[course_run.course],
         )
-        factories.CourseFactory(products=[product])
         order = factories.OrderFactory(product=product)
         enrollment = Enrollment.objects.get()
         enrollment.is_active = False
@@ -218,7 +212,6 @@ class CredentialProductGetOrGenerateCertificateOrderModelsTestCase(TestCase):
             certificate_definition=factories.CertificateDefinitionFactory(),
             target_courses=[course_run.course],
         )
-        factories.CourseFactory(products=[product])
         order = factories.OrderFactory(product=product)
 
         with mock.patch.object(Enrollment, "get_grade", return_value={"passed": False}):
