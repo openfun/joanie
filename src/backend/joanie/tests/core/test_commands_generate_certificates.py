@@ -51,8 +51,7 @@ class CreateCertificatesTestCase(TestCase):
             type=enums.PRODUCT_TYPE_CREDENTIAL,
             target_courses=[course_run.course],
         )
-        course = factories.CourseFactory(products=[product])
-        order = factories.OrderFactory(product=product, course=course)
+        order = factories.OrderFactory(product=product)
         certificate_qs = models.Certificate.objects.filter(order=order)
 
         self.assertEqual(certificate_qs.count(), 0)
