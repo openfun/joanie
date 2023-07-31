@@ -111,16 +111,15 @@ stop: ## stop the development server using Docker
 
 # -- Backend
 
-demo: ## create a demo if app container is running
-	@echo "Check app container is running..."
-	@if [ $(shell docker container inspect -f '{{.State.Running}}' "$(shell $(COMPOSE) ps -q app)") = "false" ] ; then\
-		echo "❌ App must be up and running to create demo site.";\
-		exit 1;\
-	fi
-	@$(MANAGE) flush --no-input
-	@$(COMPOSE_EXEC_APP) python manage.py create_demo
-	@${MAKE} superuser
+demo: ## flush db then create a demo for load testing purpose
+	@$(MAKE) resetdb
+	@$(MANAGE) create_demo
 .PHONY: demo
+
+demo-dev: ## flush db then create a dataset for dev purpose
+	@${MAKE} resetdb
+	@$(MANAGE) create_dev_demo
+.PHONY: demo-dev
 
 # Nota bene: Black should come after isort just in case they don't agree...
 lint: ## lint back-end python sources
@@ -211,10 +210,10 @@ dbshell: ## connect to database shell
 	docker-compose exec app-dev python manage.py dbshell
 .PHONY: dbshell
 
-resetdb: ## flush database
+resetdb: ## flush database and create a superuser "admin"
 	@echo "$(BOLD)Flush database$(RESET)"
 	@$(MANAGE) flush
-	@$(MANAGE) createsuperuser --username admin --email admin@example.com --noinput
+	@${MAKE} superuser
 .PHONY: resetdb
 
 # -- Frontend admin
@@ -310,10 +309,6 @@ clean: ## restore repository state as it was freshly cloned
 help:
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 .PHONY: help
-
-demo-data: ## create fake data for dev purpose
-	@$(MANAGE) loaddatafake
-.PHONY: demo-data
 
 ngrok: ## Run a proxy through ngrok
 ngrok:
