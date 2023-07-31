@@ -31,6 +31,11 @@ JOANIE_PAYMENT_BACKEND=joanie.payment.backends.dummy.DummyPaymentBackend
 # OBF_CLIENT_ID=
 # OBF_CLIENT_SECRET=
 
+# Course synchronization webhooks
+# Uncomment the line below to configure
+# Joanie so it synchronizes with a local instance of Richie
+# DJANGO_COURSE_WEB_HOOKS=[{"url": "http://richie:8070/api/v1.0/course-runs-sync/", "secret": "shared secret", "verify": false}]
+
 # Mail
 DJANGO_EMAIL_HOST="mailcatcher"
 DJANGO_EMAIL_PORT=1025
