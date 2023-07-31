@@ -1,14 +1,16 @@
 """
 Admin API Endpoints
 """
+
 import django_filters.rest_framework
 from rest_framework import authentication, mixins, permissions, viewsets
 
 from joanie.core import filters, models, serializers
+from joanie.core.mixins import admin as admin_mixins
 
 
 # pylint: disable=too-many-ancestors
-class OrganizationViewSet(viewsets.ModelViewSet):
+class OrganizationViewSet(viewsets.ModelViewSet, admin_mixins.BulkDeleteMixin):
     """
     Admin Organization ViewSet
     """
@@ -29,7 +31,7 @@ class OrganizationViewSet(viewsets.ModelViewSet):
         return self.serializer_class
 
 
-class ProductViewSet(viewsets.ModelViewSet):
+class ProductViewSet(viewsets.ModelViewSet, admin_mixins.BulkDeleteMixin):
     """
     Admin Product ViewSet
     """
@@ -41,7 +43,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     filterset_class = filters.ProductAdminFilterSet
 
 
-class CourseViewSet(viewsets.ModelViewSet):
+class CourseViewSet(viewsets.ModelViewSet, admin_mixins.BulkDeleteMixin):
     """
     Admin Course ViewSet
     """
@@ -62,7 +64,7 @@ class CourseViewSet(viewsets.ModelViewSet):
         return self.serializer_class
 
 
-class CourseRunViewSet(viewsets.ModelViewSet):
+class CourseRunViewSet(viewsets.ModelViewSet, admin_mixins.BulkDeleteMixin):
     """
     Admin CourseRun ViewSet
     """
@@ -75,7 +77,7 @@ class CourseRunViewSet(viewsets.ModelViewSet):
     filterset_class = filters.CourseRunAdminFilterSet
 
 
-class CertificateDefinitionViewSet(viewsets.ModelViewSet):
+class CertificateDefinitionViewSet(viewsets.ModelViewSet, admin_mixins.BulkDeleteMixin):
     """
     Admin Certificate ViewSet
     """

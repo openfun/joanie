@@ -5,7 +5,7 @@ import random
 
 from django.test import TestCase
 
-from joanie.core import factories
+from joanie.core import factories, models
 
 
 class CourseRunAdminApiTest(TestCase):
@@ -233,3 +233,21 @@ class CourseRunAdminApiTest(TestCase):
         response = self.client.delete(f"/api/v1.0/admin/course-runs/{course_run.id}/")
 
         self.assertEqual(response.status_code, 204)
+
+    def test_admin_api_course_runs_bulk_delete(self):
+        """
+        Staff user should be able to delete multiple course runs.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        course_runs = factories.CourseRunFactory.create_batch(3)
+        factories.CourseRunFactory()
+        data = {"id": [str(course_run.id) for course_run in course_runs]}
+        response = self.client.delete(
+            "/api/v1.0/admin/course-runs/", data=data, content_type="application/json"
+        )
+        content = response.json()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(models.CourseRun.objects.count(), 1)
+        self.assertEqual(len(content["deleted"]), 3)
+        self.assertFalse("error" in content)
