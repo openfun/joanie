@@ -10,7 +10,8 @@
         "setup-cfg"
       ],
       "matchPackageNames": [
-        "pydantic"
+        "pydantic",
+        "responses"
       ]
     },
     {
