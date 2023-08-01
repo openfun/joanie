@@ -4,7 +4,6 @@ import itertools
 import json
 import random
 import uuid
-from datetime import timedelta
 from logging import Logger
 from unittest import mock
 
@@ -13,6 +12,7 @@ from django.utils import timezone
 
 from joanie.core import enums, exceptions, factories, models
 from joanie.core.factories import CourseRunFactory, EnrollmentFactory
+from joanie.core.models import CourseState
 from joanie.core.serializers import fields
 from joanie.lms_handler.backends.openedx import OpenEdXLMSBackend
 from joanie.payment.factories import InvoiceFactory
@@ -39,37 +39,40 @@ class EnrollmentApiTest(BaseAPITestCase):
 
     def create_opened_course_run(self, count=1, **kwargs):
         """Create course runs opened for enrollment."""
+        open_states = [
+            CourseState.ONGOING_OPEN,
+            CourseState.FUTURE_OPEN,
+            CourseState.ARCHIVED_OPEN,
+        ]
         if count > 1:
             return CourseRunFactory.create_batch(
                 count,
-                start=self.now - timedelta(hours=1),
-                end=self.now + timedelta(hours=2),
-                enrollment_end=self.now + timedelta(hours=1),
+                state=random.choice(open_states),
                 **kwargs,
             )
 
         return CourseRunFactory(
-            start=self.now - timedelta(hours=1),
-            end=self.now + timedelta(hours=2),
-            enrollment_end=self.now + timedelta(hours=1),
+            state=random.choice(open_states),
             **kwargs,
         )
 
     def create_closed_course_run(self, count=1, **kwargs):
         """Create course runs closed for enrollment."""
+        closed_states = [
+            CourseState.FUTURE_NOT_YET_OPEN,
+            CourseState.FUTURE_CLOSED,
+            CourseState.ONGOING_CLOSED,
+            CourseState.ARCHIVED_CLOSED,
+        ]
         if count > 1:
             return CourseRunFactory.create_batch(
                 count,
-                start=self.now - timedelta(hours=1),
-                end=self.now + timedelta(hours=1),
-                enrollment_end=self.now,
+                state=random.choice(closed_states),
                 **kwargs,
             )
 
         return CourseRunFactory(
-            start=self.now - timedelta(hours=1),
-            end=self.now + timedelta(hours=1),
-            enrollment_end=self.now,
+            state=random.choice(closed_states),
             **kwargs,
         )
 
@@ -137,7 +140,10 @@ class EnrollmentApiTest(BaseAPITestCase):
                             ),
                             "enrollment_end": enrollment.course_run.enrollment_end.isoformat().replace(  # noqa pylint: disable=line-too-long
                                 "+00:00", "Z"
-                            ),
+                            )
+                            if enrollment.course_run.state["priority"]
+                            != CourseState.ARCHIVED_OPEN
+                            else None,
                             "start": enrollment.course_run.start.isoformat().replace(
                                 "+00:00", "Z"
                             ),
@@ -152,7 +158,9 @@ class EnrollmentApiTest(BaseAPITestCase):
                                 ],
                                 "datetime": enrollment.course_run.state["datetime"]
                                 .isoformat()
-                                .replace("+00:00", "Z"),
+                                .replace("+00:00", "Z")
+                                if enrollment.course_run.state["datetime"]
+                                else None,
                             },
                         },
                         "created_on": enrollment.created_on.isoformat().replace(
@@ -204,7 +212,10 @@ class EnrollmentApiTest(BaseAPITestCase):
                             ),
                             "enrollment_end": other_enrollment.course_run.enrollment_end.isoformat().replace(  # noqa pylint: disable=line-too-long
                                 "+00:00", "Z"
-                            ),
+                            )
+                            if other_enrollment.course_run.state["priority"]
+                            != CourseState.ARCHIVED_OPEN
+                            else None,
                             "start": other_enrollment.course_run.start.isoformat().replace(
                                 "+00:00", "Z"
                             ),
@@ -223,7 +234,9 @@ class EnrollmentApiTest(BaseAPITestCase):
                                     "datetime"
                                 ]
                                 .isoformat()
-                                .replace("+00:00", "Z"),
+                                .replace("+00:00", "Z")
+                                if other_enrollment.course_run.state["datetime"]
+                                else None,
                             },
                         },
                         "created_on": other_enrollment.created_on.isoformat().replace(
@@ -478,9 +491,12 @@ class EnrollmentApiTest(BaseAPITestCase):
                             "enrollment_start": course_run_1.enrollment_start.isoformat().replace(  # noqa pylint: disable=line-too-long
                                 "+00:00", "Z"
                             ),
-                            "enrollment_end": course_run_1.enrollment_end.isoformat().replace(  # noqa pylint: disable=line-too-long
+                            "enrollment_end": course_run_1.enrollment_end.isoformat().replace(
                                 "+00:00", "Z"
-                            ),
+                            )
+                            if course_run_1.state["priority"]
+                            != CourseState.ARCHIVED_OPEN
+                            else None,
                             "start": course_run_1.start.isoformat().replace(
                                 "+00:00", "Z"
                             ),
@@ -491,7 +507,9 @@ class EnrollmentApiTest(BaseAPITestCase):
                                 "call_to_action": course_run_1.state["call_to_action"],
                                 "datetime": course_run_1.state["datetime"]
                                 .isoformat()
-                                .replace("+00:00", "Z"),
+                                .replace("+00:00", "Z")
+                                if course_run_1.state["datetime"]
+                                else None,
                             },
                         },
                         "created_on": enrollment_1.created_on.isoformat().replace(
@@ -635,7 +653,10 @@ class EnrollmentApiTest(BaseAPITestCase):
                     ),
                     "enrollment_end": enrollment.course_run.enrollment_end.isoformat().replace(
                         "+00:00", "Z"
-                    ),
+                    )
+                    if enrollment.course_run.state["priority"]
+                    != CourseState.ARCHIVED_OPEN
+                    else None,
                     "start": enrollment.course_run.start.isoformat().replace(
                         "+00:00", "Z"
                     ),
@@ -646,7 +667,9 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "call_to_action": enrollment.course_run.state["call_to_action"],
                         "datetime": enrollment.course_run.state["datetime"]
                         .isoformat()
-                        .replace("+00:00", "Z"),
+                        .replace("+00:00", "Z")
+                        if enrollment.course_run.state["datetime"]
+                        else None,
                     },
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
@@ -744,7 +767,9 @@ class EnrollmentApiTest(BaseAPITestCase):
                     ),
                     "enrollment_end": course_run.enrollment_end.isoformat().replace(
                         "+00:00", "Z"
-                    ),
+                    )
+                    if course_run.state["priority"] != CourseState.ARCHIVED_OPEN
+                    else None,
                     "start": course_run.start.isoformat().replace("+00:00", "Z"),
                     "end": course_run.end.isoformat().replace("+00:00", "Z"),
                     "state": {
@@ -753,7 +778,9 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "call_to_action": course_run.state["call_to_action"],
                         "datetime": course_run.state["datetime"]
                         .isoformat()
-                        .replace("+00:00", "Z"),
+                        .replace("+00:00", "Z")
+                        if course_run.state["datetime"]
+                        else None,
                     },
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
@@ -773,9 +800,10 @@ class EnrollmentApiTest(BaseAPITestCase):
         """
         user = factories.UserFactory()
         target_course = factories.CourseFactory()
-        course_run1 = self.create_opened_course_run(
+        course_run1 = CourseRunFactory(
             course=target_course,
             resource_link="http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course",
+            state=CourseState.ONGOING_OPEN,
         )
         course_run2 = self.create_opened_course_run(
             course=target_course,
@@ -871,7 +899,9 @@ class EnrollmentApiTest(BaseAPITestCase):
                     ),
                     "enrollment_end": course_run.enrollment_end.isoformat().replace(
                         "+00:00", "Z"
-                    ),
+                    )
+                    if course_run.state["priority"] != CourseState.ARCHIVED_OPEN
+                    else None,
                     "start": course_run.start.isoformat().replace("+00:00", "Z"),
                     "end": course_run.end.isoformat().replace("+00:00", "Z"),
                     "state": {
@@ -880,7 +910,9 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "call_to_action": course_run.state["call_to_action"],
                         "datetime": course_run.state["datetime"]
                         .isoformat()
-                        .replace("+00:00", "Z"),
+                        .replace("+00:00", "Z")
+                        if course_run.state["datetime"]
+                        else None,
                     },
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
@@ -960,7 +992,9 @@ class EnrollmentApiTest(BaseAPITestCase):
                     ),
                     "enrollment_end": course_run.enrollment_end.isoformat().replace(
                         "+00:00", "Z"
-                    ),
+                    )
+                    if course_run.state["priority"] != CourseState.ARCHIVED_OPEN
+                    else None,
                     "start": course_run.start.isoformat().replace("+00:00", "Z"),
                     "end": course_run.end.isoformat().replace("+00:00", "Z"),
                     "state": {
@@ -969,7 +1003,9 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "call_to_action": course_run.state["call_to_action"],
                         "datetime": course_run.state["datetime"]
                         .isoformat()
-                        .replace("+00:00", "Z"),
+                        .replace("+00:00", "Z")
+                        if course_run.state["datetime"]
+                        else None,
                     },
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
@@ -1209,7 +1245,9 @@ class EnrollmentApiTest(BaseAPITestCase):
                     ),
                     "enrollment_end": course_run.enrollment_end.isoformat().replace(
                         "+00:00", "Z"
-                    ),
+                    )
+                    if course_run.state["priority"] != CourseState.ARCHIVED_OPEN
+                    else None,
                     "start": course_run.start.isoformat().replace("+00:00", "Z"),
                     "end": course_run.end.isoformat().replace("+00:00", "Z"),
                     "state": {
@@ -1218,7 +1256,9 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "call_to_action": course_run.state["call_to_action"],
                         "datetime": course_run.state["datetime"]
                         .isoformat()
-                        .replace("+00:00", "Z"),
+                        .replace("+00:00", "Z")
+                        if course_run.state["datetime"]
+                        else None,
                     },
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
@@ -1468,7 +1508,10 @@ class EnrollmentApiTest(BaseAPITestCase):
                         ),
                         "enrollment_end": enrollment.course_run.enrollment_end.isoformat().replace(
                             "+00:00", "Z"
-                        ),
+                        )
+                        if enrollment.course_run.state["priority"]
+                        != CourseState.ARCHIVED_OPEN
+                        else None,
                         "start": enrollment.course_run.start.isoformat().replace(
                             "+00:00", "Z"
                         ),
@@ -1483,7 +1526,9 @@ class EnrollmentApiTest(BaseAPITestCase):
                             ],
                             "datetime": enrollment.course_run.state["datetime"]
                             .isoformat()
-                            .replace("+00:00", "Z"),
+                            .replace("+00:00", "Z")
+                            if enrollment.course_run.state["datetime"]
+                            else None,
                         },
                     },
                     "created_on": enrollment.created_on.isoformat().replace(
@@ -1680,7 +1725,9 @@ class EnrollmentApiTest(BaseAPITestCase):
                     ),
                     "enrollment_end": course_run.enrollment_end.isoformat().replace(
                         "+00:00", "Z"
-                    ),
+                    )
+                    if course_run.state["priority"] != CourseState.ARCHIVED_OPEN
+                    else None,
                     "start": course_run.start.isoformat().replace("+00:00", "Z"),
                     "end": course_run.end.isoformat().replace("+00:00", "Z"),
                     "state": {
@@ -1689,7 +1736,9 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "call_to_action": course_run.state["call_to_action"],
                         "datetime": course_run.state["datetime"]
                         .isoformat()
-                        .replace("+00:00", "Z"),
+                        .replace("+00:00", "Z")
+                        if course_run.state["datetime"]
+                        else None,
                     },
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
@@ -1760,7 +1809,9 @@ class EnrollmentApiTest(BaseAPITestCase):
                     ),
                     "enrollment_end": course_run.enrollment_end.isoformat().replace(
                         "+00:00", "Z"
-                    ),
+                    )
+                    if course_run.state["priority"] != CourseState.ARCHIVED_OPEN
+                    else None,
                     "start": course_run.start.isoformat().replace("+00:00", "Z"),
                     "end": course_run.end.isoformat().replace("+00:00", "Z"),
                     "state": {
@@ -1769,7 +1820,9 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "call_to_action": course_run.state["call_to_action"],
                         "datetime": course_run.state["datetime"]
                         .isoformat()
-                        .replace("+00:00", "Z"),
+                        .replace("+00:00", "Z")
+                        if course_run.state["datetime"]
+                        else None,
                     },
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
@@ -1820,7 +1873,9 @@ class EnrollmentApiTest(BaseAPITestCase):
                     ),
                     "enrollment_end": course_run.enrollment_end.isoformat().replace(
                         "+00:00", "Z"
-                    ),
+                    )
+                    if course_run.state["priority"] != CourseState.ARCHIVED_OPEN
+                    else None,
                     "start": course_run.start.isoformat().replace("+00:00", "Z"),
                     "end": course_run.end.isoformat().replace("+00:00", "Z"),
                     "state": {
@@ -1829,7 +1884,9 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "call_to_action": course_run.state["call_to_action"],
                         "datetime": course_run.state["datetime"]
                         .isoformat()
-                        .replace("+00:00", "Z"),
+                        .replace("+00:00", "Z")
+                        if course_run.state["datetime"]
+                        else None,
                     },
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
@@ -1909,7 +1966,9 @@ class EnrollmentApiTest(BaseAPITestCase):
                     ),
                     "enrollment_end": course_run.enrollment_end.isoformat().replace(
                         "+00:00", "Z"
-                    ),
+                    )
+                    if course_run.state["priority"] != CourseState.ARCHIVED_OPEN
+                    else None,
                     "start": course_run.start.isoformat().replace("+00:00", "Z"),
                     "end": course_run.end.isoformat().replace("+00:00", "Z"),
                     "state": {
@@ -1918,7 +1977,9 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "call_to_action": course_run.state["call_to_action"],
                         "datetime": course_run.state["datetime"]
                         .isoformat()
-                        .replace("+00:00", "Z"),
+                        .replace("+00:00", "Z")
+                        if course_run.state["datetime"]
+                        else None,
                     },
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
@@ -1969,7 +2030,9 @@ class EnrollmentApiTest(BaseAPITestCase):
                     ),
                     "enrollment_end": course_run.enrollment_end.isoformat().replace(
                         "+00:00", "Z"
-                    ),
+                    )
+                    if course_run.state["priority"] != CourseState.ARCHIVED_OPEN
+                    else None,
                     "start": course_run.start.isoformat().replace("+00:00", "Z"),
                     "end": course_run.end.isoformat().replace("+00:00", "Z"),
                     "state": {
@@ -1978,7 +2041,9 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "call_to_action": course_run.state["call_to_action"],
                         "datetime": course_run.state["datetime"]
                         .isoformat()
-                        .replace("+00:00", "Z"),
+                        .replace("+00:00", "Z")
+                        if course_run.state["datetime"]
+                        else None,
                     },
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),

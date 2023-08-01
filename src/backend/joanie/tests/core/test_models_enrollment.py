@@ -11,6 +11,7 @@ from django.utils import timezone
 
 from joanie.core import factories
 from joanie.core.exceptions import GradeError
+from joanie.core.models import CourseState
 from joanie.lms_handler.backends.openedx import OpenEdXLMSBackend
 
 
@@ -40,9 +41,7 @@ class EnrollmentModelsTestCase(TestCase):
         )
 
         course_run = factories.CourseRunFactory(
-            start=self.now - timedelta(hours=1),
-            end=self.now + timedelta(hours=2),
-            enrollment_end=self.now + timedelta(hours=1),
+            state=CourseState.ONGOING_OPEN,
             title="my run",
             resource_link=resource_link,
             is_listed=True,
@@ -62,9 +61,7 @@ class EnrollmentModelsTestCase(TestCase):
     def test_models_enrollment_str_inactive(self):
         """The string representation should work as expected for an inactive enrollment."""
         course_run = factories.CourseRunFactory(
-            start=self.now - timedelta(hours=1),
-            end=self.now + timedelta(hours=2),
-            enrollment_end=self.now + timedelta(hours=1),
+            state=CourseState.ONGOING_OPEN,
             title="my run",
         )
 
@@ -84,9 +81,7 @@ class EnrollmentModelsTestCase(TestCase):
         A user can only have one enrollment on a given course run.
         """
         course_run = factories.CourseRunFactory(
-            start=self.now - timedelta(hours=1),
-            end=self.now + timedelta(hours=2),
-            enrollment_end=self.now + timedelta(hours=1),
+            state=CourseState.ONGOING_OPEN,
             is_listed=True,
         )
         enrollment = factories.EnrollmentFactory(course_run=course_run, is_active=False)
@@ -107,9 +102,7 @@ class EnrollmentModelsTestCase(TestCase):
         """
         [cr1, cr2] = factories.CourseRunFactory.create_batch(
             2,
-            start=self.now - timedelta(hours=1),
-            end=self.now + timedelta(hours=2),
-            enrollment_end=self.now + timedelta(hours=1),
+            state=CourseState.ONGOING_OPEN,
             course=factories.CourseFactory(),
             is_listed=True,
         )
@@ -179,10 +172,7 @@ class EnrollmentModelsTestCase(TestCase):
         # Now create a course run currently opened now
         course_run = factories.CourseRunFactory(
             course=course,
-            start=self.now - timedelta(hours=1),
-            end=self.now + timedelta(hours=2),
-            enrollment_start=self.now - timedelta(hours=2),
-            enrollment_end=self.now + timedelta(hours=1),
+            state=CourseState.ONGOING_OPEN,
             is_listed=True,
         )
 
@@ -199,9 +189,7 @@ class EnrollmentModelsTestCase(TestCase):
     def test_models_enrollment_forbid_for_non_listed_course_run(self):
         """If a course run is not listed, user should not be allowed to enroll."""
         course_run = factories.CourseRunFactory(
-            start=self.now - timedelta(hours=1),
-            end=self.now + timedelta(hours=2),
-            enrollment_end=self.now + timedelta(hours=1),
+            state=CourseState.ONGOING_OPEN,
             is_listed=False,
         )
 
@@ -223,9 +211,7 @@ class EnrollmentModelsTestCase(TestCase):
         user = factories.UserFactory()
         course_run = factories.CourseRunFactory.create_batch(
             2,
-            start=self.now - timedelta(hours=1),
-            end=self.now + timedelta(hours=2),
-            enrollment_end=self.now + timedelta(hours=1),
+            state=CourseState.ONGOING_OPEN,
             is_listed=False,
             course=factories.CourseFactory(),
         )[0]
@@ -267,9 +253,7 @@ class EnrollmentModelsTestCase(TestCase):
         course = factories.CourseFactory()
         [cr1, cr2] = factories.CourseRunFactory.create_batch(
             2,
-            start=self.now - timedelta(hours=1),
-            end=self.now + timedelta(hours=2),
-            enrollment_end=self.now + timedelta(hours=1),
+            state=CourseState.ONGOING_OPEN,
             is_listed=False,
             course=course,
         )
@@ -305,9 +289,7 @@ class EnrollmentModelsTestCase(TestCase):
     def test_models_enrollment_forbid_for_closed_course_run(self):
         """If a course run is closed, user should not be allowed to enroll."""
         course_run = factories.CourseRunFactory(
-            start=timezone.now() - timedelta(hours=-2),
-            end=timezone.now() + timedelta(hours=-1),
-            enrollment_end=timezone.now() + timedelta(hours=-1),
+            state=CourseState.ONGOING_CLOSED,
         )
 
         with self.assertRaises(ValidationError) as context:
@@ -334,9 +316,7 @@ class EnrollmentModelsTestCase(TestCase):
             "http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course"
         )
         course_run = factories.CourseRunFactory.create(
-            start=self.now - timedelta(hours=1),
-            end=self.now + timedelta(hours=2),
-            enrollment_end=self.now + timedelta(hours=1),
+            state=CourseState.ONGOING_OPEN,
             resource_link=resource_link,
             is_listed=True,
         )
@@ -367,9 +347,7 @@ class EnrollmentModelsTestCase(TestCase):
             "http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course"
         )
         course_run = factories.CourseRunFactory.create(
-            start=self.now - timedelta(hours=1),
-            end=self.now + timedelta(hours=2),
-            enrollment_end=self.now + timedelta(hours=1),
+            state=CourseState.ONGOING_OPEN,
             resource_link=resource_link,
             is_listed=True,
         )
@@ -401,9 +379,7 @@ class EnrollmentModelsTestCase(TestCase):
         course = factories.CourseFactory()
         course_run = factories.CourseRunFactory.create_batch(
             2,
-            start=self.now - timedelta(hours=1),
-            end=self.now + timedelta(hours=2),
-            enrollment_end=self.now + timedelta(hours=1),
+            state=CourseState.ONGOING_OPEN,
             is_listed=True,
             course=course,
         )[0]
@@ -430,9 +406,7 @@ class EnrollmentModelsTestCase(TestCase):
         a ValidationError should be raised.
         """
         course_run = factories.CourseRunFactory.create(
-            start=self.now - timedelta(hours=1),
-            end=self.now + timedelta(hours=2),
-            enrollment_end=self.now + timedelta(hours=1),
+            state=CourseState.ONGOING_OPEN,
             is_listed=False,
         )
         with self.assertRaises(ValidationError) as context:
@@ -457,9 +431,7 @@ class EnrollmentModelsTestCase(TestCase):
         product in the scope of an order, a ValidationError should be raised.
         """
         course_run = factories.CourseRunFactory.create(
-            start=self.now - timedelta(hours=1),
-            end=self.now + timedelta(hours=2),
-            enrollment_end=self.now + timedelta(hours=1),
+            state=CourseState.ONGOING_OPEN,
             is_listed=True,
         )
 

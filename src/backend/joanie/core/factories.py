@@ -13,6 +13,8 @@ import factory.fuzzy
 from easy_thumbnails.files import ThumbnailerImageFieldFile, generate_all_aliases
 from faker import Faker
 
+from joanie.core.models import CourseState
+
 from . import enums, models
 
 
@@ -193,6 +195,12 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
     A factory to easily generate a credible course run for our tests.
     """
 
+    class Params:
+        """Parameters for the factory."""
+
+        state = None
+        ref_date = django_timezone.now()
+
     class Meta:
         model = models.CourseRun
 
@@ -221,70 +229,168 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
         )
 
     @factory.lazy_attribute
-    def start(self):  # pylint: disable=no-self-use
+    def start(self):
         """
-        A start datetime for the course run is chosen randomly in the short past/future (it can
-        of course be forced if we want something else), then the other significant dates
-        for the course run are chosen randomly in periods that make sense with this start date.
+        Compute a start date according to the course run state and the ref date. Otherwise,
+        a start datetime for the course run is chosen randomly in the past/future
+        in the range of 1 to 365 days (it can of course be forced if we want something else),
+        then the other significant dates for the course run are chosen randomly in periods
+        that make sense with this start date.
         """
-        now = django_timezone.now()
-        period = timedelta(days=200)
+        if self.state == CourseState.TO_BE_SCHEDULED:
+            return None
+
+        period = timedelta(
+            days=random.randrange(1, 365, 1)  # nosec
+        )  # between 1 and 365 days
+
+        if self.state in [
+            CourseState.ONGOING_OPEN,
+            CourseState.ONGOING_CLOSED,
+            CourseState.ARCHIVED_OPEN,
+            CourseState.ARCHIVED_CLOSED,
+        ]:
+            # The course run is on going or archived,
+            # so the start date must be less than the ref date
+            min_date = self.ref_date - period
+            max_date = self.ref_date
+        elif self.state in [
+            CourseState.FUTURE_OPEN,
+            CourseState.FUTURE_NOT_YET_OPEN,
+            CourseState.FUTURE_CLOSED,
+        ]:
+            # The course run has not yet started,
+            # so the start date must be greater than the ref date
+            min_date = self.ref_date
+            max_date = self.ref_date + period
+        else:
+            # Otherwise, the start date can be chosen randomly in the past/future
+            min_date = self.ref_date - period
+            max_date = self.ref_date + period
+
         return datetime.utcfromtimestamp(
             random.randrange(  # nosec
-                int((now - period).timestamp()), int((now + period).timestamp())
+                int(min_date.timestamp()), int(max_date.timestamp())
             )
         ).replace(tzinfo=timezone.utc)
 
     @factory.lazy_attribute
     def end(self):
         """
-        The end datetime is at a random duration after the start datetme (we pick within 90 days).
+        Compute the end date according to the course run state and the ref date.
+        Otherwise, pick a random date in the range of 1 to 365 days after the start date
         """
         if not self.start:
             return None
-        period = timedelta(days=90)
+
+        period = timedelta(
+            days=random.randrange(1, 365, 1)  # nosec
+        )  # between 1 and 365 days
+
+        if self.state in [CourseState.ARCHIVED_OPEN, CourseState.ARCHIVED_CLOSED]:
+            # The course run is archived, end date must be less than ref date
+            if self.start >= self.ref_date:
+                raise ValueError("Start date must be less than ref date.")
+            min_date = self.start
+            max_date = self.ref_date
+        elif self.state in [CourseState.ONGOING_OPEN, CourseState.ONGOING_CLOSED]:
+            # The course run is on going, end date must be greater than ref_date
+            min_date = self.ref_date
+            max_date = self.ref_date + period
+        else:
+            # Otherwise, we just want end date to be greater than start date
+            min_date = self.start
+            max_date = self.start + period
+
         return datetime.utcfromtimestamp(
             random.randrange(  # nosec
-                int(self.start.timestamp()), int((self.start + period).timestamp())
+                int(min_date.timestamp()), int(max_date.timestamp())
             )
         ).replace(tzinfo=timezone.utc)
 
     @factory.lazy_attribute
     def enrollment_start(self):
         """
-        The start of enrollment is a random datetime before the start datetime.
+        Compute the enrollment start date according to the course run state
+        and the ref date. Otherwise, pick a random date in the range of 1 to 90 days
+        before the start date.
         """
         if not self.start:
             return None
-        period = timedelta(days=90)
+
+        period = timedelta(
+            days=random.randrange(1, 90, 1)  # nosec
+        )  # between 1 and 90 days
+
+        if self.state in [CourseState.FUTURE_OPEN, CourseState.FUTURE_CLOSED]:
+            # The course run enrollment has not yet started,
+            # so the enrollment start date must be less than the ref date
+            min_date = self.ref_date - period
+            max_date = self.ref_date
+        elif self.state == CourseState.FUTURE_NOT_YET_OPEN:
+            # The course run is not yet open for enrollment,
+            # so the enrollment start date must be greater than the ref date
+            if self.start <= self.ref_date:
+                raise ValueError("Start date must be greater than ref date.")
+            min_date = self.ref_date
+            max_date = self.start
+        else:
+            # Otherwise, the enrollment start date can be in the past or in the future
+            min_date = self.start - period
+            max_date = self.start
+
         return datetime.utcfromtimestamp(
             random.randrange(  # nosec
-                int((self.start - period).timestamp()), int(self.start.timestamp())
+                int(min_date.timestamp()), int(max_date.timestamp())
             )
         ).replace(tzinfo=timezone.utc)
 
     @factory.lazy_attribute
     def enrollment_end(self):
         """
-        The end of enrollment is a random datetime between the start of enrollment
-        and the end of the course.
-        If the enrollment start and end datetimes have been forced to incoherent dates,
-        then just don't set any end of enrollment...
+        Compute the enrollment end date according to the course run state
+        and the ref date. Otherwise, pick a random date in the range of enrollment
+        start date and end date.
         """
-        if not self.start:
+        if (
+            not self.start
+            or not self.enrollment_start
+            or self.state == CourseState.ARCHIVED_OPEN
+        ):
+            # Archived open state is a special case.
+            # The course run has ended but enrollment is still opened.
             return None
-        enrollment_start = self.enrollment_start or self.start - timedelta(
-            days=random.randint(1, 90)  # nosec
-        )
-        max_enrollment_end = self.end or self.start + timedelta(
-            days=random.randint(1, 90)  # nosec
-        )
-        max_enrollment_end = max(
-            enrollment_start + timedelta(hours=1), max_enrollment_end
-        )
+
+        period = timedelta(
+            days=random.randrange(1, 90, 1)  # nosec
+        )  # between 1 and 90 days
+
+        if self.state in [CourseState.ONGOING_OPEN, CourseState.FUTURE_OPEN]:
+            # The course run is opened for enrollment, so the enrollment end date must
+            # be greater than the ref date and less than the course run end
+            if self.end and self.end <= self.ref_date:
+                raise ValueError("End date must be greater than ref date.")
+            min_date = self.ref_date
+            max_date = self.end or self.ref_date + period
+        elif self.state in [CourseState.ONGOING_CLOSED, CourseState.FUTURE_CLOSED]:
+            # The course run is closed for enrollment,
+            # so the enrollment end date must be less than the ref date
+            min_date = self.ref_date - period
+            max_date = self.ref_date
+        else:
+            # Otherwise, the enrollment end must be in the range of
+            # the enrollment start and the end of the course run.
+            # About course run not yet opened for enrollment, the enrollment end date
+            # must be greater than the enrollment start date too.
+            # (as this one is greater than the ref date)
+            if self.end and self.end <= self.enrollment_start:
+                raise ValueError("End date must be greater than enrollment start date.")
+            min_date = self.enrollment_start
+            max_date = self.end or self.enrollment_start + period
+
         return datetime.utcfromtimestamp(
             random.randrange(  # nosec
-                int(enrollment_start.timestamp()), int(max_enrollment_end.timestamp())
+                int(min_date.timestamp()), int(max_date.timestamp())
             )
         ).replace(tzinfo=timezone.utc)
 
