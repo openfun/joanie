@@ -5,6 +5,7 @@ from django.utils import translation
 import arrow
 
 from joanie.core import enums, factories, models
+from joanie.core.models import CourseState
 
 OPENEDX_COURSE_RUN_URI = (
     "http://openedx.test/courses/course-v1:edx+{course:s}+{course_run:s}/course"
@@ -74,49 +75,53 @@ class Command(BaseCommand):
         bases_of_botany_run1 = factories.CourseRunFactory(
             title="Bases of botany",
             resource_link=OPENEDX_COURSE_RUN_URI.format(
-                course="000001", course_run="BasesOfBotany_run1"
+                course="00001", course_run="BasesOfBotany_run1"
             ),
-            start=arrow.utcnow().shift(days=-2).datetime,
             # Give access to admin user
             course__users=[[admin_user, enums.OWNER]],
             course__organizations=[organization],
+            state=CourseState.ONGOING_OPEN,
         )
         factories.CourseRunFactory(
             title="Bases of botany",
             course=bases_of_botany_run1.course,
             resource_link=OPENEDX_COURSE_RUN_URI.format(
-                course="000001", course_run="BasesOfBotany_run2"
+                course="00001", course_run="BasesOfBotany_run2"
             ),
-            start=arrow.utcnow().shift(days=10).datetime,
+            state=CourseState.ONGOING_OPEN,
         )
         how_to_make_a_herbarium_run1 = factories.CourseRunFactory(
             title="How to make a herbarium",
             resource_link=OPENEDX_COURSE_RUN_URI.format(
-                course="000002", course_run="HowToMakeHerbarium_run1"
+                course="00002", course_run="HowToMakeHerbarium_run1"
             ),
             # Give access to admin user
             course__users=[[admin_user, enums.OWNER]],
             course__organizations=[organization],
+            state=CourseState.ONGOING_OPEN,
         )
         factories.CourseRunFactory(
             title="How to make a herbarium",
             course=how_to_make_a_herbarium_run1.course,
             resource_link=OPENEDX_COURSE_RUN_URI.format(
-                course="000002", course_run="HowToMakeHerbarium_run2"
+                course="00002", course_run="HowToMakeHerbarium_run2"
             ),
+            state=CourseState.ONGOING_OPEN,
         )
         scientific_publication_analysis_run1 = factories.CourseRunFactory(
             title="Scientific publication analysis",
             resource_link=OPENEDX_COURSE_RUN_URI.format(
-                course="000003", course_run="ScientificPublicationAnalysis_run1"
+                course="00003", course_run="ScientificPublicationAnalysis_run1"
             ),
+            state=CourseState.ONGOING_OPEN,
         )
         factories.CourseRunFactory(
             title="Scientific publication analysis",
             course=scientific_publication_analysis_run1.course,
             resource_link=OPENEDX_COURSE_RUN_URI.format(
-                course="000003", course_run="ScientificPublicationAnalysis_run2"
+                course="00003", course_run="ScientificPublicationAnalysis_run2"
             ),
+            state=CourseState.ONGOING_OPEN,
         )
 
         # Give courses access to admin user
