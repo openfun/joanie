@@ -4,7 +4,6 @@ import itertools
 import json
 import random
 import uuid
-from datetime import timedelta
 from logging import Logger
 from unittest import mock
 
@@ -13,6 +12,7 @@ from django.utils import timezone
 
 from joanie.core import enums, exceptions, factories, models
 from joanie.core.factories import CourseRunFactory, EnrollmentFactory
+from joanie.core.models import CourseState
 from joanie.core.serializers import fields
 from joanie.lms_handler.backends.openedx import OpenEdXLMSBackend
 from joanie.payment.factories import InvoiceFactory
@@ -42,16 +42,24 @@ class EnrollmentApiTest(BaseAPITestCase):
         if count > 1:
             return CourseRunFactory.create_batch(
                 count,
-                start=self.now - timedelta(hours=1),
-                end=self.now + timedelta(hours=2),
-                enrollment_end=self.now + timedelta(hours=1),
+                state=random.choice(
+                    [
+                        CourseState.ONGOING_OPEN,
+                        CourseState.FUTURE_OPEN,
+                        CourseState.ARCHIVED_OPEN,
+                    ]
+                ),
                 **kwargs,
             )
 
         return CourseRunFactory(
-            start=self.now - timedelta(hours=1),
-            end=self.now + timedelta(hours=2),
-            enrollment_end=self.now + timedelta(hours=1),
+            state=random.choice(
+                [
+                    CourseState.ONGOING_OPEN,
+                    CourseState.FUTURE_OPEN,
+                    CourseState.ARCHIVED_OPEN,
+                ]
+            ),
             **kwargs,
         )
 
@@ -60,16 +68,28 @@ class EnrollmentApiTest(BaseAPITestCase):
         if count > 1:
             return CourseRunFactory.create_batch(
                 count,
-                start=self.now - timedelta(hours=1),
-                end=self.now + timedelta(hours=1),
-                enrollment_end=self.now,
+                state=random.choice(
+                    [
+                        CourseState.FUTURE_NOT_YET_OPEN,
+                        CourseState.FUTURE_CLOSED,
+                        CourseState.ONGOING_CLOSED,
+                        CourseState.ARCHIVED_CLOSED,
+                        CourseState.TO_BE_SCHEDULED,
+                    ]
+                ),
                 **kwargs,
             )
 
         return CourseRunFactory(
-            start=self.now - timedelta(hours=1),
-            end=self.now + timedelta(hours=1),
-            enrollment_end=self.now,
+            state=random.choice(
+                [
+                    CourseState.FUTURE_NOT_YET_OPEN,
+                    CourseState.FUTURE_CLOSED,
+                    CourseState.ONGOING_CLOSED,
+                    CourseState.ARCHIVED_CLOSED,
+                    CourseState.TO_BE_SCHEDULED,
+                ]
+            ),
             **kwargs,
         )
 

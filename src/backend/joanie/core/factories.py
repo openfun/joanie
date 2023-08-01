@@ -13,6 +13,8 @@ import factory.fuzzy
 from easy_thumbnails.files import ThumbnailerImageFieldFile, generate_all_aliases
 from faker import Faker
 
+from joanie.core.models import CourseState
+
 from . import enums, models
 
 
@@ -193,6 +195,12 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
     A factory to easily generate a credible course run for our tests.
     """
 
+    class Params:
+        """Parameters for the factory."""
+
+        state = None
+        now = django_timezone.now()
+
     class Meta:
         model = models.CourseRun
 
@@ -227,6 +235,8 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
         of course be forced if we want something else), then the other significant dates
         for the course run are chosen randomly in periods that make sense with this start date.
         """
+        if self.state is not None:
+            return CourseRunFactory.get_dates_from_state(self.state, self.now)["start"]
         now = django_timezone.now()
         period = timedelta(days=200)
         return datetime.utcfromtimestamp(
@@ -240,6 +250,8 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
         """
         The end datetime is at a random duration after the start datetme (we pick within 90 days).
         """
+        if self.state is not None:
+            return CourseRunFactory.get_dates_from_state(self.state, self.now)["end"]
         if not self.start:
             return None
         period = timedelta(days=90)
@@ -254,6 +266,10 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
         """
         The start of enrollment is a random datetime before the start datetime.
         """
+        if self.state is not None:
+            return CourseRunFactory.get_dates_from_state(self.state, self.now)[
+                "enrollment_start"
+            ]
         if not self.start:
             return None
         period = timedelta(days=90)
@@ -271,6 +287,10 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
         If the enrollment start and end datetimes have been forced to incoherent dates,
         then just don't set any end of enrollment...
         """
+        if self.state is not None:
+            return CourseRunFactory.get_dates_from_state(self.state, self.now)[
+                "enrollment_end"
+            ]
         if not self.start:
             return None
         enrollment_start = self.enrollment_start or self.start - timedelta(
@@ -287,6 +307,57 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
                 int(enrollment_start.timestamp()), int(max_enrollment_end.timestamp())
             )
         ).replace(tzinfo=timezone.utc)
+
+    @staticmethod
+    def get_dates_from_state(state, ref_date=django_timezone.now()):
+        """Generate dates for a course run according to state and a reference date."""
+        enrollment_start = None
+        enrollment_end = None
+        start = None
+        end = None
+
+        if state == CourseState.ONGOING_OPEN:
+            enrollment_start = ref_date - timedelta(days=60)
+            enrollment_end = ref_date + timedelta(days=30)
+            start = ref_date - timedelta(days=30)
+            end = ref_date + timedelta(days=60)
+        elif state == CourseState.FUTURE_OPEN:
+            enrollment_start = ref_date - timedelta(days=30)
+            enrollment_end = ref_date + timedelta(days=15)
+            start = ref_date + timedelta(days=30)
+            end = ref_date + timedelta(days=60)
+        elif state == CourseState.ARCHIVED_OPEN:
+            enrollment_start = ref_date - timedelta(days=60)
+            enrollment_end = ref_date + timedelta(days=60)
+            start = ref_date - timedelta(days=30)
+            end = ref_date - timedelta(days=15)
+        elif state == CourseState.FUTURE_NOT_YET_OPEN:
+            enrollment_start = ref_date + timedelta(days=15)
+            enrollment_end = ref_date + timedelta(days=30)
+            start = ref_date + timedelta(days=30)
+            end = ref_date + timedelta(days=60)
+        elif state == CourseState.FUTURE_CLOSED:
+            enrollment_start = ref_date - timedelta(days=60)
+            enrollment_end = ref_date - timedelta(days=30)
+            start = ref_date + timedelta(days=30)
+            end = ref_date + timedelta(days=60)
+        elif state == CourseState.ONGOING_CLOSED:
+            enrollment_start = ref_date - timedelta(days=60)
+            enrollment_end = ref_date - timedelta(days=30)
+            start = ref_date - timedelta(days=15)
+            end = ref_date + timedelta(days=30)
+        elif state == CourseState.ARCHIVED_CLOSED:
+            enrollment_start = ref_date - timedelta(days=60)
+            enrollment_end = ref_date - timedelta(days=30)
+            start = ref_date - timedelta(days=30)
+            end = ref_date - timedelta(days=15)
+
+        return {
+            "enrollment_start": enrollment_start,
+            "enrollment_end": enrollment_end,
+            "start": start,
+            "end": end,
+        }
 
 
 class EnrollmentFactory(factory.django.DjangoModelFactory):

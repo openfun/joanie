@@ -1,7 +1,6 @@
 """
 Test suite for course models
 """
-from datetime import timedelta
 
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
@@ -187,62 +186,49 @@ class CourseStateModelsTestCase(TestCase):
         """Create an ongoing course run that is open for enrollment."""
         return factories.CourseRunFactory(
             course=course,
-            start=self.now - timedelta(hours=1),
-            end=self.now + timedelta(hours=2),
-            enrollment_end=self.now + timedelta(hours=1),
+            state=CourseState.ONGOING_OPEN,
         )
 
     def create_run_ongoing_closed(self, course):
         """Create an ongoing course run that is closed for enrollment."""
         return factories.CourseRunFactory(
             course=course,
-            start=self.now - timedelta(hours=1),
-            end=self.now + timedelta(hours=1),
-            enrollment_end=self.now,
+            state=CourseState.ONGOING_CLOSED,
         )
 
     def create_run_archived_open(self, course):
         """Create an archived course run."""
         return factories.CourseRunFactory(
             course=course,
-            start=self.now - timedelta(hours=1),
-            end=self.now,
-            enrollment_end=self.now + timedelta(hours=1),
+            state=CourseState.ARCHIVED_OPEN,
         )
 
     def create_run_archived_closed(self, course):
         """Create an archived course run."""
         return factories.CourseRunFactory(
             course=course,
-            start=self.now - timedelta(hours=1),
-            end=self.now,
-            enrollment_end=self.now - timedelta(hours=1),
+            state=CourseState.ARCHIVED_CLOSED,
         )
 
     def create_run_future_not_yet_open(self, course):
         """Create a course run in the future and not yet open for enrollment."""
         return factories.CourseRunFactory(
             course=course,
-            start=self.now + timedelta(hours=2),
-            enrollment_start=self.now + timedelta(hours=1),
+            state=CourseState.FUTURE_NOT_YET_OPEN,
         )
 
     def create_run_future_closed(self, course):
         """Create a course run in the future and already closed for enrollment."""
         return factories.CourseRunFactory(
             course=course,
-            start=self.now + timedelta(hours=1),
-            enrollment_start=self.now - timedelta(hours=2),
-            enrollment_end=self.now - timedelta(hours=1),
+            state=CourseState.FUTURE_CLOSED,
         )
 
     def create_run_future_open(self, course):
         """Create a course run in the future and open for enrollment."""
         return factories.CourseRunFactory(
             course=course,
-            start=self.now + timedelta(hours=1),
-            enrollment_start=self.now - timedelta(hours=1),
-            enrollment_end=self.now + timedelta(hours=1),
+            state=CourseState.FUTURE_OPEN,
         )
 
     def test_models_course_state_to_be_scheduled(self):

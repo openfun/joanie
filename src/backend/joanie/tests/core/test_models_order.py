@@ -2,17 +2,15 @@
 Test suite for order models
 """
 import random
-from datetime import timedelta
 from unittest import mock
 
 from django.core.exceptions import ValidationError
 from django.test import TestCase
-from django.utils import timezone
 
 from django_fsm import TransitionNotAllowed
 
 from joanie.core import enums, factories
-from joanie.core.models import Certificate, Enrollment
+from joanie.core.models import Certificate, CourseState, Enrollment
 from joanie.payment.factories import InvoiceFactory
 
 
@@ -161,9 +159,7 @@ class OrderModelsTestCase(TestCase):
         # - Link only one course run to target_course
         factories.CourseRunFactory(
             course=target_course,
-            start=timezone.now() - timedelta(hours=1),
-            end=timezone.now() + timedelta(hours=2),
-            enrollment_end=timezone.now() + timedelta(hours=1),
+            state=CourseState.ONGOING_OPEN,
         )
 
         product = factories.ProductFactory(
@@ -198,9 +194,7 @@ class OrderModelsTestCase(TestCase):
         # - Link only one course run to target_course
         course_run = factories.CourseRunFactory(
             course=target_course,
-            start=timezone.now() - timedelta(hours=1),
-            end=timezone.now() + timedelta(hours=2),
-            enrollment_end=timezone.now() + timedelta(hours=1),
+            state=CourseState.ONGOING_OPEN,
             is_listed=True,
         )
 
@@ -243,9 +237,7 @@ class OrderModelsTestCase(TestCase):
         cr1 = factories.CourseRunFactory.create_batch(
             2,
             course=target_course,
-            start=timezone.now() - timedelta(hours=1),
-            end=timezone.now() + timedelta(hours=2),
-            enrollment_end=timezone.now() + timedelta(hours=1),
+            state=CourseState.ONGOING_OPEN,
             is_listed=False,
         )[0]
 
@@ -281,9 +273,7 @@ class OrderModelsTestCase(TestCase):
         cr1 = factories.CourseRunFactory.create_batch(
             2,
             course=target_course,
-            start=timezone.now() - timedelta(hours=1),
-            end=timezone.now() + timedelta(hours=2),
-            enrollment_end=timezone.now() + timedelta(hours=1),
+            state=CourseState.ONGOING_OPEN,
             is_listed=False,
         )[0]
 
@@ -326,9 +316,7 @@ class OrderModelsTestCase(TestCase):
         cr1 = factories.CourseRunFactory.create_batch(
             2,
             course=target_course,
-            start=timezone.now() - timedelta(hours=1),
-            end=timezone.now() + timedelta(hours=2),
-            enrollment_end=timezone.now() + timedelta(hours=1),
+            state=CourseState.ONGOING_OPEN,
             is_listed=True,
         )[0]
 
@@ -361,9 +349,7 @@ class OrderModelsTestCase(TestCase):
         """
         [cr1, cr2] = factories.CourseRunFactory.create_batch(
             2,
-            start=timezone.now() - timedelta(hours=1),
-            end=timezone.now() + timedelta(hours=2),
-            enrollment_end=timezone.now() + timedelta(hours=1),
+            state=CourseState.ONGOING_OPEN,
             is_listed=False,
         )
         product = factories.ProductFactory(
@@ -485,10 +471,8 @@ class OrderModelsTestCase(TestCase):
     def test_models_order_get_or_generate_certificate(self):
         """Generate a certificate for a product order"""
         course_run = factories.CourseRunFactory(
-            enrollment_end=timezone.now() + timedelta(hours=1),
-            enrollment_start=timezone.now() - timedelta(hours=1),
+            state=CourseState.ONGOING_OPEN,
             is_gradable=True,
-            start=timezone.now() - timedelta(hours=1),
         )
         product = factories.ProductFactory(
             price="0.00",
@@ -532,10 +516,8 @@ class OrderModelsTestCase(TestCase):
         on the product
         """
         course_run = factories.CourseRunFactory(
-            enrollment_end=timezone.now() + timedelta(hours=1),
-            enrollment_start=timezone.now() - timedelta(hours=1),
+            state=CourseState.ONGOING_OPEN,
             is_gradable=True,
-            start=timezone.now() - timedelta(hours=1),
         )
         product = factories.ProductFactory(
             price="0.00",
@@ -555,10 +537,8 @@ class OrderModelsTestCase(TestCase):
     def test_models_order_get_or_generate_certificate_type_enrollment(self):
         """A product of the type "enrollment" should not generate any certificate."""
         course_run = factories.CourseRunFactory(
-            enrollment_end=timezone.now() + timedelta(hours=1),
-            enrollment_start=timezone.now() - timedelta(hours=1),
+            state=CourseState.ONGOING_OPEN,
             is_gradable=True,
-            start=timezone.now() - timedelta(hours=1),
         )
         product = factories.ProductFactory(
             price="0.00",
@@ -580,10 +560,8 @@ class OrderModelsTestCase(TestCase):
         graded course.
         """
         course_run = factories.CourseRunFactory(
-            enrollment_end=timezone.now() + timedelta(hours=1),
-            enrollment_start=timezone.now() - timedelta(hours=1),
+            state=CourseState.ONGOING_OPEN,
             is_gradable=True,
-            start=timezone.now() - timedelta(hours=1),
         )
         product = factories.ProductFactory(
             price="0.00",
@@ -607,10 +585,8 @@ class OrderModelsTestCase(TestCase):
     def test_models_order_get_or_generate_certificate_course_run_is_not_gradable(self):
         """No certificate should be generated if there is no gradable course runs."""
         course_run = factories.CourseRunFactory(
-            enrollment_end=timezone.now() + timedelta(hours=1),
-            enrollment_start=timezone.now() - timedelta(hours=1),
+            state=CourseState.ONGOING_OPEN,
             is_gradable=False,  # course run is not gradable
-            start=timezone.now() - timedelta(hours=1),
         )
         product = factories.ProductFactory(
             price="0.00",
@@ -630,11 +606,8 @@ class OrderModelsTestCase(TestCase):
     def test_models_order_get_or_generate_certificate_course_run_in_the_future(self):
         """No certificate should be generated if the course runs are in the future."""
         course_run = factories.CourseRunFactory(
-            enrollment_end=timezone.now() + timedelta(hours=1),
-            enrollment_start=timezone.now() - timedelta(hours=1),
+            state=CourseState.FUTURE_OPEN,
             is_gradable=True,
-            start=timezone.now()
-            + timedelta(hours=1),  # course run starts in the future
         )
         product = factories.ProductFactory(
             price="0.00",
@@ -654,10 +627,8 @@ class OrderModelsTestCase(TestCase):
     def test_models_order_get_or_generate_certificate_enrollment_inactive(self):
         """No certificate should be generated if the user's enrollment is inactive."""
         course_run = factories.CourseRunFactory(
-            enrollment_end=timezone.now() + timedelta(hours=1),
-            enrollment_start=timezone.now() - timedelta(hours=1),
+            state=CourseState.ONGOING_OPEN,
             is_gradable=True,
-            start=timezone.now() - timedelta(hours=1),
         )
         product = factories.ProductFactory(
             price="0.00",
@@ -680,10 +651,8 @@ class OrderModelsTestCase(TestCase):
     def test_models_order_get_or_generate_certificate_enrollment_not_passed(self):
         """No certificate should be generated if the user's enrollment is not passed."""
         course_run = factories.CourseRunFactory(
-            enrollment_end=timezone.now() + timedelta(hours=1),
-            enrollment_start=timezone.now() - timedelta(hours=1),
+            state=CourseState.ONGOING_OPEN,
             is_gradable=True,
-            start=timezone.now() - timedelta(hours=1),
         )
         product = factories.ProductFactory(
             price="0.00",

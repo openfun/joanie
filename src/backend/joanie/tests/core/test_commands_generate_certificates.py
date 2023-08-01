@@ -1,10 +1,8 @@
 """Test suite for the management command 'generate_certificates'"""
 import uuid
-from datetime import timedelta
 
 from django.core.management import call_command
 from django.test import TestCase
-from django.utils import timezone
 
 from joanie.core import enums, factories, models
 
@@ -39,10 +37,8 @@ class CreateCertificatesTestCase(TestCase):
 
         # Create a certifying product with one order eligible for certification
         course_run = factories.CourseRunFactory(
-            enrollment_end=timezone.now() + timedelta(hours=1),
-            enrollment_start=timezone.now() - timedelta(hours=1),
+            state=models.CourseState.ONGOING_OPEN,
             is_gradable=True,
-            start=timezone.now() - timedelta(hours=1),
         )
         product = factories.ProductFactory(
             price="0.00",
@@ -69,10 +65,8 @@ class CreateCertificatesTestCase(TestCase):
         """
         # Create a certifying product with two orders eligible for certification
         course_run = factories.CourseRunFactory(
-            enrollment_end=timezone.now() + timedelta(hours=1),
-            enrollment_start=timezone.now() - timedelta(hours=1),
+            state=models.CourseState.ONGOING_OPEN,
             is_gradable=True,
-            start=timezone.now() - timedelta(hours=1),
         )
         product = factories.ProductFactory(
             price="0.00",
@@ -100,10 +94,8 @@ class CreateCertificatesTestCase(TestCase):
         # Create a certifying product used in two courses
         # Then create one order per course
         course_run = factories.CourseRunFactory(
-            enrollment_end=timezone.now() + timedelta(hours=1),
-            enrollment_start=timezone.now() - timedelta(hours=1),
+            state=models.CourseState.ONGOING_OPEN,
             is_gradable=True,
-            start=timezone.now() - timedelta(hours=1),
         )
         product = factories.ProductFactory(
             price="0.00",
@@ -136,10 +128,8 @@ class CreateCertificatesTestCase(TestCase):
         # Create two certifying products with order eligible for certification.
         [cr1, cr2] = factories.CourseRunFactory.create_batch(
             2,
-            enrollment_end=timezone.now() + timedelta(hours=1),
-            enrollment_start=timezone.now() - timedelta(hours=1),
+            state=models.CourseState.ONGOING_OPEN,
             is_gradable=True,
-            start=timezone.now() - timedelta(hours=1),
         )
         product_1 = factories.ProductFactory(
             price="0.00",
@@ -178,10 +168,8 @@ class CreateCertificatesTestCase(TestCase):
         # Create two certifying products with order eligible for certification.
         [cr1, cr2] = factories.CourseRunFactory.create_batch(
             2,
-            enrollment_end=timezone.now() + timedelta(hours=1),
-            enrollment_start=timezone.now() - timedelta(hours=1),
+            state=models.CourseState.ONGOING_OPEN,
             is_gradable=True,
-            start=timezone.now() - timedelta(hours=1),
         )
         product_1 = factories.ProductFactory(
             price="0.00",
@@ -239,10 +227,8 @@ class CreateCertificatesTestCase(TestCase):
         # Create two certifying products with order eligible for certification.
         [cr1, cr2, cr3, cr4, cr5, cr6] = factories.CourseRunFactory.create_batch(
             6,
-            enrollment_end=timezone.now() + timedelta(hours=1),
-            enrollment_start=timezone.now() - timedelta(hours=1),
+            state=models.CourseState.ONGOING_OPEN,
             is_gradable=True,
-            start=timezone.now() - timedelta(hours=1),
         )
         product_1 = factories.ProductFactory(
             price="0.00",
