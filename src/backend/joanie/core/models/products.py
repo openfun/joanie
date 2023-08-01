@@ -112,15 +112,15 @@ class Product(parler_models.TranslatableModel, BaseModel):
               product/course relation.
 
         """
-        course_relations_with_course_runs = self.target_course_relations.filter(
+        target_course_relations_with_course_runs = self.target_course_relations.filter(
             course_runs__isnull=False
         ).only("pk")
 
         return courses_models.CourseRun.objects.filter(
-            models.Q(product_relations__in=course_relations_with_course_runs)
+            models.Q(product_relations__in=target_course_relations_with_course_runs)
             | models.Q(
                 course__in=self.target_courses.exclude(
-                    product_target_relations__in=course_relations_with_course_runs
+                    product_target_relations__in=target_course_relations_with_course_runs
                 )
             )
         )
@@ -137,6 +137,9 @@ class Product(parler_models.TranslatableModel, BaseModel):
         If a product has no target courses or no related course runs, it will still return
         an equivalent course run with null dates and hidden visibility.
         """
+        if self.type == enums.PRODUCT_TYPE_CERTIFICATE:
+            return None
+
         dates = self.get_equivalent_course_run_dates()
 
         return {
@@ -193,6 +196,10 @@ class Product(parler_models.TranslatableModel, BaseModel):
             course_run_data = product.get_equivalent_course_run_data(
                 visibility=visibility
             )
+
+            # Ignore products of type certificate
+            if course_run_data is None:
+                continue
 
             course_relations = product.course_relations.select_related("course")
             if courses:
