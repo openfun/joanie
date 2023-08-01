@@ -1,7 +1,6 @@
 """
 Test suite for course models
 """
-from datetime import timedelta
 
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
@@ -10,7 +9,7 @@ from django.test import TestCase
 from django.utils import timezone
 
 from joanie.core import factories, models
-from joanie.core.models import CourseState
+from joanie.core.models import MAX_DATE, CourseState
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -183,68 +182,6 @@ class CourseStateModelsTestCase(TestCase):
         super().setUp()
         self.now = timezone.now()
 
-    def create_run_ongoing_open(self, course):
-        """Create an ongoing course run that is open for enrollment."""
-        return factories.CourseRunFactory(
-            course=course,
-            start=self.now - timedelta(hours=1),
-            end=self.now + timedelta(hours=2),
-            enrollment_end=self.now + timedelta(hours=1),
-        )
-
-    def create_run_ongoing_closed(self, course):
-        """Create an ongoing course run that is closed for enrollment."""
-        return factories.CourseRunFactory(
-            course=course,
-            start=self.now - timedelta(hours=1),
-            end=self.now + timedelta(hours=1),
-            enrollment_end=self.now,
-        )
-
-    def create_run_archived_open(self, course):
-        """Create an archived course run."""
-        return factories.CourseRunFactory(
-            course=course,
-            start=self.now - timedelta(hours=1),
-            end=self.now,
-            enrollment_end=self.now + timedelta(hours=1),
-        )
-
-    def create_run_archived_closed(self, course):
-        """Create an archived course run."""
-        return factories.CourseRunFactory(
-            course=course,
-            start=self.now - timedelta(hours=1),
-            end=self.now,
-            enrollment_end=self.now - timedelta(hours=1),
-        )
-
-    def create_run_future_not_yet_open(self, course):
-        """Create a course run in the future and not yet open for enrollment."""
-        return factories.CourseRunFactory(
-            course=course,
-            start=self.now + timedelta(hours=2),
-            enrollment_start=self.now + timedelta(hours=1),
-        )
-
-    def create_run_future_closed(self, course):
-        """Create a course run in the future and already closed for enrollment."""
-        return factories.CourseRunFactory(
-            course=course,
-            start=self.now + timedelta(hours=1),
-            enrollment_start=self.now - timedelta(hours=2),
-            enrollment_end=self.now - timedelta(hours=1),
-        )
-
-    def create_run_future_open(self, course):
-        """Create a course run in the future and open for enrollment."""
-        return factories.CourseRunFactory(
-            course=course,
-            start=self.now + timedelta(hours=1),
-            enrollment_start=self.now - timedelta(hours=1),
-            enrollment_end=self.now + timedelta(hours=1),
-        )
-
     def test_models_course_state_to_be_scheduled(self):
         """
         Confirm course state result when there is no course runs at all.
@@ -259,7 +196,10 @@ class CourseStateModelsTestCase(TestCase):
         Confirm course state when there is a course run only in the past.
         """
         course = factories.CourseFactory()
-        self.create_run_archived_closed(course)
+        factories.CourseRunFactory(
+            course=course,
+            state=CourseState.ARCHIVED_CLOSED,
+        )
         with self.assertNumQueries(2):
             state = course.state
         self.assertEqual(state, CourseState(6))
@@ -269,10 +209,13 @@ class CourseStateModelsTestCase(TestCase):
         Confirm course state when there is a past course run but open for enrollment.
         """
         course = factories.CourseFactory()
-        course_run = self.create_run_archived_open(course)
+        factories.CourseRunFactory(
+            course=course,
+            state=CourseState.ARCHIVED_OPEN,
+        )
         with self.assertNumQueries(2):
             state = course.state
-        self.assertEqual(state, CourseState(2, course_run.enrollment_end))
+        self.assertEqual(state, CourseState(2, MAX_DATE))
 
     def test_models_course_state_ongoing_enrollment_closed(self):
         """
@@ -280,7 +223,10 @@ class CourseStateModelsTestCase(TestCase):
         enrollment.
         """
         course = factories.CourseFactory()
-        self.create_run_ongoing_closed(course)
+        factories.CourseRunFactory(
+            course=course,
+            state=CourseState.ONGOING_CLOSED,
+        )
         with self.assertNumQueries(2):
             state = course.state
         self.assertEqual(state, CourseState(5))
@@ -291,7 +237,10 @@ class CourseStateModelsTestCase(TestCase):
         enrollment.
         """
         course = factories.CourseFactory()
-        course_run = self.create_run_future_not_yet_open(course)
+        course_run = factories.CourseRunFactory(
+            course=course,
+            state=CourseState.FUTURE_NOT_YET_OPEN,
+        )
         with self.assertNumQueries(2):
             state = course.state
         expected_state = CourseState(3, course_run.start)
@@ -303,7 +252,10 @@ class CourseStateModelsTestCase(TestCase):
         enrollment.
         """
         course = factories.CourseFactory()
-        self.create_run_future_closed(course)
+        factories.CourseRunFactory(
+            course=course,
+            state=CourseState.FUTURE_CLOSED,
+        )
         with self.assertNumQueries(2):
             state = course.state
         expected_state = CourseState(4)
@@ -314,7 +266,10 @@ class CourseStateModelsTestCase(TestCase):
         Confirm course state when there is a future course run open for enrollment.
         """
         course = factories.CourseFactory()
-        course_run = self.create_run_future_open(course)
+        course_run = factories.CourseRunFactory(
+            course=course,
+            state=CourseState.FUTURE_OPEN,
+        )
         with self.assertNumQueries(2):
             state = course.state
         expected_state = CourseState(1, course_run.start)
@@ -325,7 +280,10 @@ class CourseStateModelsTestCase(TestCase):
         Confirm course state when there is an ongoing course run open for enrollment.
         """
         course = factories.CourseFactory()
-        course_run = self.create_run_ongoing_open(course)
+        course_run = factories.CourseRunFactory(
+            course=course,
+            state=CourseState.ONGOING_OPEN,
+        )
         with self.assertNumQueries(1):
             state = course.state
         expected_state = CourseState(0, course_run.enrollment_end)
@@ -336,7 +294,10 @@ class CourseStateModelsTestCase(TestCase):
         Confirm course state takes course's products in account
         """
         target_course = factories.CourseFactory()
-        target_course_run = self.create_run_ongoing_open(target_course)
+        target_course_run = factories.CourseRunFactory(
+            course=target_course,
+            state=CourseState.ONGOING_OPEN,
+        )
         product = factories.ProductFactory(target_courses=[target_course])
         course = factories.CourseFactory(products=[product])
 

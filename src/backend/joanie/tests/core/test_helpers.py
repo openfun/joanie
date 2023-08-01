@@ -1,9 +1,7 @@
 """Joanie core helpers tests suite"""
-from datetime import timedelta
 from unittest import mock
 
 from django.test.testcases import TestCase
-from django.utils import timezone
 
 from joanie.core import enums, factories, helpers, models
 from joanie.lms_handler.backends.dummy import DummyLMSBackend
@@ -19,10 +17,8 @@ class HelpersTestCase(TestCase):
         """
         # Create a certifying product with one order eligible for certification
         course_run = factories.CourseRunFactory(
-            enrollment_end=timezone.now() + timedelta(hours=1),
-            enrollment_start=timezone.now() - timedelta(hours=1),
+            state=models.CourseState.ONGOING_OPEN,
             is_gradable=True,
-            start=timezone.now() - timedelta(hours=1),
         )
         product = factories.ProductFactory(
             price="0.00",
@@ -48,10 +44,8 @@ class HelpersTestCase(TestCase):
         """
         # Create a certifying product with one order eligible for certification
         course_run = factories.CourseRunFactory(
-            enrollment_end=timezone.now() + timedelta(hours=1),
-            enrollment_start=timezone.now() - timedelta(hours=1),
+            state=models.CourseState.ONGOING_OPEN,
             is_gradable=False,
-            start=timezone.now() - timedelta(hours=1),
         )
         product = factories.ProductFactory(
             price="0.00",
@@ -85,10 +79,8 @@ class HelpersTestCase(TestCase):
         """
         # Create a certifying product with one order eligible for certification
         course_run = factories.CourseRunFactory(
-            enrollment_end=timezone.now() + timedelta(hours=1),
-            enrollment_start=timezone.now() - timedelta(hours=1),
+            state=models.CourseState.ONGOING_OPEN,
             is_gradable=True,
-            start=timezone.now() - timedelta(hours=1),
         )
         product = factories.ProductFactory(
             price="0.00",
@@ -124,18 +116,10 @@ class HelpersTestCase(TestCase):
         """
 
         # Create a certifying product with one order eligible for certification
-        course_run = factories.CourseRunFactory(
-            enrollment_end=timezone.now() + timedelta(hours=1),
-            enrollment_start=timezone.now() - timedelta(hours=1),
+        [course_run, cr_2] = factories.CourseRunFactory.create_batch(
+            2,
+            state=models.CourseState.ONGOING_OPEN,
             is_gradable=True,
-            start=timezone.now() - timedelta(hours=1),
-        )
-
-        cr_2 = factories.CourseRunFactory(
-            enrollment_end=timezone.now() + timedelta(hours=1),
-            enrollment_start=timezone.now() - timedelta(hours=1),
-            is_gradable=True,
-            start=timezone.now() - timedelta(hours=1),
         )
         product = factories.ProductFactory(
             price="0.00",
@@ -166,16 +150,12 @@ class HelpersTestCase(TestCase):
         """
         # Create a certifying product with one order eligible for certification
         course_run = factories.CourseRunFactory(
-            enrollment_end=timezone.now() + timedelta(hours=1),
-            enrollment_start=timezone.now() - timedelta(hours=1),
+            state=models.CourseState.ONGOING_OPEN,
             is_gradable=True,
-            start=timezone.now() - timedelta(hours=1),
         )
         not_gradable_course_run = factories.CourseRunFactory(
-            enrollment_end=timezone.now() + timedelta(hours=1),
-            enrollment_start=timezone.now() - timedelta(hours=1),
+            state=models.CourseState.ONGOING_OPEN,
             is_gradable=False,
-            start=timezone.now() - timedelta(hours=1),
         )
         product_1 = factories.ProductFactory(
             price="0.00",
