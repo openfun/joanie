@@ -113,46 +113,38 @@ class ProductModelsTestCase(TestCase):
             self.assertEqual(len(course_runs), 3)
             self.assertCountEqual(list(course_runs), [cr1, cr2, cr3])
 
-    def test_model_product_get_equivalent_course_run_data_type_not_enrollment(self):
+    def test_models_product_get_equivalent_course_run_data_type_certificate(self):
         """
-        If the product is not of type enrollment, it should return an empty equivalent
+        If the product is of type `certificate`, it should return None for an equivalent
         course run
         """
-        product = factories.ProductFactory(
-            type=random.choice(enums.PRODUCT_TYPE_CERTIFICATE_ALLOWED)
-        )
-        self.assertEqual(
-            product.get_equivalent_course_run_data(),
-            {
-                "catalog_visibility": "hidden",
-                "end": None,
-                "enrollment_end": None,
-                "enrollment_start": None,
-                "languages": [],
-                "start": None,
-            },
-        )
+        product = factories.ProductFactory(type="certificate")
+        self.assertIsNone(product.get_equivalent_course_run_data())
 
-    def test_model_productget_equivalent_course_run_data_type_enrollment_no_course(
+    def test_models_product_get_equivalent_course_run_data_type_enrollment_no_target_courses(
         self,
     ):
         """
-        If the product is of type enrollment but has no target courses, it should return None.
+        If the product is of type `enrollment` or `credential` but has no target courses,
+        it should return an empty equivalent course run.
         """
-        product = factories.ProductFactory(type=enums.PRODUCT_TYPE_ENROLLMENT)
+        product_types = [
+            t for t, _name in enums.PRODUCT_TYPE_CHOICES if t != "certificate"
+        ]
+        product = factories.ProductFactory(type=random.choice(product_types))
         self.assertEqual(
             product.get_equivalent_course_run_data(),
             {
-                "start": None,
-                "end": None,
-                "enrollment_start": None,
-                "enrollment_end": None,
-                "languages": [],
                 "catalog_visibility": "hidden",
+                "end": None,
+                "enrollment_end": None,
+                "enrollment_start": None,
+                "languages": [],
+                "start": None,
             },
         )
 
-    def test_model_product_get_equivalent_course_run_data_with_courses(self):
+    def test_models_product_get_equivalent_course_run_data_with_courses(self):
         """
         If the product is of type enrollment, it should return an equivalent course
         run with the expected data.
@@ -220,7 +212,7 @@ class ProductModelsTestCase(TestCase):
             all(lang in languages for cr in course_runs for lang in cr.languages)
         )
 
-    def test_model_product_get_equivalent_course_run_languages(self):
+    def test_models_product_get_equivalent_course_run_languages(self):
         """Check that the lists of languages are merged"""
         courses = (
             factories.CourseRunFactory(
@@ -234,7 +226,7 @@ class ProductModelsTestCase(TestCase):
             ["tr", "ast", "ne", "it", "af", "ro", "fr"],
         )
 
-    def test_model_product_get_equivalent_course_run_dates(self):
+    def test_models_product_get_equivalent_course_run_dates(self):
         """
         Check that product dates are processed
         by aggregating target course runs dates as expected.
@@ -270,7 +262,7 @@ class ProductModelsTestCase(TestCase):
             },
         )
 
-    def test_model_product_get_equivalent_serialized_course_runs_for_products(
+    def test_models_product_get_equivalent_serialized_course_runs_for_products(
         self,
     ):
         """
@@ -309,7 +301,7 @@ class ProductModelsTestCase(TestCase):
             ],
         )
 
-    def test_model_product_get_equivalent_serialized_course_runs_for_products_with_visibility(  # noqa pylint: disable=line-too-long
+    def test_models_product_get_equivalent_serialized_course_runs_for_products_with_visibility(  # noqa pylint: disable=line-too-long
         self,
     ):
         """
@@ -351,7 +343,7 @@ class ProductModelsTestCase(TestCase):
             ],
         )
 
-    def test_model_product_get_equivalent_serialized_course_runs_for_products_without_course_relations(  # noqa pylint: disable=line-too-long
+    def test_models_product_get_equivalent_serialized_course_runs_for_products_without_course_relations(  # noqa pylint: disable=line-too-long
         self,
     ):
         """
@@ -374,7 +366,7 @@ class ProductModelsTestCase(TestCase):
             product.get_equivalent_serialized_course_runs_for_products([product]), []
         )
 
-    def test_model_product_state(self):
+    def test_models_product_state(self):
         """
         Check that the state property returns the expected value.
         """

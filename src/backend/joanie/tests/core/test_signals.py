@@ -15,13 +15,49 @@ from joanie.core.utils import webhooks
 class SignalsTestCase(TestCase):
     """Joanie core helpers tests case"""
 
+    @mock.patch.object(webhooks, "synchronize_course_runs")
+    def test_signals_on_certificate_type_product(self, mock_sync):
+        """
+        Certificate products return None as equivalent course runs and should
+        not trigger any synchronization.
+        """
+        course_run = factories.CourseRunFactory(
+            start=datetime(2022, 7, 7, 7, 0, tzinfo=ZoneInfo("UTC")),
+            is_listed=True,
+        )
+        factories.ProductFactory(type="certificate", courses=[course_run.course])
+        mock_sync.reset_mock()
+
+        course_run.save()
+
+        # Only the course run should get synchronized and not the product
+        self.assertEqual(mock_sync.call_count, 1)
+        synchronized_course_runs = mock_sync.call_args_list[0][0][0]
+        self.assertEqual(len(synchronized_course_runs), 1)
+        self.assertCountEqual(
+            synchronized_course_runs[0]["resource_link"],
+            f"https://example.com/api/v1.0/course-runs/{course_run.id}/",
+        )
+        self.assertCountEqual(
+            synchronized_course_runs[0]["course"],
+            course_run.course.code,
+        )
+        self.assertEqual(
+            synchronized_course_runs[0]["start"],
+            "2022-07-07T07:00:00+00:00",
+        )
+        self.assertEqual(
+            synchronized_course_runs[0]["catalog_visibility"],
+            "course_and_search",
+        )
+
     # Course run
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
-    def test_signals_on_save_course_run_success(self, mock_sync):
+    def test_signals_on_save_course_run_target_course_success(self, mock_sync):
         """
-        Webhook should be triggered when a course run is saved, updating
-        the equivalent course run of related products and the course run itself.
+        Webhook should be triggered when a course run is saved, updating the equivalent
+        course run of products related via target course and the course run itself.
         """
         course_run = factories.CourseRunFactory(
             start=datetime(2022, 7, 7, 7, 0, tzinfo=ZoneInfo("UTC")),
@@ -67,10 +103,10 @@ class SignalsTestCase(TestCase):
             self.assertEqual(course_run["catalog_visibility"], "course_and_search")
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
-    def test_signals_on_save_course_run_restrict(self, mock_sync):
+    def test_signals_on_save_course_run_target_course_restrict(self, mock_sync):
         """
-        When a course run restriction is in place, synchronize_course_runs should
-        only be triggered for course runs declared in the restriction list.
+        When a course run restriction is in place, synchronize_course_runs should only be triggered
+        on products for course runs of target course that are declared in the restriction list.
         """
         course_run = factories.CourseRunFactory(is_listed=True)
         course_run_excluded = factories.CourseRunFactory(
@@ -152,7 +188,7 @@ class SignalsTestCase(TestCase):
         """
         synchronize_course_runs should be triggered when a course run is deleted
         setting the visibility to hidden for the course run, the related products's
-        equivalent course run should be updated as well.
+        equivalent course run for target courses should be updated as well.
         """
         cr_id = "2a76d5ee-8310-4a28-8e7f-c34dbdc4dd8a"
         course_run = factories.CourseRunFactory(
@@ -220,7 +256,8 @@ class SignalsTestCase(TestCase):
     @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_save_product_target_course_relation(self, mock_sync):
         """
-        Product synchronization should be triggered when a product course relation is saved.
+        Product synchronization should be triggered when a product target course
+        relation is saved.
         """
         course_run = factories.CourseRunFactory()
         product, other_product = factories.ProductFactory.create_batch(2)
@@ -256,7 +293,8 @@ class SignalsTestCase(TestCase):
     @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_delete_product_target_course_relation(self, mock_sync):
         """
-        Product synchronization should be triggered when a product course relation is deleted.
+        Product synchronization should be triggered when a product target course
+        relation is deleted.
         """
         course_run = factories.CourseRunFactory()
         product, other_product = factories.ProductFactory.create_batch(2)
@@ -289,7 +327,7 @@ class SignalsTestCase(TestCase):
     @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_delete_product_target_course_relation_query(self, mock_sync):
         """
-        Product synchronization should not be triggered when product course relations
+        Product synchronization should not be triggered when product target course relations
         are deleted via a query. This case should be handled manually by the developer.
         """
         course_run = factories.CourseRunFactory()
@@ -411,8 +449,11 @@ class SignalsTestCase(TestCase):
         course = factories.CourseFactory(products=[product])
         mock_sync.reset_mock()
 
+        product_types = [
+            t for t, _name in enums.PRODUCT_TYPE_CHOICES if t != "certificate"
+        ]
         new_product = course.products.create(
-            type=random.choice(enums.PRODUCT_TYPE_CHOICES)[0],
+            type=random.choice(product_types),
         )
 
         self.assertEqual(mock_sync.call_count, 1)
