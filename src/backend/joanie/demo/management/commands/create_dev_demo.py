@@ -1,10 +1,11 @@
 """Management command to initialize some fake data (products, courses and course runs)"""
+import random
+
 from django.core.management.base import BaseCommand
 from django.utils import translation
 
-import arrow
-
 from joanie.core import enums, factories, models
+from joanie.core.models import CourseState
 
 OPENEDX_COURSE_RUN_URI = (
     "http://openedx.test/courses/course-v1:edx+{course:s}+{course_run:s}/course"
@@ -14,20 +15,35 @@ OPENEDX_COURSE_RUN_URI = (
 class Command(BaseCommand):
     """Create some fake data (products, courses and course runs)"""
 
-    help = "Create some fake products, courses and course runs"
+    help = "Create some fake credential products, courses and course runs"
+
+    def get_random_languages(self):
+        """
+        Return a set of random languages.
+        global_settings.languages is not consistent between django version so we do
+        want to use ALL_LANGUAGES to set course run languages to prevent synchronization
+        issues between Joanie & Richie.
+        """
+        return random.sample(["de", "en", "fr", "pt"], random.randint(1, 4))  # nosec
 
     def create_course(self, user, organization, batch_size=1, with_course_runs=False):
         """Create courses for given user and organization."""
 
         if batch_size == 1:
-            course_runs = []
-            if with_course_runs:
-                course_runs = factories.CourseRunFactory.create_batch(2, is_listed=True)
-            return factories.CourseFactory(
+            course = factories.CourseFactory(
                 organizations=[organization],
                 users=[[user, enums.OWNER]],
-                course_runs=course_runs,
             )
+            if with_course_runs:
+                factories.CourseRunFactory.create_batch(
+                    2,
+                    is_listed=True,
+                    state=CourseState.ONGOING_OPEN,
+                    languages=self.get_random_languages(),
+                    course=course,
+                )
+
+            return course
 
         courses = factories.CourseFactory.create_batch(
             batch_size, organizations=[organization], users=[[user, enums.OWNER]]
@@ -36,7 +52,11 @@ class Command(BaseCommand):
         if with_course_runs:
             for course in courses:
                 factories.CourseRunFactory.create_batch(
-                    2, course=course, is_listed=True
+                    2,
+                    course=course,
+                    is_listed=True,
+                    state=CourseState.ONGOING_OPEN,
+                    languages=self.get_random_languages(),
                 )
         return courses
 
@@ -49,7 +69,7 @@ class Command(BaseCommand):
         return factories.ProductFactory(
             courses=[course],
             target_courses=target_courses,
-            type=enums.PRODUCT_TYPE_CERTIFICATE,
+            type=enums.PRODUCT_TYPE_CREDENTIAL,
         )
 
     def create_product(self, user, organization, batch_size=1):
@@ -74,49 +94,59 @@ class Command(BaseCommand):
         bases_of_botany_run1 = factories.CourseRunFactory(
             title="Bases of botany",
             resource_link=OPENEDX_COURSE_RUN_URI.format(
-                course="000001", course_run="BasesOfBotany_run1"
+                course="00001", course_run="BasesOfBotany_run1"
             ),
-            start=arrow.utcnow().shift(days=-2).datetime,
             # Give access to admin user
             course__users=[[admin_user, enums.OWNER]],
             course__organizations=[organization],
+            languages=self.get_random_languages(),
+            state=CourseState.ONGOING_OPEN,
         )
         factories.CourseRunFactory(
             title="Bases of botany",
             course=bases_of_botany_run1.course,
+            languages=self.get_random_languages(),
             resource_link=OPENEDX_COURSE_RUN_URI.format(
-                course="000001", course_run="BasesOfBotany_run2"
+                course="00001", course_run="BasesOfBotany_run2"
             ),
-            start=arrow.utcnow().shift(days=10).datetime,
+            state=CourseState.ONGOING_OPEN,
         )
         how_to_make_a_herbarium_run1 = factories.CourseRunFactory(
             title="How to make a herbarium",
             resource_link=OPENEDX_COURSE_RUN_URI.format(
-                course="000002", course_run="HowToMakeHerbarium_run1"
+                course="00002", course_run="HowToMakeHerbarium_run1"
             ),
             # Give access to admin user
             course__users=[[admin_user, enums.OWNER]],
             course__organizations=[organization],
+            languages=self.get_random_languages(),
+            state=CourseState.ONGOING_OPEN,
         )
         factories.CourseRunFactory(
             title="How to make a herbarium",
             course=how_to_make_a_herbarium_run1.course,
+            languages=self.get_random_languages(),
             resource_link=OPENEDX_COURSE_RUN_URI.format(
-                course="000002", course_run="HowToMakeHerbarium_run2"
+                course="00002", course_run="HowToMakeHerbarium_run2"
             ),
+            state=CourseState.ONGOING_OPEN,
         )
         scientific_publication_analysis_run1 = factories.CourseRunFactory(
             title="Scientific publication analysis",
+            languages=self.get_random_languages(),
             resource_link=OPENEDX_COURSE_RUN_URI.format(
-                course="000003", course_run="ScientificPublicationAnalysis_run1"
+                course="00003", course_run="ScientificPublicationAnalysis_run1"
             ),
+            state=CourseState.ONGOING_OPEN,
         )
         factories.CourseRunFactory(
             title="Scientific publication analysis",
             course=scientific_publication_analysis_run1.course,
+            languages=self.get_random_languages(),
             resource_link=OPENEDX_COURSE_RUN_URI.format(
-                course="000003", course_run="ScientificPublicationAnalysis_run2"
+                course="00003", course_run="ScientificPublicationAnalysis_run2"
             ),
+            state=CourseState.ONGOING_OPEN,
         )
 
         # Give courses access to admin user
