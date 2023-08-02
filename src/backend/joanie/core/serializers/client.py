@@ -420,9 +420,10 @@ class EnrollmentSerializer(serializers.ModelSerializer):
     """
 
     id = serializers.CharField(read_only=True, required=False)
+    certificate = serializers.SlugRelatedField(read_only=True, slug_field="id")
     course_run = CourseRunSerializer(read_only=True)
-    was_created_by_order = serializers.BooleanField(required=True)
     products = serializers.SerializerMethodField(read_only=True)
+    was_created_by_order = serializers.BooleanField(required=True)
 
     class Meta:
         model = models.Enrollment

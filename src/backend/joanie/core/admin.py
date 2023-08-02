@@ -114,18 +114,23 @@ class CertificateDefinitionAdmin(TranslatableAdmin):
     """Admin class for the CertificateDefinition model"""
 
     list_display = ("name", "title")
+    search_fields = ("name", "translations__title")
 
 
 @admin.register(models.Certificate)
 class CertificateAdmin(admin.ModelAdmin):
     """Admin class for the Certificate model"""
 
-    list_display = ("order", "owner", "issued_on")
-    readonly_fields = ("order", "issued_on", "owner", "certificate_definition")
-
-    def owner(self, obj):  # pylint: disable=no-self-use
-        """Retrieve the owner of the certificate from the related order."""
-        return obj.order.owner
+    list_display = ("organization", "order", "enrollment", "owner", "issued_on")
+    list_filter = [OrganizationFilter]
+    readonly_fields = (
+        "organization",
+        "order",
+        "enrollment",
+        "issued_on",
+        "owner",
+        "certificate_definition",
+    )
 
 
 class CourseProductRelationInline(admin.StackedInline):
@@ -513,6 +518,12 @@ class EnrollmentAdmin(admin.ModelAdmin):
     list_display = ("user", "course_run", "state")
     list_filter = [RequiredUserFilter, CourseRunFilter, "state"]
     list_select_related = ("user", "course_run")
+    search_fields = (
+        "user__email",
+        "user__username",
+        "organization__translations__title",
+        "course_run__course__translations__title",
+    )
 
     @csrf_protect_m
     def changelist_view(self, request, extra_context=None):
