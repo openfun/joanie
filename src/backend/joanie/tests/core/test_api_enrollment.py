@@ -344,6 +344,92 @@ class EnrollmentApiTest(BaseAPITestCase):
             ],
         )
 
+    def test_api_enrollment_read_list_authenticated_with_direct_certificate(self):
+        """
+        When a certificate was emitted directly on this enrollment (without going through
+        an order), it should be included in the payload.
+        """
+        course_run = self.create_opened_course_run(is_listed=True)
+        enrollment = factories.EnrollmentFactory(course_run=course_run)
+        certificate = factories.EnrollmentCertificateFactory(enrollment=enrollment)
+
+        # Create an unrelated enrollment in order to study db queries
+        other_course_run = self.create_opened_course_run(is_listed=True)
+        unrelated_enrollment = factories.EnrollmentFactory(course_run=other_course_run)
+        factories.EnrollmentCertificateFactory(enrollment=unrelated_enrollment)
+
+        # The user can see his/her enrollment
+        token = self.generate_token_from_user(enrollment.user)
+
+        with self.assertNumQueries(18):
+            self.client.get(
+                "/api/v1.0/enrollments/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        # A second call to the url should benefit from caching on the product serializer
+        with self.assertNumQueries(6):
+            response = self.client.get(
+                "/api/v1.0/enrollments/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        content = json.loads(response.content)
+
+        self.assertEqual(len(content["results"]), 3)
+        self.assertEqual(
+            content["results"][2]["products"],
+            [
+                {
+                    "call_to_action": "let's go!",
+                    "certificate_definition": {
+                        "description": "",
+                        "name": str(product2.certificate_definition.name),
+                        "title": str(product2.certificate_definition.title),
+                    },
+                    "id": str(product2.id),
+                    "orders": [str(validated_order.id)],
+                    "organizations": [
+                        {
+                            "code": validated_order.organization.code,
+                            "id": str(validated_order.organization.id),
+                            "logo": "_this_field_is_mocked",
+                            "title": validated_order.organization.title,
+                        }
+                    ],
+                    "price": float(product2.price),
+                    "price_currency": "EUR",
+                    "target_courses": [],
+                    "title": product2.title,
+                    "type": "certificate",
+                },
+                {
+                    "call_to_action": "let's go!",
+                    "certificate_definition": {
+                        "description": "",
+                        "name": str(product1.certificate_definition.name),
+                        "title": str(product1.certificate_definition.title),
+                    },
+                    "id": str(product1.id),
+                    "orders": [str(pending_order.id)],
+                    "organizations": [
+                        {
+                            "code": pending_order.organization.code,
+                            "id": str(pending_order.organization.id),
+                            "logo": "_this_field_is_mocked",
+                            "title": pending_order.organization.title,
+                        }
+                    ],
+                    "price": float(product1.price),
+                    "price_currency": "EUR",
+                    "target_courses": [],
+                    "title": product1.title,
+                    "type": "certificate",
+                },
+            ],
+        )
+
     def test_api_enrollment_read_list_pagination(self):
         """Pagination should work as expected."""
         user = factories.UserFactory()

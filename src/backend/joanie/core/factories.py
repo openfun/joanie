@@ -463,6 +463,24 @@ class CertificateFactory(factory.django.DjangoModelFactory):
         """
         return self.order.product.certificate_definition
 
+    @factory.lazy_attribute
+    def organization(self):
+        """Return the order organization."""
+        return self.order.organization
+
+
+class EnrollmentCertificateFactory(factory.django.DjangoModelFactory):
+    """
+    A factory to create a certificate directly related to an enrollment (not through an order)
+    """
+
+    class Meta:
+        model = models.Certificate
+
+    enrollment = factory.SubFactory(EnrollmentFactory)
+    certificate_definition = factory.SubFactory(CertificateDefinitionFactory)
+    organization = factory.SubFactory(OrganizationFactory)
+
 
 class CourseWishFactory(factory.django.DjangoModelFactory):
     """A factory to create a course wish for a user."""

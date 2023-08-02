@@ -651,6 +651,7 @@ class Order(BaseModel):
         return (
             Certificate.objects.create(
                 order=self,
+                organization=self.organization,
                 certificate_definition=self.product.certificate_definition,
             ),
             True,

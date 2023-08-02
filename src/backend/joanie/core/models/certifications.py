@@ -68,8 +68,25 @@ class Certificate(BaseModel):
         # disable=all is necessary to avoid an AstroidImportError because of our models structure
         # Astroid is looking for a module models.py that does not exist
         "core.Order",  # pylint: disable=all
+        blank=True,
+        null=True,
         verbose_name=_("order"),
         on_delete=models.PROTECT,
+        editable=False,
+    )
+    enrollment = models.OneToOneField(
+        blank=True,
+        null=True,
+        on_delete=models.PROTECT,
+        to="core.enrollment",
+        verbose_name=_("enrollment"),
+        editable=False,
+    )
+    organization = models.ForeignKey(
+        on_delete=models.PROTECT,
+        to="core.organization",
+        verbose_name=_("organization"),
+        editable=False,
     )
 
     localized_context = models.JSONField(
@@ -83,9 +100,24 @@ class Certificate(BaseModel):
         verbose_name = _("Certificate")
         verbose_name_plural = _("Certificates")
         ordering = ["-created_on"]
+        constraints = [
+            models.CheckConstraint(
+                check=(
+                    models.Q(("order__isnull", False), ("enrollment__isnull", True))
+                    | models.Q(("order__isnull", True), ("enrollment__isnull", False))
+                ),
+                name="either_order_or_enrollment",
+                violation_error_message="Certificate should have either an order or an enrollment",
+            )
+        ]
 
     def __str__(self):
         return f"{self.order.owner}'s certificate for course {self.order.course}"
+
+    @property
+    def owner(self):
+        """Returns the certificate owner depending from the related order or enrollment."""
+        return self.order.owner if self.order else self.enrollment.user
 
     @property
     def document(self):
@@ -112,13 +144,15 @@ class Certificate(BaseModel):
         Saving is left to the caller.
         """
         context = {}
-        related_product = self.order.product
-        organization = self.order.organization
+        organization = self.organization
+        title_object = (
+            self.order.product if self.order else self.enrollment.course_run.course
+        )
 
         for language, __ in settings.LANGUAGES:
             context[language] = {
                 "course": {
-                    "name": related_product.safe_translation_getter(
+                    "name": title_object.safe_translation_getter(
                         "title", language_code=language
                     ),
                 },
@@ -137,18 +171,16 @@ class Certificate(BaseModel):
         """
 
         language_settings = get_language_settings(language_code or get_language())
-        organization = self.order.organization
-        owner = self.order.owner
 
         base_context = {
             "creation_date": self.issued_on.isoformat(),
             "student": {
-                "name": owner.get_full_name() or owner.username,
+                "name": self.owner.get_full_name() or self.owner.username,
             },
             "organization": {
-                "representative": organization.representative,
-                "signature": image_to_base64(organization.signature),
-                "logo": image_to_base64(organization.logo),
+                "representative": self.organization.representative,
+                "signature": image_to_base64(self.organization.signature),
+                "logo": image_to_base64(self.organization.logo),
             },
         }
 
