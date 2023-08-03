@@ -429,6 +429,7 @@ class EnrollmentSerializer(serializers.ModelSerializer):
         model = models.Enrollment
         fields = [
             "id",
+            "certificate",
             "course_run",
             "created_on",
             "is_active",

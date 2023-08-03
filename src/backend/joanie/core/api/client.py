@@ -221,13 +221,14 @@ class EnrollmentViewSet(
             models.Enrollment.objects.filter(user__username=username)
             .select_related("course_run__course")
             .prefetch_related(
+                "certificate",
                 Prefetch(
                     "course_run__course__product_relations",
                     queryset=models.CourseProductRelation.objects.select_related(
                         "product"
                     ).filter(product__type=enums.PRODUCT_TYPE_CERTIFICATE),
                     to_attr="certificate_product_relations",
-                )
+                ),
             )
         )
 
