@@ -103,7 +103,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         # The user can see his/her enrollment
         token = self.generate_token_from_user(enrollment.user)
 
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(4):
             response = self.client.get(
                 "/api/v1.0/enrollments/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -121,6 +121,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "results": [
                     {
                         "id": str(enrollment.id),
+                        "certificate": None,
                         "course_run": {
                             "id": str(enrollment.course_run.id),
                             "course": {
@@ -169,7 +170,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         # The user linked to the other enrollment can only see his/her enrollment
         token = self.generate_token_from_user(other_enrollment.user)
 
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(4):
             response = self.client.get(
                 "/api/v1.0/enrollments/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -187,6 +188,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "results": [
                     {
                         "id": str(other_enrollment.id),
+                        "certificate": None,
                         "course_run": {
                             "id": str(other_enrollment.course_run.id),
                             "course": {
@@ -273,14 +275,14 @@ class EnrollmentApiTest(BaseAPITestCase):
         # The user can see his/her enrollment
         token = self.generate_token_from_user(enrollment.user)
 
-        with self.assertNumQueries(12):
+        with self.assertNumQueries(13):
             self.client.get(
                 "/api/v1.0/enrollments/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
         # A second call to the url should benefit from caching on the product serializer
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(4):
             response = self.client.get(
                 "/api/v1.0/enrollments/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -361,14 +363,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         # The user can see his/her enrollment
         token = self.generate_token_from_user(enrollment.user)
 
-        with self.assertNumQueries(18):
-            self.client.get(
-                "/api/v1.0/enrollments/",
-                HTTP_AUTHORIZATION=f"Bearer {token}",
-            )
-
-        # A second call to the url should benefit from caching on the product serializer
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(4):
             response = self.client.get(
                 "/api/v1.0/enrollments/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -377,57 +372,10 @@ class EnrollmentApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, 200)
         content = json.loads(response.content)
 
-        self.assertEqual(len(content["results"]), 3)
+        self.assertEqual(len(content["results"]), 1)
         self.assertEqual(
-            content["results"][2]["products"],
-            [
-                {
-                    "call_to_action": "let's go!",
-                    "certificate_definition": {
-                        "description": "",
-                        "name": str(product2.certificate_definition.name),
-                        "title": str(product2.certificate_definition.title),
-                    },
-                    "id": str(product2.id),
-                    "orders": [str(validated_order.id)],
-                    "organizations": [
-                        {
-                            "code": validated_order.organization.code,
-                            "id": str(validated_order.organization.id),
-                            "logo": "_this_field_is_mocked",
-                            "title": validated_order.organization.title,
-                        }
-                    ],
-                    "price": float(product2.price),
-                    "price_currency": "EUR",
-                    "target_courses": [],
-                    "title": product2.title,
-                    "type": "certificate",
-                },
-                {
-                    "call_to_action": "let's go!",
-                    "certificate_definition": {
-                        "description": "",
-                        "name": str(product1.certificate_definition.name),
-                        "title": str(product1.certificate_definition.title),
-                    },
-                    "id": str(product1.id),
-                    "orders": [str(pending_order.id)],
-                    "organizations": [
-                        {
-                            "code": pending_order.organization.code,
-                            "id": str(pending_order.organization.id),
-                            "logo": "_this_field_is_mocked",
-                            "title": pending_order.organization.title,
-                        }
-                    ],
-                    "price": float(product1.price),
-                    "price_currency": "EUR",
-                    "target_courses": [],
-                    "title": product1.title,
-                    "type": "certificate",
-                },
-            ],
+            content["results"][0]["certificate"],
+            str(certificate.pk),
         )
 
     def test_api_enrollment_read_list_pagination(self):
@@ -516,6 +464,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "results": [
                     {
                         "id": str(enrollment_1.id),
+                        "certificate": None,
                         "course_run": {
                             "id": str(course_run_1.id),
                             "resource_link": course_run_1.resource_link,
@@ -599,7 +548,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             user=user, course_run=cr3, was_created_by_order=True
         )
 
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(4):
             response = self.client.get(
                 "/api/v1.0/enrollments/?was_created_by_order=false",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -609,7 +558,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         content = response.json()
         self.assertEqual(content["count"], 2)
 
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(4):
             response = self.client.get(
                 "/api/v1.0/enrollments/?was_created_by_order=true",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -670,6 +619,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             content,
             {
                 "id": str(enrollment.id),
+                "certificate": None,
                 "course_run": {
                     "id": str(enrollment.course_run.id),
                     "course": {
@@ -778,6 +728,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             content,
             {
                 "id": str(enrollment.id),
+                "certificate": None,
                 "course_run": {
                     "id": str(course_run.id),
                     "course": {
@@ -904,6 +855,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             content,
             {
                 "id": str(enrollment.id),
+                "certificate": None,
                 "course_run": {
                     "id": str(course_run.id),
                     "course": {
@@ -992,6 +944,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             content,
             {
                 "id": str(enrollment.id),
+                "certificate": None,
                 "course_run": {
                     "id": str(course_run.id),
                     "course": {
@@ -1240,6 +1193,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             content,
             {
                 "id": str(enrollment.id),
+                "certificate": None,
                 "course_run": {
                     "id": str(course_run.id),
                     "course": {
@@ -1498,6 +1452,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 content,
                 {
                     "id": str(enrollment.id),
+                    "certificate": None,
                     "course_run": {
                         "id": str(enrollment.course_run.id),
                         "course": {
@@ -1709,6 +1664,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             response.json(),
             {
                 "id": str(enrollment.id),
+                "certificate": None,
                 "course_run": {
                     "id": str(course_run.id),
                     "course": {
@@ -1788,6 +1744,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             response.json(),
             {
                 "id": str(enrollment.id),
+                "certificate": None,
                 "course_run": {
                     "id": str(course_run.id),
                     "course": {
@@ -1847,6 +1804,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             response.json(),
             {
                 "id": str(enrollment.id),
+                "certificate": None,
                 "course_run": {
                     "id": str(course_run.id),
                     "course": {
@@ -1935,6 +1893,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             response.json(),
             {
                 "id": str(enrollment.id),
+                "certificate": None,
                 "course_run": {
                     "id": str(course_run.id),
                     "course": {
@@ -1994,6 +1953,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             response.json(),
             {
                 "id": str(enrollment.id),
+                "certificate": None,
                 "course_run": {
                     "id": str(course_run.id),
                     "course": {

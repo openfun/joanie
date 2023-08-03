@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Allow issuing a certificate directly for an enrollment (without an order)
 - Generate certificates for products of type `certificate`
 - Add route detailing current user
 - Add related certificate products to enrollment API endpoint
