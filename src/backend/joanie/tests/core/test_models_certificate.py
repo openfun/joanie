@@ -7,7 +7,6 @@ from django.test import TestCase
 from parler.utils.context import switch_language
 from pdfminer.high_level import extract_text as pdf_extract_text
 
-from joanie.core.enums import PRODUCT_TYPE_CERTIFICATE
 from joanie.core.factories import (
     CertificateDefinitionFactory,
     CourseFactory,
@@ -43,7 +42,6 @@ class CertificateModelTestCase(TestCase):
         product = ProductFactory(
             courses=[],
             title="Graded product",
-            type=PRODUCT_TYPE_CERTIFICATE,
         )
         CourseProductRelationFactory(
             course=course, product=product, organizations=[organization]
@@ -83,7 +81,6 @@ class CertificateModelTestCase(TestCase):
         product = ProductFactory(
             courses=[],
             title="Graded product",
-            type=PRODUCT_TYPE_CERTIFICATE,
             certificate_definition=certificate_definition,
         )
         CourseProductRelationFactory(
@@ -134,7 +131,6 @@ class CertificateModelTestCase(TestCase):
         product = ProductFactory(
             courses=[],
             title="Graded product",
-            type=PRODUCT_TYPE_CERTIFICATE,
         )
         CourseProductRelationFactory(
             course=course, product=product, organizations=[organization]

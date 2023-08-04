@@ -10,7 +10,7 @@ from django.test.utils import override_settings
 from django.utils import timezone
 
 from joanie.core import factories
-from joanie.core.exceptions import GradeError
+from joanie.core.exceptions import EnrollmentError, GradeError
 from joanie.core.models import CourseState
 from joanie.lms_handler.backends.openedx import OpenEdXLMSBackend
 
@@ -58,7 +58,8 @@ class EnrollmentModelsTestCase(TestCase):
             f"[active][set] Françoise for my run [{course_run.state['text']}]",
         )
 
-    def test_models_enrollment_str_inactive(self):
+    @mock.patch.object(OpenEdXLMSBackend, "set_enrollment", side_effect=EnrollmentError)
+    def test_models_enrollment_str_inactive(self, _mock_set):
         """The string representation should work as expected for an inactive enrollment."""
         course_run = factories.CourseRunFactory(
             state=CourseState.ONGOING_OPEN,
@@ -76,7 +77,8 @@ class EnrollmentModelsTestCase(TestCase):
             f"[inactive][failed] Françoise for my run [{course_run.state['text']}]",
         )
 
-    def test_models_enrollment_unique_course_run_user(self):
+    @mock.patch.object(OpenEdXLMSBackend, "set_enrollment", return_value=True)
+    def test_models_enrollment_unique_course_run_user(self, _mock_set):
         """
         A user can only have one enrollment on a given course run.
         """
@@ -96,7 +98,10 @@ class EnrollmentModelsTestCase(TestCase):
             str(context.exception),
         )
 
-    def test_models_enrollment_unique_opened_course_run_per_course_and_user(self):
+    @mock.patch.object(OpenEdXLMSBackend, "set_enrollment", return_value=True)
+    def test_models_enrollment_unique_opened_course_run_per_course_and_user(
+        self, _mock_set
+    ):
         """
         A user can only have one enrollment for an opened course run for a course.
         """
@@ -144,7 +149,10 @@ class EnrollmentModelsTestCase(TestCase):
             str(context.exception),
         )
 
-    def test_models_enrollment_not_unique_course_run_per_course_and_user(self):
+    @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
+    def test_models_enrollment_not_unique_course_run_per_course_and_user(
+        self, _mock_set
+    ):
         """
         A user can have multiple enrollments for a same course from the moment only one
         is currently opened.
@@ -203,7 +211,10 @@ class EnrollmentModelsTestCase(TestCase):
             str(context.exception),
         )
 
-    def test_models_enrollment_allows_for_non_listed_course_run_with_product(self):
+    @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
+    def test_models_enrollment_allows_for_non_listed_course_run_with_product(
+        self, _mock_set
+    ):
         """
         If a course run is not listed but linked to a product,
         user should be allowed to enroll if he/she purchased the product.
@@ -243,8 +254,9 @@ class EnrollmentModelsTestCase(TestCase):
             course_run=course_run, user=user, was_created_by_order=True
         )
 
+    @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
     def test_models_enrollment_forbid_for_non_listed_course_run_not_included_in_product(
-        self,
+        self, _mock_set
     ):
         """
         If a course run is not listed and not linked to a product, user should not be
@@ -370,7 +382,8 @@ class EnrollmentModelsTestCase(TestCase):
             username=enrollment.user.username, resource_link=course_run.resource_link
         )
 
-    def test_models_enrollment_was_created_by_order_flag(self):
+    @mock.patch.object(OpenEdXLMSBackend, "set_enrollment", return_value=True)
+    def test_models_enrollment_was_created_by_order_flag(self, _mock_set):
         """
         For a course run which is listed (available for free enrollment) and also
         linked to a product, the `was_created_by_order` flag can be set to store
@@ -397,7 +410,7 @@ class EnrollmentModelsTestCase(TestCase):
         # Then if user purchases the product, the flag should not have been updated
         order = factories.OrderFactory(owner=user, product=product)
         order.submit()
-        order_enrollment = order.get_enrollments().first()
+        order_enrollment = order.get_target_enrollments().first()
         self.assertEqual(enrollment, order_enrollment)
         self.assertFalse(order_enrollment.was_created_by_order)
 

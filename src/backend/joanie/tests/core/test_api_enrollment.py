@@ -77,7 +77,8 @@ class EnrollmentApiTest(BaseAPITestCase):
             **kwargs,
         )
 
-    def test_api_enrollment_read_list_anonymous(self):
+    @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
+    def test_api_enrollment_read_list_anonymous(self, _mock_set):
         """It should not be possible to retrieve the list of enrollments for anonymous users."""
         factories.EnrollmentFactory(
             course_run=self.create_opened_course_run(is_listed=True)
@@ -93,12 +94,13 @@ class EnrollmentApiTest(BaseAPITestCase):
             content, {"detail": "Authentication credentials were not provided."}
         )
 
+    @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
     @mock.patch.object(
         fields.ThumbnailDetailField,
         "to_representation",
         return_value="_this_field_is_mocked",
     )
-    def test_api_enrollment_read_list_authenticated_owned(self, _):
+    def test_api_enrollment_read_list_authenticated_owned(self, *_):
         """Authenticated users retrieving the list of enrollments should only see theirs."""
         enrollment, other_enrollment = factories.EnrollmentFactory.create_batch(
             2, course_run=self.create_opened_course_run(is_listed=True)
@@ -254,12 +256,13 @@ class EnrollmentApiTest(BaseAPITestCase):
             },
         )
 
+    @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
     @mock.patch.object(
         fields.ThumbnailDetailField,
         "to_representation",
         return_value="_this_field_is_mocked",
     )
-    def test_api_enrollment_read_list_authenticated_with_certificate_products(self, _):
+    def test_api_enrollment_read_list_authenticated_with_certificate_products(self, *_):
         """
         When the related course run has certificate products they should be
         included in the response.
@@ -362,7 +365,10 @@ class EnrollmentApiTest(BaseAPITestCase):
             ],
         )
 
-    def test_api_enrollment_read_list_authenticated_with_direct_certificate(self):
+    @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
+    def test_api_enrollment_read_list_authenticated_with_direct_certificate(
+        self, _mock_set
+    ):
         """
         When a certificate was emitted directly on this enrollment (without going through
         an order), it should be included in the payload.
@@ -394,7 +400,8 @@ class EnrollmentApiTest(BaseAPITestCase):
             str(certificate.pk),
         )
 
-    def test_api_enrollment_read_list_pagination(self):
+    @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
+    def test_api_enrollment_read_list_pagination(self, _mock_set):
         """Pagination should work as expected."""
         user = factories.UserFactory()
         enrollments = [
@@ -445,12 +452,13 @@ class EnrollmentApiTest(BaseAPITestCase):
         enrollment_ids.remove(content["results"][0]["id"])
         self.assertEqual(enrollment_ids, [])
 
+    @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
     @mock.patch.object(
         fields.ThumbnailDetailField,
         "to_representation",
         return_value="_this_field_is_mocked",
     )
-    def test_api_enrollment_read_list_filtered_by_course_run_id(self, _):
+    def test_api_enrollment_read_list_filtered_by_course_run_id(self, *_):
         """
         Authenticated users retrieving the list of enrollments should be able to filter
         by course run id.
@@ -545,7 +553,8 @@ class EnrollmentApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {"course_run": ["Enter a valid UUID."]})
 
-    def test_api_enrollment_read_list_filtered_by_was_created_by_order(self):
+    @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
+    def test_api_enrollment_read_list_filtered_by_was_created_by_order(self, _mock_set):
         """
         Authenticated users retrieving the list of enrollments should be able to filter
         by was_created_by_order.
@@ -590,7 +599,8 @@ class EnrollmentApiTest(BaseAPITestCase):
         content = response.json()
         self.assertEqual(content["count"], 1)
 
-    def test_api_enrollment_read_detail_anonymous(self):
+    @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
+    def test_api_enrollment_read_detail_anonymous(self, _mock_set):
         """Anonymous users should not be allowed to retrieve an enrollment."""
         enrollment = factories.EnrollmentFactory(
             course_run=self.create_opened_course_run(is_listed=True),
@@ -605,12 +615,13 @@ class EnrollmentApiTest(BaseAPITestCase):
             {"detail": "Authentication credentials were not provided."},
         )
 
+    @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
     @mock.patch.object(
         fields.ThumbnailDetailField,
         "to_representation",
         return_value="_this_field_is_mocked",
     )
-    def test_api_enrollment_read_detail_authenticated_owner(self, _):
+    def test_api_enrollment_read_detail_authenticated_owner(self, *_):
         """Authenticated users should be allowed to retrieve an enrollment they own."""
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -689,7 +700,8 @@ class EnrollmentApiTest(BaseAPITestCase):
             },
         )
 
-    def test_api_enrollment_read_detail_authenticated_not_owner(self):
+    @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
+    def test_api_enrollment_read_detail_authenticated_not_owner(self, _mock_set):
         """Authenticated users should not be able to retrieve an enrollment they don't own."""
         enrollment = factories.EnrollmentFactory(
             course_run=self.create_opened_course_run(is_listed=True)
@@ -754,8 +766,8 @@ class EnrollmentApiTest(BaseAPITestCase):
         content = json.loads(response.content)
 
         self.assertEqual(models.Enrollment.objects.count(), 1)
-        mock_set.assert_called_once_with("panoramix", resource_link, is_active)
         enrollment = models.Enrollment.objects.get()
+        mock_set.assert_called_once_with(enrollment)
         self.assertEqual(
             content,
             {
@@ -982,8 +994,8 @@ class EnrollmentApiTest(BaseAPITestCase):
         content = json.loads(response.content)
 
         self.assertEqual(models.Enrollment.objects.count(), 1)
-        mock_set.assert_called_once_with("panoramix", resource_link, is_active)
         enrollment = models.Enrollment.objects.get()
+        mock_set.assert_called_once_with(enrollment)
         self.assertEqual(
             content,
             {
@@ -1232,8 +1244,8 @@ class EnrollmentApiTest(BaseAPITestCase):
         content = json.loads(response.content)
 
         self.assertEqual(models.Enrollment.objects.count(), 1)
-        mock_set.assert_called_once_with("panoramix", resource_link, is_active)
         enrollment = models.Enrollment.objects.get()
+        mock_set.assert_called_once_with(enrollment)
 
         # - Enrollment uid has been generated and state has been set according
         #   to LMSHandler.set_enrollment response
@@ -1346,7 +1358,8 @@ class EnrollmentApiTest(BaseAPITestCase):
             },
         )
 
-    def test_api_enrollment_delete_anonymous(self):
+    @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
+    def test_api_enrollment_delete_anonymous(self, _mock_set):
         """Anonymous users should not be able to delete an enrollment."""
         enrollment = factories.EnrollmentFactory(
             course_run=self.create_opened_course_run(is_listed=True)
@@ -1364,7 +1377,8 @@ class EnrollmentApiTest(BaseAPITestCase):
 
         self.assertEqual(models.Enrollment.objects.count(), 1)
 
-    def test_api_enrollment_delete_authenticated(self):
+    @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
+    def test_api_enrollment_delete_authenticated(self, _mock_set):
         """
         Authenticated users should not be able to delete any enrollment
         whether he/she is staff or even superuser.
@@ -1385,7 +1399,8 @@ class EnrollmentApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, 405)
         self.assertEqual(models.Enrollment.objects.count(), 1)
 
-    def test_api_enrollment_delete_owner(self):
+    @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
+    def test_api_enrollment_delete_owner(self, _mock_set):
         """A user should not be allowed to delete his/her enrollments."""
         enrollment = factories.EnrollmentFactory(
             course_run=self.create_opened_course_run(is_listed=True)

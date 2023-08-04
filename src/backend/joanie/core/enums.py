@@ -35,6 +35,12 @@ PRODUCT_TYPE_CHOICES = (
     # finally orchestrator will offer user to pay to get a certificate
     (PRODUCT_TYPE_CERTIFICATE, _("Certificate")),
 )
+PRODUCT_TYPE_ORDER_FIELDS = {
+    # product type            required | empty
+    PRODUCT_TYPE_CREDENTIAL: ("course", "enrollment"),
+    PRODUCT_TYPE_ENROLLMENT: ("course", "enrollment"),
+    PRODUCT_TYPE_CERTIFICATE: ("enrollment", "course"),
+}
 
 PRODUCT_TYPE_CERTIFICATE_ALLOWED = [
     PRODUCT_TYPE_CERTIFICATE,

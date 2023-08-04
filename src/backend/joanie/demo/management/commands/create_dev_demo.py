@@ -172,19 +172,19 @@ class Command(BaseCommand):
 
         course = product.courses.first()
 
-        if product_type == enums.PRODUCT_TYPE_CERTIFICATE:
-            factories.EnrollmentFactory(
+        return factories.OrderFactory(
+            course=None if product_type == enums.PRODUCT_TYPE_CERTIFICATE else course,
+            enrollment=factories.EnrollmentFactory(
                 user=user,
                 course_run=course.course_runs.first(),
                 is_active=True,
                 state=enums.ENROLLMENT_STATE_SET,
             )
-
-        return factories.OrderFactory(
-            state=enums.ORDER_STATE_VALIDATED,
-            product=product,
-            course=course,
+            if product_type == enums.PRODUCT_TYPE_CERTIFICATE
+            else None,
             owner=user,
+            product=product,
+            state=enums.ORDER_STATE_VALIDATED,
         )
 
     def create_product_purchased_with_certificate(

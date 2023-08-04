@@ -25,8 +25,8 @@ class FailingLMSBackend(BaseLMSBackend):
         """Get enrollment status for a user on a course run given its url"""
         logger.error("Internal server error")
 
-    def set_enrollment(self, username, resource_link, active=True):
-        """Set enrollment for a user with a course run given its url."""
+    def set_enrollment(self, enrollment):
+        """Set enrollment for a user."""
         logger.error("Internal server error")
         raise EnrollmentError()
 

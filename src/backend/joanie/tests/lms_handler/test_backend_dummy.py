@@ -1,9 +1,12 @@
 """Test suite for the Dummy LMS Backend"""
+from datetime import timedelta
 
 from django.core.cache import cache
 from django.test import TestCase
 from django.test.utils import override_settings
+from django.utils import timezone
 
+from joanie.core import factories
 from joanie.lms_handler import LMSHandler
 from joanie.lms_handler.backends.dummy import DummyLMSBackend
 
@@ -23,7 +26,9 @@ class DummyLMSBackendTestCase(TestCase):
 
     def setUp(self):
         """Clears the cache before each test"""
+        super().setUp()
         cache.clear()
+        self.now = timezone.now()
 
     def test_backend_dummy_get_enrollment_not_set(self):
         """
@@ -58,24 +63,30 @@ class DummyLMSBackendTestCase(TestCase):
         resource_link = (
             "http://dummy-lms.test/courses/course-v1:edx+000001+Demo_Course/course"
         )
-        username = "joanie"
+        enrollment = factories.EnrollmentFactory(
+            course_run__start=self.now - timedelta(hours=1),
+            course_run__end=self.now + timedelta(hours=2),
+            course_run__enrollment_end=self.now + timedelta(hours=1),
+            course_run__is_listed=True,
+            course_run__resource_link=resource_link,
+        )
 
         backend = LMSHandler.select_lms(resource_link)
         self.assertIsInstance(backend, DummyLMSBackend)
 
-        backend.set_enrollment(username, resource_link, True)
+        backend.set_enrollment(enrollment)
 
-        enrollment = backend.get_enrollment(username, resource_link)
-        self.assertEqual(enrollment["user"], username)
+        lms_enrollment = backend.get_enrollment(enrollment.user.username, resource_link)
+        self.assertEqual(lms_enrollment["user"], enrollment.user.username)
         self.assertEqual(
-            enrollment["course_details"]["course_id"],
+            lms_enrollment["course_details"]["course_id"],
             "course-v1:edx+000001+Demo_Course",
         )
-        self.assertTrue(enrollment["is_active"])
+        self.assertEqual(lms_enrollment["is_active"], enrollment.is_active)
 
     def test_backend_dummy_set_and_get_unenrollment(self):
         """
-        On user unrollment
+        On user unenrollment
         set_enrollment should return True
         get_enrollment should return a fake course run enrollment object
         marked "inactive".
@@ -83,20 +94,27 @@ class DummyLMSBackendTestCase(TestCase):
         resource_link = (
             "http://dummy-lms.test/courses/course-v1:edx+000001+Demo_Course/course"
         )
-        username = "joanie"
+        enrollment = factories.EnrollmentFactory(
+            course_run__start=self.now - timedelta(hours=1),
+            course_run__end=self.now + timedelta(hours=2),
+            course_run__enrollment_end=self.now + timedelta(hours=1),
+            course_run__is_listed=True,
+            course_run__resource_link=resource_link,
+            is_active=False,
+        )
 
         backend = LMSHandler.select_lms(resource_link)
         self.assertIsInstance(backend, DummyLMSBackend)
 
-        backend.set_enrollment(username, resource_link, False)
+        backend.set_enrollment(enrollment)
 
-        enrollment = backend.get_enrollment(username, resource_link)
-        self.assertEqual(enrollment["user"], username)
+        lms_enrollment = backend.get_enrollment(enrollment.user.username, resource_link)
+        self.assertEqual(lms_enrollment["user"], enrollment.user.username)
         self.assertEqual(
-            enrollment["course_details"]["course_id"],
+            lms_enrollment["course_details"]["course_id"],
             "course-v1:edx+000001+Demo_Course",
         )
-        self.assertFalse(enrollment["is_active"])
+        self.assertFalse(lms_enrollment["is_active"])
 
     def test_backend_dummy_get_grades(self):
         """It should return a blank grade dictionary"""

@@ -2,7 +2,6 @@
 Core application factories
 """
 import random
-import uuid
 from datetime import datetime, timedelta, timezone
 
 from django.conf import settings
@@ -220,12 +219,12 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
             )
         ]
 
-    @factory.lazy_attribute
-    def resource_link(self):
+    @factory.lazy_attribute_sequence
+    def resource_link(self, sequence):
         """Generate a resource link that looks like an OpenEdX course url."""
         code = self.course.code if self.course else "0001"
         return (
-            f"http://openedx.test/courses/course-v1:edx+{code!s}/{str(uuid.uuid4())}/"
+            f"http://openedx.test/courses/course-v1:edx+{code!s}+{sequence:d}/course/"
         )
 
     @factory.lazy_attribute
@@ -414,7 +413,7 @@ class ProductFactory(factory.django.DjangoModelFactory):
         model = models.Product
         skip_postgeneration_save = True
 
-    type = enums.PRODUCT_TYPE_ENROLLMENT
+    type = enums.PRODUCT_TYPE_CREDENTIAL
     title = factory.Faker("bs")
     call_to_action = "let's go!"
     price = Faker().pydecimal(left_digits=3, right_digits=2, min_value=0)
@@ -515,16 +514,22 @@ class OrderFactory(factory.django.DjangoModelFactory):
 
     product = factory.SubFactory(ProductFactory)
     course = factory.LazyAttribute(lambda o: o.product.courses.order_by("?").first())
-    owner = factory.SubFactory(UserFactory)
+    enrollment = None
+
+    @factory.lazy_attribute
+    def owner(self):
+        """Retrieve the user from the enrollment when available or create a new one."""
+        if self.enrollment:
+            return self.enrollment.user
+        return UserFactory()
 
     @factory.lazy_attribute
     def organization(self):
         """Retrieve the organization from the product/course relation."""
-        return (
-            self.product.course_relations.get(course=self.course)
-            .organizations.order_by("?")
-            .first()
-        )
+        course_relations = self.product.course_relations
+        if self.course:
+            course_relations = course_relations.filter(course=self.course)
+        return course_relations.first().organizations.order_by("?").first()
 
 
 class OrderTargetCourseRelationFactory(factory.django.DjangoModelFactory):
@@ -562,7 +567,7 @@ class OrderCertificateFactory(factory.django.DjangoModelFactory):
 
     order = factory.SubFactory(
         OrderFactory,
-        product__type=enums.PRODUCT_TYPE_CERTIFICATE,
+        product__type=enums.PRODUCT_TYPE_CREDENTIAL,
     )
 
     @factory.lazy_attribute

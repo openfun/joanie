@@ -63,15 +63,12 @@ class DummyLMSBackend(BaseLMSBackend):
             "user": username,
         }
 
-    def set_enrollment(self, username, resource_link, active=True):
-        """
-        Set fake enrollment to cache for a user with a course run given
-        its resource_link and its active state.
-        """
-        course_id = self.extract_course_id(resource_link)
-        cache_key = self.get_cache_key(username, course_id)
+    def set_enrollment(self, enrollment):
+        """Set fake enrollment to cache for a user."""
+        course_id = self.extract_course_id(enrollment.course_run.resource_link)
+        cache_key = self.get_cache_key(enrollment.user.username, course_id)
 
-        if active:
+        if enrollment.is_active:
             cache.set(cache_key, True)
         else:
             cache.delete(cache_key)

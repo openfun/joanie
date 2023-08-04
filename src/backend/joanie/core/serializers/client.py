@@ -520,7 +520,12 @@ class OrderSerializer(serializers.ModelSerializer):
     owner = serializers.CharField(
         source="owner.username", read_only=True, required=False
     )
-    course = CourseLightSerializer(read_only=True, exclude_abilities=True)
+    course = CourseLightSerializer(
+        read_only=True, exclude_abilities=True, required=False
+    )
+    enrollment = serializers.SlugRelatedField(
+        queryset=models.Enrollment.objects.all(), slug_field="id", required=False
+    )
     total = serializers.DecimalField(
         coerce_to_string=False,
         decimal_places=2,
@@ -536,7 +541,7 @@ class OrderSerializer(serializers.ModelSerializer):
     product = serializers.SlugRelatedField(
         queryset=models.Product.objects.all(), slug_field="id"
     )
-    enrollments = serializers.SerializerMethodField(read_only=True)
+    target_enrollments = serializers.SerializerMethodField(read_only=True)
     target_courses = OrderTargetCourseRelationSerializer(
         read_only=True, many=True, source="course_relations"
     )
@@ -549,7 +554,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "certificate",
             "course",
             "created_on",
-            "enrollments",
+            "enrollment",
             "id",
             "main_invoice",
             "organization",
@@ -557,6 +562,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "product",
             "state",
             "target_courses",
+            "target_enrollments",
             "total",
             "total_currency",
         ]
@@ -564,22 +570,22 @@ class OrderSerializer(serializers.ModelSerializer):
             "certificate",
             "created_on",
             "course",
-            "enrollments",
             "id",
             "main_invoice",
             "owner",
             "state",
             "target_courses",
+            "target_enrollments",
             "total",
             "total_currency",
         ]
 
-    def get_enrollments(self, order):
+    def get_target_enrollments(self, order):
         """
         For the current order, retrieve its related enrollments.
         """
         return EnrollmentSerializer(
-            instance=order.get_enrollments(),
+            instance=order.get_target_enrollments(),
             many=True,
             context=self.context,
         ).data
@@ -590,6 +596,7 @@ class OrderSerializer(serializers.ModelSerializer):
         only on update.
         """
         validated_data.pop("course", None)
+        validated_data.pop("enrollment", None)
         validated_data.pop("organization", None)
         validated_data.pop("product", None)
         return super().update(instance, validated_data)
