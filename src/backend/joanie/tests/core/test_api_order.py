@@ -13,6 +13,7 @@ from django.test.client import RequestFactory
 from pdfminer.high_level import extract_text as pdf_extract_text
 
 from joanie.core import enums, factories, models
+from joanie.core.models import CourseState
 from joanie.core.serializers import fields
 from joanie.payment.backends.dummy import DummyPaymentBackend
 from joanie.payment.exceptions import CreatePaymentFailed
@@ -83,10 +84,11 @@ class OrderApiTest(BaseAPITestCase):
                             "cover": "_this_field_is_mocked",
                         },
                         "certificate": None,
+                        "enrollment": None,
                         "created_on": order.created_on.strftime(
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
-                        "enrollments": [],
+                        "target_enrollments": [],
                         "id": str(order.id),
                         "organization": str(order.organization.id),
                         "owner": order.owner.username,
@@ -129,7 +131,8 @@ class OrderApiTest(BaseAPITestCase):
                         "created_on": other_order.created_on.strftime(
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
-                        "enrollments": [],
+                        "enrollment": None,
+                        "target_enrollments": [],
                         "main_invoice": None,
                         "organization": str(other_order.organization.id),
                         "owner": other_order.owner.username,
@@ -231,7 +234,8 @@ class OrderApiTest(BaseAPITestCase):
                         "created_on": order.created_on.strftime(
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
-                        "enrollments": [],
+                        "enrollment": None,
+                        "target_enrollments": [],
                         "main_invoice": None,
                         "organization": str(order.organization.id),
                         "owner": order.owner.username,
@@ -309,7 +313,8 @@ class OrderApiTest(BaseAPITestCase):
                         "created_on": order.created_on.strftime(
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
-                        "enrollments": [],
+                        "enrollment": None,
+                        "target_enrollments": [],
                         "main_invoice": None,
                         "organization": str(order.organization.id),
                         "owner": order.owner.username,
@@ -336,10 +341,15 @@ class OrderApiTest(BaseAPITestCase):
         credential_product = factories.ProductFactory(
             type=enums.PRODUCT_TYPE_CREDENTIAL
         )
-        user = factories.UserFactory()
 
         # User purchases the certificate product
-        order = factories.OrderFactory(owner=user, product=certificate_product)
+        enrollment = factories.EnrollmentFactory(
+            course_run__state=CourseState.FUTURE_OPEN, course_run__is_listed=True
+        )
+        user = enrollment.user
+        order = factories.OrderFactory(
+            owner=user, product=certificate_product, course=None, enrollment=enrollment
+        )
 
         # User purchases the credential product
         factories.OrderFactory(owner=user, product=credential_product)
@@ -347,7 +357,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
 
         # Retrieve user's order related to the first course linked to the product 1
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(7):
             response = self.client.get(
                 f"/api/v1.0/orders/?product__type={enums.PRODUCT_TYPE_CERTIFICATE}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -364,16 +374,11 @@ class OrderApiTest(BaseAPITestCase):
                     {
                         "id": str(order.id),
                         "certificate": None,
-                        "course": {
-                            "code": order.course.code,
-                            "id": str(order.course.id),
-                            "title": order.course.title,
-                            "cover": "_this_field_is_mocked",
-                        },
+                        "course": None,
                         "created_on": order.created_on.strftime(
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
-                        "enrollments": [],
+                        "enrollment": str(enrollment.id),
                         "main_invoice": None,
                         "organization": str(order.organization.id),
                         "owner": order.owner.username,
@@ -382,6 +387,7 @@ class OrderApiTest(BaseAPITestCase):
                         "product": str(order.product.id),
                         "state": order.state,
                         "target_courses": [],
+                        "target_enrollments": [],
                     }
                 ],
             },
@@ -390,7 +396,7 @@ class OrderApiTest(BaseAPITestCase):
     def test_api_order_read_list_filtered_with_several_product_type(self):
         """
         Authenticated user should be able to filter their orders
-        by several product type.
+        by several product types.
         """
 
         certificate_product = factories.ProductFactory(
@@ -402,7 +408,14 @@ class OrderApiTest(BaseAPITestCase):
         user = factories.UserFactory()
 
         # User purchases the certificate product
-        order = factories.OrderFactory(owner=user, product=certificate_product)
+        enrollment = factories.EnrollmentFactory(
+            user=user,
+            course_run__state=CourseState.FUTURE_OPEN,
+            course_run__is_listed=True,
+        )
+        order = factories.OrderFactory(
+            owner=user, product=certificate_product, course=None, enrollment=enrollment
+        )
 
         # User purchases the credential product
         order2 = factories.OrderFactory(owner=user, product=credential_product)
@@ -410,7 +423,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
 
         # Retrieve user's order related to the first course linked to the product 1
-        with self.assertNumQueries(10):
+        with self.assertNumQueries(11):
             response = self.client.get(
                 (
                     f"/api/v1.0/orders/?product__type={enums.PRODUCT_TYPE_CERTIFICATE}"
@@ -439,10 +452,15 @@ class OrderApiTest(BaseAPITestCase):
         credential_product = factories.ProductFactory(
             type=enums.PRODUCT_TYPE_CREDENTIAL
         )
-        user = factories.UserFactory()
 
         # User purchases both products
-        factories.OrderFactory(owner=user, product=certificate_product)
+        enrollment = factories.EnrollmentFactory(
+            course_run__state=CourseState.FUTURE_OPEN, course_run__is_listed=True
+        )
+        user = enrollment.user
+        factories.OrderFactory(
+            owner=user, product=certificate_product, course=None, enrollment=enrollment
+        )
         factories.OrderFactory(owner=user, product=credential_product)
 
         token = self.generate_token_from_user(user)
@@ -512,7 +530,8 @@ class OrderApiTest(BaseAPITestCase):
                         "created_on": order.created_on.strftime(
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
-                        "enrollments": [],
+                        "enrollment": None,
+                        "target_enrollments": [],
                         "main_invoice": None,
                         "organization": str(order.organization.id),
                         "owner": order.owner.username,
@@ -571,7 +590,8 @@ class OrderApiTest(BaseAPITestCase):
                         "created_on": order.created_on.strftime(
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
-                        "enrollments": [],
+                        "enrollment": None,
+                        "target_enrollments": [],
                         "main_invoice": None,
                         "organization": str(order.organization.id),
                         "owner": order.owner.username,
@@ -634,7 +654,8 @@ class OrderApiTest(BaseAPITestCase):
                         "created_on": order.created_on.strftime(
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
-                        "enrollments": [],
+                        "enrollment": None,
+                        "target_enrollments": [],
                         "main_invoice": None,
                         "organization": str(order.organization.id),
                         "owner": order.owner.username,
@@ -760,6 +781,7 @@ class OrderApiTest(BaseAPITestCase):
                     "cover": "_this_field_is_mocked",
                 },
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                "enrollment": None,
                 "state": order.state,
                 "main_invoice": None,
                 "organization": str(order.organization.id),
@@ -767,7 +789,7 @@ class OrderApiTest(BaseAPITestCase):
                 "total": float(product.price),
                 "total_currency": settings.DEFAULT_CURRENCY,
                 "product": str(product.id),
-                "enrollments": [],
+                "target_enrollments": [],
                 "target_courses": [
                     {
                         "code": target_course.code,
@@ -854,8 +876,8 @@ class OrderApiTest(BaseAPITestCase):
         "to_representation",
         return_value="_this_field_is_mocked",
     )
-    def test_api_order_create_authenticated_success(self, _mock_thumbnail):
-        """Any authenticated user should be able to create an order."""
+    def test_api_order_create_authenticated_for_course_success(self, _mock_thumbnail):
+        """Any authenticated user should be able to create an order for a course."""
         target_courses = factories.CourseFactory.create_batch(2)
         product = factories.ProductFactory(target_courses=target_courses, price=0.00)
         organization = product.course_relations.first().organizations.first()
@@ -894,14 +916,15 @@ class OrderApiTest(BaseAPITestCase):
                     "cover": "_this_field_is_mocked",
                 },
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                "state": "draft",
+                "enrollment": None,
                 "main_invoice": None,
                 "organization": str(order.organization.id),
                 "owner": "panoramix",
+                "product": str(product.id),
+                "state": "draft",
                 "total": float(product.price),
                 "total_currency": settings.DEFAULT_CURRENCY,
-                "product": str(product.id),
-                "enrollments": [],
+                "target_enrollments": [],
                 "target_courses": [
                     {
                         "code": target_course.code,
@@ -952,7 +975,7 @@ class OrderApiTest(BaseAPITestCase):
             },
         )
 
-        with self.assertNumQueries(26):
+        with self.assertNumQueries(28):
             response = self.client.patch(
                 f"/api/v1.0/orders/{order.id}/submit/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -967,6 +990,110 @@ class OrderApiTest(BaseAPITestCase):
             list(order.target_courses.order_by("product_relations")), target_courses
         )
         self.assertEqual(response.json(), {"payment_info": None})
+
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_order_create_authenticated_for_enrollment_success(
+        self, _mock_thumbnail
+    ):
+        """Any authenticated user should be able to create an order for an enrollment."""
+        enrollment = factories.EnrollmentFactory(
+            course_run__state=models.CourseState.ONGOING_OPEN,
+            course_run__is_listed=True,
+        )
+        product = factories.ProductFactory(price=0.00, type="certificate")
+        organization = product.course_relations.first().organizations.first()
+
+        data = {
+            "enrollment": str(enrollment.id),
+            "organization": str(organization.id),
+            "product": str(product.id),
+        }
+        token = self.generate_token_from_user(enrollment.user)
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 201)
+        # order has been created
+        self.assertEqual(models.Order.objects.count(), 1)
+        order = models.Order.objects.get(
+            enrollment=enrollment,
+            course__isnull=True,
+            organization=organization,
+            product=product,
+        )
+
+        self.assertEqual(list(order.target_courses.all()), [])
+        self.assertEqual(
+            response.json(),
+            {
+                "id": str(order.id),
+                "certificate": None,
+                "course": None,
+                "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                "enrollment": str(enrollment.id),
+                "state": "draft",
+                "main_invoice": None,
+                "organization": str(order.organization.id),
+                "owner": enrollment.user.username,
+                "total": float(product.price),
+                "total_currency": settings.DEFAULT_CURRENCY,
+                "product": str(product.id),
+                "target_enrollments": [],
+                "target_courses": [],
+            },
+        )
+
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_order_create_authenticated_for_enrollment_not_owner(
+        self, _mock_thumbnail
+    ):
+        """
+        An authenticated user can not create an order for an enrollment s.he doesn't own.
+        """
+        enrollment = factories.EnrollmentFactory(
+            course_run__state=models.CourseState.ONGOING_OPEN,
+            course_run__is_listed=True,
+        )
+        product = factories.ProductFactory(price=0.00, type="certificate")
+        organization = product.course_relations.first().organizations.first()
+
+        data = {
+            "enrollment": str(enrollment.id),
+            "organization": str(organization.id),
+            "product": str(product.id),
+        }
+        token = self.get_user_token("panoramix")
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(models.Order.objects.exists())
+        self.assertEqual(
+            response.json(),
+            {
+                "enrollment": [
+                    "The enrollment should belong to the owner of this order."
+                ],
+            },
+        )
 
     def test_api_order_create_authenticated_organization_not_passed_none(self):
         """
@@ -1094,8 +1221,9 @@ class OrderApiTest(BaseAPITestCase):
     )
     def test_api_order_create_has_read_only_fields(self, _mock_thumbnail):
         """
-        If an authenticated user tries to create an order with more fields than
-        "product" and "course", it should not be allowed to override these fields.
+        If an authenticated user tries to create an order with more fields than "product" and
+        "course" or "enrollment", they should not be taken into account as they are set by
+        the server.
         """
         target_courses = factories.CourseFactory.create_batch(2)
         product = factories.ProductFactory(target_courses=target_courses, price=0.00)
@@ -1148,6 +1276,7 @@ class OrderApiTest(BaseAPITestCase):
                     "cover": "_this_field_is_mocked",
                 },
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                "enrollment": None,
                 "state": "validated",
                 "main_invoice": None,
                 "organization": str(order.organization.id),
@@ -1155,7 +1284,7 @@ class OrderApiTest(BaseAPITestCase):
                 "total": float(product.price),
                 "total_currency": settings.DEFAULT_CURRENCY,
                 "product": str(product.id),
-                "enrollments": [],
+                "target_enrollments": [],
                 "target_courses": [
                     {
                         "code": target_course.code,
@@ -1336,9 +1465,7 @@ class OrderApiTest(BaseAPITestCase):
         self.assertFalse(models.Order.objects.exists())
         self.assertEqual(
             response.json(),
-            {
-                "course": ["This field is required."],
-            },
+            {"__all__": ["Either the course or the enrollment field is required."]},
         )
 
     def test_api_order_create_once(self):
@@ -1446,7 +1573,7 @@ class OrderApiTest(BaseAPITestCase):
             "billing_address": billing_address,
         }
 
-        with self.assertNumQueries(18):
+        with self.assertNumQueries(19):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -1470,14 +1597,15 @@ class OrderApiTest(BaseAPITestCase):
                     "cover": "_this_field_is_mocked",
                 },
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                "state": "draft",
+                "enrollment": None,
                 "main_invoice": None,
                 "organization": str(order.organization.id),
                 "owner": user.username,
+                "product": str(product.id),
                 "total": float(product.price),
                 "total_currency": settings.DEFAULT_CURRENCY,
-                "product": str(product.id),
-                "enrollments": [],
+                "state": "draft",
+                "target_enrollments": [],
                 "target_courses": [
                     {
                         "code": target_course.code,
@@ -1531,7 +1659,7 @@ class OrderApiTest(BaseAPITestCase):
                 ],
             },
         )
-        with self.assertNumQueries(10):
+        with self.assertNumQueries(11):
             response = self.client.patch(
                 f"/api/v1.0/orders/{order.id}/submit/",
                 data=data,
@@ -1605,14 +1733,15 @@ class OrderApiTest(BaseAPITestCase):
                 "cover": "_this_field_is_mocked",
             },
             "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-            "state": "draft",
+            "enrollment": None,
             "main_invoice": None,
             "organization": str(order.organization.id),
             "owner": user.username,
+            "product": str(product.id),
             "total": float(product.price),
             "total_currency": settings.DEFAULT_CURRENCY,
-            "product": str(product.id),
-            "enrollments": [],
+            "state": "draft",
+            "target_enrollments": [],
             "target_courses": [],
         }
         self.assertEqual(response.json(), expected_json)
@@ -1638,7 +1767,7 @@ class OrderApiTest(BaseAPITestCase):
     @mock.patch.object(DummyPaymentBackend, "create_payment")
     def test_api_order_create_payment_failed(self, mock_create_payment):
         """
-        If payment creation failed, any order should be created.
+        If payment creation failed, the order should not be created.
         """
         mock_create_payment.side_effect = CreatePaymentFailed("Unreachable endpoint")
         user = factories.UserFactory()
@@ -1762,7 +1891,7 @@ class OrderApiTest(BaseAPITestCase):
                 "certificate",
                 "course",
                 "created_on",
-                "enrollments",
+                "enrollment",
                 "id",
                 "main_invoice",
                 "organization",
@@ -1770,6 +1899,7 @@ class OrderApiTest(BaseAPITestCase):
                 "product",
                 "state",
                 "target_courses",
+                "target_enrollments",
                 "total",
                 "total_currency",
             ],
@@ -2097,7 +2227,7 @@ class OrderApiTest(BaseAPITestCase):
         }
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(15):
+        with self.assertNumQueries(16):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -2144,7 +2274,7 @@ class OrderApiTest(BaseAPITestCase):
         }
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(18):
+        with self.assertNumQueries(19):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,

@@ -278,17 +278,23 @@ class OrderViewSet(
         """Force the order's "owner" field to the logged-in user."""
         serializer.save(owner=self.request.user)
 
-    def _get_organization_with_least_active_orders(self, product, course):
+    def _get_organization_with_least_active_orders(
+        self, product, course, enrollment=None
+    ):
         """
         Return the organization with the least not canceled order count
         for a given product and course.
         """
+        if enrollment:
+            clause = Q(order__enrollment=enrollment)
+        else:
+            clause = Q(order__course=course)
+
         order_count = Count(
             "order",
-            filter=Q(
-                Q(order__product=product, order__course=course),
-                ~Q(order__state=enums.ORDER_STATE_CANCELED),
-            ),
+            filter=clause
+            & Q(order__product=product)
+            & ~Q(order__state=enums.ORDER_STATE_CANCELED),
         )
 
         try:
@@ -297,15 +303,13 @@ class OrderViewSet(
             return None
 
         try:
-            organizations = (
+            return (
                 course_relation.organizations.annotate(order_count=order_count)
                 .order_by("order_count")
                 .first()
             )
         except models.Organization.DoesNotExist:
             return None
-
-        return organizations
 
     # pylint: disable=too-many-return-statements
     @transaction.atomic
@@ -315,28 +319,40 @@ class OrderViewSet(
         if not serializer.is_valid():
             return Response(serializer.errors, status=400)
 
-        product = serializer.validated_data.get("product")
         course_code = serializer.initial_data.get("course")
 
+        enrollment = serializer.validated_data.get("enrollment")
+        product = serializer.validated_data.get("product")
+
         # Retrieve course instance from the provided course code
-        if not course_code:
-            return Response({"course": ["This field is required."]}, status=400)
+        if course_code:
+            try:
+                course = models.Course.objects.get(code=course_code)
+            except models.Course.DoesNotExist:
+                return Response(
+                    {"course": ["Course with code {course_code} does not exist."]},
+                    status=400,
+                )
+            serializer.validated_data["course"] = course
+        else:
+            if not enrollment:
+                return Response(
+                    {
+                        "__all__": [
+                            "Either the course or the enrollment field is required."
+                        ]
+                    },
+                    status=400,
+                )
+            course = enrollment.course_run.course
 
-        try:
-            course = models.Course.objects.get(code=course_code)
-        except models.Course.DoesNotExist:
-            return Response(
-                {"course": ["Course with code {course_code} does not exist."]},
-                status=400,
-            )
-        serializer.validated_data["course"] = course
-
-        # Populate organization field if it is not set
+        # Force the organization field
         if not serializer.validated_data.get("organization"):
-            organization = self._get_organization_with_least_active_orders(
-                product, course
+            serializer.validated_data[
+                "organization"
+            ] = self._get_organization_with_least_active_orders(
+                product, course, enrollment
             )
-            serializer.validated_data["organization"] = organization
 
         # - Validate data then create an order
         try:

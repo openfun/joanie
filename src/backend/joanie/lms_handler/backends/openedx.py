@@ -5,15 +5,23 @@ import json
 import logging
 import re
 
+from django.db.models import Q
+
 import requests
 from requests.auth import AuthBase
 
+from joanie.core import enums
 from joanie.core.exceptions import EnrollmentError, GradeError
+from joanie.core.models.products import Order
 from joanie.lms_handler.serializers import SyncCourseRunSerializer
 
 from .base import BaseLMSBackend
 
 logger = logging.getLogger(__name__)
+
+
+OPENEDX_MODE_HONOR = "honor"
+OPENEDX_MODE_VERIFIED = "verified"
 
 
 def split_course_key(key):
@@ -93,13 +101,24 @@ class OpenEdXLMSBackend(BaseLMSBackend):
         logger.error(response.content)
         return None
 
-    def set_enrollment(self, username, resource_link, active=True):
-        """Set enrollment for a user with a course run given its url."""
+    def set_enrollment(self, enrollment):
+        """Set enrollment for a user on the remote LMS using resource link as url."""
         base_url = self.configuration["BASE_URL"]
-        course_id = self.extract_course_id(resource_link)
+        course_id = self.extract_course_id(enrollment.course_run.resource_link)
+        mode = (
+            OPENEDX_MODE_VERIFIED
+            if Order.objects.filter(
+                Q(target_courses=enrollment.course_run.course)
+                | Q(enrollment=enrollment),
+                state=enums.ORDER_STATE_VALIDATED,
+            ).exists()
+            else OPENEDX_MODE_HONOR
+        )
+
         payload = {
-            "is_active": active,
-            "user": username,
+            "is_active": enrollment.is_active,
+            "mode": mode,
+            "user": enrollment.user.username,
             "course_details": {"course_id": course_id},
         }
         url = f"{base_url}/api/enrollment/v1/enrollment"
@@ -107,7 +126,7 @@ class OpenEdXLMSBackend(BaseLMSBackend):
 
         if response.ok:
             data = json.loads(response.content)
-            if data["is_active"] == active:
+            if data["is_active"] == enrollment.is_active:
                 return
 
         logger.error(response.content)

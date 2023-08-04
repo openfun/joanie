@@ -1,21 +1,204 @@
 """
 Test suite for order models
 """
+import json
 import random
+from unittest import mock
 
 from django.core.exceptions import ValidationError
 from django.test import RequestFactory, TestCase
+from django.test.utils import override_settings
 
+import responses
 from django_fsm import TransitionNotAllowed
 
-from joanie.core import enums, factories
+from joanie.core import enums, exceptions, factories
 from joanie.core.models import CourseState, Enrollment
+from joanie.lms_handler.backends.dummy import DummyLMSBackend
 from joanie.payment.factories import BillingAddressDictFactory, InvoiceFactory
 
 
 # pylint: disable=too-many-public-methods
 class OrderModelsTestCase(TestCase):
     """Test suite for the Order model."""
+
+    def test_models_order_enrollment_was_created_by_order(self):
+        """
+        The enrollment linked to an order, must not orginated from an order.
+        This is because, being flagged with "was_created_by_order" as True, this enrollment will
+        not be listed directly on the student dashboard. It will be visible only behind one of
+        the orders listed on the dashboard.
+        """
+        course_run = factories.CourseRunFactory(
+            state=CourseState.FUTURE_OPEN,
+            is_listed=True,
+        )
+        factories.ProductFactory(target_courses=[course_run.course], type="enrollment")
+        enrollment = factories.EnrollmentFactory(
+            course_run=course_run, was_created_by_order=True
+        )
+
+        certificate_product = factories.ProductFactory(
+            courses=[course_run.course], type="certificate"
+        )
+
+        with self.assertRaises(ValidationError) as context:
+            factories.OrderFactory(
+                product=certificate_product, course=None, enrollment=enrollment
+            )
+        self.assertEqual(
+            str(context.exception),
+            (
+                "{'enrollment': [\"Orders can't be placed on enrollments originating "
+                'from an order."]}'
+            ),
+        )
+
+    def test_models_order_enrollment_owned_by_enrollment_user(self):
+        """The enrollment linked to an order, must belong to the order owner."""
+        course_run = factories.CourseRunFactory(
+            state=CourseState.FUTURE_OPEN,
+            is_listed=True,
+        )
+        enrollment = factories.EnrollmentFactory(course_run=course_run)
+
+        certificate_product = factories.ProductFactory(
+            courses=[course_run.course], type="certificate"
+        )
+
+        with self.assertRaises(ValidationError) as context:
+            factories.OrderFactory(
+                # Forcing the user to something else than the enrollment user
+                owner=factories.UserFactory(),
+                product=certificate_product,
+                course=None,
+                enrollment=enrollment,
+            )
+        self.assertEqual(
+            str(context.exception),
+            (
+                "{'enrollment': ['The enrollment should belong to the owner of this order.']}"
+            ),
+        )
+
+    def test_models_order_course_enrollment_constraint_product_certificate(self):
+        """
+        Orders for "certificate" type products can only be linked to an enrollment.
+        The course field must remain null.
+        """
+        course = factories.CourseFactory()
+        product = factories.ProductFactory(courses=[course], type="certificate")
+        organization = product.course_relations.get().organizations.first()
+        enrollment = factories.EnrollmentFactory(
+            course_run__state=CourseState.FUTURE_OPEN, course_run__is_listed=True
+        )
+
+        with self.assertRaises(ValidationError) as context:
+            factories.OrderFactory(
+                product=product, course=course, enrollment=enrollment
+            )
+        self.assertEqual(
+            str(context.exception),
+            "{'course': ['course field should be left empty for certificate products.']}",
+        )
+
+        with self.assertRaises(ValidationError) as context:
+            factories.OrderFactory(
+                organization=organization, product=product, course=None, enrollment=None
+            )
+        self.assertEqual(
+            str(context.exception),
+            "{'enrollment': ['enrollment field should be set for certificate products.']}",
+        )
+
+        with self.assertRaises(ValidationError) as context:
+            factories.OrderFactory(product=product, course=course, enrollment=None)
+        self.assertEqual(
+            str(context.exception),
+            (
+                "{'enrollment': ['enrollment field should be set for certificate products.'], "
+                "'course': ['course field should be left empty for certificate products.']}"
+            ),
+        )
+
+        factories.OrderFactory(
+            organization=organization,
+            product=product,
+            course=None,
+            enrollment=enrollment,
+        )
+
+    def _enrollment_constraint_product_on_courses(self, product_type):
+        """
+        Factorized test code to test "course" and "enrollment" fields for
+        products that are sold on the syllabus.
+        """
+        course = factories.CourseFactory()
+        product = factories.ProductFactory(courses=[course], type=product_type)
+        organization = product.course_relations.get().organizations.first()
+        enrollment = factories.EnrollmentFactory(
+            course_run__state=CourseState.FUTURE_OPEN, course_run__is_listed=True
+        )
+
+        with self.assertRaises(ValidationError) as context:
+            factories.OrderFactory(
+                product=product, course=course, enrollment=enrollment
+            )
+        self.assertEqual(
+            str(context.exception),
+            (
+                "{'enrollment': ['enrollment field should be left empty "
+                f"for {product_type} products.']}}"
+            ),
+        )
+
+        with self.assertRaises(ValidationError) as context:
+            factories.OrderFactory(
+                organization=organization, product=product, course=None, enrollment=None
+            )
+        self.assertEqual(
+            str(context.exception),
+            (
+                "{'course': ['course field should be set "
+                f"for {product_type} products.']}}"
+            ),
+        )
+
+        with self.assertRaises(ValidationError) as context:
+            factories.OrderFactory(
+                organization=organization,
+                product=product,
+                course=None,
+                enrollment=enrollment,
+            )
+        self.assertEqual(
+            str(context.exception),
+            (
+                f"{{'course': ['course field should be set for {product_type} products.'], "
+                "'enrollment': ['enrollment field should be left empty "
+                f"for {product_type} products.']}}"
+            ),
+        )
+
+        factories.OrderFactory(
+            product=product,
+            course=course,
+            enrollment=None,
+        )
+
+    def test_models_order_course_enrollment_constraint_product_credential(self):
+        """
+        Orders for "credential" type products can only be linked to a course.
+        The enrollment field must remain null.
+        """
+        self._enrollment_constraint_product_on_courses("credential")
+
+    def test_models_order_course_enrollment_constraint_product_enrollment(self):
+        """
+        Orders for "enrollment" type products can only be linked to a course.
+        The enrollment field must remain null.
+        """
+        self._enrollment_constraint_product_on_courses("enrollment")
 
     def test_models_order_course_owner_product_unique_not_canceled(self):
         """
@@ -186,7 +369,7 @@ class OrderModelsTestCase(TestCase):
         InvoiceFactory(order=order, total=order.total)
 
         # - Validate the order should automatically enroll user to course run
-        with self.assertNumQueries(19):
+        with self.assertNumQueries(21):
             order.validate()
 
         self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
@@ -235,7 +418,7 @@ class OrderModelsTestCase(TestCase):
         InvoiceFactory(order=order, total=order.total)
 
         # - Validate the order should automatically enroll user to course run
-        with self.assertNumQueries(26):
+        with self.assertNumQueries(27):
             order.validate()
 
         enrollment.refresh_from_db()
@@ -328,7 +511,7 @@ class OrderModelsTestCase(TestCase):
         self.assertEqual(Enrollment.objects.filter(is_active=True).count(), 1)
 
         # - When order is canceled, user should not be unenrolled to related enrollments
-        with self.assertNumQueries(10):
+        with self.assertNumQueries(12):
             order.cancel()
         self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
         self.assertEqual(Enrollment.objects.count(), 1)
@@ -365,7 +548,7 @@ class OrderModelsTestCase(TestCase):
         self.assertEqual(Enrollment.objects.filter(is_active=True).count(), 1)
 
         # - When order is canceled, user should not be unenrolled to related enrollments
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(10):
             order.cancel()
         self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
         self.assertEqual(Enrollment.objects.count(), 1)
@@ -390,15 +573,15 @@ class OrderModelsTestCase(TestCase):
         # - As the two product's target courses have only one course run, order owner
         #   should have been automatically enrolled to those course runs.
         with self.assertNumQueries(1):
-            self.assertEqual(len(order.get_enrollments()), 2)
-        self.assertEqual(len(order.get_enrollments(is_active=True)), 2)
-        self.assertEqual(len(order.get_enrollments(is_active=False)), 0)
+            self.assertEqual(len(order.get_target_enrollments()), 2)
+        self.assertEqual(len(order.get_target_enrollments(is_active=True)), 2)
+        self.assertEqual(len(order.get_target_enrollments(is_active=False)), 0)
 
         # - Then order is canceled so user should be unenrolled to course runs.
         order.cancel()
-        self.assertEqual(len(order.get_enrollments()), 2)
-        self.assertEqual(len(order.get_enrollments(is_active=True)), 0)
-        self.assertEqual(len(order.get_enrollments(is_active=False)), 2)
+        self.assertEqual(len(order.get_target_enrollments()), 2)
+        self.assertEqual(len(order.get_target_enrollments(is_active=True)), 0)
+        self.assertEqual(len(order.get_target_enrollments(is_active=False)), 2)
 
     def test_models_order_target_course_runs_property(self):
         """
@@ -492,7 +675,72 @@ class OrderModelsTestCase(TestCase):
             order.validate()
         self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
 
-    def test_models_order_cancel_transition(self):
+    @responses.activate
+    def test_models_order_validate_preexisting_enrollments_targeted(self):
+        """
+        When an order is validated, if the user was previously enrolled for free in any of the
+        course runs targeted by the purchased product, we should change their enrollment mode on
+        these course runs to "verified".
+        """
+        course = factories.CourseFactory()
+        resource_link = (
+            "http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course"
+        )
+        course_run = factories.CourseRunFactory(
+            course=course,
+            resource_link=resource_link,
+            state=CourseState.ONGOING_OPEN,
+            is_listed=True,
+        )
+        factories.CourseRunFactory(
+            course=course, state=CourseState.ONGOING_OPEN, is_listed=True
+        )
+        product = factories.ProductFactory(target_courses=[course], price="0.00")
+
+        # Create a pre-existing free enrollment
+        enrollment = factories.EnrollmentFactory(course_run=course_run)
+        order = factories.OrderFactory(product=product)
+
+        url = "http://openedx.test/api/enrollment/v1/enrollment"
+
+        responses.add(
+            responses.POST,
+            url,
+            status=200,
+            json={"is_active": enrollment.is_active},
+        )
+
+        with override_settings(
+            JOANIE_LMS_BACKENDS=[
+                {
+                    "API_TOKEN": "a_secure_api_token",
+                    "BACKEND": "joanie.lms_handler.backends.openedx.OpenEdXLMSBackend",
+                    "BASE_URL": "http://openedx.test",
+                    "COURSE_REGEX": r"^.*/courses/(?P<course_id>.*)/course/?$",
+                    "SELECTOR_REGEX": r".*",
+                }
+            ]
+        ):
+            order.submit()
+
+        self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
+
+        self.assertEqual(len(responses.calls), 1)
+        self.assertEqual(responses.calls[0].request.url, url)
+        self.assertEqual(
+            responses.calls[0].request.headers["X-Edx-Api-Key"], "a_secure_api_token"
+        )
+        self.assertEqual(
+            json.loads(responses.calls[0].request.body),
+            {
+                "is_active": enrollment.is_active,
+                "mode": "verified",
+                "user": enrollment.user.username,
+                "course_details": {"course_id": "course-v1:edx+000001+Demo_Course"},
+            },
+        )
+
+    def test_models_order_cancel_success(self):
         """Test that the cancel transition is successful from any state"""
 
         order = factories.OrderFactory(
@@ -501,6 +749,69 @@ class OrderModelsTestCase(TestCase):
         )
         order.cancel()
         self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
+
+    @responses.activate
+    def test_models_order_cancel_certificate_product_openedx_enrollment_mode(self):
+        """
+        Test that the source enrollment is set back to "honor" in the LMS when a related order
+        is canceled.
+        """
+        course = factories.CourseFactory()
+        product = factories.ProductFactory(courses=[course], type="certificate")
+
+        resource_link = (
+            "http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course"
+        )
+        enrollment = factories.EnrollmentFactory(
+            course_run__state=CourseState.FUTURE_OPEN,
+            course_run__is_listed=True,
+            course_run__resource_link=resource_link,
+        )
+        order = factories.OrderFactory(
+            course=None,
+            product=product,
+            enrollment=enrollment,
+            state="validated",
+        )
+
+        url = "http://openedx.test/api/enrollment/v1/enrollment"
+        responses.add(
+            responses.POST,
+            url,
+            status=200,
+            json={"is_active": enrollment.is_active},
+        )
+
+        with override_settings(
+            JOANIE_LMS_BACKENDS=[
+                {
+                    "API_TOKEN": "a_secure_api_token",
+                    "BACKEND": "joanie.lms_handler.backends.openedx.OpenEdXLMSBackend",
+                    "BASE_URL": "http://openedx.test",
+                    "COURSE_REGEX": r"^.*/courses/(?P<course_id>.*)/course/?$",
+                    "SELECTOR_REGEX": r".*",
+                }
+            ]
+        ):
+            order.cancel()
+
+        enrollment.refresh_from_db()
+        self.assertEqual(enrollment.state, "set")
+
+        self.assertEqual(len(responses.calls), 1)
+        self.assertEqual(responses.calls[0].request.url, url)
+        self.assertEqual(
+            responses.calls[0].request.headers["X-Edx-Api-Key"], "a_secure_api_token"
+        )
+        self.assertEqual(
+            json.loads(responses.calls[0].request.body),
+            {
+                "is_active": enrollment.is_active,
+                "mode": "honor",
+                "user": enrollment.user.username,
+                "course_details": {"course_id": "course-v1:edx+000001+Demo_Course"},
+            },
+        )
 
     def test_models_order_create_target_course_relations_on_submit(self):
         """

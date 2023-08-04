@@ -7,7 +7,6 @@ from unittest import mock
 from pdfminer.high_level import extract_text as pdf_extract_text
 from rest_framework.pagination import PageNumberPagination
 
-from joanie.core.enums import PRODUCT_TYPE_CERTIFICATE
 from joanie.core.factories import (
     CertificateDefinitionFactory,
     CourseProductRelationFactory,
@@ -48,9 +47,7 @@ class CertificateApiTest(BaseAPITestCase):
         """
         OrderCertificateFactory.create_batch(5)
         user = UserFactory()
-        order = OrderFactory(
-            owner=user, product=ProductFactory(type=PRODUCT_TYPE_CERTIFICATE)
-        )
+        order = OrderFactory(owner=user, product=ProductFactory())
         certificate = OrderCertificateFactory(order=order)
 
         token = self.generate_token_from_user(user)
@@ -105,12 +102,7 @@ class CertificateApiTest(BaseAPITestCase):
         user = UserFactory()
         token = self.generate_token_from_user(user)
 
-        orders = [
-            OrderFactory(
-                owner=user, product=ProductFactory(type=PRODUCT_TYPE_CERTIFICATE)
-            )
-            for _ in range(3)
-        ]
+        orders = [OrderFactory(owner=user, product=ProductFactory()) for _ in range(3)]
         certificates = [OrderCertificateFactory(order=order) for order in orders]
         certificate_ids = [str(certificate.id) for certificate in certificates]
 
@@ -175,9 +167,7 @@ class CertificateApiTest(BaseAPITestCase):
         """
         not_owned_certificate = OrderCertificateFactory()
         user = UserFactory()
-        order = OrderFactory(
-            owner=user, product=ProductFactory(type=PRODUCT_TYPE_CERTIFICATE)
-        )
+        order = OrderFactory(owner=user, product=ProductFactory())
         certificate = OrderCertificateFactory(order=order)
 
         token = self.generate_token_from_user(user)
@@ -255,7 +245,6 @@ class CertificateApiTest(BaseAPITestCase):
         certificate_definition = CertificateDefinitionFactory()
         product = ProductFactory(
             title="Graded product",
-            type=PRODUCT_TYPE_CERTIFICATE,
             certificate_definition=certificate_definition,
         )
         order = OrderFactory(
@@ -308,7 +297,6 @@ class CertificateApiTest(BaseAPITestCase):
         product = ProductFactory(
             courses=[],
             title="Graded product",
-            type=PRODUCT_TYPE_CERTIFICATE,
         )
         CourseProductRelationFactory(product=product, organizations=[organization])
 

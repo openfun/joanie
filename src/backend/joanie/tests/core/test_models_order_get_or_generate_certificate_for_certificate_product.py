@@ -21,22 +21,26 @@ class CertificateProductGetOrGenerateCertificateOrderModelsTestCase(TestCase):
         self,
     ):
         """Generate a certificate for a product order"""
-        course_run = factories.CourseRunFactory(
-            enrollment_end=timezone.now() + timedelta(hours=1),
-            enrollment_start=timezone.now() - timedelta(hours=1),
-            is_gradable=True,
-            is_listed=True,
-            start=timezone.now() - timedelta(hours=1),
+        enrollment = factories.EnrollmentFactory(
+            course_run__enrollment_end=timezone.now() + timedelta(hours=1),
+            course_run__enrollment_start=timezone.now() - timedelta(hours=1),
+            course_run__is_gradable=True,
+            course_run__is_listed=True,
+            course_run__start=timezone.now() - timedelta(hours=1),
+            is_active=True,
         )
         product = factories.ProductFactory(
             price="0.00",
             type="certificate",
             certificate_definition=factories.CertificateDefinitionFactory(),
-            courses=[course_run.course],
+            courses=[enrollment.course_run.course],
         )
-        order = factories.OrderFactory(product=product, course=course_run.course)
-        factories.EnrollmentFactory(
-            user=order.owner, course_run=course_run, is_active=True
+        organization = product.course_relations.first().organizations.first()
+        order = factories.OrderFactory(
+            organization=organization,
+            product=product,
+            course=None,
+            enrollment=enrollment,
         )
 
         new_certificate, created = order.get_or_generate_certificate()
@@ -86,9 +90,9 @@ class CertificateProductGetOrGenerateCertificateOrderModelsTestCase(TestCase):
             certificate_definition=None,  # No certificate definition defined
             courses=[course_run.course],
         )
-        order = factories.OrderFactory(product=product, course=course_run.course)
-        factories.EnrollmentFactory(
-            user=order.owner, course_run=course_run, is_active=True
+        enrollment = factories.EnrollmentFactory(course_run=course_run, is_active=True)
+        order = factories.OrderFactory(
+            product=product, course=None, enrollment=enrollment
         )
 
         new_certificate, created = order.get_or_generate_certificate()
@@ -114,9 +118,9 @@ class CertificateProductGetOrGenerateCertificateOrderModelsTestCase(TestCase):
             certificate_definition=factories.CertificateDefinitionFactory(),
             courses=[course_run.course],
         )
-        order = factories.OrderFactory(product=product, course=course_run.course)
-        factories.EnrollmentFactory(
-            user=order.owner, course_run=course_run, is_active=True
+        enrollment = factories.EnrollmentFactory(course_run=course_run, is_active=True)
+        order = factories.OrderFactory(
+            product=product, course=None, enrollment=enrollment
         )
 
         new_certificate, created = order.get_or_generate_certificate()
@@ -143,9 +147,9 @@ class CertificateProductGetOrGenerateCertificateOrderModelsTestCase(TestCase):
             certificate_definition=factories.CertificateDefinitionFactory(),
             courses=[course_run.course],
         )
-        order = factories.OrderFactory(product=product, course=course_run.course)
-        factories.EnrollmentFactory(
-            user=order.owner, course_run=course_run, is_active=True
+        enrollment = factories.EnrollmentFactory(course_run=course_run, is_active=True)
+        order = factories.OrderFactory(
+            product=product, course=None, enrollment=enrollment
         )
 
         new_certificate, created = order.get_or_generate_certificate()
@@ -171,9 +175,9 @@ class CertificateProductGetOrGenerateCertificateOrderModelsTestCase(TestCase):
             certificate_definition=factories.CertificateDefinitionFactory(),
             courses=[course_run.course],
         )
-        order = factories.OrderFactory(product=product, course=course_run.course)
-        factories.EnrollmentFactory(
-            user=order.owner, course_run=course_run, is_active=False
+        enrollment = factories.EnrollmentFactory(course_run=course_run, is_active=False)
+        order = factories.OrderFactory(
+            product=product, course=None, enrollment=enrollment
         )
 
         new_certificate, created = order.get_or_generate_certificate()
@@ -199,9 +203,9 @@ class CertificateProductGetOrGenerateCertificateOrderModelsTestCase(TestCase):
             certificate_definition=factories.CertificateDefinitionFactory(),
             courses=[course_run.course],
         )
-        order = factories.OrderFactory(product=product, course=course_run.course)
-        factories.EnrollmentFactory(
-            user=order.owner, course_run=course_run, is_active=True
+        enrollment = factories.EnrollmentFactory(course_run=course_run, is_active=True)
+        order = factories.OrderFactory(
+            product=product, course=None, enrollment=enrollment
         )
 
         with mock.patch.object(Enrollment, "get_grade", return_value={"passed": False}):

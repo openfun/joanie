@@ -77,11 +77,11 @@ class CreateCertificatesTestCase(TestCase):
             certificate_definition=factories.CertificateDefinitionFactory(),
             courses=[course_run.course],
         )
-        order = factories.OrderFactory(product=product, course=course_run.course)
-        order.submit()
-        factories.EnrollmentFactory(
-            user=order.owner, course_run=course_run, is_active=True
+        enrollment = factories.EnrollmentFactory(course_run=course_run, is_active=True)
+        order = factories.OrderFactory(
+            product=product, course=None, enrollment=enrollment, owner=enrollment.user
         )
+        order.submit()
         certificate_qs = models.Certificate.objects.filter(order=order)
 
         self.assertEqual(certificate_qs.count(), 0)

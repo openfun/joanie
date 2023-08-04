@@ -284,13 +284,14 @@ class ProductAdminTestCase(BaseAPITestCase):
         self.assertContains(response, product.title)
 
         # - Check there are links to go to related courses admin change view
-        html = lxml.html.fromstring(response.content)
-        related_courses_field = html.cssselect(".field-related_courses")[0]
+        tree = lxml.html.fromstring(response.content)
+        links = tree.xpath(
+            '//div[contains(@class, "field-related_courses")]//a[not(contains(@class, "button"))]'
+        )
 
         # - Product courses are ordered by code
         [course_0, course_1] = product.courses.all()
 
-        links = related_courses_field.cssselect("a")
         self.assertEqual(len(links), 2)
         self.assertEqual(links[0].text_content(), f"{course_0.code} | {course_0.title}")
         self.assertEqual(

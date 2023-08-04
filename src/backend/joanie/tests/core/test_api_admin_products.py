@@ -97,7 +97,13 @@ class ProductAdminApiTest(TestCase):
             "type": product.type,
             "price": float(product.price),
             "price_currency": "EUR",
-            "certificate_definition": product.certificate_definition,
+            "certificate_definition": {
+                "description": "",
+                "id": str(product.certificate_definition.id),
+                "name": product.certificate_definition.name,
+                "template": "howard.issuers.CertificateDocument",
+                "title": product.certificate_definition.title,
+            },
             "target_courses": [
                 {
                     "id": str(relations[1].id),
@@ -224,7 +230,7 @@ class ProductAdminApiTest(TestCase):
             "title": "Product 001",
             "price": "100.00",
             "price_currency": "EUR",
-            "type": "enrollment",
+            "type": random.choice(["credential", "certificate"]),
             "call_to_action": "Purchase now",
             "description": "This is a product description",
         }
