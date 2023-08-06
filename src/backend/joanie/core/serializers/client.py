@@ -6,7 +6,7 @@ from django.utils.translation import gettext_lazy as _
 
 from rest_framework import exceptions, serializers
 
-from joanie.core import enums, models, utils
+from joanie.core import enums, models
 from joanie.core.serializers.fields import ThumbnailDetailField
 
 
@@ -542,6 +542,9 @@ class OrderSerializer(serializers.ModelSerializer):
         queryset=models.Product.objects.all(), slug_field="id"
     )
     target_enrollments = serializers.SerializerMethodField(read_only=True)
+    order_group = serializers.SlugRelatedField(
+        queryset=models.OrderGroup.objects.all(), slug_field="id", required=False
+    )
     target_courses = OrderTargetCourseRelationSerializer(
         read_only=True, many=True, source="course_relations"
     )
@@ -557,6 +560,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "enrollment",
             "id",
             "main_invoice",
+            "order_group",
             "organization",
             "owner",
             "product",
@@ -592,13 +596,14 @@ class OrderSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         """
-        Make the "course", "organization" and "product" fields read_only
+        Make the "course", "organization", "order_group" and "product" fields read_only
         only on update.
         """
         validated_data.pop("course", None)
         validated_data.pop("enrollment", None)
         validated_data.pop("organization", None)
         validated_data.pop("product", None)
+        validated_data.pop("order_group", None)
         return super().update(instance, validated_data)
 
     def get_total_currency(self, *args, **kwargs):
@@ -606,6 +611,21 @@ class OrderSerializer(serializers.ModelSerializer):
         Return the currency used
         """
         return settings.DEFAULT_CURRENCY
+
+
+class OrderGroupSerializer(serializers.ModelSerializer):
+    """Serializer for order groups in a product."""
+
+    nb_availabilities = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = models.OrderGroup
+        fields = ["id", "is_active", "nb_seats", "nb_availabilities"]
+        read_only_fields = fields
+
+    def get_nb_availabilities(self, order_group):
+        """Return the number of available seats for this order group."""
+        return order_group.nb_seats - order_group.get_nb_binding_orders()
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -620,6 +640,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
     id = serializers.CharField(read_only=True)
     certificate_definition = CertificationDefinitionSerializer(read_only=True)
+    order_groups = OrderGroupSerializer(read_only=True, many=True)
     price = serializers.DecimalField(
         coerce_to_string=False,
         decimal_places=2,
@@ -638,6 +659,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "call_to_action",
             "certificate_definition",
             "id",
+            "order_groups",
             "price",
             "price_currency",
             "state",
@@ -661,9 +683,9 @@ class ProductSerializer(serializers.ModelSerializer):
         """
         Cache the serializer representation for the current instance.
         """
-        cache_key = utils.get_resource_cache_key(
-            "product_for_course",
-            f"{instance.id!s}-{self.context.get('course_code', 'nocourse'):s}",
+        course_code = self.context.get("course_code", "nocourse")
+        cache_key = instance.get_cache_key(
+            f"product_for_course-{course_code:s}",
             is_language_sensitive=True,
         )
         representation = cache.get(cache_key)

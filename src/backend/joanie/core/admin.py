@@ -323,6 +323,13 @@ class ProductTargetCourseRelationInline(SortableInlineAdminMixin, admin.TabularI
     extra = 0
 
 
+class OrderGroupInline(admin.TabularInline):
+    """Admin class for the OrderGroup model as tabular inline."""
+
+    model = models.OrderGroup
+    extra = 0
+
+
 @admin.register(models.Product)
 class ProductAdmin(
     DjangoObjectActions,
@@ -350,7 +357,7 @@ class ProductAdmin(
             },
         ),
     )
-    inlines = (ProductTargetCourseRelationInline,)
+    inlines = (ProductTargetCourseRelationInline, OrderGroupInline)
     list_filter = ["type"]
     readonly_fields = (
         "id",

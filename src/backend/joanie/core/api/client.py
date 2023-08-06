@@ -78,12 +78,16 @@ class CourseProductRelationViewSet(
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = serializers.CourseProductRelationSerializer
     ordering = ["-created_on"]
-    queryset = models.CourseProductRelation.objects.filter(
-        organizations__isnull=False,
-    ).select_related(
-        "course",
-        "product",
-        "product__certificate_definition",
+    queryset = (
+        models.CourseProductRelation.objects.filter(
+            organizations__isnull=False,
+        )
+        .select_related(
+            "course",
+            "product",
+            "product__certificate_definition",
+        )
+        .prefetch_related("organizations")
     )
 
     @property

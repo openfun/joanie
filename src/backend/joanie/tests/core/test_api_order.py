@@ -32,6 +32,8 @@ class OrderApiTest(BaseAPITestCase):
         """Clear cache after each tests"""
         cache.clear()
 
+    # Read
+
     def test_api_order_read_list_anonymous(self):
         """It should not be possible to retrieve the list of orders for anonymous users."""
         course = factories.CourseFactory()
@@ -77,27 +79,28 @@ class OrderApiTest(BaseAPITestCase):
                 "previous": None,
                 "results": [
                     {
+                        "certificate": None,
                         "course": {
                             "code": course.code,
                             "id": str(course.id),
                             "title": course.title,
                             "cover": "_this_field_is_mocked",
                         },
-                        "certificate": None,
                         "enrollment": None,
                         "created_on": order.created_on.strftime(
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
                         "target_enrollments": [],
                         "id": str(order.id),
+                        "main_invoice": None,
+                        "order_group": None,
                         "organization": str(order.organization.id),
                         "owner": order.owner.username,
-                        "total": float(product.price),
-                        "total_currency": settings.DEFAULT_CURRENCY,
                         "product": str(order.product.id),
-                        "main_invoice": None,
                         "state": order.state,
                         "target_courses": [],
+                        "total": float(product.price),
+                        "total_currency": settings.DEFAULT_CURRENCY,
                     }
                 ],
             },
@@ -134,6 +137,7 @@ class OrderApiTest(BaseAPITestCase):
                         "enrollment": None,
                         "target_enrollments": [],
                         "main_invoice": None,
+                        "order_group": None,
                         "organization": str(other_order.organization.id),
                         "owner": other_order.owner.username,
                         "total": float(other_order.total),
@@ -237,6 +241,7 @@ class OrderApiTest(BaseAPITestCase):
                         "enrollment": None,
                         "target_enrollments": [],
                         "main_invoice": None,
+                        "order_group": None,
                         "organization": str(order.organization.id),
                         "owner": order.owner.username,
                         "total": float(order.total),
@@ -316,6 +321,7 @@ class OrderApiTest(BaseAPITestCase):
                         "enrollment": None,
                         "target_enrollments": [],
                         "main_invoice": None,
+                        "order_group": None,
                         "organization": str(order.organization.id),
                         "owner": order.owner.username,
                         "total": float(order.total),
@@ -380,6 +386,7 @@ class OrderApiTest(BaseAPITestCase):
                         ),
                         "enrollment": str(enrollment.id),
                         "main_invoice": None,
+                        "order_group": None,
                         "organization": str(order.organization.id),
                         "owner": order.owner.username,
                         "total": float(order.total),
@@ -533,6 +540,7 @@ class OrderApiTest(BaseAPITestCase):
                         "enrollment": None,
                         "target_enrollments": [],
                         "main_invoice": None,
+                        "order_group": None,
                         "organization": str(order.organization.id),
                         "owner": order.owner.username,
                         "total": float(order.total),
@@ -593,6 +601,7 @@ class OrderApiTest(BaseAPITestCase):
                         "enrollment": None,
                         "target_enrollments": [],
                         "main_invoice": None,
+                        "order_group": None,
                         "organization": str(order.organization.id),
                         "owner": order.owner.username,
                         "total": float(order.total),
@@ -657,6 +666,7 @@ class OrderApiTest(BaseAPITestCase):
                         "enrollment": None,
                         "target_enrollments": [],
                         "main_invoice": None,
+                        "order_group": None,
                         "organization": str(order.organization.id),
                         "owner": order.owner.username,
                         "total": float(order.total),
@@ -784,6 +794,7 @@ class OrderApiTest(BaseAPITestCase):
                 "enrollment": None,
                 "state": order.state,
                 "main_invoice": None,
+                "order_group": None,
                 "organization": str(order.organization.id),
                 "owner": owner.username,
                 "total": float(product.price),
@@ -855,6 +866,8 @@ class OrderApiTest(BaseAPITestCase):
         content = json.loads(response.content)
         self.assertEqual(content, {"detail": "Not found."})
 
+    # Create
+
     def test_api_order_create_anonymous(self):
         """Anonymous users should not be able to create an order."""
         product = factories.ProductFactory()
@@ -918,6 +931,7 @@ class OrderApiTest(BaseAPITestCase):
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "enrollment": None,
                 "main_invoice": None,
+                "order_group": None,
                 "organization": str(order.organization.id),
                 "owner": "panoramix",
                 "product": str(product.id),
@@ -1040,13 +1054,14 @@ class OrderApiTest(BaseAPITestCase):
                 "course": None,
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "enrollment": str(enrollment.id),
-                "state": "draft",
                 "main_invoice": None,
+                "order_group": None,
                 "organization": str(order.organization.id),
                 "owner": enrollment.user.username,
+                "product": str(product.id),
+                "state": "draft",
                 "total": float(product.price),
                 "total_currency": settings.DEFAULT_CURRENCY,
-                "product": str(product.id),
                 "target_enrollments": [],
                 "target_courses": [],
             },
@@ -1219,7 +1234,7 @@ class OrderApiTest(BaseAPITestCase):
         "to_representation",
         return_value="_this_field_is_mocked",
     )
-    def test_api_order_create_has_read_only_fields(self, _mock_thumbnail):
+    def test_api_order_create_authenticated_has_read_only_fields(self, _mock_thumbnail):
         """
         If an authenticated user tries to create an order with more fields than "product" and
         "course" or "enrollment", they should not be taken into account as they are set by
@@ -1277,14 +1292,13 @@ class OrderApiTest(BaseAPITestCase):
                 },
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "enrollment": None,
-                "state": "validated",
                 "main_invoice": None,
+                "order_group": None,
                 "organization": str(order.organization.id),
                 "owner": "panoramix",
-                "total": float(product.price),
-                "total_currency": settings.DEFAULT_CURRENCY,
                 "product": str(product.id),
                 "target_enrollments": [],
+                "state": "validated",
                 "target_courses": [
                     {
                         "code": target_course.code,
@@ -1336,6 +1350,8 @@ class OrderApiTest(BaseAPITestCase):
                         "order_relations__position"
                     )
                 ],
+                "total": float(product.price),
+                "total_currency": settings.DEFAULT_CURRENCY,
             },
         )
 
@@ -1468,7 +1484,7 @@ class OrderApiTest(BaseAPITestCase):
             {"__all__": ["Either the course or the enrollment field is required."]},
         )
 
-    def test_api_order_create_once(self):
+    def test_api_order_create_authenticated_product_course_unicity(self):
         """
         If a user tries to create a new order while he has already a not canceled order
         for the couple product - course, a bad request response should be returned.
@@ -1513,10 +1529,10 @@ class OrderApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, 201)
 
-    def test_api_order_create_does_not_requires_billing_address(self):
+    def test_api_order_create_authenticated_billing_address_not_required(self):
         """
         When creating an order related to a fee product, if no billing address is
-        given, the order is created drafted
+        given, the order is created as draft.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -1553,7 +1569,9 @@ class OrderApiTest(BaseAPITestCase):
         "to_representation",
         return_value="_this_field_is_mocked",
     )
-    def test_api_order_create_payment(self, mock_create_payment, _mock_thumbnail):
+    def test_api_order_create_authenticated_payment_binding(
+        self, mock_create_payment, _mock_thumbnail
+    ):
         """
         Create an order to a fee product and then submitting it should create a
         payment and bind payment information into the response.
@@ -1573,7 +1591,7 @@ class OrderApiTest(BaseAPITestCase):
             "billing_address": billing_address,
         }
 
-        with self.assertNumQueries(19):
+        with self.assertNumQueries(20):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -1599,6 +1617,7 @@ class OrderApiTest(BaseAPITestCase):
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "enrollment": None,
                 "main_invoice": None,
+                "order_group": None,
                 "organization": str(order.organization.id),
                 "owner": user.username,
                 "product": str(product.id),
@@ -1688,7 +1707,7 @@ class OrderApiTest(BaseAPITestCase):
         "to_representation",
         return_value="_this_field_is_mocked",
     )
-    def test_api_order_create_payment_with_registered_credit_card(
+    def test_api_order_create_authenticated_payment_with_registered_credit_card(
         self,
         _mock_thumbnail,
         mock_create_one_click_payment,
@@ -1735,6 +1754,7 @@ class OrderApiTest(BaseAPITestCase):
             "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             "enrollment": None,
             "main_invoice": None,
+            "order_group": None,
             "organization": str(order.organization.id),
             "owner": user.username,
             "product": str(product.id),
@@ -1765,7 +1785,7 @@ class OrderApiTest(BaseAPITestCase):
         self.assertEqual(response.json(), expected_json)
 
     @mock.patch.object(DummyPaymentBackend, "create_payment")
-    def test_api_order_create_payment_failed(self, mock_create_payment):
+    def test_api_order_create_authenticated_payment_failed(self, mock_create_payment):
         """
         If payment creation failed, the order should not be created.
         """
@@ -1806,55 +1826,347 @@ class OrderApiTest(BaseAPITestCase):
 
         self.assertEqual(content, {"detail": "Unreachable endpoint"})
 
-    def test_api_order_delete_anonymous(self):
-        """Anonymous users should not be able to delete an order."""
-        product = factories.ProductFactory()
-        order = factories.OrderFactory(product=product)
-
-        response = self.client.delete(f"/api/v1.0/orders/{order.id}/")
-
-        self.assertEqual(response.status_code, 401)
-
-        content = json.loads(response.content)
-        self.assertEqual(
-            content,
-            {"detail": "Authentication credentials were not provided."},
-        )
-
-        self.assertEqual(models.Order.objects.count(), 1)
-
-    def test_api_order_delete_authenticated(self):
+    def test_api_order_create_authenticated_nb_seats(self):
         """
-        Authenticated users should not be able to delete an order
-        whether or not he/she is staff or even superuser.
+        The number of validated/pending orders on a product should not be above the limit
+        set by the number of seats
         """
+        user = factories.UserFactory()
+        course = factories.CourseFactory()
         product = factories.ProductFactory()
-        order = factories.OrderFactory(product=product)
-        user = factories.UserFactory(
-            is_staff=random.choice([True, False]),
-            is_superuser=random.choice([True, False]),
+        order_group = models.OrderGroup.objects.create(product=product, nb_seats=1)
+        relation = factories.CourseProductRelationFactory(
+            course=course,
+            product=product,
+            organizations=factories.OrganizationFactory.create_batch(2),
         )
+        billing_address = BillingAddressDictFactory()
+        factories.OrderFactory(
+            product=product,
+            course=course,
+            state=enums.ORDER_STATE_VALIDATED,
+            order_group=order_group,
+        )
+        data = {
+            "course": course.code,
+            "organization": str(relation.organizations.first().id),
+            "order_group": str(order_group.id),
+            "product": str(product.id),
+            "billing_address": billing_address,
+        }
         token = self.generate_token_from_user(user)
 
-        response = self.client.delete(
-            f"/api/v1.0/orders/{order.id}/",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
+        with self.assertNumQueries(19):
+            response = self.client.post(
+                "/api/v1.0/orders/",
+                data=data,
+                content_type="application/json",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json(),
+            {
+                "order_group": [
+                    f"Maximum number of orders reached for product {product.title}"
+                ]
+            },
         )
-        self.assertEqual(response.status_code, 405)
-        self.assertEqual(models.Order.objects.count(), 1)
+        self.assertEqual(
+            models.Order.objects.filter(course=course, product=product).count(), 1
+        )
 
-    def test_api_order_delete_owner(self):
-        """The order owner should not be able to delete an order."""
+    def test_api_order_create_authenticated_no_seats(self):
+        """
+        If nb_seats is set to 0 on an active order group, there should be no limit
+        to the number of orders
+        """
+        user = factories.UserFactory()
+        course = factories.CourseFactory()
         product = factories.ProductFactory()
-        order = factories.OrderFactory(product=product)
-        token = self.generate_token_from_user(order.owner)
+        order_group = models.OrderGroup.objects.create(product=product, nb_seats=0)
+        relation = factories.CourseProductRelationFactory(
+            course=course,
+            product=product,
+            organizations=factories.OrganizationFactory.create_batch(2),
+        )
+        billing_address = BillingAddressDictFactory()
+        factories.OrderFactory.create_batch(
+            size=100, product=product, course=course, order_group=order_group
+        )
+        data = {
+            "course": course.code,
+            "organization": str(relation.organizations.first().id),
+            "order_group": str(order_group.id),
+            "product": str(product.id),
+            "billing_address": billing_address,
+        }
+        token = self.generate_token_from_user(user)
 
-        response = self.client.delete(
-            f"/api/v1.0/orders/{order.id}/",
+        with self.assertNumQueries(22):
+            response = self.client.post(
+                "/api/v1.0/orders/",
+                data=data,
+                content_type="application/json",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+        self.assertEqual(
+            models.Order.objects.filter(product=product, course=course).count(), 101
+        )
+        self.assertEqual(response.status_code, 201)
+
+    def test_api_order_create_authenticated_free_product_no_billing_address(self):
+        """
+        Create an order on a free product without billing address
+        should create an order then transition its state to 'validated'.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        course = factories.CourseFactory()
+        product = factories.ProductFactory(courses=[course], price=0.00)
+        organization = product.course_relations.first().organizations.first()
+
+        data = {
+            "course": course.code,
+            "organization": str(organization.id),
+            "product": str(product.id),
+        }
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, 405)
-        self.assertEqual(models.Order.objects.count(), 1)
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.json()["state"], enums.ORDER_STATE_DRAFT)
+        order = models.Order.objects.get(id=response.json()["id"])
+        response = self.client.patch(
+            f"/api/v1.0/orders/{order.id}/submit/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, 201)
+        order.refresh_from_db()
+        self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
+
+    def test_api_order_create_authenticated_no_billing_address_to_validation(self):
+        """
+        Create an order on a fee product should be done in 3 steps.
+        First create the order in draft state. Then submit the order by
+        providing a billing address should pass the order state to `submitted`
+        and return payment information. Once the payment has been done, the order
+        should be validated.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        course = factories.CourseFactory()
+        product = factories.ProductFactory(courses=[course])
+        organization = product.course_relations.first().organizations.first()
+
+        data = {
+            "course": course.code,
+            "organization": str(organization.id),
+            "product": str(product.id),
+        }
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.json()["state"], enums.ORDER_STATE_DRAFT)
+        order_id = response.json()["id"]
+        billing_address = BillingAddressDictFactory()
+        data["billing_address"] = billing_address
+        response = self.client.patch(
+            f"/api/v1.0/orders/{order_id}/submit/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, 201)
+        order = models.Order.objects.get(id=order_id)
+        self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
+
+        InvoiceFactory(order=order)
+        order.validate()
+        order.refresh_from_db()
+        self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
+
+    def test_api_order_create_order_group_required(self):
+        """
+        An order group must be passed when placing an order if the ordered product defines
+        at least one active order group.
+        """
+        user = factories.UserFactory()
+        course = factories.CourseFactory()
+        product = factories.ProductFactory()
+        models.OrderGroup.objects.create(product=product, nb_seats=1)
+        relation = factories.CourseProductRelationFactory(
+            course=course,
+            product=product,
+            organizations=factories.OrganizationFactory.create_batch(2),
+        )
+        billing_address = BillingAddressDictFactory()
+        data = {
+            "course": course.code,
+            "organization": str(relation.organizations.first().id),
+            "product": str(product.id),
+            "billing_address": billing_address,
+        }
+        token = self.generate_token_from_user(user)
+
+        with self.assertNumQueries(16):
+            response = self.client.post(
+                "/api/v1.0/orders/",
+                data=data,
+                content_type="application/json",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json(),
+            {
+                "order_group": [
+                    f"An active order group is required for product {product.title}."
+                ]
+            },
+        )
+        self.assertFalse(
+            models.Order.objects.filter(course=course, product=product).exists()
+        )
+
+    def test_api_order_create_order_group_unrelated(self):
+        """The order group must apply to the product being ordered."""
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        organization = factories.OrganizationFactory()
+        relation = factories.CourseProductRelationFactory(
+            organizations=[organization],
+        )
+        billing_address = BillingAddressDictFactory()
+
+        # Order group related to another product
+        order_group = factories.OrderGroupFactory()
+
+        data = {
+            "course": relation.course.code,
+            "order_group": str(order_group.id),
+            "organization": str(organization.id),
+            "product": str(relation.product.id),
+            "billing_address": billing_address,
+        }
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json(),
+            {
+                "order_group": [
+                    f"This order group does not apply to the product {relation.product.title}."
+                ]
+            },
+        )
+        self.assertFalse(models.Order.objects.exists())
+
+    def test_api_order_create_several_order_groups(self):
+        """A product can have several active order groups."""
+        user = factories.UserFactory()
+        course = factories.CourseFactory()
+        product = factories.ProductFactory()
+        order_group1 = models.OrderGroup.objects.create(product=product, nb_seats=1)
+        order_group2 = models.OrderGroup.objects.create(product=product, nb_seats=1)
+        relation = factories.CourseProductRelationFactory(
+            course=course,
+            product=product,
+            organizations=factories.OrganizationFactory.create_batch(2),
+        )
+        billing_address = BillingAddressDictFactory()
+        factories.OrderFactory(
+            product=product,
+            course=course,
+            order_group=order_group1,
+            state=random.choice(["submitted", "validated"]),
+        )
+        data = {
+            "course": course.code,
+            "organization": str(relation.organizations.first().id),
+            "product": str(product.id),
+            "billing_address": billing_address,
+        }
+        token = self.generate_token_from_user(user)
+
+        # Order group 1 should already be full
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data={"order_group": str(order_group1.id), **data},
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json(),
+            {
+                "order_group": [
+                    f"Maximum number of orders reached for product {product.title}"
+                ]
+            },
+        )
+        self.assertEqual(
+            models.Order.objects.filter(course=course, product=product).count(), 1
+        )
+
+        # Order group 2 should still have place
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data={"order_group": str(order_group2.id), **data},
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(
+            models.Order.objects.filter(course=course, product=product).count(), 2
+        )
+
+    def test_api_order_create_inactive_order_groups(self):
+        """An inactive order group should not be taken into account."""
+        user = factories.UserFactory()
+        course = factories.CourseFactory()
+        product = factories.ProductFactory()
+        models.OrderGroup.objects.create(product=product, nb_seats=1, is_active=False)
+        relation = factories.CourseProductRelationFactory(
+            course=course,
+            product=product,
+            organizations=factories.OrganizationFactory.create_batch(2),
+        )
+        billing_address = BillingAddressDictFactory()
+        data = {
+            "course": course.code,
+            "organization": str(relation.organizations.first().id),
+            "product": str(product.id),
+            "billing_address": billing_address,
+        }
+        token = self.generate_token_from_user(user)
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(
+            models.Order.objects.filter(course=course, product=product).count(), 1
+        )
+
+    # Update
 
     # pylint: disable=too-many-locals
     def _check_api_order_update_detail(self, order, user, error_code):
@@ -1894,6 +2206,7 @@ class OrderApiTest(BaseAPITestCase):
                 "enrollment",
                 "id",
                 "main_invoice",
+                "order_group",
                 "organization",
                 "owner",
                 "product",
@@ -1964,6 +2277,60 @@ class OrderApiTest(BaseAPITestCase):
         order = factories.OrderFactory(owner=owner, product=product)
         self._check_api_order_update_detail(order, owner, 405)
 
+    # Delete
+
+    def test_api_order_delete_anonymous(self):
+        """Anonymous users should not be able to delete an order."""
+        product = factories.ProductFactory()
+        order = factories.OrderFactory(product=product)
+
+        response = self.client.delete(f"/api/v1.0/orders/{order.id}/")
+
+        self.assertEqual(response.status_code, 401)
+
+        content = json.loads(response.content)
+        self.assertEqual(
+            content,
+            {"detail": "Authentication credentials were not provided."},
+        )
+
+        self.assertEqual(models.Order.objects.count(), 1)
+
+    def test_api_order_delete_authenticated(self):
+        """
+        Authenticated users should not be able to delete an order
+        whether or not he/she is staff or even superuser.
+        """
+        product = factories.ProductFactory()
+        order = factories.OrderFactory(product=product)
+        user = factories.UserFactory(
+            is_staff=random.choice([True, False]),
+            is_superuser=random.choice([True, False]),
+        )
+        token = self.generate_token_from_user(user)
+
+        response = self.client.delete(
+            f"/api/v1.0/orders/{order.id}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, 405)
+        self.assertEqual(models.Order.objects.count(), 1)
+
+    def test_api_order_delete_owner(self):
+        """The order owner should not be able to delete an order."""
+        product = factories.ProductFactory()
+        order = factories.OrderFactory(product=product)
+        token = self.generate_token_from_user(order.owner)
+
+        response = self.client.delete(
+            f"/api/v1.0/orders/{order.id}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, 405)
+        self.assertEqual(models.Order.objects.count(), 1)
+
+    # Get invoice
+
     def test_api_order_get_invoice_anonymous(self):
         """An anonymous user should not be allowed to retrieve an invoice."""
         invoice = InvoiceFactory()
@@ -1999,7 +2366,7 @@ class OrderApiTest(BaseAPITestCase):
         content = json.loads(response.content)
         self.assertEqual(content, {"reference": "This parameter is required."})
 
-    def test_api_order_get_invoice_not_linked_to_order(self):
+    def test_api_order_get_invoice_authenticated_not_linked_to_order(self):
         """
         An authenticated user should not be allowed to retrieve an invoice
         not linked to the current order
@@ -2077,6 +2444,8 @@ class OrderApiTest(BaseAPITestCase):
         document_text = pdf_extract_text(BytesIO(response.content)).replace("\n", "")
         self.assertRegex(document_text, r"INVOICE")
 
+    # FSM
+
     def test_api_order_abort_anonymous(self):
         """An anonymous user should not be allowed to abort an order"""
         order = factories.OrderFactory()
@@ -2104,7 +2473,7 @@ class OrderApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, 404)
 
-    def test_api_order_cannot_abort_validated(self):
+    def test_api_order_abort_authenticated_forbidden_validated(self):
         """
         An authenticated user which is the owner of the order should not be able
         to abort the order if it is validated.
@@ -2201,187 +2570,9 @@ class OrderApiTest(BaseAPITestCase):
         order.refresh_from_db()
         self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
 
-    def test_api_order_create_too_many_orders(self):
+    def test_api_order_validate_anonymous(self):
         """
-        The number of allowed orders on a product should not be above the limit
-        set by max_validated_orders
-        """
-        user = factories.UserFactory()
-        course = factories.CourseFactory()
-        product = factories.ProductFactory(price=0.0)
-        relation = factories.CourseProductRelationFactory(
-            course=course,
-            product=product,
-            organizations=factories.OrganizationFactory.create_batch(2),
-            max_validated_orders=1,
-        )
-        billing_address = BillingAddressDictFactory()
-        factories.OrderFactory(
-            product=product, course=course, state=enums.ORDER_STATE_VALIDATED
-        )
-        data = {
-            "course": course.code,
-            "organization": str(relation.organizations.first().id),
-            "product": str(product.id),
-            "billing_address": billing_address,
-        }
-        token = self.generate_token_from_user(user)
-
-        with self.assertNumQueries(16):
-            response = self.client.post(
-                "/api/v1.0/orders/",
-                data=data,
-                content_type="application/json",
-                HTTP_AUTHORIZATION=f"Bearer {token}",
-            )
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(
-            response.json(),
-            (
-                {
-                    "max_validated_orders": [
-                        f"Maximum number of orders reached for product {product.title}"
-                        f" and course {course.code}"
-                    ]
-                }
-            ),
-        )
-        self.assertEqual(
-            models.Order.objects.filter(course=course, product=product).count(), 1
-        )
-
-    def test_api_order_create_no_limit(self):
-        """
-        If max_validated_orders is set to 0, there should be no limit
-        to the number of orders
-        """
-        user = factories.UserFactory()
-        course = factories.CourseFactory()
-        product = factories.ProductFactory()
-        relation = factories.CourseProductRelationFactory(
-            course=course,
-            product=product,
-            organizations=factories.OrganizationFactory.create_batch(2),
-            max_validated_orders=0,
-        )
-        billing_address = BillingAddressDictFactory()
-        factories.OrderFactory.create_batch(size=100, product=product, course=course)
-        data = {
-            "course": course.code,
-            "organization": str(relation.organizations.first().id),
-            "product": str(product.id),
-            "billing_address": billing_address,
-        }
-        token = self.generate_token_from_user(user)
-
-        with self.assertNumQueries(19):
-            response = self.client.post(
-                "/api/v1.0/orders/",
-                data=data,
-                content_type="application/json",
-                HTTP_AUTHORIZATION=f"Bearer {token}",
-            )
-        self.assertEqual(
-            models.Order.objects.filter(product=product, course=course).count(), 101
-        )
-        self.assertEqual(response.status_code, 201)
-
-    def test_api_order_create_free_product_no_billing_address(self):
-        """
-        Create an order on a free product without billing address
-        should create an order then transition its state to 'validated'.
-        """
-        user = factories.UserFactory()
-        token = self.generate_token_from_user(user)
-        course = factories.CourseFactory()
-        product = factories.ProductFactory(courses=[course], price=0.00)
-        organization = product.course_relations.first().organizations.first()
-
-        data = {
-            "course": course.code,
-            "organization": str(organization.id),
-            "product": str(product.id),
-        }
-        response = self.client.post(
-            "/api/v1.0/orders/",
-            data=data,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-        self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.json()["state"], enums.ORDER_STATE_DRAFT)
-        order = models.Order.objects.get(id=response.json()["id"])
-        response = self.client.patch(
-            f"/api/v1.0/orders/{order.id}/submit/",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-        self.assertEqual(response.status_code, 201)
-        order.refresh_from_db()
-        self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
-
-    def test_api_order_create_no_billing_address_to_validation(self):
-        """
-        Create an order on a fee product should be done in 3 steps.
-        First create the order in draft state. Then submit the order by
-        providing a billing address should pass the order state to `submitted`
-        and return payment information. Once the payment has been done, the order
-        should be validated.
-        """
-        user = factories.UserFactory()
-        token = self.generate_token_from_user(user)
-        course = factories.CourseFactory()
-        product = factories.ProductFactory(courses=[course])
-        organization = product.course_relations.first().organizations.first()
-
-        data = {
-            "course": course.code,
-            "organization": str(organization.id),
-            "product": str(product.id),
-        }
-
-        response = self.client.post(
-            "/api/v1.0/orders/",
-            data=data,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-        self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.json()["state"], enums.ORDER_STATE_DRAFT)
-        order_id = response.json()["id"]
-        billing_address = BillingAddressDictFactory()
-        data["billing_address"] = billing_address
-        response = self.client.patch(
-            f"/api/v1.0/orders/{order_id}/submit/",
-            data=data,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-        self.assertEqual(response.status_code, 201)
-        order = models.Order.objects.get(id=order_id)
-        self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
-
-        InvoiceFactory(order=order)
-        order.validate()
-        order.refresh_from_db()
-        self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
-
-    def test_api_order_validate_unexisting(self):
-        """
-        User should receive 404 when validating a non existing order
-        """
-        user = factories.UserFactory()
-        token = self.generate_token_from_user(user)
-
-        response = self.client.put(
-            "/api/v1.0/orders/notarealid/validate/",
-            content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-        self.assertEqual(response.status_code, 404)
-
-    def test_api_order_validate_unauthenticated(self):
-        """
-        Unauthenticated user should not be able to validate an order
+        Anonymous user should not be able to validate an order
         """
         order = factories.OrderFactory()
         order.submit(
@@ -2395,7 +2586,21 @@ class OrderApiTest(BaseAPITestCase):
         order.refresh_from_db()
         self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
 
-    def test_api_order_validate_not_owned(self):
+    def test_api_order_validate_authenticated_unexisting(self):
+        """
+        User should receive 404 when validating a non existing order
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        response = self.client.put(
+            "/api/v1.0/orders/notarealid/validate/",
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_api_order_validate_authenticated_not_owned(self):
         """
         Authenticated user should not be able to validate order they don't own
         """
@@ -2414,7 +2619,7 @@ class OrderApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, 404)
         self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
 
-    def test_api_order_validate(self):
+    def test_api_order_validate_owned(self):
         """
         User should be able to validate order they own
         """
@@ -2434,7 +2639,21 @@ class OrderApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
 
-    def test_api_order_cancel_unexisting(self):
+    def test_api_order_cancel_anonymous(self):
+        """
+        Anonymous user cannot cancel order
+        """
+
+        order = factories.OrderFactory()
+        response = self.client.post(
+            f"/api/v1.0/orders/{order.id}/cancel/",
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 401)
+        order.refresh_from_db()
+        self.assertNotEqual(order.state, enums.ORDER_STATE_CANCELED)
+
+    def test_api_order_cancel_authenticated_unexisting(self):
         """
         User should receive 404 when canceling a non existing order
         """
@@ -2448,21 +2667,7 @@ class OrderApiTest(BaseAPITestCase):
         )
         self.assertEqual(response.status_code, 404)
 
-    def test_api_order_cancel_unauthenticated(self):
-        """
-        Unauthenticated user cannot cancel order
-        """
-
-        order = factories.OrderFactory()
-        response = self.client.post(
-            f"/api/v1.0/orders/{order.id}/cancel/",
-            content_type="application/json",
-        )
-        self.assertEqual(response.status_code, 401)
-        order.refresh_from_db()
-        self.assertNotEqual(order.state, enums.ORDER_STATE_CANCELED)
-
-    def test_api_order_cancel_not_owned(self):
+    def test_api_order_cancel_authenticated_not_owned(self):
         """
         Authenticated user should not be able to cancel order they don't own
         """
@@ -2481,7 +2686,7 @@ class OrderApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, 404)
         self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
 
-    def test_api_order_cancel(self):
+    def test_api_order_cancel_authenticated_owned(self):
         """
         User should able to cancel owned orders as long as they are not
         validated
@@ -2523,7 +2728,7 @@ class OrderApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, 204)
         self.assertEqual(order_submitted.state, enums.ORDER_STATE_CANCELED)
 
-    def test_api_order_cancel_validated(self):
+    def test_api_order_cancel_authenticated_validated(self):
         """
         User should not able to cancel already validated order
         """
@@ -2540,7 +2745,20 @@ class OrderApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, 422)
         self.assertEqual(order_validated.state, enums.ORDER_STATE_VALIDATED)
 
-    def test_api_order_submit_unexisting(self):
+    def test_api_order_submit_anonymous(self):
+        """
+        Anonymous user cannot submit order
+        """
+        order = factories.OrderFactory()
+        response = self.client.patch(
+            f"/api/v1.0/orders/{order.id}/submit/",
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 401)
+        order.refresh_from_db()
+        self.assertEqual(order.state, enums.ORDER_STATE_DRAFT)
+
+    def test_api_order_submit_authenticated_unexisting(self):
         """
         User should receive 404 when submitting a non existing order
         """
@@ -2554,20 +2772,7 @@ class OrderApiTest(BaseAPITestCase):
         )
         self.assertEqual(response.status_code, 404)
 
-    def test_api_order_submit_unauthenticated(self):
-        """
-        Unauthenticated user cannot submit order
-        """
-        order = factories.OrderFactory()
-        response = self.client.patch(
-            f"/api/v1.0/orders/{order.id}/submit/",
-            content_type="application/json",
-        )
-        self.assertEqual(response.status_code, 401)
-        order.refresh_from_db()
-        self.assertEqual(order.state, enums.ORDER_STATE_DRAFT)
-
-    def test_api_order_submit_not_owned(self):
+    def test_api_order_submit_authenticated_not_owned(self):
         """
         Authenticated user should not be able to submit order they don't own
         """
@@ -2586,7 +2791,7 @@ class OrderApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, 404)
         self.assertEqual(order.state, enums.ORDER_STATE_DRAFT)
 
-    def test_api_order_submit_no_billing_address(self):
+    def test_api_order_submit_authenticated_no_billing_address(self):
         """
         User should not be able to submit a fee order without billing address
         """
@@ -2607,7 +2812,7 @@ class OrderApiTest(BaseAPITestCase):
         )
         self.assertEqual(order.state, enums.ORDER_STATE_DRAFT)
 
-    def test_api_order_submit(self):
+    def test_api_order_submit_authenticated_sucess(self):
         """
         User should be able to submit a fee order with a billing address
         or a free order without a billing address

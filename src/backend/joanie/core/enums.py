@@ -72,6 +72,11 @@ ORDER_STATE_CHOICES = (
         pgettext_lazy("As in: the order is validated.", "Validated"),
     ),
 )
+BINDING_ORDER_STATES = (
+    ORDER_STATE_SUBMITTED,
+    ORDER_STATE_PENDING,
+    ORDER_STATE_VALIDATED,
+)
 
 ENROLLMENT_STATE_SET = "set"
 ENROLLMENT_STATE_FAILED = "failed"

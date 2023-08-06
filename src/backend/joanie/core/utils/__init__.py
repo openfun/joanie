@@ -6,7 +6,6 @@ import collections.abc
 import json
 
 from django.utils.text import slugify
-from django.utils.translation import get_language
 
 from configurations import values
 from PIL import ImageFile as PillowImageFile
@@ -71,24 +70,6 @@ def image_to_base64(file_or_path, close=False):
             file.close()
         else:
             file.seek(file_pos)
-
-
-def get_resource_cache_key(
-    resource_name, resource_id, is_language_sensitive=False, language=None
-):
-    """
-    Return a resource cache key related to its name and its identifier. If the resource
-    is multilingual, extra argument is_local_sensitive can be set to True to bind
-    the active language within the cache key. Elsewhere, an extra argument language is
-    also accepted to bind this given language into the cache key.
-    """
-    cache_key = f"{resource_name}-{resource_id}"
-
-    if is_language_sensitive or language:
-        current_language = language or get_language()
-        cache_key = f"{cache_key}-{current_language}"
-
-    return cache_key
 
 
 class JSONValue(values.Value):

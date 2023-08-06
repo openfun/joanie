@@ -54,7 +54,14 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
                     course=course, product=product, organizations=[organizations[0]]
                 )
             )
-        with self.assertNumQueries(17):
+        with self.assertNumQueries(18):
+            response = self.client.get(
+                f"/api/v1.0/organizations/{organizations[0].id}/course-product-relations/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        # A second call to the url should benefit from caching on the product serializer
+        with self.assertNumQueries(3):
             response = self.client.get(
                 f"/api/v1.0/organizations/{organizations[0].id}/course-product-relations/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -143,7 +150,17 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
                     course=course, product=product, organizations=[organizations[0]]
                 )
             )
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
+            response = self.client.get(
+                (
+                    f"/api/v1.0/organizations/{organizations[0].id}/course-product-relations/"
+                    f"{relations[0].id}/"
+                ),
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        # A second call to the url should benefit from caching on the product serializer
+        with self.assertNumQueries(2):
             response = self.client.get(
                 (
                     f"/api/v1.0/organizations/{organizations[0].id}/course-product-relations/"

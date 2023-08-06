@@ -294,7 +294,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         # The user can see his/her enrollment
         token = self.generate_token_from_user(enrollment.user)
 
-        with self.assertNumQueries(13):
+        with self.assertNumQueries(16):
             self.client.get(
                 "/api/v1.0/enrollments/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -321,6 +321,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "name": str(product2.certificate_definition.name),
                         "title": str(product2.certificate_definition.title),
                     },
+                    "order_groups": [],
                     "id": str(product2.id),
                     "price": float(product2.price),
                     "price_currency": "EUR",
@@ -345,6 +346,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "name": str(product1.certificate_definition.name),
                         "title": str(product1.certificate_definition.title),
                     },
+                    "order_groups": [],
                     "state": {
                         "priority": product1.state["priority"],
                         "datetime": product1.state["datetime"]

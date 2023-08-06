@@ -506,6 +506,16 @@ class ProductTargetCourseRelationFactory(factory.django.DjangoModelFactory):
         self.course_runs.set(extracted)
 
 
+class OrderGroupFactory(factory.django.DjangoModelFactory):
+    """A factory to create order groups."""
+
+    class Meta:
+        model = models.OrderGroup
+
+    product = factory.SubFactory(ProductFactory)
+    nb_seats = factory.fuzzy.FuzzyInteger(0, 100)
+
+
 class OrderFactory(factory.django.DjangoModelFactory):
     """A factory to create an Order"""
 

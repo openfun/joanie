@@ -50,6 +50,8 @@ class ProductAdminTestCase(BaseAPITestCase):
             "title": "My product",
             "call_to_action": "Let's go",
             "organizations": str(organization.id),
+            "order_groups-TOTAL_FORMS": 0,
+            "order_groups-INITIAL_FORMS": 0,
             "target_course_relations-TOTAL_FORMS": 0,
             "target_course_relations-INITIAL_FORMS": 0,
         }
@@ -113,6 +115,8 @@ class ProductAdminTestCase(BaseAPITestCase):
             "call_to_action": "Let's go",
             "certificate_definition": certificate_definition.pk,
             "organizations": str(organization.id),
+            "order_groups-TOTAL_FORMS": 0,
+            "order_groups-INITIAL_FORMS": 0,
             "target_course_relations-TOTAL_FORMS": 0,
             "target_course_relations-INITIAL_FORMS": 0,
         }
@@ -144,6 +148,8 @@ class ProductAdminTestCase(BaseAPITestCase):
             "title": "Product for course",
             "call_to_action": "Let's go",
             "organizations": str(organization.id),
+            "order_groups-TOTAL_FORMS": 0,
+            "order_groups-INITIAL_FORMS": 0,
             "target_course_relations-TOTAL_FORMS": 0,
             "target_course_relations-INITIAL_FORMS": 0,
         }
@@ -219,6 +225,8 @@ class ProductAdminTestCase(BaseAPITestCase):
             "price_1": settings.DEFAULT_CURRENCY,
             "call_to_action": product.call_to_action,
             "organizations": str(organization.id),
+            "order_groups-TOTAL_FORMS": 0,
+            "order_groups-INITIAL_FORMS": 0,
             "target_course_relations-TOTAL_FORMS": 3,
             "target_course_relations-INITIAL_FORMS": 3,
             "target_course_relations-0-id": tc2.product_target_relations.get(

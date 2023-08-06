@@ -574,13 +574,6 @@ class CourseProductRelation(BaseModel):
         related_name="product_relations",
         verbose_name=_("organizations"),
     )
-    max_validated_orders = models.PositiveSmallIntegerField(
-        default=0,
-        verbose_name=_("max validated orders"),
-        help_text=_(
-            "The maximum amount of orders that can be validated for a given product"
-        ),
-    )
 
     class Meta:
         db_table = "joanie_course_product_relation"

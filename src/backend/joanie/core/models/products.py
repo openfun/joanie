@@ -309,6 +309,32 @@ class ProductTargetCourseRelation(BaseModel):
         webhooks.synchronize_course_runs(serialized_course_runs)
 
 
+class OrderGroup(BaseModel):
+    """Order group to enforce a maximum number of seats for a product."""
+
+    nb_seats = models.PositiveSmallIntegerField(
+        default=0,
+        verbose_name=_("Number of seats"),
+        help_text=_(
+            "The maximum number of orders that can be validated for a given order group"
+        ),
+    )
+    product = models.ForeignKey(
+        to=Product,
+        verbose_name=_("product"),
+        related_name="order_groups",
+        on_delete=models.RESTRICT,
+    )
+    is_active = models.BooleanField(_("is active"), default=True)
+
+    def get_nb_binding_orders(self):
+        """Query the number of binding orders related to this order group."""
+        return self.orders.filter(
+            product_id=self.product_id,
+            state__in=enums.BINDING_ORDER_STATES,
+        ).count()
+
+
 class Order(BaseModel):
     """
     Order model represents and records details user's order (for free or not) to a course product
@@ -344,6 +370,14 @@ class Order(BaseModel):
         null=True,
     )
 
+    order_group = models.ForeignKey(
+        OrderGroup,
+        verbose_name=_("order group"),
+        related_name="orders",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
     target_courses = models.ManyToManyField(
         courses_models.Course,
         related_name="target_orders",
@@ -554,6 +588,7 @@ class Order(BaseModel):
         except ObjectDoesNotExist:
             return None
 
+    # pylint: disable=too-many-branches
     def clean(self):
         """Clean instance fields and raise a ValidationError in case of issue."""
         error_dict = defaultdict(list)
@@ -584,55 +619,46 @@ class Order(BaseModel):
                     )
                 )
 
-        course_product_relation = (
-            courses_models.CourseProductRelation.objects.filter(
-                course=self.course_id,
-                product=self.product_id,
-                organizations=self.organization_id,
-            )
-            .only("max_validated_orders")
-            .first()
-        )
+        # pylint: disable=no-member
+        title = self.product.title
         if (
             not self.created_on
             and self.course_id
             and self.product_id
             and self.organization_id
-            and course_product_relation is None
+            and not courses_models.CourseProductRelation.objects.filter(
+                course=self.course_id,
+                product=self.product_id,
+                organizations=self.organization_id,
+            ).exists()
         ):
             # pylint: disable=no-member
             message = _(
-                f'The course "{self.course.title}" and the product "{self.product.title}" '
+                f'The course "{self.course.title}" and the product "{title}" '
                 f'should be linked for organization "{self.organization.title}".'
             )
             error_dict["__all__"].append(message)
 
-        if course_product_relation is not None:
-            max_validated_orders = course_product_relation.max_validated_orders
-        else:
-            max_validated_orders = 0
-        if max_validated_orders > 0:
-            annotation = (
-                Order.objects.filter(
-                    product=self.product,
-                    course=self.course,
-                    state__in=(enums.ORDER_STATE_VALIDATED, enums.ORDER_STATE_PENDING),
-                )
-                .annotate(
-                    orders_count=models.Count("id", distinct=True),
-                )
-                .values("orders_count")
-                .first()
-                or {}
+        if self.order_group_id and self.order_group.product_id != self.product_id:
+            error_dict["order_group"].append(
+                f"This order group does not apply to the product {title:s}."
             )
-            validated_order_count = annotation.get("orders_count", 0)
-            if validated_order_count >= max_validated_orders:
-                # pylint: disable=no-member
-                message = _(
-                    f"Maximum number of orders reached for product {self.product.title}"
-                    f" and course {self.course.code}"
+
+        if self.product.order_groups.filter(is_active=True).exists():
+            if (
+                not self.order_group_id
+                or not self.order_group.is_active
+                or not self.order_group.product_id == self.product_id
+            ):
+                error_dict["order_group"].append(
+                    f"An active order group is required for product {title:s}."
                 )
-                error_dict["max_validated_orders"].append(message)
+            else:
+                nb_seats = self.order_group.nb_seats
+                if 0 < nb_seats <= self.order_group.get_nb_binding_orders():
+                    error_dict["order_group"].append(
+                        f"Maximum number of orders reached for product {title:s}"
+                    )
 
         if error_dict:
             raise ValidationError(error_dict)
@@ -822,6 +848,12 @@ def order_post_transition_callback(
         # Make sure it is saved in case the state is modified e.g in case of synchronization
         # failure
         order_enrollment.set()
+
+    # Reset product cache if its representation is impacted by changes on related orders
+    # e.g. number of remaining seats when an order group is used
+    # see test_api_course_product_relation_read_detail_with_order_groups_cache
+    if instance.order_group:
+        Product.objects.filter(id=instance.product_id).update(updated_on=timezone.now())
 
 
 class OrderTargetCourseRelation(BaseModel):
