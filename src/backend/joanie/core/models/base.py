@@ -8,6 +8,7 @@ import uuid
 from itertools import chain
 
 from django.db import models
+from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
 
@@ -41,6 +42,20 @@ class BaseModel(models.Model):
 
     def __repr__(self, dict_repr=False):
         return str(self.to_dict())
+
+    def get_cache_key(self, prefix, is_language_sensitive=False, language=None):
+        """
+        Return a cache key for the instance. If the key is going to be used for multilingual
+        content, an extra argument `is_local_sensitive` can be set to True to bind
+        the active language to the cache key. Alternatively, a `language` argument is
+        also accepted to bind a specific language to the cache key.
+        """
+        cache_key = f"{prefix:s}-{self.id!s}-{self.updated_on.timestamp():.6f}"
+        if is_language_sensitive or language:
+            current_language = language or get_language()
+            cache_key = f"{cache_key}-{current_language}"
+
+        return cache_key
 
     def to_dict(self):
         """Return a dictionary representation of the model."""

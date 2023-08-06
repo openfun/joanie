@@ -26,7 +26,7 @@ and this project adheres to
 - Add admin endpoints to create/update/delete organization/course accesses
 - Add admin endpoint to search users
 - Add endpoints to get course product relations and courses from organization
-- Add `max_validated_orders` field to CourseProductRelation model
+- Add order groups to allow limiting the number of seats on a product course
 - Add api endpoint to retrieve course product relations
 - Add `get_selling_organizations` method to Course model
 - Add courses client api endpoint

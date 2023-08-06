@@ -97,6 +97,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                         "name": relation.product.certificate_definition.name,
                         "title": relation.product.certificate_definition.title,
                     },
+                    "order_groups": [],
                     "state": {
                         "priority": product.state["priority"],
                         "datetime": product.state["datetime"]
@@ -292,7 +293,11 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             course=course, product=product
         )
 
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(9):
+            self.client.get(f"/api/v1.0/courses/{course.code}/products/{product.id}/")
+
+        # A second call to the url should benefit from caching on the product serializer
+        with self.assertNumQueries(0):
             response = self.client.get(
                 f"/api/v1.0/courses/{course.code}/products/{product.id}/"
             )
@@ -313,7 +318,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, 200)
 
         # Then cache should be language sensitive
-        with self.assertNumQueries(14):
+        with self.assertNumQueries(15):
             self.client.get(
                 f"/api/v1.0/courses/{course.code}/products/{product.id}/",
                 HTTP_ACCEPT_LANGUAGE="fr-fr",
@@ -414,7 +419,14 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         )
         factories.UserCourseAccessFactory(user=user, course=course)
 
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
+            self.client.get(
+                f"/api/v1.0/course-product-relations/{relation.id}/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        # A second call to the url should benefit from caching on the product serializer
+        with self.assertNumQueries(2):
             response = self.client.get(
                 f"/api/v1.0/course-product-relations/{relation.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -441,6 +453,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                         "name": relation.product.certificate_definition.name,
                         "title": relation.product.certificate_definition.title,
                     },
+                    "order_groups": [],
                     "state": {
                         "priority": product.state["priority"],
                         "datetime": product.state["datetime"]
@@ -516,6 +529,133 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     for organization in relation.organizations.all()
                 ],
             },
+        )
+
+    def test_api_course_product_relation_read_detail_with_order_groups(self):
+        """The detail of order groups related to the product should be served as expected."""
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        relation = factories.CourseProductRelationFactory()
+        factories.UserCourseAccessFactory(user=user, course=relation.course)
+        product = relation.product
+        order_group1, order_group2 = factories.OrderGroupFactory.create_batch(
+            2, product=product
+        )
+        factories.OrderFactory.create_batch(
+            3, product=product, order_group=order_group1, state="validated"
+        )
+        for state, _label in enums.ORDER_STATE_CHOICES:
+            if state in ["pending", "submitted", "validated"]:
+                continue
+            factories.OrderFactory(
+                product=product, order_group=order_group1, state=state
+            )
+
+        with self.assertNumQueries(7):
+            self.client.get(
+                f"/api/v1.0/course-product-relations/{relation.id}/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        # A second call to the url should benefit from caching on the product serializer
+        with self.assertNumQueries(2):
+            response = self.client.get(
+                f"/api/v1.0/course-product-relations/{relation.id}/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 200)
+
+        content = response.json()
+        self.assertEqual(
+            content["product"]["order_groups"],
+            [
+                {
+                    "id": str(order_group1.id),
+                    "is_active": True,
+                    "nb_availabilities": order_group1.nb_seats - 3,
+                    "nb_seats": order_group1.nb_seats,
+                },
+                {
+                    "id": str(order_group2.id),
+                    "is_active": True,
+                    "nb_availabilities": order_group2.nb_seats,
+                    "nb_seats": order_group2.nb_seats,
+                },
+            ],
+        )
+
+    def test_api_course_product_relation_read_detail_with_order_groups_cache(self):
+        """Cache should be reset on order submit and cancel."""
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        product = factories.ProductFactory(price="0.00")
+        relation = factories.CourseProductRelationFactory(product=product)
+        factories.UserCourseAccessFactory(user=user, course=relation.course)
+        order_group = factories.OrderGroupFactory(product=product, nb_seats=10)
+        order = factories.OrderFactory(product=product, order_group=order_group)
+
+        response = self.client.get(
+            f"/api/v1.0/course-product-relations/{relation.id}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, 200)
+
+        content = response.json()
+        self.assertEqual(
+            content["product"]["order_groups"],
+            [
+                {
+                    "id": str(order_group.id),
+                    "is_active": True,
+                    "nb_availabilities": 10,
+                    "nb_seats": 10,
+                },
+            ],
+        )
+
+        # Submitting order should impact the number of seat availabilities in the
+        # representation of the product
+        order.submit()
+
+        response = self.client.get(
+            f"/api/v1.0/course-product-relations/{relation.id}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(
+            response.json()["product"]["order_groups"],
+            [
+                {
+                    "id": str(order_group.id),
+                    "is_active": True,
+                    "nb_availabilities": 9,
+                    "nb_seats": 10,
+                },
+            ],
+        )
+
+        # Cancelling order should re-credit the number of seat availabilities in the
+        # representation of the product
+        order.cancel()
+
+        response = self.client.get(
+            f"/api/v1.0/course-product-relations/{relation.id}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(
+            response.json()["product"]["order_groups"],
+            [
+                {
+                    "id": str(order_group.id),
+                    "is_active": True,
+                    "nb_availabilities": 10,
+                    "nb_seats": 10,
+                },
+            ],
         )
 
     def test_api_course_product_relation_create_anonymous(self):
