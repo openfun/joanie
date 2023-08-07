@@ -445,7 +445,7 @@ class AddressFactory(factory.django.DjangoModelFactory):
     owner = factory.SubFactory(UserFactory)
 
 
-class CertificateFactory(factory.django.DjangoModelFactory):
+class OrderCertificateFactory(factory.django.DjangoModelFactory):
     """A factory to create a certificate"""
 
     class Meta:
