@@ -412,6 +412,7 @@ class ProductFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = models.Product
+        skip_postgeneration_save = True
 
     type = enums.PRODUCT_TYPE_ENROLLMENT
     title = factory.Faker("bs")
@@ -466,6 +467,7 @@ class CourseProductRelationFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = models.CourseProductRelation
+        skip_postgeneration_save = True
 
     product = factory.SubFactory(ProductFactory)
     course = factory.SubFactory(CourseFactory)
@@ -487,6 +489,7 @@ class ProductTargetCourseRelationFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = models.ProductTargetCourseRelation
+        skip_postgeneration_save = True
 
     product = factory.SubFactory(ProductFactory)
     course = factory.SubFactory(CourseFactory)
