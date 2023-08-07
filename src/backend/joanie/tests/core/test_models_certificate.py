@@ -10,9 +10,9 @@ from pdfminer.high_level import extract_text as pdf_extract_text
 from joanie.core.enums import PRODUCT_TYPE_CERTIFICATE
 from joanie.core.factories import (
     CertificateDefinitionFactory,
-    CertificateFactory,
     CourseFactory,
     CourseProductRelationFactory,
+    OrderCertificateFactory,
     OrderFactory,
     OrganizationFactory,
     ProductFactory,
@@ -27,7 +27,7 @@ class CertificateModelTestCase(TestCase):
         When a certificate is created, localized contexts in each enabled languages
         should be created.
         """
-        certificate = CertificateFactory()
+        certificate = OrderCertificateFactory()
         languages = settings.LANGUAGES
 
         self.assertEqual(len(list(certificate.localized_context)), len(languages))
@@ -54,7 +54,7 @@ class CertificateModelTestCase(TestCase):
         product.translations.create(language_code="fr-fr", title="Produit certifiant")
 
         order = OrderFactory(product=product, organization=organization)
-        certificate = CertificateFactory(order=order)
+        certificate = OrderCertificateFactory(order=order)
 
         context = certificate.get_document_context("en-us")
         self.assertEqual(context["course"]["name"], "Graded product")
@@ -95,7 +95,7 @@ class CertificateModelTestCase(TestCase):
         product.translations.create(language_code="fr-fr", title="Produit certifiant")
 
         order = OrderFactory(product=product)
-        certificate = CertificateFactory(order=order)
+        certificate = OrderCertificateFactory(order=order)
 
         document_text = pdf_extract_text(BytesIO(certificate.document)).replace(
             "\n", ""
@@ -141,7 +141,7 @@ class CertificateModelTestCase(TestCase):
         )
 
         order = OrderFactory(product=product, organization=organization)
-        certificate = CertificateFactory(order=order)
+        certificate = OrderCertificateFactory(order=order)
 
         # - Retrieve the document context should raise a ValueError
         with self.assertRaises(ValueError) as context:
