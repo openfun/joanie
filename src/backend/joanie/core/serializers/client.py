@@ -70,12 +70,7 @@ class CourseLightSerializer(AbilitiesModelSerializer):
             "id",
             "title",
         ]
-        read_only_fields = [
-            "code",
-            "cover",
-            "id",
-            "title",
-        ]
+        read_only_fields = fields
 
 
 class CourseAccessSerializer(AbilitiesModelSerializer):
@@ -160,7 +155,7 @@ class OrganizationSerializer(AbilitiesModelSerializer):
     class Meta:
         model = models.Organization
         fields = ["id", "code", "logo", "title"]
-        read_only_fields = ["id", "code", "logo", "title"]
+        read_only_fields = fields
 
 
 class OrganizationAccessSerializer(AbilitiesModelSerializer):
@@ -248,7 +243,7 @@ class CertificateOrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Order
         fields = ["id", "course", "organization"]
-        read_only_fields = ["id", "course", "organization"]
+        read_only_fields = fields
 
 
 class CertificationDefinitionSerializer(serializers.ModelSerializer):
@@ -261,7 +256,7 @@ class CertificationDefinitionSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.CertificateDefinition
         fields = ["description", "name", "title"]
-        read_only_fields = ("description", "name", "title")
+        read_only_fields = fields
 
 
 class CertificateSerializer(serializers.ModelSerializer):
@@ -276,7 +271,7 @@ class CertificateSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Certificate
         fields = ["id", "certificate_definition", "issued_on", "order"]
-        read_only_fields = ["id", "certificate_definition", "issued_on", "order"]
+        read_only_fields = fields
 
     def get_context(self, certificate):
         """
@@ -307,18 +302,7 @@ class CourseRunSerializer(serializers.ModelSerializer):
             "title",
             "state",
         ]
-        read_only_fields = [
-            "course",
-            "end",
-            "enrollment_end",
-            "enrollment_start",
-            "id",
-            "languages",
-            "resource_link",
-            "start",
-            "title",
-            "state",
-        ]
+        read_only_fields = fields
 
 
 class CourseRunLightSerializer(serializers.ModelSerializer):
@@ -339,17 +323,7 @@ class CourseRunLightSerializer(serializers.ModelSerializer):
             "title",
             "state",
         ]
-        read_only_fields = [
-            "end",
-            "enrollment_end",
-            "enrollment_start",
-            "id",
-            "languages",
-            "resource_link",
-            "start",
-            "title",
-            "state",
-        ]
+        read_only_fields = fields
 
 
 class ProductTargetCourseRelationSerializer(serializers.ModelSerializer):
@@ -570,19 +544,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "total",
             "total_currency",
         ]
-        read_only_fields = [
-            "certificate",
-            "created_on",
-            "course",
-            "id",
-            "main_invoice",
-            "owner",
-            "state",
-            "target_courses",
-            "target_enrollments",
-            "total",
-            "total_currency",
-        ]
+        read_only_fields = fields
 
     def get_target_enrollments(self, order):
         """
@@ -667,17 +629,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "title",
             "type",
         ]
-        read_only_fields = [
-            "call_to_action",
-            "certificate_definition",
-            "id",
-            "price",
-            "price_currency",
-            "state",
-            "target_courses",
-            "title",
-            "type",
-        ]
+        read_only_fields = fields
 
     def to_representation(self, instance):
         """
@@ -730,17 +682,7 @@ class CourseSerializer(AbilitiesModelSerializer):
             "state",
             "title",
         ]
-        read_only_fields = [
-            "created_on",
-            "code",
-            "course_runs",
-            "cover",
-            "id",
-            "organizations",
-            "products",
-            "state",
-            "title",
-        ]
+        read_only_fields = fields
 
 
 class CourseProductRelationSerializer(serializers.ModelSerializer):
@@ -763,13 +705,7 @@ class CourseProductRelationSerializer(serializers.ModelSerializer):
             "organizations",
             "product",
         ]
-        read_only_fields = [
-            "course",
-            "created_on",
-            "id",
-            "organizations",
-            "product",
-        ]
+        read_only_fields = fields
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -788,14 +724,7 @@ class UserSerializer(serializers.ModelSerializer):
             "is_staff",
             "abilities",
         ]
-        read_only_fields = [
-            "id",
-            "username",
-            "full_name",
-            "is_superuser",
-            "is_staff",
-            "abilities",
-        ]
+        read_only_fields = fields
 
     def get_abilities(self, user):
         """Return abilities of the logged-in user on itself."""
