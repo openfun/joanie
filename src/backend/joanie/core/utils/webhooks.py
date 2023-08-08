@@ -49,10 +49,11 @@ def synchronize_course_runs(serialized_course_runs):
                 timeout=3,
             )
 
-        except requests.exceptions.RetryError:
+        except requests.exceptions.RetryError as exc:
             logger.error(
                 "Synchronization failed due to max retries exceeded with url %s",
                 webhook["url"],
+                exc_info=exc,
             )
         except requests.exceptions.RequestException as exc:
             logger.error(

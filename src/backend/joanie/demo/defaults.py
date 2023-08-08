@@ -10,3 +10,9 @@ NB_OBJECTS = {
     "enrollments": 30000,
     "max_orders_per_product": 50,
 }
+
+NB_DEV_OBJECTS = {
+    "product_credential": 5,
+    "product_certificate": 5,
+    "course": 10,
+}
