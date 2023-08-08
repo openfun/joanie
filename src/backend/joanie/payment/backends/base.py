@@ -107,10 +107,10 @@ class BasePaymentBackend:
     def _do_on_payment_failure(order):
         """
         Generic actions triggered when a failed payment has been received.
-        Mark the invoice as canceled and cancel the order.
+        Mark the invoice as pending.
         """
         # - Unvalidate order
-        order.cancel()
+        order.pending()
 
     @staticmethod
     def _do_on_refund(amount, invoice, refund_reference):

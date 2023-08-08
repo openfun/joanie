@@ -4,13 +4,13 @@ Test suite for order models
 import random
 
 from django.core.exceptions import ValidationError
-from django.test import TestCase
+from django.test import RequestFactory, TestCase
 
 from django_fsm import TransitionNotAllowed
 
 from joanie.core import enums, factories
 from joanie.core.models import CourseState, Enrollment
-from joanie.payment.factories import InvoiceFactory
+from joanie.payment.factories import BillingAddressDictFactory, InvoiceFactory
 
 
 # pylint: disable=too-many-public-methods
@@ -63,6 +63,10 @@ class OrderModelsTestCase(TestCase):
 
         # Create an order link to the product
         order = factories.OrderFactory(product=product)
+        order.submit(
+            request=RequestFactory().request(),
+            billing_address=BillingAddressDictFactory(),
+        )
 
         target_courses = order.target_courses.order_by("product_target_relations")
         self.assertCountEqual(target_courses, courses)
@@ -119,10 +123,9 @@ class OrderModelsTestCase(TestCase):
         """
         course = factories.CourseFactory()
         product = factories.ProductFactory(title="Traçabilité", courses=[course])
-        order = factories.OrderFactory(product=product, state=enums.ORDER_STATE_PENDING)
-
-        # 1 - By default, an order is `pending``
-        self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
+        order = factories.OrderFactory(
+            product=product, state=enums.ORDER_STATE_SUBMITTED
+        )
 
         # 2 - When an invoice is linked to the order, and the method validate() is
         # called its state is `validated`
@@ -143,7 +146,8 @@ class OrderModelsTestCase(TestCase):
         courses = factories.CourseFactory.create_batch(2)
         # Create a free product
         product = factories.ProductFactory(courses=courses, price=0)
-        order = factories.OrderFactory(product=product)
+        order = factories.OrderFactory(product=product, total=0.00)
+        order.submit()
 
         self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
 
@@ -165,9 +169,17 @@ class OrderModelsTestCase(TestCase):
             courses=[course], target_courses=[target_course]
         )
 
-        order = factories.OrderFactory(owner=owner, product=product, course=course)
+        order = factories.OrderFactory(
+            owner=owner,
+            product=product,
+            course=course,
+        )
+        order.submit(
+            request=RequestFactory().request(),
+            billing_address=BillingAddressDictFactory(),
+        )
 
-        self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
+        self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
         self.assertEqual(Enrollment.objects.count(), 0)
 
         # - Create an invoice to mark order as validated
@@ -201,14 +213,22 @@ class OrderModelsTestCase(TestCase):
             courses=[course], target_courses=[target_course]
         )
 
-        order = factories.OrderFactory(owner=owner, product=product, course=course)
+        order = factories.OrderFactory(
+            owner=owner,
+            product=product,
+            course=course,
+        )
+        order.submit(
+            request=RequestFactory().request(),
+            billing_address=BillingAddressDictFactory(),
+        )
 
         # - Create an inactive enrollment for related course run
         enrollment = factories.EnrollmentFactory(
             user=owner, course_run=course_run, is_active=False
         )
 
-        self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
+        self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
         self.assertEqual(Enrollment.objects.count(), 1)
 
         # - Create an invoice to mark order as validated
@@ -243,7 +263,12 @@ class OrderModelsTestCase(TestCase):
         product = factories.ProductFactory(
             courses=[course], target_courses=[target_course], price=0.00
         )
-        order = factories.OrderFactory(owner=owner, product=product, course=course)
+        order = factories.OrderFactory(
+            owner=owner,
+            product=product,
+            course=course,
+        )
+        order.submit()
 
         # - As target_course has several course runs, user should not be enrolled automatically
         self.assertEqual(Enrollment.objects.count(), 0)
@@ -284,7 +309,12 @@ class OrderModelsTestCase(TestCase):
             price=0.00,
         )
         # - User purchases the two products
-        order = factories.OrderFactory(owner=owner, product=product_1, course=course)
+        order = factories.OrderFactory(
+            owner=owner,
+            product=product_1,
+            course=course,
+        )
+        order.submit()
         factories.OrderFactory(owner=owner, product=product_2, course=course)
 
         # - As target_course has several course runs, user should not be enrolled automatically
@@ -355,6 +385,7 @@ class OrderModelsTestCase(TestCase):
             price="0.00", target_courses=[cr1.course, cr2.course]
         )
         order = factories.OrderFactory(product=product)
+        order.submit()
 
         # - As the two product's target courses have only one course run, order owner
         #   should have been automatically enrolled to those course runs.
@@ -385,6 +416,10 @@ class OrderModelsTestCase(TestCase):
 
         # - Create an order link to the product
         order = factories.OrderFactory(product=product)
+        order.submit(
+            request=RequestFactory().request(),
+            billing_address=BillingAddressDictFactory(),
+        )
 
         # - Update product course relation, order course relation should not be impacted
         relation.course_runs.set([])
@@ -411,7 +446,7 @@ class OrderModelsTestCase(TestCase):
         """
         order_invoice = factories.OrderFactory(
             product=factories.ProductFactory(price="10.00"),
-            state=enums.ORDER_STATE_PENDING,
+            state=enums.ORDER_STATE_SUBMITTED,
         )
         InvoiceFactory(order=order_invoice)
         self.assertEqual(order_invoice.can_be_state_validated(), True)
@@ -420,10 +455,12 @@ class OrderModelsTestCase(TestCase):
 
         order_free = factories.OrderFactory(
             product=factories.ProductFactory(price="0.00"),
-            state=enums.ORDER_STATE_PENDING,
+            state=enums.ORDER_STATE_DRAFT,
         )
+        order_free.submit()
         self.assertEqual(order_free.can_be_state_validated(), True)
         # order free are automatically validated without calling the validate method
+        # but submit need to be called nonetheless
         self.assertEqual(order_free.state, enums.ORDER_STATE_VALIDATED)
         with self.assertRaises(TransitionNotAllowed):
             order_free.validate()

@@ -7,6 +7,7 @@ import uuid
 from logging import Logger
 from unittest import mock
 
+from django.test.client import RequestFactory
 from django.test.utils import override_settings
 from django.utils import timezone
 
@@ -15,7 +16,7 @@ from joanie.core.factories import CourseRunFactory, EnrollmentFactory
 from joanie.core.models import CourseState
 from joanie.core.serializers import fields
 from joanie.lms_handler.backends.openedx import OpenEdXLMSBackend
-from joanie.payment.factories import InvoiceFactory
+from joanie.payment.factories import BillingAddressDictFactory, InvoiceFactory
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -303,8 +304,8 @@ class EnrollmentApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, 200)
         content = json.loads(response.content)
-
         self.assertEqual(len(content["results"]), 3)
+
         self.assertEqual(
             content["results"][2]["products"],
             [
@@ -609,11 +610,16 @@ class EnrollmentApiTest(BaseAPITestCase):
     def test_api_enrollment_read_detail_authenticated_owner(self, _):
         """Authenticated users should be allowed to retrieve an enrollment they own."""
         user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
         target_courses = factories.CourseFactory.create_batch(2)
         target_course_runs = self.create_opened_course_run(2, course=target_courses[0])
         self.create_opened_course_run(2, course=target_courses[1])
         product = factories.ProductFactory(target_courses=target_courses)
         order = factories.OrderFactory(owner=user, product=product)
+        order.submit(
+            request=RequestFactory().request(),
+            billing_address=BillingAddressDictFactory(),
+        )
         # - Create an invoice related to the order to mark it as validated
         InvoiceFactory(order=order, total=order.total)
         order.validate()
@@ -624,7 +630,6 @@ class EnrollmentApiTest(BaseAPITestCase):
             is_active=True,
             was_created_by_order=True,
         )
-        token = self.generate_token_from_user(user)
 
         response = self.client.get(
             f"/api/v1.0/enrollments/{enrollment.id}/",
@@ -810,7 +815,8 @@ class EnrollmentApiTest(BaseAPITestCase):
             resource_link="http://openedx.test/courses/course-v1:edx+000002+Demo_Course/course",
         )
         product = factories.ProductFactory(target_courses=[target_course], price="0.00")
-        factories.OrderFactory(owner=user, product=product)
+        order = factories.OrderFactory(owner=user, product=product)
+        order.submit(request=RequestFactory().request())
 
         # Create a pre-existing enrollment and try to enroll to this course's second course run
         factories.EnrollmentFactory(
@@ -1610,6 +1616,10 @@ class EnrollmentApiTest(BaseAPITestCase):
         )
         product = factories.ProductFactory(target_courses=[target_course])
         order = factories.OrderFactory(product=product)
+        order.submit(
+            request=RequestFactory().request(),
+            billing_address=BillingAddressDictFactory(),
+        )
         # - Create an invoice related to the order to mark it as validated
         InvoiceFactory(order=order, total=order.total)
         order.validate()
@@ -1636,6 +1646,10 @@ class EnrollmentApiTest(BaseAPITestCase):
         )
         product = factories.ProductFactory(target_courses=[target_course])
         order = factories.OrderFactory(product=product)
+        order.submit(
+            request=RequestFactory().request(),
+            billing_address=BillingAddressDictFactory(),
+        )
 
         # - Create an invoice related then validate the order
         InvoiceFactory(order=order, total=order.total)
@@ -1664,6 +1678,10 @@ class EnrollmentApiTest(BaseAPITestCase):
         )
         product = factories.ProductFactory(target_courses=[target_course])
         order = factories.OrderFactory(owner=user, product=product)
+        order.submit(
+            request=RequestFactory().request(),
+            billing_address=BillingAddressDictFactory(),
+        )
 
         # - Create an invoice related then validate the order
         InvoiceFactory(order=order, total=order.total)
@@ -1838,6 +1856,11 @@ class EnrollmentApiTest(BaseAPITestCase):
         factories.CourseRunFactory(course=course_run.course)
         product = factories.ProductFactory(target_courses=[course_run.course])
         order = factories.OrderFactory(owner=user, product=product)
+        order.submit(
+            request=RequestFactory().request(),
+            billing_address=BillingAddressDictFactory(),
+        )
+
         # - Create an invoice related to the order to mark it as validated
         InvoiceFactory(order=order, total=order.total)
         order.validate()
@@ -1922,6 +1945,10 @@ class EnrollmentApiTest(BaseAPITestCase):
         self.create_opened_course_run(course=target_course)
         product = factories.ProductFactory(target_courses=[target_course])
         order = factories.OrderFactory(owner=user, product=product)
+        order.submit(
+            request=RequestFactory().request(),
+            billing_address=BillingAddressDictFactory(),
+        )
         InvoiceFactory(order=order, total=order.total)
         order.validate()
 
@@ -1995,6 +2022,10 @@ class EnrollmentApiTest(BaseAPITestCase):
         factories.CourseRunFactory(course=course_run.course)
         product = factories.ProductFactory(target_courses=[course_run.course])
         order = factories.OrderFactory(owner=user, product=product)
+        order.submit(
+            request=RequestFactory().request(),
+            billing_address=BillingAddressDictFactory(),
+        )
         # - Create an invoice related then validate the order
         InvoiceFactory(order=order, total=order.total)
         order.validate()

@@ -21,8 +21,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
 from joanie.core import enums, filters, models, permissions, serializers
-from joanie.payment import get_payment_backend
-from joanie.payment.models import CreditCard, Invoice
+from joanie.payment.models import Invoice
 
 
 class Pagination(pagination.PageNumberPagination):
@@ -318,7 +317,6 @@ class OrderViewSet(
 
         product = serializer.validated_data.get("product")
         course_code = serializer.initial_data.get("course")
-        billing_address = serializer.initial_data.get("billing_address")
 
         # Retrieve course instance from the provided course code
         if not course_code:
@@ -340,11 +338,6 @@ class OrderViewSet(
             )
             serializer.validated_data["organization"] = organization
 
-        # If product is not free, we have to create a payment.
-        # To create one, a billing address is mandatory
-        if product.price > 0 and not billing_address:
-            return Response({"billing_address": "This field is required."}, status=400)
-
         # - Validate data then create an order
         try:
             self.perform_create(serializer)
@@ -357,61 +350,53 @@ class OrderViewSet(
                 status=400,
             )
 
-        # Once order has been created, if product is not free, create a payment
-        if product.price > 0:
-            order = serializer.instance
-            payment_backend = get_payment_backend()
-            credit_card_id = serializer.initial_data.get("credit_card_id")
-
-            # if payment in one click
-            if credit_card_id:
-                try:
-                    credit_card = CreditCard.objects.get(
-                        owner=order.owner, id=credit_card_id
-                    )
-                    payment_info = payment_backend.create_one_click_payment(
-                        request=request,
-                        order=order,
-                        billing_address=billing_address,
-                        credit_card_token=credit_card.token,
-                    )
-                except (CreditCard.DoesNotExist, NotImplementedError):
-                    pass
-            else:
-                payment_info = payment_backend.create_payment(
-                    request=request, order=order, billing_address=billing_address
-                )
-
-            # Return the fresh new order with payment_info
-            return Response(
-                {**serializer.data, "payment_info": payment_info}, status=201
-            )
-
         # Else return the fresh new order
         return Response(serializer.data, status=201)
 
+    @action(detail=True, methods=["PATCH"])
+    def submit(
+        self, request, pk=None
+    ):  # pylint: disable=no-self-use, invalid-name, unused-argument
+        """
+        Submit a draft order if the conditions are filled
+        """
+        serializer = self.get_serializer(data=request.data)
+        billing_address = serializer.initial_data.get("billing_address")
+        credit_card_id = serializer.initial_data.get("credit_card_id")
+        order = self.get_object()
+
+        return Response(
+            {"payment_info": order.submit(billing_address, credit_card_id, request)},
+            status=201,
+        )
+
     @action(detail=True, methods=["POST"])
-    def abort(self, request, pk=None):  # pylint: disable=no-self-use, invalid-name
-        """Abort a pending order and the related payment if there is one."""
-        username = request.auth["username"] if request.auth else request.user.username
+    def abort(
+        self, request, pk=None
+    ):  # pylint: disable=no-self-use, invalid-name, unused-argument
+        """Change the state of the order to pending"""
         payment_id = request.data.get("payment_id")
 
-        try:
-            order = models.Order.objects.get(pk=pk, owner__username=username)
-        except models.Order.DoesNotExist:
-            return Response(
-                f'No order found with id "{pk}" owned by {username}.', status=404
-            )
+        order = self.get_object()
 
-        if order.state != enums.ORDER_STATE_PENDING:
-            return Response("Cannot abort a not pending order.", status=403)
+        if order.state == enums.ORDER_STATE_VALIDATED:
+            return Response("Cannot abort a validated order.", status=422)
 
-        if payment_id:
-            payment_backend = get_payment_backend()
-            payment_backend.abort_payment(payment_id)
+        order.pending(payment_id)
+
+        return Response(status=204)
+
+    @action(detail=True, methods=["POST"])
+    def cancel(
+        self, request, pk=None
+    ):  # pylint: disable=no-self-use, invalid-name, unused-argument
+        """Change the state of the order to cancelled"""
+        order = self.get_object()
+
+        if order.state == enums.ORDER_STATE_VALIDATED:
+            return Response("Cannot cancel a validated order.", status=422)
 
         order.cancel()
-
         return Response(status=204)
 
     @action(detail=True, methods=["GET"])
@@ -446,6 +431,17 @@ class OrderViewSet(
         ] = f"attachment; filename={invoice.reference}.pdf;"
 
         return response
+
+    @action(detail=True, methods=["PUT"])
+    def validate(
+        self, request, pk=None
+    ):  # pylint: disable=no-self-use, invalid-name, unused-argument
+        """
+        Validate the order
+        """
+        order = self.get_object()
+        order.validate()
+        return Response(status=200)
 
 
 class AddressViewSet(

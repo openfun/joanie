@@ -9,6 +9,7 @@ import payplug
 from payplug.exceptions import BadRequest, Forbidden, UnknownAPIResource
 from rest_framework.test import APIRequestFactory
 
+from joanie.core import enums
 from joanie.core.factories import OrderFactory, ProductFactory, UserFactory
 from joanie.payment.backends.base import BasePaymentBackend
 from joanie.payment.backends.payplug import PayplugBackend
@@ -443,7 +444,9 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         payment_id = "pay_00000"
         product = ProductFactory()
         owner = UserFactory(language="en-us")
-        order = OrderFactory(product=product, owner=owner)
+        order = OrderFactory(
+            product=product, owner=owner, state=enums.ORDER_STATE_SUBMITTED
+        )
         backend = PayplugBackend(self.configuration)
         billing_address = BillingAddressDictFactory()
         payplug_billing_address = billing_address.copy()

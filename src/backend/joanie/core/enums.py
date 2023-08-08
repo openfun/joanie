@@ -50,15 +50,17 @@ CATALOG_VISIBILITY_CHOICES = (
     HIDDEN,
 )
 
-ORDER_STATE_PENDING = "pending"  # waiting for payment
+ORDER_STATE_DRAFT = "draft"  # order has been created
+ORDER_STATE_SUBMITTED = "submitted"  # order information have been validated
+ORDER_STATE_PENDING = "pending"  # payment has failed but can be retried
 ORDER_STATE_CANCELED = "canceled"  # has been canceled
-ORDER_STATE_FAILED = "failed"  # payment failed
 ORDER_STATE_VALIDATED = "validated"  # is free or has an invoice linked
 
 ORDER_STATE_CHOICES = (
-    (ORDER_STATE_PENDING, _("Pending")),  # default
+    (ORDER_STATE_DRAFT, _("Draft")),  # default
+    (ORDER_STATE_SUBMITTED, _("Submitted")),
+    (ORDER_STATE_PENDING, _("Pending")),
     (ORDER_STATE_CANCELED, pgettext_lazy("As in: the order is cancelled.", "Canceled")),
-    (ORDER_STATE_FAILED, pgettext_lazy("As in: the order is failed.", "Failed")),
     (
         ORDER_STATE_VALIDATED,
         pgettext_lazy("As in: the order is validated.", "Validated"),

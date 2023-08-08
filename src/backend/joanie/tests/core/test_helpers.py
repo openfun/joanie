@@ -54,6 +54,7 @@ class HelpersTestCase(TestCase):
         )
         course = factories.CourseFactory(products=[product])
         order = factories.OrderFactory(product=product, course=course)
+        order.submit()
         certificate_qs = models.Certificate.objects.filter(order=order)
         self.assertEqual(certificate_qs.count(), 0)
 
@@ -89,6 +90,7 @@ class HelpersTestCase(TestCase):
         )
         course = factories.CourseFactory(products=[product])
         order = factories.OrderFactory(product=product, course=course)
+        order.submit()
         certificate_qs = models.Certificate.objects.filter(order=order)
         self.assertEqual(certificate_qs.count(), 0)
 
@@ -128,6 +130,7 @@ class HelpersTestCase(TestCase):
         )
         course = factories.CourseFactory(products=[product])
         order = factories.OrderFactory(product=product, course=course)
+        order.submit()
         certificate_qs = models.Certificate.objects.filter(order=order)
 
         self.assertEqual(certificate_qs.count(), 0)
@@ -178,6 +181,9 @@ class HelpersTestCase(TestCase):
                 product=product_1, course=course, state=enums.ORDER_STATE_CANCELED
             ),
         ]
+
+        for order in orders[0:-1]:
+            order.submit()
 
         certificate_qs = models.Certificate.objects.filter(order__in=orders)
 

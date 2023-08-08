@@ -15,7 +15,7 @@ from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
 import requests
-from django_fsm import FSMField, TransitionNotAllowed, transition
+from django_fsm import FSMField, transition
 from django_fsm.signals import post_transition
 from parler import models as parler_models
 from urllib3.util import Retry
@@ -25,6 +25,8 @@ from joanie.core.exceptions import EnrollmentError, GradeError
 from joanie.core.models.certifications import Certificate
 from joanie.core.utils import webhooks
 from joanie.lms_handler import LMSHandler
+from joanie.payment import get_payment_backend
+from joanie.payment.models import CreditCard
 
 from . import accounts as customers_models
 from . import courses as courses_models
@@ -349,7 +351,7 @@ class Order(BaseModel):
     )
 
     state = FSMField(
-        default=enums.ORDER_STATE_PENDING,
+        default=enums.ORDER_STATE_DRAFT,
         choices=enums.ORDER_STATE_CHOICES,
         db_index=True,
     )
@@ -376,11 +378,82 @@ class Order(BaseModel):
         An order can be validated if the product is free or if it
         has invoices.
         """
-        return self.total == 0 or self.invoices.count() > 0
+        return self.total == 0.0 or self.invoices.count() > 0
+
+    def can_be_state_submitted(self):
+        """
+        An order can be submitted if the order has a course, an organization,
+        an owner, and a product
+        """
+        return (
+            self.course is not None
+            and self.organization is not None
+            and self.owner is not None
+            and self.product is not None
+        )
 
     @transition(
         field="state",
-        source=enums.ORDER_STATE_PENDING,
+        source=enums.ORDER_STATE_DRAFT,
+        target=enums.ORDER_STATE_SUBMITTED,
+        conditions=[can_be_state_submitted],
+    )
+    def _submit(self, billing_address=None, credit_card_id=None, request=None):
+        """
+        Transition order to submitted state.
+        Create a payment if the product is fee
+        """
+        payment_backend = get_payment_backend()
+        if credit_card_id:
+            try:
+                credit_card = CreditCard.objects.get(
+                    owner=self.owner, id=credit_card_id
+                )
+                return payment_backend.create_one_click_payment(
+                    request=request,
+                    order=self,
+                    billing_address=billing_address,
+                    credit_card_token=credit_card.token,
+                )
+            except (CreditCard.DoesNotExist, NotImplementedError):
+                pass
+        payment_info = payment_backend.create_payment(
+            request=request, order=self, billing_address=billing_address
+        )
+
+        return payment_info
+
+    def submit(self, billing_address=None, credit_card_id=None, request=None):
+        """
+        Transition order to submitted state and to validate if order is free
+        """
+        if self.total != 0.0 and billing_address is None:
+            raise ValidationError({"billing_address": ["This field is required."]})
+
+        for relation in ProductTargetCourseRelation.objects.filter(
+            product=self.product
+        ):
+            order_relation = OrderTargetCourseRelation.objects.create(
+                order=self,
+                course=relation.course,
+                position=relation.position,
+                is_graded=relation.is_graded,
+            )
+            order_relation.course_runs.set(relation.course_runs.all())
+
+        if self.total == 0.0:
+            self.validate()
+            return None
+
+        return self._submit(billing_address, credit_card_id, request)
+
+    @transition(
+        field="state",
+        source=[
+            enums.ORDER_STATE_PENDING,
+            enums.ORDER_STATE_SUBMITTED,
+            enums.ORDER_STATE_DRAFT,
+        ],
         target=enums.ORDER_STATE_VALIDATED,
         conditions=[can_be_state_validated],
     )
@@ -389,11 +462,29 @@ class Order(BaseModel):
         Transition order to validated state.
         """
 
-    @transition(field="state", source="*", target=enums.ORDER_STATE_CANCELED)
+    @transition(
+        field="state",
+        source="*",
+        target=enums.ORDER_STATE_CANCELED,
+    )
     def cancel(self):
         """
         Mark order instance as "canceled".
         """
+
+    @transition(
+        field="state",
+        source=[enums.ORDER_STATE_SUBMITTED, enums.ORDER_STATE_VALIDATED],
+        target=enums.ORDER_STATE_PENDING,
+    )
+    def pending(self, payment_id=None):
+        """
+        Mark order instance as "pending" and abort the related
+        payment if there is one
+        """
+        if payment_id:
+            payment_backend = get_payment_backend()
+            payment_backend.abort_payment(payment_id)
 
     @property
     def target_course_runs(self):
@@ -494,26 +585,7 @@ class Order(BaseModel):
     def save(self, *args, **kwargs):
         """Call full clean before saving instance."""
         self.full_clean()
-        is_new = not bool(self.created_on)
         models.Model.save(self, *args, **kwargs)
-        if is_new:
-            # - Generate order course relation
-            for relation in ProductTargetCourseRelation.objects.filter(
-                product=self.product
-            ):
-                order_relation = OrderTargetCourseRelation.objects.create(
-                    order=self,
-                    course=relation.course,
-                    position=relation.position,
-                    is_graded=relation.is_graded,
-                )
-                order_relation.course_runs.set(relation.course_runs.all())
-
-            try:
-                # orders with free product are automatically validated
-                self.validate()
-            except TransitionNotAllowed:
-                pass
 
     def get_enrollments(self, is_active=None):
         """

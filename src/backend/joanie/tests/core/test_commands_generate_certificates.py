@@ -48,6 +48,7 @@ class CreateCertificatesTestCase(TestCase):
             target_courses=[course_run.course],
         )
         order = factories.OrderFactory(product=product)
+        order.submit()
         certificate_qs = models.Certificate.objects.filter(order=order)
 
         self.assertEqual(certificate_qs.count(), 0)
@@ -77,6 +78,7 @@ class CreateCertificatesTestCase(TestCase):
             courses=[course_run.course],
         )
         order = factories.OrderFactory(product=product, course=course_run.course)
+        order.submit()
         factories.EnrollmentFactory(
             user=order.owner, course_run=course_run, is_active=True
         )
@@ -108,6 +110,8 @@ class CreateCertificatesTestCase(TestCase):
         )
         course = factories.CourseFactory(products=[product])
         orders = factories.OrderFactory.create_batch(2, product=product, course=course)
+        for order in orders:
+            order.submit()
         certificate_qs = models.Certificate.objects.filter(order__in=orders)
 
         self.assertEqual(certificate_qs.count(), 0)
@@ -142,6 +146,8 @@ class CreateCertificatesTestCase(TestCase):
             factories.OrderFactory(product=product, course=course_1),
             factories.OrderFactory(product=product, course=course_2),
         ]
+        for order in orders:
+            order.submit()
         certificate_qs = models.Certificate.objects.filter(order__in=orders)
 
         self.assertEqual(certificate_qs.count(), 0)
@@ -179,6 +185,8 @@ class CreateCertificatesTestCase(TestCase):
             factories.OrderFactory(course=course, product=product_1),
             factories.OrderFactory(course=course, product=product_2),
         ]
+        for order in orders:
+            order.submit()
         certificate_qs = models.Certificate.objects.filter(order__in=orders)
 
         self.assertEqual(certificate_qs.count(), 0)
@@ -225,6 +233,8 @@ class CreateCertificatesTestCase(TestCase):
             factories.OrderFactory(course=course_2, product=product_1),
             factories.OrderFactory(course=course_2, product=product_2),
         ]
+        for order in orders:
+            order.submit()
         certificate_qs = models.Certificate.objects.filter(order__in=orders)
 
         self.assertEqual(certificate_qs.count(), 0)
@@ -278,6 +288,8 @@ class CreateCertificatesTestCase(TestCase):
             factories.OrderFactory(course=course, product=product_1),
             factories.OrderFactory(course=course, product=product_2),
         ]
+        for order in orders:
+            order.submit()
         certificate_qs = models.Certificate.objects.filter(order__in=orders)
 
         self.assertEqual(certificate_qs.count(), 0)
