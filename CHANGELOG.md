@@ -10,6 +10,8 @@ and this project adheres to
 
 ## Added
 
+- Add multiples product, order, certificates and enrollment in the database
+  that's initialized with the `make demo-dev`
 - Add client api filter to filter `Order` resource by `product__type` 
 - Add a backoffice redirect view to redirect to the frontend admin backoffice
 - Add filters to CourseRun list for a given course on admin api
