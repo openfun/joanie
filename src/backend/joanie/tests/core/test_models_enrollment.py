@@ -237,7 +237,8 @@ class EnrollmentModelsTestCase(TestCase):
         )
 
         # - Once the product purchased, enrollment should be allowed
-        factories.OrderFactory(owner=user, product=product)
+        order = factories.OrderFactory(owner=user, product=product)
+        order.submit()
         factories.EnrollmentFactory(
             course_run=course_run, user=user, was_created_by_order=True
         )
@@ -263,7 +264,8 @@ class EnrollmentModelsTestCase(TestCase):
         course_relation = product.target_course_relations.get(course=course)
         course_relation.course_runs.set([cr1])
 
-        factories.OrderFactory(owner=user, product=product)
+        order = factories.OrderFactory(owner=user, product=product)
+        order.submit()
 
         # - Enroll to cr2 should fail
         with self.assertRaises(ValidationError) as context:
@@ -394,6 +396,7 @@ class EnrollmentModelsTestCase(TestCase):
 
         # Then if user purchases the product, the flag should not have been updated
         order = factories.OrderFactory(owner=user, product=product)
+        order.submit()
         order_enrollment = order.get_enrollments().first()
         self.assertEqual(enrollment, order_enrollment)
         self.assertFalse(order_enrollment.was_created_by_order)

@@ -9,7 +9,7 @@ from django.urls import reverse
 
 from rest_framework.test import APIRequestFactory
 
-from joanie.core.enums import ORDER_STATE_PENDING, ORDER_STATE_VALIDATED
+from joanie.core.enums import ORDER_STATE_SUBMITTED, ORDER_STATE_VALIDATED
 from joanie.core.factories import OrderFactory, ProductFactory, UserFactory
 from joanie.payment.backends.base import BasePaymentBackend
 from joanie.payment.backends.dummy import DummyPaymentBackend
@@ -110,7 +110,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
             first_name="",
             last_name="",
         )
-        order = OrderFactory(owner=owner)
+        order = OrderFactory(owner=owner, state=ORDER_STATE_SUBMITTED)
         billing_address = BillingAddressDictFactory()
         request = APIRequestFactory().post(path="/")
         payment_id = f"pay_{order.id}"
@@ -128,7 +128,6 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
                 "is_paid": True,
             },
         )
-        self.assertEqual(order.state, ORDER_STATE_PENDING)
         mock_create_payment.assert_called_once_with(request, order, billing_address)
 
         request = APIRequestFactory().post(
@@ -251,7 +250,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
         backend = DummyPaymentBackend()
 
         # Create a payment
-        order = OrderFactory()
+        order = OrderFactory(state=ORDER_STATE_SUBMITTED)
         billing_address = BillingAddressDictFactory()
         request = APIRequestFactory().post(path="/")
         payment_id = backend.create_payment(request, order, billing_address)[
@@ -268,7 +267,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
 
         backend.handle_notification(request)
         order.refresh_from_db()
-        self.assertEqual(order.state, ORDER_STATE_PENDING)
+        self.assertEqual(order.state, ORDER_STATE_SUBMITTED)
 
         mock_payment_failure.assert_called_once_with(order)
 
@@ -423,7 +422,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
         request_factory = APIRequestFactory()
 
         # Create a payment
-        order = OrderFactory()
+        order = OrderFactory(state=ORDER_STATE_SUBMITTED)
         billing_address = BillingAddressDictFactory()
         request = APIRequestFactory().post(path="/")
         payment_id = backend.create_payment(request, order, billing_address)[

@@ -7,6 +7,7 @@ from django.core import mail
 
 from rest_framework.test import APIRequestFactory
 
+from joanie.core import enums
 from joanie.core.factories import OrderFactory, UserFactory
 from joanie.payment.backends.base import BasePaymentBackend
 from joanie.payment.factories import BillingAddressDictFactory
@@ -137,7 +138,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase):
         """
         backend = TestBasePaymentBackend()
         owner = UserFactory(email="sam@fun-test.fr", language="en-us")
-        order = OrderFactory(owner=owner)
+        order = OrderFactory(owner=owner, state=enums.ORDER_STATE_SUBMITTED)
         billing_address = BillingAddressDictFactory()
         payment = {
             "id": "pay_0",
@@ -171,12 +172,12 @@ class BasePaymentBackendTestCase(BasePaymentTestCase):
         order.
         """
         backend = TestBasePaymentBackend()
-        order = OrderFactory()
+        order = OrderFactory(state=enums.ORDER_STATE_SUBMITTED)
 
         backend.call_do_on_payment_failure(order)
 
-        # - Order has been canceled
-        self.assertEqual(order.state, "canceled")
+        # - Payment has failed gracefully and changed order state to pending
+        self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
 
         # - No email has been sent
         self.assertEqual(len(mail.outbox), 0)
@@ -188,7 +189,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase):
         transaction.
         """
         backend = TestBasePaymentBackend()
-        order = OrderFactory()
+        order = OrderFactory(state=enums.ORDER_STATE_SUBMITTED)
         billing_address = BillingAddressDictFactory()
 
         # Create payment and register it
@@ -244,7 +245,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase):
         """Check error is raised if send_mails fails"""
         backend = TestBasePaymentBackend()
         owner = UserFactory(email="sam@fun-test.fr", username="Samantha")
-        order = OrderFactory(owner=owner)
+        order = OrderFactory(owner=owner, state=enums.ORDER_STATE_SUBMITTED)
         billing_address = BillingAddressDictFactory()
         payment = {
             "id": "pay_0",
@@ -290,7 +291,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase):
             last_name="Smith",
             language="en-us",
         )
-        order = OrderFactory(owner=owner)
+        order = OrderFactory(owner=owner, state=enums.ORDER_STATE_SUBMITTED)
         billing_address = BillingAddressDictFactory()
         payment = {
             "id": "pay_0",
@@ -330,7 +331,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase):
             first_name="Dave",
             last_name="Bowman",
         )
-        order = OrderFactory(owner=owner)
+        order = OrderFactory(owner=owner, state=enums.ORDER_STATE_SUBMITTED)
         billing_address = BillingAddressDictFactory()
         payment = {
             "id": "pay_0",

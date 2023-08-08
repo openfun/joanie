@@ -41,6 +41,7 @@ and this project adheres to
 
 ### Changed
 
+- Refactor the Order FSM to make a better use of transitions
 - Allow to get course product relation anonymously
   through a course id / product id pair
 - Take products in account to process Course state

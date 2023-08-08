@@ -19,7 +19,7 @@ from howard.issuers import InvoiceDocument
 from parler.utils import get_language_settings
 from parler.utils.context import switch_language
 
-from joanie.core.models import BaseModel, Order
+from joanie.core.models.base import BaseModel
 from joanie.core.utils import merge_dict
 
 from . import enums as payment_enums
@@ -48,7 +48,7 @@ class Invoice(BaseModel):
         unique=True,
     )
     order = models.ForeignKey(
-        to=Order,
+        to="core.Order",
         verbose_name=_("order"),
         related_name="invoices",
         on_delete=models.PROTECT,
