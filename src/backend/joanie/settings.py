@@ -227,6 +227,11 @@ class Base(Configuration):
         }
     }
 
+    JOANIE_BACKOFFICE_BASE_URL = values.Value(
+        environ_name="JOANIE_BACKOFFICE_BASE_URL",
+        environ_prefix=None,
+    )
+
     # Cache
     CACHES = {
         "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},

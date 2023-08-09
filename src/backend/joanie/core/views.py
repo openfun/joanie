@@ -1,6 +1,7 @@
 """Views of the ``core`` app of the Joanie project."""
+from django.conf import settings
 from django.contrib.sites.models import Site
-from django.views.generic.base import TemplateView
+from django.views.generic.base import RedirectView, TemplateView
 
 from ..core.factories import OrderFactory
 
@@ -37,3 +38,21 @@ class DebugMailSuccessPaymentViewTxt(DebugMailSuccessPayment):
     in text format"""
 
     template_name = "mail/text/order_validated.txt"
+
+
+class BackOfficeRedirectView(RedirectView):
+    """
+    Redirect to the next.js backoffice application
+    with the path caught in the redirect url
+    """
+
+    permanent = True
+    query_string = False
+    pattern_name = None
+    http_method_names = ["get"]
+
+    def get_redirect_url(self, *args, **kwargs):
+        """
+        Redirect to the backoffice pathname caught in the url
+        """
+        return f"{settings.JOANIE_BACKOFFICE_BASE_URL}/{self.kwargs['path']}"
