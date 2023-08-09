@@ -20,7 +20,7 @@ class CourseAccessAdminApiTest(TestCase):
         course = factories.CourseFactory()
         response = self.client.get(f"/api/v1.0/admin/courses/{course.id}/accesses/")
 
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 401)
         content = response.json()
         self.assertEqual(
             content["detail"], "Authentication credentials were not provided."

@@ -2,11 +2,12 @@
 Admin API Endpoints
 """
 import django_filters.rest_framework
-from rest_framework import authentication, mixins, permissions, viewsets
+from rest_framework import mixins, permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from joanie.core import filters, models, serializers
+from joanie.core.authentication import SessionAuthenticationWithAuthenticateHeader
 
 
 # pylint: disable=too-many-ancestors
@@ -15,7 +16,7 @@ class OrganizationViewSet(viewsets.ModelViewSet):
     Admin Organization ViewSet
     """
 
-    authentication_classes = [authentication.SessionAuthentication]
+    authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_class = serializers.AdminOrganizationSerializer
     queryset = models.Organization.objects.all()
@@ -36,7 +37,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     Admin Product ViewSet
     """
 
-    authentication_classes = [authentication.SessionAuthentication]
+    authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_class = serializers.AdminProductSerializer
     queryset = models.Product.objects.all()
@@ -48,7 +49,7 @@ class CourseViewSet(viewsets.ModelViewSet):
     Admin Course ViewSet
     """
 
-    authentication_classes = [authentication.SessionAuthentication]
+    authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_class = serializers.AdminCourseSerializer
     queryset = models.Course.objects.all().prefetch_related("organizations", "products")
@@ -69,7 +70,7 @@ class CourseRunViewSet(viewsets.ModelViewSet):
     Admin CourseRun ViewSet
     """
 
-    authentication_classes = [authentication.SessionAuthentication]
+    authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_class = serializers.AdminCourseRunSerializer
     queryset = models.CourseRun.objects.all().select_related("course")
@@ -95,7 +96,7 @@ class CertificateDefinitionViewSet(viewsets.ModelViewSet):
     Admin Certificate ViewSet
     """
 
-    authentication_classes = [authentication.SessionAuthentication]
+    authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_class = serializers.AdminCertificateDefinitionSerializer
     queryset = models.CertificateDefinition.objects.all()
@@ -108,7 +109,7 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     Admin User ViewSet
     """
 
-    authentication_classes = [authentication.SessionAuthentication]
+    authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_class = serializers.AdminUserSerializer
     me_serializer_class = serializers.AdminUserCompleteSerializer
@@ -154,7 +155,7 @@ class CourseAccessViewSet(
     Write only Course Access ViewSet
     """
 
-    authentication_classes = [authentication.SessionAuthentication]
+    authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_class = serializers.AdminCourseAccessSerializer
     queryset = models.CourseAccess.objects.all().select_related("user")
@@ -178,7 +179,7 @@ class OrganizationAccessViewSet(
     Write only Organization Access ViewSet
     """
 
-    authentication_classes = [authentication.SessionAuthentication]
+    authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_class = serializers.AdminOrganizationAccessSerializer
     queryset = models.OrganizationAccess.objects.all().select_related("user")

@@ -22,7 +22,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             f"/api/v1.0/admin/organizations/{organization.id}/accesses/"
         )
 
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 401)
         content = response.json()
         self.assertEqual(
             content["detail"], "Authentication credentials were not provided."
