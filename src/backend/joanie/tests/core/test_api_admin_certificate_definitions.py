@@ -19,7 +19,7 @@ class CertificateDefinitionAdminApiTest(TestCase):
         """
         response = self.client.get("/api/v1.0/admin/certificate-definitions/")
 
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 401)
         content = response.json()
         self.assertEqual(
             content["detail"], "Authentication credentials were not provided."

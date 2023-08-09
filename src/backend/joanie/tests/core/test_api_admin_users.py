@@ -19,7 +19,7 @@ class UserAdminApiTest(TestCase):
         """
         response = self.client.get("/api/v1.0/admin/users/")
 
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 401)
         content = response.json()
         self.assertEqual(
             content["detail"], "Authentication credentials were not provided."
@@ -219,7 +219,7 @@ class UserAdminApiTest(TestCase):
         factories.UserFactory(is_staff=True, is_superuser=True)
         response = self.client.get("/api/v1.0/admin/users/me/")
 
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 401)
 
     def test_admin_api_user_me_no_access(self):
         """
