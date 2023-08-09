@@ -12,6 +12,8 @@ import { defineMessages, useIntl } from "react-intl";
 import { useTheme } from "@mui/material/styles";
 import { DashboardNavItem } from "@/layouts/dashboard/nav/item/DashboardNavItem";
 import { DashboardNavItemsList } from "@/layouts/dashboard/nav/item/list/DasboardNavItemsList";
+import { useAuthContext } from "@/contexts/auth/AuthContext";
+import { PATH_ADMIN } from "@/utils/routes/path";
 
 const messages = defineMessages({
   settingsSubHeader: {
@@ -24,9 +26,20 @@ const messages = defineMessages({
     defaultMessage: "Notifications",
     description: "Notifications navigation label",
   },
+  logout: {
+    id: "layouts.dashboard.nav.account.logout",
+    defaultMessage: "Logout",
+    description: "Logout label",
+  },
+  administrator: {
+    id: "layouts.dashboard.nav.account.administrator",
+    defaultMessage: "Administrator",
+    description: "administrator label",
+  },
 });
 
 export function DashboardLayoutNavAccount() {
+  const { user } = useAuthContext();
   const ref = useRef<HTMLButtonElement>(null);
   const [navAccountMenuIsOpen, setNavAccountMenuIsOpen] = useState(false);
   const intl = useIntl();
@@ -55,11 +68,13 @@ export function DashboardLayoutNavAccount() {
           }}
         >
           <Box display="flex" alignItems="center" gap="10px">
-            <Avatar alt="John Doe">JD</Avatar>
+            <Avatar alt={user.username}>
+              {user.username[0].toUpperCase()}
+            </Avatar>
             <div>
-              <Typography>John</Typography>
+              <Typography>{user.username}</Typography>
               <Typography color="text.secondary" variant="caption">
-                Administrator
+                {intl.formatMessage(messages.administrator)}
               </Typography>
             </div>
           </Box>
@@ -83,8 +98,14 @@ export function DashboardLayoutNavAccount() {
             open={navAccountMenuIsOpen}
             onClose={handleCloseMenu}
           >
-            <MenuItem onClick={handleCloseMenu}>Profile</MenuItem>
-            <MenuItem onClick={handleCloseMenu}>My account</MenuItem>
+            <MenuItem
+              onClick={() => {
+                handleCloseMenu();
+                window.location.replace(PATH_ADMIN.auth.logout());
+              }}
+            >
+              {intl.formatMessage(messages.logout)}
+            </MenuItem>
           </Menu>
         </Box>
         <DashboardNavItem

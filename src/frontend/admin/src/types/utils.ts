@@ -24,3 +24,7 @@ export type WithRequired<T> = {
 };
 
 export type ToFormValues<T> = WithRequired<T>;
+
+export enum HttpStatus {
+  UNAUTHORIZED = 401,
+}
