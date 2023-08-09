@@ -26,6 +26,7 @@ from rest_framework.routers import DefaultRouter
 from joanie.core.api import admin as api_admin
 from joanie.core.api import client as api_client
 from joanie.core.views import (
+    BackOfficeRedirectView,
     DebugMailSuccessPaymentViewHtml,
     DebugMailSuccessPaymentViewTxt,
 )
@@ -156,6 +157,11 @@ urlpatterns = [
                 ),
             ]
         ),
+    ),
+    re_path(
+        r"^redirects/backoffice/(?P<path>.*)$",
+        BackOfficeRedirectView.as_view(),
+        name="redirect-to-backoffice",
     ),
 ]
 
