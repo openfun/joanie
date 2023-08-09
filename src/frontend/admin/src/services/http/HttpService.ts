@@ -1,8 +1,10 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import Cookies from "js-cookie";
+import { LocalesEnum } from "@/types/i18n/LocalesEnum";
+import { HttpStatus } from "@/types/utils";
 import { HttpError } from "@/services/http/HttpError";
 import { TRANSLATE_CONTENT_LANGUAGE, USER_LANGUAGE } from "@/utils/constants";
-import { LocalesEnum } from "@/types/i18n/LocalesEnum";
+import { PATH_ADMIN } from "@/utils/routes/path";
 
 export const fetchApi = (routes: RequestInfo, options: RequestInit = {}) => {
   const headers =
@@ -53,6 +55,10 @@ export async function checkStatus(
   response: Response,
   options: CheckStatusOptions = { fallbackValue: null, ignoredErrorStatus: [] },
 ): Promise<any> {
+  if (response.status === HttpStatus.UNAUTHORIZED) {
+    window.location.replace(PATH_ADMIN.auth.login());
+  }
+
   if (response.ok) {
     if (response.headers.get("Content-Type") === "application/json") {
       return response.json();
