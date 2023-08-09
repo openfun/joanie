@@ -35,4 +35,26 @@ export const PATH_ADMIN = {
     create: path("/certificates-definitions/create"),
     edit: (id: string) => path(`/certificates-definitions/${id}/edit`),
   },
+  auth: {
+    login: (redirectUrl?: string) => {
+      // eslint-disable-next-line compat/compat
+      const url = new URL(
+        `${process.env.NEXT_PUBLIC_DJANGO_ADMIN_BASE_URL}/login/`,
+      );
+      const redirectPath = redirectUrl ?? window.location.pathname;
+      url.searchParams.append("next", `/redirects/backoffice${redirectPath}`);
+
+      return url.toString();
+    },
+    logout: (redirectUrl?: string) => {
+      // eslint-disable-next-line compat/compat
+      const url = new URL(
+        `${process.env.NEXT_PUBLIC_DJANGO_ADMIN_BASE_URL}/logout/`,
+      );
+      const redirectPath = redirectUrl ?? window.location.pathname;
+      url.searchParams.append("next", `/redirects/backoffice${redirectPath}`);
+
+      return url.toString();
+    },
+  },
 };
