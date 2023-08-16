@@ -10,6 +10,7 @@
         "setup-cfg"
       ],
       "matchPackageNames": [
+        "obc",
         "pydantic",
         "responses"
       ]
