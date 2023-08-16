@@ -1,9 +1,6 @@
-import "@testing-library/jest-dom/extend-expect";
+import "@testing-library/jest-dom";
 import "whatwg-fetch";
 import { server } from "./mocks/server";
-import { QueryCache } from "@tanstack/react-query";
-
-const queryCache = new QueryCache();
 
 jest.mock("next/router", () => require("next-router-mock"));
 
