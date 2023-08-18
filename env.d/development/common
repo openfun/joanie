@@ -5,7 +5,7 @@ DJANGO_SETTINGS_MODULE=joanie.settings
 DJANGO_SUPERUSER_PASSWORD=admin
 
 # Python
-PYTHONPATH=/app/src/backend
+PYTHONPATH=/app:/app/joanie
 
 # LMS BACKENDS
 # OpenEdX

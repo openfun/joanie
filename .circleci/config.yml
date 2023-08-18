@@ -117,6 +117,8 @@ jobs:
   lint-back:
     docker:
       - image: cimg/python:3.10
+        environment:
+          PYTHONPATH: /home/circleci/joanie/src/backend:/home/circleci/joanie/src/backend/joanie
     working_directory: ~/joanie/src/backend
     steps:
       - checkout:
