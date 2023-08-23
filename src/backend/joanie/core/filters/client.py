@@ -5,8 +5,9 @@ from typing import List
 
 from django_filters import rest_framework as filters
 
+from joanie.core import enums
+
 from .. import models
-from ..enums import ORDER_STATE_CHOICES
 
 
 class OrderViewSetFilter(filters.FilterSet):
@@ -16,7 +17,11 @@ class OrderViewSetFilter(filters.FilterSet):
 
     product = filters.UUIDFilter(field_name="product")
     course = filters.CharFilter(field_name="course__code")
-    state = filters.ChoiceFilter(field_name="state", choices=ORDER_STATE_CHOICES)
+    state = filters.ChoiceFilter(field_name="state", choices=enums.ORDER_STATE_CHOICES)
+    product__type = filters.MultipleChoiceFilter(
+        field_name="product__type",
+        choices=enums.PRODUCT_TYPE_CHOICES,
+    )
 
     class Meta:
         model = models.Order

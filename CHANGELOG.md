@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Add client api filter to filter `Order` resource by `product__type` 
 - Add a backoffice redirect view to redirect to the frontend admin backoffice
 - Add filters to CourseRun list for a given course on admin api
 - Allow issuing a certificate directly for an enrollment (without an order)
