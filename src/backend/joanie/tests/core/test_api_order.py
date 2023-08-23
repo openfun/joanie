@@ -328,6 +328,150 @@ class OrderApiTest(BaseAPITestCase):
         "to_representation",
         return_value="_this_field_is_mocked",
     )
+    def test_api_order_read_list_filtered_by_product_type(self, _mock_thumbnail):
+        """Authenticated user should be able to filter their orders by product type."""
+        certificate_product = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CERTIFICATE
+        )
+        credential_product = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CREDENTIAL
+        )
+        user = factories.UserFactory()
+
+        # User purchases the certificate product
+        order = factories.OrderFactory(owner=user, product=certificate_product)
+
+        # User purchases the credential product
+        factories.OrderFactory(owner=user, product=credential_product)
+
+        token = self.generate_token_from_user(user)
+
+        # Retrieve user's order related to the first course linked to the product 1
+        with self.assertNumQueries(6):
+            response = self.client.get(
+                f"/api/v1.0/orders/?product__type={enums.PRODUCT_TYPE_CERTIFICATE}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "count": 1,
+                "next": None,
+                "previous": None,
+                "results": [
+                    {
+                        "id": str(order.id),
+                        "certificate": None,
+                        "course": {
+                            "code": order.course.code,
+                            "id": str(order.course.id),
+                            "title": order.course.title,
+                            "cover": "_this_field_is_mocked",
+                        },
+                        "created_on": order.created_on.strftime(
+                            "%Y-%m-%dT%H:%M:%S.%fZ"
+                        ),
+                        "enrollments": [],
+                        "main_invoice": None,
+                        "organization": str(order.organization.id),
+                        "owner": order.owner.username,
+                        "total": float(order.total),
+                        "total_currency": settings.DEFAULT_CURRENCY,
+                        "product": str(order.product.id),
+                        "state": order.state,
+                        "target_courses": [],
+                    }
+                ],
+            },
+        )
+
+    def test_api_order_read_list_filtered_with_several_product_type(self):
+        """
+        Authenticated user should be able to filter their orders
+        by several product type.
+        """
+
+        certificate_product = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CERTIFICATE
+        )
+        credential_product = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CREDENTIAL
+        )
+        user = factories.UserFactory()
+
+        # User purchases the certificate product
+        order = factories.OrderFactory(owner=user, product=certificate_product)
+
+        # User purchases the credential product
+        order2 = factories.OrderFactory(owner=user, product=credential_product)
+
+        token = self.generate_token_from_user(user)
+
+        # Retrieve user's order related to the first course linked to the product 1
+        with self.assertNumQueries(10):
+            response = self.client.get(
+                (
+                    f"/api/v1.0/orders/?product__type={enums.PRODUCT_TYPE_CERTIFICATE}"
+                    f"&product__type={enums.PRODUCT_TYPE_CREDENTIAL}"
+                ),
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 2)
+        self.assertCountEqual(
+            [result["id"] for result in content["results"]],
+            [str(order.id), str(order2.id)],
+        )
+
+    def test_api_order_read_list_filtered_with_invalid_product_type(self):
+        """
+        Authenticated user should be able to filter their orders
+        by several product type.
+        """
+
+        certificate_product = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CERTIFICATE
+        )
+        credential_product = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CREDENTIAL
+        )
+        user = factories.UserFactory()
+
+        # User purchases both products
+        factories.OrderFactory(owner=user, product=certificate_product)
+        factories.OrderFactory(owner=user, product=credential_product)
+
+        token = self.generate_token_from_user(user)
+
+        # Retrieve user's order related to the first course linked to the product 1
+        with self.assertNumQueries(0):
+            response = self.client.get(
+                "/api/v1.0/orders/?product__type=invalid_product_type",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json(),
+            {
+                "product__type": [
+                    (
+                        "Select a valid choice. "
+                        "invalid_product_type is not one of the available choices."
+                    )
+                ]
+            },
+        )
+
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
     def test_api_order_read_list_filtered_by_state_draft(self, _mock_thumbnail):
         """Authenticated user should be able to retrieve its draft orders."""
         [product_1, product_2] = factories.ProductFactory.create_batch(2)
