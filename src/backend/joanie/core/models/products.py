@@ -394,7 +394,7 @@ class Order(BaseModel):
 
     @transition(
         field="state",
-        source=enums.ORDER_STATE_DRAFT,
+        source=[enums.ORDER_STATE_DRAFT, enums.ORDER_STATE_PENDING],
         target=enums.ORDER_STATE_SUBMITTED,
         conditions=[can_be_state_submitted],
     )
@@ -430,16 +430,17 @@ class Order(BaseModel):
         if self.total != 0.0 and billing_address is None:
             raise ValidationError({"billing_address": ["This field is required."]})
 
-        for relation in ProductTargetCourseRelation.objects.filter(
-            product=self.product
-        ):
-            order_relation = OrderTargetCourseRelation.objects.create(
-                order=self,
-                course=relation.course,
-                position=relation.position,
-                is_graded=relation.is_graded,
-            )
-            order_relation.course_runs.set(relation.course_runs.all())
+        if self.state == enums.ORDER_STATE_DRAFT:
+            for relation in ProductTargetCourseRelation.objects.filter(
+                product=self.product
+            ):
+                order_relation = OrderTargetCourseRelation.objects.create(
+                    order=self,
+                    course=relation.course,
+                    position=relation.position,
+                    is_graded=relation.is_graded,
+                )
+                order_relation.course_runs.set(relation.course_runs.all())
 
         if self.total == 0.0:
             self.validate()
@@ -450,9 +451,8 @@ class Order(BaseModel):
     @transition(
         field="state",
         source=[
-            enums.ORDER_STATE_PENDING,
-            enums.ORDER_STATE_SUBMITTED,
             enums.ORDER_STATE_DRAFT,
+            enums.ORDER_STATE_SUBMITTED,
         ],
         target=enums.ORDER_STATE_VALIDATED,
         conditions=[can_be_state_validated],
