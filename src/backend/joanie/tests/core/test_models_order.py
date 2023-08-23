@@ -501,3 +501,60 @@ class OrderModelsTestCase(TestCase):
         )
         order.cancel()
         self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
+
+    def test_models_order_create_target_course_relations_on_submit(self):
+        """
+        When an order is submitted, product target courses should be copied to the order
+        """
+        product = factories.ProductFactory(
+            target_courses=factories.CourseFactory.create_batch(2)
+        )
+        order = factories.OrderFactory(product=product)
+
+        self.assertEqual(order.state, enums.ORDER_STATE_DRAFT)
+        self.assertEqual(order.target_courses.count(), 0)
+
+        # Then we submit the order
+        order.submit(
+            request=RequestFactory().request(),
+            billing_address=BillingAddressDictFactory(),
+        )
+
+        self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
+        self.assertEqual(order.target_courses.count(), 2)
+
+    def test_models_order_dont_create_target_course_relations_on_resubmit(self):
+        """
+        When an order is submitted again, product target courses should not be copied
+        again to the order
+        """
+        product = factories.ProductFactory(
+            target_courses=factories.CourseFactory.create_batch(2)
+        )
+        order = factories.OrderFactory(product=product)
+
+        self.assertEqual(order.state, enums.ORDER_STATE_DRAFT)
+        self.assertEqual(order.target_courses.count(), 0)
+
+        # Then we submit the order
+        order.submit(
+            request=RequestFactory().request(),
+            billing_address=BillingAddressDictFactory(),
+        )
+
+        self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
+        self.assertEqual(order.target_courses.count(), 2)
+
+        # Unfortunately, order transitions to pending state
+        order.pending()
+
+        self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
+
+        # So we need to submit it again
+        order.submit(
+            request=RequestFactory().request(),
+            billing_address=BillingAddressDictFactory(),
+        )
+
+        self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
+        self.assertEqual(order.target_courses.count(), product.target_courses.count())
