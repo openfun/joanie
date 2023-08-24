@@ -315,6 +315,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             content["results"][2]["products"],
             [
                 {
+                    "instructions": "",
                     "call_to_action": "let's go!",
                     "certificate_definition": {
                         "description": "",
@@ -340,6 +341,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                     "type": "certificate",
                 },
                 {
+                    "instructions": "",
                     "call_to_action": "let's go!",
                     "certificate_definition": {
                         "description": "",

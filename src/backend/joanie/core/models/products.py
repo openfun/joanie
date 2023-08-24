@@ -56,6 +56,7 @@ class Product(parler_models.TranslatableModel, BaseModel):
     translations = parler_models.TranslatedFields(
         title=models.CharField(_("title"), max_length=255),
         description=models.CharField(_("description"), max_length=500, blank=True),
+        instructions=models.TextField(_("instructions"), blank=True),
         call_to_action=models.CharField(_("call to action"), max_length=255),
     )
     target_courses = models.ManyToManyField(

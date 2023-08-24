@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Add `instructions` markdown field to `Product` model
 - Add filter course by product type
 - Enroll as "verified" mode in OpenEdX when enrolling via an order
 - Add mermaid graph for Order workflow

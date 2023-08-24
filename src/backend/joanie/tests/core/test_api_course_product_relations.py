@@ -91,6 +91,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "title": course.title,
                 },
                 "product": {
+                    "instructions": "",
                     "call_to_action": relation.product.call_to_action,
                     "certificate_definition": {
                         "description": relation.product.certificate_definition.description,
@@ -447,6 +448,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "title": course.title,
                 },
                 "product": {
+                    "instructions": "",
                     "call_to_action": relation.product.call_to_action,
                     "certificate_definition": {
                         "description": relation.product.certificate_definition.description,

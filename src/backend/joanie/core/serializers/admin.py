@@ -163,6 +163,7 @@ class AdminProductSerializer(serializers.ModelSerializer):
         coerce_to_string=False, decimal_places=2, max_digits=9, min_value=0
     )
     price_currency = serializers.SerializerMethodField(read_only=True)
+    instructions = serializers.CharField(required=False)
 
     class Meta:
         model = models.Product
@@ -174,6 +175,7 @@ class AdminProductSerializer(serializers.ModelSerializer):
             "price",
             "price_currency",
             "type",
+            "instructions",
             "certificate_definition",
             "target_courses",
         ]
@@ -647,6 +649,7 @@ class AdminProductDetailSerializer(serializers.ModelSerializer):
             "certificate_definition",
             "target_courses",
             "course_relations",
+            "instructions",
         ]
         read_only_fields = [
             "id",
@@ -659,6 +662,7 @@ class AdminProductDetailSerializer(serializers.ModelSerializer):
             "certificate_definition",
             "target_courses",
             "course_relations",
+            "instructions",
         ]
 
     def get_target_courses(self, product):
