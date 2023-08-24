@@ -1,11 +1,16 @@
-import { defineMessages } from "react-intl";
+import { defineMessages, useIntl } from "react-intl";
+import { useQuery } from "@tanstack/react-query";
 import {
+  QueryOptions,
+  ResourcesQuery,
   useResource,
-  useResources,
+  useResourcesCustom,
   UseResourcesProps,
 } from "@/hooks/useResources";
 import { Course } from "@/services/api/models/Course";
 import { CourseRepository } from "@/services/repositories/courses/CoursesRepository";
+import { DTOAccesses } from "@/services/api/models/Accesses";
+import { SelectOption } from "@/components/presentational/hook-form/RHFSelect";
 
 export const useCoursesMessages = defineMessages({
   errorUpdate: {
@@ -71,6 +76,67 @@ const props: UseResourcesProps<Course> = {
   messages: useCoursesMessages,
 };
 // eslint-disable-next-line react-hooks/rules-of-hooks
-export const useCourses = useResources(props);
+
+export const useCourses = (
+  filters?: ResourcesQuery,
+  queryOptions?: QueryOptions<Course>,
+) => {
+  const custom = useResourcesCustom({ ...props, filters, queryOptions });
+  const intl = useIntl();
+  const accesses = useAllCourseAccesses();
+  return {
+    ...custom,
+    accesses,
+    methods: {
+      ...custom.methods,
+      addAccessUser: async (courseId: string, user: string, role: string) => {
+        const result = await CourseRepository.addUserAccess(
+          courseId,
+          user,
+          role,
+        );
+        await custom.methods.invalidate();
+        return result;
+      },
+      updateAccessUser: async (
+        courseId: string,
+        accessId: string,
+        payload: DTOAccesses,
+      ) => {
+        try {
+          await CourseRepository.updateUserAccess(courseId, accessId, payload);
+          await custom.methods.invalidate();
+        } catch (e) {
+          custom.methods.setError(
+            intl.formatMessage(useCoursesMessages.errorUpdate),
+          );
+        }
+      },
+      removeAccessUser: async (courseId: string, accessId: string) => {
+        try {
+          await CourseRepository.removeUserAccess(courseId, accessId);
+          await custom.methods.invalidate();
+        } catch (e) {
+          custom.methods.setError(
+            intl.formatMessage(useCoursesMessages.errorDelete),
+          );
+        }
+      },
+    },
+  };
+};
+
 // eslint-disable-next-line react-hooks/rules-of-hooks
 export const useCourse = useResource(props);
+
+export const useAllCourseAccesses = (): SelectOption[] | undefined => {
+  const accesses = useQuery(
+    ["allCourseAccesses"],
+    async () => {
+      return CourseRepository.getAvailableAccesses();
+    },
+    { staleTime: Infinity, cacheTime: Infinity },
+  );
+
+  return accesses?.data ?? undefined;
+};

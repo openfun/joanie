@@ -9,7 +9,6 @@ import TextField from "@mui/material/TextField";
 import { Delete, SearchOutlined } from "@mui/icons-material";
 import { useIntl } from "react-intl";
 import { useDebouncedCallback } from "use-debounce";
-import { SimpleCard } from "@/components/presentational/card/SimpleCard";
 import { TableDefaultActions } from "@/components/presentational/table/TableDefaultActions";
 import { tableTranslations } from "@/components/presentational/table/translations";
 
@@ -25,6 +24,7 @@ interface Props<T> {
   multiSelectActions?: React.ReactElement;
   loading?: boolean;
   columnBuffer?: number;
+  topActions?: React.ReactElement;
 }
 
 export function TableComponent<T>({ enableEdit = true, ...props }: Props<T>) {
@@ -50,8 +50,12 @@ export function TableComponent<T>({ enableEdit = true, ...props }: Props<T>) {
           return (
             <TableDefaultActions
               entityName={entityName}
-              onDelete={() => props.onRemoveClick?.(params.row)}
-              onEdit={() => props.onEditClick?.(params.row)}
+              onDelete={
+                props.onRemoveClick && (() => props.onRemoveClick?.(params.row))
+              }
+              onEdit={
+                props.onEditClick && (() => props.onEditClick?.(params.row))
+              }
             />
           );
         },
@@ -65,25 +69,28 @@ export function TableComponent<T>({ enableEdit = true, ...props }: Props<T>) {
   });
 
   return (
-    <SimpleCard>
+    <>
       <Box padding={3}>
-        <TextField
-          defaultValue=""
-          onChange={(event) => onChangeSearchInput(event.target.value)}
-          fullWidth
-          placeholder="Search..."
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                {props.loading ? (
-                  <CircularProgress size="19px" />
-                ) : (
-                  <SearchOutlined />
-                )}
-              </InputAdornment>
-            ),
-          }}
-        />
+        {props.onSearch && (
+          <TextField
+            defaultValue=""
+            onChange={(event) => onChangeSearchInput(event.target.value)}
+            fullWidth
+            placeholder="Search..."
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  {props.loading ? (
+                    <CircularProgress size="19px" />
+                  ) : (
+                    <SearchOutlined />
+                  )}
+                </InputAdornment>
+              ),
+            }}
+          />
+        )}
+        {props.topActions}
       </Box>
       <Box position="relative">
         {selectedRows.length > 0 && (
@@ -112,6 +119,7 @@ export function TableComponent<T>({ enableEdit = true, ...props }: Props<T>) {
         )}
 
         <DataGrid
+          getRowHeight={() => "auto"}
           sx={{
             border: "none",
             borderRadius: 0,
@@ -153,6 +161,6 @@ export function TableComponent<T>({ enableEdit = true, ...props }: Props<T>) {
           disableRowSelectionOnClick
         />
       </Box>
-    </SimpleCard>
+    </>
   );
 }

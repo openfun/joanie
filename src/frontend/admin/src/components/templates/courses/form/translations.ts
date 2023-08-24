@@ -26,4 +26,9 @@ export const courseFormMessages = defineMessages({
     defaultMessage: "Add relation",
     description: "Label for the product relation subheader form",
   },
+  membersSectionTitle: {
+    id: "components.templates.course.form.translations.membersSectionTitle",
+    defaultMessage: "Course members",
+    description: "Title for the member section",
+  },
 });

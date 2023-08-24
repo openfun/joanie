@@ -31,4 +31,9 @@ export const organizationFormMessages = defineMessages({
     defaultMessage: "Signature",
     description: "Label for the upload signature input",
   },
+  membersSectionTitle: {
+    id: "components.templates.organizations.form.translations.membersSectionTitle",
+    defaultMessage: "Organization members",
+    description: "Title for the member section",
+  },
 });

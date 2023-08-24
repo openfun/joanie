@@ -16,9 +16,19 @@ export const commonTranslations = defineMessages({
     defaultMessage: "Edit",
     description: "Common edit label",
   },
+  delete: {
+    id: "translations.common.commonTranslations.delete",
+    defaultMessage: "Delete",
+    description: "Common delete label",
+  },
   language: {
     id: "translations.common.commonTranslations.language",
     defaultMessage: "Language",
     description: "Common language label",
+  },
+  submit: {
+    id: "translations.common.commonTranslations.submit",
+    defaultMessage: "Submit",
+    description: "Submit label for submit button",
   },
 });

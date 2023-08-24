@@ -1,7 +1,6 @@
 import { defineMessages, useIntl } from "react-intl";
 import { useRouter } from "next/router";
 import { DashboardLayoutPage } from "@/layouts/dashboard/page/DashboardLayoutPage";
-import { SimpleCard } from "@/components/presentational/card/SimpleCard";
 import { coursesPagesTranslation } from "@/translations/pages/courses/breadcrumbsTranslations";
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { CourseForm } from "@/components/templates/courses/form/CourseForm";
@@ -34,13 +33,11 @@ export default function CoursesCreatePage() {
         },
       ]}
     >
-      <SimpleCard>
-        <CourseForm
-          afterSubmit={(course) =>
-            router.push(PATH_ADMIN.courses.edit(course.id))
-          }
-        />
-      </SimpleCard>
+      <CourseForm
+        afterSubmit={(course) =>
+          router.push(PATH_ADMIN.courses.edit(course.id))
+        }
+      />
     </DashboardLayoutPage>
   );
 }

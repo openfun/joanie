@@ -61,6 +61,7 @@ export function RHFSearch<T>({ items, onFilter, ...props }: RHFSearchProps<T>) {
       filterSelectedOptions={true}
       autoComplete
       options={options}
+      filterOptions={(x) => x} // need to disable the built-in filtering of the Autocomplete component
     />
   );
 }

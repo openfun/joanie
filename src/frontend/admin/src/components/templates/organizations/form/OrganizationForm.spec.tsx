@@ -17,6 +17,7 @@ describe("<OrganizationForm/>", () => {
     screen.getByRole("button", { name: "Choose a logo" });
     screen.getByRole("button", { name: "Add a signature" });
     screen.getByRole("button", { name: "Submit" });
+    expect(screen.queryByText("Organization members")).toBe(null);
   });
   it("renders a populated form", async () => {
     const org = OrganizationFactory();
@@ -34,5 +35,11 @@ describe("<OrganizationForm/>", () => {
       name: "Code",
     });
     expect(code.value).toBe(org.code);
+    if (org.accesses && org.accesses.length > 0) {
+      await screen.findByText("Organization members");
+      org.accesses.forEach((access) => {
+        screen.getByText(access.user.username);
+      });
+    }
   });
 });

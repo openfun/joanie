@@ -5,7 +5,7 @@ import { DashboardLayoutPage } from "@/layouts/dashboard/page/DashboardLayoutPag
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { commonTranslations } from "@/translations/common/commonTranslations";
 import { certificateDefinitionsBreadcrumbsTranslation } from "@/translations/pages/certificates-definitions/breadcrumbsTranslations";
-import { CertificatesDefinitionsList } from "@/components/templates/certificates-definitions/list/CertificatesDefintionsList";
+import { CertificatesDefinitionsList } from "@/components/templates/certificates-definitions/list/CertificatesDefinitionsList";
 
 const messages = defineMessages({
   pageTitle: {

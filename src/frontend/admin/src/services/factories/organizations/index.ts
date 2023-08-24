@@ -1,6 +1,10 @@
 import { faker } from "@faker-js/faker";
-import { Organization } from "@/services/api/models/Organization";
+import {
+  Organization,
+  OrganizationRoles,
+} from "@/services/api/models/Organization";
 import { ThumbnailDetailFactory } from "@/services/factories/images";
+import { AccessesFactory } from "@/services/factories/accesses";
 
 const build = (): Organization => {
   return {
@@ -10,6 +14,7 @@ const build = (): Organization => {
     representative: faker.internet.email(),
     signature: ThumbnailDetailFactory(),
     logo: ThumbnailDetailFactory(),
+    accesses: AccessesFactory(Object.values(OrganizationRoles), 4),
   };
 };
 

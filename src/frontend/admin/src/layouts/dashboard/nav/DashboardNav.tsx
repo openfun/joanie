@@ -11,13 +11,13 @@ interface Props {
 
 export function DashboardNav(props: Props) {
   const theme = useTheme();
+
   return (
     <>
       <Drawer
         sx={{
           width: theme.navigation.width,
-          padding: theme.spacing(2),
-          display: { xs: "none", sm: "block" },
+          display: { xs: "none", sm: "none", md: "block" },
           flexShrink: 0,
           "& .MuiDrawer-paper": {
             borderRight: "1px solid rgb(240, 240, 240)",
@@ -37,7 +37,7 @@ export function DashboardNav(props: Props) {
       <Drawer
         sx={{
           width: theme.navigation.width,
-          display: { xs: "block", sm: "none" },
+          display: { xs: "block", sm: "block", md: "none" },
           flexShrink: 0,
           "& .MuiDrawer-paper": {
             width: theme.navigation.width,

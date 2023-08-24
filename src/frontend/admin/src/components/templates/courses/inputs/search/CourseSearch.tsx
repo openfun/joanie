@@ -4,7 +4,6 @@ import {
   RHFAutocompleteSearchProps,
   RHFSearch,
 } from "@/components/presentational/hook-form/RHFSearch";
-import { Organization } from "@/services/api/models/Organization";
 import { Maybe } from "@/types/utils";
 import { Course } from "@/services/api/models/Course";
 import { useCourses } from "@/hooks/useCourses/useCourses";
@@ -19,7 +18,7 @@ export function CourseSearch(props: RHFAutocompleteSearchProps<Course>) {
       items={courses.items}
       loading={courses.states.fetching}
       onFilter={setQuery}
-      getOptionLabel={(option: Maybe<Organization>) => option?.title ?? ""}
+      getOptionLabel={(option: Maybe<Course>) => option?.title ?? ""}
       isOptionEqualToValue={(option, value) => option.code === value.code}
     />
   );

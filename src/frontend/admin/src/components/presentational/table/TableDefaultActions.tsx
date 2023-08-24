@@ -16,17 +16,19 @@ import {
 import { AlertModal } from "@/components/presentational/modal/AlertModal";
 import { useModal } from "@/components/presentational/modal/useModal";
 import { tableTranslations } from "@/components/presentational/table/translations";
+import { commonTranslations } from "@/translations/common/commonTranslations";
 
-interface TableDefaultMenuItem {
+export interface TableDefaultMenuItem {
   title: string;
   icon: ReactElement;
   onClick?: () => void;
 }
 
 interface Props {
-  onDelete: () => void;
-  onEdit: () => void;
+  onDelete?: () => void;
+  onEdit?: () => void;
   entityName?: string;
+  extendedOptions?: TableDefaultMenuItem[];
 }
 
 export function TableDefaultActions(props: Props) {
@@ -35,19 +37,29 @@ export function TableDefaultActions(props: Props) {
   const deleteModal = useModal();
 
   const menuItems: TableDefaultMenuItem[] = useMemo(() => {
-    return [
-      {
-        title: "Edit",
+    const other = props.extendedOptions ?? [];
+    let result = [];
+
+    if (props.onEdit) {
+      result.push({
+        title: intl.formatMessage(commonTranslations.edit),
         icon: <EditIcon fontSize="small" />,
         onClick: props.onEdit,
-      },
-      {
-        title: "Delete",
+      });
+    }
+
+    result = [...result, ...other];
+
+    if (props.onDelete) {
+      result.push({
+        title: intl.formatMessage(commonTranslations.delete),
         icon: <DeleteOutlineOutlinedIcon color="error" fontSize="small" />,
         onClick: deleteModal.handleOpen,
-      },
-    ];
-  }, [deleteModal.handleOpen, props.onEdit]);
+      });
+    }
+
+    return result;
+  }, [deleteModal.handleOpen, props.onEdit, props.onDelete]);
 
   return (
     <>
@@ -72,15 +84,17 @@ export function TableDefaultActions(props: Props) {
           })}
         </MenuList>
       </MenuPopover>
-      <AlertModal
-        title={intl.formatMessage(tableTranslations.deleteModalTitle)}
-        handleAccept={props.onDelete}
-        message={intl.formatMessage(tableTranslations.deleteModalMessage, {
-          entityName: props.entityName ? `(${props.entityName})` : "",
-        })}
-        open={deleteModal.open}
-        handleClose={deleteModal.handleClose}
-      />
+      {props.onDelete && (
+        <AlertModal
+          title={intl.formatMessage(tableTranslations.deleteModalTitle)}
+          handleAccept={props.onDelete}
+          message={intl.formatMessage(tableTranslations.deleteModalMessage, {
+            entityName: props.entityName ? `(${props.entityName})` : "",
+          })}
+          open={deleteModal.open}
+          handleClose={deleteModal.handleClose}
+        />
+      )}
     </>
   );
 }
