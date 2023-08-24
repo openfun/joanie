@@ -157,6 +157,7 @@ class ProductAdminApiTest(TestCase):
                     "position": relations[0].position,
                 },
             ],
+            "instructions": "",
             "course_relations": [
                 {
                     "id": str(relation.id),
@@ -210,6 +211,7 @@ class ProductAdminApiTest(TestCase):
             "type": "enrollment",
             "call_to_action": "Purchase now",
             "description": "This is a product description",
+            "instructions": "test instruction",
         }
 
         response = self.client.post("/api/v1.0/admin/products/", data=data)
@@ -218,6 +220,7 @@ class ProductAdminApiTest(TestCase):
         content = response.json()
         self.assertIsNotNone(content["id"])
         self.assertEqual(content["title"], "Product 001")
+        self.assertEqual(content["instructions"], "test instruction")
 
     def test_admin_api_product_update(self):
         """
@@ -233,6 +236,7 @@ class ProductAdminApiTest(TestCase):
             "type": random.choice(["credential", "certificate"]),
             "call_to_action": "Purchase now",
             "description": "This is a product description",
+            "instructions": "This is a test instruction",
         }
 
         response = self.client.put(
@@ -245,6 +249,7 @@ class ProductAdminApiTest(TestCase):
         content = response.json()
         self.assertEqual(content["id"], str(product.id))
         self.assertEqual(content["price"], 100)
+        self.assertEqual(content["instructions"], "This is a test instruction")
 
     def test_admin_api_product_partially_update(self):
         """

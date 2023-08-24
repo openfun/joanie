@@ -349,6 +349,7 @@ class ProductAdmin(
                     "type",
                     "title",
                     "description",
+                    "instructions",
                     "call_to_action",
                     "price",
                     "certificate_definition",

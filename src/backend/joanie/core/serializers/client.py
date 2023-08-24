@@ -4,6 +4,7 @@ from django.core.cache import cache
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
+import markdown
 from rest_framework import exceptions, serializers
 
 from joanie.core import enums, models
@@ -601,6 +602,7 @@ class ProductSerializer(serializers.ModelSerializer):
     """
 
     id = serializers.CharField(read_only=True)
+    instructions = serializers.SerializerMethodField(read_only=True)
     certificate_definition = CertificationDefinitionSerializer(read_only=True)
     order_groups = OrderGroupSerializer(read_only=True, many=True)
     price = serializers.DecimalField(
@@ -621,6 +623,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "call_to_action",
             "certificate_definition",
             "id",
+            "instructions",
             "order_groups",
             "price",
             "price_currency",
@@ -655,6 +658,16 @@ class ProductSerializer(serializers.ModelSerializer):
     def get_price_currency(self, *args, **kwargs):
         """Return the code of currency used by the instance"""
         return settings.DEFAULT_CURRENCY
+
+    def get_instructions(self, instance):
+        """Return the instruction of the instance in html format."""
+        instructions = instance.safe_translation_getter(
+            "instructions", any_language=True
+        )
+        if not instructions:
+            return ""
+
+        return markdown.markdown(instructions)
 
 
 class CourseSerializer(AbilitiesModelSerializer):
