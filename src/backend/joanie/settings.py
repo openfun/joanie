@@ -12,10 +12,9 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 import json
 import os
 
-from django.utils.translation import gettext_lazy as _
-
 import sentry_sdk
 from configurations import Configuration, values
+from django.utils.translation import gettext_lazy as _
 from sentry_sdk.integrations.django import DjangoIntegration
 
 from .core.utils import JSONValue
@@ -450,6 +449,7 @@ class Development(Base):
     NGROK_ENDPOINT = values.Value(None, "NGROK_ENDPOINT", environ_prefix=None)
 
     SESSION_COOKIE_NAME = "joanie_sessionid"
+    LANGUAGE_COOKIE_NAME = "joanie_django_language"
 
     LOGIN_URL = "/admin/login/"
     LOGOUT_URL = "/admin/logout/"
