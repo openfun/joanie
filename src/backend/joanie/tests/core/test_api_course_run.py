@@ -78,6 +78,7 @@ class CourseRunApiTest(BaseAPITestCase):
                 ),
                 "start": course_run.start.isoformat().replace("+00:00", "Z"),
                 "end": course_run.end.isoformat().replace("+00:00", "Z"),
+                "languages": course_run.languages,
             },
         )
 

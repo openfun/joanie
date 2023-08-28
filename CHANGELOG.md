@@ -8,6 +8,12 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Changed
+
+- Add languages to the `CourseRun` serializer
+- Rename `certificate` field to `certificate_definition`
+  into the `ProductSerializer`
+
 ## [1.1.0] - 2023-02-22
 
 ### Changed

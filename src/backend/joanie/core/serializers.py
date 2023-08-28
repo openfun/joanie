@@ -138,9 +138,7 @@ class ProductSerializer(serializers.ModelSerializer):
     """
 
     id = serializers.CharField(read_only=True)
-    certificate = CertificationDefinitionSerializer(
-        read_only=True, source="certificate_definition"
-    )
+    certificate_definition = CertificationDefinitionSerializer(read_only=True)
     organizations = serializers.SerializerMethodField("get_organizations")
     price = MoneyField(
         coerce_to_string=False,
@@ -155,7 +153,7 @@ class ProductSerializer(serializers.ModelSerializer):
         model = models.Product
         fields = [
             "call_to_action",
-            "certificate",
+            "certificate_definition",
             "id",
             "organizations",
             "price",
@@ -166,7 +164,7 @@ class ProductSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "call_to_action",
-            "certificate",
+            "certificate_definition",
             "id",
             "organizations",
             "price",
@@ -345,6 +343,7 @@ class CourseRunSerializer(serializers.ModelSerializer):
             "enrollment_end",
             "enrollment_start",
             "id",
+            "languages",
             "resource_link",
             "start",
             "title",
@@ -356,6 +355,7 @@ class CourseRunSerializer(serializers.ModelSerializer):
             "enrollment_end",
             "enrollment_start",
             "id",
+            "languages",
             "resource_link",
             "start",
             "title",

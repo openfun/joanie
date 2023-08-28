@@ -99,7 +99,7 @@ class ProductApiTest(BaseAPITestCase):
             response.json(),
             {
                 "call_to_action": product.call_to_action,
-                "certificate": {
+                "certificate_definition": {
                     "description": product.certificate_definition.description,
                     "name": product.certificate_definition.name,
                     "title": product.certificate_definition.title,
@@ -148,6 +148,7 @@ class ProductApiTest(BaseAPITestCase):
                                 "enrollment_end": course_run.enrollment_end.isoformat().replace(  # noqa pylint: disable=line-too-long
                                     "+00:00", "Z"
                                 ),
+                                "languages": course_run.languages,
                             }
                             for course_run in target_course.course_runs.all().order_by(
                                 "start"
