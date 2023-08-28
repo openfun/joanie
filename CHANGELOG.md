@@ -66,6 +66,14 @@ and this project adheres to
 - Badge providers now live in the obc python package
 - Remove unused `OrderLiteSerializer`
 
+## [1.2.0] - 2023-08-28
+
+### Changed
+
+- Add languages to the `CourseRun` serializer
+- Rename `certificate` field to `certificate_definition`
+  into the `ProductSerializer`
+
 ## [1.1.0] - 2023-02-22
 
 ### Changed
@@ -97,6 +105,7 @@ and this project adheres to
 - First working version serving sellable micro-credentials for multiple
   organizations synchronized to a remote catalog
 
-[unreleased]: https://github.com/openfun/joanie/compare/v1.1.0...main
+[unreleased]: https://github.com/openfun/joanie/compare/v1.2.0...main
+[1.2.0]: https://github.com/openfun/joanie/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/openfun/joanie/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/openfun/joanie/compare/695965575b80d45c2600a1bcaf84d78bebaec1e7...v1.0.0

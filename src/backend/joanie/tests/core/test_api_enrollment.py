@@ -163,6 +163,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                                 if enrollment.course_run.state["datetime"]
                                 else None,
                             },
+                            "languages": enrollment.course_run.languages,
                         },
                         "created_on": enrollment.created_on.isoformat().replace(
                             "+00:00", "Z"
@@ -239,6 +240,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                                 if other_enrollment.course_run.state["datetime"]
                                 else None,
                             },
+                            "languages": other_enrollment.course_run.languages,
                         },
                         "created_on": other_enrollment.created_on.isoformat().replace(
                             "+00:00", "Z"
@@ -512,6 +514,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                                 if course_run_1.state["datetime"]
                                 else None,
                             },
+                            "languages": course_run_1.languages,
                         },
                         "created_on": enrollment_1.created_on.isoformat().replace(
                             "+00:00", "Z"
@@ -676,6 +679,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         if enrollment.course_run.state["datetime"]
                         else None,
                     },
+                    "languages": enrollment.course_run.languages,
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": enrollment.is_active,
@@ -787,6 +791,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         if course_run.state["datetime"]
                         else None,
                     },
+                    "languages": course_run.languages,
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": is_active,
@@ -920,6 +925,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         if course_run.state["datetime"]
                         else None,
                     },
+                    "languages": course_run.languages,
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": is_active,
@@ -1013,6 +1019,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         if course_run.state["datetime"]
                         else None,
                     },
+                    "languages": course_run.languages,
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": is_active,
@@ -1266,6 +1273,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         if course_run.state["datetime"]
                         else None,
                     },
+                    "languages": course_run.languages,
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": is_active,
@@ -1536,6 +1544,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                             if enrollment.course_run.state["datetime"]
                             else None,
                         },
+                        "languages": enrollment.course_run.languages,
                     },
                     "created_on": enrollment.created_on.isoformat().replace(
                         "+00:00", "Z"
@@ -1758,6 +1767,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         if course_run.state["datetime"]
                         else None,
                     },
+                    "languages": course_run.languages,
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": False,
@@ -1842,6 +1852,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         if course_run.state["datetime"]
                         else None,
                     },
+                    "languages": course_run.languages,
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": False,
@@ -1911,6 +1922,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         if course_run.state["datetime"]
                         else None,
                     },
+                    "languages": course_run.languages,
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": True,
@@ -2008,6 +2020,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         if course_run.state["datetime"]
                         else None,
                     },
+                    "languages": course_run.languages,
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": True,
@@ -2076,6 +2089,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         if course_run.state["datetime"]
                         else None,
                     },
+                    "languages": course_run.languages,
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": True,
