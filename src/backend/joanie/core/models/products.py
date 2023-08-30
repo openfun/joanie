@@ -5,8 +5,6 @@ import itertools
 import logging
 from collections import defaultdict
 
-from django.conf import settings
-from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -22,14 +20,12 @@ from parler import models as parler_models
 from urllib3.util import Retry
 
 from joanie.core import enums
-from joanie.core.exceptions import EnrollmentError, GradeError
 from joanie.core.models.certifications import Certificate
 from joanie.core.utils import webhooks
-from joanie.lms_handler import LMSHandler
 from joanie.payment import get_payment_backend
 from joanie.payment.models import CreditCard
 
-from . import accounts as customers_models
+from . import accounts as accounts_models
 from . import courses as courses_models
 from .base import BaseModel
 
@@ -46,212 +42,6 @@ adapter = requests.adapters.HTTPAdapter(
 session = requests.Session()
 session.mount("http://", adapter)
 session.mount("https://", adapter)
-
-
-class Enrollment(BaseModel):
-    """
-    Enrollment model represents and records lms enrollment state for course run
-    as part of an order
-    """
-
-    course_run = models.ForeignKey(
-        to=courses_models.CourseRun,
-        verbose_name=_("course run"),
-        related_name="enrollments",
-        on_delete=models.RESTRICT,
-    )
-    user = models.ForeignKey(
-        to=customers_models.User,
-        verbose_name=_("user"),
-        related_name="enrollments",
-        on_delete=models.RESTRICT,
-    )
-    is_active = models.BooleanField(
-        help_text=_("Ticked if the user is enrolled to the course run."),
-        verbose_name="is active",
-    )
-    state = models.CharField(
-        _("state"), choices=enums.ENROLLMENT_STATE_CHOICES, max_length=50, blank=True
-    )
-    was_created_by_order = models.BooleanField(
-        help_text=_(
-            "Ticked if the enrollment has been initially created in the scope of an order."
-        ),
-        verbose_name=_("was created by order"),
-        default=False,
-    )
-
-    class Meta:
-        db_table = "joanie_enrollment"
-        unique_together = ("course_run", "user")
-        verbose_name = _("Enrollment")
-        verbose_name_plural = _("Enrollments")
-        ordering = ["-created_on"]
-
-    def __str__(self):
-        active = _("active") if self.is_active else _("inactive")
-        return f"[{active}][{self.state}] {self.user} for {self.course_run}"
-
-    @property
-    def grade_cache_key(self):
-        """The cache key used to store enrollment's grade."""
-        return f"grade_{self.id}"
-
-    @property
-    def is_passed(self):
-        """Get enrollment grade then return the `passed` property value or False"""
-        grade = self.get_grade()
-
-        return grade["passed"] if grade else False
-
-    def get_grade(self):
-        """Retrieve the grade from the related LMS then store result in cache."""
-        grade = cache.get(self.grade_cache_key)
-
-        if grade is None:
-            lms = LMSHandler.select_lms(self.course_run.resource_link)
-
-            if lms is None:
-                logger.error(
-                    "Course run %s has no related lms.",
-                    self.course_run.id,
-                )
-            else:
-                try:
-                    grade = lms.get_grades(
-                        username=self.user.username,
-                        resource_link=self.course_run.resource_link,
-                    )
-                except GradeError:
-                    pass
-                else:
-                    cache.set(
-                        self.grade_cache_key,
-                        grade,
-                        settings.JOANIE_ENROLLMENT_GRADE_CACHE_TTL,
-                    )
-
-        return grade
-
-    def clean(self):
-        """
-        Clean instance fields and raise a ValidationError in case of issue.
-
-        Sometimes a course run can be available for free enrollment
-        (course_run.is_listed = True) and also included in a product. So a user can
-        enroll to this course run for free or in the scope of an order. The flag
-        `was_created_by_order` aims to store the context of the enrollment creation. If
-        the enrollment is created in the scope of an order, this flag must be set to
-        True. Otherwise, in the case of a free enrollment, the flag must be set to
-        False.
-
-        --> *1
-        But if the related course run is not listed (so not available for free
-        enrollment) the flag `was_created_by_order` cannot be set to False.
-
-        --> *2
-        And if the related course run is not linked to any product, the flag
-        `was_created_by_order` cannot be set to True.
-        """
-
-        # The related course run must be opened for enrollment
-        if self.course_run.state["priority"] > courses_models.CourseState.ARCHIVED_OPEN:
-            message = _(
-                "You are not allowed to enroll to a course run not opened for enrollment."
-            )
-            raise ValidationError({"__all__": [message]})
-
-        # The user should not be enrolled in another opened course run of the same course.
-        if (
-            self.is_active
-            and self.user.enrollments.exclude(id=self.id)
-            .filter(
-                course_run__course=self.course_run.course,
-                course_run__end__gte=timezone.now(),
-                is_active=True,
-            )
-            .exists()
-        ):
-            message = _(
-                "You are already enrolled to an opened course run "
-                f'for the course "{self.course_run.course.title}".'
-            )
-            raise ValidationError({"user": [message]})
-
-        # Forbid creating a free enrollment if the related course run is not listed and
-        # if the course relies on a product and the owner doesn't purchase it.
-        if self.is_active and not self.course_run.is_listed:
-            if self.was_created_by_order is False:
-                # --> *1
-                message = _(
-                    "You cannot enroll to a non-listed course run out of the scope of an order."
-                )
-                raise ValidationError({"was_created_by_order": [message]})
-            if self.course_run.course.targeted_by_products.exists():
-                validated_user_orders = Order.objects.filter(
-                    (
-                        models.Q(
-                            course_relations__course_runs__isnull=True,
-                            target_courses__course_runs=self.course_run,
-                        )
-                        | models.Q(course_relations__course_runs=self.course_run)
-                    ),
-                    state=enums.ORDER_STATE_VALIDATED,
-                    owner=self.user,
-                )
-                if validated_user_orders.count() == 0:
-                    message = _(
-                        f'Course run "{self.course_run.id!s}" '
-                        "requires a valid order to enroll."
-                    )
-                    raise ValidationError({"__all__": [message]})
-            else:
-                message = _("You are not allowed to enroll to a course run not listed.")
-                raise ValidationError({"__all__": [message]})
-        elif self.was_created_by_order is True:
-            if not self.course_run.course.targeted_by_products.exists():
-                # --> *2
-                message = _(
-                    (
-                        "The related course run is not linked to any product, "
-                        "so it cannot be created in the scope of an order."
-                    )
-                )
-                raise ValidationError({"was_created_by_order": [message]})
-
-        return super().clean()
-
-    def set(self):
-        """Try setting the state to the LMS. Saving is left to the caller."""
-        # Now we can enroll user to LMS course run
-        link = self.course_run.resource_link
-        lms = LMSHandler.select_lms(link)
-
-        if lms is None:
-            # If no lms found we set enrollment and order to failure state
-            # this issue could be due to a bad setting or a bad resource_link filled,
-            # so we need to log this error to fix it quickly to joanie side
-            logger.error('No LMS configuration found for course run: "%s".', link)
-            self.state = enums.ENROLLMENT_STATE_FAILED
-            return
-
-        # Try to enroll user to lms course run and update joanie's enrollment state
-        try:
-            lms.set_enrollment(self)
-        except EnrollmentError:
-            logger.error(
-                'Enrollment failed for course run "%s".',
-                self.course_run.resource_link,
-            )
-            self.state = enums.ENROLLMENT_STATE_FAILED
-        else:
-            self.state = enums.ENROLLMENT_STATE_SET
-
-    def save(self, *args, **kwargs):
-        """Call full clean before saving instance."""
-        self.full_clean()
-        self.set()
-        models.Model.save(self, *args, **kwargs)
 
 
 class Product(parler_models.TranslatableModel, BaseModel):
@@ -536,7 +326,7 @@ class Order(BaseModel):
         null=True,
     )
     enrollment = models.ForeignKey(
-        to=Enrollment,
+        to=courses_models.Enrollment,
         verbose_name=_("enrollment"),
         on_delete=models.PROTECT,
         related_name="related_orders",
@@ -563,7 +353,7 @@ class Order(BaseModel):
         validators=[MinValueValidator(0.0)],
     )
     owner = models.ForeignKey(
-        to=customers_models.User,
+        to=accounts_models.User,
         verbose_name=_("owner"),
         related_name="orders",
         on_delete=models.RESTRICT,
@@ -858,7 +648,7 @@ class Order(BaseModel):
         if is_active is not None:
             filters.update({"is_active": is_active})
 
-        return Enrollment.objects.filter(**filters)
+        return courses_models.Enrollment.objects.filter(**filters)
 
     def enroll_user_to_course_run(self):
         """
@@ -877,11 +667,11 @@ class Order(BaseModel):
         for course in courses_with_one_course_run:
             course_run = course.course_runs.first()
             try:
-                enrollment = Enrollment.objects.only("is_active").get(
+                enrollment = courses_models.Enrollment.objects.only("is_active").get(
                     course_run=course_run, user=self.owner
                 )
-            except Enrollment.DoesNotExist:
-                Enrollment.objects.create(
+            except courses_models.Enrollment.DoesNotExist:
+                courses_models.Enrollment.objects.create(
                     course_run=course_run,
                     is_active=True,
                     user=self.owner,
@@ -962,7 +752,7 @@ class Order(BaseModel):
 
         # Retrieve all enrollments in one query. Since these enrollments rely on
         # order course runs, the count will always be pretty small.
-        course_enrollments = Enrollment.objects.filter(
+        course_enrollments = courses_models.Enrollment.objects.filter(
             course_run__course__in=graded_courses,
             course_run__is_gradable=True,
             course_run__start__lte=timezone.now(),
