@@ -125,6 +125,14 @@ admin_organization_related_router.register(
     basename="admin_organization_accesses",
 )
 
+# Admin API routes nested under products
+admin_product_related_router = DefaultRouter()
+admin_product_related_router.register(
+    "target-courses",
+    api_admin.TargetCoursesViewSet,
+    basename="admin_product_target_courses",
+)
+
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -139,6 +147,10 @@ urlpatterns = [
     path(
         f"api/{API_VERSION}/admin/organizations/<uuid:organization_id>/",
         include(admin_organization_related_router.urls),
+    ),
+    path(
+        f"api/{API_VERSION}/admin/products/<uuid:product_id>/",
+        include(admin_product_related_router.urls),
     ),
     path(
         f"api/{API_VERSION}/",
