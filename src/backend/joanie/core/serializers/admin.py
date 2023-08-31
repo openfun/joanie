@@ -183,6 +183,45 @@ class AdminProductSerializer(serializers.ModelSerializer):
         """Return the code of currency used by the instance"""
         return settings.DEFAULT_CURRENCY
 
+    def to_representation(self, instance):
+        serializer = AdminProductDetailSerializer(instance)
+        return serializer.data
+
+
+class AdminProductLightSerializer(serializers.ModelSerializer):
+    """Concise Serializer for Product model."""
+
+    price_currency = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = models.Product
+        fields = [
+            "id",
+            "title",
+            "description",
+            "call_to_action",
+            "price",
+            "price_currency",
+            "type",
+            "certificate_definition",
+            "target_courses",
+        ]
+        read_only_fields = [
+            "id",
+            "title",
+            "description",
+            "call_to_action",
+            "price",
+            "price_currency",
+            "type",
+            "certificate_definition",
+            "target_courses",
+        ]
+
+    def get_price_currency(self, *args, **kwargs):
+        """Return the code of currency used by the instance"""
+        return settings.DEFAULT_CURRENCY
+
 
 class AdminProductRelationSerializer(serializers.ModelSerializer):
     """Serializer for CourseProductRelation model."""
@@ -382,3 +421,203 @@ class AdminCourseRunSerializer(serializers.ModelSerializer):
                 )
 
         return validated_data
+
+
+class AdminTargetCourseSerializer(serializers.ModelSerializer):
+    """
+    Serialize all information about a target course.
+    """
+
+    course_runs = serializers.SerializerMethodField(read_only=True)
+    position = serializers.SerializerMethodField(read_only=True)
+    is_graded = serializers.SerializerMethodField(read_only=True)
+    organizations = AdminOrganizationLightSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = models.Course
+        fields = [
+            "id",
+            "code",
+            "course_runs",
+            "is_graded",
+            "organizations",
+            "position",
+            "title",
+        ]
+        read_only_fields = [
+            "id",
+            "code",
+            "course_runs",
+            "is_graded",
+            "organizations",
+            "position",
+            "title",
+        ]
+
+    @property
+    def context_resource(self):
+        """
+        Retrieve the product/order resource provided in context.
+        If no product/order is provided, it raises a ValidationError.
+        """
+        try:
+            resource = self.context["resource"]
+        except KeyError as exception:
+            raise serializers.ValidationError(
+                'TargetCourseSerializer context must contain a "resource" property.'
+            ) from exception
+
+        if not isinstance(resource, (models.Order, models.Product)):
+            raise serializers.ValidationError(
+                "TargetCourseSerializer context resource property must be instance of "
+                "Product or Order."
+            )
+
+        return resource
+
+    def get_target_course_relation(self, target_course):
+        """
+        Return the relevant target course relation depending on whether the resource context
+        is a product or an order.
+        """
+        if isinstance(self.context_resource, models.Order):
+            return target_course.order_relations.get(order=self.context_resource)
+
+        if isinstance(self.context_resource, models.Product):
+            return target_course.product_target_relations.get(
+                product=self.context_resource
+            )
+
+        return None
+
+    def get_position(self, target_course):
+        """
+        Retrieve the position of the course related to its product/order relation
+        """
+        relation = self.get_target_course_relation(target_course)
+
+        return relation.position
+
+    def get_is_graded(self, target_course):
+        """
+        Retrieve the `is_graded` state of the course related to its product/order relation
+        """
+        relation = self.get_target_course_relation(target_course)
+
+        return relation.is_graded
+
+    def get_course_runs(self, target_course):
+        """
+        Return related course runs ordered by start date asc
+        """
+        course_runs = self.context_resource.target_course_runs.filter(
+            course=target_course
+        ).order_by("start")
+
+        return AdminCourseRunSerializer(course_runs, many=True).data
+
+
+class AdminProductTargetCourseRelationSerializer(serializers.ModelSerializer):
+    """
+    Serializer for ProductTargetCourseRelation model
+    """
+
+    class Meta:
+        model = models.ProductTargetCourseRelation
+        fields = ["id", "course", "product", "course_runs"]
+
+
+class AdminCourseNestedSerializer(serializers.ModelSerializer):
+    """Serializer for Course model nested in product."""
+
+    title = serializers.CharField()
+    cover = ThumbnailDetailField(required=False)
+    organizations = AdminOrganizationLightSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = models.Course
+        fields = (
+            "id",
+            "code",
+            "cover",
+            "title",
+            "organizations",
+            "state",
+        )
+        read_only_fields = ["id", "state"]
+
+
+class AdminCourseRelationsSerializer(serializers.ModelSerializer):
+    """
+    Serialize all information about a course relation nested in a product.
+    """
+
+    course = AdminCourseNestedSerializer(read_only=True)
+    organizations = AdminOrganizationLightSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = models.CourseProductRelation
+        fields = [
+            "id",
+            "course",
+            "organizations",
+        ]
+        read_only_fields = [
+            "id",
+            "course",
+            "organizations",
+        ]
+
+
+class AdminProductDetailSerializer(serializers.ModelSerializer):
+    """Serializer for Product details"""
+
+    certificate_definition = AdminCertificateDefinitionSerializer()
+    target_courses = serializers.SerializerMethodField(read_only=True)
+    price = serializers.DecimalField(
+        coerce_to_string=False, decimal_places=2, max_digits=9, min_value=0
+    )
+    course_relations = AdminCourseRelationsSerializer(read_only=True, many=True)
+    price_currency = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = models.Product
+        fields = [
+            "id",
+            "title",
+            "description",
+            "call_to_action",
+            "type",
+            "price",
+            "price_currency",
+            "certificate_definition",
+            "target_courses",
+            "course_relations",
+        ]
+        read_only_fields = [
+            "id",
+            "title",
+            "description",
+            "call_to_action",
+            "type",
+            "price",
+            "price_currency",
+            "certificate_definition",
+            "target_courses",
+            "course_relations",
+        ]
+
+    def get_target_courses(self, product):
+        """Compute the serialized value for the "target_courses" field."""
+        context = self.context.copy()
+        context["resource"] = product
+
+        return AdminTargetCourseSerializer(
+            instance=product.target_courses.all().order_by("order_relations__position"),
+            many=True,
+            context=context,
+        ).data
+
+    def get_price_currency(self, *args, **kwargs):
+        """Return the code of currency used by the instance"""
+        return settings.DEFAULT_CURRENCY

@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Add target_course route and list view for products
 - Add multiples product, order, certificates and enrollment in the database
   that's initialized with the `make demo-dev`
 - Add client api filter to filter `Order` resource by `product__type` 

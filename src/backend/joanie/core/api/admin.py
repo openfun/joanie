@@ -40,8 +40,14 @@ class ProductViewSet(viewsets.ModelViewSet):
     authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_class = serializers.AdminProductSerializer
+    serializer_action_classes = {"list": serializers.AdminProductLightSerializer}
     queryset = models.Product.objects.all()
     filterset_class = filters.ProductAdminFilterSet
+
+    def get_serializer_class(self):
+        if self.action in self.serializer_action_classes:
+            return self.serializer_action_classes[self.action]
+        return self.serializer_class
 
 
 class CourseViewSet(viewsets.ModelViewSet):
@@ -191,3 +197,36 @@ class OrganizationAccessViewSet(
         context = super().get_serializer_context()
         context["organization_id"] = self.kwargs["organization_id"]
         return context
+
+
+class TargetCoursesViewSet(
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
+    """
+    Write only Product's TargetCourse ViewSet
+    """
+
+    authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
+    permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
+    serializer_class = serializers.AdminProductTargetCourseRelationSerializer
+    queryset = models.ProductTargetCourseRelation.objects.all()
+
+    def create(self, request, *args, **kwargs):
+        """
+        Parse and create the ProductTargetCourseRelation
+        """
+        data = request.data
+        data["product"] = kwargs.get("product_id")
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+        course_runs = serializer.validated_data.pop("course_runs", [])
+        relation = models.ProductTargetCourseRelation(**serializer.validated_data)
+        relation.save()
+        for course_run in course_runs:
+            relation.course_runs.add(course_run)
+        response = self.get_serializer(relation)
+        return Response(response.data, status=201)
