@@ -61,9 +61,12 @@ class ProductAdminApiTest(TestCase):
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
-        product = factories.ProductFactory()
+        target_course = factories.CourseFactory()
+        product = factories.ProductFactory(target_courses=[target_course])
         relation = models.CourseProductRelation.objects.get(product=product)
-
+        target_course_relation = models.ProductTargetCourseRelation.objects.get(
+            product=product.id, course=target_course.id
+        )
         response = self.client.get(f"/api/v1.0/admin/products/{product.id}/")
 
         self.assertEqual(response.status_code, 200)
@@ -78,7 +81,25 @@ class ProductAdminApiTest(TestCase):
             "price": float(product.price),
             "price_currency": "EUR",
             "certificate_definition": product.certificate_definition,
-            "target_courses": [],
+            "target_courses": [
+                {
+                    "id": str(target_course_relation.id),
+                    "course": {
+                        "code": target_course_relation.course.code,
+                        "title": target_course_relation.course.title,
+                        "id": str(target_course_relation.course.id),
+                        "state": {
+                            "priority": target_course_relation.course.state["priority"],
+                            "datetime": target_course_relation.course.state["datetime"],
+                            "call_to_action": target_course_relation.course.state[
+                                "call_to_action"
+                            ],
+                            "text": target_course_relation.course.state["text"],
+                        },
+                    },
+                    "course_runs": [],
+                }
+            ],
             "course_relations": [
                 {
                     "id": str(relation.id),
