@@ -7,6 +7,7 @@ from django.utils import translation
 from joanie.core import enums, factories, models
 from joanie.core.models import CourseState
 from joanie.demo.defaults import NB_DEV_OBJECTS
+from joanie.payment import factories as payment_factories
 
 OPENEDX_COURSE_RUN_URI = (
     "http://openedx.test/courses/course-v1:edx+{course:s}+{course_run:s}/course"
@@ -79,9 +80,6 @@ class Command(BaseCommand):
             )
 
             for target_course in target_course_list:
-                factories.ProductTargetCourseRelationFactory(
-                    course=target_course, product=product
-                )
                 factories.CourseRunFactory(
                     course=target_course,
                     is_listed=True,
@@ -99,6 +97,9 @@ class Command(BaseCommand):
                     resource_link=OPENEDX_COURSE_RUN_URI.format(
                         course=target_course.code, course_run="{course.title}_run2"
                     ),
+                )
+                factories.ProductTargetCourseRelationFactory(
+                    course=target_course, product=product
                 )
             self.stdout.write(
                 self.style.SUCCESS(
@@ -141,7 +142,7 @@ class Command(BaseCommand):
             )
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"Successfully create product credential on course {course.code}"
+                    f"Successfully create product certificate on course {course.code}"
                 )
             )
             return product
@@ -161,7 +162,9 @@ class Command(BaseCommand):
             state=enums.ENROLLMENT_STATE_SET,
         )
 
-    def create_product_purchased(self, user, organization, product_type):
+    def create_product_purchased(
+        self, user, organization, product_type, order_status=enums.ORDER_STATE_VALIDATED
+    ):
         """Create a product certificate, it's enrollment and it's order."""
         if product_type == enums.PRODUCT_TYPE_CERTIFICATE:
             product = self.create_product_certificate(user, organization)
@@ -172,7 +175,7 @@ class Command(BaseCommand):
 
         course = product.courses.first()
 
-        return factories.OrderFactory(
+        order = factories.OrderFactory(
             course=None if product_type == enums.PRODUCT_TYPE_CERTIFICATE else course,
             enrollment=factories.EnrollmentFactory(
                 user=user,
@@ -184,8 +187,14 @@ class Command(BaseCommand):
             else None,
             owner=user,
             product=product,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=order_status,
         )
+        for target_course in product.target_courses.all():
+            factories.OrderTargetCourseRelationFactory(
+                order=order, course=target_course
+            )
+
+        return order
 
     def create_product_purchased_with_certificate(
         self, user, organization, product_type
@@ -218,6 +227,10 @@ class Command(BaseCommand):
             # Give access to admin user
             users=[[admin_user, enums.OWNER]],
         )
+
+        # Add one credit card to admin user
+        payment_factories.CreditCardFactory(owner=admin_user)
+        factories.AddressFactory(owner=admin_user)
 
         # First create a course product to learn how to become a botanist
         # 1/ some course runs are required to become a botanist
@@ -381,5 +394,17 @@ class Command(BaseCommand):
                 "Successfully create a enrollment with a generated certificate"
             )
         )
+
+        # Order for all existing status on PRODUCT_CREDENTIAL
+        for order_status in [
+            enums.ORDER_STATE_DRAFT,
+            enums.ORDER_STATE_SUBMITTED,
+            enums.ORDER_STATE_PENDING,
+            enums.ORDER_STATE_CANCELED,
+            enums.ORDER_STATE_VALIDATED,
+        ]:
+            self.create_product_purchased(
+                admin_user, organization, enums.PRODUCT_TYPE_CREDENTIAL, order_status
+            )
 
         self.stdout.write(self.style.SUCCESS("Successfully fake data creation"))

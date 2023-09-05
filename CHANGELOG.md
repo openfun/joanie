@@ -47,6 +47,8 @@ and this project adheres to
 - Add many admin api filters with text search 
 - Add a nested endpoint to retrieve all the course runs of a course
 - Filter courses according to whether they have listed course runs or not
+- Add some objects to demo-dev command. A credit card, a billing address and
+  one order of each state. Also add some order target courses.
 
 ### Changed
 
@@ -74,6 +76,10 @@ and this project adheres to
 - Remove djmoney and Moneyfields
 - Badge providers now live in the obc python package
 - Remove unused `OrderLiteSerializer`
+
+### Fixed
+
+- Fix demo-dev command synchronization error.
 
 ## [1.2.0] - 2023-08-28
 
