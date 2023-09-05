@@ -45,6 +45,7 @@ and this project adheres to
 
 ### Changed
 
+- Data returned by product admin serializer
 - Refactor the Order FSM to make a better use of transitions
 - Allow to get course product relation anonymously
   through a course id / product id pair
