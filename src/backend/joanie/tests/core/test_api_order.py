@@ -648,6 +648,46 @@ class OrderApiTest(BaseAPITestCase):
             },
         )
 
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_order_read_list_filtered_by_multiple_states(self, _mock_thumbnail):
+        """It should be possible to filter orders by multiple states."""
+        user = factories.UserFactory()
+
+        # User purchases products as their price are equal to 0.00€,
+        # the orders are directly validated
+        factories.OrderFactory(owner=user, state=enums.ORDER_STATE_VALIDATED)
+        factories.OrderFactory(owner=user, state=enums.ORDER_STATE_PENDING)
+        factories.OrderFactory(owner=user, state=enums.ORDER_STATE_SUBMITTED)
+        # User purchases a product then cancels it
+        factories.OrderFactory(owner=user, state=enums.ORDER_STATE_CANCELED)
+
+        token = self.generate_token_from_user(user)
+
+        # Retrieve user's order related to the product 1
+        response = self.client.get(
+            "/api/v1.0/orders/?state=validated&state=submitted&state=pending",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        response = response.json()
+
+        self.assertEqual(len(response["results"]), 3)
+        order_states = [order["state"] for order in response["results"]]
+        order_states.sort()
+        self.assertEqual(
+            order_states,
+            [
+                enums.ORDER_STATE_PENDING,
+                enums.ORDER_STATE_SUBMITTED,
+                enums.ORDER_STATE_VALIDATED,
+            ],
+        )
+
     def test_api_order_read_list_filtered_by_invalid_state(self):
         """
         Authenticated user providing an invalid state to filter its orders

@@ -61,6 +61,7 @@ and this project adheres to
 - Improve certificate serializer
 - Upgrade to Django 4.2
 - Add model and API endpoint for course wishes
+- Change order viewset filter "state" to accept multiple choices.
 
 ### Removed
 
