@@ -517,27 +517,17 @@ class AdminTargetCourseSerializer(serializers.ModelSerializer):
         return AdminCourseRunSerializer(course_runs, many=True).data
 
 
-class AdminCourseRunLightSerializer(serializers.ModelSerializer):
-    """Serializer for CourseRun model."""
+class AdminProductTargetCourseRelationDisplaySerializer(serializers.ModelSerializer):
+    """
+    Serializer for ProductTargetCourseRelation model
+    """
 
-    title = serializers.CharField()
-    languages = serializers.MultipleChoiceField(choices=ALL_LANGUAGES)
+    course = AdminCourseLightSerializer()
+    course_runs = AdminCourseRunSerializer(many=True)
 
     class Meta:
-        model = models.CourseRun
-        fields = [
-            "id",
-            "resource_link",
-            "title",
-            "is_gradable",
-            "is_listed",
-            "languages",
-            "start",
-            "end",
-            "enrollment_start",
-            "enrollment_end",
-        ]
-        read_only_fields = ["id"]
+        model = models.ProductTargetCourseRelation
+        fields = ["id", "course", "is_graded", "position", "course_runs"]
 
 
 class AdminProductTargetCourseRelationSerializer(serializers.ModelSerializer):
@@ -547,7 +537,11 @@ class AdminProductTargetCourseRelationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.ProductTargetCourseRelation
-        fields = ["id", "course", "product", "course_runs"]
+        fields = ["id", "course", "product", "is_graded", "position", "course_runs"]
+
+    def to_representation(self, instance):
+        serializer = AdminProductTargetCourseRelationDisplaySerializer(instance)
+        return serializer.data
 
 
 class AdminCourseNestedSerializer(serializers.ModelSerializer):
@@ -568,20 +562,6 @@ class AdminCourseNestedSerializer(serializers.ModelSerializer):
             "state",
         )
         read_only_fields = ["id", "state"]
-
-
-class AdminProductTargetCourseRelationNestedSerializer(serializers.ModelSerializer):
-    """
-    Serializer for ProductTargetCourseRelation model
-    """
-
-    course = AdminCourseLightSerializer()
-    course_runs = AdminCourseRunLightSerializer(read_only=True, many=True)
-
-    class Meta:
-        model = models.ProductTargetCourseRelation
-        fields = ["id", "course", "course_runs"]
-        read_only_fields = ["id", "course", "course_runs"]
 
 
 class AdminCourseRelationsSerializer(serializers.ModelSerializer):
@@ -648,13 +628,14 @@ class AdminProductDetailSerializer(serializers.ModelSerializer):
         """Compute the serialized value for the "target_courses" field."""
         context = self.context.copy()
         context["resource"] = product
-        relations = models.ProductTargetCourseRelation.objects.filter(
-            product=product.id
-        )
 
-        return AdminProductTargetCourseRelationNestedSerializer(
-            instance=relations,
-            many=True,
+        relations = models.ProductTargetCourseRelation.objects.filter(
+            product=product
+        ).order_by("position")
+        instances = [relation.course for relation in relations]
+
+        return AdminTargetCourseSerializer(
+            instance=instances, many=True, context=context
         ).data
 
     def get_price_currency(self, *args, **kwargs):

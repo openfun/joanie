@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Add a route to reorder target_courses
 - Add target_course route and list view for products
 - Add multiples product, order, certificates and enrollment in the database
   that's initialized with the `make demo-dev`
