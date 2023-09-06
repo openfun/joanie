@@ -61,12 +61,29 @@ class ProductAdminApiTest(TestCase):
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
-        target_course = factories.CourseFactory()
-        product = factories.ProductFactory(target_courses=[target_course])
+        product = factories.ProductFactory()
         relation = models.CourseProductRelation.objects.get(product=product)
-        target_course_relation = models.ProductTargetCourseRelation.objects.get(
-            product=product.id, course=target_course.id
+        courses = factories.CourseFactory.create_batch(3)
+        relations = []
+        relations.append(
+            models.ProductTargetCourseRelation(
+                course=courses[0], product=product, position=2
+            )
         )
+        relations[0].save()
+        relations.append(
+            models.ProductTargetCourseRelation(
+                course=courses[1], product=product, position=0
+            )
+        )
+        relations[1].save()
+        relations.append(
+            models.ProductTargetCourseRelation(
+                course=courses[2], product=product, position=1
+            )
+        )
+        relations[2].save()
+
         response = self.client.get(f"/api/v1.0/admin/products/{product.id}/")
 
         self.assertEqual(response.status_code, 200)
@@ -83,22 +100,32 @@ class ProductAdminApiTest(TestCase):
             "certificate_definition": product.certificate_definition,
             "target_courses": [
                 {
-                    "id": str(target_course_relation.id),
-                    "course": {
-                        "code": target_course_relation.course.code,
-                        "title": target_course_relation.course.title,
-                        "id": str(target_course_relation.course.id),
-                        "state": {
-                            "priority": target_course_relation.course.state["priority"],
-                            "datetime": target_course_relation.course.state["datetime"],
-                            "call_to_action": target_course_relation.course.state[
-                                "call_to_action"
-                            ],
-                            "text": target_course_relation.course.state["text"],
-                        },
-                    },
+                    "id": str(courses[1].id),
+                    "code": courses[1].code,
                     "course_runs": [],
-                }
+                    "is_graded": relations[1].is_graded,
+                    "organizations": [],
+                    "position": relations[1].position,
+                    "title": courses[1].title,
+                },
+                {
+                    "id": str(courses[2].id),
+                    "code": courses[2].code,
+                    "course_runs": [],
+                    "is_graded": relations[2].is_graded,
+                    "organizations": [],
+                    "position": relations[2].position,
+                    "title": courses[2].title,
+                },
+                {
+                    "id": str(courses[0].id),
+                    "code": courses[0].code,
+                    "course_runs": [],
+                    "is_graded": relations[0].is_graded,
+                    "organizations": [],
+                    "position": relations[0].position,
+                    "title": courses[0].title,
+                },
             ],
             "course_relations": [
                 {
@@ -251,14 +278,26 @@ class ProductAdminApiTest(TestCase):
         )
         self.assertEqual(response.status_code, 201)
         relation = models.ProductTargetCourseRelation.objects.get()
+        expected_result = {
+            "id": str(relation.id),
+            "course": {
+                "code": relation.course.code,
+                "title": relation.course.title,
+                "id": str(relation.course.id),
+                "state": {
+                    "priority": relation.course.state["priority"],
+                    "datetime": relation.course.state["datetime"],
+                    "call_to_action": relation.course.state["call_to_action"],
+                    "text": relation.course.state["text"],
+                },
+            },
+            "is_graded": relation.is_graded,
+            "position": relation.position,
+            "course_runs": [],
+        }
         self.assertEqual(
             response.json(),
-            {
-                "id": str(relation.id),
-                "course": str(course.id),
-                "product": str(product.id),
-                "course_runs": [],
-            },
+            expected_result,
         )
 
     def test_admin_api_product_delete_target_course_without_authentication(self):
@@ -284,13 +323,66 @@ class ProductAdminApiTest(TestCase):
         product = factories.ProductFactory()
         course = factories.CourseFactory()
         product.target_courses.add(course)
-        relation = models.ProductTargetCourseRelation.objects.get(
-            product=product, course=course
-        )
         response = self.client.delete(
-            f"/api/v1.0/admin/products/{product.id}/target-courses/{relation.id}/",
+            f"/api/v1.0/admin/products/{product.id}/target-courses/{course.id}/",
         )
         self.assertEqual(response.status_code, 204)
         self.assertEqual(models.ProductTargetCourseRelation.objects.count(), 0)
         product.refresh_from_db()
         self.assertEqual(product.target_courses.count(), 0)
+
+    def test_admin_api_product_edit_target_course(self):
+        """
+        Authenticated user should be able to modify a target_course
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        product = factories.ProductFactory()
+        course = factories.CourseFactory()
+        product.target_courses.add(course)
+        relation = models.ProductTargetCourseRelation.objects.get(
+            product=product, course=course
+        )
+        relation.is_graded = False
+        relation.save()
+        response = self.client.patch(
+            f"/api/v1.0/admin/products/{product.id}/target-courses/{course.id}/",
+            data={"is_graded": True},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 201)
+        relation.refresh_from_db()
+        self.assertTrue(relation.is_graded)
+
+    def test_admin_api_product_reorder_target_course(self):
+        """
+        Authenticated user should be able to change target_courses order
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        product = factories.ProductFactory()
+        courses = factories.CourseFactory.create_batch(5)
+        for course in courses:
+            product.target_courses.add(course)
+        response = self.client.post(
+            f"/api/v1.0/admin/products/{product.id}/target-courses/reorder/",
+            data={
+                "target_courses": [
+                    str(courses[1].id),
+                    str(courses[3].id),
+                    str(courses[0].id),
+                    str(courses[2].id),
+                    str(courses[4].id),
+                ]
+            },
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 201)
+        relations = models.ProductTargetCourseRelation.objects.filter(product=product)
+        self.assertEqual(relations.get(course=courses[1]).position, 0)
+        self.assertEqual(relations.get(course=courses[3]).position, 1)
+        self.assertEqual(relations.get(course=courses[0]).position, 2)
+        self.assertEqual(relations.get(course=courses[2]).position, 3)
+        self.assertEqual(relations.get(course=courses[4]).position, 4)

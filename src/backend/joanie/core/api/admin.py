@@ -219,8 +219,8 @@ class TargetCoursesViewSet(
         Parse and create the ProductTargetCourseRelation
         """
         data = request.data
+        serializer = self.get_serializer(data=data)
         data["product"] = kwargs.get("product_id")
-        serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=400)
         course_runs = serializer.validated_data.pop("course_runs", [])
@@ -230,3 +230,64 @@ class TargetCoursesViewSet(
             relation.course_runs.add(course_run)
         response = self.get_serializer(relation)
         return Response(response.data, status=201)
+
+    def partial_update(self, request, *args, **kwargs):
+        """
+        Parse and patch the ProductTargetCourseRelation
+        """
+        data = request.data
+        data["product"] = kwargs.get("product_id")
+        if data.get("course_runs", None) == "":
+            data["course_runs"] = []
+        relation = self.queryset.get(product=data["product"], course=kwargs["pk"])
+        serializer = self.get_serializer(relation, data=data, partial=True)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+        course_runs = serializer.validated_data.pop("course_runs", None)
+        models.ProductTargetCourseRelation.objects.filter(pk=relation.id).update(
+            **serializer.validated_data
+        )
+        relation.refresh_from_db()
+        if course_runs is not None:
+            relation.course_runs.clear()
+            for course_run in course_runs:
+                relation.course_runs.add(course_run)
+        response = self.get_serializer(relation)
+        return Response(response.data, status=201)
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Delete the relation between product_id and course_id
+        """
+        product_id = kwargs.get("product_id")
+        course_id = kwargs["pk"]
+        self.queryset.get(product=product_id, course=course_id).delete()
+        return Response(status=204)
+
+    @action(detail=False, methods=["POST"])
+    def reorder(
+        self, request, *args, **kwargs
+    ):  # pylint: disable=no-self-use, unused-argument
+        """
+        Allow to reorder target_courses for a product
+        """
+        product_id = kwargs.get("product_id")
+        target_course_ids = request.data.pop("target_courses")
+        all_target_courses = models.ProductTargetCourseRelation.objects.filter(
+            product=product_id, course__in=target_course_ids
+        )
+        if len(all_target_courses) != len(target_course_ids):
+            return Response(
+                {
+                    "target_courses": (
+                        "target_courses do not match "
+                        f"those on product id {product_id}"
+                    )
+                },
+                status=400,
+            )
+        for index, target_course_id in enumerate(target_course_ids):
+            models.ProductTargetCourseRelation.objects.filter(
+                product=product_id, course=target_course_id
+            ).update(position=index)
+        return Response(status=201)
