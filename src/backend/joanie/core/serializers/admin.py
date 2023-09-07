@@ -586,6 +586,43 @@ class AdminCourseRelationsSerializer(serializers.ModelSerializer):
         ]
 
 
+class AdminCourseRunLightSerializer(serializers.ModelSerializer):
+    """Serializer for CourseRun model."""
+
+    title = serializers.CharField()
+    languages = serializers.MultipleChoiceField(choices=ALL_LANGUAGES)
+
+    class Meta:
+        model = models.CourseRun
+        fields = [
+            "id",
+            "resource_link",
+            "title",
+            "is_gradable",
+            "is_listed",
+            "languages",
+            "start",
+            "end",
+            "enrollment_start",
+            "enrollment_end",
+        ]
+        read_only_fields = ["id"]
+
+
+class AdminProductTargetCourseRelationNestedSerializer(serializers.ModelSerializer):
+    """
+    Serializer for ProductTargetCourseRelation model
+    """
+
+    course = AdminCourseLightSerializer()
+    course_runs = AdminCourseRunLightSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = models.ProductTargetCourseRelation
+        fields = ["id", "course", "course_runs", "is_graded", "position"]
+        read_only_fields = ["id", "course", "course_runs", "is_graded", "position"]
+
+
 class AdminProductDetailSerializer(serializers.ModelSerializer):
     """Serializer for Product details"""
 
@@ -632,10 +669,9 @@ class AdminProductDetailSerializer(serializers.ModelSerializer):
         relations = models.ProductTargetCourseRelation.objects.filter(
             product=product
         ).order_by("position")
-        instances = [relation.course for relation in relations]
 
-        return AdminTargetCourseSerializer(
-            instance=instances, many=True, context=context
+        return AdminProductTargetCourseRelationNestedSerializer(
+            instance=relations, many=True, context=context
         ).data
 
     def get_price_currency(self, *args, **kwargs):
