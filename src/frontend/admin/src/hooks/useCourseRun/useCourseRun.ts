@@ -1,11 +1,15 @@
 import { defineMessages } from "react-intl";
 import {
+  ResourcesQuery,
   useResource,
   useResources,
   UseResourcesProps,
 } from "@/hooks/useResources";
 import { CourseRun } from "@/services/api/models/CourseRun";
 import { CoursesRunsRepository } from "@/services/repositories/courses-runs/CoursesRunsRepository";
+import { ApiResourceInterface } from "@/hooks/useResources/types";
+import { CourseRepository } from "@/services/repositories/courses/CoursesRepository";
+import { Nullable } from "@/types/utils";
 
 export const useCourseRunMessages = defineMessages({
   errorUpdate: {
@@ -43,17 +47,30 @@ export const useCourseRunMessages = defineMessages({
   },
 });
 
-/** const certifs = useCourseRun();
+export type CourseRunResourcesQuery = ResourcesQuery & {
+  courseId?: string;
+  state?: Nullable<string>;
+  start?: Nullable<string>;
+};
+
+/**
  * Joanie Api hook to retrieve/create/update/delete course-runs
  * owned by the authenticated user.
  */
-const props: UseResourcesProps<CourseRun> = {
+const props: UseResourcesProps<
+  CourseRun,
+  CourseRunResourcesQuery,
+  ApiResourceInterface<CourseRun, CourseRunResourcesQuery>
+> = {
   queryKey: ["coursesRuns"],
   apiInterface: () => ({
     get: async (filters) => {
       if (filters?.id) {
         const { id, ...otherFilters } = filters;
         return CoursesRunsRepository.get(id, otherFilters);
+      } else if (filters?.courseId) {
+        const { courseId, ...allFilters } = filters;
+        return CourseRepository.getCourseRuns(courseId, allFilters);
       } else {
         return CoursesRunsRepository.getAll(filters);
       }
