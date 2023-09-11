@@ -260,6 +260,7 @@ export const useResourcesRoot = <
     items,
     meta,
     methods: {
+      mutation,
       invalidate,
       prefetch,
       refetch: readHandler.refetch,
