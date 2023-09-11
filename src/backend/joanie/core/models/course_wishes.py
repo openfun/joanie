@@ -34,3 +34,8 @@ class CourseWish(BaseModel):
 
     def __str__(self):
         return f"{self.owner}'s wish to participate in {self.course}"
+
+    def save(self, *args, **kwargs):
+        """Enforce validation each time an instance is saved."""
+        self.full_clean()
+        super().save(*args, **kwargs)

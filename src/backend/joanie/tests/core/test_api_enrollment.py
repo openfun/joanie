@@ -1582,6 +1582,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {user_token}",
         )
         initial_data = json.loads(response.content)
+        self.assertEqual(initial_data["state"], enrollment.state)
 
         # Get alternative values to try to modify our enrollment
         other_user = factories.UserFactory(is_superuser=random.choice([True, False]))
@@ -1594,12 +1595,13 @@ class EnrollmentApiTest(BaseAPITestCase):
 
         # Try modifying the enrollment on each field with our alternative data
         course_run = models.CourseRun.objects.exclude(id=enrollment.course_run_id).get()
+        new_state = random.choice([s[0] for s in enums.ENROLLMENT_STATE_CHOICES])
         new_data = {
             "id": uuid.uuid4(),
             "user": other_user.username,
             "course_run": course_run.id,
             "created_on": "2000-01-01T09:00:00+00:00",
-            "state": "failed",
+            "state": new_state,
             "was_created_by_order": False,
         }
         headers = (
@@ -1623,8 +1625,11 @@ class EnrollmentApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {user_token}",
         )
-        new_data = json.loads(response.content)
-        self.assertEqual(new_data, initial_data)
+        actual_data = json.loads(response.content)
+        self.assertEqual(
+            actual_data.pop("state"),
+            "set" if http_code == 200 else initial_data["state"],
+        )
 
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment", return_value="enrolled")
     def test_api_enrollment_update_detail_anonymous(self, _mock_set):
@@ -1815,7 +1820,6 @@ class EnrollmentApiTest(BaseAPITestCase):
             course_run=course_run, user=user, is_active=True
         )
 
-        self.assertEqual(enrollment.state, "set")
         self.assertEqual(enrollment.is_active, True)
         self.assertEqual(enrollment.was_created_by_order, False)
 
@@ -1957,8 +1961,8 @@ class EnrollmentApiTest(BaseAPITestCase):
         self, _, __
     ):
         """
-        An authenticated user should not be allowed to update the was_created_by_order
-        field to false of one of its enrollment if this one was previously created by an
+        An authenticated user should not be allowed to update the "was_created_by_order" field
+        to False on one of its enrollment if this one was previously created by an
         order and active.
         """
         user = factories.UserFactory()
@@ -1983,7 +1987,6 @@ class EnrollmentApiTest(BaseAPITestCase):
             course_run=course_run, user=user, is_active=True, was_created_by_order=True
         )
 
-        self.assertEqual(enrollment.state, "set")
         self.assertEqual(enrollment.is_active, True)
         self.assertEqual(enrollment.was_created_by_order, True)
 

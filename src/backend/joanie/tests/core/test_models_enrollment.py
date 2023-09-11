@@ -11,7 +11,7 @@ from django.utils import timezone
 
 from joanie.core import factories
 from joanie.core.exceptions import EnrollmentError, GradeError
-from joanie.core.models import CourseState
+from joanie.core.models import CourseState, Enrollment
 from joanie.lms_handler.backends.openedx import OpenEdXLMSBackend
 
 
@@ -51,6 +51,7 @@ class EnrollmentModelsTestCase(TestCase):
             course_run=course_run,
             user__username="Françoise",
             is_active=True,
+            state="set",
         )
 
         self.assertEqual(
@@ -70,6 +71,7 @@ class EnrollmentModelsTestCase(TestCase):
             course_run=course_run,
             user__username="Françoise",
             is_active=False,
+            state="failed",
         )
 
         self.assertEqual(
@@ -253,6 +255,23 @@ class EnrollmentModelsTestCase(TestCase):
         factories.EnrollmentFactory(
             course_run=course_run, user=user, was_created_by_order=True
         )
+
+    def test_models_enrollment_set_existing(self):
+        """Calling the set method is only allowed on an existing enrollment"""
+        user = factories.UserFactory()
+        course_run = factories.CourseRunFactory(
+            state=CourseState.ONGOING_OPEN,
+        )
+        enrollment = Enrollment(course_run=course_run, user=user)
+
+        with self.assertRaises(ValidationError) as context:
+            enrollment.set()
+
+        self.assertEqual(
+            "['The enrollment should be created before being set to the LMS.']",
+            str(context.exception),
+        )
+        self.assertEqual(user.enrollments.count(), 0)
 
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
     def test_models_enrollment_forbid_for_non_listed_course_run_not_included_in_product(

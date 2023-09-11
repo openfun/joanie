@@ -122,11 +122,9 @@ class OpenEdXLMSBackendTestCase(TestCase):
             "http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course"
         )
         course_run = factories.CourseRunFactory(
-            start=self.now - timedelta(hours=1),
-            end=self.now + timedelta(hours=2),
-            enrollment_end=self.now + timedelta(hours=1),
             is_listed=True,
             resource_link=resource_link,
+            state=models.CourseState.ONGOING_OPEN,
         )
         resource_link = course_run.resource_link
         user = factories.UserFactory()

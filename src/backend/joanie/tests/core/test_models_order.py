@@ -24,7 +24,7 @@ class OrderModelsTestCase(TestCase):
 
     def test_models_order_enrollment_was_created_by_order(self):
         """
-        The enrollment linked to an order, must not orginated from an order.
+        The enrollment linked to an order, must not orginate from an order.
         This is because, being flagged with "was_created_by_order" as True, this enrollment will
         not be listed directly on the student dashboard. It will be visible only behind one of
         the orders listed on the dashboard.
@@ -369,7 +369,7 @@ class OrderModelsTestCase(TestCase):
         InvoiceFactory(order=order, total=order.total)
 
         # - Validate the order should automatically enroll user to course run
-        with self.assertNumQueries(21):
+        with self.assertNumQueries(22):
             order.validate()
 
         self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
@@ -418,7 +418,7 @@ class OrderModelsTestCase(TestCase):
         InvoiceFactory(order=order, total=order.total)
 
         # - Validate the order should automatically enroll user to course run
-        with self.assertNumQueries(27):
+        with self.assertNumQueries(28):
             order.validate()
 
         enrollment.refresh_from_db()
@@ -510,9 +510,10 @@ class OrderModelsTestCase(TestCase):
         self.assertEqual(Enrollment.objects.count(), 1)
         self.assertEqual(Enrollment.objects.filter(is_active=True).count(), 1)
 
-        # - When order is canceled, user should not be unenrolled to related enrollments
-        with self.assertNumQueries(12):
+        # - When order is canceled, user should not be unenrolled from related enrollments
+        with self.assertNumQueries(13):
             order.cancel()
+
         self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
         self.assertEqual(Enrollment.objects.count(), 1)
         self.assertEqual(Enrollment.objects.filter(is_active=True).count(), 1)
@@ -550,13 +551,14 @@ class OrderModelsTestCase(TestCase):
         # - When order is canceled, user should not be unenrolled to related enrollments
         with self.assertNumQueries(10):
             order.cancel()
+
         self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
         self.assertEqual(Enrollment.objects.count(), 1)
         self.assertEqual(Enrollment.objects.filter(is_active=True).count(), 1)
 
-    def test_models_order_get_enrollments(self):
+    def test_models_order_get_target_enrollments(self):
         """
-        Order model implements a `get_enrollment` method to retrieve enrollments
+        Order model implements a `get_target_enrollments` method to retrieve enrollments
         related to the order instance.
         """
         [cr1, cr2] = factories.CourseRunFactory.create_batch(
@@ -621,7 +623,7 @@ class OrderModelsTestCase(TestCase):
             self.assertEqual(len(course_runs), 3)
             self.assertCountEqual(list(course_runs), [cr1, cr2, cr3])
 
-    def test_models_order_validate_transition(self):
+    def test_models_order_validate_transition_success(self):
         """
         Test that the validate transition is successful
         when the order is free or has invoices and is in the
@@ -648,7 +650,7 @@ class OrderModelsTestCase(TestCase):
         with self.assertRaises(TransitionNotAllowed):
             order_free.validate()
 
-    def test_models_order_validate_transition_failure(self):
+    def test_models_order_validate_failure(self):
         """
         Test that the validate transition fails when the
         order is not free and has no invoices
@@ -662,8 +664,9 @@ class OrderModelsTestCase(TestCase):
             order_no_invoice.validate()
         self.assertEqual(order_no_invoice.state, enums.ORDER_STATE_PENDING)
 
-    def test_models_order_transition_failure_when_not_pending(self):
-        """Test that the validate transition fails when the
+    def test_models_order_validate_failure_when_not_pending(self):
+        """
+        Test that the validate transition fails when the
         order is not in the ORDER_STATE_PENDING state
         """
         order = factories.OrderFactory(
@@ -812,6 +815,37 @@ class OrderModelsTestCase(TestCase):
                 "course_details": {"course_id": "course-v1:edx+000001+Demo_Course"},
             },
         )
+
+    def test_models_order_cancel_certificate_product_enrollment_state_failed(self):
+        """
+        Test that the source enrollment state switches to "failed" if the order is canceled and
+        something wrong happens during synchronization of the enrollment mode. Indeed, it
+        should try to set it to "honor" when the related order is canceled...
+        """
+        course = factories.CourseFactory()
+        product = factories.ProductFactory(courses=[course], type="certificate")
+
+        enrollment = factories.EnrollmentFactory(
+            course_run__state=CourseState.FUTURE_OPEN, course_run__is_listed=True
+        )
+        order = factories.OrderFactory(
+            course=None,
+            product=product,
+            enrollment=enrollment,
+            state="validated",
+        )
+
+        def enrollment_error(*args, **kwargs):
+            raise exceptions.EnrollmentError()
+
+        with mock.patch.object(
+            DummyLMSBackend, "set_enrollment", side_effect=enrollment_error
+        ):
+            order.cancel()
+
+        self.assertEqual(enrollment.state, "failed")
+        enrollment.refresh_from_db()
+        self.assertEqual(enrollment.state, "failed")
 
     def test_models_order_create_target_course_relations_on_submit(self):
         """

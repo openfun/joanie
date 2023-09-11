@@ -40,6 +40,11 @@ class User(BaseModel, auth_models.AbstractUser):
     def __str__(self):
         return self.username
 
+    def save(self, *args, **kwargs):
+        """Enforce validation each time an instance is saved."""
+        self.full_clean()
+        super().save(*args, **kwargs)
+
     def update_from_token(self, token):
         """Update user from token token."""
         values = get_user_dict(token)
@@ -131,6 +136,11 @@ class Address(BaseModel):
             raise ValidationError(_("Demote a main address is forbidden"))
 
         return super().clean()
+
+    def save(self, *args, **kwargs):
+        """Enforce validation each time an instance is saved."""
+        self.full_clean()
+        super().save(*args, **kwargs)
 
     @property
     def full_name(self):

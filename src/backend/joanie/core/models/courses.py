@@ -30,6 +30,8 @@ from joanie.lms_handler import LMSHandler
 from .accounts import User
 from .base import BaseModel
 
+# pylint: disable=too-many-lines
+
 MAX_DATE = datetime(MAXYEAR, 12, 31, tzinfo=tz.utc)
 
 logger = logging.getLogger(__name__)
@@ -178,6 +180,11 @@ class Organization(parler_models.TranslatableModel, BaseModel):
         self.code = utils.normalize_code(self.code)
         return super().clean()
 
+    def save(self, *args, **kwargs):
+        """Enforce validation each time an instance is saved."""
+        self.full_clean()
+        super().save(*args, **kwargs)
+
     def get_abilities(self, user):
         """
         Compute and return abilities for a given user taking into account
@@ -240,6 +247,8 @@ class OrganizationAccess(BaseModel):
 
     def save(self, *args, **kwargs):
         """Make sure we keep at least one owner for the organization."""
+        self.full_clean()
+
         if self.pk and self.role != enums.OWNER:
             accesses = self._meta.model.objects.filter(
                 organization=self.organization, role=enums.OWNER
@@ -377,6 +386,11 @@ class Course(parler_models.TranslatableModel, BaseModel):
         self.code = utils.normalize_code(self.code)
         return super().clean()
 
+    def save(self, *args, **kwargs):
+        """Enforce validation each time an instance is saved."""
+        self.full_clean()
+        super().save(*args, **kwargs)
+
     def get_selling_organizations(self, product=None):
         """
         Return the list of organizations selling a product for the course.
@@ -458,6 +472,8 @@ class CourseAccess(BaseModel):
 
     def save(self, *args, **kwargs):
         """Make sure we keep at least one owner for the course."""
+        self.full_clean()
+
         if self.pk and self.role != enums.OWNER:
             accesses = self._meta.model.objects.filter(
                 course=self.course, role=enums.OWNER
@@ -575,6 +591,11 @@ class CourseProductRelation(BaseModel):
 
     def __str__(self):
         return f"{self.course}: {self.product}"
+
+    def save(self, *args, **kwargs):
+        """Enforce validation each time an instance is saved."""
+        self.full_clean()
+        super().save(*args, **kwargs)
 
     def get_read_detail_api_url(self):
         """
@@ -770,6 +791,11 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
 
         super().clean()
 
+    def save(self, *args, **kwargs):
+        """Enforce validation each time an instance is saved."""
+        self.full_clean()
+        super().save(*args, **kwargs)
+
     def delete(self, using=None):
         """
         We need to synchronize with webhooks upon deletion. We could have used the signal but it
@@ -963,33 +989,38 @@ class Enrollment(BaseModel):
         return super().clean()
 
     def set(self):
-        """Try setting the state to the LMS. Saving is left to the caller."""
+        """Try setting the state to the LMS."""
+        if not self.created_on:
+            raise ValidationError(
+                "The enrollment should be created before being set to the LMS."
+            )
+
         # Now we can enroll user to LMS course run
         link = self.course_run.resource_link
         lms = LMSHandler.select_lms(link)
+        state = enums.ENROLLMENT_STATE_SET
 
         if lms is None:
             # If no lms found we set enrollment and order to failure state
             # this issue could be due to a bad setting or a bad resource_link filled,
             # so we need to log this error to fix it quickly to joanie side
             logger.error('No LMS configuration found for course run: "%s".', link)
-            self.state = enums.ENROLLMENT_STATE_FAILED
-            return
-
-        # Try to enroll user to lms course run and update joanie's enrollment state
-        try:
-            lms.set_enrollment(self)
-        except exceptions.EnrollmentError:
-            logger.error(
-                'Enrollment failed for course run "%s".',
-                self.course_run.resource_link,
-            )
-            self.state = enums.ENROLLMENT_STATE_FAILED
+            state = enums.ENROLLMENT_STATE_FAILED
         else:
-            self.state = enums.ENROLLMENT_STATE_SET
+            # Try to enroll user to lms course run and update joanie's enrollment state
+            try:
+                lms.set_enrollment(self)
+            except exceptions.EnrollmentError:
+                logger.error(
+                    'Enrollment failed for course run "%s".',
+                    self.course_run.resource_link,
+                )
+                state = enums.ENROLLMENT_STATE_FAILED
+
+        self.state = state
+        Enrollment.objects.filter(pk=self.pk).update(state=state)
 
     def save(self, *args, **kwargs):
         """Call full clean before saving instance."""
         self.full_clean()
-        self.set()
-        models.Model.save(self, *args, **kwargs)
+        super().save(*args, **kwargs)

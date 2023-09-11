@@ -39,11 +39,6 @@ class BaseModel(models.Model):
 
         abstract = True
 
-    def save(self, *args, **kwargs):
-        """Enforce validation each time an instance is saved."""
-        self.full_clean()
-        super().save(*args, **kwargs)
-
     def __repr__(self, dict_repr=False):
         return str(self.to_dict())
 
