@@ -141,9 +141,6 @@ jobs:
       - run:
           name: Lint code with bandit
           command: ~/.local/bin/bandit -c .banditrc -qr .
-      - run:
-          name: Type-check code with mypy
-          command: ~/.local/bin/mypy .
 
   test-back:
     docker:

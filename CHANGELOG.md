@@ -65,6 +65,7 @@ and this project adheres to
 
 ### Removed
 
+- Remove mypy
 - Product API endpoint
 - Remove djmoney and Moneyfields
 - Badge providers now live in the obc python package
