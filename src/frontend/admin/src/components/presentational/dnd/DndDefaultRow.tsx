@@ -1,18 +1,27 @@
 import * as React from "react";
+import { ReactNode } from "react";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { grey } from "@mui/material/colors";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import ModeEditOutlineTwoToneIcon from "@mui/icons-material/ModeEditOutlineTwoTone";
 
-interface Props {
+export interface DndDefaultRowProps {
   mainTitle: string;
-  subTitle?: string;
+  subTitle?: string | ReactNode;
   rightActions?: React.ReactNode;
+  enableEdit?: boolean;
+  enableDelete?: boolean;
+  onEdit?: () => void;
   onDelete?: () => void;
 }
 
-export function DndDefaultRow(props: Props) {
+export function DndDefaultRow({
+  enableDelete = true,
+  enableEdit = false,
+  ...props
+}: DndDefaultRowProps) {
   return (
     <Box
       display="flex"
@@ -24,7 +33,7 @@ export function DndDefaultRow(props: Props) {
         borderRadius: 1,
         backgroundColor: grey[100],
         "&:hover": {
-          ".toto-test": {
+          ".right-actions": {
             opacity: 1,
           },
         },
@@ -35,7 +44,7 @@ export function DndDefaultRow(props: Props) {
         <Typography variant="caption">{props.subTitle}</Typography>
       </Box>
       <Box
-        className="toto-test"
+        className="right-actions"
         sx={{
           opacity: 0,
           display: "flex",
@@ -45,9 +54,16 @@ export function DndDefaultRow(props: Props) {
         }}
       >
         {props.rightActions}
-        <IconButton size="small" onClick={props.onDelete}>
-          <DeleteOutlineRoundedIcon color="error" fontSize="small" />
-        </IconButton>
+        {enableEdit && (
+          <IconButton size="small" onClick={props.onEdit}>
+            <ModeEditOutlineTwoToneIcon color="action" fontSize="small" />
+          </IconButton>
+        )}
+        {enableDelete && (
+          <IconButton size="small" onClick={props.onDelete}>
+            <DeleteOutlineRoundedIcon color="error" fontSize="small" />
+          </IconButton>
+        )}
       </Box>
     </Box>
   );
