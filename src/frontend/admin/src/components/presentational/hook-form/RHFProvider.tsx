@@ -18,7 +18,7 @@ interface Props<T extends FieldValues> {
   children: React.ReactNode;
   id?: string;
   methods: UseFormReturn<T>;
-  onSubmit: VoidFunction;
+  onSubmit?: VoidFunction;
   formRef?: MutableRefObject<HTMLFormElement | undefined>;
   isSubmitting?: boolean;
   showSubmit?: boolean;
@@ -35,7 +35,14 @@ export function RHFProvider<T extends FieldValues>({
   const intl = useIntl();
   return (
     <FormProvider {...methods}>
-      <form id={id} onSubmit={onSubmit}>
+      <form
+        id={id}
+        onSubmit={(event) => {
+          event.stopPropagation();
+          event.preventDefault();
+          onSubmit?.();
+        }}
+      >
         {children}
         {showSubmit && (
           <Box mt={2} display="flex" justifyContent="flex-end">

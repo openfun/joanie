@@ -1,6 +1,11 @@
 import { Controller, useFormContext } from "react-hook-form";
 import Autocomplete, { AutocompleteProps } from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
+import Box from "@mui/material/Box";
+import InputAdornment from "@mui/material/InputAdornment";
+import React, { ReactNode } from "react";
+import Divider from "@mui/material/Divider";
+import { Maybe } from "@/types/utils";
 
 export interface RHFAutocompleteProps<
   T,
@@ -14,6 +19,7 @@ export interface RHFAutocompleteProps<
   name: string;
   label?: string;
   helperText?: React.ReactNode;
+  leftIcons?: React.ReactNode;
 }
 
 export default function RHFAutocomplete<
@@ -25,12 +31,33 @@ export default function RHFAutocomplete<
   name,
   label,
   helperText,
+  leftIcons,
   ...other
 }: Omit<
   RHFAutocompleteProps<T, Multiple, DisableClearable, FreeSolo>,
   "renderInput"
 >) {
   const { control, setValue } = useFormContext();
+
+  const getLeftIcons = (originLeft: Maybe<ReactNode>): Maybe<ReactNode> => {
+    if (leftIcons === undefined) {
+      return originLeft;
+    }
+
+    return (
+      <>
+        <Box display="flex" alignItems="center">
+          {leftIcons && (
+            <InputAdornment position="start">
+              {leftIcons}
+              <Divider sx={{ height: 28, m: 0.5 }} orientation="vertical" />
+            </InputAdornment>
+          )}
+        </Box>
+        {originLeft}
+      </>
+    );
+  };
 
   return (
     <Controller
@@ -45,6 +72,10 @@ export default function RHFAutocomplete<
               error={!!error}
               helperText={error ? error?.message : helperText}
               {...params}
+              InputProps={{
+                ...params.InputProps,
+                startAdornment: getLeftIcons(params.InputProps.startAdornment),
+              }}
             />
           )}
           {...other}
