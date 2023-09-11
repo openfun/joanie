@@ -4,6 +4,7 @@ import MuiAppBar, { AppBarProps as MuiAppBarProps } from "@mui/material/AppBar";
 import IconButton from "@mui/material/IconButton";
 import classNames from "classnames";
 import MenuOpenIcon from "@mui/icons-material/MenuOpen";
+import Toolbar from "@mui/material/Toolbar";
 import styles from "./DashboardLayoutHeader.module.scss";
 
 interface AppBarProps extends MuiAppBarProps {
@@ -45,21 +46,19 @@ interface Props {
 export function DashboardLayoutHeader({ open, ...props }: Props) {
   return (
     <AppBar color="inherit" position="fixed" open={open}>
-      <div className={styles.headerContainer}>
-        <div>
-          <IconButton
-            size="small"
-            className={classNames({
-              [styles.openNavigationButton]: true,
-              [styles.navigationIsOpen]: open,
-            })}
-            onClick={props.onToggleNavigation}
-          >
-            <MenuOpenIcon fontSize="small" />
-          </IconButton>
-        </div>
+      <Toolbar className={styles.headerContainer}>
+        <IconButton
+          size="small"
+          className={classNames({
+            [styles.openNavigationButton]: true,
+            [styles.navigationIsOpen]: open,
+          })}
+          onClick={props.onToggleNavigation}
+        >
+          <MenuOpenIcon fontSize="small" />
+        </IconButton>
         <div id="header-actions" />
-      </div>
+      </Toolbar>
     </AppBar>
   );
 }
