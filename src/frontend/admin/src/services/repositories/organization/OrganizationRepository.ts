@@ -1,5 +1,4 @@
 import queryString from "query-string";
-import { EntityRoutesPaths } from "@/types/routes";
 import { AbstractRepository } from "@/services/repositories/AbstractRepository";
 import { ResourcesQuery } from "@/hooks/useResources";
 import { Maybe } from "@/types/utils";
@@ -11,8 +10,9 @@ import {
 import { exportToFormData } from "@/utils/forms";
 import { DTOAccesses } from "@/services/api/models/Accesses";
 import { SelectOption } from "@/components/presentational/hook-form/RHFSelect";
+import { BaseEntityRoutesPaths } from "@/types/routes";
 
-type OrganizationRoutes = EntityRoutesPaths & {
+type OrganizationRoutes = BaseEntityRoutesPaths & {
   addUserAccess: (id: string) => string;
   updateUserAccess: (orgId: string, accessId: string) => string;
   removeUserAccess: (orgId: string, accessId: string) => string;
@@ -29,7 +29,7 @@ export const organizationRoute: OrganizationRoutes = {
   addUserAccess: (id: string) => `/organizations/${id}/accesses/`,
   updateUserAccess: (orgId: string, accessId: string) =>
     `/organizations/${orgId}/accesses/${accessId}/`,
-  removeUserAccess: (orgId, accessId) =>
+  removeUserAccess: (orgId: string, accessId: string) =>
     `/organizations/${orgId}/accesses/${accessId}/`,
 };
 

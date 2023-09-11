@@ -1,5 +1,5 @@
 import queryString from "query-string";
-import { EntityRoutesPaths } from "@/types/routes";
+import { BaseEntityRoutesPaths } from "@/types/routes";
 import { AbstractRepository } from "@/services/repositories/AbstractRepository";
 import { ResourcesQuery } from "@/hooks/useResources";
 import { Maybe } from "@/types/utils";
@@ -7,7 +7,7 @@ import { checkStatus, fetchApi } from "@/services/http/HttpService";
 import { exportToFormData } from "@/utils/forms";
 import { User } from "@/services/api/models/User";
 
-export const userRoutes: EntityRoutesPaths = {
+export const userRoutes: BaseEntityRoutesPaths = {
   get: (id: string, params: string = "") => `/users/${id}/${params}`,
   getAll: (params: string = "") => `/users/${params}`,
   create: "/users/",
