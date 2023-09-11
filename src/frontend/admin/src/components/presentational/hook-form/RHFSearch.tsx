@@ -1,23 +1,40 @@
 import * as React from "react";
-import { useEffect, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { useFormContext } from "react-hook-form";
+import IconButton from "@mui/material/IconButton";
+import AddIcon from "@mui/icons-material/Add";
+import ModeEditOutlineTwoToneIcon from "@mui/icons-material/ModeEditOutlineTwoTone";
+import Divider from "@mui/material/Divider";
 import RHFAutocomplete, {
   RHFAutocompleteProps,
 } from "@/components/presentational/hook-form/RHFAutocomplete";
-import { Maybe } from "@/types/utils";
+import { Maybe, Nullable } from "@/types/utils";
 
 export interface RHFAutocompleteSearchProps<T>
-  extends Omit<RHFAutocompleteProps<T, Maybe<boolean>>, "options"> {}
+  extends Omit<RHFAutocompleteProps<T, Maybe<boolean>>, "options"> {
+  enableAdd?: boolean;
+  enableEdit?: boolean;
+  onAddClick?: () => void;
+  onEditClick?: () => void;
+}
 
 export interface RHFSearchProps<T> extends RHFAutocompleteSearchProps<T> {
   items: T[];
   onFilter: (searchTerm: string) => void;
 }
 
-export function RHFSearch<T>({ items, onFilter, ...props }: RHFSearchProps<T>) {
+export function RHFSearch<T>({
+  enableAdd,
+  enableEdit,
+  onAddClick,
+  onEditClick,
+  items,
+  onFilter,
+  ...props
+}: RHFSearchProps<T>) {
   const { getValues } = useFormContext();
-
+  const value: Nullable<T> = getValues(props.name);
   const [search, setSearch] = useState("");
   const [selectedOptions, setSelectedOptions] = useState<T | T[]>();
   const [options, setOptions] = useState<T[]>([]);
@@ -26,7 +43,7 @@ export function RHFSearch<T>({ items, onFilter, ...props }: RHFSearchProps<T>) {
 
   useEffect(() => {
     setSelectedOptions(getValues(props.name));
-  }, [getValues, props.name]);
+  }, [value]);
 
   useEffect(() => {
     const isArray = Array.isArray(selectedOptions);
@@ -37,12 +54,40 @@ export function RHFSearch<T>({ items, onFilter, ...props }: RHFSearchProps<T>) {
       result = [selectedOptions];
     }
 
-    if (search === "") {
-      setOptions(result);
-    } else {
-      setOptions([...items, ...result]);
-    }
+    setOptions([...items, ...result]);
   }, [items, search, selectedOptions]);
+
+  const getLeftIcons = (): Maybe<ReactNode> => {
+    const addEditButton = value && enableEdit;
+    if (!addEditButton && !enableAdd) {
+      return undefined;
+    }
+    return (
+      <>
+        {enableAdd && (
+          <IconButton
+            data-testid="search-add-button"
+            onClick={onAddClick}
+            size="small"
+          >
+            <AddIcon color="primary" />
+          </IconButton>
+        )}
+        {enableAdd && addEditButton && (
+          <Divider sx={{ height: 28, m: 0.5 }} orientation="vertical" />
+        )}
+        {addEditButton && (
+          <IconButton
+            onClick={onEditClick}
+            size="small"
+            data-testid="search-edit-button"
+          >
+            <ModeEditOutlineTwoToneIcon color="primary" />
+          </IconButton>
+        )}
+      </>
+    );
+  };
 
   return (
     <RHFAutocomplete
@@ -58,6 +103,7 @@ export function RHFSearch<T>({ items, onFilter, ...props }: RHFSearchProps<T>) {
         setSelectedOptions(newValue);
       }}
       includeInputInList
+      leftIcons={getLeftIcons()}
       filterSelectedOptions={true}
       autoComplete
       options={options}
