@@ -1,5 +1,5 @@
 import queryString from "query-string";
-import { EntityRoutesPaths } from "@/types/routes";
+import { BaseEntityRoutesPaths } from "@/types/routes";
 import { AbstractRepository } from "@/services/repositories/AbstractRepository";
 import { ResourcesQuery } from "@/hooks/useResources";
 import { Maybe } from "@/types/utils";
@@ -8,11 +8,19 @@ import { Course, DTOCourse } from "@/services/api/models/Course";
 import { exportToFormData } from "@/utils/forms";
 import { DTOAccesses } from "@/services/api/models/Accesses";
 import { SelectOption } from "@/components/presentational/hook-form/RHFSelect";
+import { CourseRun } from "@/services/api/models/CourseRun";
+import { CourseRunResourcesQuery } from "@/hooks/useCourseRun/useCourseRun";
 
-type CourseRoutes = EntityRoutesPaths & {
+export type CourseResourceQuery = ResourcesQuery & {
+  state?: string;
+  start?: string;
+};
+
+type CourseRoutes = BaseEntityRoutesPaths & {
   addUserAccess: (id: string) => string;
   updateUserAccess: (courseId: string, accessId: string) => string;
   removeUserAccess: (courseId: string, accessId: string) => string;
+  getCoursesRuns: (courseId: string, params: string) => string;
   allRoles: string;
   options: string;
 };
@@ -23,9 +31,11 @@ export const coursesRoute: CourseRoutes = {
   create: "/courses/",
   update: (id: string) => `/courses/${id}/`,
   delete: (id: string) => `/courses/${id}/`,
+  getCoursesRuns: (courseId: string, params: string = "") =>
+    `/courses/${courseId}/course-runs/${params}`,
   options: "/courses/",
   addUserAccess: (id: string) => `/courses/${id}/accesses/`,
-  removeUserAccess: (courseId, accessId) =>
+  removeUserAccess: (courseId: string, accessId: string) =>
     `/courses/${courseId}/accesses/${accessId}/`,
   updateUserAccess: (courseId: string, accessId: string) =>
     `/courses/${courseId}/accesses/${accessId}/`,
@@ -33,7 +43,11 @@ export const coursesRoute: CourseRoutes = {
 };
 
 interface Repository
-  extends AbstractRepository<Course, ResourcesQuery, DTOCourse> {
+  extends AbstractRepository<Course, CourseResourceQuery, DTOCourse> {
+  getCourseRuns: (
+    courseId: string,
+    filters?: Maybe<CourseRunResourcesQuery>,
+  ) => Promise<CourseRun[]>;
   addUserAccess: (
     courseId: string,
     userId: string,
@@ -49,7 +63,10 @@ interface Repository
 }
 
 export const CourseRepository: Repository = class CourseRepository {
-  static get(id: string, filters?: Maybe<ResourcesQuery>): Promise<Course> {
+  static get(
+    id: string,
+    filters?: Maybe<CourseResourceQuery>,
+  ): Promise<Course> {
     const url = coursesRoute.get(
       id,
       filters ? `?${queryString.stringify(filters)}` : "",
@@ -57,7 +74,7 @@ export const CourseRepository: Repository = class CourseRepository {
     return fetchApi(url, { method: "GET" }).then(checkStatus);
   }
 
-  static getAll(filters: Maybe<ResourcesQuery>): Promise<Course[]> {
+  static getAll(filters: Maybe<CourseResourceQuery>): Promise<Course[]> {
     const url = coursesRoute.getAll(
       filters ? `?${queryString.stringify(filters)}` : "",
     );
@@ -81,6 +98,17 @@ export const CourseRepository: Repository = class CourseRepository {
       method: "PATCH",
       body: exportToFormData(payload),
     }).then(checkStatus);
+  }
+
+  static getCourseRuns(
+    courseId: string,
+    filters: Maybe<CourseRunResourcesQuery>,
+  ): Promise<CourseRun[]> {
+    const url = coursesRoute.getCoursesRuns(
+      courseId,
+      filters ? `?${queryString.stringify(filters)}` : "",
+    );
+    return fetchApi(url, { method: "GET" }).then(checkStatus);
   }
 
   static addUserAccess(

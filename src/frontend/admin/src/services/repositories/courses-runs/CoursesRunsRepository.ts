@@ -1,5 +1,4 @@
 import queryString from "query-string";
-import { EntityRoutesPaths } from "@/types/routes";
 import { AbstractRepository } from "@/services/repositories/AbstractRepository";
 import { ResourcesQuery } from "@/hooks/useResources";
 import { Maybe } from "@/types/utils";
@@ -10,8 +9,9 @@ import {
 } from "@/services/http/HttpService";
 import { CourseRun, DTOCourseRun } from "@/services/api/models/CourseRun";
 import { JoanieLanguage } from "@/components/presentational/hook-form/RHFSelectLanguage";
+import { BaseEntityRoutesPaths } from "@/types/routes";
 
-export const coursesRunsRoute: EntityRoutesPaths = {
+export const coursesRunsRoute: BaseEntityRoutesPaths = {
   get: (id: string, params: string = "") => `/course-runs/${id}/${params}`,
   getAll: (params: string = "") => `/course-runs/${params}`,
   create: "/course-runs/",

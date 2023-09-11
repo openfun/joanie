@@ -1,5 +1,5 @@
 import queryString from "query-string";
-import { EntityRoutesPaths } from "@/types/routes";
+import { BaseEntityRoutesPaths } from "@/types/routes";
 import { AbstractRepository } from "@/services/repositories/AbstractRepository";
 
 import { Maybe } from "@/types/utils";
@@ -11,7 +11,7 @@ import {
 } from "@/services/api/models/CertificateDefinition";
 import { ResourcesQuery } from "@/hooks/useResources/types";
 
-export const certificateDefinitionRoutes: EntityRoutesPaths = {
+export const certificateDefinitionRoutes: BaseEntityRoutesPaths = {
   get: (id: string, params: string = "") =>
     `/certificate-definitions/${id}/${params}`,
   getAll: (params: string = "") => `/certificate-definitions/${params}`,
