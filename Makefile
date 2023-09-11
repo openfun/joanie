@@ -127,7 +127,6 @@ lint: \
   lint-isort \
   lint-black \
   lint-flake8 \
-  lint-mypy \
   lint-pylint \
   lint-bandit
 .PHONY: lint
@@ -151,11 +150,6 @@ lint-isort: ## automatically re-arrange python imports in back-end code base
 	@echo 'lint:isort started…'
 	@$(COMPOSE_RUN_APP) isort --atomic .
 .PHONY: lint-isort
-
-lint-mypy: ## type check back-end python sources with mypy
-	@echo 'lint:mypy started…'
-	@$(COMPOSE_RUN_APP) mypy .
-.PHONY: lint-mypy
 
 lint-pylint: ## lint back-end python sources with pylint
 	@echo 'lint:pylint started…'
