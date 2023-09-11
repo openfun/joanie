@@ -12,6 +12,7 @@ export type Course = {
   code: string;
   title: string;
   organizations: Organization[];
+  is_graded: boolean;
   product_relations?: CourseRelationToProduct[];
   state?: CourseState;
   courses_runs?: CourseRun[];
@@ -26,7 +27,7 @@ export enum CourseRoles {
 }
 
 export type CourseFormValues = ToFormValues<
-  Omit<Course, "accesses" | "id" | "state" | "courses_runs">
+  Omit<Course, "accesses" | "id" | "state" | "courses_runs" | "is_graded">
 >;
 
 export interface DTOCourse {
