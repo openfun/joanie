@@ -79,6 +79,11 @@ class Badge(parler_models.TranslatableModel, BaseModel):
     def __str__(self):
         return f"{self.provider}: {self.safe_translation_getter('name')}"
 
+    def save(self, *args, **kwargs):
+        """Enforce validation each time an instance is saved."""
+        self.full_clean()
+        super().save(*args, **kwargs)
+
 
 class IssuedBadge(BaseModel):
     """
@@ -134,3 +139,8 @@ class IssuedBadge(BaseModel):
 
     def __str__(self):
         return f"{self.badge} - {self.user.get_full_name()}"
+
+    def save(self, *args, **kwargs):
+        """Enforce validation each time an instance is saved."""
+        self.full_clean()
+        super().save(*args, **kwargs)

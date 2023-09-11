@@ -239,6 +239,11 @@ class Product(parler_models.TranslatableModel, BaseModel):
             )
         super().clean()
 
+    def save(self, *args, **kwargs):
+        """Enforce validation each time an instance is saved."""
+        self.full_clean()
+        super().save(*args, **kwargs)
+
 
 class ProductTargetCourseRelation(BaseModel):
     """
@@ -282,6 +287,11 @@ class ProductTargetCourseRelation(BaseModel):
 
     def __str__(self):
         return f"{self.product}: {self.position} / {self.course}"
+
+    def save(self, *args, **kwargs):
+        """Enforce validation each time an instance is saved."""
+        self.full_clean()
+        super().save(*args, **kwargs)
 
     def delete(self, using=None, keep_parents=False):
         """
@@ -635,7 +645,7 @@ class Order(BaseModel):
     def save(self, *args, **kwargs):
         """Call full clean before saving instance."""
         self.full_clean()
-        models.Model.save(self, *args, **kwargs)
+        super().save(*args, **kwargs)
 
     def get_target_enrollments(self, is_active=None):
         """
@@ -802,7 +812,7 @@ def order_post_transition_callback(
     # course runs targeted by the purchased product, we should change their enrollment mode on
     # these course runs to "verified".
     if instance.state in [enums.ORDER_STATE_VALIDATED, enums.ORDER_STATE_CANCELED]:
-        for enrollment in Enrollment.objects.filter(
+        for enrollment in courses_models.Enrollment.objects.filter(
             course_run__course__target_orders=instance
         ).select_related("course_run", "user"):
             enrollment.set()
@@ -854,3 +864,8 @@ class OrderTargetCourseRelation(BaseModel):
 
     def __str__(self):
         return f"{self.order}: {self.position} / {self.course}"
+
+    def save(self, *args, **kwargs):
+        """Enforce validation each time an instance is saved."""
+        self.full_clean()
+        super().save(*args, **kwargs)

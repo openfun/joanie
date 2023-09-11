@@ -7,7 +7,7 @@ from unittest import mock
 from django.test import TestCase
 from django.utils import timezone
 
-from joanie.core import factories
+from joanie.core import factories, models
 from joanie.core.models import Certificate, Enrollment
 
 
@@ -22,11 +22,9 @@ class CertificateProductGetOrGenerateCertificateOrderModelsTestCase(TestCase):
     ):
         """Generate a certificate for a product order"""
         enrollment = factories.EnrollmentFactory(
-            course_run__enrollment_end=timezone.now() + timedelta(hours=1),
-            course_run__enrollment_start=timezone.now() - timedelta(hours=1),
             course_run__is_gradable=True,
             course_run__is_listed=True,
-            course_run__start=timezone.now() - timedelta(hours=1),
+            course_run__state=models.CourseState.ONGOING_OPEN,
             is_active=True,
         )
         product = factories.ProductFactory(

@@ -232,8 +232,19 @@ class EnrollmentViewSet(
         )
 
     def perform_create(self, serializer):
-        """Force the enrollment's "owner" field to the logged-in user."""
-        serializer.save(user=self.request.user)
+        """
+        Force the enrollment's "owner" field to the logged-in user and synchronize the
+        enrollment with the LMS.
+        """
+        instance = serializer.save(user=self.request.user)
+        instance.set()
+
+    def perform_update(self, serializer):
+        """
+        Synchronize the enrollment with the LMS.
+        """
+        instance = serializer.save()
+        instance.set()
 
 
 # pylint: disable=too-many-ancestors

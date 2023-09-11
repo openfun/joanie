@@ -6,7 +6,7 @@ from django.test import TestCase
 from django.test.utils import override_settings
 from django.utils import timezone
 
-from joanie.core import factories
+from joanie.core import factories, models
 from joanie.lms_handler import LMSHandler
 from joanie.lms_handler.backends.dummy import DummyLMSBackend
 
@@ -95,11 +95,9 @@ class DummyLMSBackendTestCase(TestCase):
             "http://dummy-lms.test/courses/course-v1:edx+000001+Demo_Course/course"
         )
         enrollment = factories.EnrollmentFactory(
-            course_run__start=self.now - timedelta(hours=1),
-            course_run__end=self.now + timedelta(hours=2),
-            course_run__enrollment_end=self.now + timedelta(hours=1),
             course_run__is_listed=True,
             course_run__resource_link=resource_link,
+            course_run__state=models.CourseState.ONGOING_OPEN,
             is_active=False,
         )
 

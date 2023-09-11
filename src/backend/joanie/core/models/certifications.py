@@ -46,6 +46,11 @@ class CertificateDefinition(parler_models.TranslatableModel, BaseModel):
     def __str__(self):
         return self.safe_translation_getter("title", any_language=True)
 
+    def save(self, *args, **kwargs):
+        """Enforce validation each time an instance is saved."""
+        self.full_clean()
+        super().save(*args, **kwargs)
+
 
 class Certificate(BaseModel):
     """
@@ -201,4 +206,4 @@ class Certificate(BaseModel):
         if is_new:
             self._set_localized_context()
 
-        models.Model.save(self, *args, **kwargs)
+        super().save(*args, **kwargs)

@@ -294,7 +294,6 @@ class Invoice(BaseModel):
 
         On creation, we also create a context for each active languages.
         """
-
         self.full_clean()
 
         is_new = self.created_on is None
@@ -302,7 +301,7 @@ class Invoice(BaseModel):
         if is_new:
             self._set_localized_context()
 
-        models.Model.save(self, *args, **kwargs)
+        super().save(*args, **kwargs)
 
 
 class Transaction(BaseModel):
@@ -344,6 +343,11 @@ class Transaction(BaseModel):
     def __str__(self):
         transaction_type = "Credit" if self.total < 0 else "Debit"
         return f"{transaction_type} transaction ({self.total})"
+
+    def save(self, *args, **kwargs):
+        """Enforce validation each time an instance is saved."""
+        self.full_clean()
+        super().save(*args, **kwargs)
 
 
 class CreditCard(BaseModel):
@@ -405,6 +409,11 @@ class CreditCard(BaseModel):
             raise ValidationError(_("Demote a main credit card is forbidden"))
 
         return super().clean()
+
+    def save(self, *args, **kwargs):
+        """Enforce validation each time an instance is saved."""
+        self.full_clean()
+        super().save(*args, **kwargs)
 
 
 @receiver(models.signals.post_delete, sender=CreditCard)
