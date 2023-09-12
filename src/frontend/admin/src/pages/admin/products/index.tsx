@@ -1,5 +1,15 @@
-import { DashboardLayoutPage } from "@/layouts/dashboard/page/DashboardLayoutPage";
+import { useEffect } from "react";
+import { useRouter } from "next/router";
+import { PATH_ADMIN } from "@/utils/routes/path";
 
-export default function Products() {
-  return <DashboardLayoutPage>Products pages</DashboardLayoutPage>;
+export default function Index() {
+  const { pathname, push } = useRouter();
+
+  useEffect(() => {
+    if (pathname === PATH_ADMIN.products.root) {
+      push(PATH_ADMIN.products.list);
+    }
+  }, [pathname]);
+
+  return null;
 }
