@@ -100,7 +100,7 @@ export function RHFSearch<T>({
         if (!newValue) {
           return;
         }
-        setSelectedOptions(newValue);
+        setSelectedOptions(newValue as T | T[]);
       }}
       includeInputInList
       leftIcons={getLeftIcons()}

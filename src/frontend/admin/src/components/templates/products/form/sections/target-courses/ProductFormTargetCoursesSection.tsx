@@ -60,7 +60,7 @@ export function ProductFormTargetCoursesSection(props: Props) {
     };
   };
 
-  const methods = useForm<ProductTargetCoursesFormValues>({
+  const methods = useForm({
     resolver: yupResolver(Schema),
     defaultValues: getDefaultValues(),
   });

@@ -45,12 +45,12 @@ export function CourseRunForm({ courseRun, ...props }: Props) {
 
   const RegisterSchema = Yup.object().shape({
     title: Yup.string().required(),
-    course: Yup.mixed<Course>().required(),
+    course: Yup.object<Course>().required(),
     resource_link: Yup.string().required(),
-    start: Yup.string().nullable(),
-    end: Yup.string().nullable(),
-    enrollment_start: Yup.string().nullable(),
-    enrollment_end: Yup.string().nullable(),
+    start: Yup.string().defined().nullable(),
+    end: Yup.string().defined().nullable(),
+    enrollment_start: Yup.string().defined().nullable(),
+    enrollment_end: Yup.string().defined().nullable(),
     languages: Yup.array<JoanieLanguage>().required(),
     is_gradable: Yup.boolean().required(),
     is_listed: Yup.boolean().required(),
@@ -59,19 +59,19 @@ export function CourseRunForm({ courseRun, ...props }: Props) {
   const getDefaultValues = () => {
     return {
       title: courseRun?.title ?? "",
-      course: courseRun?.course ?? {},
+      course: courseRun?.course ?? (null as any), // to not trigger type validation for the default values
       resource_link: courseRun?.resource_link ?? "",
+      start: courseRun?.start ?? null,
+      end: courseRun?.end ?? null,
+      enrollment_start: courseRun?.enrollment_start ?? null,
+      enrollment_end: courseRun?.enrollment_end ?? null,
       languages: selectLanguageUtils.getObjectsFromValues(courseRun?.languages),
       is_gradable: courseRun?.is_gradable ?? false,
       is_listed: courseRun?.is_listed ?? false,
-      start: courseRun?.start ?? "",
-      end: courseRun?.end ?? "",
-      enrollment_start: courseRun?.enrollment_start ?? "",
-      enrollment_end: courseRun?.enrollment_end ?? "",
     };
   };
 
-  const methods = useForm<FormValues>({
+  const methods = useForm({
     resolver: yupResolver(RegisterSchema),
     defaultValues: getDefaultValues(),
   });

@@ -4,7 +4,6 @@ import {
   DTOCourseRelationToProduct,
 } from "./Relations";
 import { CourseRun } from "./CourseRun";
-import { ToFormValues } from "@/types/utils";
 import { Accesses } from "@/services/api/models/Accesses";
 
 export type Course = {
@@ -26,8 +25,9 @@ export enum CourseRoles {
   MANAGER = "manager",
 }
 
-export type CourseFormValues = ToFormValues<
-  Omit<Course, "accesses" | "id" | "state" | "courses_runs" | "is_graded">
+export type CourseFormValues = Omit<
+  Course,
+  "accesses" | "id" | "state" | "courses_runs" | "is_graded"
 >;
 
 export interface DTOCourse {

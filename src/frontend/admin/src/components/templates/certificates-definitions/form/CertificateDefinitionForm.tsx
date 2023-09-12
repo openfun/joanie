@@ -15,7 +15,6 @@ import { genericUpdateFormError } from "@/utils/forms";
 import { TranslatableContent } from "@/components/presentational/translatable-content/TranslatableContent";
 import {
   CertificateDefinition,
-  CertificateDefinitionFormValues,
   DTOCertificateDefinition,
 } from "@/services/api/models/CertificateDefinition";
 
@@ -69,7 +68,7 @@ export function CertificateDefinitionForm({ definition, ...props }: Props) {
     };
   };
 
-  const methods = useForm<CertificateDefinitionFormValues>({
+  const methods = useForm({
     resolver: yupResolver(RegisterSchema),
     defaultValues: getDefaultValues(),
   });
