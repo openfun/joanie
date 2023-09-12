@@ -49,6 +49,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
                 "patch": False,
                 "put": False,
                 "manage_accesses": False,
+                "can_sign_contract": False,
             },
         )
 
@@ -64,6 +65,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
                 "patch": False,
                 "put": False,
                 "manage_accesses": False,
+                "can_sign_contract": False,
             },
         )
 
@@ -79,6 +81,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
                 "patch": True,
                 "put": True,
                 "manage_accesses": True,
+                "can_sign_contract": True,
             },
         )
 
@@ -94,6 +97,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
                 "patch": True,
                 "put": True,
                 "manage_accesses": True,
+                "can_sign_contract": False,
             },
         )
 
@@ -112,6 +116,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
                 "patch": False,
                 "put": False,
                 "manage_accesses": False,
+                "can_sign_contract": False,
             },
         )
 
@@ -131,5 +136,6 @@ class OrganizationModelsTestCase(BaseAPITestCase):
                 "patch": False,
                 "put": False,
                 "manage_accesses": False,
+                "can_sign_contract": False,
             },
         )

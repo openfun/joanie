@@ -196,6 +196,7 @@ class Organization(parler_models.TranslatableModel, BaseModel):
             "put": is_owner_or_admin,
             "delete": role == enums.OWNER,
             "manage_accesses": is_owner_or_admin,
+            "can_sign_contract": role == enums.OWNER,
         }
 
 
