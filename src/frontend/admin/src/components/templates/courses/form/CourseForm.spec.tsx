@@ -44,4 +44,18 @@ describe("<CourseForm/>", () => {
       });
     }
   });
+
+  it("renders a populated form without the product relation  section", async () => {
+    const course = CourseFactory();
+    render(
+      <TestingWrapper>
+        <CourseForm course={course} showProductRelationSection={false} />
+      </TestingWrapper>,
+    );
+    const title: HTMLInputElement = await screen.findByRole("textbox", {
+      name: "Title",
+    });
+    expect(title.value).toBe(course.title);
+    expect(screen.queryByText("Relation to products")).not.toBeInTheDocument();
+  });
 });

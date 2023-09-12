@@ -35,11 +35,16 @@ import { AccessesList } from "@/components/templates/accesses/list/AccessesList"
 import { LoadingContent } from "@/components/presentational/loading/LoadingContent";
 
 interface Props {
+  showProductRelationSection?: boolean;
   afterSubmit?: (course: Course) => void;
   course?: Course;
 }
 
-export function CourseForm({ course, ...props }: Props) {
+export function CourseForm({
+  course,
+  showProductRelationSection = true,
+  ...props
+}: Props) {
   const intl = useIntl();
   const courses = useCourses({}, { enabled: false });
 
@@ -156,42 +161,52 @@ export function CourseForm({ course, ...props }: Props) {
                   />
                 </Grid>
 
-                <Grid xs={12} md={6}>
-                  <Typography variant="subtitle2">
-                    {intl.formatMessage(
-                      courseFormMessages.productRelationSubtitle,
-                    )}
-                  </Typography>
-                </Grid>
-                <Grid xs={12} md={6}>
-                  <Box display="flex" width="100%" justifyContent="flex-end">
-                    <Button
-                      size="small"
-                      onClick={relationToProductModal.handleOpen}
-                    >
-                      {intl.formatMessage(
-                        courseFormMessages.addRelationButtonLabel,
-                      )}
-                    </Button>
-                  </Box>
-                </Grid>
-                <Grid xs={12}>
-                  <Stack spacing={1}>
-                    {productsArray.fields.map((product, index) => (
-                      <DndDefaultRow
-                        key={`${product.product.title}-${product.id}`}
-                        onDelete={() => productsArray.remove(index)}
-                        mainTitle={product.product.title}
-                        rightActions={
-                          <Button onClick={() => editRelation(product, index)}>
-                            Edit
-                          </Button>
-                        }
-                        subTitle={`${product.organizations.length} organizations selectionnées`}
-                      />
-                    ))}
-                  </Stack>
-                </Grid>
+                {showProductRelationSection && (
+                  <>
+                    <Grid xs={12} md={6}>
+                      <Typography variant="subtitle2">
+                        {intl.formatMessage(
+                          courseFormMessages.productRelationSubtitle,
+                        )}
+                      </Typography>
+                    </Grid>
+                    <Grid xs={12} md={6}>
+                      <Box
+                        display="flex"
+                        width="100%"
+                        justifyContent="flex-end"
+                      >
+                        <Button
+                          size="small"
+                          onClick={relationToProductModal.handleOpen}
+                        >
+                          {intl.formatMessage(
+                            courseFormMessages.addRelationButtonLabel,
+                          )}
+                        </Button>
+                      </Box>
+                    </Grid>
+                    <Grid xs={12}>
+                      <Stack spacing={1}>
+                        {productsArray.fields.map((product, index) => (
+                          <DndDefaultRow
+                            key={`${product.product.title}-${product.id}`}
+                            onDelete={() => productsArray.remove(index)}
+                            mainTitle={product.product.title}
+                            rightActions={
+                              <Button
+                                onClick={() => editRelation(product, index)}
+                              >
+                                Edit
+                              </Button>
+                            }
+                            subTitle={`${product.organizations.length} organizations selectionnées`}
+                          />
+                        ))}
+                      </Stack>
+                    </Grid>
+                  </>
+                )}
               </Grid>
             </RHFProvider>
 
