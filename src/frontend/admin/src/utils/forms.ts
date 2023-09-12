@@ -28,7 +28,11 @@ export const appendToFormData = (
   }
 };
 
-export const exportToFormData = (payload: any): FormData => {
+export const exportToFormData = (payload: any): FormData | any => {
+  if (process.env.NEXT_PUBLIC_API_SOURCE === "mocked") {
+    return JSON.stringify(payload);
+  }
+
   const formData = new FormData();
 
   Object.entries(payload).forEach(([key, value]) =>
