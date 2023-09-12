@@ -296,7 +296,7 @@ jobs:
         auth:
           username: $DOCKER_HUB_USER
           password: $DOCKER_HUB_PASSWORD
-    parallelism: 3
+    parallelism: 5
     resource_class: large
     working_directory: ~/joanie/src/frontend/admin
     steps:
@@ -308,7 +308,7 @@ jobs:
             - v3-frontend-admin-dependencies-
       - run:
           name: Run test command
-          command: yarn test -w 3 --shard "$(($CIRCLE_NODE_INDEX + 1))/$CIRCLE_NODE_TOTAL"
+          command: yarn test -w 5 --shard "$(($CIRCLE_NODE_INDEX + 1))/$CIRCLE_NODE_TOTAL"
 
 
   # ---- Internationalization jobs ----

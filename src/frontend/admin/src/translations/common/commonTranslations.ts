@@ -6,6 +6,11 @@ export const commonTranslations = defineMessages({
     defaultMessage: "Title",
     description: "Common title label",
   },
+  description: {
+    id: "translations.common.commonTranslations.description",
+    defaultMessage: "Description",
+    description: "Common description label",
+  },
   add: {
     id: "translations.common.commonTranslations.add",
     defaultMessage: "Add",
@@ -29,6 +34,6 @@ export const commonTranslations = defineMessages({
   submit: {
     id: "translations.common.commonTranslations.submit",
     defaultMessage: "Submit",
-    description: "Submit label for submit button",
+    description: "Common submit label",
   },
 });
