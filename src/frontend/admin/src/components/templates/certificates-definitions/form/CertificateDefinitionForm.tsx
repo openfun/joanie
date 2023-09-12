@@ -6,7 +6,6 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import Grid from "@mui/material/Unstable_Grid2";
 import { defineMessages, useIntl } from "react-intl";
 import Box from "@mui/material/Box";
-import MenuItem from "@mui/material/MenuItem";
 import { RHFProvider } from "@/components/presentational/hook-form/RHFProvider";
 import { RHFTextField } from "@/components/presentational/hook-form/RHFTextField";
 import { RHFSelect } from "@/components/presentational/hook-form/RHFSelect";
@@ -132,12 +131,14 @@ export function CertificateDefinitionForm({ definition, ...props }: Props) {
                 data-testid="template-select"
                 name="template"
                 disabled={true}
+                options={[
+                  {
+                    label: "Default",
+                    value: "howard.issuers.CertificateDocument",
+                  },
+                ]}
                 label={intl.formatMessage(messages.templateLabel)}
-              >
-                <MenuItem value="howard.issuers.CertificateDocument">
-                  Default template
-                </MenuItem>
-              </RHFSelect>
+              />
             </Grid>
             <Grid xs={12}>
               <RHFTextField

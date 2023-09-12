@@ -12,7 +12,7 @@ export function OrganizationSearch(
   props: RHFAutocompleteSearchProps<Organization>,
 ) {
   const [query, setQuery] = useState("");
-  const organizations = useOrganizations({ query }, { enabled: query !== "" });
+  const organizations = useOrganizations({ query });
 
   return (
     <RHFSearch
