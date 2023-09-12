@@ -7,6 +7,7 @@ export function StrictModeDroppable({ children, ...props }: DroppableProps) {
   const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line compat/compat
     const animation = requestAnimationFrame(() => setEnabled(true));
     return () => {
       cancelAnimationFrame(animation);

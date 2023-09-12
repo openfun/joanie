@@ -57,8 +57,8 @@ export function CourseForm({
   const RegisterSchema = Yup.object().shape({
     code: Yup.string().required(),
     title: Yup.string().required(),
-    organizations: Yup.array<Organization>().min(1).required(),
-    product_relations: Yup.array<CourseRelationToProduct>(),
+    organizations: Yup.array<any, Organization>().min(1).required(),
+    product_relations: Yup.array<any, CourseRelationToProduct>(),
   });
 
   const getDefaultValues = () => {
@@ -70,7 +70,7 @@ export function CourseForm({
     };
   };
 
-  const methods = useForm<CourseFormValues>({
+  const methods = useForm({
     resolver: yupResolver(RegisterSchema),
     defaultValues: getDefaultValues(),
   });

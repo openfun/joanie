@@ -30,7 +30,7 @@ export function ProductTargetCourseRelationForm(props: Props) {
 
   const Schema = Yup.object().shape({
     course: Yup.mixed<Course>().required(),
-    course_runs: Yup.array<CourseRun>().min(0).optional(),
+    course_runs: Yup.array<any, CourseRun>().min(0).optional(),
     enable_course_runs: Yup.boolean().optional(),
   });
 
@@ -54,7 +54,7 @@ export function ProductTargetCourseRelationForm(props: Props) {
     };
   };
 
-  const form = useForm<ProductTargetCourseRelationFormValues>({
+  const form = useForm({
     resolver: yupResolver(Schema),
     defaultValues: getDefaultValues(),
   });

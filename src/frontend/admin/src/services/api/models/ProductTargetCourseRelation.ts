@@ -4,7 +4,6 @@ import { CourseRun } from "./CourseRun";
 import { CourseFactory } from "@/services/factories/courses";
 import { randomNumber } from "@/utils/numbers";
 import { CourseRunFactory } from "@/services/factories/courses-runs";
-import { ToFormValues } from "@/types/utils";
 
 export type ProductTargetCourseRelation = {
   id: string;
@@ -21,11 +20,11 @@ export type ProductTargetCourseRelationOptionalId = Omit<
   id?: string;
 };
 
-export type ProductTargetCourseRelationFormValues = ToFormValues<{
+export type ProductTargetCourseRelationFormValues = {
   course: Course;
   course_runs?: CourseRun[];
   enable_course_runs?: boolean;
-}>;
+};
 
 export type DTOProductTargetCourseRelation = {
   id?: string;

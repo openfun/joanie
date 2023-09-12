@@ -9,7 +9,7 @@ type Props = DateTimePickerProps<any> & {
 
 export function RHFDateTimePicker({ label, name }: Props) {
   const { control, getValues, setValue } = useFormContext();
-
+  const value = getValues(name);
   return (
     <Controller
       name={name}
@@ -18,7 +18,7 @@ export function RHFDateTimePicker({ label, name }: Props) {
         <div>
           <DateTimePicker
             {...field}
-            value={new Date(getValues(name))}
+            value={value ? new Date(value) : null}
             onChange={(newValue: Date | null) => {
               if (newValue === null) {
                 setValue(name, undefined);
