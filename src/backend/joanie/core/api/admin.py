@@ -221,6 +221,10 @@ class TargetCoursesViewSet(
         data = request.data
         serializer = self.get_serializer(data=data)
         data["product"] = kwargs.get("product_id")
+        # Data has to be fixed before validation because the front-end
+        # may set "course_runs": "" which is not accepted by the serializer
+        if not data.get("course_runs", None):
+            data["course_runs"] = []
         if not serializer.is_valid():
             return Response(serializer.errors, status=400)
         course_runs = serializer.validated_data.pop("course_runs", [])
@@ -237,6 +241,8 @@ class TargetCoursesViewSet(
         """
         data = request.data
         data["product"] = kwargs.get("product_id")
+        # Data has to be fixed before validation because the front-end
+        # may set "course_runs": "" which is not accepted by the serializer
         if data.get("course_runs", None) == "":
             data["course_runs"] = []
         relation = self.queryset.get(product=data["product"], course=kwargs["pk"])
