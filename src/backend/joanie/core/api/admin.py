@@ -119,7 +119,7 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_class = serializers.AdminUserSerializer
     me_serializer_class = serializers.AdminUserCompleteSerializer
-    queryset = models.User.objects.all()
+    queryset = models.User.objects.all().order_by("username")
     filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
     filterset_class = filters.UserAdminFilterSet
 

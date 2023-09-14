@@ -2,7 +2,7 @@
 Test suite for Course run Admin API.
 """
 import random
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from django.test import TestCase
 
@@ -276,7 +276,8 @@ class CourseRunAdminApiTest(TestCase):
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
-        now = datetime.utcnow()
+        now = datetime.now(tz=timezone.utc)
+        format_time = "%Y-%m-%dT%H:%M:%S"
         course = factories.CourseFactory.create()
         course_run = factories.CourseRunFactory(
             course=course, is_listed=True, start=now
@@ -286,7 +287,7 @@ class CourseRunAdminApiTest(TestCase):
         )
 
         response = self.client.get(
-            f"/api/v1.0/admin/courses/{course.id}/course-runs/?start={now.isoformat()}",
+            f"/api/v1.0/admin/courses/{course.id}/course-runs/?start={now.strftime(format_time)}",
         )
         self.assertEqual(response.status_code, 200)
         content = response.json()
@@ -295,7 +296,10 @@ class CourseRunAdminApiTest(TestCase):
 
         past_date = now - timedelta(weeks=30)
         response = self.client.get(
-            f"/api/v1.0/admin/courses/{course.id}/course-runs/?start={past_date.isoformat()}",
+            (
+                f"/api/v1.0/admin/courses/{course.id}/course-runs/"
+                f"?start={past_date.strftime(format_time)}"
+            ),
         )
         self.assertEqual(response.status_code, 200)
         content = response.json()
@@ -303,7 +307,10 @@ class CourseRunAdminApiTest(TestCase):
 
         future_date = now + timedelta(weeks=30)
         response = self.client.get(
-            f"/api/v1.0/admin/courses/{course.id}/course-runs/?start={future_date.isoformat()}",
+            (
+                f"/api/v1.0/admin/courses/{course.id}/course-runs/"
+                f"?start={future_date.strftime(format_time)}"
+            ),
         )
         self.assertEqual(response.status_code, 200)
         content = response.json()
@@ -317,7 +324,7 @@ class CourseRunAdminApiTest(TestCase):
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
-        now = datetime.utcnow()
+        now = datetime.now(tz=timezone.utc)
         course = factories.CourseFactory.create()
         date_pairs = [
             (now - timedelta(hours=3), now - timedelta(hours=3)),
