@@ -65,13 +65,17 @@ class CourseViewSetFilter(filters.FilterSet):
         method="filter_has_listed_course_runs"
     )
 
+    product_type = filters.ChoiceFilter(
+        choices=enums.PRODUCT_TYPE_CHOICES, method="filter_product_type"
+    )
+
     class Meta:
         model = models.Course
-        fields: List[str] = ["has_listed_course_runs"]
+        fields: List[str] = ["has_listed_course_runs", "product_type"]
 
     def filter_has_listed_course_runs(self, queryset, _name, value):
         """
-        Filter resource by looking for course runs which are listed.
+        Filter courses by looking for related course runs which are listed.
         """
         if value is True:
             filtered_queryset = queryset.filter(course_runs__is_listed=True)
@@ -79,3 +83,9 @@ class CourseViewSetFilter(filters.FilterSet):
             filtered_queryset = queryset.exclude(course_runs__is_listed=True)
 
         return filtered_queryset.distinct()
+
+    def filter_product_type(self, queryset, _name, value):
+        """
+        Filter courses by looking for related products with matching type
+        """
+        return queryset.filter(products__type=value).distinct()

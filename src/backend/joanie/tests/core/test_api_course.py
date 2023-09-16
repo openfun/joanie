@@ -167,6 +167,60 @@ class CourseApiTest(BaseAPITestCase):
             [str(courses[1].id), str(courses[2].id)],
         )
 
+    def test_api_course_list_filter_type(self):
+        """
+        Authenticated users should be able to filter courses by product
+        type if they have access to it.
+        """
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+        courses = factories.CourseFactory.create_batch(6)
+        factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CREDENTIAL, courses=courses[0:3]
+        )
+        factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_ENROLLMENT, courses=courses[3:5]
+        )
+        factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CERTIFICATE, courses=courses[4::]
+        )
+        for course in courses:
+            factories.UserCourseAccessFactory(user=user, course=course)
+        response = self.client.get(
+            f"/api/v1.0/courses/?product_type={enums.PRODUCT_TYPE_CREDENTIAL}",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 3)
+
+        response = self.client.get(
+            f"/api/v1.0/courses/?product_type={enums.PRODUCT_TYPE_ENROLLMENT}",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 2)
+
+        response = self.client.get(
+            f"/api/v1.0/courses/?product_type={enums.PRODUCT_TYPE_CERTIFICATE}",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 2)
+
+        factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CREDENTIAL, courses=[courses[4]]
+        )
+        response = self.client.get(
+            f"/api/v1.0/courses/?product_type={enums.PRODUCT_TYPE_CREDENTIAL}",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 4)
+
     def test_api_course_get_anonymous(self):
         """
         Anonymous users should not be allowed to get a course through its id.

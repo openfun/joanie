@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Add filter course by product type
 - Enroll as "verified" mode in OpenEdX when enrolling via an order
 - Add mermaid graph for Order workflow
 - Add a route to reorder target_courses
