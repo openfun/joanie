@@ -373,6 +373,36 @@ class Base(Configuration):
         },
     }
 
+    # Signature
+    JOANIE_SIGNATURE_BACKEND = {
+        "backend": values.Value(
+            "joanie.signature.backends.lex_persona.client.LexPersonaClient",
+            environ_name="JOANIE_SIGNATURE_BACKEND",
+            environ_prefix=None,
+        ),
+        "configuration": {
+            "base_url": values.Value(
+                None, environ_name="JOANIE_LEX_PERSONA_BASE_URL", environ_prefix=None
+            ),
+            "consent_page_id": values.Value(
+                None,
+                environ_name="JOANIE_LEX_PERSONA_CONSENT_PAGE_ID",
+                environ_prefix=None,
+            ),
+            "session_user_id": values.Value(
+                None, environ_name="JOANIE_LEX_PERSONA_USER_ID", environ_prefix=None
+            ),
+            "profile_id": values.Value(
+                None,
+                environ_name="JOANIE_LEX_PERSONA_PROFILE_ID",
+                environ_prefix=None,
+            ),
+            "token": values.Value(
+                None, environ_name="JOANIE_LEX_PERSONA_TOKEN", environ_prefix=None
+            ),
+        },
+    }
+
     # pylint: disable=invalid-name
     @property
     def ENVIRONMENT(self):
@@ -487,6 +517,10 @@ class Test(Base):
 
     JOANIE_PAYMENT_BACKEND = {
         "backend": "joanie.payment.backends.dummy.DummyPaymentBackend",
+    }
+
+    JOANIE_SIGNATURE_BACKEND = {
+        "backend": "joanie.signature.backends.dummy.DummySignatureBackend",
     }
 
     JOANIE_ENROLLMENT_GRADE_CACHE_TTL = 0

@@ -32,6 +32,7 @@ from joanie.core.views import (
 )
 from joanie.lms_handler.urls import urlpatterns as lms_urlpatterns
 from joanie.payment.urls import urlpatterns as payment_urlpatterns
+from joanie.signature.urls import urlpatterns as signature_urlpatterns
 
 API_VERSION = "v1.0"
 
@@ -159,6 +160,7 @@ urlpatterns = [
                 *router.urls,
                 *lms_urlpatterns,
                 *payment_urlpatterns,
+                *signature_urlpatterns,
                 re_path(
                     r"^courses/(?P<course_id>[0-9a-z-]*)/",
                     include(course_related_router.urls),

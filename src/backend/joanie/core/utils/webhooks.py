@@ -9,6 +9,8 @@ import logging
 from django.conf import settings
 
 import requests
+from rest_framework import status
+from rest_framework.response import Response
 from urllib3.util import Retry
 
 logger = logging.getLogger(__name__)

@@ -10,12 +10,13 @@ and this project adheres to
 
 ## Added
 
+- Add signature backend to sign documents
 - Add mermaid graph for Order workflow
 - Add a route to reorder target_courses
 - Add target_course route and list view for products
 - Add multiples product, order, certificates and enrollment in the database
   that's initialized with the `make demo-dev`
-- Add client api filter to filter `Order` resource by `product__type` 
+- Add client api filter to filter `Order` resource by `product__type`
 - Add a backoffice redirect view to redirect to the frontend admin backoffice
 - Add filters to CourseRun list for a given course on admin api
 - Allow issuing a certificate directly for an enrollment (without an order)
@@ -41,7 +42,7 @@ and this project adheres to
 - Display password field into admin user change view
 - Automatically allocate organization equitably on order creation according to
   their active order count per organization for the course/product couple
-- Add many admin api filters with text search 
+- Add many admin api filters with text search
 - Add a nested endpoint to retrieve all the course runs of a course
 - Filter courses according to whether they have listed course runs or not
 
