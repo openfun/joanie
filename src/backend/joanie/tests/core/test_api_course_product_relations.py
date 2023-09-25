@@ -65,6 +65,19 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         for course in courses:
             factories.UserCourseAccessFactory(user=user, course=course)
         product = factories.ProductFactory(type=enums.PRODUCT_TYPE_CREDENTIAL)
+        product.instructions = (
+            "# An h1 header\n"
+            "Paragraphs are separated by a blank line.\n"
+            "2nd paragraph. *Italic*, **bold**, and `monospace`.\n"
+            "Itemized lists look like:\n"
+            "* this one\n"
+            "* that one\n"
+            "&gt; Block quotes\n"
+            "## An h2 header\n"
+            "1. first item\n"
+            "2. second item\n"
+        )
+        product.save()
         course = courses[0]
         relation = factories.CourseProductRelationFactory(
             course=course, product=product
@@ -91,7 +104,21 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "title": course.title,
                 },
                 "product": {
-                    "instructions": "",
+                    "instructions": (
+                        "<h1>An h1 header</h1>\n"
+                        "<p>Paragraphs are separated by a blank line.\n"
+                        "2nd paragraph. <em>Italic</em>, <strong>bold</strong>, "
+                        "and <code>monospace</code>.\n"
+                        "Itemized lists look like:\n"
+                        "* this one\n"
+                        "* that one\n"
+                        "&gt; Block quotes</p>\n"
+                        "<h2>An h2 header</h2>\n"
+                        "<ol>\n"
+                        "<li>first item</li>\n"
+                        "<li>second item</li>\n"
+                        "</ol>"
+                    ),
                     "call_to_action": relation.product.call_to_action,
                     "certificate_definition": {
                         "description": relation.product.certificate_definition.description,

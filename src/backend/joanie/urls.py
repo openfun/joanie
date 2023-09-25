@@ -54,7 +54,6 @@ router.register(
     basename="course-product-relations",
 )
 router.register("users", api_client.UserViewSet, basename="users")
-router.register("products", api_client.ProductViewSet, basename="products")
 
 # - Routes nested under a course
 course_related_router = DefaultRouter()
