@@ -11,75 +11,69 @@
   </head>
   {% endif %}
   <body>
-    <header>
-      <div class="logos">
-        <div class="organization">
-          <img src="{{ organization.logo }}" />
+    <main>
+      <header>
+        <div class="logos">
+          <div class="organization">
+            <img src="{{ organization.logo }}" />
+          </div>
         </div>
-      </div>
-      <div class="title">
-        {% if contract %}
-          <h1> {{contract.title|linebreaks}}</h1>
-        {% else %}
-          <h1>{% translate "Contract Definition" %}</h1>
-        {% endif %}
-      </div>
-    </header>
-    <section class="representative">
-      <div>
-        <p>
-          {% translate "This document certifies that the student wants to enroll to the course" %}: {{ course.name|capfirst }}.
-        </p>
-        <p>
-          {% translate "Your order is delivered by the organization" %}:
-          {% if organization %}
-            {{ organization.name }}
-          {% endif %}
-        </p>
-    </div>
-    </section>
-    <section class="student">
-      <div>
-        <p>
-        {% if student %}
-          {% translate "Student name" %}: {{ student.address.first_name }} {{ student.address.last_name }}.
-        </br>
-          {% translate "Student address" %}: {{ student.address.address }} {{ student.address.postcode }}, {{ student.address.city }}.
-        </p>
-        {% else %}
-        <p>
-          This section is for the student's information (firsname, lastname and address)
-        </p>
-        {% endif %}
-      </div>
-    </section>
-    <section class="contract-articles">
-      <div>
-        {% translate "Conditions of the contract" %} :
-        {% if contract %}
-          {{ contract.body|safe }}
-        {% else %}
-        <p>
-          Create a contract definition for your contract, and add a body of articles.
-        </p>
-        {% endif %}
-      </div>
-    </section>
-    <footer>
-      <div class="signature_zone">
-        {% translate "Student's signature" %}:
-        <div class="signature-slot">
-          [SignatureField#1]
-        </div>
-      </div>
-      <div class="signature_zone">
-        {% translate "Representative's signature" %}:
-        <div class="signature-slot">
-          {% if organization %}
-            <img src="{{ organization.signature }}" />
+        <div class="title">
+          {% if contract %}
+            <h1> {{contract.title|linebreaks}}</h1>
           {% endif %}
         </div>
+      </header>
+      <section class="representative">
+        <div>
+          <p>
+            {% translate "This document certifies that the student wants to enroll to the course" %}: {{ course.name|capfirst }}.
+          </p>
+          <p>
+            {% translate "Your order is delivered by the organization" %}:
+            {% if organization %}
+              {{ organization.name }}
+            {% endif %}
+          </p>
       </div>
-    </footer>
-  </body>
+      </section>
+      <section class="student">
+        <div>
+          <p>
+          {% if student %}
+            {% translate "Student name" %}: {{ student.name }}.
+          </br>
+            {% translate "Student address" %}: {{ student.address.address }} {{ student.address.postcode }}, {{ student.address.city }}.
+          </p>
+          {% endif %}
+        </div>
+      </section>
+      <section class="contract-articles">
+        <div>
+          {% translate "Conditions of the contract" %} :
+        </div>
+        <div class="articles">
+            {% if contract %}
+              {{ contract.body|safe }}
+            {% endif %}
+        </div>
+      </section>
+      <footer class="footer">
+        <div class="signature_zone">
+          {% translate "Student's signature" %}:
+          <div class="signature-student">
+            [SignatureField#1]
+          </div>
+        </div>
+        <div class="signature_zone">
+          {% translate "Representative's signature" %}:
+          <div class="signature-slot">
+            {% if organization %}
+              <img src="{{ organization.signature }}" />
+            {% endif %}
+          </div>
+        </div>
+      </footer>
+    </body>
+  </main>
 </html>

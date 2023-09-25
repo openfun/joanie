@@ -3,17 +3,18 @@ Declare and configure the models for Joanie's contracts
 """
 import logging
 import textwrap
+from datetime import timedelta
 
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 from django.utils.functional import lazy
 from django.utils.translation import gettext_lazy as _
 
 import markdown
 
 from joanie.core import enums
-from joanie.core.utils import image_to_base64
-from joanie.core.utils.issuers import generate_document
+from joanie.core.utils import contract_definition, issuers
 
 from .base import BaseModel
 from .products import Order
@@ -62,43 +63,14 @@ class ContractDefinition(BaseModel):
             return ""
         return markdown.markdown(textwrap.dedent(self.body))
 
-    def get_document_context(self, order):
-        """
-        Build the contract document context for the given language.
-        """
-        organization = order.organization
-        owner = order.owner
-        product = order.product
-
-        return {
-            "contract": {
-                "body": self.get_body_in_html(),
-                "title": self.title,
-            },
-            "course": {
-                "name": product.safe_translation_getter(
-                    "title", language_code=self.language
-                ),
-            },
-            "student": {
-                "name": owner.get_full_name() or owner.username,
-                "address": owner.addresses.filter(is_main=True).first(),
-            },
-            "organization": {
-                "logo": image_to_base64(organization.logo),
-                "name": organization.safe_translation_getter(
-                    "title", language_code=self.language
-                ),
-                "signature": image_to_base64(organization.signature),
-            },
-        }
-
     def generate_document(self, order):
         """
         Generate the contract definition.
         """
-        context = self.get_document_context(order)
-        file_bytes = generate_document(
+        context = contract_definition.generate_document_context(
+            contract_definition=self, user=order.owner, order=order
+        )
+        file_bytes = issuers.generate_document(
             name=order.product.contract_definition.name, context=context
         )
         return context, file_bytes
@@ -218,10 +190,46 @@ class Contract(BaseModel):
             ),
         ]
 
+    # pylint: disable=no-member
     def __str__(self):
-        return f"{self.order.owner}'s contract for course {self.order.course}"
+        course = self.order.course if self.order.course else self.order.enrollment
+        return f"{self.order.owner}'s contract for course {course}"
 
     def save(self, *args, **kwargs):
         """Enforce validation each time an instance is saved."""
         self.full_clean()
         super().save(*args, **kwargs)
+
+    def tag_submission_for_signature(self, reference, checksum, context):
+        """
+        Updates the contract from an order that we have submitted to the signature provider.
+        """
+        self.submitted_for_signature_on = timezone.now()
+        self.context = context
+        self.definition_checksum = checksum
+        self.signature_backend_reference = reference
+        self.save()
+
+    def reset_submission_for_signature(self):
+        """
+        Contract that was submitted to a signature procedure should be reset when it is refused
+        by the signer.
+        """
+        self.submitted_for_signature_on = None
+        self.context = None
+        self.definition_checksum = None
+        self.signature_backend_reference = None
+        self.save()
+
+    def is_eligible_for_signing(self):
+        """
+        Determine if a contract is still eligible for signing, call this method on
+        the contract instance. If it has not been submitted to signature, we
+        make sure to return False.
+        """
+        if not self.submitted_for_signature_on:
+            return False
+
+        return timezone.now() < self.submitted_for_signature_on + timedelta(
+            seconds=settings.JOANIE_SIGNATURE_VALIDITY_PERIOD
+        )

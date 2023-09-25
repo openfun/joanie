@@ -5,7 +5,7 @@ import itertools
 import logging
 from collections import defaultdict
 
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.dispatch import receiver
@@ -24,8 +24,10 @@ from joanie.core.models.certifications import Certificate
 from joanie.core.utils import webhooks
 from joanie.payment import get_payment_backend
 from joanie.payment.models import CreditCard
+from joanie.signature.backends import get_signature_backend
 
 from . import accounts as accounts_models
+from . import contracts as contracts_models
 from . import courses as courses_models
 from .base import BaseModel
 
@@ -872,6 +874,66 @@ class Order(BaseModel):
                 certificate_definition=self.product.certificate_definition,
             ),
             True,
+        )
+
+    # pylint: disable=no-member
+    def submit_for_signature(self):
+        """
+        When the product has a contract definition, it prepares the order's contract.
+        If needed we prepare a new contract or we retrieve the existing one. Then, we check
+        the document's validity, and we check if the context has not changed since last submission.
+        If the document's validity as been reached, or the context has changed, we need
+        to delete at the signature provider the ongoing procedure and create a new contract
+        to submit.
+        """
+        if not self.product.contract_definition_id:
+            raise ValidationError("No contract definition attached to the product.")
+
+        if self.state != enums.ORDER_STATE_VALIDATED:
+            raise ValidationError("Cannot submit an order that is not yet validated.")
+
+        contract_definition = self.product.contract_definition
+
+        try:
+            contract = self.contract
+        except contracts_models.Contract.DoesNotExist:
+            contract = contracts_models.Contract(
+                order=self, definition=contract_definition
+            )
+
+        if self.contract and self.contract.signed_on:
+            raise PermissionDenied("Contract is already signed, cannot resubmit.")
+
+        backend_signature = get_signature_backend()
+        context, file_bytes = contract_definition.generate_document(self)
+
+        was_already_submitted = (
+            contract.submitted_for_signature_on and contract.signature_backend_reference
+        )
+        should_be_resubmitted = was_already_submitted and (
+            not contract.is_eligible_for_signing() or contract.context != context
+        )
+
+        if should_be_resubmitted:
+            backend_signature.delete_signing_procedure(
+                contract.signature_backend_reference
+            )
+
+        # We want to submit or re-submit the contract for signature in three cases:
+        # 1- the contract was never submitted for signature before
+        # 2- the contract was submitted for signature but the user did not sign it in time
+        #    before expiration of the signature workflow
+        # 3- the contract context has changed since it was last submitted for signature
+        if should_be_resubmitted or not was_already_submitted:
+            reference, checksum = backend_signature.submit_for_signature(
+                title=contract_definition.title,
+                file_bytes=file_bytes,
+                order=self,
+            )
+            contract.tag_submission_for_signature(reference, checksum, context)
+
+        return backend_signature.get_signature_invitation_link(
+            self.owner.email, [contract.signature_backend_reference]
         )
 
 

@@ -1,8 +1,11 @@
 """Test suite for the Contract API"""
 import random
+from io import BytesIO
 from unittest import mock
 
 from django.utils import timezone
+
+from pdfminer.high_level import extract_text as pdf_extract_text
 
 from joanie.core import enums, factories
 from joanie.core.serializers import fields
@@ -376,4 +379,241 @@ class ContractApiTest(BaseAPITestCase):
 
         self.assertContains(
             response, 'Method \\"DELETE\\" not allowed.', status_code=405
+        )
+
+    def test_api_contract_download_anonymous(self):
+        """
+        Anonymous user should not be able to download a contract.
+        """
+        contract = factories.ContractFactory()
+
+        response = self.client.get(
+            f"/api/v1.0/contracts/{str(contract.id)}/download/",
+        )
+
+        self.assertEqual(response.status_code, 401)
+
+        content = response.json()
+        self.assertEqual(
+            content, {"detail": "Authentication credentials were not provided."}
+        )
+
+    def test_api_contract_download_authenticated_with_validate_order_succeeds(self):
+        """
+        Authenticated user should be download his contract in PDF format if the order is in
+        state 'validate'.
+        """
+        user = factories.UserFactory(
+            email="student_do@example.fr", first_name="John Doe", last_name=""
+        )
+        address = factories.AddressFactory.create(owner=user)
+        order = factories.OrderFactory(
+            owner=user,
+            state=enums.ORDER_STATE_VALIDATED,
+            product=factories.ProductFactory(),
+        )
+        contract = factories.ContractFactory(
+            order=order,
+            definition=order.product.contract_definition,
+            signature_backend_reference="wfl_fake_dummy_id",
+            definition_checksum="1234",
+            context="context",
+            submitted_for_signature_on=None,
+            signed_on=timezone.now(),
+        )
+        token = self.get_user_token(user.username)
+        expected_filename = f"{contract.definition.title}".replace(" ", "_")
+
+        response = self.client.get(
+            f"/api/v1.0/contracts/{str(contract.id)}/download/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers["Content-Type"], "application/pdf")
+        self.assertEqual(
+            response.headers["Content-Disposition"],
+            f'attachment; filename="{expected_filename}.pdf"',
+        )
+
+        document_text = pdf_extract_text(BytesIO(b"".join(response.streaming_content)))
+
+        self.assertRegex(document_text, r"CONTRACT")
+        self.assertRegex(document_text, r"DEFINITION")
+        self.assertRegex(document_text, rf"{user.first_name}")
+        self.assertRegex(
+            document_text, rf"{address.address} {address.postcode}, {address.city}."
+        )
+
+    def test_api_contract_download_authenticated_with_not_validate_order(self):
+        """
+        Authenticated user should not be able to download the contract in PDF if the
+        order is not yet in state validate.
+        """
+        user = factories.UserFactory(
+            email="student_do@example.fr", first_name="John Doe", last_name=""
+        )
+        order = factories.OrderFactory(
+            owner=user,
+            state=random.choice(
+                [
+                    enums.ORDER_STATE_PENDING,
+                    enums.ORDER_STATE_DRAFT,
+                    enums.ORDER_STATE_CANCELED,
+                    enums.ORDER_STATE_SUBMITTED,
+                ]
+            ),
+            product=factories.ProductFactory(),
+        )
+        contract = factories.ContractFactory(order=order)
+        token = self.get_user_token(user.username)
+
+        response = self.client.get(
+            f"/api/v1.0/contracts/{str(contract.id)}/download/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertContains(
+            response,
+            "Cannot get contract when an order is not yet validated.",
+            status_code=400,
+        )
+
+    def test_api_contract_download_authenticated_cannot_create(self):
+        """
+        Create a contract should not be possible even if the user is authenticated.
+        """
+        user = factories.UserFactory(
+            email="student_do@example.fr", first_name="John Doe", last_name=""
+        )
+        order = factories.OrderFactory(
+            owner=user,
+            state=enums.ORDER_STATE_VALIDATED,
+            product=factories.ProductFactory(),
+        )
+        contract = factories.ContractFactory(order=order)
+        token = self.get_user_token(user.username)
+
+        response = self.client.post(
+            f"/api/v1.0/contracts/{str(contract.id)}/download/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertContains(response, 'Method \\"POST\\" not allowed.', status_code=405)
+
+    def test_api_contract_download_authenticated_cannot_update(self):
+        """
+        Update a contract should not be possible even if the user is authenticated.
+        """
+        user = factories.UserFactory(
+            email="student_do@example.fr", first_name="John Doe", last_name=""
+        )
+        order = factories.OrderFactory(
+            owner=user,
+            state=enums.ORDER_STATE_VALIDATED,
+            product=factories.ProductFactory(),
+        )
+        contract = factories.ContractFactory(order=order)
+        token = self.get_user_token(user.username)
+
+        response = self.client.put(
+            f"/api/v1.0/contracts/{str(contract.id)}/download/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertContains(response, 'Method \\"PUT\\" not allowed.', status_code=405)
+
+    def test_api_contract_download_authenticated_cannot_delete(self):
+        """
+        Update a contract should not be possible even if the user is authenticated.
+        """
+        user = factories.UserFactory(
+            email="student_do@example.fr", first_name="John Doe", last_name=""
+        )
+        order = factories.OrderFactory(
+            owner=user,
+            state=enums.ORDER_STATE_VALIDATED,
+            product=factories.ProductFactory(),
+        )
+        contract = factories.ContractFactory(order=order)
+        token = self.get_user_token(user.username)
+
+        response = self.client.delete(
+            f"/api/v1.0/contracts/{str(contract.id)}/download/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertContains(
+            response, 'Method \\"DELETE\\" not allowed.', status_code=405
+        )
+
+    def test_api_contract_download_authenticated_should_fail_if_owner_is_not_the_actual_user(
+        self,
+    ):
+        """
+        Get a contract in PDF format should not be possible when the user is not the owner
+        of the order.
+        """
+        owner = factories.UserFactory(
+            email="student_do@example.fr", first_name="John Doe", last_name=""
+        )
+        order = factories.OrderFactory(
+            owner=owner,
+            state=enums.ORDER_STATE_VALIDATED,
+            product=factories.ProductFactory(),
+        )
+        contract = factories.ContractFactory(
+            order=order,
+            definition=order.product.contract_definition,
+            signature_backend_reference="wfl_fake_dummy_id",
+            definition_checksum="1234",
+            context="context",
+            submitted_for_signature_on=None,
+            signed_on=timezone.now(),
+        )
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+
+        response = self.client.get(
+            f"/api/v1.0/contracts/{str(contract.id)}/download/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertContains(response, "Not found.", status_code=404)
+
+    def test_api_contract_download_authenticated_should_fail_if_contract_is_not_signed(
+        self,
+    ):
+        """
+        Get a contract in PDF format should not be possible even if the user is authenticated
+        and the file is not fully signed.
+        """
+        owner = factories.UserFactory(
+            email="student_do@example.fr", first_name="John Doe", last_name=""
+        )
+        order = factories.OrderFactory(
+            owner=owner,
+            state=enums.ORDER_STATE_VALIDATED,
+            product=factories.ProductFactory(),
+        )
+        contract = factories.ContractFactory(
+            order=order,
+            definition=order.product.contract_definition,
+            signature_backend_reference="wfl_fake_dummy_id",
+            definition_checksum="1234",
+            context="context",
+            submitted_for_signature_on=timezone.now(),
+            signed_on=None,
+        )
+        token = self.get_user_token(owner.username)
+
+        response = self.client.get(
+            f"/api/v1.0/contracts/{str(contract.id)}/download/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertContains(
+            response,
+            "Cannot download a contract when it is not yet fully signed.",
+            status_code=400,
         )
