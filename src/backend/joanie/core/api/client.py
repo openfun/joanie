@@ -920,15 +920,3 @@ class UserViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         """
         context = {"request": request}
         return Response(self.serializer_class(request.user, context=context).data)
-
-
-class ProductViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    Admin Product ViewSet
-    """
-
-    lookup_field = "pk"
-    pagination_class = Pagination
-    permission_classes = [permissions.IsAuthenticated]
-    queryset = models.Product.objects.all()
-    serializer_class = serializers.ProductSerializer
