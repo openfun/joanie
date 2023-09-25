@@ -155,6 +155,11 @@ admin_product_related_router.register(
     basename="admin_product_target_courses",
 )
 
+admin_product_related_router.register(
+    "order-groups",
+    api_admin.NestedProductOrderGroupViewSet,
+    basename="admin_product_order_groups",
+)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
