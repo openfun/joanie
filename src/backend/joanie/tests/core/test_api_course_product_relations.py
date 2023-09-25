@@ -1,4 +1,5 @@
 """Test suite for the Course Product Relation API."""
+import random
 import uuid
 from unittest import mock
 
@@ -567,14 +568,19 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         relation = factories.CourseProductRelationFactory()
         factories.UserCourseAccessFactory(user=user, course=relation.course)
         product = relation.product
-        order_group1, order_group2 = factories.OrderGroupFactory.create_batch(
-            2, product=product
+        order_group1 = factories.OrderGroupFactory(
+            product=product, nb_seats=random.randint(10, 100)
         )
-        factories.OrderFactory.create_batch(
-            3, product=product, order_group=order_group1, state="validated"
-        )
+        order_group2 = factories.OrderGroupFactory(product=product)
+        binding_states = ["pending", "submitted", "validated"]
+        for _ in range(3):
+            factories.OrderFactory(
+                product=product,
+                order_group=order_group1,
+                state=random.choice(binding_states),
+            )
         for state, _label in enums.ORDER_STATE_CHOICES:
-            if state in ["pending", "submitted", "validated"]:
+            if state in binding_states:
                 continue
             factories.OrderFactory(
                 product=product, order_group=order_group1, state=state
