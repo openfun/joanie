@@ -198,7 +198,7 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
         """Parameters for the factory."""
 
         state = None
-        ref_date = django_timezone.now()
+        ref_date = factory.LazyAttribute(lambda o: django_timezone.now())
 
     class Meta:
         model = models.CourseRun
@@ -295,11 +295,18 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
         elif self.state in [CourseState.ONGOING_OPEN, CourseState.ONGOING_CLOSED]:
             # The course run is on going, end date must be greater than ref_date
             min_date = self.ref_date
-            max_date = self.ref_date + period
+            max_date = min_date + period
+        elif self.state in [
+            CourseState.FUTURE_NOT_YET_OPEN,
+            CourseState.FUTURE_OPEN,
+            CourseState.FUTURE_CLOSED,
+        ]:
+            min_date = max(self.ref_date, self.start)
+            max_date = min_date + period
         else:
             # Otherwise, we just want end date to be greater than start date
             min_date = self.start
-            max_date = self.start + period
+            max_date = min_date + period
 
         return datetime.utcfromtimestamp(
             random.randrange(  # nosec
