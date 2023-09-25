@@ -1,19 +1,23 @@
 """
 Test suite for order models
 """
+# pylint: disable=too-many-lines
 import json
 import random
+from datetime import timedelta
 from unittest import mock
 
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.test import RequestFactory, TestCase
 from django.test.utils import override_settings
+from django.utils import timezone as django_timezone
 
 import responses
 from django_fsm import TransitionNotAllowed
 
 from joanie.core import enums, exceptions, factories
 from joanie.core.models import CourseState, Enrollment
+from joanie.core.utils import contract_definition
 from joanie.lms_handler.backends.dummy import DummyLMSBackend
 from joanie.payment.factories import BillingAddressDictFactory, InvoiceFactory
 
@@ -903,3 +907,250 @@ class OrderModelsTestCase(TestCase):
 
         self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
         self.assertEqual(order.target_courses.count(), product.target_courses.count())
+
+    def test_models_order_submit_for_signature_fails_when_the_product_has_no_contract_definition(
+        self,
+    ):
+        """
+        When a product does not have a contract definition attached to it, it should raise an
+        error when trying to submit the order's contract for a signature.
+        """
+        user = factories.UserFactory()
+        factories.AddressFactory(owner=user)
+        order = factories.OrderFactory(
+            owner=user,
+            product=factories.ProductFactory(contract_definition=None),
+        )
+
+        with self.assertRaises(ValidationError) as context:
+            order.submit_for_signature()
+
+        self.assertEqual(
+            str(context.exception),
+            "['No contract definition attached to the product.']",
+        )
+
+    def test_models_order_submit_for_signature_fails_because_order_is_not_state_validate(
+        self,
+    ):
+        """
+        When the order is not in state 'validated', it should not be possible to submit for
+        signature.
+        """
+        user = factories.UserFactory()
+        factories.AddressFactory(owner=user)
+        order = factories.OrderFactory(
+            owner=user,
+            state=random.choice(
+                [
+                    enums.ORDER_STATE_CANCELED,
+                    enums.ORDER_STATE_SUBMITTED,
+                    enums.ORDER_STATE_DRAFT,
+                    enums.ORDER_STATE_PENDING,
+                ]
+            ),
+            product=factories.ProductFactory(),
+        )
+
+        with self.assertRaises(ValidationError) as context:
+            order.submit_for_signature()
+
+        self.assertEqual(
+            str(context.exception),
+            "['Cannot submit an order that is not yet validated.']",
+        )
+
+    @override_settings(
+        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend"
+    )
+    def test_models_order_submit_for_signature_with_a_brand_new_contract(
+        self,
+    ):
+        """
+        When the order's product has a contract definition, and the order doesn't have yet
+        a contract generated, it will generate one and it should return an invitation link to go
+        sign the contract. While it is generated, it should update contract's fields values :
+        'submitted_for_signature_on', 'context', 'definition_checksum',
+        'signature_backend_reference'.
+        """
+        user = factories.UserFactory()
+        factories.AddressFactory(owner=user)
+        order = factories.OrderFactory(
+            owner=user,
+            state=enums.ORDER_STATE_VALIDATED,
+            product=factories.ProductFactory(),
+        )
+
+        raw_invitation_link = order.submit_for_signature()
+
+        order.contract.refresh_from_db()
+        self.assertIsNotNone(order.contract)
+        self.assertIsNotNone(order.contract.signed_on)
+        self.assertIsNone(order.contract.submitted_for_signature_on)
+        self.assertIsNotNone(order.contract.context)
+        self.assertIsNotNone(order.contract.definition)
+        self.assertIsNotNone(order.contract.signature_backend_reference)
+        self.assertIsNotNone(order.contract.definition_checksum)
+        self.assertIn(
+            "https://dummysignaturebackend.fr/?requestToken=", raw_invitation_link
+        )
+
+    @override_settings(
+        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend"
+    )
+    def test_models_order_submit_for_signature_existing_contract_with_same_context_and_still_valid(
+        self,
+    ):
+        """
+        When an order is resubmitting his contract for a signature procedure that is still
+        within the validity period and the context has not changed since last submission, it should
+        return an invitation link and not change the fields values :
+        'submitted_for_signature_on', 'context', 'definition_checksum',
+        'signature_backend_reference' of the contract.
+        """
+        user = factories.UserFactory()
+        factories.AddressFactory(owner=user)
+        order = factories.OrderFactory(
+            owner=user,
+            state=enums.ORDER_STATE_VALIDATED,
+            product=factories.ProductFactory(),
+        )
+        context = contract_definition.generate_document_context(
+            contract_definition=order.product.contract_definition,
+            user=user,
+            order=order,
+        )
+        contract = factories.ContractFactory(
+            order=order,
+            definition=order.product.contract_definition,
+            signature_backend_reference="wfl_fake_dummy_id_1",
+            definition_checksum="fake_dummy_file_hash_1",
+            context=context,
+            submitted_for_signature_on=django_timezone.now(),
+        )
+
+        invitation_url = order.submit_for_signature()
+
+        contract.refresh_from_db()
+        self.assertEqual(contract.context, context)
+        self.assertEqual(contract.definition_checksum, "fake_dummy_file_hash_1")
+        self.assertEqual(
+            contract.signature_backend_reference,
+            "wfl_fake_dummy_id_1",
+        )
+        self.assertIn("https://dummysignaturebackend.fr/?requestToken=", invitation_url)
+
+    @override_settings(
+        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend"
+    )
+    def test_models_order_submit_for_signature_with_contract_context_has_changed_and_still_valid(
+        self,
+    ):
+        """
+        When an order is resubmitting his contract for a signature that is still within the
+        validity period and the context has changed since last submission, it should return
+        an invitation link in return and update the fields values of the contract :
+        'submitted_for_signature_on', 'context', 'definition_checksum',
+        'signature_backend_reference'
+        """
+        user = factories.UserFactory()
+        factories.AddressFactory(owner=user)
+        order = factories.OrderFactory(
+            owner=user,
+            state=enums.ORDER_STATE_VALIDATED,
+            product=factories.ProductFactory(),
+        )
+        contract = factories.ContractFactory(
+            order=order,
+            definition=order.product.contract_definition,
+            signature_backend_reference="wfl_fake_dummy_id_123",
+            definition_checksum="fake_test_file_hash_1",
+            context="content",
+            submitted_for_signature_on=django_timezone.now(),
+        )
+
+        invitation_url = order.submit_for_signature()
+
+        contract.refresh_from_db()
+        self.assertIn("https://dummysignaturebackend.fr/?requestToken=", invitation_url)
+        self.assertIn("wfl_fake_dummy_", contract.signature_backend_reference)
+        self.assertIn("fake_dummy_file_hash", contract.definition_checksum)
+        self.assertIsNone(contract.submitted_for_signature_on)
+        self.assertIsNotNone(contract.signed_on)
+
+    @override_settings(
+        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend",
+        JOANIE_SIGNATURE_VALIDITY_PERIOD=60 * 60 * 24 * 15,
+    )
+    def test_models_order_submit_for_signature_contract_same_context_but_passed_validity_period(
+        self,
+    ):
+        """
+        When an order is resubmitting his contract for a signature procedure and the context has
+        not changed since last submission, but validity period is passed. It should return an
+        invitation link and update the contract's fields with new values for :
+        'submitted_for_signature_on', 'context', 'definition_checksum',
+        and 'signature_backend_reference'.
+        """
+        user = factories.UserFactory()
+        factories.AddressFactory(owner=user)
+        order = factories.OrderFactory(
+            owner=user,
+            state=enums.ORDER_STATE_VALIDATED,
+            product=factories.ProductFactory(),
+        )
+        context = contract_definition.generate_document_context(
+            contract_definition=order.product.contract_definition,
+            user=user,
+            order=order,
+        )
+        contract = factories.ContractFactory(
+            order=order,
+            definition=order.product.contract_definition,
+            signature_backend_reference="wfl_fake_dummy_id_1",
+            definition_checksum="fake_test_file_hash_1",
+            context=context,
+            submitted_for_signature_on=django_timezone.now() - timedelta(days=16),
+        )
+
+        invitation_url = order.submit_for_signature()
+
+        contract.refresh_from_db()
+        self.assertEqual(contract.context, context)
+        self.assertIn("https://dummysignaturebackend.fr/?requestToken=", invitation_url)
+        self.assertIn("fake_dummy_file_hash", contract.definition_checksum)
+        self.assertNotEqual("wfl_fake_dummy_id_1", contract.signature_backend_reference)
+        self.assertIsNone(contract.submitted_for_signature_on)
+        self.assertIsNotNone(contract.signed_on)
+
+    def test_models_order_submit_for_signature_but_contract_is_already_signed_should_fail(
+        self,
+    ):
+        """
+        When an order already have his contract signed, it should raise an error because
+        we cannot submit it again.
+        """
+        user = factories.UserFactory()
+        factories.AddressFactory(owner=user)
+        order = factories.OrderFactory(
+            owner=user,
+            state=enums.ORDER_STATE_VALIDATED,
+            product=factories.ProductFactory(),
+        )
+        now = django_timezone.now()
+        factories.ContractFactory(
+            order=order,
+            definition=order.product.contract_definition,
+            signature_backend_reference="wfl_fake_dummy_id_1",
+            definition_checksum="fake_test_file_hash_1",
+            context="context",
+            submitted_for_signature_on=None,
+            signed_on=now,
+        )
+
+        with self.assertRaises(PermissionDenied) as context:
+            order.submit_for_signature()
+
+        self.assertEqual(
+            str(context.exception), "Contract is already signed, cannot resubmit."
+        )

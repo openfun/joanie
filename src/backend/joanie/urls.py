@@ -34,6 +34,7 @@ from joanie.core.views import (
 )
 from joanie.lms_handler.urls import urlpatterns as lms_urlpatterns
 from joanie.payment.urls import urlpatterns as payment_urlpatterns
+from joanie.signature.urls import urlpatterns as signature_urlpatterns
 
 API_VERSION = "v1.0"
 
@@ -47,6 +48,11 @@ router.register(
     "contracts",
     api_client.ContractViewSet,
     basename="contracts",
+)
+router.register(
+    "contract_definitions",
+    api_client.ContractDefinitionViewset,
+    basename="contract_definitions",
 )
 router.register("courses", api_client.CourseViewSet, basename="courses")
 router.register("course-runs", api_client.CourseRunViewSet, basename="course-runs")
@@ -186,6 +192,7 @@ urlpatterns = [
                 *router.urls,
                 *lms_urlpatterns,
                 *payment_urlpatterns,
+                *signature_urlpatterns,
                 re_path(
                     r"^courses/(?P<course_id>[0-9a-z-]*)/",
                     include(course_related_router.urls),

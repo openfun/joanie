@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Add API client signature provider to sign contract from an order
 - Add admin route to add and modify OrderGroups
 - Allow to filter contracts through their signature state
 - Allow filtering orders by state or product type exclusion
@@ -25,7 +26,7 @@ and this project adheres to
 - Add target_course route and list view for products
 - Add multiples product, order, certificates and enrollment in the database
   that's initialized with the `make demo-dev`
-- Add client api filter to filter `Order` resource by `product__type` 
+- Add client api filter to filter `Order` resource by `product__type`
 - Add a backoffice redirect view to redirect to the frontend admin backoffice
 - Add filters to CourseRun list for a given course on admin api
 - Allow issuing a certificate directly for an enrollment (without an order)
@@ -51,7 +52,7 @@ and this project adheres to
 - Display password field into admin user change view
 - Automatically allocate organization equitably on order creation according to
   their active order count per organization for the course/product couple
-- Add many admin api filters with text search 
+- Add many admin api filters with text search
 - Add a nested endpoint to retrieve all the course runs of a course
 - Filter courses according to whether they have listed course runs or not
 - Add some objects to demo-dev command. A credit card, a billing address and
@@ -79,7 +80,7 @@ and this project adheres to
 - Upgrade to Django 4.2
 - Add model and API endpoint for course wishes
 - Change order viewset filter "state" to accept multiple choices.
-- Product and Order serializers now return Contract and ContractDefinition 
+- Product and Order serializers now return Contract and ContractDefinition
   object instead of ids.
 
 ### Removed

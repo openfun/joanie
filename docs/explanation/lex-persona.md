@@ -68,6 +68,11 @@ To summarize the main steps with the API :
 - Retrieve the signed documents (GET method)
 
 Additionnaly, you can create the invitation link with a POST request in order to have the control on how we will deliver this link to our future signer. This implies to set the `maxInvites` to 0 when we create the workflow in the payload, which gives us the control for the invitation link overtime (more details further down the documentation).
+
+Here are some extra methods you might need from the API:
+
+- Select documents of a collection to sign, which allows us to sign directly the documents instead of passing through the consent page (POST method).
+- Refuse the invitation to sign a document (POST method).
 ___
 ### I) Check our user's data
 #### 1- Check my user data
@@ -116,7 +121,7 @@ ___
 **Payload** :
 ```json
 {
-  "groupId" : "grp_9woWtcSt5KiAzyq********",
+  "groupId" : "grp_9**************",
   "isDisabled" : false,
   "email" : "johndoe@example.com",
   "firstName" : "John",
@@ -135,8 +140,8 @@ ___
     "created": 1688993042392,
     "email": "johndoe@example.com",
     "firstName": "John",
-    "groupId": "grp_9woWtcSt5KiAzyq********",
-    "id": "usr_H5RSBaPTeYu7Ejs********",
+    "groupId": "grp_9**************",
+    "id": "usr_H**************",
     "isDisabled": false,
     "lastLogin": 0,
     "lastName": "Doe",
@@ -144,10 +149,10 @@ ___
     "organizationTitles": [],
     "phoneNumber": "",
     "signAllowed": true,
-    "tenantId": "ten_9H4TvNNQFfrLBXH********",
+    "tenantId": "ten_9**************",
     "updated": 1688993042392,
     "viewAuthorizedGroups": [
-        "grp_9woWtcSt5KiAzyq********"
+        "grp_9**************"
     ]
 }
 ```
@@ -173,7 +178,7 @@ ___
   "steps" : [ {
     "stepType" : "signature",
     "recipients" : [ {
-      "consentPageId" : "cop_NzBEGbgTkj7v5************",
+      "consentPageId" : "cop_N******************",
       "email" : "johndoe@example.com",
       "country" : "FR",
       "phoneNumber":"+33 * ** ** ** **",
@@ -204,8 +209,8 @@ ___
     "description": "1 rue de l'exemple, 75000 Paris",
     "email": "johndoe@example.com",
     "firstName": "John",
-    "groupId": "grp_9woWtcSt5KiAzyq************",
-    "id": "wfl_4yzLat7tDUQ8Jw************",
+    "groupId": "grp_9******************",
+    "id": "wfl_4******************",
     "lastName": "Doe",
     "logs": [],
     "name": "Aerodynamic Silk Bottle",
@@ -221,7 +226,7 @@ ___
             "allowComments": true,
             "hideAttachments": false,
             "hideWorkflowRecipients": true,
-            "id": "stp_D5KgBHk63MkhdGw********",
+            "id": "stp_D**************",
             "invitePeriod": 86400000,
             "isFinished": false,
             "isStarted": false,
@@ -229,7 +234,7 @@ ___
             "maxInvites": 5,
             "recipients": [
                 {
-                    "consentPageId": "cop_NzBEGbgTkj7v5tq********",
+                    "consentPageId": "cop_N**************",
                     "country": "FR",
                     "email": "johndoe@example.com",
                     "firstName": "John",
@@ -244,11 +249,11 @@ ___
             "validityPeriod": 8553600000
         }
     ],
-    "tenantId": "ten_9H4TvNNQFfrLBXH********",
+    "tenantId": "ten_9*************",
     "updated": 1688993660520,
-    "userId": "usr_P5YBCEeRqY8jKGG********",
+    "userId": "usr_P**************",
     "viewAuthorizedGroups": [
-        "grp_9woWtcSt5KiAzyq********"
+        "grp_9**************"
     ],
     "viewAuthorizedUsers": [],
     "watchers": [],
@@ -271,7 +276,7 @@ Today, with Joanie, since we have a `full_name` that provides the `firstName` an
 For example, if our user is named : "John Doe", we can prepare the `recipients` the following way :
 ```json
 "recipients" : [ {
-    "consentPageId" : "cop_NzBEGbgTkj7v5tq********",
+    "consentPageId" : "cop_N**************",
     "email" : "johndoe@example.com",
     "country" : "FR",
     "lastName": ".",
@@ -285,7 +290,7 @@ Finally, the example above shows you that it is not required to create a "user".
 If you try to add the contact's information with the field `name` (it's a full name) instead of the `firstName` and the `lastName` fields such as :
 ```json
 "recipients" : [ {
-      "consentPageId" : "cop_NzBEGbgTkj7v5tqp********",
+      "consentPageId" : "cop_N**************",
       "email" : "jonathan.reveille@fun-mooc.fr",
       "country" : "FR",
       "name": "John Doe",
@@ -300,12 +305,12 @@ The API will response with a : 400 - Bad Request with the message :
 
 In contrary, if we have already created the user, we can just add the `userId` key and value into the request payload, such as :
 ```json
-    "recipients" : [ {
-      "consentPageId" : "cop_NzBEGbgTkj7v5tqp********",
-      "country" : "FR",
-      "userId": "usr_H5RSBaPTeYu7EjsG********",
-      "preferredLocale" : "fr"
-    } ],
+"recipients" : [ {
+    "consentPageId" : "cop_N**************",
+    "country" : "FR",
+    "userId": "usr_H**************",
+    "preferredLocale" : "fr"
+} ],
 ```
 The API will retrieve the data of the `userId` to use in order to send out the document through Lex Persona.
 
@@ -340,8 +345,8 @@ value: sip_…
     "documents": [
         {
             "created": 1688994064535,
-            "groupId": "grp_9woWtcSt5KiAzyq********",
-            "id": "doc_JyjUX6uyzFBcjTx********",
+            "groupId": "grp_9**************",
+            "id": "doc_J*************",
             "parts": [
                 {
                     "contentType": "application/pdf",
@@ -351,15 +356,15 @@ value: sip_…
                 }
             ],
             "pdfSignatureFields": [],
-            "signatureProfileId": "sip_88QapTygDpiwNsq********",
-            "tenantId": "ten_9H4TvNNQFfrLBXH********",
+            "signatureProfileId": "sip_8**************",
+            "tenantId": "ten_9**************",
             "updated": 1688994064535,
-            "userId": "usr_P5YBCEeRqY8jKGG********",
+            "userId": "usr_P**************",
             "viewAuthorizedGroups": [
-                "grp_9woWtcSt5KiAzyq********"
+                "grp_9*************"
             ],
             "viewAuthorizedUsers": [],
-            "workflowId": "wfl_4yzLat7tDUQ8JwF********",
+            "workflowId": "wfl_4yz**************",
             "workflowName": "Aerodynamic Silk Bottle"
         }
     ],
@@ -435,7 +440,7 @@ Then prepare your payload,
             "size": 83012
         }
     ],
-    "signatureProfileId": "sip_88QapTygDpiwNsqt********",
+    "signatureProfileId": "sip_8**************",
     "pdfSignatureFields": [
         {
             "imagePage": -1,
@@ -505,8 +510,8 @@ ___
     "description": "1 rue de l'exemple, 75000 Paris",
     "email": "johndoe@example.com",
     "firstName": "John",
-    "groupId": "grp_9woWtcSt5KiAzyq********",
-    "id": "wfl_4yzLat7tDUQ8JwF********",
+    "groupId": "grp_9****************",
+    "id": "wfl_4****************",
     "jobOperation": "processWorkflow",
     "lastName": "Doe",
     "logs": [],
@@ -524,7 +529,7 @@ ___
             "allowComments": true,
             "hideAttachments": false,
             "hideWorkflowRecipients": true,
-            "id": "stp_D5KgBHk63MkhdGw********",
+            "id": "stp_D****************",
             "invitePeriod": 86400000,
             "isFinished": false,
             "isStarted": true,
@@ -537,7 +542,7 @@ ___
             "maxInvites": 5,
             "recipients": [
                 {
-                    "consentPageId": "cop_NzBEGbgTkj7v5tq********",
+                    "consentPageId": "cop_N****************",
                     "country": "FR",
                     "email": "johdoe@example.com",
                     "firstName": "John",
@@ -552,11 +557,11 @@ ___
             "validityPeriod": 8553600000
         }
     ],
-    "tenantId": "ten_9H4TvNNQFfrLBXH********",
+    "tenantId": "ten_9****************",
     "updated": 1688994896088,
-    "userId": "usr_P5YBCEeRqY8jKGG********",
+    "userId": "usr_P****************",
     "viewAuthorizedGroups": [
-        "grp_9woWtcSt5KiAzyq********"
+        "grp_9****************"
     ],
     "viewAuthorizedUsers": [],
     "watchers": [],
@@ -602,7 +607,7 @@ If you prefer to **send invitation link from your business application**, you ca
   "steps" : [ {
     "stepType" : "signature",
     "recipients" : [ {
-      "consentPageId" : "cop_NzBEGbgTkj7v5************",
+      "consentPageId" : "cop_N********************",
       "email" : "johndoe@example.com",
       "country" : "FR",
       "phoneNumber":"+33 * ** ** ** **",
@@ -658,8 +663,8 @@ Once those steps through the user are finished, we can now check our `workflowSt
     "description": "1 rue de l'exemple, 75000 Paris",
     "email": "johndoe@example.com",
     "firstName": "John",
-    "groupId": "grp_9woWtcSt5KiAzyq********",
-    "id": "wfl_A1pRnmnXfW2G2akS********",
+    "groupId": "grp_9****************",
+    "id": "wfl_A****************",
     "lastName": "Doe",
     "logs": [],
     "name": "Aerodynamic Silk Bottle",
@@ -676,7 +681,7 @@ Once those steps through the user are finished, we can now check our `workflowSt
             "allowComments": true,
             "hideAttachments": false,
             "hideWorkflowRecipients": true,
-            "id": "stp_x6WLNow6GqDRsr2k********",
+            "id": "stp_x6****************",
             "invitePeriod": 86400000,
             "isFinished": true,
             "isStarted": true,
@@ -693,20 +698,20 @@ Once those steps through the user are finished, we can now check our `workflowSt
                     "created": 1689092760372,
                     "operation": "invite",
                     "recipientEmail": "johndoe@example.com",
-                    "recipientUserId": "usr_H5RSBaPTeYu7EjsG****"
+                    "recipientUserId": "usr_H***********"
                 },
                 {
                     "created": 1689092977709,
-                    "evidenceId": "evi_serversealing_m408RqHSvAIOAaP2********",
+                    "evidenceId": "evi_serversealing_****************",
                     "operation": "sign",
                     "recipientEmail": "johndoe@example.com",
-                    "recipientUserId": "usr_H5RSBaPTeYu7EjsG****"
+                    "recipientUserId": "usr_H************"
                 },
                 {
                     "created": 1689092977709,
                     "operation": "notifyRecipientFinished",
                     "recipientEmail": "johndoe@example.com",
-                    "recipientUserId": "usr_H5RSBaPTeYu7EjsG********"
+                    "recipientUserId": "usr_H****************"
                 },
                 {
                     "created": 1689092977709,
@@ -716,14 +721,14 @@ Once those steps through the user are finished, we can now check our `workflowSt
             "maxInvites": 5,
             "recipients": [
                 {
-                    "consentPageId": "cop_NzBEGbgTkj7v5tqp****",
+                    "consentPageId": "cop_N************",
                     "country": "FR",
                     "email": "johndoe@example.com",
                     "firstName": "John",
                     "lastName": "Doe",
                     "phoneNumber": "+33 * ** ** ** **",
                     "preferredLocale": "fr",
-                    "userId": "usr_H5RSBaPTeYu7********"
+                    "userId": "usr_H****************"
                 }
             ],
             "requiredRecipients": 1,
@@ -732,14 +737,14 @@ Once those steps through the user are finished, we can now check our `workflowSt
             "validityPeriod": 8553600000
         }
     ],
-    "tenantId": "ten_9H4TvNNQFfrLBXH2********",
+    "tenantId": "ten_9****************",
     "updated": 1689092977939,
-    "userId": "usr_P5YBCEeRqY8jKGGM********",
+    "userId": "usr_P****************",
     "viewAuthorizedGroups": [
-        "grp_9woWtcSt5KiAzyqL********"
+        "grp_9****************"
     ],
     "viewAuthorizedUsers": [
-        "usr_H5RSBaPTeYu7EjsG********"
+        "usr_H****************"
     ],
     "watchers": [],
     "workflowStatus": "finished"
@@ -759,3 +764,82 @@ Concerning the API, we can just use the API to retrieve the documents that were 
 **Response** : signed_document.pdf
 
 We receive the raw version of the PDF signed document.
+
+___
+#### 4- Generate the url to sign a selection of documents without passing through the consent page and get to the signature page of the first document directly:
+
+In order to sign directly a selection of documents (without passing through the consent page), you will need to :
+
+- Set our `maxInvites` to 0 in the creation of a workflow and create it. Keep the value of the workflow id.
+- Set the required recipient value when creating a worklow to : 1.
+- Use the endpoint to create invitation link (`/api/workflows/{{workflow_id_created}}/invite`) and retrieve
+in the response the specific part of the URL that comes after "invite?token=". It's a JWT token ({token_jwt}) generated by the signature provider, in which you will replace the Bearer Token that you have used with the new value.
+
+
+- Apply the JWT to the Bearer Token such as:
+
+```python
+headers = {
+    "Authorization": f"Bearer {token_jwt}", # Retrieved token from the invitation link
+    "Content-Type": "application/json",
+}
+```
+**Endpoint** : /api/requests/
+
+**Method** : POST
+
+**Payload** :
+```json
+{
+   "workflows": ["workflow_id_1", "workflow_id_2", ...]
+}
+```
+
+**Response** :
+```json
+{
+    "consentPageId": "cop_...",
+    "consentPageUrl": "https://https://example.com/?requestToken=eyJhbG#requestId=req_B",
+    "created": 1694449008081,
+    "id": "req_B",
+    "steps": [
+        {
+            "allowComments": true,
+            "stepId": "stp_4",
+            "workflowId": "workflow_id_1"
+        }
+    ],
+    "tenantId": "ten_9",
+    "updated": 1694449008081
+}
+```
+
+- You can use the link in `consentPageUrl` from the response in order to go sign directly your document(s).
+
+___
+#### 5- Refuse the signature of a document invitation :
+
+- Use the endpoint to create invitation link (endpoint : `/api/workflows/{{workflow_id}}/invite` ) and retrieve in the response the specific part of the URL that comes after `invite?token=`.
+
+It's a JWT token ({token_jwt}) generated by the signature provider, which you will use to replace the Bearer Token that you have used with this new value.
+
+- Apply the JWT token to the Bearer Token such as  :
+
+```python
+headers = {
+    "Authorization": f"Bearer {token_jwt}",
+    "Content-Type": "application/json",
+}
+```
+**Endpoint** : /api/workflows/{workflow_id}/refuse
+
+**Method** : POST
+
+**Response**:
+```json
+{
+    ...
+  "workflowStatus" : "stopped"
+}
+```
+You will see that your workflow has been "stopped". It has been refused successfully.

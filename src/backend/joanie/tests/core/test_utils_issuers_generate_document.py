@@ -1,4 +1,4 @@
-"""Tests issuers in utils"""
+"""Test suite for `generate_document` utility"""
 import textwrap
 from io import BytesIO
 
@@ -11,10 +11,10 @@ from pdfminer.high_level import extract_text as pdf_extract_text
 from joanie.core.utils import issuers
 
 
-class UtilsDocumentCreateTestCase(TestCase):
-    """Testcase for utility method to generate document"""
+class UtilsGenerateDocumentTestCase(TestCase):
+    """Test suite for `generate_document` utility"""
 
-    def test_utils_issuer_generate_document(self):
+    def test_utils_issuers_generate_document(self):
         """
         Generate document should create the pdf document when the given name
         in order to reach the .html and .css file exist.
@@ -41,12 +41,16 @@ class UtilsDocumentCreateTestCase(TestCase):
                 "name": "Some course name",
             },
             "student": {
+                "name": "John Doe",
                 "address": {
-                    "first_name": "John",
-                    "last_name": "Doe",
                     "address": "1 Rue de L'Exemple",
-                    "postcode": "75000",
                     "city": "Paris",
+                    "country": "France",
+                    "last_name": "Doe",
+                    "first_name": "John",
+                    "postcode": "75000",
+                    "is_main": True,
+                    "title": "Office",
                 },
             },
             "organization": {
@@ -64,9 +68,12 @@ class UtilsDocumentCreateTestCase(TestCase):
                 )
             )
         ).replace("\n", "")
-        self.assertRegex(document_text, r"[SignatureField#1]")
+        self.assertRegex(document_text, r"CONTRACT DEFINITION")
+        self.assertRegex(document_text, r"John Doe")
+        self.assertRegex(document_text, r"1 Rue de L'Exemple 75000, Paris")
         self.assertRegex(document_text, r"must have a computer")
         self.assertRegex(document_text, r"student and the organization are tied")
+        self.assertRegex(document_text, r"[SignatureField#1]")
 
         with self.assertRaises(TemplateDoesNotExist) as context:
             issuers.generate_document(name="convention", context=content)

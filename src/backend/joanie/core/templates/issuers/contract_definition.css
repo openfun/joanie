@@ -11,7 +11,7 @@ body {
   @page {
     size: A4 portrait;
     margin: 0;
-    padding: 0;
+    padding: 10mm;
     margin-top: 10mm;
   }
 
@@ -24,6 +24,10 @@ body {
   * {
     margin: 0;
     padding: 0;
+  }
+
+  p {
+    margin-bottom: 5mm;
   }
 
   /* ----------------------
@@ -40,6 +44,7 @@ body {
 
   .logos > div > img {
     max-height: 100px;
+    width: 30mm;
   }
 
   .logos > *:nth-child(2) {
@@ -67,26 +72,33 @@ body {
   }
 
   .contract-articles {
-    padding: 3mm;
+    padding-top: 3mm;
+  }
+
+  .articles {
+    margin-top: 3mm;
   }
 
   /* ----------------------
    * Footer
    * ---------------------- */
-  footer {
+  .footer {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     flex-direction: row;
   }
 
-  .signature_zone{
+  .signature_zone {
     margin: 10mm;
   }
 
-  .signature-slot {
+  .signature-student {
+    margin-top: 10mm;
+  }
+
+  .signature-slot > img {
     width: 50mm;
-    height: 30mm;
     margin-top: 12mm;
   }
 }

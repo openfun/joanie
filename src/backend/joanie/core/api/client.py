@@ -3,12 +3,14 @@ Client API endpoints
 """
 # pylint: disable=too-many-lines
 
+import io
 import uuid
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.db.models import Count, OuterRef, Prefetch, Q, Subquery
-from django.http import HttpResponse
+from django.http import FileResponse, HttpResponse, JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.decorators.vary import vary_on_headers
@@ -24,9 +26,10 @@ from rest_framework.response import Response
 
 from joanie.core import enums, filters, models, permissions, serializers
 from joanie.core.api.base import NestedGenericViewSet
+from joanie.core.utils import contract_definition, issuers
 from joanie.payment.models import Invoice
 
-# pylint: disable=too-many-ancestors
+# pylint: disable=too-many-ancestors, too-many-lines
 
 
 class Pagination(pagination.PageNumberPagination):
@@ -276,6 +279,9 @@ class OrderViewSet(
         - product: product id (product must be associated to the course. Otherwise,
           a 400 error is returned)
         Return new order just created
+
+    POST /api/orders/:order_id/submit_for_signature/
+        Return an invitation link to sign the contract definition
     """
 
     lookup_field = "pk"
@@ -480,6 +486,20 @@ class OrderViewSet(
         order = self.get_object()
         order.validate()
         return Response(status=200)
+
+    @action(detail=True, methods=["POST"])
+    def submit_for_signature(
+        self, request, pk=None
+    ):  # pylint: disable=no-self-use, unused-argument, invalid-name
+        """
+        Create the contract of a product's order that has a contract definition and submit
+        the contract to the signature provider. It returns a one-time use invitation link.
+        """
+        order = self.get_object()
+
+        invitation_link = order.submit_for_signature()
+
+        return JsonResponse({"invitation_link": invitation_link}, status=200)
 
 
 class AddressViewSet(
@@ -964,6 +984,9 @@ class ContractViewSet(GenericContractViewSet):
     GET /api/contracts/<contract_id>/
         Return a contract if one matches the provided id,
         and it is owned by the logged-in user.
+
+    GET /api/contracts/<contract_id>/download/
+        Return a contract in PDF format when it is signed on.
     """
 
     lookup_field = "pk"
@@ -983,6 +1006,47 @@ class ContractViewSet(GenericContractViewSet):
         query_filters = {"order__owner__username": username}
 
         return queryset.filter(**query_filters)
+
+    @action(
+        detail=True,
+        methods=["GET"],
+    )
+    def download(
+        self, request, pk=None
+    ):  # pylint: disable=no-self-use, unused-argument, invalid-name
+        """
+        Return the PDF in bytes to download of the contract's definition of an order.
+        """
+        contract = self.get_object()
+
+        if contract.order.state != enums.ORDER_STATE_VALIDATED:
+            raise ValidationError(
+                "Cannot get contract when an order is not yet validated."
+            )
+
+        if contract.submitted_for_signature_on:
+            raise ValidationError(
+                "Cannot download a contract when it is not yet fully signed."
+            )
+
+        context_data = contract_definition.generate_document_context(
+            contract_definition=contract.definition,
+            user=self.request.user,
+            order=contract.order,
+        )
+        contract_definition_pdf_bytes = issuers.generate_document(
+            contract.definition.name, context_data
+        )
+        # Note that if you pass a file-like object like io.BytesIO,
+        # it’s your task to seek() it before passing it to FileResponse.
+        contract_definition_pdf_bytes_io = io.BytesIO(contract_definition_pdf_bytes)
+        contract_definition_pdf_bytes_io.seek(0)
+
+        return FileResponse(
+            contract_definition_pdf_bytes_io,
+            as_attachment=True,
+            filename=f"{contract.definition.title}.pdf".replace(" ", "_"),
+        )
 
 
 class NestedOrganizationContractViewSet(NestedGenericViewSet, GenericContractViewSet):
@@ -1092,3 +1156,43 @@ class NestedCourseContractViewSet(NestedGenericViewSet, GenericContractViewSet):
         }
 
         return queryset.filter(**query_filters)
+
+
+class ContractDefinitionViewset(viewsets.GenericViewSet):
+    """
+    API views to preview the contract definition for a user
+
+    GET /api/contract_definition/:contract_definition_id/preview_template
+        Return the contract definition file in PDF format.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = models.ContractDefinition.objects.all()
+
+    @action(
+        detail=True,
+        methods=["GET"],
+        url_path="preview_template",
+    )
+    def preview_template(
+        self, request, pk=None
+    ):  # pylint: disable=invalid-name, unused-argument
+        """
+        Return the contract definition in PDF in bytes.
+        """
+        definition = self.get_object()
+        context = contract_definition.generate_document_context(
+            contract_definition=definition,
+            user=self.request.user,
+        )
+        contract_definition_pdf_bytes = issuers.generate_document(
+            name=definition.name, context=context
+        )
+        contract_definition_pdf_bytes_io = io.BytesIO(contract_definition_pdf_bytes)
+        contract_definition_pdf_bytes_io.seek(0)
+
+        return FileResponse(
+            contract_definition_pdf_bytes_io,
+            as_attachment=True,
+            filename="contract_definition_preview_template.pdf",
+        )

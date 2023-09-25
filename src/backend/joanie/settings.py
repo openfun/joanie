@@ -198,6 +198,7 @@ class Base(Configuration):
         "joanie.payment",
         "joanie.badges",
         "joanie.demo",
+        "joanie.signature",
     ]
 
     # Joanie
@@ -371,6 +372,43 @@ class Base(Configuration):
             "128w": {"size": (128, 128), "crop": "smart", "upscale": True},
         },
     }
+
+    # Signature Backend
+    JOANIE_SIGNATURE_BACKEND = values.Value(
+        "joanie.signature.backends.dummy.DummySignatureBackend",
+        environ_name="JOANIE_SIGNATURE_BACKEND",
+        environ_prefix=None,
+    )
+    JOANIE_SIGNATURE_VALIDITY_PERIOD = values.PositiveIntegerValue(
+        60 * 60 * 24 * 15,
+        environ_name="JOANIE_SIGNATURE_VALIDITY_PERIOD",
+        environ_prefix=None,
+    )
+
+    JOANIE_SIGNATURE_TIMEOUT = values.PositiveIntegerValue(
+        3, environ_name="JOANIE_SIGNATURE_TIMEOUT", environ_prefix=None
+    )
+
+    # Signature Backend - Lex Persona
+    JOANIE_SIGNATURE_LEXPERSONA_BASE_URL = values.Value(
+        None, environ_name="JOANIE_SIGNATURE_LEXPERSONA_BASE_URL", environ_prefix=None
+    )
+    JOANIE_SIGNATURE_LEXPERSONA_CONSENT_PAGE_ID = values.Value(
+        None,
+        environ_name="JOANIE_SIGNATURE_LEXPERSONA_CONSENT_PAGE_ID",
+        environ_prefix=None,
+    )
+    JOANIE_SIGNATURE_LEXPERSONA_SESSION_USER_ID = values.Value(
+        None,
+        environ_name="JOANIE_SIGNATURE_LEXPERSONA_SESSION_USER_ID",
+        environ_prefix=None,
+    )
+    JOANIE_SIGNATURE_LEXPERSONA_PROFILE_ID = values.Value(
+        None, environ_name="JOANIE_SIGNATURE_LEXPERSONA_PROFILE_ID", environ_prefix=None
+    )
+    JOANIE_SIGNATURE_LEXPERSONA_TOKEN = values.Value(
+        None, environ_name="JOANIE_SIGNATURE_LEXPERSONA_TOKEN", environ_prefix=None
+    )
 
     # pylint: disable=invalid-name
     @property
