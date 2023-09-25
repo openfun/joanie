@@ -23,6 +23,8 @@ from rest_framework.response import Response
 from joanie.core import enums, filters, models, permissions, serializers
 from joanie.payment.models import Invoice
 
+# pylint: disable=too-many-ancestors
+
 
 class Pagination(pagination.PageNumberPagination):
     """Pagination to display no more than 100 objects per page sorted by creation date."""
@@ -85,6 +87,7 @@ class CourseProductRelationViewSet(
         .select_related(
             "course",
             "product",
+            "product__contract_definition",
             "product__certificate_definition",
         )
         .prefetch_related("organizations")
@@ -228,7 +231,7 @@ class EnrollmentViewSet(
                 Prefetch(
                     "course_run__course__product_relations",
                     queryset=models.CourseProductRelation.objects.select_related(
-                        "product"
+                        "product", "product__contract_definition"
                     ).filter(product__type=enums.PRODUCT_TYPE_CERTIFICATE),
                     to_attr="certificate_product_relations",
                 ),
@@ -286,7 +289,7 @@ class OrderViewSet(
             else self.request.user.username
         )
         return models.Order.objects.filter(owner__username=username).select_related(
-            "owner", "product", "certificate", "course"
+            "certificate", "contract", "course", "owner", "product"
         )
 
     def perform_create(self, serializer):
@@ -920,3 +923,31 @@ class UserViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         """
         context = {"request": request}
         return Response(self.serializer_class(request.user, context=context).data)
+
+
+class ContractViewSet(
+    mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet
+):
+    """
+    API views to get all contracts for a user
+
+    GET /api/contracts/:contract_id
+        Return list of all contracts for a user or one contract if an id is
+        provided.
+    """
+
+    lookup_field = "pk"
+    pagination_class = Pagination
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = serializers.ContractSerializer
+
+    def get_queryset(self):
+        """
+        Custom queryset to get user contracts
+        """
+        username = (
+            self.request.auth["username"]
+            if self.request.auth
+            else self.request.user.username
+        )
+        return models.Contract.objects.filter(order__owner__username=username)

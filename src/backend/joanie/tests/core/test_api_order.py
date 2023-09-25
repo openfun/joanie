@@ -80,17 +80,17 @@ class OrderApiTest(BaseAPITestCase):
                 "results": [
                     {
                         "certificate": None,
+                        "contract": None,
                         "course": {
                             "code": course.code,
                             "id": str(course.id),
                             "title": course.title,
                             "cover": "_this_field_is_mocked",
                         },
-                        "enrollment": None,
                         "created_on": order.created_on.strftime(
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
-                        "target_enrollments": [],
+                        "enrollment": None,
                         "id": str(order.id),
                         "main_invoice": None,
                         "order_group": None,
@@ -99,6 +99,7 @@ class OrderApiTest(BaseAPITestCase):
                         "product": str(order.product.id),
                         "state": order.state,
                         "target_courses": [],
+                        "target_enrollments": [],
                         "total": float(product.price),
                         "total_currency": settings.DEFAULT_CURRENCY,
                     }
@@ -125,6 +126,7 @@ class OrderApiTest(BaseAPITestCase):
                     {
                         "id": str(other_order.id),
                         "certificate": None,
+                        "contract": None,
                         "course": {
                             "code": other_order.course.code,
                             "id": str(other_order.course.id),
@@ -229,6 +231,7 @@ class OrderApiTest(BaseAPITestCase):
                     {
                         "id": str(order.id),
                         "certificate": None,
+                        "contract": None,
                         "course": {
                             "code": order.course.code,
                             "id": str(order.course.id),
@@ -309,6 +312,7 @@ class OrderApiTest(BaseAPITestCase):
                     {
                         "id": str(order.id),
                         "certificate": None,
+                        "contract": None,
                         "course": {
                             "code": order.course.code,
                             "id": str(order.course.id),
@@ -380,6 +384,7 @@ class OrderApiTest(BaseAPITestCase):
                     {
                         "id": str(order.id),
                         "certificate": None,
+                        "contract": None,
                         "course": None,
                         "created_on": order.created_on.strftime(
                             "%Y-%m-%dT%H:%M:%S.%fZ"
@@ -528,6 +533,7 @@ class OrderApiTest(BaseAPITestCase):
                     {
                         "id": str(order.id),
                         "certificate": None,
+                        "contract": None,
                         "course": {
                             "code": order.course.code,
                             "id": str(order.course.id),
@@ -589,6 +595,7 @@ class OrderApiTest(BaseAPITestCase):
                     {
                         "id": str(order.id),
                         "certificate": None,
+                        "contract": None,
                         "course": {
                             "code": order.course.code,
                             "id": str(order.course.id),
@@ -654,6 +661,7 @@ class OrderApiTest(BaseAPITestCase):
                     {
                         "id": str(order.id),
                         "certificate": None,
+                        "contract": None,
                         "course": {
                             "code": order.course.code,
                             "id": str(order.course.id),
@@ -784,6 +792,7 @@ class OrderApiTest(BaseAPITestCase):
             {
                 "id": str(order.id),
                 "certificate": None,
+                "contract": None,
                 "course": {
                     "code": order.course.code,
                     "id": str(order.course.id),
@@ -922,6 +931,7 @@ class OrderApiTest(BaseAPITestCase):
             {
                 "id": str(order.id),
                 "certificate": None,
+                "contract": None,
                 "course": {
                     "code": course.code,
                     "id": str(course.id),
@@ -1051,6 +1061,7 @@ class OrderApiTest(BaseAPITestCase):
             {
                 "id": str(order.id),
                 "certificate": None,
+                "contract": None,
                 "course": None,
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "enrollment": str(enrollment.id),
@@ -1284,6 +1295,7 @@ class OrderApiTest(BaseAPITestCase):
             {
                 "id": str(order.id),
                 "certificate": None,
+                "contract": None,
                 "course": {
                     "code": course.code,
                     "id": str(course.id),
@@ -1591,7 +1603,7 @@ class OrderApiTest(BaseAPITestCase):
             "billing_address": billing_address,
         }
 
-        with self.assertNumQueries(20):
+        with self.assertNumQueries(21):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -1608,6 +1620,7 @@ class OrderApiTest(BaseAPITestCase):
             {
                 "id": str(order.id),
                 "certificate": None,
+                "contract": None,
                 "course": {
                     "code": course.code,
                     "id": str(course.id),
@@ -1745,6 +1758,7 @@ class OrderApiTest(BaseAPITestCase):
         expected_json = {
             "id": str(order.id),
             "certificate": None,
+            "contract": None,
             "course": {
                 "code": course.code,
                 "id": str(course.id),
@@ -1903,7 +1917,7 @@ class OrderApiTest(BaseAPITestCase):
         }
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(22):
+        with self.assertNumQueries(23):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -2201,6 +2215,7 @@ class OrderApiTest(BaseAPITestCase):
             list(data.keys()),
             [
                 "certificate",
+                "contract",
                 "course",
                 "created_on",
                 "enrollment",

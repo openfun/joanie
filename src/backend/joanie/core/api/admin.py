@@ -297,3 +297,14 @@ class TargetCoursesViewSet(
                 product=product_id, course=target_course_id
             ).update(position=index)
         return Response(status=201)
+
+
+class ContractDefinitionViewSet(viewsets.ModelViewSet):
+    """
+    Admin Contract Definition ViewSet
+    """
+
+    authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
+    permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
+    serializer_class = serializers.AdminContractDefinitionSerializer
+    queryset = models.ContractDefinition.objects.all()

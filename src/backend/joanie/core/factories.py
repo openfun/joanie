@@ -61,6 +61,19 @@ class CertificateDefinitionFactory(factory.django.DjangoModelFactory):
     template = settings.MARION_CERTIFICATE_DOCUMENT_ISSUER
 
 
+class ContractDefinitionFactory(factory.django.DjangoModelFactory):
+    """A factory to create a contract definition"""
+
+    class Meta:
+        model = models.ContractDefinition
+
+    body = factory.Faker("paragraphs", nb=3)
+    description = factory.Faker("paragraph", nb_sentences=5)
+    language = factory.fuzzy.FuzzyChoice([lang[0] for lang in settings.LANGUAGES])
+    name = factory.fuzzy.FuzzyChoice([name[0] for name in enums.CONTRACT_NAME_CHOICES])
+    title = factory.Sequence(lambda n: f"Contract definition {n}")
+
+
 class OrganizationFactory(factory.django.DjangoModelFactory):
     """A factory to create an organization"""
 
@@ -467,6 +480,19 @@ class ProductFactory(factory.django.DjangoModelFactory):
 
         return CertificateDefinitionFactory()
 
+    @factory.lazy_attribute
+    def contract_definition(self):
+        """
+        Return a ContractDefinition object with a random title
+        if the product type is credential or certificate.
+        """
+        if self.type in [
+            enums.PRODUCT_TYPE_CREDENTIAL,
+            enums.PRODUCT_TYPE_CERTIFICATE,
+        ]:
+            return ContractDefinitionFactory()
+        return None
+
 
 class CourseProductRelationFactory(factory.django.DjangoModelFactory):
     """A factory to create CourseProductRelation object"""
@@ -621,3 +647,22 @@ class CourseWishFactory(factory.django.DjangoModelFactory):
 
     course = factory.SubFactory(CourseFactory)
     owner = factory.SubFactory(UserFactory)
+
+
+class ContractFactory(factory.django.DjangoModelFactory):
+    """A factory to create a contract"""
+
+    class Meta:
+        model = models.Contract
+
+    order = factory.SubFactory(
+        OrderFactory,
+        product__type=enums.PRODUCT_TYPE_CREDENTIAL,
+    )
+
+    @factory.lazy_attribute
+    def definition(self):
+        """
+        Return the order product contract definition.
+        """
+        return self.order.product.contract_definition

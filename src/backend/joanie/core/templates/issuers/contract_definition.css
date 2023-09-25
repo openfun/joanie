@@ -1,0 +1,92 @@
+body {
+  font-family: "Arial", "Helvetica Neue", sans-serif;
+  font-size: 13px;
+  color: #222;
+}
+
+@media print {
+  /* ----------------------
+   * Reset margins for media
+   * ---------------------- */
+  @page {
+    size: A4 portrait;
+    margin: 0;
+    padding: 0;
+    margin-top: 10mm;
+  }
+
+  body {
+    margin: 3mm;
+    padding: 7mm;
+    background: #fff;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+  }
+
+  /* ----------------------
+   * Header
+   * ---------------------- */
+  header {
+    display: flex;
+    height: 30mm;
+  }
+
+  .logos > * {
+    width: 50%;
+  }
+
+  .logos > div > img {
+    max-height: 100px;
+  }
+
+  .logos > *:nth-child(2) {
+    text-align: right;
+  }
+
+  .title {
+    font-family: "Helvetica Neue", "Arial", sans-serif;
+    font-size: 20px;
+    text-transform: uppercase;
+    text-align: right; /* Align text to the right */
+    letter-spacing: 2px;
+    padding-bottom: 10mm;
+    margin: 0; /* Remove default margin for the heading */
+  }
+
+  /* ----------------------
+   * Main
+   * ---------------------- */
+
+  .main {
+    display: flex;
+    justify-content: space-between; /* Align items with space in between */
+    flex-direction: column;
+  }
+
+  .contract-articles {
+    padding: 3mm;
+  }
+
+  /* ----------------------
+   * Footer
+   * ---------------------- */
+  footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-direction: row;
+  }
+
+  .signature_zone{
+    margin: 10mm;
+  }
+
+  .signature-slot {
+    width: 50mm;
+    height: 30mm;
+    margin-top: 12mm;
+  }
+}

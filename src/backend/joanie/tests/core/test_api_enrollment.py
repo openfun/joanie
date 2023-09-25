@@ -323,6 +323,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "title": str(product2.certificate_definition.title),
                     },
                     "order_groups": [],
+                    "contract_definition": str(product2.contract_definition.id),
                     "id": str(product2.id),
                     "price": float(product2.price),
                     "price_currency": "EUR",
@@ -349,6 +350,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "title": str(product1.certificate_definition.title),
                     },
                     "order_groups": [],
+                    "contract_definition": str(product1.contract_definition.id),
                     "state": {
                         "priority": product1.state["priority"],
                         "datetime": product1.state["datetime"]

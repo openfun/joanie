@@ -9,6 +9,17 @@ from joanie.core.enums import ALL_LANGUAGES
 from joanie.core.serializers.fields import ImageDetailField, ThumbnailDetailField
 
 
+class AdminContractDefinitionSerializer(serializers.ModelSerializer):
+    """Serializer for ContractDefinition model."""
+
+    title = serializers.CharField()
+
+    class Meta:
+        model = models.ContractDefinition
+        fields = ("id", "body", "description", "language", "title", "name")
+        read_only_fields = ["id"]
+
+
 class AdminCertificateDefinitionSerializer(serializers.ModelSerializer):
     """Serializer for CertificationDefinition model."""
 

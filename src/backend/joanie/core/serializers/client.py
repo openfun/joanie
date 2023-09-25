@@ -232,7 +232,7 @@ class OrganizationAccessSerializer(AbilitiesModelSerializer):
         return attrs
 
 
-class CertificateOrderSerializer(serializers.ModelSerializer):
+class NestedOrderSerializer(serializers.ModelSerializer):
     """
     Order model serializer for the Certificate model
     """
@@ -267,7 +267,7 @@ class CertificateSerializer(serializers.ModelSerializer):
 
     id = serializers.CharField(read_only=True, required=False)
     certificate_definition = CertificationDefinitionSerializer(read_only=True)
-    order = CertificateOrderSerializer(read_only=True)
+    order = NestedOrderSerializer(read_only=True)
 
     class Meta:
         model = models.Certificate
@@ -280,6 +280,23 @@ class CertificateSerializer(serializers.ModelSerializer):
         """
         language = self.context["request"].LANGUAGE_CODE or get_language()
         return certificate.localized_context[language]
+
+
+class ContractSerializer(serializers.ModelSerializer):
+    """Contract model serializer"""
+
+    id = serializers.CharField(read_only=True, required=False)
+    definition = serializers.SlugRelatedField(
+        queryset=models.CertificateDefinition.objects.all(), slug_field="id"
+    )
+    order = serializers.SlugRelatedField(
+        queryset=models.Order.objects.all(), slug_field="id"
+    )
+
+    class Meta:
+        model = models.Contract
+        fields = ["id", "definition", "order", "signed_on"]
+        read_only_fields = ["id", "definition", "order", "signed_on"]
 
 
 class CourseRunSerializer(serializers.ModelSerializer):
@@ -525,11 +542,13 @@ class OrderSerializer(serializers.ModelSerializer):
     )
     main_invoice = serializers.SlugRelatedField(read_only=True, slug_field="reference")
     certificate = serializers.SlugRelatedField(read_only=True, slug_field="id")
+    contract = serializers.SlugRelatedField(read_only=True, slug_field="id")
 
     class Meta:
         model = models.Order
         fields = [
             "certificate",
+            "contract",
             "course",
             "created_on",
             "enrollment",
@@ -616,12 +635,14 @@ class ProductSerializer(serializers.ModelSerializer):
     target_courses = ProductTargetCourseRelationSerializer(
         read_only=True, many=True, source="target_course_relations"
     )
+    contract_definition = serializers.SlugRelatedField(read_only=True, slug_field="id")
 
     class Meta:
         model = models.Product
         fields = [
             "call_to_action",
             "certificate_definition",
+            "contract_definition",
             "id",
             "instructions",
             "order_groups",

@@ -44,6 +44,7 @@ session.mount("http://", adapter)
 session.mount("https://", adapter)
 
 
+# pylint: disable=too-many-public-methods, too-many-lines
 class Product(parler_models.TranslatableModel, BaseModel):
     """
     Product model represents detailed description of product to purchase for a course.
@@ -79,6 +80,13 @@ class Product(parler_models.TranslatableModel, BaseModel):
     certificate_definition = models.ForeignKey(
         "CertificateDefinition",
         verbose_name=_("certificate definition"),
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
+    )
+    contract_definition = models.ForeignKey(
+        "ContractDefinition",
+        verbose_name=_("Contract definition"),
         on_delete=models.PROTECT,
         blank=True,
         null=True,

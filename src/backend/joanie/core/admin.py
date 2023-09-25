@@ -109,6 +109,31 @@ class CourseRunFilter(AutocompleteFilter):
 # Admin registers
 
 
+@admin.register(models.ContractDefinition)
+class ContractDefinitionAdmin(TranslatableAdmin):
+    """Admin class for the ContractDefinition model"""
+
+    list_display = ("title", "language")
+
+
+@admin.register(models.Contract)
+class ContractAdmin(admin.ModelAdmin):
+    """Admin class for the Contract model"""
+
+    list_display = ("order", "owner", "signed_on")
+    readonly_fields = (
+        "definition",
+        "definition_checksum",
+        "signed_on",
+        "order",
+        "owner",
+    )
+
+    def owner(self, obj):  # pylint: disable=no-self-use
+        """Retrieve the owner of the contract from the related order."""
+        return obj.order.owner
+
+
 @admin.register(models.CertificateDefinition)
 class CertificateDefinitionAdmin(TranslatableAdmin):
     """Admin class for the CertificateDefinition model"""

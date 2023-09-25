@@ -92,3 +92,8 @@ ENROLLMENT_STATE_CHOICES = (
         pgettext_lazy("As in: the enrollment failed on the LMS.", "Failed"),
     ),
 )
+
+# For contract names choices
+CONTRACT_DEFINITION = "contract_definition"
+
+CONTRACT_NAME_CHOICES = ((CONTRACT_DEFINITION, _("Contract Definition")),)  # default

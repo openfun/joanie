@@ -41,6 +41,11 @@ API_VERSION = "v1.0"
 router = DefaultRouter()
 router.register("addresses", api_client.AddressViewSet, basename="addresses")
 router.register("certificates", api_client.CertificateViewSet, basename="certificates")
+router.register(
+    "contracts",
+    api_client.ContractViewSet,
+    basename="contracts",
+)
 router.register("courses", api_client.CourseViewSet, basename="courses")
 router.register("course-runs", api_client.CourseRunViewSet, basename="course-runs")
 router.register("enrollments", api_client.EnrollmentViewSet, basename="enrollments")
@@ -105,6 +110,11 @@ admin_router.register(
     "certificate-definitions",
     api_admin.CertificateDefinitionViewSet,
     basename="admin_certificate-definitions",
+)
+admin_router.register(
+    "contract-definitions",
+    api_admin.ContractDefinitionViewSet,
+    basename="admin_contract-definitions",
 )
 admin_router.register("users", api_admin.UserViewSet, basename="admin_user")
 
