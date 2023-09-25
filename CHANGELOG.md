@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Add contract and contract definition models with related API endpoints
 - Add `instructions` markdown field to `Product` model
 - Add filter course by product type
 - Enroll as "verified" mode in OpenEdX when enrolling via an order

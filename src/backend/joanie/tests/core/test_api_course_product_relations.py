@@ -127,6 +127,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                         "title": relation.product.certificate_definition.title,
                     },
                     "order_groups": [],
+                    "contract_definition": str(product.contract_definition.id),
                     "state": {
                         "priority": product.state["priority"],
                         "datetime": product.state["datetime"]
@@ -484,6 +485,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                         "title": relation.product.certificate_definition.title,
                     },
                     "order_groups": [],
+                    "contract_definition": str(product.contract_definition.id),
                     "state": {
                         "priority": product.state["priority"],
                         "datetime": product.state["datetime"]
