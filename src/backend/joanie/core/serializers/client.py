@@ -652,14 +652,14 @@ class OrderLightSerializer(serializers.ModelSerializer):
 class OrderGroupSerializer(serializers.ModelSerializer):
     """Serializer for order groups in a product."""
 
-    nb_availabilities = serializers.SerializerMethodField(read_only=True)
+    nb_available_seats = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = models.OrderGroup
-        fields = ["id", "is_active", "nb_seats", "nb_availabilities"]
+        fields = ["id", "is_active", "nb_seats", "nb_available_seats"]
         read_only_fields = fields
 
-    def get_nb_availabilities(self, order_group):
+    def get_nb_available_seats(self, order_group):
         """Return the number of available seats for this order group."""
         return order_group.nb_seats - order_group.get_nb_binding_orders()
 

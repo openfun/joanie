@@ -83,6 +83,7 @@ class ProductAdminApiTest(TestCase):
             )
         )
         relations[2].save()
+        order_group = factories.OrderGroupFactory(product=product)
 
         response = self.client.get(f"/api/v1.0/admin/products/{product.id}/")
 
@@ -193,6 +194,18 @@ class ProductAdminApiTest(TestCase):
                             "id": str(relation.organizations.first().id),
                         }
                     ],
+                }
+            ],
+            "order_groups": [
+                {
+                    "id": str(order_group.id),
+                    "nb_seats": order_group.nb_seats,
+                    "is_active": order_group.is_active,
+                    "nb_available_seats": order_group.nb_seats
+                    - order_group.get_nb_binding_orders(),
+                    "created_on": order_group.created_on.isoformat().replace(
+                        "+00:00", "Z"
+                    ),
                 }
             ],
         }

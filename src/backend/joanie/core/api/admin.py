@@ -7,6 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from joanie.core import filters, models, serializers
+from joanie.core.api.base import NestedGenericViewSet
 from joanie.core.authentication import SessionAuthenticationWithAuthenticateHeader
 
 
@@ -308,3 +309,32 @@ class ContractDefinitionViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_class = serializers.AdminContractDefinitionSerializer
     queryset = models.ContractDefinition.objects.all()
+
+
+class NestedProductOrderGroupViewSet(
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    NestedGenericViewSet,
+):
+    """
+    OrderGroup ViewSet
+    """
+
+    authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
+    permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
+    serializer_classes = {
+        "create": serializers.AdminOrderGroupCreateSerializer,
+    }
+    default_serializer_class = serializers.AdminOrderGroupSerializer
+    queryset = models.OrderGroup.objects.all().select_related("product")
+    ordering = "created_on"
+    lookup_fields = ["product", "pk"]
+    lookup_url_kwargs = ["product_id", "pk"]
+
+    def get_serializer_class(self):
+        """
+        Return the serializer class to use depending on the action.
+        """
+        return self.serializer_classes.get(self.action, self.default_serializer_class)
