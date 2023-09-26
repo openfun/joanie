@@ -174,7 +174,7 @@ class AdminProductSerializer(serializers.ModelSerializer):
         coerce_to_string=False, decimal_places=2, max_digits=9, min_value=0
     )
     price_currency = serializers.SerializerMethodField(read_only=True)
-    instructions = serializers.CharField(required=False)
+    instructions = serializers.CharField(allow_blank=True, trim_whitespace=False)
 
     class Meta:
         model = models.Product
