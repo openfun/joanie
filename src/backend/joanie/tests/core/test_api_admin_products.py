@@ -484,3 +484,53 @@ class ProductAdminApiTest(TestCase):
         self.assertEqual(relations.get(course=courses[0]).position, 2)
         self.assertEqual(relations.get(course=courses[2]).position, 3)
         self.assertEqual(relations.get(course=courses[4]).position, 4)
+
+    def test_admin_api_product_update_empty_instructions(self):
+        """
+        Staff user should be able to update a product with empty instructions.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        product = factories.ProductFactory(
+            price=100, instructions="A not empty instruction"
+        )
+
+        response = self.client.patch(
+            f"/api/v1.0/admin/products/{product.id}/",
+            content_type="application/json",
+            data={"instructions": ""},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["instructions"], "")
+        product.refresh_from_db()
+        self.assertEqual(product.instructions, "")
+
+    def test_admin_api_product_update_trailing_whitespace(self):
+        """
+        Trailing whitespaces and newline on instructions should remain
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        product = factories.ProductFactory(price=100)
+
+        response = self.client.patch(
+            f"/api/v1.0/admin/products/{product.id}/",
+            content_type="application/json",
+            data={"instructions": "Test whitespace   "},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["instructions"], "Test whitespace   ")
+
+        response = self.client.patch(
+            f"/api/v1.0/admin/products/{product.id}/",
+            content_type="application/json",
+            data={"instructions": "Test newline\n\n"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["instructions"], "Test newline\n\n")
