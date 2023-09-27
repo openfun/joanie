@@ -374,14 +374,6 @@ class OrderViewSet(
                 )
             course = enrollment.course_run.course
 
-        # Force the organization field
-        if not serializer.validated_data.get("organization"):
-            serializer.validated_data[
-                "organization"
-            ] = self._get_organization_with_least_active_orders(
-                product, course, enrollment
-            )
-
         # - Validate data then create an order
         try:
             self.perform_create(serializer)
@@ -404,10 +396,15 @@ class OrderViewSet(
         """
         Submit a draft order if the conditions are filled
         """
-        serializer = self.get_serializer(data=request.data)
-        billing_address = serializer.initial_data.get("billing_address")
-        credit_card_id = serializer.initial_data.get("credit_card_id")
+        billing_address = request.data.get("billing_address")
+        credit_card_id = request.data.get("credit_card_id")
         order = self.get_object()
+
+        if order.organization is None:
+            order.organization = self._get_organization_with_least_active_orders(
+                order.product, order.course, order.enrollment
+            )
+            order.save()
 
         return Response(
             {"payment_info": order.submit(billing_address, credit_card_id, request)},

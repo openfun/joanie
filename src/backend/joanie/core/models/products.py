@@ -356,6 +356,8 @@ class Order(BaseModel):
         to=courses_models.Organization,
         verbose_name=_("organization"),
         on_delete=models.PROTECT,
+        blank=True,
+        null=True,
     )
     product = models.ForeignKey(
         to=Product,
@@ -437,6 +439,12 @@ class Order(BaseModel):
                 ),
                 name="either_course_or_enrollment",
                 violation_error_message="Order should have either a course or an enrollment",
+            ),
+            models.CheckConstraint(
+                check=models.Q(state=enums.ORDER_STATE_DRAFT)
+                | models.Q(organization__isnull=False),
+                name="organization_required_if_not_draft",
+                violation_error_message="Order should have an organization if not in draft state",
             ),
         ]
         verbose_name = _("Order")
