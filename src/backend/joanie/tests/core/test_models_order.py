@@ -373,7 +373,7 @@ class OrderModelsTestCase(TestCase):
         InvoiceFactory(order=order, total=order.total)
 
         # - Validate the order should automatically enroll user to course run
-        with self.assertNumQueries(23):
+        with self.assertNumQueries(24):
             order.validate()
 
         self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
@@ -422,7 +422,7 @@ class OrderModelsTestCase(TestCase):
         InvoiceFactory(order=order, total=order.total)
 
         # - Validate the order should automatically enroll user to course run
-        with self.assertNumQueries(27):
+        with self.assertNumQueries(28):
             order.validate()
 
         enrollment.refresh_from_db()
@@ -515,7 +515,7 @@ class OrderModelsTestCase(TestCase):
         self.assertEqual(Enrollment.objects.filter(is_active=True).count(), 1)
 
         # - When order is canceled, user should not be unenrolled from related enrollments
-        with self.assertNumQueries(13):
+        with self.assertNumQueries(14):
             order.cancel()
 
         self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
@@ -553,7 +553,7 @@ class OrderModelsTestCase(TestCase):
         self.assertEqual(Enrollment.objects.filter(is_active=True).count(), 1)
 
         # - When order is canceled, user should not be unenrolled to related enrollments
-        with self.assertNumQueries(10):
+        with self.assertNumQueries(11):
             order.cancel()
 
         self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
@@ -1154,3 +1154,22 @@ class OrderModelsTestCase(TestCase):
         self.assertEqual(
             str(context.exception), "Contract is already signed, cannot resubmit."
         )
+
+    def test_models_order_organization_required_if_not_draft_constraint(self):
+        """
+        Check the db constraint forbidding a non draft order to not have a linked
+        organization
+        """
+        for order_state in enums.ORDER_STATE_CHOICES:
+            if order_state[0] not in enums.ORDER_STATE_DRAFT:
+                order = factories.OrderFactory()
+                order.organization = None
+                order.state = order_state[0]
+                with self.assertRaises(ValidationError) as context:
+                    order.save()
+                self.assertEqual(
+                    str(context.exception),
+                    (
+                        "{'__all__': ['Order should have an organization if not in draft state']}"
+                    ),
+                )

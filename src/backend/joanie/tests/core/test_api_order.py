@@ -1156,7 +1156,7 @@ class OrderApiTest(BaseAPITestCase):
             },
         )
 
-        with self.assertNumQueries(28):
+        with self.assertNumQueries(30):
             response = self.client.patch(
                 f"/api/v1.0/orders/{order.id}/submit/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -1278,10 +1278,10 @@ class OrderApiTest(BaseAPITestCase):
             },
         )
 
-    def test_api_order_create_authenticated_organization_not_passed_none(self):
+    def test_api_order_create_submit_authenticated_organization_not_passed(self):
         """
-        It should not be possible to create an order without passing an organization if there are
-        none linked to the product.
+        It should be possible to create an order without passing an organization if there are
+        none linked to the product, but be impossible to submit
         """
         target_course = factories.CourseFactory()
         course = factories.CourseFactory()
@@ -1305,19 +1305,28 @@ class OrderApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
+        self.assertEqual(response.status_code, 201)
+        order_id = response.json()["id"]
+        self.assertTrue(models.Order.objects.filter(id=order_id).exists())
+        response = self.client.patch(
+            f"/api/v1.0/orders/{order_id}/submit/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
         self.assertEqual(response.status_code, 400)
-        self.assertFalse(models.Order.objects.exists())
+        self.assertEqual(
+            models.Order.objects.get(id=order_id).state, enums.ORDER_STATE_DRAFT
+        )
         self.assertEqual(
             response.json(),
             {
-                "organization": ["This field cannot be null."],
+                "__all__": ["Order should have an organization if not in draft state"],
             },
         )
 
     def test_api_order_create_authenticated_organization_not_passed_one(self):
         """
-        It should be possible to create an order without passing an organization if there is
-        only one linked to the product.
+        It should be possible to create then submit an order without passing
+        an organization if there is only one linked to the product.
         """
         target_course = factories.CourseFactory()
         product = factories.ProductFactory(target_courses=[target_course], price=0.00)
@@ -1339,6 +1348,20 @@ class OrderApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, 201)
         # order has been created
+
+        self.assertEqual(
+            models.Order.objects.filter(
+                organization__isnull=True, course=course
+            ).count(),
+            1,
+        )
+
+        response = self.client.patch(
+            f"/api/v1.0/orders/{response.json()['id']}/submit/",
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
         self.assertEqual(
             models.Order.objects.filter(
                 organization=organization, course=course
@@ -1348,8 +1371,8 @@ class OrderApiTest(BaseAPITestCase):
 
     def test_api_order_create_authenticated_organization_passed_several(self):
         """
-        It should be possible to create an order without passing an organization if there are
-        several linked to the product.
+        It should be possible to create then submit an order without passing an
+        organization if there are several linked to the product.
         The one with the least active order count should be allocated.
         """
         course = factories.CourseFactory()
@@ -1391,11 +1414,18 @@ class OrderApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
+        order_id = response.json()["id"]
+
+        response = self.client.patch(
+            f"/api/v1.0/orders/{order_id}/submit/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
         self.assertEqual(response.status_code, 201)
         self.assertEqual(models.Order.objects.count(), 10)  # 9 + 1
         # The chosen organization should be one of the organizations with the lowest order count
-        organization_id = response.json()["organization"]
-        self.assertEqual(counter[organization_id], min(counter.values()))
+        organization_id = models.Order.objects.get(id=order_id).organization.id
+        self.assertEqual(counter[str(organization_id)], min(counter.values()))
 
     @mock.patch.object(
         fields.ThumbnailDetailField,
@@ -1760,7 +1790,7 @@ class OrderApiTest(BaseAPITestCase):
             "billing_address": billing_address,
         }
 
-        with self.assertNumQueries(21):
+        with self.assertNumQueries(22):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -1848,7 +1878,7 @@ class OrderApiTest(BaseAPITestCase):
                 ],
             },
         )
-        with self.assertNumQueries(11):
+        with self.assertNumQueries(12):
             response = self.client.patch(
                 f"/api/v1.0/orders/{order.id}/submit/",
                 data=data,
@@ -2027,7 +2057,7 @@ class OrderApiTest(BaseAPITestCase):
         }
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(19):
+        with self.assertNumQueries(20):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -2074,7 +2104,7 @@ class OrderApiTest(BaseAPITestCase):
         }
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(23):
+        with self.assertNumQueries(24):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -2188,7 +2218,7 @@ class OrderApiTest(BaseAPITestCase):
         }
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(16):
+        with self.assertNumQueries(17):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -2441,12 +2471,48 @@ class OrderApiTest(BaseAPITestCase):
         order = factories.OrderFactory(product=product)
         self._check_api_order_update_detail(order, user, 405)
 
-    def test_api_order_update_detail_authenticated_owner(self):
-        """The owner of an order should not be allowed to update his/her order."""
-        owner = factories.UserFactory(is_superuser=True, is_staff=True)
+    def test_api_order_update_detail_authenticated_unowned(self):
+        """
+        An authenticated user should not be allowed to update an order
+        they do not own.
+        """
+        user = factories.UserFactory()
         *target_courses, _other_course = factories.CourseFactory.create_batch(3)
         product = factories.ProductFactory(target_courses=target_courses)
-        order = factories.OrderFactory(owner=owner, product=product)
+        order = factories.OrderFactory(product=product)
+        self._check_api_order_update_detail(order, user, 405)
+
+    def test_api_order_update_detail_authenticated_owned(self):
+        """
+        An authenticated user should not be allowed to update an order
+        they own, no matter the state.
+        """
+        owner = factories.UserFactory()
+        *target_courses, _other_course = factories.CourseFactory.create_batch(3)
+        product = factories.ProductFactory(target_courses=target_courses)
+        order = factories.OrderFactory(
+            owner=owner, product=product, state=enums.ORDER_STATE_SUBMITTED
+        )
+        self._check_api_order_update_detail(order, owner, 405)
+        models.Order.objects.all().delete()
+        order = factories.OrderFactory(
+            owner=owner, product=product, state=enums.ORDER_STATE_VALIDATED
+        )
+        self._check_api_order_update_detail(order, owner, 405)
+        models.Order.objects.all().delete()
+        order = factories.OrderFactory(
+            owner=owner, product=product, state=enums.ORDER_STATE_PENDING
+        )
+        self._check_api_order_update_detail(order, owner, 405)
+        models.Order.objects.all().delete()
+        order = factories.OrderFactory(
+            owner=owner, product=product, state=enums.ORDER_STATE_CANCELED
+        )
+        self._check_api_order_update_detail(order, owner, 405)
+        models.Order.objects.all().delete()
+        order = factories.OrderFactory(
+            owner=owner, product=product, state=enums.ORDER_STATE_DRAFT
+        )
         self._check_api_order_update_detail(order, owner, 405)
 
     # Delete

@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Allow to leave organization empty while order is in draft
 - Add API client signature provider to sign contract from an order
 - Add admin route to add and modify OrderGroups
 - Allow to filter contracts through their signature state
