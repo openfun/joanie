@@ -77,10 +77,19 @@ describe("<ProductForm/>", () => {
 
     // Test Main Form
     screen.getByRole("heading", { name: "Main information's" });
+
     const titleInput = screen.getByRole("textbox", { name: "Title" });
     screen.getByRole("button", { name: "Type credential" });
     const description = screen.getByRole("textbox", { name: "Description" });
     screen.getByRole("combobox", { name: "Certificate definition" });
+
+    const instructionTitle = screen.getByRole("heading", {
+      name: "Product instruction",
+      level: 6,
+    });
+    screen.getByText("(click to edit)");
+    await userEvent.click(instructionTitle);
+    expect(screen.queryByText("(click to edit)")).not.toBeInTheDocument();
 
     screen.getByRole("heading", { name: "Financial information's" });
     const callToActionInput = screen.getByRole("textbox", {
