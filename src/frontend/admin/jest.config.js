@@ -16,7 +16,65 @@ const customJestConfig = {
   },
   testEnvironment: "jest-environment-jsdom",
   transformIgnorePatterns: [
-    "/node_modules/(?!(query-string|decode-uri-component|split-on-first|filter-obj)/)",
+    "/node_modules/(?!(" +
+      "jest-next-dynamic|" +
+      "query-string|" +
+      "decode-uri-component|" +
+      "split-on-first|" +
+      "filter-obj|" +
+      "@uiw/react-md-editor|" +
+      "@uiw/react-markdown-preview|" +
+      "react-markdown|" +
+      "trim-lines|" +
+      "@mdx-js/mdx2|" +
+      "unified|" +
+      "bail|" +
+      "is-plain-obj|" +
+      "trough|" +
+      "vfile[^/]*|" +
+      "unist-util-stringify-position|" +
+      "remark-mdx|" +
+      "micromark[^/]*|" +
+      "unist-util-position-from-estree|" +
+      "estree-util[^/]+|" +
+      "estree-walker|" +
+      "decode-named-character-reference|" +
+      "character-entities|" +
+      "mdast-util[^/]+|" +
+      "ccount|" +
+      "parse-entities|" +
+      "character-entities-legacy|" +
+      "character-reference-invalid|" +
+      "stringify-entities|" +
+      "character-entities-html4|" +
+      "remark[^/]+|" +
+      "unist-builder|" +
+      "unist-util[^/]+|" +
+      "property-information|" +
+      "github-slugger|" +
+      "refractor|" +
+      "periscopic|" +
+      "is-decimal|" +
+      "is-hexadecimal|" +
+      "is-alphanumerical|" +
+      "is-alphabetical|" +
+      "direction|" +
+      "bcp-47-match|" +
+      "is-reference|" +
+      "hast-util[^/]+|" +
+      "nth-check|" +
+      "hast-to-hyperscript+|" +
+      "html-void-elements+|" +
+      "comma-separated-tokens|" +
+      "space-separated-tokens|" +
+      "zwitch|" +
+      "rehype-[^/]+|" +
+      "hastscript|" +
+      "web-namespaces|" +
+      "escape-string-regexp|" +
+      "markdown-table|" +
+      "rehype",
+    ")/)",
     "^.+\\.module\\.(css|sass|scss)$",
   ],
 };
