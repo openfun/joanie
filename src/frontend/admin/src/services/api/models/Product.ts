@@ -16,6 +16,7 @@ export type Product = {
   target_courses?: ProductTargetCourseRelation[];
   price?: number;
   price_currency?: string;
+  instructions?: string;
   certificate_definition?: CertificateDefinition;
   courses?: ProductRelationToCourse[];
 };
@@ -33,6 +34,7 @@ export type ProductFormValues = ToFormValues<{
   call_to_action: string;
   target_courses?: ProductTargetCourseRelation[];
   price?: number;
+  instructions?: string;
   price_currency?: string;
   certificate_definition?: Nullable<CertificateDefinition>;
 }>;
@@ -42,6 +44,7 @@ export type DTOProduct = {
   type: ProductType;
   title: string;
   description?: string;
+  instructions?: string;
   call_to_action: string;
   price?: number;
   price_currency?: string;
