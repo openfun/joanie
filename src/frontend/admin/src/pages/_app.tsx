@@ -1,6 +1,8 @@
 import "@/styles/globals.scss";
 import type { AppProps } from "next/app";
-
+import "@uiw/react-md-editor/markdown-editor.css";
+// eslint-disable-next-line import/no-extraneous-dependencies
+import "@uiw/react-markdown-preview/dist/markdown.css";
 import { CacheProvider } from "@emotion/react";
 import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
