@@ -49,6 +49,16 @@ export const productFormMessages = defineMessages({
       "Used for the generation of the certificate of completion of the course",
     description: "Helper text for the definition input",
   },
+  instructionsTitle: {
+    id: "components.templates.products.form.translations.instructionsTitle",
+    defaultMessage: "Product instructions",
+    description: "Title for the instruction section",
+  },
+  instructionsTitleHelp: {
+    id: "components.templates.products.form.translations.instructionsTitleHelp",
+    defaultMessage: "(click to edit)",
+    description: "Help for the for the instruction section",
+  },
   financialInformationTitle: {
     id: "components.templates.products.form.translations.financialInformationTitle",
     defaultMessage: "Financial information's",
