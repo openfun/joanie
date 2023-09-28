@@ -25,6 +25,8 @@ import { CertificateDefinition } from "@/services/api/models/CertificateDefiniti
 import { useProducts } from "@/hooks/useProducts/useProducts";
 import { RHFProvider } from "@/components/presentational/hook-form/RHFProvider";
 import { RHFValuesChange } from "@/components/presentational/hook-form/RFHValuesChange";
+import { ProductFormInstructions } from "@/components/templates/products/form/sections/main/instructions/ProductFormInstructions";
+import { removeEOL } from "@/utils/string";
 
 type Props = WizardStepProps & {
   product?: Product;
@@ -39,6 +41,7 @@ const Schema = Yup.object().shape({
   description: Yup.string().required(),
   price: Yup.number().min(0).optional(),
   price_currency: Yup.string().optional(),
+  instructions: Yup.string().optional(),
   call_to_action: Yup.string().required(),
   certificate_definition: Yup.mixed<CertificateDefinition>()
     .nullable()
@@ -60,11 +63,12 @@ export function ProductFormMain({
     return {
       title: product?.title ?? "",
       type: product?.type ?? ProductType.CERTIFICATE,
-      description: product?.description ?? "",
+      description: removeEOL(product?.description),
       price: product?.price ?? 0,
       price_currency: product?.price_currency ?? "EUR",
       call_to_action: product?.call_to_action ?? "",
       certificate_definition: product?.certificate_definition ?? null,
+      instructions: removeEOL(product?.instructions),
     };
   };
 
@@ -173,6 +177,7 @@ export function ProductFormMain({
           )}
         </Grid>
         <ProductFormFinancial />
+        <ProductFormInstructions />
       </RHFValuesChange>
     </RHFProvider>
   );

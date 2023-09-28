@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import { rest } from "msw";
 import userEvent from "@testing-library/user-event";
 import { SnackbarProvider } from "notistack";
@@ -52,7 +52,7 @@ describe("<ProductForm/>", () => {
 
   it("renders ProductForm without product and select certificate type", async () => {
     jest.useFakeTimers({ advanceTimers: true });
-    render(
+    const { container } = render(
       <SnackbarProvider>
         <ProductForm />
       </SnackbarProvider>,
@@ -77,10 +77,30 @@ describe("<ProductForm/>", () => {
 
     // Test Main Form
     screen.getByRole("heading", { name: "Main information's" });
+
     const titleInput = screen.getByRole("textbox", { name: "Title" });
     screen.getByRole("combobox", { name: "Type" });
     const description = screen.getByRole("textbox", { name: "Description" });
     screen.getByRole("combobox", { name: "Certificate definition" });
+
+    const instructionTitle = screen.getByRole("heading", {
+      name: "Product instructions",
+      level: 6,
+    });
+    screen.getByText("(click to edit)");
+    await userEvent.click(instructionTitle);
+    expect(screen.queryByText("(click to edit)")).not.toBeInTheDocument();
+
+    const markdownEditorContainer =
+      container.getElementsByClassName("w-md-editor");
+    expect(markdownEditorContainer.length).toBe(1);
+    const markdownEditor: HTMLElement = markdownEditorContainer.item(
+      0,
+    ) as HTMLElement;
+    expect(markdownEditor).not.toBe(null);
+    const markdownTextbox = within(markdownEditor).getByRole("textbox");
+    await userEvent.type(markdownTextbox, "### Hello");
+    expect(markdownTextbox).toHaveValue("### Hello");
 
     screen.getByRole("heading", { name: "Financial information's" });
     const callToActionInput = screen.getByRole("textbox", {
