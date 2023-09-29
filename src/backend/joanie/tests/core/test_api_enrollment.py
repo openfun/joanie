@@ -1903,7 +1903,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         self.assertEqual(enrollment.is_active, True)
         self.assertEqual(enrollment.was_created_by_order, False)
 
-        # User unrolls and tried to update the was_created_by_order field but it should
+        # User unenrolls and tried to update the was_created_by_order field but it should
         # not be updated because enrollment is active.
         response = self.client.put(
             f"/api/v1.0/enrollments/{enrollment.id}/",
@@ -1964,7 +1964,6 @@ class EnrollmentApiTest(BaseAPITestCase):
 
         # Then user purchases a product containing the previously created course run and
         # tries to update to was_created_by_order field again.
-        factories.CourseRunFactory(course=course_run.course)
         product = factories.ProductFactory(target_courses=[course_run.course])
         order = factories.OrderFactory(owner=user, product=product)
         order.submit(
@@ -1975,6 +1974,14 @@ class EnrollmentApiTest(BaseAPITestCase):
         # - Create an invoice related to the order to mark it as validated
         InvoiceFactory(order=order, total=order.total)
         order.validate()
+
+        # The enrollment should have been activated automatically
+        enrollment.refresh_from_db()
+        self.assertTrue(enrollment.is_active)
+
+        # Set it to False and show that the `was_created_by_order` flag can then be updated
+        enrollment.is_active = False
+        enrollment.save()
 
         response = self.client.put(
             f"/api/v1.0/enrollments/{enrollment.id}/",

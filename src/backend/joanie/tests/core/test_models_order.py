@@ -369,7 +369,7 @@ class OrderModelsTestCase(TestCase):
         InvoiceFactory(order=order, total=order.total)
 
         # - Validate the order should automatically enroll user to course run
-        with self.assertNumQueries(22):
+        with self.assertNumQueries(23):
             order.validate()
 
         self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
@@ -418,7 +418,7 @@ class OrderModelsTestCase(TestCase):
         InvoiceFactory(order=order, total=order.total)
 
         # - Validate the order should automatically enroll user to course run
-        with self.assertNumQueries(28):
+        with self.assertNumQueries(27):
             order.validate()
 
         enrollment.refresh_from_db()

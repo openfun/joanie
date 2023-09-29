@@ -80,6 +80,7 @@ and this project adheres to
 
 ### Fixed
 
+- Fix auto enrollment with closed and specific course runs
 - Fix demo-dev command synchronization error.
 
 ## [1.2.0] - 2023-08-28
