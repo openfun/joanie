@@ -700,24 +700,72 @@ class Order(BaseModel):
         Enroll user to course runs that are the unique course run opened
         for enrollment on their course.
         """
-        courses_with_one_course_run = self.target_courses.annotate(
-            course_runs_count=models.Count("course_runs")
-        ).filter(
-            models.Q(course_runs__enrollment_end__gt=timezone.now())
-            | models.Q(course_runs__enrollment_end__isnull=True),
-            course_runs__enrollment_start__lte=timezone.now(),
-            course_runs_count=1,
+        now = timezone.now()
+
+        # Annotation queries for counting open course runs
+        open_course_runs_count = models.Count(
+            models.Case(
+                models.When(
+                    models.Q(course__course_runs__enrollment_end__gt=now)
+                    | models.Q(course__course_runs__enrollment_end__isnull=True),
+                    course__course_runs__enrollment_start__lte=now,
+                    then=1,
+                ),
+                distinct=True,
+                output_field=models.IntegerField(),
+            )
+        )
+        open_specific_course_runs_count = models.Count(
+            "course_runs",
+            distinct=True,
+            filter=(
+                models.Q(course_runs__enrollment_end__gt=now)
+                | models.Q(course_runs__enrollment_end__isnull=True)
+            )
+            & models.Q(course_runs__enrollment_start__lte=now),
         )
 
-        for course in courses_with_one_course_run:
-            course_run = course.course_runs.first()
+        # Annotation queries for retrieving open course runs
+        open_course_run = courses_models.CourseRun.objects.filter(
+            models.Q(enrollment_end__gt=now) | models.Q(enrollment_end__isnull=True),
+            enrollment_start__lte=now,
+            course=models.OuterRef("course"),
+        ).values("pk")[:1]
+
+        open_specific_course_run = (
+            OrderTargetCourseRelation.course_runs.through.objects.filter(
+                models.Q(courserun__enrollment_end__gt=now)
+                | models.Q(courserun__enrollment_end__isnull=True),
+                courserun__enrollment_start__lte=now,
+                ordertargetcourserelation_id=models.OuterRef("pk"),
+            ).values("courserun_id")[:1]
+        )
+
+        # Main query
+        course_relations_with_one_course_run = self.course_relations.annotate(
+            nb_open_course_runs=open_course_runs_count,
+            nb_open_specific_course_runs=open_specific_course_runs_count,
+            nb_specific_course_runs=models.Count("course_runs", distinct=True),
+            open_course_run_id=models.Subquery(open_course_run),
+            open_specific_course_run_id=models.Subquery(open_specific_course_run),
+        ).filter(
+            models.Q(nb_open_specific_course_runs=1)
+            | models.Q(nb_specific_course_runs=0, nb_open_course_runs=1)
+        )
+
+        for course_relation in course_relations_with_one_course_run:
+            open_course_run_id = (
+                course_relation.open_specific_course_run_id
+                if course_relation.nb_open_specific_course_runs == 1
+                else course_relation.open_course_run_id
+            )
             try:
                 enrollment = courses_models.Enrollment.objects.only("is_active").get(
-                    course_run=course_run, user=self.owner
+                    course_run_id=open_course_run_id, user=self.owner
                 )
             except courses_models.Enrollment.DoesNotExist:
                 courses_models.Enrollment.objects.create(
-                    course_run=course_run,
+                    course_run_id=open_course_run_id,
                     is_active=True,
                     user=self.owner,
                     was_created_by_order=True,

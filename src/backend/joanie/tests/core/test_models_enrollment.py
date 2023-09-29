@@ -283,8 +283,8 @@ class EnrollmentModelsTestCase(TestCase):
         """
         user = factories.UserFactory()
         course = factories.CourseFactory()
-        [cr1, cr2] = factories.CourseRunFactory.create_batch(
-            2,
+        [cr1, cr2, cr3] = factories.CourseRunFactory.create_batch(
+            3,
             state=CourseState.ONGOING_OPEN,
             is_listed=False,
             course=course,
@@ -293,7 +293,7 @@ class EnrollmentModelsTestCase(TestCase):
 
         # - Restrict available course runs for this product to cr1
         course_relation = product.target_course_relations.get(course=course)
-        course_relation.course_runs.set([cr1])
+        course_relation.course_runs.set([cr1, cr2])
 
         order = factories.OrderFactory(owner=user, product=product)
         order.submit()
@@ -301,12 +301,12 @@ class EnrollmentModelsTestCase(TestCase):
         # - Enroll to cr2 should fail
         with self.assertRaises(ValidationError) as context:
             factories.EnrollmentFactory(
-                course_run=cr2, user=user, was_created_by_order=True, is_active=True
+                course_run=cr3, user=user, was_created_by_order=True, is_active=True
             )
 
         self.assertEqual(
             (
-                f"{{'__all__': ['Course run \"{cr2.id}\" "
+                f"{{'__all__': ['Course run \"{cr3.id}\" "
                 "requires a valid order to enroll.']}"
             ),
             str(context.exception),
