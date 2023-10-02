@@ -50,6 +50,7 @@ and this project adheres to
 - Filter courses according to whether they have listed course runs or not
 - Add some objects to demo-dev command. A credit card, a billing address and
   one order of each state. Also add some order target courses.
+- Add markdown editor inside the BO
 
 ### Changed
 
