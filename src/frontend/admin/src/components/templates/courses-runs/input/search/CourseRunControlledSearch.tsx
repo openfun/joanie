@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { defineMessages, useIntl } from "react-intl";
 import TuneIcon from "@mui/icons-material/Tune";
@@ -14,7 +14,7 @@ import ControlledSelect, {
   ControlledSelectProps,
 } from "@/components/presentational/inputs/select/ControlledSelect";
 import { useModal } from "@/components/presentational/modal/useModal";
-import { CourseRun } from "@/services/api/models/CourseRun";
+import { CourseRun, courseRunStates } from "@/services/api/models/CourseRun";
 import {
   CourseRunResourcesQuery,
   useCoursesRuns,
@@ -51,9 +51,11 @@ type Props = Omit<ControlledSelectProps<CourseRun>, "options"> & {
 
 export function CourseRunControlledSearch({ courseId, ...props }: Props) {
   const intl = useIntl();
+
+  const [stateLabel, setStateLabel] = useState<string>("");
   const [filters, setFilters] = useState<CourseRunResourcesQuery>({
     start: null,
-    state: "",
+    state: null,
   });
   const courseRuns = useCoursesRuns({ ...filters, courseId });
   const updateFilters = (newFilters: CourseRunResourcesQuery) => {
@@ -62,10 +64,38 @@ export function CourseRunControlledSearch({ courseId, ...props }: Props) {
       ...newFilters,
     }));
   };
+
   const debouncedSetSearch = useDebouncedCallback((term: string) => {
     updateFilters({ query: term });
   }, 300);
   const createModal = useModal();
+
+  const updateFilterState = (newValue: Maybe<string>) => {
+    if (!newValue) {
+      setStateLabel("");
+      updateFilters({ state: null });
+      return;
+    }
+    let newState: CourseRunResourcesQuery["state"];
+    courseRunStates.forEach((item) => {
+      const label = intl.formatMessage(item.label);
+      if (label === newValue) {
+        newState = item.states;
+      }
+    });
+    setStateLabel(newValue);
+    updateFilters({ state: newState });
+  };
+
+  const options = useMemo(() => {
+    return courseRunStates.map((item) => {
+      const label = intl.formatMessage(item.label);
+      return {
+        label,
+        value: label,
+      };
+    });
+  }, []);
 
   return (
     <ControlledSelect
@@ -73,10 +103,7 @@ export function CourseRunControlledSearch({ courseId, ...props }: Props) {
       options={courseRuns.items}
       leftIcons={
         <Badge
-          invisible={
-            (filters.state == null || filters.state === "") &&
-            filters.start == null
-          }
+          invisible={filters.state == null && filters.start == null}
           badgeContent=""
           variant="dot"
           color="warning"
@@ -110,13 +137,16 @@ export function CourseRunControlledSearch({ courseId, ...props }: Props) {
                   }}
                 />
                 <BasicSelect
-                  value={filters.state}
+                  enableClear
+                  onClear={() => {
+                    updateFilterState(undefined);
+                  }}
+                  value={stateLabel}
                   label={intl.formatMessage(messages.statusFilterLabel)}
-                  onSelect={(newState) => updateFilters({ state: newState })}
-                  options={[
-                    { label: "A", value: "AA" },
-                    { label: "B", value: "BB" },
-                  ]}
+                  onSelect={(newState) => {
+                    updateFilterState(newState);
+                  }}
+                  options={options}
                 />
               </Stack>
             </Box>

@@ -49,7 +49,7 @@ export const useCourseRunMessages = defineMessages({
 
 export type CourseRunResourcesQuery = ResourcesQuery & {
   courseId?: string;
-  state?: Nullable<string>;
+  state?: Nullable<number[]>;
   start?: Nullable<string>;
 };
 
