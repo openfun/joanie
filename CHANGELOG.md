@@ -25,7 +25,7 @@ and this project adheres to
 - Allow issuing a certificate directly for an enrollment (without an order)
 - Generate certificates for products of type `certificate`
 - Add route detailing current user
-- Add related certificate products to enrollment API endpoint
+- Add related certificate products and orders to enrollment API endpoint
 - Add admin endpoints to create/update/delete organization/course accesses
 - Add admin endpoint to search users
 - Add endpoints to get course product relations and courses from organization

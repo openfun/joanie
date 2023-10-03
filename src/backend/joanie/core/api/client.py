@@ -228,6 +228,7 @@ class EnrollmentViewSet(
             .select_related("course_run__course")
             .prefetch_related(
                 "certificate",
+                "related_orders",
                 Prefetch(
                     "course_run__course__product_relations",
                     queryset=models.CourseProductRelation.objects.select_related(
