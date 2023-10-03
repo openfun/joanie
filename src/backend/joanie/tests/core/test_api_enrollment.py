@@ -109,7 +109,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         # The user can see his/her enrollment
         token = self.generate_token_from_user(enrollment.user)
 
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             response = self.client.get(
                 "/api/v1.0/enrollments/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -171,6 +171,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                             "+00:00", "Z"
                         ),
                         "is_active": enrollment.is_active,
+                        "orders": [],
                         "products": [],
                         "state": enrollment.state,
                         "was_created_by_order": enrollment.was_created_by_order,
@@ -182,7 +183,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         # The user linked to the other enrollment can only see his/her enrollment
         token = self.generate_token_from_user(other_enrollment.user)
 
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             response = self.client.get(
                 "/api/v1.0/enrollments/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -248,6 +249,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                             "+00:00", "Z"
                         ),
                         "is_active": other_enrollment.is_active,
+                        "orders": [],
                         "products": [],
                         "state": other_enrollment.state,
                         "was_created_by_order": other_enrollment.was_created_by_order,
@@ -294,14 +296,14 @@ class EnrollmentApiTest(BaseAPITestCase):
         # The user can see his/her enrollment
         token = self.generate_token_from_user(enrollment.user)
 
-        with self.assertNumQueries(16):
+        with self.assertNumQueries(17):
             self.client.get(
                 "/api/v1.0/enrollments/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
         # A second call to the url should benefit from caching on the product serializer
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             response = self.client.get(
                 "/api/v1.0/enrollments/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -391,7 +393,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         # The user can see his/her enrollment
         token = self.generate_token_from_user(enrollment.user)
 
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             response = self.client.get(
                 "/api/v1.0/enrollments/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -534,6 +536,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                             "+00:00", "Z"
                         ),
                         "is_active": enrollment_1.is_active,
+                        "orders": [],
                         "products": [],
                         "state": enrollment_1.state,
                         "was_created_by_order": enrollment_1.was_created_by_order,
@@ -585,7 +588,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             user=user, course_run=cr3, was_created_by_order=True
         )
 
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             response = self.client.get(
                 "/api/v1.0/enrollments/?was_created_by_order=false",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -595,7 +598,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         content = response.json()
         self.assertEqual(content["count"], 2)
 
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             response = self.client.get(
                 "/api/v1.0/enrollments/?was_created_by_order=true",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -627,7 +630,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         "to_representation",
         return_value="_this_field_is_mocked",
     )
-    def test_api_enrollment_read_detail_authenticated_owner(self, *_):
+    def test_api_enrollment_read_detail_authenticated_owner_success(self, *_):
         """Authenticated users should be allowed to retrieve an enrollment they own."""
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -700,10 +703,75 @@ class EnrollmentApiTest(BaseAPITestCase):
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": enrollment.is_active,
+                "orders": [],
                 "products": [],
                 "state": enrollment.state,
                 "was_created_by_order": enrollment.was_created_by_order,
             },
+        )
+
+    def test_api_enrollment_read_detail_authenticated_owner_certificate(self):
+        """
+        An enrollment's related certificate products and orders should be included in the payload.
+        """
+        course_run = factories.CourseRunFactory(
+            state=CourseState.ONGOING_OPEN, is_listed=True
+        )
+        product = factories.ProductFactory(
+            courses=[course_run.course], type="certificate"
+        )
+        enrollment = factories.EnrollmentFactory(course_run=course_run)
+        order = factories.OrderFactory(
+            product=product, enrollment=enrollment, course=None
+        )
+        certificate = factories.OrderCertificateFactory(order=order)
+        token = self.generate_token_from_user(order.owner)
+
+        response = self.client.get(
+            f"/api/v1.0/enrollments/{enrollment.id}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+
+        self.assertEqual(
+            content["orders"],
+            [
+                {
+                    "id": str(order.id),
+                    "certificate": str(certificate.id),
+                    "product": str(product.id),
+                    "state": "draft",
+                }
+            ],
+        )
+        self.assertEqual(
+            content["products"],
+            [
+                {
+                    "call_to_action": "let's go!",
+                    "certificate_definition": {
+                        "description": "",
+                        "name": product.certificate_definition.name,
+                        "title": product.certificate_definition.title,
+                    },
+                    "contract_definition": str(product.contract_definition.id),
+                    "id": str(product.id),
+                    "instructions": "",
+                    "order_groups": [],
+                    "price": float(product.price),
+                    "price_currency": "EUR",
+                    "state": {
+                        "call_to_action": None,
+                        "datetime": None,
+                        "priority": 7,
+                        "text": "to be scheduled",
+                    },
+                    "target_courses": [],
+                    "title": product.title,
+                    "type": "certificate",
+                }
+            ],
         )
 
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
@@ -813,6 +881,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": is_active,
+                "orders": [],
                 "products": [],
                 "state": "set",
                 "was_created_by_order": False,
@@ -947,6 +1016,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": is_active,
+                "orders": [],
                 "products": [],
                 "state": "failed",
                 "was_created_by_order": False,
@@ -1041,6 +1111,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": is_active,
+                "orders": [],
                 "products": [],
                 "state": "failed",
                 "was_created_by_order": False,
@@ -1295,6 +1366,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": is_active,
+                "orders": [],
                 "products": [],
                 "state": "set",
                 "was_created_by_order": False,
@@ -1571,6 +1643,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "+00:00", "Z"
                     ),
                     "is_active": is_active_new,
+                    "orders": [],
                     "products": [],
                     "state": "set",
                     "was_created_by_order": False,
@@ -1797,6 +1870,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": False,
+                "orders": [],
                 "products": [],
                 "state": "set",
                 "was_created_by_order": False,
@@ -1881,6 +1955,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": False,
+                "orders": [],
                 "products": [],
                 "state": "set",
                 "was_created_by_order": False,
@@ -1951,6 +2026,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": True,
+                "orders": [],
                 "products": [],
                 "state": "set",
                 "was_created_by_order": True,
@@ -2048,6 +2124,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": True,
+                "orders": [],
                 "products": [],
                 "state": "set",
                 "was_created_by_order": True,
@@ -2117,6 +2194,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": True,
+                "orders": [],
                 "products": [],
                 "state": "set",
                 "was_created_by_order": True,

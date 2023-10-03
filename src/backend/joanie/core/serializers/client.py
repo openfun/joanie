@@ -419,6 +419,7 @@ class EnrollmentSerializer(serializers.ModelSerializer):
     certificate = serializers.SlugRelatedField(read_only=True, slug_field="id")
     course_run = CourseRunSerializer(read_only=True)
     products = serializers.SerializerMethodField(read_only=True)
+    orders = serializers.SerializerMethodField(read_only=True)
     was_created_by_order = serializers.BooleanField(required=True)
 
     class Meta:
@@ -429,6 +430,7 @@ class EnrollmentSerializer(serializers.ModelSerializer):
             "course_run",
             "created_on",
             "is_active",
+            "orders",
             "products",
             "state",
             "was_created_by_order",
@@ -476,8 +478,9 @@ class EnrollmentSerializer(serializers.ModelSerializer):
         if instance.was_created_by_order:
             return []
 
-        # Try getting the related products annotated on the instance by the calling
-        # viewset and default to querying the database ourselves
+        # Try getting the related products that may have been annotated on the instance when the
+        # call originates from a viewset (the viewset annotates the query to minimize database
+        # calls) and default to querying the database ourselves
         try:
             relations = instance.course_run.course.certificate_product_relations
         except AttributeError:
@@ -498,6 +501,28 @@ class EnrollmentSerializer(serializers.ModelSerializer):
 
         return ProductSerializer(
             products,
+            many=True,
+            context=context,
+        ).data
+
+    def get_orders(self, instance):
+        """Get orders pointing to the enrollment."""
+        if instance.was_created_by_order:
+            return []
+
+        # Try getting the related orders that may have been prefetched on the instance by the
+        # viewset (the viewset prefetches related orders to minimize database calls) and default
+        # to querying the database ourselves
+        try:
+            orders = instance.related_orders
+        except AttributeError:
+            orders = models.Order.objects.filter(enrollment=instance)
+
+        context = self.context.copy()
+        context["resource"] = instance
+
+        return OrderLightSerializer(
+            orders,
             many=True,
             context=context,
         ).data
@@ -593,6 +618,20 @@ class OrderSerializer(serializers.ModelSerializer):
         Return the currency used
         """
         return settings.DEFAULT_CURRENCY
+
+
+class OrderLightSerializer(serializers.ModelSerializer):
+    """Order model light serializer."""
+
+    class Meta:
+        model = models.Order
+        fields = [
+            "id",
+            "certificate",
+            "product",
+            "state",
+        ]
+        read_only_fields = fields
 
 
 class OrderGroupSerializer(serializers.ModelSerializer):
