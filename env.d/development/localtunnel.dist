@@ -1,0 +1,5 @@
+## Locatunnel configuration
+
+LOCALTUNNEL_SUBDOMAIN=dev-${USER}-joanie
+LOCALTUNNEL_PORT=8071
+LOCALTUNNEL_HOST=https://localtunnel.me

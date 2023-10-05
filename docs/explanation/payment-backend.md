@@ -43,35 +43,46 @@ In case you do not need to interact with your payment provider, we implemented
 a `DummyPaymentBackend` which allows you to use Joanie locally without any
 configuration.
 
-#### Use Ngrok to serve joanie on a public url
+#### Use localtunnel to serve joanie on a public url
 
 Since we took for assumption the use of a payment provider with a webhook
 notification system, in order to integrate a local joanie instance with your
 payment provider, you have to serve your local instance of Joanie on a public
-url. To simplify this task, we have integrated a [ngrok](https://ngrok.com)
-service within your `docker-compose`.
+url. To simplify this task, we have integrated a [localtunnel](https://theboroer.github.io/localtunnel-www/)
 
-##### 1. Run ngrok service
+##### 1. Run joanie over localtunnel service
 
-  First you have to start the ngrok service and retrieve the freshly created
-  public url. The `make ngrok` command does that for you:
+  First you have to start joanie application then open a localtunnel. To ease this step,
+  there is a command `tunnel` available in the Makefile. So `make tunnel` will run
+  joanie application then open a localtunnel. The process will stay in foreground and will
+  print all requests catched by your localtunnel. 
 
   ```bash
-  > make ngrok
+  > make tunnel
 
-  Starting joanie_ngrok_1 ... done
-  Joanie is accessible on : 
-  https://****-**-**-***-***.ngrok.io # Copy this url
+  [+] Building 0.0s (0/0)                                                docker:desktop-linux
+  [+] Running 3/3
+   ✔ Container joanie-postgresql-1  Running                                              0.0s 
+   ✔ Container joanie-app-1         Running                                              0.0s 
+   ✔ Container joanie-nginx-1       Started                                              0.1s 
+  ...
+  
+  npx localtunnel -s dev-****-joanie -h https://localtunnel.me --port 8071 --print-requests
+  your url is: https://dev-****-joanie.loca.lt # Copy this url
   ```
 
-##### 2. Request Joanie API from ngrok public url
+##### 2. Request Joanie API from localtunnel public url
 
   Once Joanie is served from a public url, you just have to call joanie
-  from this public url.
+  from this public url. The public url has been printed by the `make tunnel` command but
+  if you do not see it anymore in our terminal, you can run `bin/get_tunnel_url` at the
+  root of the project.
+  It follows the pattern `https://dev-{USER}-joanie.loca.lt`.
 
-In the case of payments api, the notification url is built on the request's
-absolute uri. So in order to make payment webhooks working, you have to update the
-joanie endpoint in your client project.
+
+  In the case of payments api, the notification url is built on the request's
+  absolute uri. So in order to make payment webhooks working, you have to update the
+  joanie endpoint in your client project.
 
 ## Supported providers
 
