@@ -23,6 +23,8 @@
 # ==============================================================================
 # VARIABLES
 
+include env.d/development/localtunnel
+
 # -- Database
 
 DB_HOST            = postgresql
@@ -69,6 +71,7 @@ bootstrap: \
 	data/media \
 	data/static \
 	env.d/development/crowdin \
+	env.d/development/localtunnel \
 	frontend/admin/env \
 	build \
 	admin-install \
@@ -243,6 +246,9 @@ admin-i18n-compile: ## Compile translations of frontend admin app
 env.d/development/crowdin:
 	cp env.d/development/crowdin.dist env.d/development/crowdin
 
+env.d/development/localtunnel:
+	cp env.d/development/localtunnel.dist env.d/development/localtunnel
+
 crowdin-download: ## Download translated message from crowdin
 	@$(COMPOSE_RUN_CROWDIN) download -c crowdin/config.yml
 .PHONY: crowdin-download
@@ -304,10 +310,10 @@ help:
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 .PHONY: help
 
-ngrok: ## Run a proxy through ngrok
-ngrok:
-	@$(COMPOSE) stop ngrok
-	@$(COMPOSE) up -d ngrok
-	@echo "Joanie is accessible on : "
-	@bin/get_ngrok_url
-.PHONE: ngrok
+tunnel: ## Run a proxy through localtunnel
+tunnel: run
+	@echo
+	npx localtunnel -s $(LOCALTUNNEL_SUBDOMAIN) -h $(LOCALTUNNEL_HOST) --port $(LOCALTUNNEL_PORT) --print-requests
+tunnel:
+
+.PHONE: tunnel

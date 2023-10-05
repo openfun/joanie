@@ -110,12 +110,6 @@ services:
     ports:
       - "1081:1080"
 
-  ngrok:
-    image: wernight/ngrok
-    command: ngrok http app-dev:8000
-    ports:
-      - 4040:4040
-
   terraform-state:
     image: hashicorp/terraform:1.0.7
     environment:
