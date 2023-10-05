@@ -932,7 +932,7 @@ class ContractViewSet(
     """
     API views to get all contracts for a user
 
-    GET /api/contracts/:contract_id
+    GET /api/contracts/:<contract_id>
         Return list of all contracts for a user or one contract if an id is
         provided.
     """
@@ -941,6 +941,7 @@ class ContractViewSet(
     pagination_class = Pagination
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = serializers.ContractSerializer
+    filterset_class = filters.ContractViewSetFilter
 
     def get_queryset(self):
         """
@@ -951,4 +952,11 @@ class ContractViewSet(
             if self.request.auth
             else self.request.user.username
         )
-        return models.Contract.objects.filter(order__owner__username=username)
+        qs = models.Contract.objects.filter(
+            Q(
+                order__organization__accesses__user__username=username,
+                order__organization__accesses__role__in=[enums.OWNER, enums.ADMIN],
+            )
+            | Q(order__owner__username=username)
+        ).prefetch_related("order", "order__organization", "order__course")
+        return qs.order_by("-signed_on", "created_on")

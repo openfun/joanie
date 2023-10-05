@@ -240,11 +240,25 @@ class NestedOrderSerializer(serializers.ModelSerializer):
     id = serializers.CharField(read_only=True, required=False)
     course = CourseLightSerializer(read_only=True, exclude_abilities=True)
     organization = OrganizationSerializer(read_only=True, exclude_abilities=True)
+    title = serializers.SerializerMethodField()
+    learner_name = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Order
-        fields = ["id", "course", "organization"]
+        fields = ["id", "course", "organization", "learner_name", "title"]
         read_only_fields = fields
+
+    def get_title(self, instance):
+        """
+        Return the title of the linked product
+        """
+        return instance.product.title
+
+    def get_learner_name(self, instance):
+        """
+        Return the name full name of the order's owner
+        """
+        return instance.owner.get_full_name()
 
 
 class CertificationDefinitionSerializer(serializers.ModelSerializer):
@@ -286,17 +300,13 @@ class ContractSerializer(serializers.ModelSerializer):
     """Contract model serializer"""
 
     id = serializers.CharField(read_only=True, required=False)
-    definition = serializers.SlugRelatedField(
-        queryset=models.CertificateDefinition.objects.all(), slug_field="id"
-    )
-    order = serializers.SlugRelatedField(
-        queryset=models.Order.objects.all(), slug_field="id"
-    )
+    definition = CertificationDefinitionSerializer()
+    order = NestedOrderSerializer()
 
     class Meta:
         model = models.Contract
-        fields = ["id", "definition", "order", "signed_on"]
-        read_only_fields = ["id", "definition", "order", "signed_on"]
+        fields = ["id", "definition", "order", "signed_on", "created_on"]
+        read_only_fields = fields
 
 
 class CourseRunSerializer(serializers.ModelSerializer):
