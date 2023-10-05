@@ -420,7 +420,18 @@ class EnrollmentFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.Enrollment
 
-    course_run = factory.SubFactory(CourseRunFactory)
+    # Create an enrollable course run for free by default
+    course_run = factory.SubFactory(
+        CourseRunFactory,
+        is_listed=True,
+        state=factory.fuzzy.FuzzyChoice(
+            [
+                CourseState.ONGOING_OPEN,
+                CourseState.FUTURE_OPEN,
+                CourseState.ARCHIVED_OPEN,
+            ]
+        ),
+    )
     user = factory.SubFactory(UserFactory)
     is_active = factory.fuzzy.FuzzyChoice([True, False])
     state = factory.fuzzy.FuzzyChoice([s[0] for s in enums.ENROLLMENT_STATE_CHOICES])

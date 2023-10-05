@@ -7,15 +7,7 @@ from unittest import mock
 from pdfminer.high_level import extract_text as pdf_extract_text
 from rest_framework.pagination import PageNumberPagination
 
-from joanie.core.factories import (
-    CertificateDefinitionFactory,
-    CourseProductRelationFactory,
-    OrderCertificateFactory,
-    OrderFactory,
-    OrganizationFactory,
-    ProductFactory,
-    UserFactory,
-)
+from joanie.core import factories
 from joanie.core.serializers import fields
 from joanie.tests.base import BaseAPITestCase
 
@@ -25,7 +17,7 @@ class CertificateApiTest(BaseAPITestCase):
 
     def test_api_certificate_read_list_anonymous(self):
         """It should not be possible to retrieve the list of certificates for anonymous user"""
-        OrderCertificateFactory.create_batch(2)
+        factories.OrderCertificateFactory.create_batch(2)
         response = self.client.get("/api/v1.0/certificates/")
 
         self.assertEqual(response.status_code, 401)
@@ -45,10 +37,10 @@ class CertificateApiTest(BaseAPITestCase):
         When an authenticated user retrieves the list of certificates,
         it should return only his/hers.
         """
-        OrderCertificateFactory.create_batch(5)
-        user = UserFactory()
-        order = OrderFactory(owner=user, product=ProductFactory())
-        certificate = OrderCertificateFactory(order=order)
+        factories.OrderCertificateFactory.create_batch(5)
+        user = factories.UserFactory()
+        order = factories.OrderFactory(owner=user, product=factories.ProductFactory())
+        certificate = factories.OrderCertificateFactory(order=order)
 
         token = self.generate_token_from_user(user)
 
@@ -99,11 +91,16 @@ class CertificateApiTest(BaseAPITestCase):
     @mock.patch.object(PageNumberPagination, "get_page_size", return_value=2)
     def test_api_certificate_read_list_pagination(self, _mock_page_size):
         """Pagination should work as expected."""
-        user = UserFactory()
+        user = factories.UserFactory()
         token = self.generate_token_from_user(user)
 
-        orders = [OrderFactory(owner=user, product=ProductFactory()) for _ in range(3)]
-        certificates = [OrderCertificateFactory(order=order) for order in orders]
+        orders = [
+            factories.OrderFactory(owner=user, product=factories.ProductFactory())
+            for _ in range(3)
+        ]
+        certificates = [
+            factories.OrderCertificateFactory(order=order) for order in orders
+        ]
         certificate_ids = [str(certificate.id) for certificate in certificates]
 
         response = self.client.get(
@@ -144,7 +141,7 @@ class CertificateApiTest(BaseAPITestCase):
         """
         An anonymous user should not be able to retrieve a certificate
         """
-        certificate = OrderCertificateFactory()
+        certificate = factories.OrderCertificateFactory()
 
         response = self.client.get(f"/api/v1.0/certificates/{certificate.id}/")
 
@@ -165,10 +162,10 @@ class CertificateApiTest(BaseAPITestCase):
         An authenticated user should only be able to retrieve a certificate
         only if he/she owns it.
         """
-        not_owned_certificate = OrderCertificateFactory()
-        user = UserFactory()
-        order = OrderFactory(owner=user, product=ProductFactory())
-        certificate = OrderCertificateFactory(order=order)
+        not_owned_certificate = factories.OrderCertificateFactory()
+        user = factories.UserFactory()
+        order = factories.OrderFactory(owner=user, product=factories.ProductFactory())
+        certificate = factories.OrderCertificateFactory(order=order)
 
         token = self.generate_token_from_user(user)
 
@@ -224,7 +221,7 @@ class CertificateApiTest(BaseAPITestCase):
         """
         An anonymous user should not be able to download a certificate.
         """
-        certificate = OrderCertificateFactory()
+        certificate = factories.OrderCertificateFactory()
 
         response = self.client.get(f"/api/v1.0/certificates/{certificate.id}/download/")
 
@@ -235,22 +232,64 @@ class CertificateApiTest(BaseAPITestCase):
             content, {"detail": "Authentication credentials were not provided."}
         )
 
-    def test_api_certificate_download_authenticated(self):
+    def test_api_certificate_download_authenticated_order(self):
         """
         An authenticated user should be able to download a certificate
-        only he/she owns it.
+        linked to an order only he/she owns it.
         """
-        not_owned_certificate = OrderCertificateFactory()
-        user = UserFactory()
-        certificate_definition = CertificateDefinitionFactory()
-        product = ProductFactory(
+        not_owned_certificate = factories.OrderCertificateFactory()
+        user = factories.UserFactory()
+        certificate_definition = factories.CertificateDefinitionFactory()
+        product = factories.ProductFactory(
             title="Graded product",
             certificate_definition=certificate_definition,
         )
-        order = OrderFactory(
+        order = factories.OrderFactory(
             owner=user, product=product, course=product.courses.first()
         )
-        certificate = OrderCertificateFactory(order=order)
+        certificate = factories.OrderCertificateFactory(order=order)
+
+        token = self.generate_token_from_user(user)
+
+        # - Try to retrieve a not owned certificate should return a 404
+        response = self.client.get(
+            f"/api/v1.0/certificates/{not_owned_certificate.id}/download/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+        content = json.loads(response.content)
+        self.assertEqual(
+            content,
+            {"detail": f"No certificate found with id {not_owned_certificate.id}."},
+        )
+
+        # - Try to retrieve an owned certificate should return the certificate id
+        response = self.client.get(
+            f"/api/v1.0/certificates/{certificate.id}/download/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers["Content-Type"], "application/pdf")
+        self.assertEqual(
+            response.headers["Content-Disposition"],
+            f"attachment; filename={certificate.id}.pdf;",
+        )
+
+        document_text = pdf_extract_text(BytesIO(response.content)).replace("\n", "")
+        self.assertRegex(document_text, r"CERTIFICATE")
+
+    def test_api_certificate_download_authenticated_enrollment(self):
+        """
+        An authenticated user should be able to download a certificate
+        linked to an enrollment only he/she owns it.
+        """
+        not_owned_certificate = factories.EnrollmentCertificateFactory()
+        user = factories.UserFactory()
+        enrollment = factories.EnrollmentFactory(user=user)
+        certificate = factories.EnrollmentCertificateFactory(enrollment=enrollment)
 
         token = self.generate_token_from_user(user)
 
@@ -289,19 +328,23 @@ class CertificateApiTest(BaseAPITestCase):
         If the server is not able to create the certificate document, it should return
         a 422 error.
         """
-        user = UserFactory()
-        organization = OrganizationFactory(
+        user = factories.UserFactory()
+        organization = factories.OrganizationFactory(
             title="University X", representative="Joanie Cunningham", logo=None
         )
 
-        product = ProductFactory(
+        product = factories.ProductFactory(
             courses=[],
             title="Graded product",
         )
-        CourseProductRelationFactory(product=product, organizations=[organization])
+        factories.CourseProductRelationFactory(
+            product=product, organizations=[organization]
+        )
 
-        order = OrderFactory(product=product, organization=organization, owner=user)
-        certificate = OrderCertificateFactory(order=order)
+        order = factories.OrderFactory(
+            product=product, organization=organization, owner=user
+        )
+        certificate = factories.OrderCertificateFactory(order=order)
 
         token = self.generate_token_from_user(user)
 
@@ -320,7 +363,7 @@ class CertificateApiTest(BaseAPITestCase):
         """
         Create a certificate should not be allowed even if user is admin
         """
-        user = UserFactory(is_staff=True, is_superuser=True)
+        user = factories.UserFactory(is_staff=True, is_superuser=True)
         token = self.generate_token_from_user(user)
         response = self.client.post(
             "/api/v1.0/certificates/",
@@ -336,9 +379,9 @@ class CertificateApiTest(BaseAPITestCase):
         """
         Update a certificate should not be allowed even if user is admin
         """
-        user = UserFactory(is_staff=True, is_superuser=True)
+        user = factories.UserFactory(is_staff=True, is_superuser=True)
         token = self.generate_token_from_user(user)
-        certificate = OrderCertificateFactory()
+        certificate = factories.OrderCertificateFactory()
         response = self.client.put(
             f"/api/v1.0/certificates/{certificate.id}/",
             {"id": uuid.uuid4()},
@@ -353,9 +396,9 @@ class CertificateApiTest(BaseAPITestCase):
         """
         Delete a certificate should not be allowed even if user is admin
         """
-        user = UserFactory(is_staff=True, is_superuser=True)
+        user = factories.UserFactory(is_staff=True, is_superuser=True)
         token = self.generate_token_from_user(user)
-        certificate = OrderCertificateFactory()
+        certificate = factories.OrderCertificateFactory()
         response = self.client.delete(
             f"/api/v1.0/certificates/{certificate.id}/",
             {"id": uuid.uuid4()},

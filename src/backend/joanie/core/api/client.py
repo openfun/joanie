@@ -579,8 +579,9 @@ class CertificateViewSet(
         username = request.auth["username"] if request.auth else request.user.username
         try:
             certificate = models.Certificate.objects.get(
+                Q(order__owner__username=username)
+                | Q(enrollment__user__username=username),
                 pk=pk,
-                order__owner__username=username,
             )
         except models.Certificate.DoesNotExist:
             return Response(
