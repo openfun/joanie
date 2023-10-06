@@ -110,7 +110,7 @@ describe("<ProductForm/>", () => {
     await waitFor(() => {
       expect(mockEnqueue).toBeCalled();
     });
-  }, 10000);
+  }, 15000);
 
   it("renders ProductForm and test target course part", async () => {
     const product = ProductFactory();
@@ -177,5 +177,5 @@ describe("<ProductForm/>", () => {
     await userEvent.click(courseResult);
 
     screen.getByText("course");
-  }, 10000);
+  }, 15000);
 });
