@@ -53,6 +53,7 @@ and this project adheres to
 
 ### Changed
 
+- Improve exception management of `handle_notification` payment endpoint
 - Data returned by product admin serializer
 - Refactor the Order FSM to make a better use of transitions
 - Allow to get course product relation anonymously

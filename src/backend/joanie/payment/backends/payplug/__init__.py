@@ -7,7 +7,7 @@ from django.conf import settings
 import payplug
 import requests
 from payplug import notifications
-from payplug.exceptions import BadRequest, Forbidden, NotFound, UnknownAPIResource
+from payplug.exceptions import BadRequest, Forbidden, NotFound, PayplugError
 
 from joanie.core.models import Order
 
@@ -188,7 +188,7 @@ class PayplugBackend(BasePaymentBackend):
         """
         try:
             resource = notifications.treat(request.body)
-        except UnknownAPIResource as error:
+        except PayplugError as error:
             raise exceptions.ParseNotificationFailed() from error
 
         if isinstance(resource, payplug.resources.Payment):
