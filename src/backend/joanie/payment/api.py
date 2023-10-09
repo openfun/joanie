@@ -3,6 +3,7 @@ API endpoints
 """
 import logging
 
+from django.core.exceptions import ValidationError
 from django.db import transaction
 
 from rest_framework import mixins, permissions, viewsets
@@ -25,8 +26,9 @@ def webhook(request):
     payment_backend = get_payment_backend()
     try:
         payment_backend.handle_notification(request)
-    except exceptions.ParseNotificationFailed as error:
-        return Response(str(error), status=error.status_code)
+    except (exceptions.ParseNotificationFailed, ValidationError) as exception:
+        logger.error("Cannot handle payment notification", exc_info=exception)
+        return Response(str(exception), status=getattr(exception, "status_code", 500))
 
     return Response(status=200)
 
