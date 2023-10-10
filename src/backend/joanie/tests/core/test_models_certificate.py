@@ -107,9 +107,56 @@ class CertificateModelTestCase(TestCase):
             document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
             self.assertRegex(document_text, r"Joanie Cunningham.*University X")
 
-        # TODO: Check context shape
+    def test_models_certificate_certificate_document(self):
+        """
+        Certificate document property should generate a certificate document
+        in the active language.
+        """
+        organization = factories.OrganizationFactory(title="University X")
+        user = factories.UserFactory(first_name="Joanie Cunningham")
+        course = factories.CourseFactory(title="Course with attestation")
+        enrollment = factories.EnrollmentFactory(user=user, course_run__course=course)
+        certificate_definition = factories.CertificateDefinitionFactory(
+            template=enums.CERTIFICATE
+        )
 
-    def test_models_certification_document_with_incomplete_information(self):
+        # - Add French translations
+        organization.translations.create(language_code="fr-fr", title="Université X")
+        course.translations.create(
+            language_code="fr-fr", title="Cours avec attestation"
+        )
+
+        certificate = factories.EnrollmentCertificateFactory(
+            certificate_definition=certificate_definition,
+            enrollment=enrollment,
+            organization=organization,
+        )
+
+        (document, _) = certificate.generate_document()
+        document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
+        self.assertRegex(document_text, "ATTESTATION OF ACHIEVEMENT")
+        self.assertRegex(
+            document_text, r"Joanie Cunningham.*Course with attestation.*University X"
+        )
+
+        with switch_language(course, "fr-fr"):
+            (document, _) = certificate.generate_document()
+            document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
+            self.assertRegex(
+                document_text,
+                r"Joanie Cunningham.*Cours avec attestation.*Université X",
+            )
+
+        with switch_language(course, "de-de"):
+            # - Finally, unknown language should use the default language as fallback
+            (document, _) = certificate.generate_document()
+            document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
+            self.assertRegex(
+                document_text,
+                r"Joanie Cunningham.*Course with attestation.*University X",
+            )
+
+    def test_models_certificate_document_with_incomplete_information(self):
         """
         If the certificate context is incomplete, the certificate document should not
         be created.

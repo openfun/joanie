@@ -239,7 +239,9 @@ class CertificateApiTest(BaseAPITestCase):
         """
         not_owned_certificate = factories.OrderCertificateFactory()
         user = factories.UserFactory()
-        certificate_definition = factories.CertificateDefinitionFactory()
+        certificate_definition = factories.CertificateDefinitionFactory(
+            template=enums.DEGREE
+        )
         product = factories.ProductFactory(
             title="Graded product",
             certificate_definition=certificate_definition,
@@ -290,7 +292,7 @@ class CertificateApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         enrollment = factories.EnrollmentFactory(user=user)
         certificate = factories.EnrollmentCertificateFactory(
-            enrollment=enrollment, certificate_definition__template=enums.DEGREE
+            enrollment=enrollment, certificate_definition__template=enums.CERTIFICATE
         )
 
         token = self.generate_token_from_user(user)
@@ -323,7 +325,7 @@ class CertificateApiTest(BaseAPITestCase):
         )
 
         document_text = pdf_extract_text(BytesIO(response.content)).replace("\n", "")
-        self.assertRegex(document_text, r"CERTIFICATE")
+        self.assertRegex(document_text, r"ATTESTATION OF ACHIEVEMENT")
 
     def test_api_certificate_download_unprocessable_entity(self):
         """

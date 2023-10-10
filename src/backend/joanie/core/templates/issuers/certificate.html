@@ -1,0 +1,60 @@
+{% load i18n %}
+{% load static %}
+{% load extra_tags %}
+
+<html>
+{% if debug %}
+<head>
+    <style>
+      {{ css }}
+    </style>
+</head>
+{% endif %}
+<body>
+    <main class="document">
+        <header class="header">
+            <div class="header__logos">
+                <img src="{% base64_static "joanie/images/logo_fun.png" %}" />
+                <img src="{{ organization.logo }}" />
+            </div>
+            <h1 class="header__title">{% translate "Attestation of achievement" %}</h1>
+        </header>
+        <div class="body">
+            <div class="content">
+                <section class="details">
+                    <p>
+                    {% blocktranslate trimmed with student=student.name course=course.name organization=organization.name site=site.name %}
+                    <strong class="details__student-name">{{ student }}</strong>
+                    <br/>has successfully completed the MOOC<sup>*</sup>
+                    <br/><strong class="details__course-name">{{ course }}</strong>
+                    <br/>proposed by <strong>{{ organization }}</strong>
+                    <br />and published on the platform <strong>{{ site }}</strong>
+                    {% endblocktranslate %}
+                    </p>
+                    <p class="details__issue-date">
+                        {% blocktranslate trimmed with creation_date=creation_date|date:"d/m/Y" %}
+                        On the {{ creation_date }}.
+                        {% endblocktranslate %}
+                    </p>
+                </section>
+                <section class="teachers">
+                </section>
+            </div>
+        </div>
+        <footer class="footer">
+            <p class="footer__site-name">{{ site.hostname }}</p>
+            <div class="footer__notes">
+                <p><sup>*</sup>{% translate "MOOC: Massive Open Online Course" %}</p>
+                <p>
+                    <strong>
+                    {% blocktranslate trimmed with organization=organization.name %}
+                    The current document is not a degree or diploma and does not award credits (ECTS).
+                    <br />It does not certify that the learner was registered with {{ organization }}.
+                    <br />The learner's identity has not been verified.
+                    {% endblocktranslate %}
+                    </strong>
+                </p>
+            </div>
+        </footer>
+    </main>
+</body>
