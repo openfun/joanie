@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from django.test.utils import override_settings
 
 from joanie.core import factories, models
+from joanie.core.models import User
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -45,7 +46,7 @@ class UserModelTestCase(BaseAPITestCase):
         )
 
         with self.assertRaises(ValidationError):
-            factories.UserFactory(
+            User.objects.create(
                 username="Sam", email="sam@fun-test.fr", language="en-us"
             )
 
@@ -56,7 +57,7 @@ class UserModelTestCase(BaseAPITestCase):
         factories.UserFactory(username="Sam", email="sam@fun-test.fr")
 
         with self.assertRaises(ValidationError) as error:
-            factories.UserFactory(username="Sam")
+            User.objects.create(username="Sam")
             self.assertEqual(
                 "{'username': ['A user with that username already exists.']}",
                 str(error.exception),

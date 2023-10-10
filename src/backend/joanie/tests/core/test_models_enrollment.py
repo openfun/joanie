@@ -91,8 +91,10 @@ class EnrollmentModelsTestCase(TestCase):
         enrollment = factories.EnrollmentFactory(course_run=course_run, is_active=False)
 
         with self.assertRaises(ValidationError) as context:
-            factories.EnrollmentFactory(
-                course_run=enrollment.course_run, user=enrollment.user
+            Enrollment.objects.create(
+                course_run=enrollment.course_run,
+                user=enrollment.user,
+                is_active=True,
             )
 
         self.assertEqual(
@@ -116,7 +118,7 @@ class EnrollmentModelsTestCase(TestCase):
         enrollment = factories.EnrollmentFactory(course_run=cr1, is_active=True)
 
         with self.assertRaises(ValidationError) as context:
-            factories.EnrollmentFactory(
+            Enrollment.objects.create(
                 course_run=cr2, user=enrollment.user, is_active=True
             )
 
@@ -133,15 +135,12 @@ class EnrollmentModelsTestCase(TestCase):
 
         # If the first enrollment is not active anymore, user should be able to enroll
         # to another course run for the same course
-        factories.EnrollmentFactory(
-            course_run=cr2, user=enrollment.user, is_active=True
-        )
+        Enrollment.objects.create(course_run=cr2, user=enrollment.user, is_active=True)
 
         # And finally it should not be able to re-enroll to the first course run
         with self.assertRaises(ValidationError) as context:
-            factories.EnrollmentFactory(
-                course_run=cr1, user=enrollment.user, is_active=True
-            )
+            enrollment.is_active = True
+            enrollment.save()
 
         self.assertEqual(
             (

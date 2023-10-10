@@ -12,7 +12,7 @@ from django.utils import timezone as django_timezone
 
 from joanie.core import factories
 from joanie.core.factories import CourseRunFactory
-from joanie.core.models import CourseState
+from joanie.core.models import CourseRun, CourseState
 
 # pylint: disable=too-many-public-methods
 
@@ -59,7 +59,11 @@ class CourseRunModelsTestCase(TestCase):
         course_run = factories.CourseRunFactory()
 
         with self.assertRaises(ValidationError) as context:
-            factories.CourseRunFactory(resource_link=course_run.resource_link)
+            CourseRun.objects.create(
+                course=course_run.course,
+                languages=course_run.languages,
+                resource_link=course_run.resource_link,
+            )
 
         self.assertEqual(
             "{'resource_link': ['Course run with this Resource link already exists.']}",
