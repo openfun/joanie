@@ -7,7 +7,7 @@ from unittest import mock
 from pdfminer.high_level import extract_text as pdf_extract_text
 from rest_framework.pagination import PageNumberPagination
 
-from joanie.core import factories
+from joanie.core import enums, factories
 from joanie.core.serializers import fields
 from joanie.tests.base import BaseAPITestCase
 
@@ -289,7 +289,9 @@ class CertificateApiTest(BaseAPITestCase):
         not_owned_certificate = factories.EnrollmentCertificateFactory()
         user = factories.UserFactory()
         enrollment = factories.EnrollmentFactory(user=user)
-        certificate = factories.EnrollmentCertificateFactory(enrollment=enrollment)
+        certificate = factories.EnrollmentCertificateFactory(
+            enrollment=enrollment, certificate_definition__template=enums.DEGREE
+        )
 
         token = self.generate_token_from_user(user)
 

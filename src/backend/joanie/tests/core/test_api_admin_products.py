@@ -101,7 +101,7 @@ class ProductAdminApiTest(TestCase):
                 "description": "",
                 "id": str(product.certificate_definition.id),
                 "name": product.certificate_definition.name,
-                "template": "howard.issuers.CertificateDocument",
+                "template": product.certificate_definition.template,
                 "title": product.certificate_definition.title,
             },
             "target_courses": [

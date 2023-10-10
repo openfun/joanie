@@ -4,15 +4,18 @@ Declare and configure the models for the certifications part
 import logging
 
 from django.conf import settings
+from django.contrib.sites.models import Site
 from django.db import models
-from django.utils.module_loading import import_string
+from django.utils import timezone
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
 from parler import models as parler_models
 from parler.utils import get_language_settings
 
+from joanie.core import enums
 from joanie.core.utils import image_to_base64, merge_dict
+from joanie.core.utils.issuers import generate_document
 
 from .base import BaseModel
 
@@ -32,6 +35,7 @@ class CertificateDefinition(parler_models.TranslatableModel, BaseModel):
     # howard template used to generate pdf certificate
     template = models.CharField(
         _("template to generate pdf"),
+        choices=enums.CERTIFICATE_NAME_CHOICES,
         max_length=255,
         blank=True,
         null=True,
@@ -121,7 +125,7 @@ class Certificate(BaseModel):
 
     @property
     def course(self):
-        """Returns the certificate owner according to the related order or enrollment."""
+        """Returns the certificate owner depending from the related order or enrollment."""
         return self.order.course if self.order else self.enrollment.course_run.course
 
     @property
@@ -129,12 +133,12 @@ class Certificate(BaseModel):
         """Returns the certificate owner depending from the related order or enrollment."""
         return self.order.owner if self.order else self.enrollment.user
 
-    @property
-    def document(self):
+    def generate_document(self):
         """
-        Get the document related to the certificate instance.
+        Generate the certificate document through the certificate definition template
+        and the document context.
         """
-        document_issuer = import_string(self.certificate_definition.template)
+
         try:
             context = self.get_document_context()
         except ValueError as exception:
@@ -142,10 +146,12 @@ class Certificate(BaseModel):
                 "Cannot get document context to generate certificate.",
                 exc_info=exception,
             )
-            return None
+            return None, None
 
-        document = document_issuer(identifier=self.id, context_query=context)
-        return document.create(persist=False)
+        file_bytes = generate_document(
+            name=self.certificate_definition.template, context=context
+        )
+        return file_bytes, context
 
     def _set_localized_context(self):
         """
@@ -181,9 +187,12 @@ class Certificate(BaseModel):
         """
 
         language_settings = get_language_settings(language_code or get_language())
+        site = Site.objects.get_current()
 
         base_context = {
-            "creation_date": self.issued_on.isoformat(),
+            "id": str(self.pk),
+            "creation_date": self.issued_on,
+            "delivery_stamp": timezone.now(),
             "student": {
                 "name": self.owner.get_full_name() or self.owner.username,
             },
@@ -191,6 +200,10 @@ class Certificate(BaseModel):
                 "representative": self.organization.representative,
                 "signature": image_to_base64(self.organization.signature),
                 "logo": image_to_base64(self.organization.logo),
+            },
+            "site": {
+                "name": site.name,
+                "hostname": "https://" + site.domain,
             },
         }
 

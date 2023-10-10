@@ -54,6 +54,7 @@ and this project adheres to
 
 ### Changed
 
+- Internalize degree template
 - Allow to download enrollment certificate from related download api endpoint
 - Data returned by product admin serializer
 - Refactor the Order FSM to make a better use of transitions

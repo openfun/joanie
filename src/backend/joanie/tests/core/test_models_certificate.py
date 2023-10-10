@@ -7,15 +7,7 @@ from django.test import TestCase
 from parler.utils.context import switch_language
 from pdfminer.high_level import extract_text as pdf_extract_text
 
-from joanie.core.factories import (
-    CertificateDefinitionFactory,
-    CourseFactory,
-    CourseProductRelationFactory,
-    OrderCertificateFactory,
-    OrderFactory,
-    OrganizationFactory,
-    ProductFactory,
-)
+from joanie.core import enums, factories
 
 
 class CertificateModelTestCase(TestCase):
@@ -26,7 +18,7 @@ class CertificateModelTestCase(TestCase):
         When a certificate is created, localized contexts in each enabled languages
         should be created.
         """
-        certificate = OrderCertificateFactory()
+        certificate = factories.OrderCertificateFactory()
         languages = settings.LANGUAGES
 
         self.assertEqual(len(list(certificate.localized_context)), len(languages))
@@ -37,13 +29,13 @@ class CertificateModelTestCase(TestCase):
         does not exist, we should gracefully fallback to the default language defined
         through parler settings ("en-us" in our case).
         """
-        organization = OrganizationFactory(title="Organization 1")
-        course = CourseFactory()
-        product = ProductFactory(
+        organization = factories.OrganizationFactory(title="Organization 1")
+        course = factories.CourseFactory()
+        product = factories.ProductFactory(
             courses=[],
             title="Graded product",
         )
-        CourseProductRelationFactory(
+        factories.CourseProductRelationFactory(
             course=course, product=product, organizations=[organization]
         )
 
@@ -51,8 +43,8 @@ class CertificateModelTestCase(TestCase):
         organization.translations.create(language_code="fr-fr", title="Établissement 1")
         product.translations.create(language_code="fr-fr", title="Produit certifiant")
 
-        order = OrderFactory(product=product, organization=organization)
-        certificate = OrderCertificateFactory(order=order)
+        order = factories.OrderFactory(product=product, organization=organization)
+        certificate = factories.OrderCertificateFactory(order=order)
 
         context = certificate.get_document_context("en-us")
         self.assertEqual(context["course"]["name"], "Graded product")
@@ -68,22 +60,24 @@ class CertificateModelTestCase(TestCase):
         self.assertEqual(context["course"]["name"], "Graded product")
         self.assertEqual(context["organization"]["name"], "Organization 1")
 
-    def test_models_certificate_document(self):
+    def test_models_certificate_degree_document(self):
         """
-        Certificate document property should generate a document
+        Certificate document property should generate a degree document
         in the active language.
         """
-        organization = OrganizationFactory(
+        organization = factories.OrganizationFactory(
             title="University X", representative="Joanie Cunningham"
         )
-        course = CourseFactory()
-        certificate_definition = CertificateDefinitionFactory()
-        product = ProductFactory(
+        course = factories.CourseFactory()
+        certificate_definition = factories.CertificateDefinitionFactory(
+            template=enums.DEGREE
+        )
+        product = factories.ProductFactory(
             courses=[],
             title="Graded product",
             certificate_definition=certificate_definition,
         )
-        CourseProductRelationFactory(
+        factories.CourseProductRelationFactory(
             course=course, product=product, organizations=[organization]
         )
 
@@ -91,28 +85,29 @@ class CertificateModelTestCase(TestCase):
         organization.translations.create(language_code="fr-fr", title="Université X")
         product.translations.create(language_code="fr-fr", title="Produit certifiant")
 
-        order = OrderFactory(product=product)
-        certificate = OrderCertificateFactory(order=order)
+        order = factories.OrderFactory(product=product)
+        certificate = factories.OrderCertificateFactory(order=order)
 
-        document_text = pdf_extract_text(BytesIO(certificate.document)).replace(
-            "\n", ""
-        )
+        (document, _) = certificate.generate_document()
+        document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
+        self.assertRegex(document_text, "Certificate")
+        self.assertRegex(document_text, rf"Certificate ID: {str(certificate.id)}")
         self.assertRegex(
             document_text, r"Joanie Cunningham.*University X.*Graded product"
         )
 
         with switch_language(product, "fr-fr"):
-            document_text = pdf_extract_text(BytesIO(certificate.document)).replace(
-                "\n", ""
-            )
+            (document, _) = certificate.generate_document()
+            document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
             self.assertRegex(document_text, r"Joanie Cunningham.*Université X")
 
         with switch_language(product, "de-de"):
             # - Finally, unknown language should use the default language as fallback
-            document_text = pdf_extract_text(BytesIO(certificate.document)).replace(
-                "\n", ""
-            )
+            (document, _) = certificate.generate_document()
+            document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
             self.assertRegex(document_text, r"Joanie Cunningham.*University X")
+
+        # TODO: Check context shape
 
     def test_models_certification_document_with_incomplete_information(self):
         """
@@ -120,24 +115,24 @@ class CertificateModelTestCase(TestCase):
         be created.
         """
 
-        organization = OrganizationFactory(
+        organization = factories.OrganizationFactory(
             title="University X",
             representative="Joanie Cunningham",
             logo=None,
             signature=None,
         )
 
-        course = CourseFactory()
-        product = ProductFactory(
+        course = factories.CourseFactory()
+        product = factories.ProductFactory(
             courses=[],
             title="Graded product",
         )
-        CourseProductRelationFactory(
+        factories.CourseProductRelationFactory(
             course=course, product=product, organizations=[organization]
         )
 
-        order = OrderFactory(product=product, organization=organization)
-        certificate = OrderCertificateFactory(order=order)
+        order = factories.OrderFactory(product=product, organization=organization)
+        certificate = factories.OrderCertificateFactory(order=order)
 
         # - Retrieve the document context should raise a ValueError
         with self.assertRaises(ValueError) as context:
@@ -149,5 +144,6 @@ class CertificateModelTestCase(TestCase):
         )
 
         # - But try to create the document should return None
-        document = certificate.document
+        (document, context) = certificate.generate_document()
         self.assertIsNone(document)
+        self.assertIsNone(context)

@@ -1,0 +1,121 @@
+@import url("https://fonts.googleapis.com/css2?family=Hind:wght@300;500&family=Montserrat:wght@600&display=swap");
+
+body {
+  font-family: "Hind", sans-serif;
+  font-size: 19px;
+  font-weight: 300;
+  color: #222;
+}
+
+@media print {
+  /* ----------------------
+   * Reset margins for media
+   * ---------------------- */
+  @page {
+    size: A4 landscape;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    margin: 0.3cm;
+    padding: 0.7cm;
+    background: #fff;
+    border: 0.3cm solid #e1e5ea;
+    height: 18.4cm;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+  }
+
+  /* ----------------------
+   * Header
+   * ---------------------- */
+  #certificate header .logos {
+    display: flex;
+  }
+
+  #certificate header .logos > * {
+    width: 50%;
+  }
+
+  #certificate header .logos > div > img {
+    max-height: 100px;
+  }
+
+  #certificate header .logos > *:nth-child(2) {
+    text-align: right;
+  }
+
+  #certificate header .title {
+    font-family: "Montserrat", sans-serif;
+    font-size: 21px;
+    text-transform: uppercase;
+    text-align: center;
+    letter-spacing: 3px;
+    margin: 1.3cm;
+  }
+
+  #certificate header .title h1 {
+    font-weight: 600 !important;
+  }
+
+  /* ----------------------
+   * Main
+   * ---------------------- */
+  #certificate article.main {
+    height: 11.5cm;
+  }
+  #certificate article.main #student {
+    font-weight: 500;
+    margin-top: 0.6cm;
+  }
+
+  #certificate article.main #signatures {
+    display: flex;
+    margin-top: 1.2cm;
+  }
+
+  #certificate article.main #signatures > *:first-child {
+    width: 40%;
+  }
+
+  #certificate article.main #signatures .seal {
+    width: 60%;
+    min-height: 3cm;
+    border: 1px solid #969098;
+    text-align: center;
+  }
+
+  #certificate article.main #signatures .seal p {
+    font-size: 0.6rem;
+    color: #969098;
+    margin-top: 3px;
+  }
+
+  #certificate article.main #signatures .seal .manager img {
+    max-width: 100%;
+    max-height: 100px;
+  }
+
+  /* ----------------------
+   * Footer
+   * ---------------------- */
+  #certificate footer {
+    border-top: 1px solid #e1e4e9;
+    font-size: 0.6rem;
+    display: flex;
+  }
+
+  #certificate footer > div {
+    width: 50%;
+    margin-top: 3px;
+    color: #969098;
+  }
+
+  #certificate footer .identifier {
+    text-align: right;
+  }
+}

@@ -5,7 +5,7 @@ import random
 
 from django.test import TestCase
 
-from joanie.core import factories
+from joanie.core import enums, factories
 
 
 class CertificateDefinitionAdminApiTest(TestCase):
@@ -168,7 +168,7 @@ class CertificateDefinitionAdminApiTest(TestCase):
         data = {
             "name": "Certificate Definition 001",
             "title": "Certificate grade 1",
-            "template": "joanie.core.templates.certificate-001",
+            "template": enums.DEGREE,
         }
 
         response = self.client.post(
@@ -191,12 +191,12 @@ class CertificateDefinitionAdminApiTest(TestCase):
         certification_definition = factories.CertificateDefinitionFactory(
             name="Certificate Definition 001",
             title="Certificate grade 1",
-            template="joanie.core.templates.certificate-001",
+            template=enums.DEGREE,
         )
         payload = {
             "name": "Updated Certificate Definition 001",
             "title": "Updated Certificate grade 1",
-            "template": "joanie.core.templates.updated-certificate-001",
+            "template": enums.CERTIFICATE,
         }
 
         response = self.client.put(
@@ -210,9 +210,7 @@ class CertificateDefinitionAdminApiTest(TestCase):
         self.assertEqual(content["id"], str(certification_definition.id))
         self.assertEqual(content["name"], "Updated Certificate Definition 001")
         self.assertEqual(content["title"], "Updated Certificate grade 1")
-        self.assertEqual(
-            content["template"], "joanie.core.templates.updated-certificate-001"
-        )
+        self.assertEqual(content["template"], "certificate")
 
     def test_admin_api_certificate_definition_partially_update(self):
         """
@@ -221,21 +219,19 @@ class CertificateDefinitionAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
         certification_definition = factories.CertificateDefinitionFactory(
-            template="joanie.core.templates.certificate-001",
+            template=enums.CERTIFICATE,
         )
 
         response = self.client.patch(
             f"/api/v1.0/admin/certificate-definitions/{certification_definition.id}/",
             content_type="application/json",
-            data={"template": "joanie.core.templates.updated-certificate-001"},
+            data={"template": enums.DEGREE},
         )
 
         self.assertEqual(response.status_code, 200)
         content = response.json()
         self.assertEqual(content["id"], str(certification_definition.id))
-        self.assertEqual(
-            content["template"], "joanie.core.templates.updated-certificate-001"
-        )
+        self.assertEqual(content["template"], "degree")
 
     def test_admin_api_certificate_definition_delete(self):
         """

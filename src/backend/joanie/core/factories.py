@@ -60,7 +60,9 @@ class CertificateDefinitionFactory(factory.django.DjangoModelFactory):
 
     title = factory.Sequence(lambda n: f"Certificate definition {n}")
     name = factory.Sequence(lambda n: f"certificate-definition-{n}")
-    template = settings.MARION_CERTIFICATE_DOCUMENT_ISSUER
+    template = factory.fuzzy.FuzzyChoice(
+        [name[0] for name in enums.CERTIFICATE_NAME_CHOICES]
+    )
 
 
 class ContractDefinitionFactory(factory.django.DjangoModelFactory):
