@@ -110,7 +110,7 @@ class CourseRunFilter(AutocompleteFilter):
 
 
 @admin.register(models.ContractDefinition)
-class ContractDefinitionAdmin(TranslatableAdmin):
+class ContractDefinitionAdmin(admin.ModelAdmin):
     """Admin class for the ContractDefinition model"""
 
     list_display = ("title", "language")
@@ -149,6 +149,7 @@ class CertificateAdmin(admin.ModelAdmin):
     list_display = ("organization", "order", "enrollment", "owner", "issued_on")
     list_filter = [OrganizationFilter]
     readonly_fields = (
+        "id",
         "organization",
         "order",
         "enrollment",
