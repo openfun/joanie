@@ -43,6 +43,7 @@ class UserFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = settings.AUTH_USER_MODEL
+        django_get_or_create = ("username",)
 
     username = factory.Sequence(lambda n: f"user{n!s}")
     email = factory.Faker("email")
@@ -55,6 +56,7 @@ class CertificateDefinitionFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = models.CertificateDefinition
+        django_get_or_create = ("name",)
 
     title = factory.Sequence(lambda n: f"Certificate definition {n}")
     name = factory.Sequence(lambda n: f"certificate-definition-{n}")
@@ -79,9 +81,11 @@ class OrganizationFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = models.Organization
+        django_get_or_create = ("code",)
 
     code = factory.Sequence(lambda n: n)
     title = factory.Sequence(lambda n: f"Organization {n}")
+    representative = factory.Faker("name")
     signature = factory.django.ImageField(
         filename="signature.png", format="png", width=1, height=1
     )
@@ -128,6 +132,7 @@ class CourseFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = models.Course
+        django_get_or_create = ("code",)
 
     code = factory.Sequence(lambda k: f"{k:05d}")
     title = factory.Sequence(lambda n: f"Course {n}")
@@ -215,6 +220,7 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = models.CourseRun
+        django_get_or_create = ("resource_link",)
 
     course = factory.SubFactory(CourseFactory)
     title = factory.Sequence(lambda n: f"Course run {n}")
@@ -419,6 +425,10 @@ class EnrollmentFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = models.Enrollment
+        django_get_or_create = (
+            "course_run",
+            "user",
+        )
 
     # Create an enrollable course run for free by default
     course_run = factory.SubFactory(
