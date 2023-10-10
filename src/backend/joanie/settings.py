@@ -296,7 +296,6 @@ class Base(Configuration):
 
     # Marion
     MARION_DOCUMENT_ISSUER_CHOICES_CLASS = "howard.defaults.DocumentIssuerChoices"
-    MARION_CERTIFICATE_DOCUMENT_ISSUER = "howard.issuers.CertificateDocument"
 
     # Django Money
     DEFAULT_CURRENCY = "EUR"

@@ -1,0 +1,73 @@
+{% load i18n %}
+{% load static %}
+{% load extra_tags %}
+
+<html>
+{% if debug %}
+<head>
+    <style>
+      {{ css }}
+    </style>
+</head>
+{% endif %}
+<body>
+<div id="certificate">
+    <header>
+        <div class="logos">
+            <div class="fun">
+                <img src="{% base64_static "joanie/images/logo_fun.png" %}" />
+            </div>
+            <div class="organization">
+                <img src="{{ organization.logo }}" />
+            </div>
+        </div>
+        <div class="title">
+            <h1>{% translate "Certificate" %}</h1>
+        </div>
+    </header>
+    <article class="main">
+        <section id="representative">
+            <p>
+                {% blocktranslate trimmed with representative=organization.representative organization=organization.name %}
+                I, {{ representative }},<br/>
+                legal representative of the course provider {{ organization }}<br/>
+                certifies that:
+                {% endblocktranslate %}
+            </p>
+        </section>
+        <section id="student">
+            <p>
+                {% blocktranslate trimmed with student=student.name course=course.name %}
+                {{ student }}
+                <br>successfully completed the course {{ course }}.
+                {% endblocktranslate %}
+            </p>
+            <p>
+                {% blocktranslate trimmed with creation_date=creation_date|date:"SHORT_DATE_FORMAT" %}
+                Issued on {{ creation_date }}
+                {% endblocktranslate %}
+            </p>
+        </section>
+        <section id="signatures">
+            <div></div>
+            <div class="seal">
+                <p>
+                    {% translate "Stamp and signature of the course provider manager" %}
+                </p>
+                <div class="manager">
+                    <img src="{{ organization.signature }}" />
+                </div>
+            </div>
+        </section>
+    </article>
+    <footer>
+        <div class="generated-at">
+            {% translate "Delivery stamp: " %}{{ delivery_stamp }}
+        </div>
+        <div class="identifier">
+            {% translate "Certificate ID: "%}{{ id }}
+        </div>
+    </footer>
+</div>
+</body>
+</html>

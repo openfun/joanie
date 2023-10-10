@@ -588,7 +588,7 @@ class CertificateViewSet(
                 {"detail": f"No certificate found with id {pk}."}, status=404
             )
 
-        document = certificate.document
+        (document, _) = certificate.generate_document()
 
         if not document:
             return Response(
