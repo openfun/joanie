@@ -1,0 +1,28 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>🧑‍💻 Joanie Dev Tool - Document PDF Viewer</title>
+    <style>
+      html, body {
+        display: block;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        height: 100%;
+        width: 100%;
+      }
+
+      #pdf-viewer {
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+</head>
+<body>
+<iframe id="pdf-viewer" src="data:application/pdf;base64,{{base64_pdf}}" width="842" height="596"
+       type="application/pdf">
+</body>
+</html>
