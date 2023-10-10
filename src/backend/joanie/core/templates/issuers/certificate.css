@@ -1,0 +1,142 @@
+/* == Globals */
+:root {
+  --color-accent: #3B76BB;
+  --color-neutral-500: #e1e5ea;
+  --color-neutral-600: #71757a;
+  --color-neutral-900: #01050a;
+  --padding-inline: 20mm;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: #FFF;
+  border-color: var(--color-neutral-500);
+  border-style: solid;
+  border-width: 3mm;
+  box-sizing: border-box;
+  color: var(--color-neutral-600);
+  font-family: "Arial", sans-serif;
+  font-size: 16pt;
+  font-weight: 300;
+  height: 190mm;
+}
+
+h1, strong {
+  font-weight: inherit;
+}
+
+strong {
+  color: var(--color-neutral-900);
+}
+
+sup {
+  color: var(--color-accent);
+}
+
+.document {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* == Header */
+.header {
+  align-items: stretch;
+  display: flex;
+  flex-direction: column;
+  padding: 6mm 6mm 10mm 6mm;
+}
+
+.header__logos {
+  align-items: center;
+  display: inline-flex;
+  justify-content: space-between;
+  margin-bottom: 10mm;
+  width: 100%;
+}
+
+.header__logos img {
+  height: 28mm;
+  width: auto;
+}
+
+.header__title {
+  color: var(--color-accent);
+  display: inline-block;
+  font-size: 24pt;
+  letter-spacing: 2pt;
+  margin: 0;
+  text-align: center;
+  text-transform: uppercase;
+  width: 100%;
+}
+
+/* == Body */
+.body {
+  flex: 1;
+}
+
+/* == Content */
+.content {
+  display: flex;
+  background-color: var(--color-neutral-500);
+  padding-right: 12mm;
+}
+
+.details {
+  padding: 0 12mm 0 var(--padding-inline);
+  width: 80%;
+}
+
+.details__student-name {
+  font-size: 24pt;
+}
+
+.details__course-name {
+  display: inline-block;
+  padding-top: 5mm;
+}
+
+.details__issue-date {
+  color: var(--color-accent);
+}
+
+.teachers {
+  background: #FFF;
+  flex: 1;
+}
+
+/* == Footer */
+.footer {
+  padding: 3mm var(--padding-inline);
+}
+
+.footer__site-name {
+  color: var(--color-accent);
+  text-align: center;
+}
+
+.footer__notes {
+  /*padding-top: 5mm;*/
+  font-size: 8pt;
+}
+
+/* == Print dedicated styles */
+@media print {
+  @page {
+    margin: 0;
+    padding: 10mm;
+    size: A4 landscape;
+  }
+
+  * {
+    /* Enforce to render color exactly for printing */
+    -webkit-print-color-adjust: exact; /* Chrome, Safari 6 – 15.3, Edge */
+    color-adjust: exact; /* Firefox 48 – 96 */
+    print-color-adjust: exact; /* Firefox 97+, Safari 15.4+ */
+  }
+}

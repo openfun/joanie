@@ -99,8 +99,10 @@ CONTRACT_DEFINITION = "contract_definition"
 CONTRACT_NAME_CHOICES = ((CONTRACT_DEFINITION, _("Contract Definition")),)  # default
 
 # For certification names choices
+CERTIFICATE = "certificate"
 DEGREE = "degree"
 
 CERTIFICATE_NAME_CHOICES = (
+    (CERTIFICATE, _("Certificate")),
     (DEGREE, _("Degree")),
 )
