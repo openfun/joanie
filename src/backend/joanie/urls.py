@@ -27,6 +27,8 @@ from joanie.core.api import admin as api_admin
 from joanie.core.api import client as api_client
 from joanie.core.views import (
     BackOfficeRedirectView,
+    DebugCertificateTemplateView,
+    DebugDegreeTemplateView,
     DebugMailSuccessPaymentViewHtml,
     DebugMailSuccessPaymentViewTxt,
 )
@@ -201,6 +203,16 @@ if settings.DEBUG:
                 "__debug__/mail/order_validated_txt",
                 DebugMailSuccessPaymentViewTxt.as_view(),
                 name="debug.mail.order_validated_txt",
+            ),
+            path(
+                "__debug__/pdf-templates/certificate",
+                DebugCertificateTemplateView.as_view(),
+                name="debug.certificate_definition.certificate",
+            ),
+            path(
+                "__debug__/pdf-templates/degree",
+                DebugDegreeTemplateView.as_view(),
+                name="debug.certificate_definition.degree",
             ),
         ]
         + staticfiles_urlpatterns()
