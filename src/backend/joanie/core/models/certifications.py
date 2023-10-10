@@ -117,7 +117,12 @@ class Certificate(BaseModel):
         ]
 
     def __str__(self):
-        return f"{self.order.owner}'s certificate for course {self.order.course}"
+        return f"{self.owner}'s certificate for course {self.course}"
+
+    @property
+    def course(self):
+        """Returns the certificate owner according to the related order or enrollment."""
+        return self.order.course if self.order else self.enrollment.course_run.course
 
     @property
     def owner(self):
