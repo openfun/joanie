@@ -91,8 +91,8 @@ def course_runs_sync(request):
         try:
             course = models.Course.objects.get(code=course_number)
         except models.Course.DoesNotExist:
-            return Response(
-                {"resource_link": [f"Unknown course: {course_number:s}."]}, status=400
+            course = models.Course.objects.create(
+                code=course_number, title=request.data.get("title", course_number)
             )
 
         # Instantiate a new course run
