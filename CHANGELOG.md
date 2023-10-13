@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Create missing courses automatically on course run sync
 - Create `certificate` template
 - Add contract and contract definition models with related API endpoints
 - Add `instructions` markdown field to `Product` model

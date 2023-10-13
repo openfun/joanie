@@ -138,10 +138,10 @@ class SyncCourseRunApiTestCase(TestCase):
         self.assertEqual(CourseRun.objects.count(), 0)
         self.assertEqual(Course.objects.count(), 0)
 
-    def test_api_course_run_sync_create_unknown_course(self):
+    def test_api_course_run_sync_create_unknown_course_with_title(self):
         """
         If the submitted data is not related to an existing course run and the related course
-        can't be found, the course run synchronization view should return a 400 error.
+        can't be found, a new course should be created with the title passed for the course_run.
         """
         data = {
             "resource_link": "http://example.edx:8073/courses/course-v1:edX+DemoX+01/course/",
@@ -150,6 +150,7 @@ class SyncCourseRunApiTestCase(TestCase):
             "enrollment_start": "2020-11-09T09:31:59.417936Z",
             "enrollment_end": "2020-12-24T09:31:59.417972Z",
             "languages": ["en", "fr"],
+            "title": "my course run",
         }
 
         response = self.client.post(
@@ -157,23 +158,30 @@ class SyncCourseRunApiTestCase(TestCase):
             data,
             content_type="application/json",
             HTTP_AUTHORIZATION=(
-                "SIG-HMAC-SHA256 338f7c262254e8220fea54467526f8f1f4562ee3adf1e3a71abaf23a20b739e4"
+                "SIG-HMAC-SHA256 e20dd1e2b7f1553298f3bd717dd4c3e8361e215e355dcbdc54a3d88c28585f94"
             ),
         )
 
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(
-            json.loads(response.content), {"resource_link": ["Unknown course: DEMOX."]}
-        )
-        self.assertEqual(CourseRun.objects.count(), 0)
-        self.assertEqual(Course.objects.count(), 0)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.content), {"success": True})
+        self.assertEqual(CourseRun.objects.count(), 1)
 
-    def test_api_course_run_sync_create(self):
+        # Check the new course
+        course = Course.objects.get()
+        self.assertEqual(course.title, "my course run")
+
+        # Check the new course run
+        course_run = CourseRun.objects.get(course=course)
+        serializer = SyncCourseRunSerializer(instance=course_run)
+        data.pop("title")
+        self.assertEqual(serializer.data, data)
+
+    def test_api_course_run_sync_create_unknown_course_no_title(self):
         """
-        If the submitted data is not related to an existing course run, a new course run should
-        be created.
+        If the submitted data does not include the "title" field and is not related to an existing
+        course run and the related course can't be found, a new course should be created with the
+        course code passed in the course_run synchronization data.
         """
-        CourseFactory(code="DemoX")
         data = {
             "resource_link": "http://example.edx:8073/courses/course-v1:edX+DemoX+01/course/",
             "start": "2020-12-09T09:31:59.417817Z",
@@ -196,9 +204,48 @@ class SyncCourseRunApiTestCase(TestCase):
         self.assertEqual(json.loads(response.content), {"success": True})
         self.assertEqual(CourseRun.objects.count(), 1)
 
+        # Check the new course
+        course = Course.objects.get()
+        self.assertEqual(course.title, "DEMOX")
+
+        # Check the new course run
+        course_run = CourseRun.objects.get(course=course)
+        serializer = SyncCourseRunSerializer(instance=course_run)
+        self.assertEqual(serializer.data, data)
+
+    def test_api_course_run_sync_create(self):
+        """
+        If the submitted data is not related to an existing course run, a new course run should
+        be created.
+        """
+        CourseFactory(code="DemoX")
+        data = {
+            "resource_link": "http://example.edx:8073/courses/course-v1:edX+DemoX+01/course/",
+            "start": "2020-12-09T09:31:59.417817Z",
+            "end": "2021-03-14T09:31:59.417895Z",
+            "enrollment_start": "2020-11-09T09:31:59.417936Z",
+            "enrollment_end": "2020-12-24T09:31:59.417972Z",
+            "languages": ["en", "fr"],
+            "title": "my course run",
+        }
+
+        response = self.client.post(
+            "/api/v1.0/course-runs-sync",
+            data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=(
+                "SIG-HMAC-SHA256 e20dd1e2b7f1553298f3bd717dd4c3e8361e215e355dcbdc54a3d88c28585f94"
+            ),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.content), {"success": True})
+        self.assertEqual(CourseRun.objects.count(), 1)
+
         # Check the new course run
         course_run = CourseRun.objects.get()
         serializer = SyncCourseRunSerializer(instance=course_run)
+        data.pop("title")
         self.assertEqual(serializer.data, data)
 
     @override_settings(TIME_ZONE="UTC")
@@ -275,6 +322,7 @@ class SyncCourseRunApiTestCase(TestCase):
             "enrollment_start": "2020-11-09T09:31:59.417936Z",
             "enrollment_end": "2020-12-24T09:31:59.417972Z",
             "languages": ["en", "fr"],
+            "title": "my course run",
         }
 
         response = self.client.post(
@@ -282,7 +330,7 @@ class SyncCourseRunApiTestCase(TestCase):
             data,
             content_type="application/json",
             HTTP_AUTHORIZATION=(
-                "SIG-HMAC-SHA256 338f7c262254e8220fea54467526f8f1f4562ee3adf1e3a71abaf23a20b739e4"
+                "SIG-HMAC-SHA256 e20dd1e2b7f1553298f3bd717dd4c3e8361e215e355dcbdc54a3d88c28585f94"
             ),
         )
 
@@ -293,6 +341,7 @@ class SyncCourseRunApiTestCase(TestCase):
         # Check that the existing course run was updated
         course_run = CourseRun.objects.get()
         serializer = SyncCourseRunSerializer(instance=course_run)
+        data.pop("title")
         self.assertEqual(serializer.data, data)
 
     @override_settings(TIME_ZONE="UTC")
