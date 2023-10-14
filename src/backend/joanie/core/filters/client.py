@@ -21,9 +21,17 @@ class OrderViewSetFilter(filters.FilterSet):
     state = filters.MultipleChoiceFilter(
         field_name="state", choices=enums.ORDER_STATE_CHOICES
     )
+    state__exclude = filters.MultipleChoiceFilter(
+        field_name="state", choices=enums.ORDER_STATE_CHOICES, exclude=True
+    )
     product__type = filters.MultipleChoiceFilter(
         field_name="product__type",
         choices=enums.PRODUCT_TYPE_CHOICES,
+    )
+    product__type__exclude = filters.MultipleChoiceFilter(
+        field_name="product__type",
+        choices=enums.PRODUCT_TYPE_CHOICES,
+        exclude=True,
     )
 
     class Meta:
