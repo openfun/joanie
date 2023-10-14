@@ -16,6 +16,7 @@ class OrderViewSetFilter(filters.FilterSet):
     """
 
     product = filters.UUIDFilter(field_name="product")
+    enrollment = filters.UUIDFilter(field_name="enrollment")
     course = filters.CharFilter(field_name="course__code")
     state = filters.MultipleChoiceFilter(
         field_name="state", choices=enums.ORDER_STATE_CHOICES

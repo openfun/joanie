@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Allow filtering orders by enrollment
 - Create missing courses automatically on course run sync
 - Create `certificate` template
 - Add contract and contract definition models with related API endpoints
