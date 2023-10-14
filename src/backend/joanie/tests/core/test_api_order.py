@@ -492,10 +492,10 @@ class OrderApiTest(BaseAPITestCase):
             },
         )
 
-    def test_api_order_read_list_filtered_with_several_product_type(self):
+    def test_api_order_read_list_filtered_with_multiple_product_type(self):
         """
         Authenticated user should be able to filter their orders
-        by several product types.
+        by limiting to or excluding several product types.
         """
 
         certificate_product = factories.ProductFactory(
@@ -503,6 +503,9 @@ class OrderApiTest(BaseAPITestCase):
         )
         credential_product = factories.ProductFactory(
             type=enums.PRODUCT_TYPE_CREDENTIAL
+        )
+        enrollment_product = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_ENROLLMENT
         )
         user = factories.UserFactory()
 
@@ -512,16 +515,34 @@ class OrderApiTest(BaseAPITestCase):
             course_run__state=CourseState.FUTURE_OPEN,
             course_run__is_listed=True,
         )
-        order = factories.OrderFactory(
+        certificate_order = factories.OrderFactory(
             owner=user, product=certificate_product, course=None, enrollment=enrollment
         )
 
         # User purchases the credential product
-        order2 = factories.OrderFactory(owner=user, product=credential_product)
+        credential_order = factories.OrderFactory(
+            owner=user, product=credential_product
+        )
+
+        # User purchases the enrollment product
+        enrollment_order = factories.OrderFactory(
+            owner=user, product=enrollment_product
+        )
 
         token = self.generate_token_from_user(user)
 
-        # Retrieve user's order related to the first course linked to the product 1
+        # Retrieve user's orders without any filter
+        with self.assertNumQueries(15):
+            response = self.client.get(
+                "/api/v1.0/orders/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 3)
+
+        # Retrieve user's orders filtered to limit to 2 product types
         with self.assertNumQueries(11):
             response = self.client.get(
                 (
@@ -536,7 +557,21 @@ class OrderApiTest(BaseAPITestCase):
         self.assertEqual(content["count"], 2)
         self.assertCountEqual(
             [result["id"] for result in content["results"]],
-            [str(order.id), str(order2.id)],
+            [str(certificate_order.id), str(credential_order.id)],
+        )
+
+        # Retrieve user's orders filtered to exclude one product type
+        response = self.client.get(
+            f"/api/v1.0/orders/?product__type__exclude={enums.PRODUCT_TYPE_CERTIFICATE}",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 2)
+        self.assertCountEqual(
+            [result["id"] for result in content["results"]],
+            [str(credential_order.id), str(enrollment_order.id)],
         )
 
     def test_api_order_read_list_filtered_with_invalid_product_type(self):
@@ -780,7 +815,7 @@ class OrderApiTest(BaseAPITestCase):
         return_value="_this_field_is_mocked",
     )
     def test_api_order_read_list_filtered_by_multiple_states(self, _mock_thumbnail):
-        """It should be possible to filter orders by multiple states."""
+        """It should be possible to filter orders by limiting to or excluding multiple states."""
         user = factories.UserFactory()
 
         # User purchases products as their price are equal to 0.00€,
@@ -793,7 +828,18 @@ class OrderApiTest(BaseAPITestCase):
 
         token = self.generate_token_from_user(user)
 
-        # Retrieve user's order related to the product 1
+        # Retrieve user's orders without any filter
+        response = self.client.get(
+            "/api/v1.0/orders/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        response = response.json()
+
+        self.assertEqual(len(response["results"]), 4)
+
+        # Retrieve user's orders filtered to limit to 3 states
         response = self.client.get(
             "/api/v1.0/orders/?state=validated&state=submitted&state=pending",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -811,6 +857,26 @@ class OrderApiTest(BaseAPITestCase):
                 enums.ORDER_STATE_PENDING,
                 enums.ORDER_STATE_SUBMITTED,
                 enums.ORDER_STATE_VALIDATED,
+            ],
+        )
+
+        # Retrieve user's orders filtered to exclude 2 states
+        response = self.client.get(
+            "/api/v1.0/orders/?state__exclude=validated&state__exclude=pending",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        response = response.json()
+
+        self.assertEqual(len(response["results"]), 2)
+        order_states = [order["state"] for order in response["results"]]
+        order_states.sort()
+        self.assertEqual(
+            order_states,
+            [
+                enums.ORDER_STATE_CANCELED,
+                enums.ORDER_STATE_SUBMITTED,
             ],
         )
 
