@@ -281,6 +281,93 @@ class OrderApiTest(BaseAPITestCase):
         "to_representation",
         return_value="_this_field_is_mocked",
     )
+    def test_api_order_read_list_filtered_by_enrollment_id(self, _mock_thumbnail):
+        """Authenticated user should be able to filter their orders by enrollment id."""
+        user = factories.UserFactory()
+        [enrollment_1, enrollment_2] = factories.EnrollmentFactory.create_batch(
+            2, user=user
+        )
+
+        # User purchases from enrollment 1
+        order = factories.OrderFactory(
+            owner=user,
+            course=None,
+            enrollment=enrollment_1,
+            product__type="certificate",
+        )
+
+        # User purchases from enrollment 2
+        factories.OrderFactory(
+            owner=user,
+            course=None,
+            enrollment=enrollment_2,
+            product__type="certificate",
+        )
+
+        token = self.generate_token_from_user(user)
+
+        # Retrieve user's order related to the enrollment 1
+        response = self.client.get(
+            f"/api/v1.0/orders/?enrollment={enrollment_1.id}",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "count": 1,
+                "next": None,
+                "previous": None,
+                "results": [
+                    {
+                        "id": str(order.id),
+                        "certificate": None,
+                        "contract": None,
+                        "course": None,
+                        "created_on": order.created_on.strftime(
+                            "%Y-%m-%dT%H:%M:%S.%fZ"
+                        ),
+                        "enrollment": str(enrollment_1.id),
+                        "target_enrollments": [],
+                        "main_invoice": None,
+                        "order_group": None,
+                        "organization": str(order.organization.id),
+                        "owner": order.owner.username,
+                        "total": float(order.total),
+                        "total_currency": settings.DEFAULT_CURRENCY,
+                        "product": str(order.product.id),
+                        "state": order.state,
+                        "target_courses": [],
+                    }
+                ],
+            },
+        )
+
+    def test_api_order_read_list_filtered_by_invalid_enrollment_id(self):
+        """
+        Authenticated user providing an invalid enrollment id to filter its orders
+        should get a 400 error response.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        # Try to retrieve user's order related with an invalid enrollment id
+        # should return a 400 error
+        with self.assertNumQueries(0):
+            response = self.client.get(
+                "/api/v1.0/orders/?enrollment=invalid_enrollment_id",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {"enrollment": ["Enter a valid UUID."]})
+
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
     def test_api_order_read_list_filtered_by_course_code(self, _mock_thumbnail):
         """Authenticated user should be able to filter their orders by course code."""
         [product_1, product_2] = factories.ProductFactory.create_batch(2)
