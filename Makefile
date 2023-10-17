@@ -25,6 +25,11 @@
 
 include env.d/development/localtunnel
 
+BOLD := \033[1m
+RESET := \033[0m
+GREEN := \033[1;32m
+
+
 # -- Database
 
 DB_HOST            = postgresql
@@ -160,8 +165,8 @@ lint-pylint: ## lint back-end python sources with pylint
 .PHONY: lint-pylint
 
 test: ## run project tests
-test: \
-	test-back
+	@$(MAKE) test-back
+	@$(MAKE) admin-test
 .PHONY: test
 
 test-back: ## run back-end tests
@@ -306,14 +311,14 @@ clean: ## restore repository state as it was freshly cloned
 	git clean -idx
 .PHONY: clean
 
-help:
-	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
-.PHONY: help
-
 tunnel: ## Run a proxy through localtunnel
-tunnel: run
+	@$(MAKE) run
 	@echo
 	npx localtunnel -s $(LOCALTUNNEL_SUBDOMAIN) -h $(LOCALTUNNEL_HOST) --port $(LOCALTUNNEL_PORT) --print-requests
-tunnel:
+.PHONY: tunnel
 
-.PHONE: tunnel
+help:
+	@echo "$(BOLD)Joanie Makefile"
+	@echo "Please use 'make $(BOLD)target$(RESET)' where $(BOLD)target$(RESET) is one of:"
+	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(firstword $(MAKEFILE_LIST)) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "$(GREEN)%-30s$(RESET) %s\n", $$1, $$2}'
+.PHONY: help
