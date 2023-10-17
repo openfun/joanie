@@ -34,6 +34,8 @@ jest.mock("notistack", () => ({
 
 describe("<ProductForm/>", () => {
   beforeEach(() => {
+    jest.useFakeTimers({ advanceTimers: true });
+
     server.use(
       rest.get(buildApiUrl(coursesRoute.getAll()), (req, res, ctx) => {
         return res(ctx.json([course]));
@@ -48,6 +50,10 @@ describe("<ProductForm/>", () => {
         return res(ctx.json([org]));
       }),
     );
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   it("renders ProductForm without product and select certificate type", async () => {
@@ -133,6 +139,7 @@ describe("<ProductForm/>", () => {
   }, 15000);
 
   it("renders ProductForm and test target course part", async () => {
+    const user = userEvent.setup();
     const product = ProductFactory();
     product.target_courses = [];
     render(
@@ -153,7 +160,7 @@ describe("<ProductForm/>", () => {
 
     expect(callToActionInput).toHaveValue(product.call_to_action);
     expect(titleInput).toHaveValue(product.title);
-    await userEvent.click(nextButton);
+    await user.click(nextButton);
 
     // Test target_courses section
     await screen.findByText(
@@ -164,7 +171,7 @@ describe("<ProductForm/>", () => {
     const addTargetCourseButton = screen.getByRole("button", {
       name: "Add target course",
     });
-    await userEvent.click(addTargetCourseButton);
+    await user.click(addTargetCourseButton);
     screen.getByText(
       "In this form, you can choose a course to integrate it into the product as well as the associated course runs.",
     );
@@ -173,10 +180,10 @@ describe("<ProductForm/>", () => {
       name: "Course search",
     });
 
-    await userEvent.type(courseSearch, "Test");
+    await user.type(courseSearch, "Test");
     const val = await screen.findByRole("option", { name: "Testing" });
 
-    await userEvent.click(val);
+    await user.click(val);
     const checkboxLabel = await screen.findByText(
       "Choose specific course-runs",
     );
@@ -187,12 +194,12 @@ describe("<ProductForm/>", () => {
       }),
     ).not.toBeInTheDocument();
 
-    await userEvent.click(checkboxLabel);
+    await user.click(checkboxLabel);
     const courseRunSearch = screen.getByRole("combobox", {
       name: "Search course run",
     });
 
-    await userEvent.type(courseRunSearch, "course");
+    await user.type(courseRunSearch, "course");
     const courseResult = await screen.findByRole("option", { name: "course" });
     await userEvent.click(courseResult);
 
