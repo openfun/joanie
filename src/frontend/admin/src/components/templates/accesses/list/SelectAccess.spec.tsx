@@ -25,7 +25,7 @@ describe("<SelectAccess/>", () => {
       },
     );
 
-    const select = await screen.findByRole("button");
+    const select = await screen.findByRole("combobox");
     await userEvent.click(select);
     const listbox = within(screen.getByRole("listbox"));
     roles.forEach((role) => {

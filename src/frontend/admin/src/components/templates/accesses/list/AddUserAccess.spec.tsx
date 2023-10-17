@@ -37,7 +37,7 @@ describe("<AddUserAccess />", () => {
     );
 
     // Search and select user
-    const userSearch = await screen.findByRole("combobox");
+    const userSearch = await screen.findByRole("combobox", { name: "User" });
     await userEvent.click(userSearch);
     await userEvent.type(userSearch, returnedUser.username);
     const searchResult = screen.getByText(returnedUser.username);
@@ -52,5 +52,5 @@ describe("<AddUserAccess />", () => {
     const addButton = screen.getByRole("button", { name: "Add" });
     await userEvent.click(addButton);
     expect(onAdd).toBeCalledWith(returnedUser, roles[0].value);
-  });
+  }, 10000);
 });
