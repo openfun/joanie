@@ -78,7 +78,7 @@ describe("<ProductForm/>", () => {
     // Test Main Form
     screen.getByRole("heading", { name: "Main information's" });
     const titleInput = screen.getByRole("textbox", { name: "Title" });
-    screen.getByRole("button", { name: "Type credential" });
+    screen.getByRole("combobox", { name: "Type" });
     const description = screen.getByRole("textbox", { name: "Description" });
     screen.getByRole("combobox", { name: "Certificate definition" });
 
@@ -87,7 +87,7 @@ describe("<ProductForm/>", () => {
       name: "Call to action",
     });
     screen.getByRole("spinbutton", { name: "Price" });
-    screen.getByRole("button", { name: "Price currency Euro" });
+    screen.getByRole("combobox", { name: "Price currency" });
 
     await userEvent.type(callToActionInput, "Buy");
     expect(callToActionInput).toHaveValue("Buy");
