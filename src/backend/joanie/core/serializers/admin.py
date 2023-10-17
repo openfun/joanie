@@ -168,13 +168,17 @@ class AdminProductSerializer(serializers.ModelSerializer):
     """Serializer for Product model."""
 
     title = serializers.CharField()
-    description = serializers.CharField(required=False)
+    description = serializers.CharField(
+        allow_blank=True, trim_whitespace=False, required=False
+    )
     call_to_action = serializers.CharField()
     price = serializers.DecimalField(
         coerce_to_string=False, decimal_places=2, max_digits=9, min_value=0
     )
     price_currency = serializers.SerializerMethodField(read_only=True)
-    instructions = serializers.CharField(allow_blank=True, trim_whitespace=False)
+    instructions = serializers.CharField(
+        allow_blank=True, trim_whitespace=False, required=False
+    )
 
     class Meta:
         model = models.Product
