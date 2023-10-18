@@ -33,6 +33,12 @@ class CreateDevDemoTestCase(TestCase):
         nb_product_credential += (
             1  # create_product_credential_purchased_with_certificate
         )
+        nb_product_credential += (
+            1  # create_product_credential_purchased with unsigned contract
+        )
+        nb_product_credential += (
+            1  # create_product_credential_purchased with signed contract
+        )
         nb_product_credential += 5  # one order of each state
 
         nb_product = nb_product_credential + nb_product_certificate
