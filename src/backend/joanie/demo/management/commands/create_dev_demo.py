@@ -2,6 +2,7 @@
 import random
 
 from django.core.management.base import BaseCommand
+from django.utils import timezone as django_timezone
 from django.utils import translation
 
 from joanie.core import enums, factories, models
@@ -189,6 +190,7 @@ class Command(BaseCommand):
             product=product,
             state=order_status,
         )
+
         for target_course in product.target_courses.all():
             factories.OrderTargetCourseRelationFactory(
                 order=order, course=target_course
@@ -384,6 +386,36 @@ class Command(BaseCommand):
         self.stdout.write(
             self.style.SUCCESS(
                 "Successfully create a order for a PRODUCT_CREDENTIAL with a generated certificate"
+            )
+        )
+
+        # Order for a PRODUCT_CREDENTIAL with a unsigned contract
+        order = self.create_product_purchased(
+            admin_user, organization, enums.PRODUCT_TYPE_CREDENTIAL
+        )
+        factories.ContractFactory(
+            order=order, definition=order.product.contract_definition, signed_on=None
+        )
+        self.stdout.write(
+            self.style.SUCCESS(
+                "Successfully create a order for a PRODUCT_CREDENTIAL with an unsigned contract"
+            )
+        )
+
+        # Order for a PRODUCT_CREDENTIAL with a signed contract
+        order = self.create_product_purchased(
+            admin_user, organization, enums.PRODUCT_TYPE_CREDENTIAL
+        )
+
+        factories.ContractFactory(
+            order=order,
+            definition=order.product.contract_definition,
+            signed_on=django_timezone.now(),
+        )
+
+        self.stdout.write(
+            self.style.SUCCESS(
+                "Successfully create a order for a PRODUCT_CREDENTIAL with a signed contract"
             )
         )
 

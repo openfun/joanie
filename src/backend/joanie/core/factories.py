@@ -1,6 +1,8 @@
 """
 Core application factories
 """
+import hashlib
+import json
 import random
 from datetime import datetime, timedelta, timezone
 
@@ -13,6 +15,8 @@ from easy_thumbnails.files import ThumbnailerImageFieldFile, generate_all_aliase
 from faker import Faker
 
 from joanie.core import enums, models
+from joanie.core.serializers import AddressSerializer
+from joanie.core.utils import image_to_base64
 
 
 def generate_thumbnails_for_field(field, include_global=False):
@@ -703,6 +707,7 @@ class ContractFactory(factory.django.DjangoModelFactory):
         OrderFactory,
         product__type=enums.PRODUCT_TYPE_CREDENTIAL,
     )
+    signed_on = None
 
     @factory.lazy_attribute
     def definition(self):
@@ -710,3 +715,46 @@ class ContractFactory(factory.django.DjangoModelFactory):
         Return the order product contract definition.
         """
         return self.order.product.contract_definition
+
+    @factory.lazy_attribute
+    def context(self):
+        """
+        Lazily generate the contract context from the related order and contract definition.
+        """
+        if self.signed_on:
+            student_address = self.order.owner.addresses.filter(is_main=True).first()
+            return {
+                "student": {
+                    "name": self.order.owner.get_full_name()
+                    or self.order.owner.username,
+                    "address": AddressSerializer(student_address).data,
+                },
+                "contract": {
+                    "body": self.definition.get_body_in_html(),
+                    "title": self.definition.title,
+                },
+                "course": {
+                    "name": self.order.product.safe_translation_getter(
+                        "title", language_code=self.definition.language
+                    ),
+                },
+                "organization": {
+                    "logo": image_to_base64(self.order.organization.logo),
+                    "name": self.order.organization.safe_translation_getter(
+                        "title", language_code=self.definition.language
+                    ),
+                    "signature": image_to_base64(self.order.organization.signature),
+                },
+            }
+        return None
+
+    @factory.lazy_attribute
+    def definition_checksum(self):
+        """
+        Lazily generate the definition_checksum from context.
+        """
+        if self.signed_on:
+            return hashlib.sha256(
+                json.dumps(self.context, sort_keys=True).encode("utf-8")
+            ).hexdigest()
+        return None
