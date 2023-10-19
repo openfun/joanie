@@ -1,6 +1,8 @@
 """
 Client API endpoints
 """
+# pylint: disable=too-many-lines
+
 import uuid
 
 from django.conf import settings
@@ -21,6 +23,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
 from joanie.core import enums, filters, models, permissions, serializers
+from joanie.core.api.base import NestedGenericViewSet
 from joanie.payment.models import Invoice
 
 # pylint: disable=too-many-ancestors
@@ -927,29 +930,164 @@ class UserViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         return Response(self.serializer_class(request.user, context=context).data)
 
 
-class ContractViewSet(
+class GenericContractViewSet(
     mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet
 ):
     """
-    API views to get all contracts for a user
+    The Generic API viewset to list & retrieve contracts.
 
-    GET /api/contracts/:contract_id
-        Return list of all contracts for a user or one contract if an id is
-        provided.
+    GET /.*/contracts/<uuid:contract_id>
     """
 
     lookup_field = "pk"
     pagination_class = Pagination
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = serializers.ContractSerializer
+    ordering = ["-signed_on", "-created_on"]
+    queryset = models.Contract.objects.all().select_related(
+        "definition",
+        "order__organization",
+        "order__course",
+        "order__owner",
+        "order__product",
+    )
+
+
+class ContractViewSet(GenericContractViewSet):
+    """
+    Contract Viewset to list & retrieve contracts owned by the authenticated user.
+
+    GET /api/contracts/
+        Return list of all contracts owned by the logged-in user.
+
+    GET /api/contracts/<contract_id>/
+        Return a contract if one matches the provided id,
+        and it is owned by the logged-in user.
+    """
+
+    lookup_field = "pk"
 
     def get_queryset(self):
         """
-        Custom queryset to get user contracts
+        Customize the queryset to get only user's contracts.
         """
+        queryset = super().get_queryset()
+
         username = (
             self.request.auth["username"]
             if self.request.auth
             else self.request.user.username
         )
-        return models.Contract.objects.filter(order__owner__username=username)
+
+        query_filters = {"order__owner__username": username}
+
+        return queryset.filter(**query_filters)
+
+
+class NestedOrganizationContractViewSet(NestedGenericViewSet, GenericContractViewSet):
+    """
+    Nested Contract Viewset inside organization route.
+    It allows to list & retrieve organization's contracts if the user is
+    an administrator or an owner of the organization.
+
+    GET /api/courses/<organization_id|organization_code>/contracts/
+        Return list of all organization's contracts
+
+    GET /api/courses/<organization_id|organization_code>/contracts/<contract_id>/
+        Return an organization's contract if one matches the provided id
+    """
+
+    lookup_fields = ["order__organization__pk", "pk"]
+    lookup_url_kwargs = ["organization_id", "pk"]
+
+    def _lookup_by_organization_code_or_pk(self):
+        """
+        Override `lookup_fields` to lookup by organization code or pk according to
+        the `organization_id` kwarg is a valid UUID or not.
+        """
+        try:
+            uuid.UUID(self.kwargs["organization_id"])
+        except ValueError:
+            self.lookup_fields[0] = "order__organization__code__iexact"
+
+    def initial(self, request, *args, **kwargs):
+        """
+        Runs anything that needs to occur prior to calling method handler.
+        """
+        super().initial(request, *args, **kwargs)
+        self._lookup_by_organization_code_or_pk()
+
+    def get_queryset(self):
+        """
+        Customize the queryset to get only organization's contracts for those user has
+        access to.
+        """
+        queryset = super().get_queryset()
+
+        username = (
+            self.request.auth["username"]
+            if self.request.auth
+            else self.request.user.username
+        )
+
+        query_filters = {
+            "order__organization__accesses__user__username": username,
+            "order__organization__accesses__role__in": [enums.OWNER, enums.ADMIN],
+        }
+
+        return queryset.filter(**query_filters)
+
+
+class NestedCourseContractViewSet(NestedGenericViewSet, GenericContractViewSet):
+    """
+    Nested Contract Viewset inside course route.
+    It allows to list & retrieve course's contracts if the user is an administrator
+    or an owner of the contract's organization.
+
+    GET /api/courses/<course_id|course_code>/contracts/
+        Return list of all course's contracts
+
+    GET /api/courses/<course_id|course_code>/contracts/<contract_id>/
+        Return a course's contract if one matches the provided id
+    """
+
+    lookup_fields = ["order__course__pk", "pk"]
+    lookup_url_kwargs = ["course_id", "pk"]
+
+    def _lookup_by_course_code_or_pk(self):
+        """
+        Override `lookup_fields` to lookup by course code or pk according to
+        the `course_id` kwarg is a valid UUID or not.
+        """
+        try:
+            uuid.UUID(self.kwargs["course_id"])
+        except ValueError:
+            self.lookup_fields[0] = "order__course__code__iexact"
+
+    def initial(self, request, *args, **kwargs):
+        """
+        Runs anything that needs to occur prior to calling method handler.
+        """
+        super().initial(request, *args, **kwargs)
+        self._lookup_by_course_code_or_pk()
+
+    def get_queryset(self):
+        """
+        Customize the queryset to get only course's contracts for those user has
+        access to. By "access", we mean the user is administrator or owner of the
+        organization.
+        """
+        queryset = super().get_queryset()
+
+        username = (
+            self.request.auth["username"]
+            if self.request.auth
+            else self.request.user.username
+        )
+
+        query_filters = {
+            "order__organization__accesses__user__username": username,
+            "order__organization__accesses__role__in": [enums.OWNER, enums.ADMIN],
+        }
+
+        return queryset.filter(**query_filters)

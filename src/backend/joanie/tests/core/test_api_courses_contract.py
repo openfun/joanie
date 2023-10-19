@@ -1,0 +1,496 @@
+"""Test suite for the Courses Contract API"""
+import random
+from unittest import mock
+
+from django.utils import timezone
+
+from joanie.core import enums, factories, models
+from joanie.core.serializers import fields
+from joanie.tests.base import BaseAPITestCase
+
+
+class CourseContractApiTest(BaseAPITestCase):
+    """Tests for the Courses Contract API"""
+
+    def test_api_courses_contracts_list_anonymous(self):
+        """Anonymous user cannot query all contracts from a course."""
+        course = factories.CourseFactory()
+
+        with self.assertNumQueries(0):
+            response = self.client.get(f"/api/v1.0/courses/{str(course.id)}/contracts/")
+
+        self.assertEqual(response.status_code, 401)
+
+    def test_api_courses_contracts_list_without_access(self):
+        """
+        Authenticated user without access to the course organization cannot query
+        organization's contracts for a course.
+        """
+        organization = factories.OrganizationFactory()
+        course = factories.CourseFactory()
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        relation = factories.CourseProductRelationFactory(
+            organizations=[organization], course=course
+        )
+        factories.ContractFactory.create_batch(
+            5,
+            order__product=relation.product,
+            order__course=course,
+            order__organization=organization,
+        )
+
+        with self.assertNumQueries(1):
+            response = self.client.get(
+                f"/api/v1.0/courses/{str(course.id)}/contracts/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "count": 0,
+                "next": None,
+                "previous": None,
+                "results": [],
+            },
+        )
+
+    def test_api_courses_contracts_list_without_admin_or_owner_accesses(self):
+        """
+        Authenticated user without admin or owner access to the course organization
+        cannot query organization's contracts for a course.
+        """
+        organization = factories.OrganizationFactory()
+        course = factories.CourseFactory()
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        factories.UserOrganizationAccessFactory(
+            user=user,
+            organization=organization,
+            role=enums.MEMBER,
+        )
+
+        relation = factories.CourseProductRelationFactory(
+            organizations=[organization], course=course
+        )
+        factories.ContractFactory.create_batch(
+            5,
+            order__product=relation.product,
+            order__course=course,
+            order__organization=organization,
+        )
+
+        # Having course access does not imply to be able to access to course's contract
+        factories.UserCourseAccessFactory(course=course, user=user)
+
+        with self.assertNumQueries(1):
+            response = self.client.get(
+                f"/api/v1.0/courses/{str(course.id)}/contracts/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "count": 0,
+                "next": None,
+                "previous": None,
+                "results": [],
+            },
+        )
+
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_courses_contracts_list_with_accesses(self, _):
+        """
+        Authenticated user with admin or owner access to the organization
+        can query organization's course contracts.
+        """
+        organizations = factories.OrganizationFactory.create_batch(2)
+        courses = factories.CourseFactory.create_batch(2)
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        # - Create contracts for two organizations with admin or owner access
+        #   and several courses.
+        for organization in organizations:
+            factories.UserOrganizationAccessFactory(
+                user=user,
+                organization=organization,
+                role=random.choice([enums.ADMIN, enums.OWNER]),
+            )
+
+            for course in courses:
+                relation = factories.CourseProductRelationFactory(
+                    organizations=[organization], course=course
+                )
+                factories.ContractFactory.create_batch(
+                    5,
+                    order__product=relation.product,
+                    order__course=course,
+                    order__organization=organization,
+                )
+
+        # Create random contracts that should not be returned
+        factories.ContractFactory.create_batch(5)
+        factories.ContractFactory(order__owner=user)
+
+        with self.assertNumQueries(2):
+            response = self.client.get(
+                f"/api/v1.0/courses/{str(courses[0].id)}/contracts/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        contracts = models.Contract.objects.filter(order__course=courses[0])
+        expected_contracts = sorted(contracts, key=lambda x: x.created_on, reverse=True)
+        self.assertEqual(
+            response.json(),
+            {
+                "count": 10,
+                "next": None,
+                "previous": None,
+                "results": [
+                    {
+                        "id": str(contract.id),
+                        "created_on": contract.created_on.isoformat().replace(
+                            "+00:00", "Z"
+                        ),
+                        "signed_on": contract.signed_on.isoformat().replace(
+                            "+00:00", "Z"
+                        )
+                        if contract.signed_on
+                        else None,
+                        "definition": {
+                            "description": contract.definition.description,
+                            "id": str(contract.definition.id),
+                            "language": contract.definition.language,
+                            "title": contract.definition.title,
+                        },
+                        "order": {
+                            "id": str(contract.order.id),
+                            "course": {
+                                "code": contract.order.course.code,
+                                "cover": "_this_field_is_mocked",
+                                "id": str(contract.order.course.id),
+                                "title": contract.order.course.title,
+                            },
+                            "organization": {
+                                "id": str(contract.order.organization.id),
+                                "code": contract.order.organization.code,
+                                "logo": "_this_field_is_mocked",
+                                "title": contract.order.organization.title,
+                            },
+                            "owner": contract.order.owner.username,
+                            "product": contract.order.product.title,
+                        },
+                    }
+                    for contract in expected_contracts
+                ],
+            },
+        )
+
+    def test_api_courses_contracts_retrieve_anonymous(self):
+        """
+        Anonymous user cannot query an organization's course contract.
+        """
+        contract = factories.ContractFactory()
+        course = contract.order.course
+
+        with self.assertNumQueries(0):
+            response = self.client.get(
+                f"/api/v1.0/courses/{str(course.id)}/contracts/{str(contract.id)}/"
+            )
+
+        self.assertEqual(response.status_code, 401)
+
+    def test_api_courses_contracts_retrieve_without_access(self):
+        """
+        Authenticated user without access to the organization cannot query
+        an organization's course contract.
+        """
+        organization = factories.OrganizationFactory()
+        course = factories.CourseFactory()
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        relation = factories.CourseProductRelationFactory(
+            organizations=[organization], course=course
+        )
+        contract = factories.ContractFactory(
+            order__product=relation.product,
+            order__course=course,
+            order__organization=organization,
+        )
+
+        # Having course access does not imply to be able to access to course's contract
+        factories.UserCourseAccessFactory(course=course, user=user)
+
+        with self.assertNumQueries(1):
+            response = self.client.get(
+                f"/api/v1.0/courses/{str(organization.id)}/contracts/{str(contract.id)}/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_api_courses_contracts_retrieve_without_admin_or_owner_accesses(self):
+        """
+        Authenticated user without admin or owner access to the organization course
+        cannot query an organization's course contract.
+        """
+        organization = factories.OrganizationFactory()
+        course = factories.CourseFactory()
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        factories.UserOrganizationAccessFactory(
+            user=user,
+            organization=organization,
+            role=enums.MEMBER,
+        )
+
+        relation = factories.CourseProductRelationFactory(
+            organizations=[organization], course=course
+        )
+        contract = factories.ContractFactory(
+            order__product=relation.product,
+            order__course=course,
+            order__organization=organization,
+        )
+
+        with self.assertNumQueries(1):
+            response = self.client.get(
+                f"/api/v1.0/courses/{str(course.id)}/contracts/{str(contract.id)}/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 404)
+
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_courses_contracts_retrieve_with_accesses(self, _):
+        """
+        Authenticated user with admin or owner access to the organization
+        can query an organization's course contract.
+        """
+        organizations = factories.OrganizationFactory.create_batch(2)
+        courses = factories.CourseFactory.create_batch(2)
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        # - Create contracts for two organizations with admin or owner access
+        #   and several courses
+        for organization in organizations:
+            factories.UserOrganizationAccessFactory(
+                user=user,
+                organization=organization,
+                role=random.choice([enums.ADMIN, enums.OWNER]),
+            )
+
+            for course in courses:
+                relation = factories.CourseProductRelationFactory(
+                    organizations=[organization], course=course
+                )
+                factories.ContractFactory.create_batch(
+                    5,
+                    order__product=relation.product,
+                    order__course=course,
+                    order__organization=organization,
+                )
+
+        # Create random contracts that should not be returned
+        factories.ContractFactory.create_batch(5)
+        factories.ContractFactory(order__owner=user)
+
+        contract = models.Contract.objects.filter(order__course=courses[0]).first()
+
+        with self.assertNumQueries(1):
+            response = self.client.get(
+                f"/api/v1.0/courses/{str(courses[0].id)}/contracts/{str(contract.id)}/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(
+            response.json(),
+            {
+                "id": str(contract.id),
+                "created_on": contract.created_on.isoformat().replace("+00:00", "Z"),
+                "signed_on": contract.signed_on.isoformat().replace("+00:00", "Z")
+                if contract.signed_on
+                else None,
+                "definition": {
+                    "description": contract.definition.description,
+                    "id": str(contract.definition.id),
+                    "language": contract.definition.language,
+                    "title": contract.definition.title,
+                },
+                "order": {
+                    "id": str(contract.order.id),
+                    "course": {
+                        "code": contract.order.course.code,
+                        "cover": "_this_field_is_mocked",
+                        "id": str(contract.order.course.id),
+                        "title": contract.order.course.title,
+                    },
+                    "organization": {
+                        "id": str(contract.order.organization.id),
+                        "code": contract.order.organization.code,
+                        "logo": "_this_field_is_mocked",
+                        "title": contract.order.organization.title,
+                    },
+                    "owner": contract.order.owner.username,
+                    "product": contract.order.product.title,
+                },
+            },
+        )
+
+    def test_api_courses_contracts_retrieve_with_accesses_and_course_code(self):
+        """
+        Authenticated user with admin or owner access to the organization
+        can query an organization's course contract. Furthermore, the api endpoint
+        should work with the course code instead of the course id.
+        """
+        organization = factories.OrganizationFactory()
+        course = factories.CourseFactory()
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        factories.UserOrganizationAccessFactory(
+            user=user,
+            organization=organization,
+            role=random.choice([enums.ADMIN, enums.OWNER]),
+        )
+
+        relation = factories.CourseProductRelationFactory(
+            organizations=[organization], course=course
+        )
+        contract = factories.ContractFactory(
+            order__product=relation.product,
+            order__course=course,
+            order__organization=organization,
+        )
+
+        with self.assertNumQueries(1):
+            response = self.client.get(
+                f"/api/v1.0/courses/{course.code}/contracts/{str(contract.id)}/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertContains(response, str(contract.id), status_code=200)
+
+    def test_api_courses_contracts_create_anonymous(self):
+        """Anonymous user cannot create an organization's contract."""
+        course = factories.CourseFactory()
+
+        with self.assertNumQueries(0):
+            response = self.client.post(
+                f"/api/v1.0/courses/{str(course.id)}/contracts/"
+            )
+
+        self.assertEqual(response.status_code, 401)
+
+    def test_api_courses_contracts_create_authenticated(self):
+        """Authenticated user cannot create an organization's contract."""
+        course = factories.CourseFactory()
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        with self.assertNumQueries(0):
+            response = self.client.post(
+                f"/api/v1.0/courses/{str(course.id)}/contracts/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertContains(response, 'Method \\"POST\\" not allowed.', status_code=405)
+
+    def test_api_courses_contracts_update_anonymous(self):
+        """Anonymous user cannot update an organization's contract."""
+        contract = factories.ContractFactory()
+        course = contract.order.course
+
+        with self.assertNumQueries(0):
+            response = self.client.put(
+                f"/api/v1.0/courses/{str(course.id)}/contracts/{str(contract.id)}/"
+            )
+
+        self.assertEqual(response.status_code, 401)
+
+    def test_api_courses_contracts_update_authenticated(self):
+        """Authenticated user cannot update an organization's contract."""
+        contract = factories.ContractFactory()
+        course = contract.order.course
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        with self.assertNumQueries(0):
+            response = self.client.put(
+                f"/api/v1.0/courses/{str(course.id)}/contracts/{str(contract.id)}/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertContains(response, 'Method \\"PUT\\" not allowed.', status_code=405)
+
+    def test_api_courses_contracts_patch_anonymous(self):
+        """Anonymous user cannot patch an organization's contract."""
+        contract = factories.ContractFactory()
+        course = contract.order.course
+
+        with self.assertNumQueries(0):
+            response = self.client.patch(
+                f"/api/v1.0/courses/{str(course.id)}/contracts/{str(contract.id)}/"
+            )
+
+        self.assertEqual(response.status_code, 401)
+
+    def test_api_courses_contracts_patch_authenticated(self):
+        """Authenticated user cannot patch an organization's contract."""
+        contract = factories.ContractFactory()
+        course = contract.order.course
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        with self.assertNumQueries(0):
+            response = self.client.patch(
+                f"/api/v1.0/courses/{str(course.id)}/contracts/{str(contract.id)}/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertContains(
+            response, 'Method \\"PATCH\\" not allowed.', status_code=405
+        )
+
+    def test_api_courses_contracts_delete_anonymous(self):
+        """Anonymous user cannot delete an organization's contract."""
+        contract = factories.ContractFactory()
+        course = contract.order.course
+
+        with self.assertNumQueries(0):
+            response = self.client.delete(
+                f"/api/v1.0/courses/{str(course.id)}/contracts/{str(contract.id)}/"
+            )
+
+        self.assertEqual(response.status_code, 401)
+
+    def test_api_courses_contracts_delete_authenticated(self):
+        """Authenticated user cannot delete an organization's contract."""
+        contract = factories.ContractFactory()
+        course = contract.order.course
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        with self.assertNumQueries(0):
+            response = self.client.delete(
+                f"/api/v1.0/courses/{str(course.id)}/contracts/{str(contract.id)}/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertContains(
+            response, 'Method \\"DELETE\\" not allowed.', status_code=405
+        )

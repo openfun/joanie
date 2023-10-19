@@ -58,6 +58,7 @@ and this project adheres to
 
 ### Changed
 
+- Update contract api endpoint to retrieve contracts by ownership
 - Internalize degree template
 - Allow to download enrollment certificate from related download api endpoint
 - Data returned by product admin serializer

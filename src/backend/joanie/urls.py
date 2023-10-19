@@ -70,6 +70,11 @@ course_related_router.register(
     basename="course_accesses",
 )
 course_related_router.register(
+    "contracts",
+    api_client.NestedCourseContractViewSet,
+    basename="course_contracts",
+)
+course_related_router.register(
     "course-runs",
     api_client.CourseRunViewSet,
     basename="course_course_runs",
@@ -86,6 +91,11 @@ organization_related_router.register(
     "accesses",
     api_client.OrganizationAccessViewSet,
     basename="organization_accesses",
+)
+organization_related_router.register(
+    "contracts",
+    api_client.NestedOrganizationContractViewSet,
+    basename="organization_contracts",
 )
 organization_related_router.register(
     "course-product-relations",
@@ -175,8 +185,8 @@ urlpatterns = [
                     r"^courses/(?P<course_id>[0-9a-z-]*)/",
                     include(course_related_router.urls),
                 ),
-                path(
-                    "organizations/<uuid:organization_id>/",
+                re_path(
+                    r"^organizations/(?P<organization_id>[0-9a-z-]*)/",
                     include(organization_related_router.urls),
                 ),
             ]
