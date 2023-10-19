@@ -76,6 +76,8 @@ and this project adheres to
 - Upgrade to Django 4.2
 - Add model and API endpoint for course wishes
 - Change order viewset filter "state" to accept multiple choices.
+- Product and Order serializers now return Contract and ContractDefinition 
+  object instead of ids.
 
 ### Removed
 

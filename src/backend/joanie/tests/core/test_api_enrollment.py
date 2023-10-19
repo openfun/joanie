@@ -325,7 +325,12 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "title": str(product2.certificate_definition.title),
                     },
                     "order_groups": [],
-                    "contract_definition": str(product2.contract_definition.id),
+                    "contract_definition": {
+                        "id": str(product2.contract_definition.id),
+                        "description": product2.contract_definition.description,
+                        "language": product2.contract_definition.language,
+                        "title": product2.contract_definition.title,
+                    },
                     "id": str(product2.id),
                     "price": float(product2.price),
                     "price_currency": "EUR",
@@ -352,7 +357,12 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "title": str(product1.certificate_definition.title),
                     },
                     "order_groups": [],
-                    "contract_definition": str(product1.contract_definition.id),
+                    "contract_definition": {
+                        "id": str(product1.contract_definition.id),
+                        "description": product1.contract_definition.description,
+                        "language": product1.contract_definition.language,
+                        "title": product1.contract_definition.title,
+                    },
                     "state": {
                         "priority": product1.state["priority"],
                         "datetime": product1.state["datetime"]
@@ -755,7 +765,12 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "name": product.certificate_definition.name,
                         "title": product.certificate_definition.title,
                     },
-                    "contract_definition": str(product.contract_definition.id),
+                    "contract_definition": {
+                        "id": str(product.contract_definition.id),
+                        "description": product.contract_definition.description,
+                        "language": product.contract_definition.language,
+                        "title": product.contract_definition.title,
+                    },
                     "id": str(product.id),
                     "instructions": "",
                     "order_groups": [],
