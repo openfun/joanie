@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Allow to filter contracts through their signature state
 - Allow filtering orders by state or product type exclusion
 - Allow filtering orders by enrollment
 - Create missing courses automatically on course run sync
