@@ -98,3 +98,19 @@ class CourseViewSetFilter(filters.FilterSet):
         Filter courses by looking for related products with matching type
         """
         return queryset.filter(products__type=value).distinct()
+
+
+class ContractViewSetFilter(filters.FilterSet):
+    """ContractFilter allows to filter this resource with a signature state."""
+
+    is_signed = filters.BooleanFilter(method="get_is_signed")
+
+    class Meta:
+        model = models.Contract
+        fields: List[str] = ["is_signed"]
+
+    def get_is_signed(self, queryset, _name, value):
+        """
+        Filter Contracts by signature status
+        """
+        return queryset.filter(signed_on__isnull=not value)

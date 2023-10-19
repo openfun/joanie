@@ -195,6 +195,85 @@ class CourseContractApiTest(BaseAPITestCase):
             },
         )
 
+    def test_api_courses_contracts_list_filter_is_signed(self):
+        """
+        Authenticated user with admin or owner access to the organization
+        can query organization's course contracts and filter them by signature state.
+        """
+        organization = factories.OrganizationFactory()
+        course = factories.CourseFactory()
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        factories.UserOrganizationAccessFactory(
+            user=user,
+            organization=organization,
+            role=random.choice([enums.ADMIN, enums.OWNER]),
+        )
+
+        relation = factories.CourseProductRelationFactory(
+            organizations=[organization], course=course
+        )
+        unsigned_contracts = factories.ContractFactory.create_batch(
+            5,
+            order__product=relation.product,
+            order__course=course,
+            order__organization=organization,
+        )
+
+        signed_contract = factories.ContractFactory.create(
+            order__product=relation.product,
+            order__course=course,
+            order__organization=organization,
+            signed_on=timezone.now(),
+            definition_checksum="test",
+            context={"title": "test"},
+        )
+
+        # Create random contracts that should not be returned
+        factories.ContractFactory.create_batch(5)
+        factories.ContractFactory(order__owner=user)
+
+        # - List without filter should return 6 contracts
+        with self.assertNumQueries(2):
+            response = self.client.get(
+                f"/api/v1.0/courses/{str(course.id)}/contracts/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 6)
+
+        # - Filter by is_signed=false should return 5 contracts
+        with self.assertNumQueries(2):
+            response = self.client.get(
+                f"/api/v1.0/courses/{str(course.id)}/contracts/?is_signed=false",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        count = content["count"]
+        result_ids = [result["id"] for result in content["results"]]
+        self.assertEqual(count, 5)
+        self.assertCountEqual(
+            result_ids, [str(contract.id) for contract in unsigned_contracts]
+        )
+
+        # - Filter by is_signed=true should return 1 contract
+        with self.assertNumQueries(2):
+            response = self.client.get(
+                f"/api/v1.0/courses/{str(course.id)}/contracts/?is_signed=true",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        count = content["count"]
+        result_ids = [result["id"] for result in content["results"]]
+        self.assertEqual(count, 1)
+        self.assertEqual(result_ids, [str(signed_contract.id)])
+
     def test_api_courses_contracts_retrieve_anonymous(self):
         """
         Anonymous user cannot query an organization's course contract.

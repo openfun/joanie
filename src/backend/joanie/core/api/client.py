@@ -943,6 +943,7 @@ class GenericContractViewSet(
     pagination_class = Pagination
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = serializers.ContractSerializer
+    filterset_class = filters.ContractViewSetFilter
     ordering = ["-signed_on", "-created_on"]
     queryset = models.Contract.objects.all().select_related(
         "definition",
