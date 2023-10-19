@@ -282,21 +282,26 @@ class CertificateSerializer(serializers.ModelSerializer):
         return certificate.localized_context[language]
 
 
+class ContractDefinitionSerializer(serializers.ModelSerializer):
+    """Serializer for ContractDefinition model serializer"""
+
+    class Meta:
+        model = models.ContractDefinition
+        fields = ["id", "description", "language", "title"]
+        read_only_fields = fields
+
+
 class ContractSerializer(serializers.ModelSerializer):
-    """Contract model serializer"""
+    """Serializer for Contract model serializer"""
 
     id = serializers.CharField(read_only=True, required=False)
-    definition = serializers.SlugRelatedField(
-        queryset=models.CertificateDefinition.objects.all(), slug_field="id"
-    )
-    order = serializers.SlugRelatedField(
-        queryset=models.Order.objects.all(), slug_field="id"
-    )
+    definition = ContractDefinitionSerializer()
+    order = NestedOrderSerializer()
 
     class Meta:
         model = models.Contract
-        fields = ["id", "definition", "order", "signed_on"]
-        read_only_fields = ["id", "definition", "order", "signed_on"]
+        fields = ["id", "definition", "order", "signed_on", "created_on"]
+        read_only_fields = fields
 
 
 class CourseRunSerializer(serializers.ModelSerializer):
@@ -567,7 +572,7 @@ class OrderSerializer(serializers.ModelSerializer):
     )
     main_invoice = serializers.SlugRelatedField(read_only=True, slug_field="reference")
     certificate = serializers.SlugRelatedField(read_only=True, slug_field="id")
-    contract = serializers.SlugRelatedField(read_only=True, slug_field="id")
+    contract = ContractSerializer(read_only=True)
 
     class Meta:
         model = models.Order
@@ -652,7 +657,8 @@ class OrderGroupSerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
     """
     Product serializer including
-        - certificate information if there is
+        - certificate definition information if there is
+        - contract definition information if there is
         - targeted courses with its course runs
             - If user is authenticated, we try to retrieve enrollment related
               to each course run.
@@ -674,7 +680,9 @@ class ProductSerializer(serializers.ModelSerializer):
     target_courses = ProductTargetCourseRelationSerializer(
         read_only=True, many=True, source="target_course_relations"
     )
-    contract_definition = serializers.SlugRelatedField(read_only=True, slug_field="id")
+    contract_definition = contract_definition = ContractDefinitionSerializer(
+        read_only=True
+    )
 
     class Meta:
         model = models.Product

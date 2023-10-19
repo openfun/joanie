@@ -1,3 +1,4 @@
+# pylint: disable=too-many-lines
 """Test suite for the Course Product Relation API."""
 import random
 import uuid
@@ -127,7 +128,12 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                         "title": relation.product.certificate_definition.title,
                     },
                     "order_groups": [],
-                    "contract_definition": str(product.contract_definition.id),
+                    "contract_definition": {
+                        "id": str(product.contract_definition.id),
+                        "description": product.contract_definition.description,
+                        "language": product.contract_definition.language,
+                        "title": product.contract_definition.title,
+                    },
                     "state": {
                         "priority": product.state["priority"],
                         "datetime": product.state["datetime"]
@@ -485,7 +491,12 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                         "title": relation.product.certificate_definition.title,
                     },
                     "order_groups": [],
-                    "contract_definition": str(product.contract_definition.id),
+                    "contract_definition": {
+                        "id": str(product.contract_definition.id),
+                        "description": product.contract_definition.description,
+                        "language": product.contract_definition.language,
+                        "title": product.contract_definition.title,
+                    },
                     "state": {
                         "priority": product.state["priority"],
                         "datetime": product.state["datetime"]

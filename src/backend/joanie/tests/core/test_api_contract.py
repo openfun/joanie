@@ -11,6 +11,7 @@ from joanie.core.factories import (
     ProductFactory,
     UserFactory,
 )
+from joanie.core.serializers import fields
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -29,7 +30,12 @@ class ContractApiTest(BaseAPITestCase):
             content, {"detail": "Authentication credentials were not provided."}
         )
 
-    def test_api_contract_read_list_authenticated(self):
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_contract_read_list_authenticated(self, _):
         """
         When an authenticated user retrieves the list of contracts,
         it should return only his/hers.
@@ -56,9 +62,31 @@ class ContractApiTest(BaseAPITestCase):
                 "results": [
                     {
                         "id": str(contract.id),
-                        "definition": str(contract.definition.id),
-                        "order": str(contract.order.id),
+                        "definition": {
+                            "id": str(contract.definition.id),
+                            "description": contract.definition.description,
+                            "language": contract.definition.language,
+                            "title": contract.definition.title,
+                        },
+                        "order": {
+                            "id": str(contract.order.id),
+                            "course": {
+                                "code": contract.order.course.code,
+                                "cover": "_this_field_is_mocked",
+                                "id": str(contract.order.course.id),
+                                "title": contract.order.course.title,
+                            },
+                            "organization": {
+                                "id": str(contract.order.organization.id),
+                                "code": contract.order.organization.code,
+                                "logo": "_this_field_is_mocked",
+                                "title": contract.order.organization.title,
+                            },
+                        },
                         "signed_on": None,
+                        "created_on": contract.created_on.isoformat().replace(
+                            "+00:00", "Z"
+                        ),
                     },
                 ],
             },
@@ -157,9 +185,55 @@ class ContractApiTest(BaseAPITestCase):
             content,
             {
                 "id": str(owned_contract.id),
-                "definition": str(owned_contract.definition.id),
-                "order": str(owned_contract.order.id),
+                "definition": {
+                    "id": str(owned_contract.definition.id),
+                    "description": owned_contract.definition.description,
+                    "language": owned_contract.definition.language,
+                    "title": owned_contract.definition.title,
+                },
+                "order": {
+                    "id": str(owned_contract.order.id),
+                    "course": {
+                        "code": owned_contract.order.course.code,
+                        "cover": {
+                            "filename": owned_contract.order.course.cover.name,
+                            "height": owned_contract.order.course.cover.height,
+                            "size": owned_contract.order.course.cover.size,
+                            "src": f"http://testserver{owned_contract.order.course.cover.url}.1x1_q85.webp",  # noqa pylint: disable=line-too-long
+                            "srcset": (
+                                f"http://testserver{owned_contract.order.course.cover.url}.1920x1080_q85_crop-smart_upscale.webp 1920w, "  # noqa pylint: disable=line-too-long
+                                f"http://testserver{owned_contract.order.course.cover.url}.1280x720_q85_crop-smart_upscale.webp 1280w, "  # noqa pylint: disable=line-too-long
+                                f"http://testserver{owned_contract.order.course.cover.url}.768x432_q85_crop-smart_upscale.webp 768w, "  # noqa pylint: disable=line-too-long
+                                f"http://testserver{owned_contract.order.course.cover.url}.384x216_q85_crop-smart_upscale.webp 384w"  # noqa pylint: disable=line-too-long
+                            ),
+                            "width": 1,
+                        },
+                        "id": str(owned_contract.order.course.id),
+                        "title": owned_contract.order.course.title,
+                    },
+                    "organization": {
+                        "id": str(owned_contract.order.organization.id),
+                        "code": owned_contract.order.organization.code,
+                        "logo": {
+                            "filename": owned_contract.order.organization.logo.name,
+                            "height": owned_contract.order.organization.logo.height,
+                            "size": owned_contract.order.organization.logo.size,
+                            "src": f"http://testserver{owned_contract.order.organization.logo.url}.1x1_q85.webp",  # noqa pylint: disable=line-too-long
+                            "srcset": (
+                                f"http://testserver{owned_contract.order.organization.logo.url}.1024x1024_q85_crop-smart_upscale.webp 1024w, "  # noqa pylint: disable=line-too-long
+                                f"http://testserver{owned_contract.order.organization.logo.url}.512x512_q85_crop-smart_upscale.webp 512w, "  # noqa pylint: disable=line-too-long
+                                f"http://testserver{owned_contract.order.organization.logo.url}.256x256_q85_crop-smart_upscale.webp 256w, "  # noqa pylint: disable=line-too-long
+                                f"http://testserver{owned_contract.order.organization.logo.url}.128x128_q85_crop-smart_upscale.webp 128w"  # noqa pylint: disable=line-too-long
+                            ),
+                            "width": 1,
+                        },
+                        "title": owned_contract.order.organization.title,
+                    },
+                },
                 "signed_on": None,
+                "created_on": owned_contract.created_on.isoformat().replace(
+                    "+00:00", "Z"
+                ),
             },
         )
 
