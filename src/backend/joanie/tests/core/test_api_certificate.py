@@ -44,7 +44,7 @@ class CertificateApiTest(BaseAPITestCase):
 
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(4):
             response = self.client.get(
                 "/api/v1.0/certificates/", HTTP_AUTHORIZATION=f"Bearer {token}"
             )
@@ -82,6 +82,8 @@ class CertificateApiTest(BaseAPITestCase):
                                 "logo": "_this_field_is_mocked",
                                 "title": order.organization.title,
                             },
+                            "owner": certificate.order.owner.username,
+                            "product": certificate.order.product.title,
                         },
                     },
                 ],
@@ -213,6 +215,8 @@ class CertificateApiTest(BaseAPITestCase):
                         "logo": "_this_field_is_mocked",
                         "title": certificate.order.organization.title,
                     },
+                    "owner": certificate.order.owner.username,
+                    "product": certificate.order.product.title,
                 },
             },
         )
