@@ -29,6 +29,8 @@ from joanie.lms_handler.backends.openedx import OpenEdXLMSBackend
 class EnrollmentModelsTestCase(TestCase):
     """Test suite for the Enrollment model."""
 
+    maxDiff = None
+
     def setUp(self):
         super().setUp()
         self.now = timezone.now()
@@ -317,6 +319,47 @@ class EnrollmentModelsTestCase(TestCase):
             course_run=cr1, user=user, was_created_by_order=True
         )
         self.assertEqual(user.enrollments.count(), 1)
+
+    def test_models_enrollment_allow_to_unenroll_from_closed_course_run(self):
+        """
+        If a course run is closed, user should be allowed to unenroll.
+        """
+        course_run = factories.CourseRunFactory(
+            state=CourseState.ONGOING_OPEN,
+            is_listed=True,
+        )
+
+        # - As the course run is opened, enrollment should be allowed
+        enrollment = factories.EnrollmentFactory(course_run=course_run, is_active=True)
+
+        # - User should be able to unenroll then re-enroll
+        enrollment.is_active = False
+        enrollment.save()
+
+        enrollment.is_active = True
+        enrollment.save()
+
+        # - Now we close the course run
+        course_run.enrollment_end = timezone.now() - timedelta(days=1)
+        course_run.save()
+
+        # - User should be still able to unenroll
+        enrollment.is_active = False
+        enrollment.save()
+
+        # - But user should not be able anymore to re-enroll
+        enrollment.is_active = True
+        with self.assertRaises(ValidationError) as context:
+            enrollment.save()
+
+        self.assertDictEqual(
+            context.exception.message_dict,
+            {
+                "__all__": [
+                    "You are not allowed to enroll to a course run not opened for enrollment."
+                ]
+            },
+        )
 
     def test_models_enrollment_forbid_for_closed_course_run(self):
         """If a course run is closed, user should not be allowed to enroll."""

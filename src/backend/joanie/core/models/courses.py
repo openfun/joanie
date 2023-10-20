@@ -914,8 +914,10 @@ class Enrollment(BaseModel):
         `was_created_by_order` cannot be set to True.
         """
 
-        # The related course run must be opened for enrollment
-        if self.course_run.state["priority"] > CourseState.ARCHIVED_OPEN:
+        # The related course run must be opened to create the enrollment or reactivate it.
+        if (not self.created_on or self.is_active) and self.course_run.state[
+            "priority"
+        ] > CourseState.ARCHIVED_OPEN:
             message = _(
                 "You are not allowed to enroll to a course run not opened for enrollment."
             )

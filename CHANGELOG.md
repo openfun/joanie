@@ -99,6 +99,7 @@ and this project adheres to
 
 ### Fixed
 
+- Fix unenrollment issue on closed course runs
 - Fix auto enrollment with closed and specific course runs
 - Fix demo-dev command synchronization error.
 
