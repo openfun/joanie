@@ -54,6 +54,7 @@ export function MarkdownComponent({ value, onChange }: Props) {
 
   return (
     <MDEditor
+      data-testid="md-editor"
       autoFocus={false}
       height={300}
       value={value}
