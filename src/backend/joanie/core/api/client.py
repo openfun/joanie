@@ -558,21 +558,21 @@ class CertificateViewSet(
     pagination_class = Pagination
     serializer_class = serializers.CertificateSerializer
     permission_classes = [permissions.IsAuthenticated]
+    queryset = models.Certificate.objects.all().select_related(
+        "certificate_definition", "order__course", "order__organization", "order__owner"
+    )
 
     def get_queryset(self):
         """
         Custom queryset to get user certificates
         """
+        queryset = super().get_queryset()
         username = (
             self.request.auth["username"]
             if self.request.auth
             else self.request.user.username
         )
-        return models.Certificate.objects.filter(
-            order__owner__username=username
-        ).select_related(
-            "certificate_definition", "order__course", "order__organization"
-        )
+        return queryset.filter(order__owner__username=username)
 
     @action(detail=True, methods=["GET"])
     def download(self, request, pk=None):  # pylint: disable=no-self-use, invalid-name
