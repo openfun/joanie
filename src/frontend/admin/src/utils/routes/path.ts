@@ -35,6 +35,12 @@ export const PATH_ADMIN = {
     create: path("/certificates-definitions/create"),
     edit: (id: string) => path(`/certificates-definitions/${id}/edit`),
   },
+  contract_definition: {
+    root: path("/contracts-definitions"),
+    list: path("/contracts-definitions/list"),
+    create: path("/contracts-definitions/create"),
+    edit: (id: string) => path(`/contracts-definitions/${id}/edit`),
+  },
   auth: {
     login: (redirectUrl?: string) => {
       // eslint-disable-next-line compat/compat
