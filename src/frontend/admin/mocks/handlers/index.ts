@@ -5,10 +5,12 @@ import { coursesHandlers } from "./courses";
 import { authHandlers } from "./auth";
 import { userHandlers } from "./users";
 import { productHandlers } from "./products";
+import { contractDefinitionsHandlers } from "./contract-definitions";
 
 export const handlers = [
   ...organizationHandlers,
   ...certificateDefinitionsHandlers,
+  ...contractDefinitionsHandlers,
   ...coursesRunsHandlers,
   ...coursesHandlers,
   ...userHandlers,
