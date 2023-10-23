@@ -44,7 +44,7 @@ class CertificateApiTest(BaseAPITestCase):
 
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(3):
             response = self.client.get(
                 "/api/v1.0/certificates/", HTTP_AUTHORIZATION=f"Bearer {token}"
             )
