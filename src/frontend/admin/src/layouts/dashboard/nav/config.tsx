@@ -1,10 +1,11 @@
 import { defineMessages } from "react-intl";
-import React, { ReactElement } from "react";
+import { ReactElement } from "react";
 import CorporateFareRoundedIcon from "@mui/icons-material/CorporateFareRounded";
 import SchoolRoundedIcon from "@mui/icons-material/SchoolRounded";
 import EventAvailableRoundedIcon from "@mui/icons-material/EventAvailableRounded";
 import TaskRoundedIcon from "@mui/icons-material/TaskRounded";
 import ProductionQuantityLimitsRoundedIcon from "@mui/icons-material/ProductionQuantityLimitsRounded";
+import GavelIcon from "@mui/icons-material/Gavel";
 import { PATH_ADMIN } from "@/utils/routes/path";
 
 const navTranslations = defineMessages({
@@ -22,6 +23,11 @@ const navTranslations = defineMessages({
     id: "layouts.dashboard.nav.config.certificatesNavTitle",
     defaultMessage: "Certificates",
     description: "Title for the Certificates nav item",
+  },
+  contractDefinitionNavTitle: {
+    id: "layouts.dashboard.nav.config.contractDefinitionNavTitle",
+    defaultMessage: "Contracts definitions",
+    description: "Title for the Contract definition nav item",
   },
   courseNavTitle: {
     id: "layouts.dashboard.nav.config.courseNavTitle",
@@ -59,6 +65,12 @@ export const navConfig: NavConfig[] = [
         path: PATH_ADMIN.certificates.list,
         prefix: PATH_ADMIN.certificates.root,
         icon: <TaskRoundedIcon />,
+      },
+      {
+        title: navTranslations.contractDefinitionNavTitle,
+        path: PATH_ADMIN.contract_definition.list,
+        prefix: PATH_ADMIN.contract_definition.root,
+        icon: <GavelIcon />,
       },
       {
         title: navTranslations.courseNavTitle,
