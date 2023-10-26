@@ -1,16 +1,14 @@
 import * as React from "react";
-import { useState } from "react";
 import { GridColDef } from "@mui/x-data-grid";
 import { defineMessages, useIntl } from "react-intl";
 import { useRouter } from "next/router";
-import { useDebouncedCallback } from "use-debounce";
 import { TableComponent } from "@/components/presentational/table/TableComponent";
 import { PATH_ADMIN } from "@/utils/routes/path";
-import { Maybe } from "@/types/utils";
 import { CustomLink } from "@/components/presentational/link/CustomLink";
 import { commonTranslations } from "@/translations/common/commonTranslations";
 import { useProducts } from "@/hooks/useProducts/useProducts";
 import { Product } from "@/services/api/models/Product";
+import { usePaginatedTableResource } from "@/components/presentational/table/usePaginatedTableResource";
 
 const messages = defineMessages({
   priceHeader: {
@@ -33,10 +31,9 @@ const messages = defineMessages({
 export function ProductList() {
   const intl = useIntl();
   const { push } = useRouter();
-  const [query, setQuery] = useState<Maybe<string>>();
-  const products = useProducts({ query });
-
-  const debouncedSetSearch = useDebouncedCallback(setQuery, 300);
+  const paginatedResource = usePaginatedTableResource({
+    useResource: useProducts,
+  });
 
   const columns: GridColDef[] = [
     {
@@ -67,11 +64,9 @@ export function ProductList() {
 
   return (
     <TableComponent
-      rows={products.items}
-      loading={products.states.isLoading || products.states.fetching}
+      {...paginatedResource.tableProps}
       columns={columns}
       columnBuffer={3}
-      onSearch={debouncedSetSearch}
       onEditClick={(product: Product) => {
         if (!product.id) {
           throw new Error("Product id is null");
@@ -79,7 +74,7 @@ export function ProductList() {
         push(PATH_ADMIN.products.edit(product.id));
       }}
       onRemoveClick={(product: Product) => {
-        products.methods.delete(product.id);
+        paginatedResource.methods.delete(product.id);
       }}
       getEntityName={(product) => {
         return product.title;
