@@ -3,7 +3,7 @@ import { GridPaginationModel } from "@mui/x-data-grid";
 import { useDebouncedCallback } from "use-debounce";
 import { Resource, useResources } from "@/hooks/useResources";
 import { Maybe } from "@/types/utils";
-import { DEFAULT_PER_PAGE_SIZE } from "@/utils/constants";
+import { DEFAULT_PAGE_SIZE, DEFAULT_SEARCH_DEBOUNCE } from "@/utils/constants";
 
 interface Props<T extends Resource> {
   initialItemsPerPage?: number;
@@ -11,8 +11,8 @@ interface Props<T extends Resource> {
   useResource: ReturnType<typeof useResources<T>>;
 }
 
-export const useTableResourcePagination = <T extends Resource>({
-  initialItemsPerPage = DEFAULT_PER_PAGE_SIZE,
+export const usePaginatedTableResource = <T extends Resource>({
+  initialItemsPerPage = DEFAULT_PAGE_SIZE,
   initialPage = 0,
   useResource,
 }: Props<T>) => {
@@ -31,10 +31,10 @@ export const useTableResourcePagination = <T extends Resource>({
   const debouncedSetQuery = useDebouncedCallback((term: string) => {
     setQuery(term);
     setCurrentPage(0);
-  }, 300);
+  }, DEFAULT_SEARCH_DEBOUNCE);
 
   return {
-    useResource: resource,
+    ...resource,
     tableProps: {
       onSearch: debouncedSetQuery,
       loading: resource.states.fetching ?? false,

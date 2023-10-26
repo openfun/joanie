@@ -13,7 +13,7 @@ import { DataGridProps } from "@mui/x-data-grid/models/props/DataGridProps";
 import { GridValidRowModel } from "@mui/x-data-grid/models/gridRows";
 import { TableDefaultActions } from "@/components/presentational/table/TableDefaultActions";
 import { tableTranslations } from "@/components/presentational/table/translations";
-import { DEFAULT_PER_PAGE_SIZE } from "@/utils/constants";
+import { DEFAULT_PAGE_SIZE } from "@/utils/constants";
 
 interface Props<T extends GridValidRowModel> extends DataGridProps<T> {
   rows: T[];
@@ -149,7 +149,7 @@ export function TableComponent<T extends GridValidRowModel>({
           initialState={{
             pagination: {
               paginationModel: {
-                pageSize: DEFAULT_PER_PAGE_SIZE,
+                pageSize: DEFAULT_PAGE_SIZE,
               },
             },
           }}
@@ -159,7 +159,7 @@ export function TableComponent<T extends GridValidRowModel>({
             footerRowSelected: (count) =>
               intl.formatMessage(tableTranslations.rowsSelected, { count }),
           }}
-          pageSizeOptions={[DEFAULT_PER_PAGE_SIZE]}
+          pageSizeOptions={[DEFAULT_PAGE_SIZE]}
           onRowSelectionModelChange={(ids) => {
             setSelectedRow(ids);
             props.onSelectRows?.(ids);

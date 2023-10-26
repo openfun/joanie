@@ -1,17 +1,15 @@
 import * as React from "react";
-import { useState } from "react";
 import { defineMessages, useIntl } from "react-intl";
 import { useRouter } from "next/router";
 import { GridColDef } from "@mui/x-data-grid";
-import { useDebouncedCallback } from "use-debounce";
 import { TableComponent } from "@/components/presentational/table/TableComponent";
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { CertificateDefinition } from "@/services/api/models/CertificateDefinition";
 import { useCertificateDefinitions } from "@/hooks/useCertificateDefinitions/useCertificateDefinitions";
-import { Maybe } from "@/types/utils";
 import { CustomLink } from "@/components/presentational/link/CustomLink";
 import { commonTranslations } from "@/translations/common/commonTranslations";
 import { SimpleCard } from "@/components/presentational/card/SimpleCard";
+import { usePaginatedTableResource } from "@/components/presentational/table/usePaginatedTableResource";
 
 const messages = defineMessages({
   nameHeader: {
@@ -28,11 +26,10 @@ const messages = defineMessages({
 
 export function CertificatesDefinitionsList() {
   const intl = useIntl();
+  const paginatedResource = usePaginatedTableResource<CertificateDefinition>({
+    useResource: useCertificateDefinitions,
+  });
   const { push } = useRouter();
-  const [query, setQuery] = useState<Maybe<string>>();
-  const certificateDefinitions = useCertificateDefinitions({ query });
-
-  const debouncedSetQuery = useDebouncedCallback(setQuery, 300);
 
   const columns: GridColDef<CertificateDefinition>[] = [
     {
@@ -70,10 +67,7 @@ export function CertificatesDefinitionsList() {
   return (
     <SimpleCard>
       <TableComponent
-        rows={certificateDefinitions.items}
-        loading={certificateDefinitions.states.fetching}
         columns={columns}
-        onSearch={debouncedSetQuery}
         columnBuffer={3}
         onEditClick={(certificateDefinition: CertificateDefinition) => {
           if (certificateDefinition.id === undefined) {
@@ -81,11 +75,12 @@ export function CertificatesDefinitionsList() {
           }
           push(PATH_ADMIN.certificates.edit(certificateDefinition.id));
         }}
+        {...paginatedResource.tableProps}
         getEntityName={(certificateDefinition) => {
           return certificateDefinition.name;
         }}
         onRemoveClick={(certificateDefinition: CertificateDefinition) => {
-          certificateDefinitions.methods.delete(certificateDefinition.id);
+          paginatedResource.methods.delete(certificateDefinition.id);
         }}
       />
     </SimpleCard>

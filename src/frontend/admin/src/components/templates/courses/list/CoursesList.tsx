@@ -1,17 +1,15 @@
 import * as React from "react";
-import { useState } from "react";
 import { defineMessages, useIntl } from "react-intl";
 import { useRouter } from "next/router";
 import { GridColDef } from "@mui/x-data-grid";
-import { useDebouncedCallback } from "use-debounce";
 import { TableComponent } from "@/components/presentational/table/TableComponent";
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { Course } from "@/services/api/models/Course";
-import { Maybe } from "@/types/utils";
 import { useCourses } from "@/hooks/useCourses/useCourses";
 import { CustomLink } from "@/components/presentational/link/CustomLink";
 import { commonTranslations } from "@/translations/common/commonTranslations";
 import { SimpleCard } from "@/components/presentational/card/SimpleCard";
+import { usePaginatedTableResource } from "@/components/presentational/table/usePaginatedTableResource";
 
 const messages = defineMessages({
   codeHeader: {
@@ -34,12 +32,9 @@ const messages = defineMessages({
 export function CoursesList() {
   const intl = useIntl();
   const { push } = useRouter();
-  const [query, setQuery] = useState<Maybe<string>>();
-  const courses = useCourses({ query });
-
-  const debouncedSetQuery = useDebouncedCallback((term) => {
-    setQuery(term);
-  }, 300);
+  const paginatedResource = usePaginatedTableResource<Course>({
+    useResource: useCourses,
+  });
 
   const columns: GridColDef<Course>[] = [
     {
@@ -73,11 +68,9 @@ export function CoursesList() {
   return (
     <SimpleCard>
       <TableComponent
-        rows={courses.items}
-        loading={courses.states.isLoading}
+        {...paginatedResource.tableProps}
         columns={columns}
         columnBuffer={4}
-        onSearch={debouncedSetQuery}
         getEntityName={(course) => {
           return course.title;
         }}
@@ -86,7 +79,9 @@ export function CoursesList() {
             push(PATH_ADMIN.courses.edit(course.id));
           }
         }}
-        onRemoveClick={(course: Course) => courses.methods.delete(course.id)}
+        onRemoveClick={(course: Course) =>
+          paginatedResource.methods.delete(course.id)
+        }
       />
     </SimpleCard>
   );
