@@ -9,10 +9,13 @@ import TextField from "@mui/material/TextField";
 import { Delete, SearchOutlined } from "@mui/icons-material";
 import { useIntl } from "react-intl";
 import { useDebouncedCallback } from "use-debounce";
+import { DataGridProps } from "@mui/x-data-grid/models/props/DataGridProps";
+import { GridValidRowModel } from "@mui/x-data-grid/models/gridRows";
 import { TableDefaultActions } from "@/components/presentational/table/TableDefaultActions";
 import { tableTranslations } from "@/components/presentational/table/translations";
+import { DEFAULT_PER_PAGE_SIZE } from "@/utils/constants";
 
-interface Props<T> {
+interface Props<T extends GridValidRowModel> extends DataGridProps<T> {
   rows: T[];
   columns: GridColDef[];
   enableEdit?: boolean;
@@ -27,9 +30,12 @@ interface Props<T> {
   topActions?: React.ReactElement;
 }
 
-export function TableComponent<T>({ enableEdit = true, ...props }: Props<T>) {
+export function TableComponent<T extends GridValidRowModel>({
+  enableEdit = true,
+  paginationMode = "server",
+  ...props
+}: Props<T>) {
   const intl = useIntl();
-  const [pageSize, setPageSize] = useState(25);
   const [selectedRows, setSelectedRow] = useState<GridRowSelectionModel>([]);
 
   const getColumns = (): GridColDef[] => {
@@ -119,6 +125,8 @@ export function TableComponent<T>({ enableEdit = true, ...props }: Props<T>) {
         )}
 
         <DataGrid
+          {...props}
+          paginationMode={paginationMode}
           getRowHeight={() => "auto"}
           sx={{
             border: "none",
@@ -141,7 +149,7 @@ export function TableComponent<T>({ enableEdit = true, ...props }: Props<T>) {
           initialState={{
             pagination: {
               paginationModel: {
-                pageSize,
+                pageSize: DEFAULT_PER_PAGE_SIZE,
               },
             },
           }}
@@ -151,8 +159,7 @@ export function TableComponent<T>({ enableEdit = true, ...props }: Props<T>) {
             footerRowSelected: (count) =>
               intl.formatMessage(tableTranslations.rowsSelected, { count }),
           }}
-          onPaginationModelChange={(size) => setPageSize(size.pageSize)}
-          pageSizeOptions={[5, 10, 25, 50, 75]}
+          pageSizeOptions={[DEFAULT_PER_PAGE_SIZE]}
           onRowSelectionModelChange={(ids) => {
             setSelectedRow(ids);
             props.onSelectRows?.(ids);

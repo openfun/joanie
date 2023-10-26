@@ -6,7 +6,13 @@ import { organizationRoute } from "@/services/repositories/organization/Organiza
 
 export const organizationHandlers = [
   rest.get(buildApiUrl(organizationRoute.getAll()), (req, res, ctx) => {
-    return res(ctx.json(OrganizationFactory(10)));
+    const result = {
+      count: 10,
+      next: null,
+      previous: null,
+      results: OrganizationFactory(10),
+    };
+    return res(ctx.json(result));
   }),
   rest.get(buildApiUrl(organizationRoute.get(":id")), (req, res, ctx) => {
     return res(ctx.json(OrganizationFactory()));
