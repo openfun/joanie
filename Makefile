@@ -141,7 +141,7 @@ lint: \
 
 lint-bandit: ## lint back-end python sources with bandit
 	@echo 'lint:bandit started…'
-	@$(COMPOSE_RUN_APP) bandit -c .banditrc -qr .
+	@$(COMPOSE_RUN_APP) bandit -c .banditrc -qr joanie
 .PHONY: lint-bandit
 
 lint-black: ## lint back-end python sources with black
