@@ -5,6 +5,7 @@ import { orgBreadcrumbsTranslation } from "@/translations/pages/organizations/br
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { OrganizationForm } from "@/components/templates/organizations/form/OrganizationForm";
 import { useOrganization } from "@/hooks/useOrganizations/useOrganizations";
+import { UseAsTemplateButton } from "@/components/templates/form/buttons/UseAsTemplateButton";
 
 const messages = defineMessages({
   pageTitle: {
@@ -22,6 +23,12 @@ export default function EditOrganizationPage() {
   const intl = useIntl();
   return (
     <DashboardLayoutPage
+      actions={
+        <UseAsTemplateButton
+          href={`${PATH_ADMIN.organizations.create}?from=${org.item?.id}`}
+          show={Boolean(org?.item)}
+        />
+      }
       isLoading={!org.states.isFetched}
       title={intl.formatMessage(messages.pageTitle, {
         organizationName: org.item?.title,

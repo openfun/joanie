@@ -6,6 +6,7 @@ import { SimpleCard } from "@/components/presentational/card/SimpleCard";
 import { certificateDefinitionsBreadcrumbsTranslation } from "@/translations/pages/certificates-definitions/breadcrumbsTranslations";
 import { CertificateDefinitionForm } from "@/components/templates/certificates-definitions/form/CertificateDefinitionForm";
 import { useCertificateDefinition } from "@/hooks/useCertificateDefinitions/useCertificateDefinitions";
+import { UseAsTemplateButton } from "@/components/templates/form/buttons/UseAsTemplateButton";
 
 const messages = defineMessages({
   pageTitle: {
@@ -22,6 +23,12 @@ export default function EditCertificatePage() {
   const definition = useCertificateDefinition(id as string);
   return (
     <DashboardLayoutPage
+      actions={
+        <UseAsTemplateButton
+          href={`${PATH_ADMIN.certificates.create}?from=${definition.item?.id}`}
+          show={Boolean(definition?.item)}
+        />
+      }
       title={intl.formatMessage(messages.pageTitle, {
         name: definition.item?.title ?? "",
       })}

@@ -5,6 +5,7 @@ import { PATH_ADMIN } from "@/utils/routes/path";
 import { coursesPagesTranslation } from "@/translations/pages/courses/breadcrumbsTranslations";
 import { CourseForm } from "@/components/templates/courses/form/CourseForm";
 import { useCourse } from "@/hooks/useCourses/useCourses";
+import { UseAsTemplateButton } from "@/components/templates/form/buttons/UseAsTemplateButton";
 
 const messages = defineMessages({
   pageTitle: {
@@ -14,14 +15,20 @@ const messages = defineMessages({
   },
 });
 
-export default function EditCourseRunPage() {
+export default function EditCoursePage() {
   const intl = useIntl();
   const { query } = useRouter();
-  const courseRun = useCourse(query.id as string);
+  const course = useCourse(query.id as string);
   return (
     <DashboardLayoutPage
+      actions={
+        <UseAsTemplateButton
+          href={`${PATH_ADMIN.courses.create}?from=${course.item?.id}`}
+          show={Boolean(course?.item)}
+        />
+      }
       title={intl.formatMessage(messages.pageTitle, {
-        courseName: courseRun?.item?.title,
+        courseName: course?.item?.title,
       })}
       breadcrumbs={[
         {
@@ -38,7 +45,7 @@ export default function EditCourseRunPage() {
       ]}
       stretch={false}
     >
-      {courseRun.item && <CourseForm course={courseRun.item} />}
+      {course.item && <CourseForm course={course.item} />}
     </DashboardLayoutPage>
   );
 }
