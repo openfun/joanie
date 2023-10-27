@@ -6,6 +6,7 @@ import { SimpleCard } from "@/components/presentational/card/SimpleCard";
 import { coursesRunsPagesTranslation } from "@/translations/pages/courses-runs/breadcrumbsTranslations";
 import { CourseRunForm } from "@/components/templates/courses-runs/form/CourseRunForm";
 import { useCourseRun } from "@/hooks/useCourseRun/useCourseRun";
+import { UseAsTemplateButton } from "@/components/templates/form/buttons/UseAsTemplateButton";
 
 const messages = defineMessages({
   pageTitle: {
@@ -21,6 +22,12 @@ export default function EditCourseRunPage() {
   const courseRun = useCourseRun(query.id as string);
   return (
     <DashboardLayoutPage
+      actions={
+        <UseAsTemplateButton
+          href={`${PATH_ADMIN.courses_run.create}?from=${courseRun.item?.id}`}
+          show={Boolean(courseRun.item)}
+        />
+      }
       isLoading={courseRun.states.isLoading}
       title={intl.formatMessage(messages.pageTitle, {
         courseRunName: courseRun.item?.title,

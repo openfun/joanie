@@ -6,6 +6,7 @@ import { SimpleCard } from "@/components/presentational/card/SimpleCard";
 import { useProduct } from "@/hooks/useProducts/useProducts";
 import { ProductForm } from "@/components/templates/products/form/ProductForm";
 import { productsPagesTranslation } from "@/translations/pages/products/breadcrumbsTranslations";
+import { UseAsTemplateButton } from "@/components/templates/form/buttons/UseAsTemplateButton";
 
 const messages = defineMessages({
   pageTitle: {
@@ -23,6 +24,12 @@ export default function EditProductPage() {
   const intl = useIntl();
   return (
     <DashboardLayoutPage
+      actions={
+        <UseAsTemplateButton
+          href={`${PATH_ADMIN.products.create}?from=${product.item?.id}`}
+          show={Boolean(product?.item)}
+        />
+      }
       isLoading={!product.states.isFetched}
       title={intl.formatMessage(messages.pageTitle, {
         productName: product.item?.title,
