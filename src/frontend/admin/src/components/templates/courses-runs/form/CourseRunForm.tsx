@@ -36,12 +36,14 @@ interface FormValues
 interface Props {
   afterSubmit?: (courseRun: CourseRun) => void;
   courseRun?: CourseRun;
+  fromCourseRun?: CourseRun;
 }
 
 export function CourseRunForm({ courseRun, ...props }: Props) {
   const intl = useIntl();
   const selectLanguageUtils = useSelectLanguageUtils();
   const courseRuns = useCoursesRuns({}, { enabled: false });
+  const defaultCourseRun = courseRun ?? props.fromCourseRun;
 
   const RegisterSchema = Yup.object().shape({
     title: Yup.string().required(),
@@ -58,16 +60,18 @@ export function CourseRunForm({ courseRun, ...props }: Props) {
 
   const getDefaultValues = () => {
     return {
-      title: courseRun?.title ?? "",
-      course: courseRun?.course ?? (null as any), // to not trigger type validation for the default values
-      resource_link: courseRun?.resource_link ?? "",
-      start: courseRun?.start ?? null,
-      end: courseRun?.end ?? null,
-      enrollment_start: courseRun?.enrollment_start ?? null,
-      enrollment_end: courseRun?.enrollment_end ?? null,
-      languages: selectLanguageUtils.getObjectsFromValues(courseRun?.languages),
-      is_gradable: courseRun?.is_gradable ?? false,
-      is_listed: courseRun?.is_listed ?? false,
+      title: defaultCourseRun?.title ?? "",
+      course: defaultCourseRun?.course ?? (null as any), // to not trigger type validation for the default values
+      resource_link: defaultCourseRun?.resource_link ?? "",
+      start: defaultCourseRun?.start ?? null,
+      end: defaultCourseRun?.end ?? null,
+      enrollment_start: defaultCourseRun?.enrollment_start ?? null,
+      enrollment_end: defaultCourseRun?.enrollment_end ?? null,
+      languages: selectLanguageUtils.getObjectsFromValues(
+        defaultCourseRun?.languages,
+      ),
+      is_gradable: defaultCourseRun?.is_gradable ?? false,
+      is_listed: defaultCourseRun?.is_listed ?? false,
     };
   };
 

@@ -30,6 +30,7 @@ import { removeEOL } from "@/utils/string";
 
 type Props = WizardStepProps & {
   product?: Product;
+  fromProduct?: Product;
   productType?: ProductType;
   onResetType: () => void;
   afterSubmit?: (product: Product) => void;
@@ -53,22 +54,23 @@ export type ProductFormMainValues = Omit<ProductFormValues, "target_courses">;
 export function ProductFormMain({
   productType = ProductType.CREDENTIAL,
   product,
+  fromProduct,
   afterSubmit,
   ...props
 }: Props) {
   const intl = useIntl();
   const productRepository = useProducts({}, { enabled: false });
-
+  const defaultProduct = product ?? fromProduct;
   const getDefaultValues = (): ProductFormMainValues => {
     return {
-      title: product?.title ?? "",
-      type: product?.type ?? ProductType.CERTIFICATE,
-      description: removeEOL(product?.description),
-      price: product?.price ?? 0,
-      price_currency: product?.price_currency ?? "EUR",
-      call_to_action: product?.call_to_action ?? "",
-      certificate_definition: product?.certificate_definition ?? null,
-      instructions: removeEOL(product?.instructions),
+      title: defaultProduct?.title ?? "",
+      type: defaultProduct?.type ?? ProductType.CERTIFICATE,
+      description: removeEOL(defaultProduct?.description),
+      price: defaultProduct?.price ?? 0,
+      price_currency: defaultProduct?.price_currency ?? "EUR",
+      call_to_action: defaultProduct?.call_to_action ?? "",
+      certificate_definition: defaultProduct?.certificate_definition ?? null,
+      instructions: removeEOL(defaultProduct?.instructions),
     };
   };
 

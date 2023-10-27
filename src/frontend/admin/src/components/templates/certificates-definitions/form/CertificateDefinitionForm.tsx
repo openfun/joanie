@@ -44,10 +44,13 @@ const messages = defineMessages({
 interface Props {
   afterSubmit?: (certificateDefinition: CertificateDefinition) => void;
   definition?: CertificateDefinition;
+  fromDefinition?: CertificateDefinition;
 }
 
 export function CertificateDefinitionForm({ definition, ...props }: Props) {
   const intl = useIntl();
+  const defaultDefinition = definition ?? props.fromDefinition;
+
   const certificateDefinitions = useCertificateDefinitions(
     {},
     { enabled: false },
@@ -61,9 +64,9 @@ export function CertificateDefinitionForm({ definition, ...props }: Props) {
 
   const getDefaultValues = () => {
     return {
-      name: definition?.name ?? "",
-      title: definition?.title ?? "",
-      description: definition?.description ?? "",
+      name: defaultDefinition?.name ?? "",
+      title: defaultDefinition?.title ?? "",
+      description: defaultDefinition?.description ?? "",
       template: "howard.issuers.CertificateDocument",
     };
   };

@@ -3,7 +3,7 @@ import { MutableRefObject } from "react";
 import { FormProvider, UseFormReturn } from "react-hook-form";
 import { FieldValues } from "react-hook-form/dist/types/fields";
 import Box from "@mui/material/Box";
-import { defineMessages, useIntl } from "react-intl";
+import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 import LoadingButton from "@mui/lab/LoadingButton";
 
 const messages = defineMessages({
@@ -18,6 +18,7 @@ interface Props<T extends FieldValues> {
   children: React.ReactNode;
   id?: string;
   methods: UseFormReturn<T>;
+  actionButtons?: React.ReactNode;
   onSubmit?: VoidFunction;
   formRef?: MutableRefObject<HTMLFormElement | undefined>;
   isSubmitting?: boolean;
@@ -28,6 +29,7 @@ export function RHFProvider<T extends FieldValues>({
   children,
   onSubmit,
   methods,
+  actionButtons,
   showSubmit = true,
   isSubmitting = false,
   id,
@@ -44,15 +46,24 @@ export function RHFProvider<T extends FieldValues>({
         }}
       >
         {children}
-        {showSubmit && (
-          <Box mt={2} display="flex" justifyContent="flex-end">
-            <LoadingButton
-              loading={isSubmitting}
-              variant="contained"
-              type="submit"
-            >
-              {intl.formatMessage(messages.submit)}
-            </LoadingButton>
+        {(showSubmit || actionButtons) && (
+          <Box
+            gap={2}
+            mt={2}
+            display="flex"
+            flexDirection="row"
+            justifyContent="flex-end"
+          >
+            {actionButtons}
+            {showSubmit && (
+              <LoadingButton
+                loading={isSubmitting}
+                variant="contained"
+                type="submit"
+              >
+                <FormattedMessage {...messages.submit} />
+              </LoadingButton>
+            )}
           </Box>
         )}
       </form>

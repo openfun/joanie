@@ -38,6 +38,7 @@ interface Props {
   showProductRelationSection?: boolean;
   afterSubmit?: (course: Course) => void;
   course?: Course;
+  fromCourse?: Course;
 }
 
 export function CourseForm({
@@ -47,6 +48,7 @@ export function CourseForm({
 }: Props) {
   const intl = useIntl();
   const courses = useCourses({}, { enabled: false });
+  const defaultCourse = course ?? props.fromCourse;
 
   const relationToProductModal = useModal();
   const [editRelationToProduct, setEditRelationToProduct] =
@@ -63,10 +65,10 @@ export function CourseForm({
 
   const getDefaultValues = () => {
     return {
-      code: course?.code ?? "",
-      title: course?.title ?? "",
-      organizations: course?.organizations ?? [],
-      product_relations: course?.product_relations ?? [],
+      code: defaultCourse?.code ?? "",
+      title: defaultCourse?.title ?? "",
+      organizations: defaultCourse?.organizations ?? [],
+      product_relations: defaultCourse?.product_relations ?? [],
     };
   };
 
@@ -127,7 +129,6 @@ export function CourseForm({
         >
           <Box padding={4}>
             <RHFProvider
-              showSubmit={false}
               methods={methods}
               id="course-form"
               onSubmit={methods.handleSubmit(onSubmit)}
@@ -210,14 +211,6 @@ export function CourseForm({
               </Grid>
             </RHFProvider>
 
-            <Box display="flex" mt={2} alignItems="center" justifyContent="end">
-              <Button
-                onClick={methods.handleSubmit(onSubmit)}
-                variant="contained"
-              >
-                {intl.formatMessage(commonTranslations.submit)}
-              </Button>
-            </Box>
             <CourseFormProductRelationModal
               onAdd={(relation) => {
                 productsArray.append(relation);

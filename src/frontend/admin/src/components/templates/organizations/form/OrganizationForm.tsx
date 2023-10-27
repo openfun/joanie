@@ -6,7 +6,6 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import Grid from "@mui/material/Unstable_Grid2";
 import { useIntl } from "react-intl";
 import Box from "@mui/material/Box";
-import LoadingButton from "@mui/lab/LoadingButton";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { RHFProvider } from "@/components/presentational/hook-form/RHFProvider";
@@ -38,17 +37,19 @@ interface FormValues {
 interface Props {
   afterSubmit?: (values: Organization) => void;
   organization?: Organization;
+  fromOrganization?: Organization;
 }
 
 export function OrganizationForm(props: Props) {
   const intl = useIntl();
   const org = useOrganizations({}, { enabled: false });
+  const defaultOrganization = props.organization ?? props.fromOrganization;
 
   const getDefaultValues = () => {
     return {
-      code: props.organization?.code ?? "",
-      title: props.organization?.title ?? "",
-      representative: props.organization?.representative ?? "",
+      code: defaultOrganization?.code ?? "",
+      title: defaultOrganization?.title ?? "",
+      representative: defaultOrganization?.representative ?? "",
     };
   };
 
@@ -112,7 +113,7 @@ export function OrganizationForm(props: Props) {
         >
           <Box padding={4}>
             <RHFProvider
-              showSubmit={false}
+              showSubmit={true}
               methods={methods}
               isSubmitting={org.states.updating}
               id="organization-form"
@@ -167,16 +168,6 @@ export function OrganizationForm(props: Props) {
                 </Grid>
               </Grid>
             </RHFProvider>
-
-            <Box display="flex" mt={2} alignItems="center" justifyContent="end">
-              <LoadingButton
-                loading={org.states.updating}
-                onClick={handleSubmit(onSubmit)}
-                variant="contained"
-              >
-                {intl.formatMessage(commonTranslations.submit)}
-              </LoadingButton>
-            </Box>
           </Box>
         </TranslatableContent>
       </SimpleCard>
