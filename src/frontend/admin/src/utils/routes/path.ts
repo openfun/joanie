@@ -4,7 +4,7 @@ function path(sublink: string, root: string = ROOTS_ADMIN) {
 }
 
 export const PATH_ADMIN = {
-  root: ROOTS_ADMIN,
+  rootAdmin: ROOTS_ADMIN,
   organizations: {
     root: path("/organizations"),
     list: path("/organizations/list"),

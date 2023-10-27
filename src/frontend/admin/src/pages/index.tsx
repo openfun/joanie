@@ -1,17 +1,13 @@
-import Head from "next/head";
+import { useEffect } from "react";
+import { useRouter } from "next/router";
+import { PATH_ADMIN } from "@/utils/routes/path";
 
-export default function Home() {
-  return (
-    <>
-      <Head>
-        <title>Joanie – Back office</title>
-        <meta name="description" content="A wonderful back office of Joanie" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-      <main>
-        <div>Hello !</div>
-      </main>
-    </>
-  );
+export default function Index() {
+  const { pathname, replace } = useRouter();
+
+  useEffect(() => {
+    replace(PATH_ADMIN.rootAdmin);
+  }, [pathname]);
+
+  return null;
 }

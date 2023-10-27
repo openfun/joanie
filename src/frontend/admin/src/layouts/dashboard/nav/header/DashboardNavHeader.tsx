@@ -2,7 +2,18 @@ import * as React from "react";
 import { styled, useTheme } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import Image from "next/image";
+import { defineMessages, useIntl } from "react-intl";
 import logo from "@/../public/images/logo/logo-fun.svg";
+import { CustomLink } from "@/components/presentational/link/CustomLink";
+import { PATH_ADMIN } from "@/utils/routes/path";
+
+const message = defineMessages({
+  goBackToHome: {
+    id: "layouts.dashboard.nav.header.DashboardNavHeader",
+    defaultMessage: "Back to the homepage",
+    description: "aria-label for the go back home link",
+  },
+});
 
 const DrawerHeader = styled("div")(({ theme }) => {
   return {
@@ -17,6 +28,7 @@ const DrawerHeader = styled("div")(({ theme }) => {
 
 export function DashboardNavHeader() {
   const theme = useTheme();
+  const intl = useIntl();
   return (
     <DrawerHeader>
       <Box
@@ -29,7 +41,16 @@ export function DashboardNavHeader() {
           padding: theme.spacing(2),
         }}
       >
-        <Image src={logo} width={150} alt="France Université Numérique logo" />
+        <CustomLink
+          href={PATH_ADMIN.rootAdmin}
+          title={intl.formatMessage(message.goBackToHome)}
+        >
+          <Image
+            src={logo}
+            width={150}
+            alt="France Université Numérique logo"
+          />
+        </CustomLink>
       </Box>
     </DrawerHeader>
   );
