@@ -66,6 +66,12 @@ export function OrganizationsList() {
         onRemoveClick={(organization: Organization) => {
           paginatedResource.methods.delete(organization.id);
         }}
+        onUseAsTemplateClick={(organization) => {
+          if (organization.id === undefined) {
+            return;
+          }
+          push(`${PATH_ADMIN.organizations.create}?from=${organization?.id}`);
+        }}
         getEntityName={(organization) => {
           return organization.title;
         }}

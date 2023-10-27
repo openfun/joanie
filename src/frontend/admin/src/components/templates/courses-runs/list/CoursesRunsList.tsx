@@ -35,6 +35,12 @@ export function CoursesRunsList() {
             push(PATH_ADMIN.courses_run.edit(courseRun?.id));
           }
         }}
+        onUseAsTemplateClick={(courseRun) => {
+          if (courseRun.id === undefined) {
+            return;
+          }
+          push(`${PATH_ADMIN.courses_run.create}?from=${courseRun?.id}`);
+        }}
         getEntityName={(courseRun) => {
           return courseRun.title;
         }}

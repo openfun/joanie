@@ -76,6 +76,12 @@ export function ProductList() {
       onRemoveClick={(product: Product) => {
         paginatedResource.methods.delete(product.id);
       }}
+      onUseAsTemplateClick={(product) => {
+        if (product.id === undefined) {
+          return;
+        }
+        push(`${PATH_ADMIN.products.create}?from=${product?.id}`);
+      }}
       getEntityName={(product) => {
         return product.title;
       }}

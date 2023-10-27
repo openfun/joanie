@@ -27,7 +27,7 @@ export default function ProductListPage() {
         },
         {
           name: intl.formatMessage(productsPagesTranslation.listBreadcrumb),
-          href: PATH_ADMIN.organizations.list,
+          href: PATH_ADMIN.products.list,
         },
       ]}
       stretch={false}

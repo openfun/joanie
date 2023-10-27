@@ -20,6 +20,7 @@ interface Props<T extends GridValidRowModel> extends DataGridProps<T> {
   columns: GridColDef[];
   enableEdit?: boolean;
   onEditClick?: (row: T) => void;
+  onUseAsTemplateClick?: (row: T) => void;
   onRemoveClick?: (row: T) => void;
   getEntityName?: (row: T) => string;
   onSelectRows?: (ids: GridRowSelectionModel) => void;
@@ -58,6 +59,10 @@ export function TableComponent<T extends GridValidRowModel>({
               entityName={entityName}
               onDelete={
                 props.onRemoveClick && (() => props.onRemoveClick?.(params.row))
+              }
+              onUseAsTemplate={
+                props.onUseAsTemplateClick &&
+                (() => props.onUseAsTemplateClick?.(params.row))
               }
               onEdit={
                 props.onEditClick && (() => props.onEditClick?.(params.row))
