@@ -4,6 +4,8 @@ import { DashboardLayoutPage } from "@/layouts/dashboard/page/DashboardLayoutPag
 import { coursesPagesTranslation } from "@/translations/pages/courses/breadcrumbsTranslations";
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { CourseForm } from "@/components/templates/courses/form/CourseForm";
+import { useFromIdSearchParams } from "@/hooks/useFromIdSearchParams";
+import { useCourse } from "@/hooks/useCourses/useCourses";
 
 const messages = defineMessages({
   pageTitle: {
@@ -16,6 +18,10 @@ const messages = defineMessages({
 export default function CoursesCreatePage() {
   const intl = useIntl();
   const router = useRouter();
+  const fromId = useFromIdSearchParams();
+  const fromCourse = useCourse(fromId);
+  const canShowForm = !fromId || !!fromCourse.item;
+
   return (
     <DashboardLayoutPage
       title={intl.formatMessage(messages.pageTitle)}
@@ -33,11 +39,14 @@ export default function CoursesCreatePage() {
         },
       ]}
     >
-      <CourseForm
-        afterSubmit={(course) =>
-          router.push(PATH_ADMIN.courses.edit(course.id))
-        }
-      />
+      {canShowForm && (
+        <CourseForm
+          fromCourse={fromCourse.item}
+          afterSubmit={(course) =>
+            router.push(PATH_ADMIN.courses.edit(course.id))
+          }
+        />
+      )}
     </DashboardLayoutPage>
   );
 }

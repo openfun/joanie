@@ -3,7 +3,7 @@ import { MutableRefObject } from "react";
 import { FormProvider, UseFormReturn } from "react-hook-form";
 import { FieldValues } from "react-hook-form/dist/types/fields";
 import Box from "@mui/material/Box";
-import { defineMessages, FormattedMessage, useIntl } from "react-intl";
+import { defineMessages, FormattedMessage } from "react-intl";
 import LoadingButton from "@mui/lab/LoadingButton";
 
 const messages = defineMessages({
@@ -34,7 +34,6 @@ export function RHFProvider<T extends FieldValues>({
   isSubmitting = false,
   id,
 }: Props<T>) {
-  const intl = useIntl();
   return (
     <FormProvider {...methods}>
       <form

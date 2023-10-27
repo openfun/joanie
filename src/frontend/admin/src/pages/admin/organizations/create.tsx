@@ -4,6 +4,8 @@ import { DashboardLayoutPage } from "@/layouts/dashboard/page/DashboardLayoutPag
 import { OrganizationForm } from "@/components/templates/organizations/form/OrganizationForm";
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { orgBreadcrumbsTranslation } from "@/translations/pages/organizations/breadcrumbsTranslations";
+import { useFromIdSearchParams } from "@/hooks/useFromIdSearchParams";
+import { useOrganization } from "@/hooks/useOrganizations/useOrganizations";
 
 const messages = defineMessages({
   pageTitle: {
@@ -16,6 +18,10 @@ const messages = defineMessages({
 export default function CreateOrganizationPage() {
   const intl = useIntl();
   const router = useRouter();
+  const fromId = useFromIdSearchParams();
+  const fromOrganization = useOrganization(fromId);
+  const canShowForm = !fromId || !!fromOrganization.item;
+
   return (
     <DashboardLayoutPage
       title={intl.formatMessage(messages.pageTitle)}
@@ -33,11 +39,14 @@ export default function CreateOrganizationPage() {
         },
       ]}
     >
-      <OrganizationForm
-        afterSubmit={(organization) =>
-          router.push(PATH_ADMIN.organizations.edit(organization.id))
-        }
-      />
+      {canShowForm && (
+        <OrganizationForm
+          fromOrganization={fromOrganization.item}
+          afterSubmit={(organization) =>
+            router.push(PATH_ADMIN.organizations.edit(organization.id))
+          }
+        />
+      )}
     </DashboardLayoutPage>
   );
 }

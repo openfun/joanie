@@ -89,5 +89,5 @@ export const useResource =
       { ...queryOptions, enabled: !!id },
     );
     const { items, ...subRes } = res;
-    return { ...subRes, item: items[0] };
+    return { ...subRes, item: id ? items[0] : undefined };
   };

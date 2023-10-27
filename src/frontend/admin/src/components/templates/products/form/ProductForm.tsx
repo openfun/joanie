@@ -10,8 +10,6 @@ import { ProductFormTypeSection } from "@/components/templates/products/form/sec
 import { ProductFormTargetCoursesSection } from "@/components/templates/products/form/sections/target-courses/ProductFormTargetCoursesSection";
 import { productFormMessages } from "@/components/templates/products/form/translations";
 import { Wizard, WizardStep } from "@/components/presentational/wizard/Wizard";
-import { UseAsTemplateButton } from "@/components/templates/form/buttons/UseAsTemplateButton";
-import { PATH_ADMIN } from "@/utils/routes/path";
 
 type Props = {
   product?: Product;
@@ -74,15 +72,7 @@ export function ProductForm({ product, fromProduct, afterSubmit }: Props) {
   return (
     <SimpleCard>
       <Box padding={4}>
-        <Wizard
-          steps={formSteps}
-          rightActions={
-            <UseAsTemplateButton
-              href={`${PATH_ADMIN.products.create}?from=${product?.id}`}
-              show={product !== undefined}
-            />
-          }
-        />
+        <Wizard steps={formSteps} />
       </Box>
     </SimpleCard>
   );
