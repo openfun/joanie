@@ -5,6 +5,8 @@ import { SimpleCard } from "@/components/presentational/card/SimpleCard";
 import { CourseRunForm } from "@/components/templates/courses-runs/form/CourseRunForm";
 import { coursesRunsPagesTranslation } from "@/translations/pages/courses-runs/breadcrumbsTranslations";
 import { PATH_ADMIN } from "@/utils/routes/path";
+import { useFromIdSearchParams } from "@/hooks/useFromIdSearchParams";
+import { useCourseRun } from "@/hooks/useCourseRun/useCourseRun";
 
 const messages = defineMessages({
   pageTitle: {
@@ -17,6 +19,9 @@ const messages = defineMessages({
 export default function CoursesRunsCreatePage() {
   const intl = useIntl();
   const router = useRouter();
+  const fromId = useFromIdSearchParams();
+  const fromCourseRun = useCourseRun(fromId);
+  const canShowForm = !fromId || !!fromCourseRun.item;
 
   return (
     <DashboardLayoutPage
@@ -38,11 +43,14 @@ export default function CoursesRunsCreatePage() {
       ]}
     >
       <SimpleCard>
-        <CourseRunForm
-          afterSubmit={(payload) => {
-            router.push(PATH_ADMIN.courses_run.edit(payload.id));
-          }}
-        />
+        {canShowForm && (
+          <CourseRunForm
+            fromCourseRun={fromCourseRun.item}
+            afterSubmit={(payload) => {
+              router.push(PATH_ADMIN.courses_run.edit(payload.id));
+            }}
+          />
+        )}
       </SimpleCard>
     </DashboardLayoutPage>
   );

@@ -1,12 +1,12 @@
 import { defineMessages, useIntl } from "react-intl";
 import * as React from "react";
-import { useState } from "react";
+import { useRouter } from "next/router";
 import { DashboardLayoutPage } from "@/layouts/dashboard/page/DashboardLayoutPage";
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { productsPagesTranslation } from "@/translations/pages/products/breadcrumbsTranslations";
 import { ProductForm } from "@/components/templates/products/form/ProductForm";
-import { Product } from "@/services/api/models/Product";
-import { Maybe } from "@/types/utils";
+import { useFromIdSearchParams } from "@/hooks/useFromIdSearchParams";
+import { useProduct } from "@/hooks/useProducts/useProducts";
 
 const messages = defineMessages({
   pageTitle: {
@@ -18,8 +18,11 @@ const messages = defineMessages({
 
 export default function CreateProductPage() {
   const intl = useIntl();
-  const [createdProduct, setCreatedProduct] =
-    useState<Maybe<Product>>(undefined);
+  const router = useRouter();
+  const fromId = useFromIdSearchParams();
+  const fromProduct = useProduct(fromId);
+  const canShowForm = !fromId || !!fromProduct.item;
+
   return (
     <DashboardLayoutPage
       title={intl.formatMessage(messages.pageTitle)}
@@ -37,7 +40,14 @@ export default function CreateProductPage() {
         },
       ]}
     >
-      <ProductForm product={createdProduct} afterSubmit={setCreatedProduct} />
+      {canShowForm && (
+        <ProductForm
+          fromProduct={fromProduct.item}
+          afterSubmit={(payload) => {
+            router.push(PATH_ADMIN.products.edit(payload.id));
+          }}
+        />
+      )}
     </DashboardLayoutPage>
   );
 }
