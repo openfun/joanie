@@ -36,4 +36,9 @@ export const commonTranslations = defineMessages({
     defaultMessage: "Submit",
     description: "Common submit label",
   },
+  useAsTemplate: {
+    id: "translations.common.commonTranslations.useAsTemplate",
+    defaultMessage: "Use as a template",
+    description: "Use as template text",
+  },
 });

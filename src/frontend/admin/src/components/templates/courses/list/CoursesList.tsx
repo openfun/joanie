@@ -79,6 +79,12 @@ export function CoursesList() {
             push(PATH_ADMIN.courses.edit(course.id));
           }
         }}
+        onUseAsTemplateClick={(course) => {
+          if (course.id === undefined) {
+            return;
+          }
+          push(`${PATH_ADMIN.courses.create}?from=${course?.id}`);
+        }}
         onRemoveClick={(course: Course) =>
           paginatedResource.methods.delete(course.id)
         }

@@ -8,6 +8,7 @@ import MenuItem from "@mui/material/MenuItem";
 import MenuList from "@mui/material/MenuList";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
+import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
 import { useIntl } from "react-intl";
 import {
   MenuPopover,
@@ -27,6 +28,7 @@ export interface TableDefaultMenuItem {
 interface Props {
   onDelete?: () => void;
   onEdit?: () => void;
+  onUseAsTemplate?: () => void;
   entityName?: string;
   extendedOptions?: TableDefaultMenuItem[];
 }
@@ -49,6 +51,14 @@ export function TableDefaultActions(props: Props) {
     }
 
     result = [...result, ...other];
+
+    if (props.onUseAsTemplate) {
+      result.push({
+        title: intl.formatMessage(commonTranslations.useAsTemplate),
+        icon: <ContentCopyOutlinedIcon fontSize="small" />,
+        onClick: props.onUseAsTemplate,
+      });
+    }
 
     if (props.onDelete) {
       result.push({

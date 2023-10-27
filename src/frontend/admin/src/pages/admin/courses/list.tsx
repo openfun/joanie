@@ -1,10 +1,11 @@
 import Button from "@mui/material/Button";
 import { useRouter } from "next/router";
-import { defineMessages, useIntl } from "react-intl";
+import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 import { DashboardLayoutPage } from "@/layouts/dashboard/page/DashboardLayoutPage";
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { CoursesList } from "@/components/templates/courses/list/CoursesList";
 import { coursesPagesTranslation } from "@/translations/pages/courses/breadcrumbsTranslations";
+import { commonTranslations } from "@/translations/common/commonTranslations";
 
 const messages = defineMessages({
   pageTitle: {
@@ -36,7 +37,7 @@ export default function CoursesListPage() {
           size="small"
           variant="contained"
         >
-          Add
+          <FormattedMessage {...commonTranslations.add} />
         </Button>
       }
     >

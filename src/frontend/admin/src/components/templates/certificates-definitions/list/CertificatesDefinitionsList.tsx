@@ -76,6 +76,14 @@ export function CertificatesDefinitionsList() {
           push(PATH_ADMIN.certificates.edit(certificateDefinition.id));
         }}
         {...paginatedResource.tableProps}
+        onUseAsTemplateClick={(certificateDefinition) => {
+          if (certificateDefinition.id === undefined) {
+            return;
+          }
+          push(
+            `${PATH_ADMIN.certificates.create}?from=${certificateDefinition?.id}`,
+          );
+        }}
         getEntityName={(certificateDefinition) => {
           return certificateDefinition.name;
         }}
