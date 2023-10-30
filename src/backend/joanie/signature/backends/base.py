@@ -106,3 +106,11 @@ class BaseSignatureBackend:
         raise NotImplementedError(
             "subclasses of BaseSignatureBackend must provide a delete_signing_procedure() method."
         )
+
+    def get_signed_file(self, reference_id: str):
+        """
+        Return the PDF format of a contrat's signature backend reference at the signature provider.
+        """
+        raise NotImplementedError(
+            "subclasses of BaseSignatureBackend must provide a get_signed_file() method."
+        )

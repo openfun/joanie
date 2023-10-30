@@ -7,6 +7,8 @@ import responses
 
 from joanie.signature.backends import get_signature_backend
 
+# pylint: disable=protected-access
+
 
 @override_settings(
     JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.lex_persona.LexPersonaBackend",
@@ -73,7 +75,7 @@ class LexPersonaBackendVerifyWebhookEventTestCase(TestCase):
 
         self.assertEqual(
             str(context.exception),
-            "['Unable to verify the webhook event with the signature provider.']",
+            "['Lex Persona: Unable to verify the webhook event with the signature provider.']",
         )
         self.assertEqual(len(responses.calls), 1)
         self.assertEqual(responses.calls[0].request.url, api_url)
