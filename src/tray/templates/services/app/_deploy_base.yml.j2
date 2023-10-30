@@ -1,29 +1,31 @@
+{%- set dc_name = "joanie-%s" | format(service_variant) -%}
+
 apiVersion: v1
 kind: Deployment
 metadata:
   labels:
     app: joanie
-    service: joanie
+    service: "{{ service_variant }}"
     version: "{{ joanie_image_tag }}"
     deployment_stamp: "{{ deployment_stamp }}"
-  name: "joanie-app-{{ deployment_stamp }}"
+  name: "{{ dc_name }}-{{ deployment_stamp }}"
   namespace: "{{ namespace_name }}"
 spec:
-  replicas: {{ joanie_app_replicas }}
+  replicas: {{ joanie_replicas }}
   selector:
     matchLabels:
       app: joanie
-      service: joanie
+      service: "{{ service_variant }}"
       version: "{{ joanie_image_tag }}"
-      deployment: "joanie-app-{{ deployment_stamp }}"
+      deployment: "{{ dc_name }}-{{ deployment_stamp }}"
       deployment_stamp: "{{ deployment_stamp }}"
   template:
     metadata:
       labels:
         app: joanie
-        service: joanie
+        service: "{{ service_variant }}"
         version: "{{ joanie_image_tag }}"
-        deployment: "joanie-app-{{ deployment_stamp }}"
+        deployment: "{{ dc_name }}-{{ deployment_stamp }}"
         deployment_stamp: "{{ deployment_stamp }}"
     spec:
       # Prefer running pods on different nodes for redundancy
@@ -37,7 +39,7 @@ spec:
                     - key: deployment
                       operator: In
                       values:
-                        - "joanie-app-{{ deployment_stamp }}"
+                        - "{{ dc_name }}-{{ deployment_stamp }}"
                 topologyKey: kubernetes.io/hostname
 {% set image_pull_secret_name = joanie_image_pull_secret_name | default(none) or default_image_pull_secret_name %}
 {% if image_pull_secret_name is not none %}
@@ -89,6 +91,9 @@ spec:
             - configMapRef:
                 name: "joanie-app-dotenv-{{ deployment_stamp }}"
           resources: {{ joanie_app_resources }}
+{% if service_variant=="celery" %}
+          command: {{ joanie_celery_command }}
+{% endif %}
       securityContext:
         runAsUser: {{ container_uid }}
         runAsGroup: {{ container_gid }}
