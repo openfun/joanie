@@ -428,3 +428,30 @@ class LexPersonaBackend(BaseSignatureBackend):
             )
 
         return response.json()
+
+    def get_signed_file(self, reference_id: str) -> bytes:
+        """
+        Return the file in PDF bytes format once it has been completely signed at the signature
+        provider.
+        """
+        timeout = settings.JOANIE_SIGNATURE_TIMEOUT
+
+        base_url = self.get_setting("BASE_URL")
+        token = self.get_setting("TOKEN")
+
+        url = f"{base_url}/api/workflows/{reference_id}/downloadDocuments"
+        headers = {"Authorization": f"Bearer {token}"}
+
+        response = requests.get(url, headers=headers, timeout=timeout)
+
+        if not response.ok:
+            logger.error(
+                "There is no document with the specified reference : %s, reason : %s",
+                reference_id,
+                response.json(),
+            )
+            raise ValidationError(
+                f"The specified reference can not be found : {reference_id}."
+            )
+
+        return response.content

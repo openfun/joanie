@@ -800,7 +800,7 @@ class LexPersonaBackendTestCase(TestCase):
         """
         request_data = {
             "method": "POST",
-            "path": "https://mocked_joanie_test/api/v1.0/webhook-signature/",
+            "path": "https://mocked_joanie_test/api/v1.0/signature/notifications/",
             "_body": json.dumps(
                 {
                     "id": "wbe_id_fake",
@@ -849,7 +849,7 @@ class LexPersonaBackendTestCase(TestCase):
         """
         request_data = {
             "method": "POST",
-            "path": "https://mocked_joanie_test/api/v1.0/webhook-signature/",
+            "path": "https://mocked_joanie_test/api/v1.0/signature/notifications/",
             "_body": json.dumps(
                 {
                     "id": "wbe_id_fake",
@@ -897,7 +897,7 @@ class LexPersonaBackendTestCase(TestCase):
         """
         request_data = {
             "method": "POST",
-            "path": "https://mocked_joanie_test/api/v1.0/webhook-signature/",
+            "path": "https://mocked_joanie_test/api/v1.0/signature/notifications/",
             "_body": b"{}",
             "content_type": "application/json",
         }
@@ -920,7 +920,7 @@ class LexPersonaBackendTestCase(TestCase):
         """
         request_data = {
             "method": "POST",
-            "path": "https://mocked_joanie_test/api/v1.0/webhook-signature/",
+            "path": "https://mocked_joanie_test/api/v1.0/signature/notifications/",
             "_body": json.dumps(
                 {
                     "tenantId": "ten_id_fake",
@@ -954,7 +954,7 @@ class LexPersonaBackendTestCase(TestCase):
         """
         request_data = {
             "method": "POST",
-            "path": "https://mocked_joanie_test/api/v1.0/webhook-signature/",
+            "path": "https://mocked_joanie_test/api/v1.0/signature/notifications/",
             "_body": "malformed JSON body",
             "content_type": "application/json",
         }
@@ -979,7 +979,7 @@ class LexPersonaBackendTestCase(TestCase):
         """
         request_data = {
             "method": "POST",
-            "path": "https://mocked_joanie_test/api/v1.0/webhook-signature/",
+            "path": "https://mocked_joanie_test/api/v1.0/signature/notifications/",
             "_body": json.dumps(
                 {
                     "id": "wbe_id_fake",
@@ -1034,7 +1034,7 @@ class LexPersonaBackendTestCase(TestCase):
         )
         request_data = {
             "method": "POST",
-            "path": "https://mocked_joanie_test/api/v1.0/webhook-signature/",
+            "path": "https://mocked_joanie_test/api/v1.0/signature/notifications/",
             "_body": json.dumps(
                 {
                     "id": "wbe_id_fake",
@@ -1098,7 +1098,7 @@ class LexPersonaBackendTestCase(TestCase):
         )
         request_data = {
             "method": "POST",
-            "path": "https://mocked_joanie_test/api/v1.0/webhook-signature/",
+            "path": "https://mocked_joanie_test/api/v1.0/signature/notifications/",
             "_body": json.dumps(
                 {
                     "id": "wbe_id_fake",
@@ -1164,7 +1164,7 @@ class LexPersonaBackendTestCase(TestCase):
         )
         request_data = {
             "method": "POST",
-            "path": "https://mocked_joanie_test/api/v1.0/webhook-signature/",
+            "path": "https://mocked_joanie_test/api/v1.0/signature/notifications",
             "_body": json.dumps(
                 {
                     "id": "wbe_id_fake",
@@ -1228,3 +1228,49 @@ class LexPersonaBackendTestCase(TestCase):
         recipient_data = backend._prepare_recipient_information_of_the_signer(order)
 
         self.assertEqual(recipient_data, expected_prepared_recipient_data)
+
+    @responses.activate
+    def test_backend_lex_persona_get_signed_file(self):
+        """
+        When we request to the signature provider that we want to retrieve a signed file
+        through a specific signature backend reference, it should return the file if found
+        as a PDF bytes.
+        """
+        reference_id = "wlf_dummy_id"
+        url = f"https://lex_persona.test01.com/api/workflows/{reference_id}/downloadDocuments"
+        pdf_content = b"Simulated PDF content in bytes from signature provider"
+        responses.add(responses.GET, url, body=pdf_content, status=200)
+        signature_backend = get_signature_backend()
+
+        pdf_data = signature_backend.get_signed_file(reference_id)
+
+        self.assertEqual(pdf_data, pdf_content)
+
+    @responses.activate
+    def test_backend_lex_persona_get_signed_file_fails_when_reference_does_not_exist(
+        self,
+    ):
+        """
+        When we request to the signature provider that we want to retrieve a signed file
+        through a specific signature backend reference, if it does not exist, it should return an
+        exception.
+        """
+        reference_id = "wlf_dummy_id_must_fail"
+        url = f"https://lex_persona.test01.com/api/workflows/{reference_id}/downloadDocuments"
+        expected_failing_response = {
+            "status": 404,
+            "error": "Not Found",
+            "message": "The specified workflow can not be found.",
+            "requestId": "796f8fe0-1934599",
+            "code": "WorkflowNotFound",
+        }
+        responses.add(responses.GET, url, json=expected_failing_response, status=404)
+        signature_backend = get_signature_backend()
+
+        with self.assertRaises(ValidationError) as context:
+            signature_backend.get_signed_file(reference_id)
+
+        self.assertEqual(
+            str(context.exception),
+            f"['The specified reference can not be found : {reference_id}.']",
+        )

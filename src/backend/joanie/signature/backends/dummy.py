@@ -8,7 +8,9 @@ from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 
 from joanie.core import models
-from joanie.signature.backends.base import BaseSignatureBackend
+from joanie.core.utils import issuers
+
+from .base import BaseSignatureBackend
 
 logger = getLogger(__name__)
 
@@ -97,3 +99,49 @@ class DummySignatureBackend(BaseSignatureBackend):
             reference_id,
             recipient_email,
         )
+
+    def get_signed_file(self, reference_id: str) -> bytes:
+        """
+        Dummy method that returns a contract in PDF bytes if the reference exists.
+        """
+        if not reference_id.startswith(self.prefix_workflow):
+            raise ValidationError(
+                f"Cannot download contract with reference id : {reference_id}."
+            )
+
+        organization_logo_default = (
+            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR"
+            "42mO8cPX6fwAIdgN9pHTGJwAAAABJRU5ErkJggg=="
+        )
+        default_context = {
+            "contract": {
+                "body": "<p>Articles de la convention</p>",
+                "title": "CONTRACT DEFINITION 1",
+            },
+            "course": {
+                "name": "<COURSE NAME DEFAULT>",
+            },
+            "student": {
+                "name": "John Doe",
+                "address": {
+                    "address": "1 Rue de L'Exemple",
+                    "city": "Paris",
+                    "country": "FR",
+                    "first_name": "John",
+                    "last_name": "Doe",
+                    "is_main": True,
+                    "postcode": "75000",
+                    "title": "Office",
+                },
+            },
+            "organization": {
+                "logo": organization_logo_default,
+                "name": "Organization 1",
+                "signature": organization_logo_default,
+            },
+        }
+        contract_definition_pdf_bytes = issuers.generate_document(
+            name="contract_definition", context=default_context
+        )
+
+        return contract_definition_pdf_bytes

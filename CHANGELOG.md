@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Add bulk download of signed contracts to generate ZIP archive with command
 - Install and configure celery with redis
 - Add CachedModelSerializer
 - Allow to leave organization empty while order is in draft
