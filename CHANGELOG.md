@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Install and configure celery with redis
 - Add CachedModelSerializer
 - Allow to leave organization empty while order is in draft
 - Add API client signature provider to sign contract from an order

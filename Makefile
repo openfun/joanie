@@ -105,6 +105,7 @@ run: ## start the wsgi (production) and development server
 	@$(COMPOSE) up --force-recreate -d nginx
 	@$(COMPOSE) up --force-recreate -d app-dev
 	@$(COMPOSE) up --force-recreate -d admin-dev
+	@$(COMPOSE) up --force-recreate -d celery-dev
 	@echo "Wait for postgresql to be up..."
 	@$(WAIT_DB)
 .PHONY: run
