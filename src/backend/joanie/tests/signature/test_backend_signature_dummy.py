@@ -1,11 +1,14 @@
 """Test suite of the DummySignatureBackend"""
 import random
+from io import BytesIO
 
 from django.core import mail
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.test.utils import override_settings
 from django.utils import timezone as django_timezone
+
+from pdfminer.high_level import extract_text as pdf_extract_text
 
 from joanie.core import factories
 from joanie.signature.backends.base import BaseSignatureBackend
@@ -214,3 +217,50 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
         )
         self.assertIsNone(contract.signed_on)
         self.assertIsNotNone(contract.submitted_for_signature_on)
+
+    def test_backend_dummy_signature_get_signed_file_with_reference_that_does_not_exist(
+        self,
+    ):
+        """
+        Dummy backend instance to get signed file method should return an exception when the
+        reference id does not exist, it must raise a Validation Error.
+        """
+        backend = DummySignatureBackend()
+
+        with self.assertRaises(ValidationError) as context:
+            backend.get_signed_file(reference_id="wrong_fake_dummy_id")
+
+        self.assertEqual(
+            str(context.exception),
+            "['Cannot download contract with reference id : wrong_fake_dummy_id.']",
+        )
+
+    def test_backend_dummy_signature_get_signed_file(
+        self,
+    ):
+        """
+        Dummy backend instance to get signed file method should return the a pdf in bytes when the
+        reference id exist.
+        """
+        contract = factories.ContractFactory(
+            signature_backend_reference="wfl_fake_dummy_id",
+            definition_checksum="1234",
+            signed_on=django_timezone.now(),
+            context="a small context",
+        )
+        backend = DummySignatureBackend()
+
+        pdf_bytes = backend.get_signed_file(
+            reference_id=contract.signature_backend_reference
+        )
+
+        self.assertIsInstance(pdf_bytes, bytes)
+
+        document_text = pdf_extract_text(BytesIO(pdf_bytes)).replace("\n", "")
+
+        self.assertRegex(
+            document_text, r"This document certifies that the student wants to enroll"
+        )
+        self.assertRegex(document_text, r"1 Rue de L'Exemple 75000, Paris.")
+        self.assertRegex(document_text, r"CONTRACT")
+        self.assertRegex(document_text, r"DEFINITION")

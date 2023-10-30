@@ -8,7 +8,8 @@ from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 
 from joanie.core import models
-from joanie.signature.backends.base import BaseSignatureBackend
+
+from .base import BaseSignatureBackend
 
 logger = getLogger(__name__)
 
@@ -97,3 +98,17 @@ class DummySignatureBackend(BaseSignatureBackend):
             reference_id,
             recipient_email,
         )
+
+    def get_signed_file(self, reference_id: str) -> bytes:
+        """
+        Dummy method that returns a contract in PDF bytes if the reference exists.
+        """
+        if not reference_id.startswith(self.prefix_workflow):
+            raise ValidationError(
+                f"Cannot download contract with reference id : {reference_id}."
+            )
+
+        contract = models.Contract.objects.get(signature_backend_reference=reference_id)
+        _, file_bytes = contract.definition.generate_document(contract.order)
+
+        return file_bytes
