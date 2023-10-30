@@ -7,6 +7,10 @@ import responses
 from joanie.signature import exceptions
 from joanie.signature.backends import get_signature_backend
 
+from . import get_expected_workflow_payload
+
+# pylint: disable=protected-access
+
 
 @override_settings(
     JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.lex_persona.LexPersonaBackend",
@@ -28,60 +32,7 @@ class LexPersonaBackendTestCase(TestCase):
         it should change the 'workflowStatus' to 'stopped'.
         """
         api_url = "https://lex_persona.test01.com/api/workflows/wfl_id_fake"
-        expected_response_data = {
-            "created": 1696238245608,
-            "currentRecipientEmails": [],
-            "currentRecipientUsers": [],
-            "description": "1 rue de l'exemple, 75000 Paris",
-            "email": "johndoe@example.fr",
-            "firstName": "John",
-            "groupId": "grp_id_fake",
-            "id": "wfl_id_fake",
-            "lastName": "Doe",
-            "logs": [],
-            "name": "Heavy Duty Wool Watch",
-            "notifiedEvents": [
-                "recipientRefused",
-                "recipientFinished",
-                "workflowStopped",
-                "workflowFinished",
-            ],
-            "progress": 0,
-            "steps": [
-                {
-                    "allowComments": True,
-                    "hideAttachments": False,
-                    "hideWorkflowRecipients": True,
-                    "id": "stp_J5gCgaRRY4NHtbGs474WjMkA",
-                    "invitePeriod": None,
-                    "isFinished": False,
-                    "isStarted": False,
-                    "logs": [],
-                    "maxInvites": 0,
-                    "recipients": [
-                        {
-                            "consentPageId": "cop_id_fake",
-                            "country": "FR",
-                            "email": "johnnydoe@example.fr",
-                            "firstName": "Johnny",
-                            "lastName": "Doe",
-                            "preferredLocale": "fr",
-                        }
-                    ],
-                    "requiredRecipients": 1,
-                    "sendDownloadLink": True,
-                    "stepType": "signature",
-                    "validityPeriod": 86400000,
-                }
-            ],
-            "tenantId": "ten_id_fake",
-            "updated": 1696238262735,
-            "userId": "usr_id_fake",
-            "viewAuthorizedGroups": ["grp_id_fake"],
-            "viewAuthorizedUsers": [],
-            "watchers": [],
-            "workflowStatus": "stopped",
-        }
+        expected_response_data = get_expected_workflow_payload("stopped")
         backend = get_signature_backend()
 
         responses.add(
@@ -129,7 +80,10 @@ class LexPersonaBackendTestCase(TestCase):
 
         self.assertEqual(
             str(context.exception),
-            "Unable to delete the signature procedure the reference does not exist wfl_id_fake",
+            (
+                "Lex Persona: Unable to delete the signature procedure the reference "
+                "does not exist wfl_id_fake"
+            ),
         )
         self.assertEqual(len(responses.calls), 1)
         self.assertEqual(responses.calls[0].request.url, api_url)

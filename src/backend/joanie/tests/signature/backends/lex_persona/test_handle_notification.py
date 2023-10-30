@@ -236,7 +236,7 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
         request = HttpRequest()
         request.__dict__.update(request_data)
         mock_verify_webhook_event.side_effect = ValidationError(
-            "['Unable to verify the webhook event with the signature provider.']"
+            "['Lex Persona: Unable to verify the webhook event with the signature provider.']"
         )
         backend = get_signature_backend()
 
@@ -245,7 +245,7 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
 
         self.assertEqual(
             str(context.exception),
-            "['Unable to verify the webhook event with the signature provider.']",
+            "['Lex Persona: Unable to verify the webhook event with the signature provider.']",
         )
 
     @mock.patch.object(LexPersonaBackend, "_verify_webhook_event")

@@ -7,6 +7,8 @@ import responses
 from joanie.signature import exceptions
 from joanie.signature.backends import get_signature_backend
 
+# pylint: disable=protected-access
+
 
 @override_settings(
     JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.lex_persona.LexPersonaBackend",
@@ -117,7 +119,10 @@ class LexPersonaBackendUploadFileToWorkflowTestCase(TestCase):
 
         self.assertEqual(
             str(context.exception),
-            "Cannot upload the file to the signature provider with the signature reference.",
+            (
+                "Lex Persona: Cannot upload the file to the signature provider with"
+                " the signature reference."
+            ),
         )
         self.assertEqual(len(responses.calls), 1)
         self.assertEqual(responses.calls[0].request.url, api_url)
