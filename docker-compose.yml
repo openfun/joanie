@@ -8,6 +8,9 @@ services:
     ports:
       - "15432:5432"
 
+  redis:
+    image: redis:5
+
   app-dev:
     build:
       context: .
@@ -31,6 +34,28 @@ services:
     depends_on:
       - postgresql
       - mailcatcher
+      - redis
+    networks:
+      default:
+      lms_outside:
+        aliases:
+          - joanie
+
+  celery-dev:
+    user: ${DOCKER_USER:-1000}
+    image: joanie:development
+    command: ["celery", "-A", "joanie.celery_app", "worker", "-l", "DEBUG"]
+    environment:
+      - DJANGO_CONFIGURATION=Development
+    env_file:
+      - env.d/development/common
+      - env.d/development/postgresql
+    volumes:
+      - ./src/backend:/app
+      - ./data/media:/data/media
+      - ./data/static:/data/static
+    depends_on:
+      - app-dev
     networks:
       default:
       lms_outside:
@@ -54,6 +79,24 @@ services:
       - ./data/media:/data/media
     depends_on:
       - postgresql
+      - redis
+    networks:
+      default:
+      lms_outside:
+        aliases:
+          - joanie
+
+  celery:
+    user: ${DOCKER_USER:-1000}
+    image: joanie:production
+    command: ["celery", "-A", "joanie.celery_app", "worker", "-l", "INFO"]
+    environment:
+      - DJANGO_CONFIGURATION=ContinuousIntegration
+    env_file:
+      - env.d/development/common
+      - env.d/development/postgresql
+    depends_on:
+      - app
     networks:
       default:
       lms_outside:

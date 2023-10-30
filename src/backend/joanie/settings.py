@@ -407,6 +407,10 @@ class Base(Configuration):
         None, environ_name="JOANIE_SIGNATURE_LEXPERSONA_TOKEN", environ_prefix=None
     )
 
+    # Celery
+    CELERY_BROKER_URL = values.Value("redis://redis:6379/0")
+    CELERY_BROKER_TRANSPORT_OPTIONS = values.DictValue({})
+
     # pylint: disable=invalid-name
     @property
     def ENVIRONMENT(self):
