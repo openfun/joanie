@@ -1,0 +1,4 @@
+{% set service_variant = "celery" %}
+{% set joanie_replicas = joanie_celery_replicas %}
+
+{% include "./_deploy_base.yml.j2" with context %}

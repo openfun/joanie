@@ -41,6 +41,16 @@ joanie_django_configuration: "Development"
 joanie_secret_name: "joanie-{{ joanie_vault_checksum | default('undefined_joanie_vault_checksum') }}"
 joanie_activate_http_basic_auth: false
 
+# -- joanie celery
+joanie_celery_replicas: 1
+joanie_celery_command: 
+  - celery
+  - -A
+  - joanie.celery_app
+  - worker
+  - -l
+  - INFO"
+
 # -- resources
 {% set app_resources = {
   "requests": {
