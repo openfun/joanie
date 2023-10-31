@@ -42,7 +42,7 @@ export default function App({ Component, pageProps }: MyAppProps) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            cacheTime: REACT_QUERY_SETTINGS.cacheTime,
+            gcTime: REACT_QUERY_SETTINGS.cacheTime,
             staleTime: 60 * 1000, // 1 mi
             retry: 0,
             retryOnMount: false,

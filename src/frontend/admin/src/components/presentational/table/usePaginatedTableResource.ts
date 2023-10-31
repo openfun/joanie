@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { GridPaginationModel } from "@mui/x-data-grid";
 import { useDebouncedCallback } from "use-debounce";
+import { keepPreviousData } from "@tanstack/react-query";
 import { Resource, useResources } from "@/hooks/useResources";
 import { Maybe } from "@/types/utils";
 import { DEFAULT_PAGE_SIZE, DEFAULT_SEARCH_DEBOUNCE } from "@/utils/constants";
@@ -25,7 +26,7 @@ export const usePaginatedTableResource = <T extends Resource>({
       query,
       page: currentPage + 1,
     },
-    { keepPreviousData: true },
+    { placeholderData: keepPreviousData },
   );
 
   const debouncedSetQuery = useDebouncedCallback((term: string) => {

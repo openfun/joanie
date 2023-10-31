@@ -109,8 +109,8 @@ export const useProducts = (
     ...custom,
     methods: {
       ...custom.methods,
-      addTargetCourse: mutation(
-        async (data: {
+      addTargetCourse: mutation({
+        mutationFn: async (data: {
           productId: string;
           payload: DTOProductTargetCourseRelation;
         }) => {
@@ -119,37 +119,33 @@ export const useProducts = (
             data.payload,
           );
         },
-        {
-          onSuccess: () => {
-            custom.methods.invalidate();
-          },
-          onError: () => {
-            custom.methods.setError(
-              intl.formatMessage(messages.errorCreateTargetCourses),
-            );
-          },
+        onSuccess: () => {
+          custom.methods.invalidate();
         },
-      ).mutate,
-      removeTargetCourse: mutation(
-        async (data: { productId: string; relationId: string }) => {
+        onError: () => {
+          custom.methods.setError(
+            intl.formatMessage(messages.errorCreateTargetCourses),
+          );
+        },
+      }).mutate,
+      removeTargetCourse: mutation({
+        mutationFn: async (data: { productId: string; relationId: string }) => {
           return ProductRepository.removeTargetCourse(
             data.productId,
             data.relationId,
           );
         },
-        {
-          onSuccess: () => {
-            custom.methods.invalidate();
-          },
-          onError: () => {
-            custom.methods.setError(
-              intl.formatMessage(messages.errorUpdateTargetCourses),
-            );
-          },
+        onSuccess: () => {
+          custom.methods.invalidate();
         },
-      ).mutate,
-      updateTargetCourse: mutation(
-        async (data: {
+        onError: () => {
+          custom.methods.setError(
+            intl.formatMessage(messages.errorUpdateTargetCourses),
+          );
+        },
+      }).mutate,
+      updateTargetCourse: mutation({
+        mutationFn: async (data: {
           productId: string;
           relationId: string;
           payload: DTOProductTargetCourseRelation;
@@ -160,35 +156,34 @@ export const useProducts = (
             data.payload,
           );
         },
-        {
-          onSuccess: () => {
-            custom.methods.invalidate();
-          },
-          onError: () => {
-            custom.methods.setError(
-              intl.formatMessage(messages.errorUpdateTargetCourses),
-            );
-          },
+        onSuccess: () => {
+          custom.methods.invalidate();
         },
-      ).mutate,
-      reorderTargetCourses: mutation(
-        async (data: { productId: string; target_courses: string[] }) => {
+        onError: () => {
+          custom.methods.setError(
+            intl.formatMessage(messages.errorUpdateTargetCourses),
+          );
+        },
+      }).mutate,
+      reorderTargetCourses: mutation({
+        mutationFn: async (data: {
+          productId: string;
+          target_courses: string[];
+        }) => {
           return ProductRepository.reorderTargetCourses(
             data.productId,
             data.target_courses,
           );
         },
-        {
-          onSuccess: () => {
-            custom.methods.invalidate();
-          },
-          onError: () => {
-            custom.methods.setError(
-              intl.formatMessage(messages.errorUpdateTargetCourses),
-            );
-          },
+        onSuccess: () => {
+          custom.methods.invalidate();
         },
-      ).mutate,
+        onError: () => {
+          custom.methods.setError(
+            intl.formatMessage(messages.errorUpdateTargetCourses),
+          );
+        },
+      }).mutate,
     },
   };
 };
