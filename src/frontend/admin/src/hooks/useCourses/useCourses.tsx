@@ -130,13 +130,14 @@ export const useCourses = (
 export const useCourse = useResource(props);
 
 export const useAllCourseAccesses = (): SelectOption[] | undefined => {
-  const accesses = useQuery(
-    ["allCourseAccesses"],
-    async () => {
+  const accesses = useQuery({
+    queryKey: ["allCourseAccesses"],
+    queryFn: async () => {
       return CourseRepository.getAvailableAccesses();
     },
-    { staleTime: Infinity, cacheTime: Infinity },
-  );
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
 
   return accesses?.data ?? undefined;
 };

@@ -1,12 +1,12 @@
 import {
+  MutateOptions,
   useMutation,
   useQuery,
   useQueryClient,
   UseQueryResult,
 } from "@tanstack/react-query";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { defineMessages, useIntl } from "react-intl";
-import { MutateOptions } from "@tanstack/query-core/src/types";
 import { useSnackbar } from "notistack";
 import {
   ApiResourceInterface,
@@ -138,28 +138,19 @@ export const useResourcesRoot = <
     }
   };
 
-  queryOptions = {
-    onError: () => updateError(intl.formatMessage(actualMessages.errorGet)),
-    ...queryOptions,
-  };
-
   if (session !== usePrevious(session)) {
     throw new Error("session must never change value.");
   }
 
   let readHandler: UseQueryResult<any, HttpError>;
-  // if (session) {
-  // [readHandler, ACTUAL_QUERY_KEY] = useSessionQuery(
-  //   QUERY_KEY,
-  //   queryFn,
-  //   queryOptions as any
-  // );
-  // } else {
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  // readHandler = useQuery(QUERY_KEY, queryFn, queryOptions);
-  // }
   // eslint-disable-next-line prefer-const
-  readHandler = useQuery(QUERY_KEY, queryFn, queryOptions);
+  readHandler = useQuery({ queryKey: QUERY_KEY, queryFn, ...queryOptions });
+
+  useEffect(() => {
+    if (readHandler.error) {
+      updateError(intl.formatMessage(actualMessages.errorGet));
+    }
+  }, [readHandler.error]);
 
   const invalidate = async () => {
     // Invalidate all queries related to the resource
@@ -171,7 +162,9 @@ export const useResourcesRoot = <
   };
 
   const prefetch = async () => {
-    await queryClient.prefetchQuery(ACTUAL_QUERY_KEY, queryFn, {
+    await queryClient.prefetchQuery({
+      queryKey: ACTUAL_QUERY_KEY,
+      queryFn,
       staleTime: session
         ? REACT_QUERY_SETTINGS.staleTimes.sessionItems
         : REACT_QUERY_SETTINGS.staleTimes.default,
@@ -195,21 +188,24 @@ export const useResourcesRoot = <
 
   const writeHandlers = {
     create: api.create
-      ? mutation(api.create, {
+      ? mutation({
+          mutationFn: api.create,
           onSuccess,
           onError: () =>
             updateError(intl.formatMessage(actualMessages.errorCreate)),
         })
       : undefined,
     update: api.update
-      ? mutation(api.update, {
+      ? mutation({
+          mutationFn: api.update,
           onSuccess,
           onError: () =>
             updateError(intl.formatMessage(actualMessages.errorUpdate)),
         })
       : undefined,
     delete: api.delete
-      ? mutation(api.delete, {
+      ? mutation({
+          mutationFn: api.delete,
           onSuccess,
           onError: () =>
             updateError(intl.formatMessage(actualMessages.errorDelete)),
@@ -277,11 +273,11 @@ export const useResourcesRoot = <
     },
     states: {
       fetching: readHandler.fetchStatus === "fetching",
-      creating: writeHandlers.create?.isLoading,
-      deleting: writeHandlers.delete?.isLoading,
-      updating: writeHandlers.update?.isLoading,
+      creating: writeHandlers.create?.isPending,
+      deleting: writeHandlers.delete?.isPending,
+      updating: writeHandlers.update?.isPending,
       isLoading: [...Object.values(writeHandlers), readHandler].some(
-        (value) => value?.isLoading,
+        (value) => value?.isPending,
       ),
       isFetched: readHandler.isFetched,
       error,

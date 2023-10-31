@@ -10,7 +10,7 @@ import { REACT_QUERY_SETTINGS } from "@/utils/settings";
 const client = new QueryClient({
   defaultOptions: {
     queries: {
-      cacheTime: REACT_QUERY_SETTINGS.cacheTime,
+      gcTime: REACT_QUERY_SETTINGS.cacheTime,
       staleTime: REACT_QUERY_SETTINGS.staleTimes.session,
       ...REACT_QUERY_SETTINGS.queries,
     },

@@ -141,13 +141,14 @@ export const useOrganizations = (
 export const useOrganization = useResource(props);
 
 export const useAllOrganizationAccesses = (): SelectOption[] | undefined => {
-  const accesses = useQuery(
-    ["allOrganizationAccesses"],
-    async () => {
+  const accesses = useQuery({
+    queryKey: ["allOrganizationAccesses"],
+    queryFn: async () => {
       return OrganizationRepository.getAvailableAccesses();
     },
-    { staleTime: Infinity, cacheTime: Infinity },
-  );
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
 
   return accesses?.data ?? undefined;
 };
