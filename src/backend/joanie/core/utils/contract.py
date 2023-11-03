@@ -13,23 +13,33 @@ logger = getLogger(__name__)
 
 
 def get_signature_backend_references(
-    course_product_relation: models.CourseProductRelation,
+    course_product_relation=None, organization=None
 ) -> list:
     """
-    Get a list of signature backend references from a course product relation object that are
-    attached to a validated orders if it exists, else it returns an empty string.
+    Get a list of signature backend references from either a Course Product Relation object or an
+    Organization object when the contract is signed. Otherwise, it returns an empty string if there
+    are no signed contracts yet.
     """
-    signature_backend_references = (
-        models.Order.objects.filter(
-            Q(course_id=course_product_relation.course.pk)
-            | Q(product_id=course_product_relation.product.pk),
-            contract__signed_on__isnull=False,
-            state=enums.ORDER_STATE_VALIDATED,
+    base_query = models.Contract.objects.filter(
+        order__state=enums.ORDER_STATE_VALIDATED,
+        signed_on__isnull=False,
+    ).select_related("order")
+
+    if course_product_relation:
+        base_query = base_query.filter(
+            Q(order__course_id=course_product_relation.course_id) &
+            Q(order__product_id=course_product_relation.product_id)
         )
-        .select_related("contract")
-        .values_list("contract__signature_backend_reference", flat=True)
-        .order_by("contract__signature_backend_reference")
+
+    if organization:
+        base_query = base_query.filter(order__organization=organization)
+
+    signature_backend_references = (
+        base_query.values_list("signature_backend_reference", flat=True)
+        .order_by("signature_backend_reference")
+        .distinct()
     )
+
     return list(signature_backend_references)
 
 
@@ -53,18 +63,15 @@ def generate_zipfile(pdf_bytes_list: list) -> str:
     default storage. The method returns the filename of the ZIP archive once done. This filename
     can be used to retrieve it from default storage.
 
-    Used compression method `zipfile.ZIP_DEFLATED`, It is efficient in terms of compression and
+    Selected compression method `zipfile.ZIP_DEFLATED`. It is efficient in terms of compression and
     decompression, making it a good choice for general-purpose compression.
     """
     if not pdf_bytes_list:
-        logger.error(
-            "You need to provide a list of PDF bytes to generate a ZIP archive."
-            "Your actual list is empty : %s",
-            pdf_bytes_list,
+        error_message = (
+            "You should provide a non-empty list of PDF bytes to generate ZIP archive."
         )
-        raise ValueError(
-            "You need to provide a non-empty list of PDF bytes to generate a ZIP archive."
-        )
+        logger.error(error_message)
+        raise ValueError(error_message)
 
     zip_buffer = io.BytesIO()  # Create the ZIP Archive.
     with zipfile.ZipFile(
@@ -73,6 +80,7 @@ def generate_zipfile(pdf_bytes_list: list) -> str:
         for index, pdf_bytes in enumerate(pdf_bytes_list):
             pdf_filename = f"contract_{index}.pdf"
             zipf.writestr(pdf_filename, pdf_bytes)  # Add PDF bytes file in ZIP archive.
+        zipf.close()
 
     zip_file_name = "signed_contracts_extract.zip"
     zip_buffer.seek(0)
