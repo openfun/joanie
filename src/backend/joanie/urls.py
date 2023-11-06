@@ -161,10 +161,12 @@ admin_product_related_router.register(
     basename="admin_product_target_courses",
 )
 
-admin_product_related_router.register(
+# Admin API routes nested under course product relations
+admin_course_product_relation_related_router = DefaultRouter()
+admin_course_product_relation_related_router.register(
     "order-groups",
-    api_admin.NestedProductOrderGroupViewSet,
-    basename="admin_product_order_groups",
+    api_admin.NestedCourseProductRelationOrderGroupViewSet,
+    basename="admin_course_product_relation_order_groups",
 )
 
 urlpatterns = [
@@ -184,6 +186,10 @@ urlpatterns = [
     path(
         f"api/{API_VERSION}/admin/products/<uuid:product_id>/",
         include(admin_product_related_router.urls),
+    ),
+    path(
+        f"api/{API_VERSION}/admin/course-product-relations/<uuid:course_product_relation_id>/",
+        include(admin_course_product_relation_related_router.urls),
     ),
     path(
         f"api/{API_VERSION}/",

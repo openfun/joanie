@@ -172,7 +172,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         ),
                         "is_active": enrollment.is_active,
                         "orders": [],
-                        "products": [],
+                        "product_relations": [],
                         "state": enrollment.state,
                         "was_created_by_order": enrollment.was_created_by_order,
                     }
@@ -250,7 +250,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         ),
                         "is_active": other_enrollment.is_active,
                         "orders": [],
-                        "products": [],
+                        "product_relations": [],
                         "state": other_enrollment.state,
                         "was_created_by_order": other_enrollment.was_created_by_order,
                     }
@@ -314,71 +314,77 @@ class EnrollmentApiTest(BaseAPITestCase):
         self.assertEqual(len(content["results"]), 3)
 
         self.assertEqual(
-            content["results"][2]["products"],
+            content["results"][2]["product_relations"],
             [
                 {
-                    "instructions": "",
-                    "call_to_action": "let's go!",
-                    "certificate_definition": {
-                        "description": "",
-                        "name": str(product2.certificate_definition.name),
-                        "title": str(product2.certificate_definition.title),
-                    },
+                    "id": str(product2.course_relations.last().id),
                     "order_groups": [],
-                    "contract_definition": {
-                        "id": str(product2.contract_definition.id),
-                        "description": product2.contract_definition.description,
-                        "language": product2.contract_definition.language,
-                        "title": product2.contract_definition.title,
+                    "product": {
+                        "instructions": "",
+                        "call_to_action": "let's go!",
+                        "certificate_definition": {
+                            "description": "",
+                            "name": str(product2.certificate_definition.name),
+                            "title": str(product2.certificate_definition.title),
+                        },
+                        "contract_definition": {
+                            "id": str(product2.contract_definition.id),
+                            "description": product2.contract_definition.description,
+                            "language": product2.contract_definition.language,
+                            "title": product2.contract_definition.title,
+                        },
+                        "id": str(product2.id),
+                        "price": float(product2.price),
+                        "price_currency": "EUR",
+                        "state": {
+                            "priority": product2.state["priority"],
+                            "datetime": product2.state["datetime"]
+                            .isoformat()
+                            .replace("+00:00", "Z")
+                            if product2.state["datetime"]
+                            else None,
+                            "call_to_action": product2.state["call_to_action"],
+                            "text": product2.state["text"],
+                        },
+                        "target_courses": [],
+                        "title": product2.title,
+                        "type": "certificate",
                     },
-                    "id": str(product2.id),
-                    "price": float(product2.price),
-                    "price_currency": "EUR",
-                    "state": {
-                        "priority": product2.state["priority"],
-                        "datetime": product2.state["datetime"]
-                        .isoformat()
-                        .replace("+00:00", "Z")
-                        if product2.state["datetime"]
-                        else None,
-                        "call_to_action": product2.state["call_to_action"],
-                        "text": product2.state["text"],
-                    },
-                    "target_courses": [],
-                    "title": product2.title,
-                    "type": "certificate",
                 },
                 {
-                    "instructions": "",
-                    "call_to_action": "let's go!",
-                    "certificate_definition": {
-                        "description": "",
-                        "name": str(product1.certificate_definition.name),
-                        "title": str(product1.certificate_definition.title),
-                    },
+                    "id": str(product1.course_relations.last().id),
                     "order_groups": [],
-                    "contract_definition": {
-                        "id": str(product1.contract_definition.id),
-                        "description": product1.contract_definition.description,
-                        "language": product1.contract_definition.language,
-                        "title": product1.contract_definition.title,
+                    "product": {
+                        "instructions": "",
+                        "call_to_action": "let's go!",
+                        "certificate_definition": {
+                            "description": "",
+                            "name": str(product1.certificate_definition.name),
+                            "title": str(product1.certificate_definition.title),
+                        },
+                        "contract_definition": {
+                            "id": str(product1.contract_definition.id),
+                            "description": product1.contract_definition.description,
+                            "language": product1.contract_definition.language,
+                            "title": product1.contract_definition.title,
+                        },
+                        "state": {
+                            "priority": product1.state["priority"],
+                            "datetime": product1.state["datetime"]
+                            .isoformat()
+                            .replace("+00:00", "Z")
+                            if product1.state["datetime"]
+                            else None,
+                            "call_to_action": product1.state["call_to_action"],
+                            "text": product1.state["text"],
+                        },
+                        "id": str(product1.id),
+                        "price": float(product1.price),
+                        "price_currency": "EUR",
+                        "target_courses": [],
+                        "title": product1.title,
+                        "type": "certificate",
                     },
-                    "state": {
-                        "priority": product1.state["priority"],
-                        "datetime": product1.state["datetime"]
-                        .isoformat()
-                        .replace("+00:00", "Z")
-                        if product1.state["datetime"]
-                        else None,
-                        "call_to_action": product1.state["call_to_action"],
-                        "text": product1.state["text"],
-                    },
-                    "id": str(product1.id),
-                    "price": float(product1.price),
-                    "price_currency": "EUR",
-                    "target_courses": [],
-                    "title": product1.title,
-                    "type": "certificate",
                 },
             ],
         )
@@ -547,7 +553,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         ),
                         "is_active": enrollment_1.is_active,
                         "orders": [],
-                        "products": [],
+                        "product_relations": [],
                         "state": enrollment_1.state,
                         "was_created_by_order": enrollment_1.was_created_by_order,
                     }
@@ -714,7 +720,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": enrollment.is_active,
                 "orders": [],
-                "products": [],
+                "product_relations": [],
                 "state": enrollment.state,
                 "was_created_by_order": enrollment.was_created_by_order,
             },
@@ -756,36 +762,39 @@ class EnrollmentApiTest(BaseAPITestCase):
             ],
         )
         self.assertEqual(
-            content["products"],
+            content["product_relations"],
             [
                 {
-                    "call_to_action": "let's go!",
-                    "certificate_definition": {
-                        "description": "",
-                        "name": product.certificate_definition.name,
-                        "title": product.certificate_definition.title,
-                    },
-                    "contract_definition": {
-                        "id": str(product.contract_definition.id),
-                        "description": product.contract_definition.description,
-                        "language": product.contract_definition.language,
-                        "title": product.contract_definition.title,
-                    },
-                    "id": str(product.id),
-                    "instructions": "",
+                    "id": str(product.course_relations.first().id),
                     "order_groups": [],
-                    "price": float(product.price),
-                    "price_currency": "EUR",
-                    "state": {
-                        "call_to_action": None,
-                        "datetime": None,
-                        "priority": 7,
-                        "text": "to be scheduled",
+                    "product": {
+                        "call_to_action": "let's go!",
+                        "certificate_definition": {
+                            "description": "",
+                            "name": product.certificate_definition.name,
+                            "title": product.certificate_definition.title,
+                        },
+                        "contract_definition": {
+                            "id": str(product.contract_definition.id),
+                            "description": product.contract_definition.description,
+                            "language": product.contract_definition.language,
+                            "title": product.contract_definition.title,
+                        },
+                        "id": str(product.id),
+                        "instructions": "",
+                        "price": float(product.price),
+                        "price_currency": "EUR",
+                        "state": {
+                            "call_to_action": None,
+                            "datetime": None,
+                            "priority": 7,
+                            "text": "to be scheduled",
+                        },
+                        "target_courses": [],
+                        "title": product.title,
+                        "type": "certificate",
                     },
-                    "target_courses": [],
-                    "title": product.title,
-                    "type": "certificate",
-                }
+                },
             ],
         )
 
@@ -897,7 +906,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": is_active,
                 "orders": [],
-                "products": [],
+                "product_relations": [],
                 "state": "set",
                 "was_created_by_order": False,
             },
@@ -1032,7 +1041,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": is_active,
                 "orders": [],
-                "products": [],
+                "product_relations": [],
                 "state": "failed",
                 "was_created_by_order": False,
             },
@@ -1127,7 +1136,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": is_active,
                 "orders": [],
-                "products": [],
+                "product_relations": [],
                 "state": "failed",
                 "was_created_by_order": False,
             },
@@ -1382,7 +1391,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": is_active,
                 "orders": [],
-                "products": [],
+                "product_relations": [],
                 "state": "set",
                 "was_created_by_order": False,
             },
@@ -1659,7 +1668,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                     ),
                     "is_active": is_active_new,
                     "orders": [],
-                    "products": [],
+                    "product_relations": [],
                     "state": "set",
                     "was_created_by_order": False,
                 },
@@ -1886,7 +1895,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": False,
                 "orders": [],
-                "products": [],
+                "product_relations": [],
                 "state": "set",
                 "was_created_by_order": False,
             },
@@ -1971,7 +1980,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": False,
                 "orders": [],
-                "products": [],
+                "product_relations": [],
                 "state": "set",
                 "was_created_by_order": False,
             },
@@ -2049,7 +2058,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": True,
                 "orders": [],
-                "products": [],
+                "product_relations": [],
                 "state": "set",
                 "was_created_by_order": True,
             },
@@ -2147,7 +2156,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": True,
                 "orders": [],
-                "products": [],
+                "product_relations": [],
                 "state": "set",
                 "was_created_by_order": True,
             },
@@ -2217,7 +2226,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": True,
                 "orders": [],
-                "products": [],
+                "product_relations": [],
                 "state": "set",
                 "was_created_by_order": True,
             },

@@ -335,9 +335,9 @@ class OrderGroup(BaseModel):
             "The maximum number of orders that can be validated for a given order group"
         ),
     )
-    product = models.ForeignKey(
-        to=Product,
-        verbose_name=_("product"),
+    course_product_relation = models.ForeignKey(
+        to=CourseProductRelation,
+        verbose_name=_("course product relation"),
         related_name="order_groups",
         on_delete=models.RESTRICT,
     )
@@ -345,8 +345,13 @@ class OrderGroup(BaseModel):
 
     def get_nb_binding_orders(self):
         """Query the number of binding orders related to this order group."""
+        product_id = self.course_product_relation.product_id
+        course_id = self.course_product_relation.course_id
+
         return self.orders.filter(
-            product_id=self.product_id,
+            models.Q(course_id=course_id)
+            | models.Q(enrollment__course_run__course_id=course_id),
+            product_id=product_id,
             state__in=enums.BINDING_ORDER_STATES,
         ).count()
 
@@ -644,45 +649,56 @@ class Order(BaseModel):
                 )
 
         # pylint: disable=no-member
-        title = self.product.title
-        if (
-            not self.created_on
-            and self.course_id
-            and self.product_id
-            and self.organization_id
-            and not CourseProductRelation.objects.filter(
-                course=self.course_id,
-                product=self.product_id,
-                organizations=self.organization_id,
-            ).exists()
-        ):
-            # pylint: disable=no-member
-            message = _(
-                f'The course "{self.course.title}" and the product "{title}" '
-                f'should be linked for organization "{self.organization.title}".'
-            )
-            error_dict["__all__"].append(message)
+        if not self.created_on and (self.enrollment or self.course) and self.product:
+            course = self.course or self.enrollment.course_run.course
+            course_title = course.title
+            product_title = self.product.title
 
-        if self.order_group_id and self.order_group.product_id != self.product_id:
-            error_dict["order_group"].append(
-                f"This order group does not apply to the product {title:s}."
-            )
+            try:
+                filters = {"product": self.product_id, "course": course}
+                if self.organization_id:
+                    filters.update({"organizations": self.organization_id})
+                course_product_relation = CourseProductRelation.objects.get(**filters)
+            except ObjectDoesNotExist:
+                course_product_relation = None
+                if self.organization_id:
+                    message = _(
+                        f'This order cannot be linked to the product "{product_title}", '
+                        f'the course "{course_title}" and '
+                        f'the organization "{self.organization.title}".'
+                    )
+                else:
+                    message = _(
+                        f'This order cannot be linked to the product "{product_title}" and '
+                        f'the course "{course_title}".'
+                    )
+                error_dict["__all__"].append(message)
 
-        if self.product.order_groups.filter(is_active=True).exists():
             if (
-                not self.order_group_id
-                or not self.order_group.is_active
-                or not self.order_group.product_id == self.product_id
+                self.order_group_id
+                and self.order_group.course_product_relation.product_id
+                != self.product_id
+                and self.order_group.course_product_relation.course != course
             ):
                 error_dict["order_group"].append(
-                    f"An active order group is required for product {title:s}."
+                    f"This order group does not apply to the product {product_title:s} "
+                    f"and the course {course_title}."
                 )
-            else:
-                nb_seats = self.order_group.nb_seats
-                if 0 < nb_seats <= self.order_group.get_nb_binding_orders():
+
+            if (
+                course_product_relation
+                and course_product_relation.order_groups.filter(is_active=True).exists()
+            ):
+                if not self.order_group_id or not self.order_group.is_active:
                     error_dict["order_group"].append(
-                        f"Maximum number of orders reached for product {title:s}"
+                        f"An active order group is required for product {product_title:s}."
                     )
+                else:
+                    nb_seats = self.order_group.nb_seats
+                    if 0 < nb_seats <= self.order_group.get_nb_binding_orders():
+                        error_dict["order_group"].append(
+                            f"Maximum number of orders reached for product {product_title:s}"
+                        )
 
         if error_dict:
             raise ValidationError(error_dict)
@@ -979,11 +995,15 @@ def order_post_transition_callback(
         # failure
         order_enrollment.set()
 
-    # Reset product cache if its representation is impacted by changes on related orders
+    # Reset course product relation cache if its representation is impacted by changes
+    # on related orders
     # e.g. number of remaining seats when an order group is used
     # see test_api_course_product_relation_read_detail_with_order_groups_cache
     if instance.order_group:
-        Product.objects.filter(id=instance.product_id).update(updated_on=timezone.now())
+        course_id = instance.course_id or instance.enrollment.course_run.course_id
+        CourseProductRelation.objects.filter(
+            product_id=instance.product_id, course_id=course_id
+        ).update(updated_on=timezone.now())
 
 
 class OrderTargetCourseRelation(BaseModel):

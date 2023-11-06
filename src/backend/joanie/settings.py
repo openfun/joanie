@@ -238,9 +238,6 @@ class Base(Configuration):
         "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
     }
 
-    JOANIE_ANONYMOUS_API_DEFAULT_CACHE_TTL = values.PositiveIntegerValue(
-        3600, environ_prefix=None
-    )  # 1 hour
     JOANIE_SERIALIZER_DEFAULT_CACHE_TTL = values.PositiveIntegerValue(
         3600, environ_prefix=None
     )  # 1 hour

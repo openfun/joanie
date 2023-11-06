@@ -266,6 +266,7 @@ class OpenEdXLMSBackendTestCase(TestCase):
             course=None,
             enrollment=enrollment,
             product__type="certificate",
+            product__courses=[course_run.course],
             state="validated",
         )
         result = backend.set_enrollment(enrollment)

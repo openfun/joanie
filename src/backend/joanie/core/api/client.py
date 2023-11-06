@@ -6,14 +6,10 @@ Client API endpoints
 import io
 import uuid
 
-from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.db.models import Count, OuterRef, Prefetch, Q, Subquery
 from django.http import FileResponse, HttpResponse, JsonResponse
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
-from django.views.decorators.vary import vary_on_headers
 
 from rest_framework import mixins, pagination
 from rest_framework import permissions as drf_permissions
@@ -143,25 +139,6 @@ class CourseProductRelationViewSet(
 
         return obj
 
-    @method_decorator(cache_page(settings.JOANIE_ANONYMOUS_API_DEFAULT_CACHE_TTL))
-    @method_decorator(vary_on_headers("Accept-Language"))
-    def retrieve_through_nested_course(self, request, *args, **kwargs):
-        """
-        Retrieve relation through its course id and product id should be cached
-        per language.
-        """
-        return super().retrieve(request, *args, **kwargs)
-
-    def retrieve(self, request, *args, **kwargs):
-        """
-        The retrieve action is used to get a single course product relation.
-        The response is cached per language.
-        """
-        if self.kwargs.get("course_id"):
-            return self.retrieve_through_nested_course(request, *args, **kwargs)
-
-        return super().retrieve(request, *args, **kwargs)
-
     @property
     def username(self):
         """Get the authenticated username from the request."""
@@ -238,7 +215,8 @@ class EnrollmentViewSet(
                 Prefetch(
                     "course_run__course__product_relations",
                     queryset=models.CourseProductRelation.objects.select_related(
-                        "product", "product__contract_definition"
+                        "product",
+                        "product__contract_definition",
                     ).filter(product__type=enums.PRODUCT_TYPE_CERTIFICATE),
                     to_attr="certificate_product_relations",
                 ),

@@ -240,20 +240,57 @@ class AdminProductLightSerializer(serializers.ModelSerializer):
         return settings.DEFAULT_CURRENCY
 
 
+class AdminOrderGroupSerializer(serializers.ModelSerializer):
+    """
+    Admin Serializer for OrderGroup model
+    """
+
+    nb_available_seats = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = models.OrderGroup
+        fields = [
+            "id",
+            "nb_seats",
+            "is_active",
+            "nb_available_seats",
+            "created_on",
+        ]
+        read_only_fields = ["id", "created_on"]
+
+    def get_nb_available_seats(self, order_group):
+        """Return the number of available seats for this order group."""
+        return order_group.nb_seats - order_group.get_nb_binding_orders()
+
+
+class AdminOrderGroupCreateSerializer(AdminOrderGroupSerializer):
+    """
+    Admin Serializer for OrderGroup model reserved to create action.
+
+    Unlike `AdminOrderGroupSerializer`, it allows to pass a product to create
+    the order group.
+    """
+
+    class Meta(AdminOrderGroupSerializer.Meta):
+        fields = [*AdminOrderGroupSerializer.Meta.fields, "course_product_relation"]
+
+
 class AdminProductRelationSerializer(serializers.ModelSerializer):
     """Serializer for CourseProductRelation model."""
 
     organizations = AdminOrganizationLightSerializer(many=True)
     product = AdminProductSerializer()
+    order_groups = AdminOrderGroupSerializer(many=True, read_only=True)
 
     class Meta:
         model = models.CourseProductRelation
         fields = (
             "id",
             "product",
+            "order_groups",
             "organizations",
         )
-        read_only_fields = ["id"]
+        read_only_fields = ["id", "order_groups"]
 
 
 class AdminCourseAccessSerializer(serializers.ModelSerializer):
@@ -588,6 +625,7 @@ class AdminCourseRelationsSerializer(serializers.ModelSerializer):
 
     course = AdminCourseNestedSerializer(read_only=True)
     organizations = AdminOrganizationLightSerializer(many=True, read_only=True)
+    order_groups = AdminOrderGroupSerializer(many=True, read_only=True)
 
     class Meta:
         model = models.CourseProductRelation
@@ -595,12 +633,9 @@ class AdminCourseRelationsSerializer(serializers.ModelSerializer):
             "id",
             "course",
             "organizations",
+            "order_groups",
         ]
-        read_only_fields = [
-            "id",
-            "course",
-            "organizations",
-        ]
+        read_only_fields = fields
 
 
 class AdminCourseRunLightSerializer(serializers.ModelSerializer):
@@ -640,41 +675,6 @@ class AdminProductTargetCourseRelationNestedSerializer(serializers.ModelSerializ
         read_only_fields = ["id", "course", "course_runs", "is_graded", "position"]
 
 
-class AdminOrderGroupSerializer(serializers.ModelSerializer):
-    """
-    Admin Serializer for OrderGroup model
-    """
-
-    nb_available_seats = serializers.SerializerMethodField(read_only=True)
-
-    class Meta:
-        model = models.OrderGroup
-        fields = [
-            "id",
-            "nb_seats",
-            "is_active",
-            "nb_available_seats",
-            "created_on",
-        ]
-        read_only_fields = ["id", "created_on"]
-
-    def get_nb_available_seats(self, order_group):
-        """Return the number of available seats for this order group."""
-        return order_group.nb_seats - order_group.get_nb_binding_orders()
-
-
-class AdminOrderGroupCreateSerializer(AdminOrderGroupSerializer):
-    """
-    Admin Serializer for OrderGroup model reserved to create action.
-
-    Unlike `AdminOrderGroupSerializer`, it allows to pass a product to create
-    the order group.
-    """
-
-    class Meta(AdminOrderGroupSerializer.Meta):
-        fields = [*AdminOrderGroupSerializer.Meta.fields, "product"]
-
-
 class AdminProductDetailSerializer(serializers.ModelSerializer):
     """Serializer for Product details"""
 
@@ -685,7 +685,6 @@ class AdminProductDetailSerializer(serializers.ModelSerializer):
     )
     course_relations = AdminCourseRelationsSerializer(read_only=True, many=True)
     price_currency = serializers.SerializerMethodField(read_only=True)
-    order_groups = AdminOrderGroupSerializer(read_only=True, many=True)
 
     class Meta:
         model = models.Product
@@ -701,7 +700,6 @@ class AdminProductDetailSerializer(serializers.ModelSerializer):
             "target_courses",
             "course_relations",
             "instructions",
-            "order_groups",
         ]
         read_only_fields = fields
 

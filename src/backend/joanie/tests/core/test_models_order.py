@@ -94,7 +94,9 @@ class OrderModelsTestCase(TestCase):
         product = factories.ProductFactory(courses=[course], type="certificate")
         organization = product.course_relations.get().organizations.first()
         enrollment = factories.EnrollmentFactory(
-            course_run__state=CourseState.FUTURE_OPEN, course_run__is_listed=True
+            course_run__state=CourseState.FUTURE_OPEN,
+            course_run__is_listed=True,
+            course_run__course=course,
         )
 
         with self.assertRaises(ValidationError) as context:
@@ -141,7 +143,9 @@ class OrderModelsTestCase(TestCase):
         product = factories.ProductFactory(courses=[course], type=product_type)
         organization = product.course_relations.get().organizations.first()
         enrollment = factories.EnrollmentFactory(
-            course_run__state=CourseState.FUTURE_OPEN, course_run__is_listed=True
+            course_run__state=CourseState.FUTURE_OPEN,
+            course_run__is_listed=True,
+            course_run__course=course,
         )
 
         with self.assertRaises(ValidationError) as context:
@@ -287,8 +291,8 @@ class OrderModelsTestCase(TestCase):
         self.assertEqual(
             context.exception.messages,
             [
-                'The course "Mathématiques" and the product "Traçabilité" '
-                'should be linked for organization "fun".'
+                'This order cannot be linked to the product "Traçabilité", '
+                'the course "Mathématiques" and the organization "fun".'
             ],
         )
 
@@ -373,7 +377,7 @@ class OrderModelsTestCase(TestCase):
         InvoiceFactory(order=order, total=order.total)
 
         # - Validate the order should automatically enroll user to course run
-        with self.assertNumQueries(24):
+        with self.assertNumQueries(23):
             order.validate()
 
         self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
@@ -422,7 +426,7 @@ class OrderModelsTestCase(TestCase):
         InvoiceFactory(order=order, total=order.total)
 
         # - Validate the order should automatically enroll user to course run
-        with self.assertNumQueries(28):
+        with self.assertNumQueries(27):
             order.validate()
 
         enrollment.refresh_from_db()
@@ -515,7 +519,7 @@ class OrderModelsTestCase(TestCase):
         self.assertEqual(Enrollment.objects.filter(is_active=True).count(), 1)
 
         # - When order is canceled, user should not be unenrolled from related enrollments
-        with self.assertNumQueries(14):
+        with self.assertNumQueries(13):
             order.cancel()
 
         self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
@@ -553,7 +557,7 @@ class OrderModelsTestCase(TestCase):
         self.assertEqual(Enrollment.objects.filter(is_active=True).count(), 1)
 
         # - When order is canceled, user should not be unenrolled to related enrollments
-        with self.assertNumQueries(11):
+        with self.assertNumQueries(10):
             order.cancel()
 
         self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
@@ -770,6 +774,7 @@ class OrderModelsTestCase(TestCase):
             "http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course"
         )
         enrollment = factories.EnrollmentFactory(
+            course_run__course=course,
             course_run__state=CourseState.FUTURE_OPEN,
             course_run__is_listed=True,
             course_run__resource_link=resource_link,
@@ -828,9 +833,10 @@ class OrderModelsTestCase(TestCase):
         """
         course = factories.CourseFactory()
         product = factories.ProductFactory(courses=[course], type="certificate")
-
         enrollment = factories.EnrollmentFactory(
-            course_run__state=CourseState.FUTURE_OPEN, course_run__is_listed=True
+            course_run__course=course,
+            course_run__is_listed=True,
+            course_run__state=CourseState.FUTURE_OPEN,
         )
         order = factories.OrderFactory(
             course=None,

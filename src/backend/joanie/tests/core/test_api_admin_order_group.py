@@ -14,7 +14,7 @@ class OrderGroupAdminApiTest(TestCase):
     Test suite for OrderGroup Admin API.
     """
 
-    base_url = "/api/v1.0/admin/products"
+    base_url = "/api/v1.0/admin/course-product-relations"
 
     # list
     def test_admin_api_order_group_list_anonymous(self):
@@ -22,8 +22,8 @@ class OrderGroupAdminApiTest(TestCase):
         Anonymous users should not be able to list order groups.
         """
 
-        product = factories.ProductFactory()
-        response = self.client.get(f"{self.base_url}/{product.id}/order-groups/")
+        relation = factories.CourseProductRelationFactory()
+        response = self.client.get(f"{self.base_url}/{relation.id}/order-groups/")
         self.assertEqual(response.status_code, 401)
         content = response.json()
         self.assertEqual(
@@ -37,12 +37,14 @@ class OrderGroupAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        product = factories.ProductFactory()
-        order_groups = factories.OrderGroupFactory.create_batch(3, product=product)
+        relation = factories.CourseProductRelationFactory()
+        order_groups = factories.OrderGroupFactory.create_batch(
+            3, course_product_relation=relation
+        )
         factories.OrderGroupFactory.create_batch(5)
 
         with self.assertNumQueries(7):
-            response = self.client.get(f"{self.base_url}/{product.id}/order-groups/")
+            response = self.client.get(f"{self.base_url}/{relation.id}/order-groups/")
         self.assertEqual(response.status_code, 200)
         content = response.json()
         expected_return = [
@@ -68,9 +70,9 @@ class OrderGroupAdminApiTest(TestCase):
         """
         admin = factories.UserFactory(is_staff=False, is_superuser=False)
         self.client.login(username=admin.username, password="password")
-        product = factories.ProductFactory()
+        relation = factories.CourseProductRelationFactory()
 
-        response = self.client.get(f"{self.base_url}/{product.id}/order-groups/")
+        response = self.client.get(f"{self.base_url}/{relation.id}/order-groups/")
 
         self.assertEqual(response.status_code, 403)
         content = response.json()
@@ -84,11 +86,11 @@ class OrderGroupAdminApiTest(TestCase):
         Anonymous users should not be able to request order groups details.
         """
 
-        product = factories.ProductFactory()
-        order_group = factories.OrderGroupFactory(product=product)
+        relation = factories.CourseProductRelationFactory()
+        order_group = factories.OrderGroupFactory(course_product_relation=relation)
 
         response = self.client.get(
-            f"{self.base_url}/{product.id}/order-groups/{order_group.id}/"
+            f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/"
         )
         self.assertEqual(response.status_code, 401)
         content = response.json()
@@ -103,12 +105,12 @@ class OrderGroupAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        product = factories.ProductFactory()
-        order_group = factories.OrderGroupFactory(product=product)
+        relation = factories.CourseProductRelationFactory()
+        order_group = factories.OrderGroupFactory(course_product_relation=relation)
 
         with self.assertNumQueries(4):
             response = self.client.get(
-                f"{self.base_url}/{product.id}/order-groups/{order_group.id}/"
+                f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/"
             )
 
         self.assertEqual(response.status_code, 200)
@@ -128,12 +130,11 @@ class OrderGroupAdminApiTest(TestCase):
         """
         Anonymous users should not be able to create an order groups.
         """
-
-        product = factories.ProductFactory()
+        relation = factories.CourseProductRelationFactory()
 
         data = {"nb_seats": 5, "is_active": True}
         response = self.client.post(
-            f"{self.base_url}/{product.id}/order-groups/",
+            f"{self.base_url}/{relation.id}/order-groups/",
             content_type="application/json",
             data=data,
         )
@@ -150,11 +151,15 @@ class OrderGroupAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        product = factories.ProductFactory()
-        data = {"nb_seats": 5, "is_active": True, "product": str(product.id)}
+        relation = factories.CourseProductRelationFactory()
+        data = {
+            "nb_seats": 5,
+            "is_active": True,
+            "course_product_relation": str(relation.id),
+        }
         with self.assertNumQueries(5):
             response = self.client.post(
-                f"{self.base_url}/{product.id}/order-groups/",
+                f"{self.base_url}/{relation.id}/order-groups/",
                 content_type="application/json",
                 data=data,
             )
@@ -171,11 +176,11 @@ class OrderGroupAdminApiTest(TestCase):
         Anonymous users should not be able to update order groups.
         """
 
-        product = factories.ProductFactory()
-        order_group = factories.OrderGroupFactory(product=product)
+        relation = factories.CourseProductRelationFactory()
+        order_group = factories.OrderGroupFactory(course_product_relation=relation)
 
         response = self.client.put(
-            f"{self.base_url}/{product.id}/order-groups/{order_group.id}/"
+            f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/"
         )
         self.assertEqual(response.status_code, 401)
         content = response.json()
@@ -190,15 +195,15 @@ class OrderGroupAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        product = factories.ProductFactory()
-        order_group = factories.OrderGroupFactory(product=product)
+        relation = factories.CourseProductRelationFactory()
+        order_group = factories.OrderGroupFactory(course_product_relation=relation)
         data = {
             "nb_seats": 505,
             "is_active": True,
         }
         with self.assertNumQueries(5):
             response = self.client.put(
-                f"{self.base_url}/{product.id}/order-groups/{str(order_group.id)}/",
+                f"{self.base_url}/{relation.id}/order-groups/{str(order_group.id)}/",
                 content_type="application/json",
                 data=data,
             )
@@ -214,11 +219,11 @@ class OrderGroupAdminApiTest(TestCase):
         Anonymous users should not be able to patch order groups.
         """
 
-        product = factories.ProductFactory()
-        order_group = factories.OrderGroupFactory(product=product)
+        relation = factories.CourseProductRelationFactory()
+        order_group = factories.OrderGroupFactory(course_product_relation=relation)
 
         response = self.client.patch(
-            f"{self.base_url}/{product.id}/order-groups/{order_group.id}/"
+            f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/"
         )
         self.assertEqual(response.status_code, 401)
         content = response.json()
@@ -233,14 +238,16 @@ class OrderGroupAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        product = factories.ProductFactory()
-        order_group = factories.OrderGroupFactory(product=product, is_active=False)
+        relation = factories.CourseProductRelationFactory()
+        order_group = factories.OrderGroupFactory(
+            course_product_relation=relation, is_active=False
+        )
         data = {
             "is_active": True,
         }
         with self.assertNumQueries(5):
             response = self.client.patch(
-                f"{self.base_url}/{product.id}/order-groups/{str(order_group.id)}/",
+                f"{self.base_url}/{relation.id}/order-groups/{str(order_group.id)}/",
                 content_type="application/json",
                 data=data,
             )
@@ -261,11 +268,11 @@ class OrderGroupAdminApiTest(TestCase):
         Anonymous users should not be able to delete order groups.
         """
 
-        product = factories.ProductFactory()
-        order_group = factories.OrderGroupFactory(product=product)
+        relation = factories.CourseProductRelationFactory()
+        order_group = factories.OrderGroupFactory(course_product_relation=relation)
 
         response = self.client.delete(
-            f"{self.base_url}/{product.id}/order-groups/{order_group.id}/"
+            f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/"
         )
         self.assertEqual(response.status_code, 401)
         content = response.json()
@@ -281,10 +288,10 @@ class OrderGroupAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        product = factories.ProductFactory()
-        order_group = factories.OrderGroupFactory(product=product)
+        relation = factories.CourseProductRelationFactory()
+        order_group = factories.OrderGroupFactory(course_product_relation=relation)
         with self.assertNumQueries(2):
             response = self.client.delete(
-                f"{self.base_url}/{product.id}/order-groups/{order_group.id}/",
+                f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/",
             )
         self.assertEqual(response.status_code, 405)

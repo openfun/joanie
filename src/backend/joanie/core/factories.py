@@ -593,7 +593,7 @@ class OrderGroupFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.OrderGroup
 
-    product = factory.SubFactory(ProductFactory)
+    course_product_relation = factory.SubFactory(CourseProductRelationFactory)
     nb_seats = factory.fuzzy.FuzzyInteger(0, 100)
 
 
