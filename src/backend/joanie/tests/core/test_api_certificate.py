@@ -15,6 +15,8 @@ from joanie.tests.base import BaseAPITestCase
 class CertificateApiTest(BaseAPITestCase):
     """Certificate API test case."""
 
+    maxDiff = None
+
     def test_api_certificate_read_list_anonymous(self):
         """It should not be possible to retrieve the list of certificates for anonymous user"""
         factories.OrderCertificateFactory.create_batch(2)
@@ -22,9 +24,8 @@ class CertificateApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, 401)
 
-        content = json.loads(response.content)
-        self.assertEqual(
-            content, {"detail": "Authentication credentials were not provided."}
+        self.assertDictEqual(
+            response.json(), {"detail": "Authentication credentials were not provided."}
         )
 
     @mock.patch.object(
@@ -51,7 +52,7 @@ class CertificateApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, 200)
         order = certificate.order
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "count": 1,
@@ -82,8 +83,8 @@ class CertificateApiTest(BaseAPITestCase):
                                 "logo": "_this_field_is_mocked",
                                 "title": order.organization.title,
                             },
-                            "owner": certificate.order.owner.username,
-                            "product": certificate.order.product.title,
+                            "owner_name": certificate.order.owner.username,
+                            "product_title": certificate.order.product.title,
                         },
                     },
                 ],
@@ -149,9 +150,9 @@ class CertificateApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, 401)
 
-        content = json.loads(response.content)
-        self.assertEqual(
-            content, {"detail": "Authentication credentials were not provided."}
+        
+        self.assertDictEqual(
+            response.json(), {"detail": "Authentication credentials were not provided."}
         )
 
     @mock.patch.object(
@@ -178,9 +179,7 @@ class CertificateApiTest(BaseAPITestCase):
         )
 
         self.assertEqual(response.status_code, 404)
-
-        content = json.loads(response.content)
-        self.assertEqual(content, {"detail": "Not found."})
+        self.assertDictEqual(response.json(), {"detail": "Not found."})
 
         # - Try to retrieve an owned certificate should return the certificate id
         response = self.client.get(
@@ -190,9 +189,8 @@ class CertificateApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, 200)
 
-        content = json.loads(response.content)
-        self.assertEqual(
-            content,
+        self.assertDictEqual(
+            response.json(),
             {
                 "id": str(certificate.id),
                 "certificate_definition": {
@@ -215,8 +213,8 @@ class CertificateApiTest(BaseAPITestCase):
                         "logo": "_this_field_is_mocked",
                         "title": certificate.order.organization.title,
                     },
-                    "owner": certificate.order.owner.username,
-                    "product": certificate.order.product.title,
+                    "owner_name": certificate.order.owner.username,
+                    "product_title": certificate.order.product.title,
                 },
             },
         )
@@ -231,9 +229,8 @@ class CertificateApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, 401)
 
-        content = json.loads(response.content)
-        self.assertEqual(
-            content, {"detail": "Authentication credentials were not provided."}
+        self.assertDictEqual(
+            response.json(), {"detail": "Authentication credentials were not provided."}
         )
 
     def test_api_certificate_download_authenticated_order(self):
@@ -265,9 +262,9 @@ class CertificateApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, 404)
 
-        content = json.loads(response.content)
-        self.assertEqual(
-            content,
+        
+        self.assertDictEqual(
+            response.json(),
             {"detail": f"No certificate found with id {not_owned_certificate.id}."},
         )
 
@@ -309,9 +306,9 @@ class CertificateApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, 404)
 
-        content = json.loads(response.content)
-        self.assertEqual(
-            content,
+        
+        self.assertDictEqual(
+            response.json(),
             {"detail": f"No certificate found with id {not_owned_certificate.id}."},
         )
 
@@ -380,8 +377,7 @@ class CertificateApiTest(BaseAPITestCase):
         )
         self.assertEqual(response.status_code, 405)
 
-        content = json.loads(response.content)
-        self.assertEqual(content, {"detail": 'Method "POST" not allowed.'})
+        self.assertDictEqual(response.json(), {"detail": 'Method "POST" not allowed.'})
 
     def test_api_certificate_update(self):
         """
@@ -397,8 +393,7 @@ class CertificateApiTest(BaseAPITestCase):
         )
         self.assertEqual(response.status_code, 405)
 
-        content = json.loads(response.content)
-        self.assertEqual(content, {"detail": 'Method "PUT" not allowed.'})
+        self.assertDictEqual(response.json(), {"detail": 'Method "PUT" not allowed.'})
 
     def test_api_certificate_delete(self):
         """
@@ -414,5 +409,6 @@ class CertificateApiTest(BaseAPITestCase):
         )
         self.assertEqual(response.status_code, 405)
 
-        content = json.loads(response.content)
-        self.assertEqual(content, {"detail": 'Method "DELETE" not allowed.'})
+        self.assertDictEqual(
+            response.json(), {"detail": 'Method "DELETE" not allowed.'}
+        )
