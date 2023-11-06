@@ -84,6 +84,7 @@ and this project adheres to
 - Change order viewset filter "state" to accept multiple choices.
 - Product and Order serializers now return Contract and ContractDefinition
   object instead of ids.
+- Rename nested order serializer attributes to be more descriptive
 
 ### Removed
 

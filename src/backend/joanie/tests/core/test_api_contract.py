@@ -14,6 +14,8 @@ from joanie.tests.base import BaseAPITestCase
 
 class ContractApiTest(BaseAPITestCase):
     """Tests for the Contract API"""
+    
+    maxDiff = None
 
     def test_api_contracts_list_anonymous(self):
         """Anonymous user cannot query contracts."""
@@ -53,7 +55,7 @@ class ContractApiTest(BaseAPITestCase):
             )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "count": 0,
@@ -86,7 +88,7 @@ class ContractApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, 200)
         expected_contracts = sorted(contracts, key=lambda x: x.created_on, reverse=True)
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "count": 5,
@@ -123,8 +125,8 @@ class ContractApiTest(BaseAPITestCase):
                                 "logo": "_this_field_is_mocked",
                                 "title": contract.order.organization.title,
                             },
-                            "owner": contract.order.owner.username,
-                            "product": contract.order.product.title,
+                            "owner_name": contract.order.owner.username,
+                            "product_title": contract.order.product.title,
                         },
                     }
                     for contract in expected_contracts
@@ -254,7 +256,7 @@ class ContractApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, 200)
 
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "id": str(contract.id),
@@ -282,8 +284,8 @@ class ContractApiTest(BaseAPITestCase):
                         "logo": "_this_field_is_mocked",
                         "title": contract.order.organization.title,
                     },
-                    "owner": contract.order.owner.username,
-                    "product": contract.order.product.title,
+                    "owner_name": contract.order.owner.username,
+                    "product_title": contract.order.product.title,
                 },
             },
         )
@@ -394,7 +396,7 @@ class ContractApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, 401)
 
         content = response.json()
-        self.assertEqual(
+        self.assertDictEqual(
             content, {"detail": "Authentication credentials were not provided."}
         )
 

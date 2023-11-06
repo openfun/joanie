@@ -12,6 +12,8 @@ from joanie.tests.base import BaseAPITestCase
 class CourseContractApiTest(BaseAPITestCase):
     """Tests for the Courses Contract API"""
 
+    maxDiff = None
+
     def test_api_courses_contracts_list_anonymous(self):
         """Anonymous user cannot query all contracts from a course."""
         course = factories.CourseFactory()
@@ -47,7 +49,7 @@ class CourseContractApiTest(BaseAPITestCase):
             )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "count": 0,
@@ -92,7 +94,7 @@ class CourseContractApiTest(BaseAPITestCase):
             )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "count": 0,
@@ -149,7 +151,7 @@ class CourseContractApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, 200)
         contracts = models.Contract.objects.filter(order__course=courses[0])
         expected_contracts = sorted(contracts, key=lambda x: x.created_on, reverse=True)
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "count": 10,
@@ -186,8 +188,8 @@ class CourseContractApiTest(BaseAPITestCase):
                                 "logo": "_this_field_is_mocked",
                                 "title": contract.order.organization.title,
                             },
-                            "owner": contract.order.owner.username,
-                            "product": contract.order.product.title,
+                            "owner_name": contract.order.owner.username,
+                            "product_title": contract.order.product.title,
                         },
                     }
                     for contract in expected_contracts
@@ -397,7 +399,7 @@ class CourseContractApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, 200)
 
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "id": str(contract.id),
@@ -425,8 +427,8 @@ class CourseContractApiTest(BaseAPITestCase):
                         "logo": "_this_field_is_mocked",
                         "title": contract.order.organization.title,
                     },
-                    "owner": contract.order.owner.username,
-                    "product": contract.order.product.title,
+                    "owner_name": contract.order.owner.username,
+                    "product_title": contract.order.product.title,
                 },
             },
         )

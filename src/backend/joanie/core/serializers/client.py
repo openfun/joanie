@@ -240,17 +240,17 @@ class NestedOrderSerializer(serializers.ModelSerializer):
     id = serializers.CharField(read_only=True, required=False)
     course = CourseLightSerializer(read_only=True, exclude_abilities=True)
     organization = OrganizationSerializer(read_only=True, exclude_abilities=True)
-    product = serializers.SlugRelatedField(
-        queryset=models.Product.objects.all(), slug_field="title"
+    product_title = serializers.SlugRelatedField(
+        read_only=True, slug_field="title", source="product"
     )
-    owner = serializers.SerializerMethodField()
+    owner_name = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Order
-        fields = ["id", "course", "organization", "owner", "product"]
+        fields = ["id", "course", "organization", "owner_name", "product_title"]
         read_only_fields = fields
 
-    def get_owner(self, instance):
+    def get_owner_name(self, instance):
         """
         Return the name full name of the order's owner or fallback to username
         """
