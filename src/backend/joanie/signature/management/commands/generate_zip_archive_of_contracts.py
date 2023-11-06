@@ -47,12 +47,7 @@ class Command(BaseCommand):
             logger.error("Error: %s", error_message)
             raise CommandError(error_message)
 
-        if options["course_product_relation"]:
-            course_product_relation_uuid = (
-                options["course_product_relation"]
-                if isinstance(options["course_product_relation"], str)
-                else str(options["course_product_relation"])
-            )
+        if course_product_relation_uuid := options["course_product_relation"]:
             try:
                 course_product_relation = models.CourseProductRelation.objects.get(
                     pk=course_product_relation_uuid
@@ -66,12 +61,7 @@ class Command(BaseCommand):
                 logger.error("Error: %s", error_message)
                 raise CommandError(error_message) from error
 
-        if options["organization"]:
-            organization_uuid = (
-                options["organization"]
-                if isinstance(options["organization"], str)
-                else str(options["organization"])
-            )
+        if organization_uuid := options["organization"]:
             try:
                 organization = models.Organization.objects.get(pk=organization_uuid)
             except models.Organization.DoesNotExist as error:

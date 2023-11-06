@@ -146,7 +146,7 @@ class LexPersonaBackendTestCase(TestCase):
 
         self.assertEqual(
             str(context.exception),
-            "Cannot create a signature procedure.",
+            "Lex Persona: Cannot create a signature procedure.",
         )
         self.assertEqual(len(responses.calls), 1)
         self.assertEqual(responses.calls[0].request.url, api_url)
@@ -251,7 +251,8 @@ class LexPersonaBackendTestCase(TestCase):
 
         self.assertEqual(
             str(context.exception),
-            "Cannot upload the file to the signature provider with the signature reference.",
+            "Lex Persona: Cannot upload the file to the signature provider "
+            "with the signature reference.",
         )
         self.assertEqual(len(responses.calls), 1)
         self.assertEqual(responses.calls[0].request.url, api_url)
@@ -356,7 +357,7 @@ class LexPersonaBackendTestCase(TestCase):
 
         self.assertEqual(
             str(context.exception),
-            "Cannot start the signature procedure with signature reference",
+            "Lex Persona: Cannot start the signature procedure with signature reference",
         )
         self.assertEqual(len(responses.calls), 1)
         self.assertEqual(responses.calls[0].request.url, api_url)
@@ -446,7 +447,8 @@ class LexPersonaBackendTestCase(TestCase):
 
         self.assertEqual(
             str(context.exception),
-            "Cannot get invitation link to sign the file from the signature provider.",
+            "Lex Persona: Cannot get invitation link to sign the file from the "
+            "signature provider.",
         )
         self.assertEqual(len(responses.calls), 1)
         self.assertEqual(responses.calls[0].request.url, api_url)
@@ -518,7 +520,7 @@ class LexPersonaBackendTestCase(TestCase):
 
         self.assertEqual(
             str(context.exception),
-            "johnnydo@example.fr has no documents registered to sign at the moment.",
+            "Lex Persona: johnnydo@example.fr has no documents registered to sign at the moment.",
         )
         self.assertEqual(len(responses.calls), 1)
         self.assertEqual(responses.calls[0].request.url, api_url)
@@ -636,7 +638,8 @@ class LexPersonaBackendTestCase(TestCase):
 
         self.assertEqual(
             str(context.exception),
-            "Unable to delete the signature procedure the reference does not exist wfl_id_fake",
+            "Lex Persona: Unable to delete the signature procedure the reference "
+            "does not exist wfl_id_fake",
         )
         self.assertEqual(len(responses.calls), 1)
         self.assertEqual(responses.calls[0].request.url, api_url)
@@ -697,7 +700,7 @@ class LexPersonaBackendTestCase(TestCase):
 
         self.assertEqual(
             str(context.exception),
-            "['Unable to verify the webhook event with the signature provider.']",
+            "['Lex Persona: Unable to verify the webhook event with the signature provider.']",
         )
         self.assertEqual(len(responses.calls), 1)
         self.assertEqual(responses.calls[0].request.url, api_url)
@@ -756,7 +759,7 @@ class LexPersonaBackendTestCase(TestCase):
 
         self.assertEqual(
             str(context.exception),
-            "johnnydo@example.fr has no documents registered to sign at the moment.",
+            "Lex Persona: johnnydo@example.fr has no documents registered to sign at the moment.",
         )
 
     def test_backend_lex_persona_extract_jwt_token(self):
@@ -998,7 +1001,7 @@ class LexPersonaBackendTestCase(TestCase):
         request = HttpRequest()
         request.__dict__.update(request_data)
         mock_verify_webhook_event.side_effect = ValidationError(
-            "['Unable to verify the webhook event with the signature provider.']"
+            "['Lex Persona: Unable to verify the webhook event with the signature provider.']"
         )
         backend = get_signature_backend()
 
@@ -1007,7 +1010,7 @@ class LexPersonaBackendTestCase(TestCase):
 
         self.assertEqual(
             str(context.exception),
-            "['Unable to verify the webhook event with the signature provider.']",
+            "['Lex Persona: Unable to verify the webhook event with the signature provider.']",
         )
 
     @mock.patch.object(LexPersonaBackend, "_verify_webhook_event")
@@ -1272,5 +1275,5 @@ class LexPersonaBackendTestCase(TestCase):
 
         self.assertEqual(
             str(context.exception),
-            f"['The specified reference can not be found : {reference_id}.']",
+            f"['Lex Persona: The specified reference can not be found : {reference_id}.']",
         )

@@ -41,8 +41,8 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         self,
     ):
         """
-        When we parse a course product relation UUID, but If the given UUID of the object does not
-        exist, it should raise an error.
+        Generating a zip archive of contract from an unknown course product relation UUID should
+        raise an error.
         """
         random_course_product_relation_uuid = uuid.uuid4()
         options = {
@@ -63,8 +63,8 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         self,
     ):
         """
-        When we parse an organization UUID, but If the given UUID of the object does not
-        exist, it should raise an error.
+        Generating a zip archive of contract from an unknown organization UUID should raise an
+        error.
         """
         random_organization_uuid = uuid.uuid4()
         options = {

@@ -17,7 +17,7 @@ def get_signature_backend_references(
 ) -> list:
     """
     Get a list of signature backend references from either a Course Product Relation object or an
-    Organization object when the contract is signed. Otherwise, it returns an empty string if there
+    Organization object when the contract is signed. Otherwise, it returns an empty list if there
     are no signed contracts yet.
     """
     base_query = models.Contract.objects.filter(
@@ -27,8 +27,8 @@ def get_signature_backend_references(
 
     if course_product_relation:
         base_query = base_query.filter(
-            Q(order__course_id=course_product_relation.course_id) &
-            Q(order__product_id=course_product_relation.product_id)
+            Q(order__course_id=course_product_relation.course_id)
+            & Q(order__product_id=course_product_relation.product_id)
         )
 
     if organization:
@@ -49,12 +49,10 @@ def fetch_pdf_bytes_of_contracts(signature_backend_references: list) -> list:
     """
     signature_backend = get_signature_backend()
 
-    pdf_bytes_collection = [
+    return [
         signature_backend.get_signed_file(reference_id)
         for reference_id in signature_backend_references
     ]
-
-    return pdf_bytes_collection
 
 
 def generate_zipfile(pdf_bytes_list: list) -> str:

@@ -12,14 +12,16 @@ from django.utils import timezone
 from pdfminer.high_level import extract_text as pdf_extract_text
 
 from joanie.core import enums, factories
-from joanie.core.utils import contract, contract_definition, issuers
+from joanie.core.utils import contract as contract_utility
+from joanie.core.utils import contract_definition as contract_definition_utility
+from joanie.core.utils import issuers
 
 
 class UtilsContractTestCase(TestCase):
     """Test suite to generate a zipfile of signed contract PDF files in bytes utility"""
 
     def setUp(self):
-        default_storage.delete("signed_contracts.zip")
+        default_storage.delete("signed_contracts_extract.zip")
 
     def test_utils_contract_get_signature_backend_references_with_no_signed_contracts_yet(
         self,
@@ -31,23 +33,18 @@ class UtilsContractTestCase(TestCase):
         return an empty list.
         """
         users = factories.UserFactory.create_batch(3)
-        course = factories.CourseFactory()
-        product = factories.ProductFactory()
-        relation = factories.CourseProductRelationFactory(
-            course=course, product=product
-        )
+        relation = factories.CourseProductRelationFactory()
         signature_reference_choices = [
             "wfl_fake_dummy_1",
             "wfl_fake_dummy_2",
             "wfl_fake_dummy_3",
         ]
-        for index, reference in enumerate(signature_reference_choices):
-            user = users[index]
-            order = factories.OrderFactory(
-                owner=user,
-                product=relation.product,
-                course=relation.course,
-                state=random.choice(
+        for index, signature_reference in enumerate(signature_reference_choices):
+            factories.ContractFactory(
+                order__owner=users[index],
+                order__product=relation.product,
+                order__course=relation.course,
+                order__state=random.choice(
                     [
                         enums.ORDER_STATE_CANCELED,
                         enums.ORDER_STATE_DRAFT,
@@ -56,16 +53,13 @@ class UtilsContractTestCase(TestCase):
                         enums.ORDER_STATE_VALIDATED,
                     ]
                 ),
-            )
-            factories.ContractFactory(
-                order=order,
-                signature_backend_reference=reference,
+                signature_backend_reference=signature_reference,
                 definition_checksum="1234",
                 context={"foo": "bar"},
                 submitted_for_signature_on=timezone.now(),
             )
 
-        references_found = contract.get_signature_backend_references(
+        references_found = contract_utility.get_signature_backend_references(
             course_product_relation=relation, organization=None
         )
 
@@ -80,33 +74,25 @@ class UtilsContractTestCase(TestCase):
         course and product. It should return a list with signature backend references.
         """
         users = factories.UserFactory.create_batch(3)
-        course = factories.CourseFactory()
-        product = factories.ProductFactory()
-        relation = factories.CourseProductRelationFactory(
-            course=course, product=product
-        )
+        relation = factories.CourseProductRelationFactory()
         signature_reference_choices = [
             "wfl_fake_dummy_1",
             "wfl_fake_dummy_2",
             "wfl_fake_dummy_3",
         ]
-        for index, reference in enumerate(signature_reference_choices):
-            user = users[index]
-            order = factories.OrderFactory(
-                owner=user,
-                product=relation.product,
-                course=relation.course,
-                state=enums.ORDER_STATE_VALIDATED,
-            )
+        for index, signature_reference in enumerate(signature_reference_choices):
             factories.ContractFactory(
-                order=order,
-                signature_backend_reference=reference,
+                order__owner=users[index],
+                order__product=relation.product,
+                order__course=relation.course,
+                order__state=enums.ORDER_STATE_VALIDATED,
+                signature_backend_reference=signature_reference,
                 definition_checksum="1234",
                 context={"foo": "bar"},
                 signed_on=timezone.now(),
             )
 
-        references_found = contract.get_signature_backend_references(
+        references_found = contract_utility.get_signature_backend_references(
             course_product_relation=relation, organization=None
         )
 
@@ -123,24 +109,19 @@ class UtilsContractTestCase(TestCase):
         it should return an empty list.
         """
         users = factories.UserFactory.create_batch(3)
-        course = factories.CourseFactory()
-        product = factories.ProductFactory()
-        relation = factories.CourseProductRelationFactory(
-            course=course, product=product
-        )
-        organization = relation.organizations.all().first()
+        relation = factories.CourseProductRelationFactory()
+        organization = relation.organizations.first()
         signature_reference_choices = [
             "wfl_fake_dummy_1",
             "wfl_fake_dummy_2",
             "wfl_fake_dummy_3",
         ]
-        for index, reference in enumerate(signature_reference_choices):
-            user = users[index]
-            order = factories.OrderFactory(
-                owner=user,
-                product=relation.product,
-                course=relation.course,
-                state=random.choice(
+        for index, signature_reference in enumerate(signature_reference_choices):
+            factories.ContractFactory(
+                order__owner=users[index],
+                order__product=relation.product,
+                order__course=relation.course,
+                order__state=random.choice(
                     [
                         enums.ORDER_STATE_CANCELED,
                         enums.ORDER_STATE_DRAFT,
@@ -149,16 +130,13 @@ class UtilsContractTestCase(TestCase):
                         enums.ORDER_STATE_VALIDATED,
                     ]
                 ),
-            )
-            factories.ContractFactory(
-                order=order,
-                signature_backend_reference=reference,
+                signature_backend_reference=signature_reference,
                 definition_checksum="1234",
                 context={"foo": "bar"},
                 submitted_for_signature_on=timezone.now(),
             )
 
-        references_found = contract.get_signature_backend_references(
+        references_found = contract_utility.get_signature_backend_references(
             course_product_relation=None, organization=organization
         )
 
@@ -176,34 +154,26 @@ class UtilsContractTestCase(TestCase):
         references.
         """
         users = factories.UserFactory.create_batch(3)
-        course = factories.CourseFactory()
-        product = factories.ProductFactory()
-        relation = factories.CourseProductRelationFactory(
-            course=course, product=product
-        )
-        organization = relation.organizations.all().first()
+        relation = factories.CourseProductRelationFactory()
+        organization = relation.organizations.first()
         signature_reference_choices = [
             "wfl_fake_dummy_1",
             "wfl_fake_dummy_2",
             "wfl_fake_dummy_3",
         ]
-        for index, reference in enumerate(signature_reference_choices):
-            user = users[index]
-            order = factories.OrderFactory(
-                owner=user,
-                product=relation.product,
-                course=relation.course,
-                state=enums.ORDER_STATE_VALIDATED,
-            )
+        for index, signature_reference in enumerate(signature_reference_choices):
             factories.ContractFactory(
-                order=order,
-                signature_backend_reference=reference,
+                order__owner=users[index],
+                order__product=relation.product,
+                order__course=relation.course,
+                order__state=enums.ORDER_STATE_VALIDATED,
+                signature_backend_reference=signature_reference,
                 definition_checksum="1234",
                 context={"foo": "bar"},
                 signed_on=timezone.now(),
             )
 
-        references_found = contract.get_signature_backend_references(
+        references_found = contract_utility.get_signature_backend_references(
             course_product_relation=None, organization=organization
         )
 
@@ -218,7 +188,7 @@ class UtilsContractTestCase(TestCase):
     def test_utils_contract_fetch_pdf_bytes_of_contracts(self):
         """
         When we call this method with 2 existing signature backend references at the signature
-        provider, it should return the a list with 2 PDF bytes.
+        provider, it should return a list with 2 PDF bytes.
         """
         factories.ContractFactory(
             signature_backend_reference="wfl_fake_dummy_4",
@@ -237,7 +207,7 @@ class UtilsContractTestCase(TestCase):
             "wfl_fake_dummy_5",
         ]
 
-        pdf_bytes_list = contract.fetch_pdf_bytes_of_contracts(
+        pdf_bytes_list = contract_utility.fetch_pdf_bytes_of_contracts(
             backend_signature_references
         )
 
@@ -263,7 +233,7 @@ class UtilsContractTestCase(TestCase):
         ]
 
         with self.assertRaises(ValidationError) as context:
-            contract.fetch_pdf_bytes_of_contracts(backend_signature_references)
+            contract_utility.fetch_pdf_bytes_of_contracts(backend_signature_references)
 
         self.assertEqual(
             str(context.exception),
@@ -275,10 +245,8 @@ class UtilsContractTestCase(TestCase):
         When we give an empty list to generate zipfile archive method, it should raise an
         error because it requires a non-empty list.
         """
-        empty_list = []
-
         with self.assertRaises(ValueError) as context:
-            contract.generate_zipfile(pdf_bytes_list=empty_list)
+            contract_utility.generate_zipfile(pdf_bytes_list=[])
 
         self.assertEqual(
             str(context.exception),
@@ -294,31 +262,26 @@ class UtilsContractTestCase(TestCase):
         """
         expected_filename_archive = "signed_contracts_extract.zip"
         users = factories.UserFactory.create_batch(3)
-        course = factories.CourseFactory()
-        product = factories.ProductFactory()
-        relation = factories.CourseProductRelationFactory(
-            course=course, product=product
-        )
+        relation = factories.CourseProductRelationFactory()
         signature_reference_choices = [
             "wfl_fake_dummy_4",
             "wfl_fake_dummy_5",
             "wfl_fake_dummy_6",
         ]
         files_in_bytes = []
-        for index, reference in enumerate(signature_reference_choices):
-            user = users[index]
+        for index, signature_reference in enumerate(signature_reference_choices):
             order = factories.OrderFactory(
-                owner=user,
+                owner=users[index],
                 product=relation.product,
                 course=relation.course,
                 state=enums.ORDER_STATE_VALIDATED,
             )
-            context = contract_definition.generate_document_context(
-                order.product.contract_definition, user, order
+            context = contract_definition_utility.generate_document_context(
+                order.product.contract_definition, users[index], order
             )
             factories.ContractFactory(
                 order=order,
-                signature_backend_reference=reference,
+                signature_backend_reference=signature_reference,
                 definition_checksum="1234",
                 context=context,
                 signed_on=timezone.now(),
@@ -328,7 +291,7 @@ class UtilsContractTestCase(TestCase):
             )
             files_in_bytes.append(pdf_bytes_file)
 
-        generated_zipfile_filename = contract.generate_zipfile(files_in_bytes)
+        generated_zipfile_filename = contract_utility.generate_zipfile(files_in_bytes)
 
         self.assertEqual(generated_zipfile_filename, expected_filename_archive)
 
