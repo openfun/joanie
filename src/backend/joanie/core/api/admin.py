@@ -311,7 +311,7 @@ class ContractDefinitionViewSet(viewsets.ModelViewSet):
     queryset = models.ContractDefinition.objects.all()
 
 
-class NestedProductOrderGroupViewSet(
+class NestedCourseProductRelationOrderGroupViewSet(
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
     mixins.RetrieveModelMixin,
@@ -328,10 +328,10 @@ class NestedProductOrderGroupViewSet(
         "create": serializers.AdminOrderGroupCreateSerializer,
     }
     default_serializer_class = serializers.AdminOrderGroupSerializer
-    queryset = models.OrderGroup.objects.all().select_related("product")
+    queryset = models.OrderGroup.objects.all().select_related("course_product_relation")
     ordering = "created_on"
-    lookup_fields = ["product", "pk"]
-    lookup_url_kwargs = ["product_id", "pk"]
+    lookup_fields = ["course_product_relation", "pk"]
+    lookup_url_kwargs = ["course_product_relation_id", "pk"]
 
     def get_serializer_class(self):
         """

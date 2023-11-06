@@ -1,6 +1,5 @@
 """Client serializers for Joanie Core app."""
 from django.conf import settings
-from django.core.cache import cache
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
@@ -8,6 +7,7 @@ import markdown
 from rest_framework import exceptions, serializers
 
 from joanie.core import enums, models
+from joanie.core.serializers.base import CachedModelSerializer
 from joanie.core.serializers.fields import ThumbnailDetailField
 
 
@@ -463,7 +463,7 @@ class EnrollmentSerializer(serializers.ModelSerializer):
     id = serializers.CharField(read_only=True, required=False)
     certificate = serializers.SlugRelatedField(read_only=True, slug_field="id")
     course_run = CourseRunSerializer(read_only=True)
-    products = serializers.SerializerMethodField(read_only=True)
+    product_relations = serializers.SerializerMethodField(read_only=True)
     orders = serializers.SerializerMethodField(read_only=True)
     was_created_by_order = serializers.BooleanField(required=True)
 
@@ -476,7 +476,7 @@ class EnrollmentSerializer(serializers.ModelSerializer):
             "created_on",
             "is_active",
             "orders",
-            "products",
+            "product_relations",
             "state",
             "was_created_by_order",
         ]
@@ -516,7 +516,7 @@ class EnrollmentSerializer(serializers.ModelSerializer):
 
         return super().update(instance, validated_data)
 
-    def get_products(self, instance):
+    def get_product_relations(self, instance):
         """
         Get products related to the enrollment's course run.
         """
@@ -529,25 +529,14 @@ class EnrollmentSerializer(serializers.ModelSerializer):
         try:
             relations = instance.course_run.course.certificate_product_relations
         except AttributeError:
-            products = models.Product.objects.filter(
-                type=enums.PRODUCT_TYPE_CERTIFICATE,
-                course_relations__course=instance.course_run.course,
+            relations = models.CourseProductRelation.objects.filter(
+                product__type=enums.PRODUCT_TYPE_CERTIFICATE,
+                course=instance.course_run.course,
             )
-        else:
-            products = [relation.product for relation in relations]
 
-        context = self.context.copy()
-        context.update(
-            {
-                "resource": instance,
-                "course_code": instance.course_run.course.code,
-            }
-        )
-
-        return ProductSerializer(
-            products,
+        return ProductRelationSerializer(
+            relations,
             many=True,
-            context=context,
         ).data
 
     def get_orders(self, instance):
@@ -706,7 +695,6 @@ class ProductSerializer(serializers.ModelSerializer):
     id = serializers.CharField(read_only=True)
     instructions = serializers.SerializerMethodField(read_only=True)
     certificate_definition = CertificationDefinitionSerializer(read_only=True)
-    order_groups = OrderGroupSerializer(read_only=True, many=True)
     price = serializers.DecimalField(
         coerce_to_string=False,
         decimal_places=2,
@@ -730,7 +718,6 @@ class ProductSerializer(serializers.ModelSerializer):
             "contract_definition",
             "id",
             "instructions",
-            "order_groups",
             "price",
             "price_currency",
             "state",
@@ -739,27 +726,6 @@ class ProductSerializer(serializers.ModelSerializer):
             "type",
         ]
         read_only_fields = fields
-
-    def to_representation(self, instance):
-        """
-        Cache the serializer representation for the current instance.
-        """
-        course_code = self.context.get("course_code", "nocourse")
-        cache_key = instance.get_cache_key(
-            f"product_for_course-{course_code:s}",
-            is_language_sensitive=True,
-        )
-        representation = cache.get(cache_key)
-
-        if representation is None:
-            representation = super().to_representation(instance)
-            cache.set(
-                cache_key,
-                representation,
-                settings.JOANIE_ANONYMOUS_SERIALIZER_DEFAULT_CACHE_TTL,
-            )
-
-        return representation
 
     def get_price_currency(self, *args, **kwargs):
         """Return the code of currency used by the instance"""
@@ -804,7 +770,7 @@ class CourseSerializer(AbilitiesModelSerializer):
         read_only_fields = fields
 
 
-class CourseProductRelationSerializer(serializers.ModelSerializer):
+class CourseProductRelationSerializer(CachedModelSerializer):
     """
     Serialize a course product relation.
     """
@@ -814,6 +780,7 @@ class CourseProductRelationSerializer(serializers.ModelSerializer):
     organizations = OrganizationSerializer(
         many=True, read_only=True, exclude_abilities=True
     )
+    order_groups = OrderGroupSerializer(many=True, read_only=True)
 
     class Meta:
         model = models.CourseProductRelation
@@ -821,7 +788,25 @@ class CourseProductRelationSerializer(serializers.ModelSerializer):
             "course",
             "created_on",
             "id",
+            "order_groups",
             "organizations",
+            "product",
+        ]
+        read_only_fields = fields
+
+
+class ProductRelationSerializer(CachedModelSerializer):
+    """
+    Serialize a course product relation.
+    """
+
+    product = ProductSerializer(read_only=True)
+
+    class Meta:
+        model = models.CourseProductRelation
+        fields = [
+            "id",
+            "order_groups",
             "product",
         ]
         read_only_fields = fields

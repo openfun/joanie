@@ -105,6 +105,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "cover": "_this_field_is_mocked",
                     "title": course.title,
                 },
+                "order_groups": [],
                 "product": {
                     "instructions": (
                         "<h1>An h1 header</h1>\n"
@@ -127,7 +128,6 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                         "name": relation.product.certificate_definition.name,
                         "title": relation.product.certificate_definition.title,
                     },
-                    "order_groups": [],
                     "contract_definition": {
                         "id": str(product.contract_definition.id),
                         "description": product.contract_definition.description,
@@ -333,7 +333,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             self.client.get(f"/api/v1.0/courses/{course.code}/products/{product.id}/")
 
         # A second call to the url should benefit from caching on the product serializer
-        with self.assertNumQueries(0):
+        with self.assertNumQueries(2):
             response = self.client.get(
                 f"/api/v1.0/courses/{course.code}/products/{product.id}/"
             )
@@ -346,7 +346,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertEqual(content["product"]["id"], str(product.id))
 
         # This query should be cached
-        with self.assertNumQueries(0):
+        with self.assertNumQueries(2):
             response = self.client.get(
                 f"/api/v1.0/courses/{course.code}/products/{product.id}/"
             )
@@ -360,7 +360,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                 HTTP_ACCEPT_LANGUAGE="fr-fr",
             )
 
-        with self.assertNumQueries(0):
+        with self.assertNumQueries(2):
             self.client.get(
                 f"/api/v1.0/courses/{course.code}/products/{product.id}/",
                 HTTP_ACCEPT_LANGUAGE="fr-fr",
@@ -482,6 +482,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "cover": "_this_field_is_mocked",
                     "title": course.title,
                 },
+                "order_groups": [],
                 "product": {
                     "instructions": "",
                     "call_to_action": relation.product.call_to_action,
@@ -490,7 +491,6 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                         "name": relation.product.certificate_definition.name,
                         "title": relation.product.certificate_definition.title,
                     },
-                    "order_groups": [],
                     "contract_definition": {
                         "id": str(product.contract_definition.id),
                         "description": product.contract_definition.description,
@@ -579,15 +579,17 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         relation = factories.CourseProductRelationFactory()
-        factories.UserCourseAccessFactory(user=user, course=relation.course)
         product = relation.product
+        course = relation.course
+        factories.UserCourseAccessFactory(user=user, course=course)
         order_group1 = factories.OrderGroupFactory(
-            product=product, nb_seats=random.randint(10, 100)
+            course_product_relation=relation, nb_seats=random.randint(10, 100)
         )
-        order_group2 = factories.OrderGroupFactory(product=product)
+        order_group2 = factories.OrderGroupFactory(course_product_relation=relation)
         binding_states = ["pending", "submitted", "validated"]
         for _ in range(3):
             factories.OrderFactory(
+                course=course,
                 product=product,
                 order_group=order_group1,
                 state=random.choice(binding_states),
@@ -596,7 +598,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             if state in binding_states:
                 continue
             factories.OrderFactory(
-                product=product, order_group=order_group1, state=state
+                course=course, product=product, order_group=order_group1, state=state
             )
 
         with self.assertNumQueries(51):
@@ -605,7 +607,8 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        # A second call to the url should benefit from caching on the product serializer
+        # A second call to the url should benefit from caching on
+        # the course product relation serializer
         with self.assertNumQueries(2):
             response = self.client.get(
                 f"/api/v1.0/course-product-relations/{relation.id}/",
@@ -616,7 +619,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
 
         content = response.json()
         self.assertEqual(
-            content["product"]["order_groups"],
+            content["order_groups"],
             [
                 {
                     "id": str(order_group1.id),
@@ -640,8 +643,12 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         product = factories.ProductFactory(price="0.00")
         relation = factories.CourseProductRelationFactory(product=product)
         factories.UserCourseAccessFactory(user=user, course=relation.course)
-        order_group = factories.OrderGroupFactory(product=product, nb_seats=10)
-        order = factories.OrderFactory(product=product, order_group=order_group)
+        order_group = factories.OrderGroupFactory(
+            course_product_relation=relation, nb_seats=10
+        )
+        order = factories.OrderFactory(
+            product=product, course=relation.course, order_group=order_group
+        )
 
         response = self.client.get(
             f"/api/v1.0/course-product-relations/{relation.id}/",
@@ -651,7 +658,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
 
         content = response.json()
         self.assertEqual(
-            content["product"]["order_groups"],
+            content["order_groups"],
             [
                 {
                     "id": str(order_group.id),
@@ -670,10 +677,11 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             f"/api/v1.0/course-product-relations/{relation.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
+
         self.assertEqual(response.status_code, 200)
 
         self.assertEqual(
-            response.json()["product"]["order_groups"],
+            response.json()["order_groups"],
             [
                 {
                     "id": str(order_group.id),
@@ -695,7 +703,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, 200)
 
         self.assertEqual(
-            response.json()["product"]["order_groups"],
+            response.json()["order_groups"],
             [
                 {
                     "id": str(order_group.id),

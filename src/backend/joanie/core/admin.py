@@ -159,6 +159,37 @@ class CertificateAdmin(admin.ModelAdmin):
     )
 
 
+@admin.register(models.OrderGroup)
+class OrderGroupAdmin(admin.ModelAdmin):
+    """Admin class for the OrderGroup model"""
+
+    list_display = (
+        "course_product_relation",
+        "is_active",
+        "nb_available_seats",
+    )
+    search_fields = ("course_product_relation",)
+    fields = ("course_product_relation", "is_active", "nb_seats", "nb_available_seats")
+    readonly_fields = ("nb_available_seats",)
+    readonly_update_fields = (
+        "course_product_relation",
+        "nb_seats",
+    )
+
+    def get_readonly_fields(self, request, obj=None):
+        """
+        Make some fields readonly on update to avoid changing them by mistake
+        """
+        if obj is None:
+            return self.readonly_fields
+
+        return self.readonly_fields + self.readonly_update_fields
+
+    def nb_available_seats(self, obj):  # pylint: disable=no-self-use
+        """Return the number of available seats for this order group."""
+        return obj.nb_seats - obj.get_nb_binding_orders()
+
+
 class CourseProductRelationInline(admin.StackedInline):
     """Admin class for the CourseProductRelation model"""
 
@@ -349,13 +380,6 @@ class ProductTargetCourseRelationInline(SortableInlineAdminMixin, admin.TabularI
     extra = 0
 
 
-class OrderGroupInline(admin.TabularInline):
-    """Admin class for the OrderGroup model as tabular inline."""
-
-    model = models.OrderGroup
-    extra = 0
-
-
 @admin.register(models.Product)
 class ProductAdmin(
     DjangoObjectActions,
@@ -385,7 +409,7 @@ class ProductAdmin(
             },
         ),
     )
-    inlines = (ProductTargetCourseRelationInline, OrderGroupInline)
+    inlines = (ProductTargetCourseRelationInline,)
     list_filter = ["type"]
     readonly_fields = (
         "id",

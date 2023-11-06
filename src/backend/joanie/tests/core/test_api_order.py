@@ -299,6 +299,7 @@ class OrderApiTest(BaseAPITestCase):
             course=None,
             enrollment=enrollment_1,
             product__type="certificate",
+            product__courses=[enrollment_1.course_run.course],
         )
 
         # User purchases from enrollment 2
@@ -307,6 +308,7 @@ class OrderApiTest(BaseAPITestCase):
             course=None,
             enrollment=enrollment_2,
             product__type="certificate",
+            product__courses=[enrollment_2.course_run.course],
         )
 
         token = self.generate_token_from_user(user)
@@ -497,9 +499,6 @@ class OrderApiTest(BaseAPITestCase):
     )
     def test_api_order_read_list_filtered_by_product_type(self, _mock_thumbnail):
         """Authenticated user should be able to filter their orders by product type."""
-        certificate_product = factories.ProductFactory(
-            type=enums.PRODUCT_TYPE_CERTIFICATE
-        )
         credential_product = factories.ProductFactory(
             type=enums.PRODUCT_TYPE_CREDENTIAL
         )
@@ -507,6 +506,10 @@ class OrderApiTest(BaseAPITestCase):
         # User purchases the certificate product
         enrollment = factories.EnrollmentFactory(
             course_run__state=CourseState.FUTURE_OPEN, course_run__is_listed=True
+        )
+        certificate_product = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CERTIFICATE,
+            courses=[enrollment.course_run.course],
         )
         user = enrollment.user
         order = factories.OrderFactory(
@@ -612,9 +615,15 @@ class OrderApiTest(BaseAPITestCase):
         Authenticated user should be able to filter their orders
         by limiting to or excluding several product types.
         """
-
+        user = factories.UserFactory()
+        enrollment = factories.EnrollmentFactory(
+            user=user,
+            course_run__state=CourseState.FUTURE_OPEN,
+            course_run__is_listed=True,
+        )
         certificate_product = factories.ProductFactory(
-            type=enums.PRODUCT_TYPE_CERTIFICATE
+            type=enums.PRODUCT_TYPE_CERTIFICATE,
+            courses=[enrollment.course_run.course],
         )
         credential_product = factories.ProductFactory(
             type=enums.PRODUCT_TYPE_CREDENTIAL
@@ -622,14 +631,8 @@ class OrderApiTest(BaseAPITestCase):
         enrollment_product = factories.ProductFactory(
             type=enums.PRODUCT_TYPE_ENROLLMENT
         )
-        user = factories.UserFactory()
 
         # User purchases the certificate product
-        enrollment = factories.EnrollmentFactory(
-            user=user,
-            course_run__state=CourseState.FUTURE_OPEN,
-            course_run__is_listed=True,
-        )
         certificate_order = factories.OrderFactory(
             owner=user, product=certificate_product, course=None, enrollment=enrollment
         )
@@ -694,18 +697,17 @@ class OrderApiTest(BaseAPITestCase):
         Authenticated user should be able to filter their orders
         by several product type.
         """
-
+        enrollment = factories.EnrollmentFactory(
+            course_run__state=CourseState.FUTURE_OPEN, course_run__is_listed=True
+        )
         certificate_product = factories.ProductFactory(
-            type=enums.PRODUCT_TYPE_CERTIFICATE
+            type=enums.PRODUCT_TYPE_CERTIFICATE,
+            courses=[enrollment.course_run.course],
         )
         credential_product = factories.ProductFactory(
             type=enums.PRODUCT_TYPE_CREDENTIAL
         )
-
         # User purchases both products
-        enrollment = factories.EnrollmentFactory(
-            course_run__state=CourseState.FUTURE_OPEN, course_run__is_listed=True
-        )
         user = enrollment.user
         factories.OrderFactory(
             owner=user, product=certificate_product, course=None, enrollment=enrollment
@@ -1265,7 +1267,7 @@ class OrderApiTest(BaseAPITestCase):
             },
         )
 
-        with self.assertNumQueries(29):
+        with self.assertNumQueries(28):
             response = self.client.patch(
                 f"/api/v1.0/orders/{order.id}/submit/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -1294,7 +1296,9 @@ class OrderApiTest(BaseAPITestCase):
             course_run__state=models.CourseState.ONGOING_OPEN,
             course_run__is_listed=True,
         )
-        product = factories.ProductFactory(price=0.00, type="certificate")
+        product = factories.ProductFactory(
+            price=0.00, type="certificate", courses=[enrollment.course_run.course]
+        )
         organization = product.course_relations.first().organizations.first()
 
         data = {
@@ -1435,7 +1439,9 @@ class OrderApiTest(BaseAPITestCase):
             course_run__state=models.CourseState.ONGOING_OPEN,
             course_run__is_listed=True,
         )
-        product = factories.ProductFactory(price=0.00, type="certificate")
+        product = factories.ProductFactory(
+            price=0.00, type="certificate", courses=[enrollment.course_run.course]
+        )
         organization = product.course_relations.first().organizations.first()
 
         data = {
@@ -1766,8 +1772,8 @@ class OrderApiTest(BaseAPITestCase):
             response.json(),
             {
                 "__all__": [
-                    'The course "mathématiques" and the product "balançoire" '
-                    'should be linked for organization "fun".'
+                    'This order cannot be linked to the product "balançoire", '
+                    'the course "mathématiques" and the organization "fun".'
                 ]
             },
         )
@@ -1814,8 +1820,8 @@ class OrderApiTest(BaseAPITestCase):
             response.json(),
             {
                 "__all__": [
-                    'The course "mathématiques" and the product "balançoire" '
-                    'should be linked for organization "fun".'
+                    'This order cannot be linked to the product "balançoire", '
+                    'the course "mathématiques" and the organization "fun".'
                 ]
             },
         )
@@ -2063,7 +2069,7 @@ class OrderApiTest(BaseAPITestCase):
                 ],
             },
         )
-        with self.assertNumQueries(11):
+        with self.assertNumQueries(10):
             response = self.client.patch(
                 f"/api/v1.0/orders/{order.id}/submit/",
                 data=data,
@@ -2219,11 +2225,13 @@ class OrderApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         course = factories.CourseFactory()
         product = factories.ProductFactory()
-        order_group = models.OrderGroup.objects.create(product=product, nb_seats=1)
         relation = factories.CourseProductRelationFactory(
             course=course,
             product=product,
             organizations=factories.OrganizationFactory.create_batch(2),
+        )
+        order_group = models.OrderGroup.objects.create(
+            course_product_relation=relation, nb_seats=1
         )
         billing_address = BillingAddressDictFactory()
         factories.OrderFactory(
@@ -2241,7 +2249,7 @@ class OrderApiTest(BaseAPITestCase):
         }
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(20):
+        with self.assertNumQueries(21):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -2269,11 +2277,13 @@ class OrderApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         course = factories.CourseFactory()
         product = factories.ProductFactory()
-        order_group = models.OrderGroup.objects.create(product=product, nb_seats=0)
         relation = factories.CourseProductRelationFactory(
             course=course,
             product=product,
             organizations=factories.OrganizationFactory.create_batch(2),
+        )
+        order_group = models.OrderGroup.objects.create(
+            course_product_relation=relation, nb_seats=0
         )
         billing_address = BillingAddressDictFactory()
         factories.OrderFactory.create_batch(
@@ -2288,7 +2298,7 @@ class OrderApiTest(BaseAPITestCase):
         }
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(46):
+        with self.assertNumQueries(47):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -2387,12 +2397,12 @@ class OrderApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         course = factories.CourseFactory()
         product = factories.ProductFactory()
-        models.OrderGroup.objects.create(product=product, nb_seats=1)
         relation = factories.CourseProductRelationFactory(
             course=course,
             product=product,
             organizations=factories.OrganizationFactory.create_batch(2),
         )
+        models.OrderGroup.objects.create(course_product_relation=relation, nb_seats=1)
         billing_address = BillingAddressDictFactory()
         data = {
             "course": course.code,
@@ -2455,7 +2465,8 @@ class OrderApiTest(BaseAPITestCase):
             response.json(),
             {
                 "order_group": [
-                    f"This order group does not apply to the product {relation.product.title}."
+                    f"This order group does not apply to the product {relation.product.title} "
+                    f"and the course {relation.course.title}."
                 ]
             },
         )
@@ -2466,12 +2477,16 @@ class OrderApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         course = factories.CourseFactory()
         product = factories.ProductFactory()
-        order_group1 = models.OrderGroup.objects.create(product=product, nb_seats=1)
-        order_group2 = models.OrderGroup.objects.create(product=product, nb_seats=1)
         relation = factories.CourseProductRelationFactory(
             course=course,
             product=product,
             organizations=factories.OrganizationFactory.create_batch(2),
+        )
+        order_group1 = models.OrderGroup.objects.create(
+            course_product_relation=relation, nb_seats=1
+        )
+        order_group2 = models.OrderGroup.objects.create(
+            course_product_relation=relation, nb_seats=1
         )
         billing_address = BillingAddressDictFactory()
         factories.OrderFactory(
@@ -2525,11 +2540,13 @@ class OrderApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         course = factories.CourseFactory()
         product = factories.ProductFactory()
-        models.OrderGroup.objects.create(product=product, nb_seats=1, is_active=False)
         relation = factories.CourseProductRelationFactory(
             course=course,
             product=product,
             organizations=factories.OrganizationFactory.create_batch(2),
+        )
+        models.OrderGroup.objects.create(
+            course_product_relation=relation, nb_seats=1, is_active=False
         )
         billing_address = BillingAddressDictFactory()
         data = {
