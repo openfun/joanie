@@ -45,7 +45,7 @@ class DelegatedJWTAuthentication(JWTAuthentication):
         def get_or_create_and_update_user():
             user, _created = self.user_model.objects.get_or_create(
                 **{api_settings.USER_ID_FIELD: user_id},
-                defaults=get_user_dict(validated_token)
+                defaults=get_user_dict(validated_token),
             )
             user.update_from_token(validated_token)
             return user
