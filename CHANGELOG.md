@@ -85,6 +85,7 @@ and this project adheres to
 - Product and Order serializers now return Contract and ContractDefinition
   object instead of ids.
 - Rename nested order serializer attributes to be more descriptive
+- Update nested order serializer to return enrollment
 
 ### Removed
 

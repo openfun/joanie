@@ -576,7 +576,12 @@ class CertificateViewSet(
     serializer_class = serializers.CertificateSerializer
     permission_classes = [permissions.IsAuthenticated]
     queryset = models.Certificate.objects.all().select_related(
-        "certificate_definition", "order__course", "order__organization", "order__owner"
+        "certificate_definition",
+        "order__course",
+        "order__enrollment__course_run__course",
+        "order__organization",
+        "order__owner",
+        "order__product",
     )
 
     def get_queryset(self):
@@ -966,6 +971,7 @@ class GenericContractViewSet(
         "definition",
         "order__organization",
         "order__course",
+        "order__enrollment__course_run__course",
         "order__owner",
         "order__product",
     )

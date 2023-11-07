@@ -182,6 +182,7 @@ class CourseContractApiTest(BaseAPITestCase):
                                 "id": str(contract.order.course.id),
                                 "title": contract.order.course.title,
                             },
+                            "enrollment": None,
                             "organization": {
                                 "id": str(contract.order.organization.id),
                                 "code": contract.order.organization.code,
@@ -421,6 +422,7 @@ class CourseContractApiTest(BaseAPITestCase):
                         "id": str(contract.order.course.id),
                         "title": contract.order.course.title,
                     },
+                    "enrollment": None,
                     "organization": {
                         "id": str(contract.order.organization.id),
                         "code": contract.order.organization.code,
