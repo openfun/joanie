@@ -4,9 +4,8 @@ Badge application factories
 
 import factory
 
+from joanie.badges import models
 from joanie.core.factories import UserFactory
-
-from . import models
 
 
 class BadgeFactory(factory.django.DjangoModelFactory):

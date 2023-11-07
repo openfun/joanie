@@ -13,7 +13,7 @@ class CoreConfig(AppConfig):
     # pylint: disable=import-outside-toplevel
     def ready(self):
         """Register signals."""
-        from . import models, signals
+        from joanie.core import models, signals
 
         post_save.connect(
             signals.on_save_course_run,

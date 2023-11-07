@@ -21,9 +21,8 @@ from parler.utils.context import switch_language
 
 from joanie.core.models.base import BaseModel
 from joanie.core.utils import merge_dict
-
-from . import enums as payment_enums
-from . import get_payment_backend
+from joanie.payment import enums as payment_enums
+from joanie.payment import get_payment_backend
 
 User = get_user_model()
 

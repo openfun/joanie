@@ -10,9 +10,8 @@ from django.contrib.sites.models import Site
 from django.core.management.base import BaseCommand, CommandError
 
 from joanie.core import enums, factories, models
+from joanie.demo import defaults
 from joanie.payment import models as payment_models
-
-from ... import defaults
 
 logger = logging.getLogger("joanie.commands.demo.create_demo")
 

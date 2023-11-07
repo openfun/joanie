@@ -11,8 +11,8 @@ from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
 from rest_framework_simplejwt.settings import api_settings
 
-from ..authentication import get_user_dict
-from .base import BaseModel
+from joanie.core.authentication import get_user_dict
+from joanie.core.models.base import BaseModel
 
 
 class User(BaseModel, auth_models.AbstractUser):

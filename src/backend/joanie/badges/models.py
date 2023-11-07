@@ -8,9 +8,7 @@ from django.utils.translation import gettext_lazy as _
 
 from parler import models as parler_models
 
-from joanie.core.models import BaseModel
-
-from ..core.models import User
+from joanie.core.models import BaseModel, User
 
 
 @lru_cache

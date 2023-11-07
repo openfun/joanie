@@ -24,11 +24,10 @@ from url_normalize import url_normalize
 
 from joanie.core import enums, exceptions, utils
 from joanie.core.fields.multiselect import MultiSelectField
+from joanie.core.models.accounts import User
+from joanie.core.models.base import BaseModel
 from joanie.core.utils import webhooks
 from joanie.lms_handler import LMSHandler
-
-from .accounts import User
-from .base import BaseModel
 
 # pylint: disable=too-many-lines
 

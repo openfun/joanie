@@ -13,9 +13,8 @@ from requests.auth import AuthBase
 from joanie.core import enums
 from joanie.core.exceptions import EnrollmentError, GradeError
 from joanie.core.models.products import Order
+from joanie.lms_handler.backends.base import BaseLMSBackend
 from joanie.lms_handler.serializers import SyncCourseRunSerializer
-
-from .base import BaseLMSBackend
 
 logger = logging.getLogger(__name__)
 

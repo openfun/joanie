@@ -6,8 +6,7 @@ import logging
 import re
 
 from joanie.core.exceptions import EnrollmentError, GradeError
-
-from .base import BaseLMSBackend
+from joanie.lms_handler.backends.base import BaseLMSBackend
 
 logger = logging.getLogger(__name__)
 

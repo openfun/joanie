@@ -10,10 +10,9 @@ from payplug import notifications
 from payplug.exceptions import BadRequest, Forbidden, NotFound, UnknownAPIResource
 
 from joanie.core.models import Order
-
-from ... import exceptions
-from ...models import CreditCard, Transaction
-from ..base import BasePaymentBackend
+from joanie.payment import exceptions
+from joanie.payment.backends.base import BasePaymentBackend
+from joanie.payment.models import CreditCard, Transaction
 
 logger = logging.getLogger(__name__)
 

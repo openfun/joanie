@@ -12,9 +12,7 @@ import factory.fuzzy
 from easy_thumbnails.files import ThumbnailerImageFieldFile, generate_all_aliases
 from faker import Faker
 
-from joanie.core.models import CourseState
-
-from . import enums, models
+from joanie.core import enums, models
 
 
 def generate_thumbnails_for_field(field, include_global=False):
@@ -265,7 +263,7 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
         then the other significant dates for the course run are chosen randomly in periods
         that make sense with this start date.
         """
-        if self.state == CourseState.TO_BE_SCHEDULED:
+        if self.state == models.CourseState.TO_BE_SCHEDULED:
             return None
 
         period = timedelta(
@@ -273,19 +271,19 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
         )  # between 1 and 365 days
 
         if self.state in [
-            CourseState.ONGOING_OPEN,
-            CourseState.ONGOING_CLOSED,
-            CourseState.ARCHIVED_OPEN,
-            CourseState.ARCHIVED_CLOSED,
+            models.CourseState.ONGOING_OPEN,
+            models.CourseState.ONGOING_CLOSED,
+            models.CourseState.ARCHIVED_OPEN,
+            models.CourseState.ARCHIVED_CLOSED,
         ]:
             # The course run is on going or archived,
             # so the start date must be less than the ref date
             min_date = self.ref_date - period
             max_date = self.ref_date
         elif self.state in [
-            CourseState.FUTURE_OPEN,
-            CourseState.FUTURE_NOT_YET_OPEN,
-            CourseState.FUTURE_CLOSED,
+            models.CourseState.FUTURE_OPEN,
+            models.CourseState.FUTURE_NOT_YET_OPEN,
+            models.CourseState.FUTURE_CLOSED,
         ]:
             # The course run has not yet started,
             # so the start date must be greater than the ref date
@@ -315,20 +313,26 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
             days=random.randrange(1, 365, 1)  # nosec
         )  # between 1 and 365 days
 
-        if self.state in [CourseState.ARCHIVED_OPEN, CourseState.ARCHIVED_CLOSED]:
+        if self.state in [
+            models.CourseState.ARCHIVED_OPEN,
+            models.CourseState.ARCHIVED_CLOSED,
+        ]:
             # The course run is archived, end date must be less than ref date
             if self.start >= self.ref_date:
                 raise ValueError("Start date must be less than ref date.")
             min_date = self.start
             max_date = self.ref_date
-        elif self.state in [CourseState.ONGOING_OPEN, CourseState.ONGOING_CLOSED]:
+        elif self.state in [
+            models.CourseState.ONGOING_OPEN,
+            models.CourseState.ONGOING_CLOSED,
+        ]:
             # The course run is on going, end date must be greater than ref_date
             min_date = self.ref_date
             max_date = min_date + period
         elif self.state in [
-            CourseState.FUTURE_NOT_YET_OPEN,
-            CourseState.FUTURE_OPEN,
-            CourseState.FUTURE_CLOSED,
+            models.CourseState.FUTURE_NOT_YET_OPEN,
+            models.CourseState.FUTURE_OPEN,
+            models.CourseState.FUTURE_CLOSED,
         ]:
             min_date = max(self.ref_date, self.start)
             max_date = min_date + period
@@ -357,12 +361,15 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
             days=random.randrange(1, 90, 1)  # nosec
         )  # between 1 and 90 days
 
-        if self.state in [CourseState.FUTURE_OPEN, CourseState.FUTURE_CLOSED]:
+        if self.state in [
+            models.CourseState.FUTURE_OPEN,
+            models.CourseState.FUTURE_CLOSED,
+        ]:
             # The course run enrollment has not yet started,
             # so the enrollment start date must be less than the ref date
             min_date = self.ref_date - period
             max_date = self.ref_date
-        elif self.state == CourseState.FUTURE_NOT_YET_OPEN:
+        elif self.state == models.CourseState.FUTURE_NOT_YET_OPEN:
             # The course run is not yet open for enrollment,
             # so the enrollment start date must be greater than the ref date
             if self.start <= self.ref_date:
@@ -390,7 +397,7 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
         if (
             not self.start
             or not self.enrollment_start
-            or self.state == CourseState.ARCHIVED_OPEN
+            or self.state == models.CourseState.ARCHIVED_OPEN
         ):
             # Archived open state is a special case.
             # The course run has ended but enrollment is still opened.
@@ -400,14 +407,20 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
             days=random.randrange(1, 90, 1)  # nosec
         )  # between 1 and 90 days
 
-        if self.state in [CourseState.ONGOING_OPEN, CourseState.FUTURE_OPEN]:
+        if self.state in [
+            models.CourseState.ONGOING_OPEN,
+            models.CourseState.FUTURE_OPEN,
+        ]:
             # The course run is opened for enrollment, so the enrollment end date must
             # be greater than the ref date and less than the course run end
             if self.end and self.end <= self.ref_date:
                 raise ValueError("End date must be greater than ref date.")
             min_date = self.ref_date
             max_date = self.end or self.ref_date + period
-        elif self.state in [CourseState.ONGOING_CLOSED, CourseState.FUTURE_CLOSED]:
+        elif self.state in [
+            models.CourseState.ONGOING_CLOSED,
+            models.CourseState.FUTURE_CLOSED,
+        ]:
             # The course run is closed for enrollment,
             # so the enrollment end date must be less than the ref date
             min_date = self.ref_date - period
@@ -446,9 +459,9 @@ class EnrollmentFactory(factory.django.DjangoModelFactory):
         is_listed=True,
         state=factory.fuzzy.FuzzyChoice(
             [
-                CourseState.ONGOING_OPEN,
-                CourseState.FUTURE_OPEN,
-                CourseState.ARCHIVED_OPEN,
+                models.CourseState.ONGOING_OPEN,
+                models.CourseState.FUTURE_OPEN,
+                models.CourseState.ARCHIVED_OPEN,
             ]
         ),
     )
