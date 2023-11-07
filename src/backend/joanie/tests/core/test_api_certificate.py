@@ -1,5 +1,4 @@
 """Tests for the Certificate API"""
-import json
 import uuid
 from io import BytesIO
 from unittest import mock
@@ -8,6 +7,7 @@ from pdfminer.high_level import extract_text as pdf_extract_text
 from rest_framework.pagination import PageNumberPagination
 
 from joanie.core import enums, factories
+from joanie.core.models import CourseState
 from joanie.core.serializers import fields
 from joanie.tests.base import BaseAPITestCase
 
@@ -43,9 +43,25 @@ class CertificateApiTest(BaseAPITestCase):
         order = factories.OrderFactory(owner=user, product=factories.ProductFactory())
         certificate = factories.OrderCertificateFactory(order=order)
 
+        enrollment = factories.EnrollmentFactory(
+            user=user,
+            course_run__state=CourseState.ONGOING_OPEN,
+        )
+        factories.EnrollmentCertificateFactory(enrollment=enrollment)
+        other_order = factories.OrderFactory(
+            owner=user,
+            product=factories.ProductFactory(
+                type=enums.PRODUCT_TYPE_CERTIFICATE,
+                courses=[enrollment.course_run.course],
+            ),
+            course=None,
+            enrollment=enrollment,
+        )
+        other_certificate = factories.OrderCertificateFactory(order=other_order)
+
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(2):
             response = self.client.get(
                 "/api/v1.0/certificates/", HTTP_AUTHORIZATION=f"Bearer {token}"
             )
@@ -55,10 +71,84 @@ class CertificateApiTest(BaseAPITestCase):
         self.assertDictEqual(
             response.json(),
             {
-                "count": 1,
+                "count": 2,
                 "next": None,
                 "previous": None,
                 "results": [
+                    {
+                        "id": str(other_certificate.id),
+                        "certificate_definition": {
+                            "description": other_certificate.certificate_definition.description,
+                            "name": other_certificate.certificate_definition.name,
+                            "title": other_certificate.certificate_definition.title,
+                        },
+                        "issued_on": other_certificate.issued_on.isoformat().replace(
+                            "+00:00", "Z"
+                        ),
+                        "order": {
+                            "id": str(other_order.id),
+                            "course": None,
+                            "enrollment": {
+                                "course_run": {
+                                    "course": {
+                                        "code": enrollment.course_run.course.code,
+                                        "cover": "_this_field_is_mocked",
+                                        "id": str(enrollment.course_run.course.id),
+                                        "title": enrollment.course_run.course.title,
+                                    },
+                                    "end": enrollment.course_run.end.isoformat().replace(
+                                        "+00:00", "Z"
+                                    ),
+                                    "enrollment_end": (
+                                        enrollment.course_run.enrollment_end.isoformat().replace(
+                                            "+00:00", "Z"
+                                        )
+                                    ),
+                                    "enrollment_start": (
+                                        enrollment.course_run.enrollment_start.isoformat().replace(
+                                            "+00:00", "Z"
+                                        )
+                                    ),
+                                    "id": str(enrollment.course_run.id),
+                                    "languages": enrollment.course_run.languages,
+                                    "resource_link": enrollment.course_run.resource_link,
+                                    "start": enrollment.course_run.start.isoformat().replace(
+                                        "+00:00", "Z"
+                                    ),
+                                    "state": {
+                                        "call_to_action": enrollment.course_run.state.get(
+                                            "call_to_action"
+                                        ),
+                                        "datetime": enrollment.course_run.state.get(
+                                            "datetime"
+                                        )
+                                        .isoformat()
+                                        .replace("+00:00", "Z"),
+                                        "priority": enrollment.course_run.state.get(
+                                            "priority"
+                                        ),
+                                        "text": enrollment.course_run.state.get("text"),
+                                    },
+                                    "title": enrollment.course_run.title,
+                                },
+                                "created_on": enrollment.created_on.isoformat().replace(
+                                    "+00:00", "Z"
+                                ),
+                                "id": str(enrollment.id),
+                                "is_active": enrollment.is_active,
+                                "state": enrollment.state,
+                                "was_created_by_order": enrollment.was_created_by_order,
+                            },
+                            "organization": {
+                                "id": str(other_order.organization.id),
+                                "code": other_order.organization.code,
+                                "logo": "_this_field_is_mocked",
+                                "title": other_order.organization.title,
+                            },
+                            "owner_name": other_certificate.order.owner.username,
+                            "product_title": other_certificate.order.product.title,
+                        },
+                    },
                     {
                         "id": str(certificate.id),
                         "certificate_definition": {
@@ -77,6 +167,7 @@ class CertificateApiTest(BaseAPITestCase):
                                 "title": order.course.title,
                                 "cover": "_this_field_is_mocked",
                             },
+                            "enrollment": None,
                             "organization": {
                                 "id": str(order.organization.id),
                                 "code": order.organization.code,
@@ -150,7 +241,6 @@ class CertificateApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, 401)
 
-        
         self.assertDictEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
@@ -207,6 +297,7 @@ class CertificateApiTest(BaseAPITestCase):
                         "title": certificate.order.course.title,
                         "cover": "_this_field_is_mocked",
                     },
+                    "enrollment": None,
                     "organization": {
                         "id": str(certificate.order.organization.id),
                         "code": certificate.order.organization.code,
@@ -262,7 +353,6 @@ class CertificateApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, 404)
 
-        
         self.assertDictEqual(
             response.json(),
             {"detail": f"No certificate found with id {not_owned_certificate.id}."},
@@ -306,7 +396,6 @@ class CertificateApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, 404)
 
-        
         self.assertDictEqual(
             response.json(),
             {"detail": f"No certificate found with id {not_owned_certificate.id}."},

@@ -14,7 +14,7 @@ from joanie.tests.base import BaseAPITestCase
 
 class ContractApiTest(BaseAPITestCase):
     """Tests for the Contract API"""
-    
+
     maxDiff = None
 
     def test_api_contracts_list_anonymous(self):
@@ -119,6 +119,7 @@ class ContractApiTest(BaseAPITestCase):
                                 "id": str(contract.order.course.id),
                                 "title": contract.order.course.title,
                             },
+                            "enrollment": None,
                             "organization": {
                                 "id": str(contract.order.organization.id),
                                 "code": contract.order.organization.code,
@@ -278,6 +279,7 @@ class ContractApiTest(BaseAPITestCase):
                         "id": str(contract.order.course.id),
                         "title": contract.order.course.title,
                     },
+                    "enrollment": None,
                     "organization": {
                         "id": str(contract.order.organization.id),
                         "code": contract.order.organization.code,

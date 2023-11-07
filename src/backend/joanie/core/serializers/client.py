@@ -232,6 +232,52 @@ class OrganizationAccessSerializer(AbilitiesModelSerializer):
         return attrs
 
 
+class CourseRunSerializer(serializers.ModelSerializer):
+    """
+    Serialize all information about a course run
+    """
+
+    course = CourseLightSerializer(read_only=True, exclude_abilities=True)
+
+    class Meta:
+        model = models.CourseRun
+        fields = [
+            "course",
+            "end",
+            "enrollment_end",
+            "enrollment_start",
+            "id",
+            "languages",
+            "resource_link",
+            "start",
+            "title",
+            "state",
+        ]
+        read_only_fields = fields
+
+
+class EnrollmentLightSerializer(serializers.ModelSerializer):
+    """
+    Enrollment model light serializer
+    """
+
+    id = serializers.CharField(read_only=True, required=False)
+    course_run = CourseRunSerializer(read_only=True)
+    was_created_by_order = serializers.BooleanField(required=True)
+
+    class Meta:
+        model = models.Enrollment
+        fields = [
+            "id",
+            "course_run",
+            "created_on",
+            "is_active",
+            "state",
+            "was_created_by_order",
+        ]
+        read_only_fields = fields
+
+
 class NestedOrderSerializer(serializers.ModelSerializer):
     """
     Order model serializer for the Certificate model
@@ -239,6 +285,7 @@ class NestedOrderSerializer(serializers.ModelSerializer):
 
     id = serializers.CharField(read_only=True, required=False)
     course = CourseLightSerializer(read_only=True, exclude_abilities=True)
+    enrollment = EnrollmentLightSerializer(read_only=True)
     organization = OrganizationSerializer(read_only=True, exclude_abilities=True)
     product_title = serializers.SlugRelatedField(
         read_only=True, slug_field="title", source="product"
@@ -247,7 +294,14 @@ class NestedOrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Order
-        fields = ["id", "course", "organization", "owner_name", "product_title"]
+        fields = [
+            "id",
+            "course",
+            "enrollment",
+            "organization",
+            "owner_name",
+            "product_title",
+        ]
         read_only_fields = fields
 
     def get_owner_name(self, instance):
@@ -311,30 +365,6 @@ class ContractSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Contract
         fields = ["id", "definition", "order", "signed_on", "created_on"]
-        read_only_fields = fields
-
-
-class CourseRunSerializer(serializers.ModelSerializer):
-    """
-    Serialize all information about a course run
-    """
-
-    course = CourseLightSerializer(read_only=True, exclude_abilities=True)
-
-    class Meta:
-        model = models.CourseRun
-        fields = [
-            "course",
-            "end",
-            "enrollment_end",
-            "enrollment_start",
-            "id",
-            "languages",
-            "resource_link",
-            "start",
-            "title",
-            "state",
-        ]
         read_only_fields = fields
 
 
