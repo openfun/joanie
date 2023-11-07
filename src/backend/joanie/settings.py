@@ -544,6 +544,9 @@ class Test(Base):
             },
         }
     )
+    PASSWORD_HASHERS = [
+        "django.contrib.auth.hashers.MD5PasswordHasher",
+    ]
 
     def __init__(self):
         # pylint: disable=invalid-name
