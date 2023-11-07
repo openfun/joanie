@@ -5,9 +5,7 @@ from typing import List
 
 from django_filters import rest_framework as filters
 
-from joanie.core import enums
-
-from .. import models
+from joanie.core import enums, models
 
 
 class OrderViewSetFilter(filters.FilterSet):

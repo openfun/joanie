@@ -10,8 +10,8 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.utils.translation import override
 
-from ..enums import INVOICE_STATE_REFUNDED
-from ..models import Invoice, Transaction
+from joanie.payment.enums import INVOICE_STATE_REFUNDED
+from joanie.payment.models import Invoice, Transaction
 
 logger = getLogger(__name__)
 

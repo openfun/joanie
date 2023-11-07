@@ -12,8 +12,7 @@ from joanie.core.factories import OrderFactory, UserFactory
 from joanie.payment.backends.base import BasePaymentBackend
 from joanie.payment.factories import BillingAddressDictFactory
 from joanie.payment.models import Invoice, Transaction
-
-from .base_payment import BasePaymentTestCase
+from joanie.tests.payment.base_payment import BasePaymentTestCase
 
 
 class TestBasePaymentBackend(BasePaymentBackend):

@@ -6,10 +6,8 @@ import string
 import factory.fuzzy
 from faker import Faker
 
-from joanie.core.factories import UserFactory
-
-from ..core.factories import OrderFactory
-from . import models
+from joanie.core.factories import OrderFactory, UserFactory
+from joanie.payment import models
 
 
 class CreditCardFactory(factory.django.DjangoModelFactory):

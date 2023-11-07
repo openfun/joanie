@@ -28,8 +28,7 @@ from joanie.payment.factories import (
     TransactionFactory,
 )
 from joanie.payment.models import CreditCard
-
-from .base_payment import BasePaymentTestCase
+from joanie.tests.payment.base_payment import BasePaymentTestCase
 
 
 class PayplugBackendTestCase(BasePaymentTestCase):

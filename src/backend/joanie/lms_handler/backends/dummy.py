@@ -8,8 +8,7 @@ from django.core.cache import cache
 from django.utils import timezone
 
 from joanie.core.factories import CourseRunFactory
-
-from .base import BaseLMSBackend
+from joanie.lms_handler.backends.base import BaseLMSBackend
 
 
 class DummyLMSBackend(BaseLMSBackend):

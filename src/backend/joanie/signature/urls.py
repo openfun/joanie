@@ -5,7 +5,7 @@ from django.urls import re_path
 
 from rest_framework.routers import DefaultRouter
 
-from . import api
+from joanie.signature import api
 
 router = DefaultRouter()
 

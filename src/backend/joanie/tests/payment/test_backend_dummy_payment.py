@@ -20,8 +20,7 @@ from joanie.payment.exceptions import (
     RegisterPaymentFailed,
 )
 from joanie.payment.factories import BillingAddressDictFactory
-
-from .base_payment import BasePaymentTestCase
+from joanie.tests.payment.base_payment import BasePaymentTestCase
 
 
 class DummyPaymentBackendTestCase(BasePaymentTestCase):

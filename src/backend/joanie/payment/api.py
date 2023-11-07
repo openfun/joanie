@@ -9,7 +9,7 @@ from rest_framework import mixins, permissions, viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from . import exceptions, get_payment_backend, models, serializers
+from joanie.payment import exceptions, get_payment_backend, models, serializers
 
 logger = logging.getLogger(__name__)
 

@@ -11,9 +11,8 @@ from rest_framework.test import APIRequestFactory
 
 from joanie.core.models import Order
 from joanie.payment import exceptions
+from joanie.payment.backends.base import BasePaymentBackend
 from joanie.payment.models import Transaction
-
-from .base import BasePaymentBackend
 
 DUMMY_PAYMENT_BACKEND_EVENT_TYPE_PAYMENT = "payment"
 DUMMY_PAYMENT_BACKEND_EVENT_TYPE_REFUND = "refund"

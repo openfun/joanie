@@ -9,7 +9,7 @@ from django.utils.translation import gettext_lazy as _
 
 from admin_auto_filters.filters import AutocompleteFilter
 
-from . import enums, models
+from joanie.payment import enums, models
 
 
 class InvoiceFilter(AutocompleteFilter):

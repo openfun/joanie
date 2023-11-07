@@ -14,10 +14,9 @@ from parler import models as parler_models
 from parler.utils import get_language_settings
 
 from joanie.core import enums
+from joanie.core.models.base import BaseModel
 from joanie.core.utils import image_to_base64, merge_dict
 from joanie.core.utils.issuers import generate_document
-
-from .base import BaseModel
 
 logger = logging.getLogger(__name__)
 

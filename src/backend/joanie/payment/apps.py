@@ -12,4 +12,6 @@ class PaymentConfig(AppConfig):
     # pylint: disable=import-outside-toplevel, unused-import
     def ready(self):
         """Import credit card post delete receiver."""
-        from .models import credit_card_post_delete_receiver  # noqa: F401,
+        from joanie.payment.models import (  # noqa: F401,
+            credit_card_post_delete_receiver,
+        )

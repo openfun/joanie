@@ -5,7 +5,7 @@ from django.urls import re_path
 
 from rest_framework import routers
 
-from .api import course_runs_sync
+from joanie.lms_handler.api import course_runs_sync
 
 ROUTER = routers.SimpleRouter()
 

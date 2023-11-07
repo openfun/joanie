@@ -14,10 +14,9 @@ from django.utils.translation import gettext_lazy as _
 import markdown
 
 from joanie.core import enums
+from joanie.core.models.base import BaseModel
+from joanie.core.models.products import Order
 from joanie.core.utils import contract_definition, issuers
-
-from .base import BaseModel
-from .products import Order
 
 logger = logging.getLogger(__name__)
 
