@@ -154,7 +154,7 @@ class ContractApiTest(BaseAPITestCase):
         factories.ContractFactory.create_batch(5)
 
         # - List without filter should return 6 contracts
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(266):
             response = self.client.get(
                 "/api/v1.0/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",

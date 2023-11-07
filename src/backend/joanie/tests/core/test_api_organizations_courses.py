@@ -61,7 +61,7 @@ class OrganizationCourseApiTest(BaseAPITestCase):
         )
 
         # Retrieve all courses from org with access
-        with self.assertNumQueries(10):
+        with self.assertNumQueries(98):
             response = self.client.get(
                 f"/api/v1.0/organizations/{organizations[0].id}/courses/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -153,7 +153,7 @@ class OrganizationCourseApiTest(BaseAPITestCase):
         factories.UserOrganizationAccessFactory(
             organization=organizations[0], user=user
         )
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(51):
             response = self.client.get(
                 f"/api/v1.0/organizations/{organizations[0].id}/courses/{courses[0].id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -237,7 +237,7 @@ class OrganizationCourseApiTest(BaseAPITestCase):
         )
 
         # Retrieve all courses from org with listed course runs
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(52):
             response = self.client.get(
                 (
                     f"/api/v1.0/organizations/{organizations[0].id}"

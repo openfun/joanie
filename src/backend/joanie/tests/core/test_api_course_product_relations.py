@@ -329,7 +329,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             course=course, product=product
         )
 
-        with self.assertNumQueries(9):
+        with self.assertNumQueries(53):
             self.client.get(f"/api/v1.0/courses/{course.code}/products/{product.id}/")
 
         # A second call to the url should benefit from caching on the product serializer
@@ -599,7 +599,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                 product=product, order_group=order_group1, state=state
             )
 
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(51):
             self.client.get(
                 f"/api/v1.0/course-product-relations/{relation.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",

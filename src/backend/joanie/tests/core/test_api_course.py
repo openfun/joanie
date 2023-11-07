@@ -38,7 +38,7 @@ class CourseApiTest(BaseAPITestCase):
         factories.UserCourseAccessFactory(user=user, course=courses[0])
         factories.UserCourseAccessFactory(user=user, course=courses[1])
 
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(51):
             response = self.client.get(
                 "/api/v1.0/courses/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",

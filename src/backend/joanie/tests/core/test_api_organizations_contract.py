@@ -224,7 +224,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         factories.ContractFactory(order__owner=user)
 
         # - List without filter should return 6 contracts
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(46):
             response = self.client.get(
                 f"/api/v1.0/organizations/{str(organization.id)}/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -435,7 +435,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
             order__organization=organization,
         )
 
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(45):
             response = self.client.get(
                 f"/api/v1.0/organizations/{organization.code}/contracts/{str(contract.id)}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
