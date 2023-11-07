@@ -20,7 +20,17 @@ from parler import models as parler_models
 from urllib3.util import Retry
 
 from joanie.core import enums
-from joanie.core import models as core_models
+from joanie.core.models.accounts import User
+from joanie.core.models.base import BaseModel
+from joanie.core.models.certifications import Certificate
+from joanie.core.models.contracts import Contract
+from joanie.core.models.courses import (
+    Course,
+    CourseProductRelation,
+    CourseRun,
+    Enrollment,
+    Organization,
+)
 from joanie.core.utils import webhooks
 from joanie.payment import get_payment_backend
 from joanie.payment.models import CreditCard
@@ -42,7 +52,7 @@ session.mount("https://", adapter)
 
 
 # pylint: disable=too-many-public-methods, too-many-lines
-class Product(parler_models.TranslatableModel, core_models.core_models.BaseModel):
+class Product(parler_models.TranslatableModel, BaseModel):
     """
     Product model represents detailed description of product to purchase for a course.
     All course runs and certification available for a product are defined here.
@@ -58,7 +68,7 @@ class Product(parler_models.TranslatableModel, core_models.core_models.BaseModel
         call_to_action=models.CharField(_("call to action"), max_length=255),
     )
     target_courses = models.ManyToManyField(
-        to=core_models.Course,
+        to=Course,
         related_name="targeted_by_products",
         through="ProductTargetCourseRelation",
         through_fields=("product", "course"),
@@ -121,7 +131,7 @@ class Product(parler_models.TranslatableModel, core_models.core_models.BaseModel
             course_runs__isnull=False
         ).only("pk")
 
-        return core_models.CourseRun.objects.filter(
+        return CourseRun.objects.filter(
             models.Q(product_relations__in=target_course_relations_with_course_runs)
             | models.Q(
                 course__in=self.target_courses.exclude(
@@ -227,7 +237,7 @@ class Product(parler_models.TranslatableModel, core_models.core_models.BaseModel
         Process the state of the product based on its equivalent course run dates.
         """
         dates = self.get_equivalent_course_run_dates()
-        return core_models.CourseRun.compute_state(**dates)
+        return CourseRun.compute_state(**dates)
 
     def clean(self):
         """
@@ -251,14 +261,14 @@ class Product(parler_models.TranslatableModel, core_models.core_models.BaseModel
         super().save(*args, **kwargs)
 
 
-class ProductTargetCourseRelation(core_models.core_models.BaseModel):
+class ProductTargetCourseRelation(BaseModel):
     """
     ProductTargetCourseRelation model allows to define position of each courses to follow
     for a product.
     """
 
     course = models.ForeignKey(
-        to=core_models.Course,
+        to=Course,
         verbose_name=_("course"),
         related_name="product_target_relations",
         on_delete=models.RESTRICT,
@@ -272,7 +282,7 @@ class ProductTargetCourseRelation(core_models.core_models.BaseModel):
     # allow restricting what course runs are proposed
     # for a given course when a product is bought.
     course_runs = models.ManyToManyField(
-        core_models.CourseRun,
+        CourseRun,
         related_name="product_relations",
         verbose_name=_("course runs"),
         blank=True,
@@ -315,7 +325,7 @@ class ProductTargetCourseRelation(core_models.core_models.BaseModel):
         webhooks.synchronize_course_runs(serialized_course_runs)
 
 
-class OrderGroup(core_models.BaseModel):
+class OrderGroup(BaseModel):
     """Order group to enforce a maximum number of seats for a product."""
 
     nb_seats = models.PositiveSmallIntegerField(
@@ -341,14 +351,14 @@ class OrderGroup(core_models.BaseModel):
         ).count()
 
 
-class Order(core_models.BaseModel):
+class Order(BaseModel):
     """
     Order model represents and records details user's order (for free or not) to a course product
     All course runs to enroll selected are defined here.
     """
 
     organization = models.ForeignKey(
-        to=core_models.Organization,
+        to=Organization,
         verbose_name=_("organization"),
         on_delete=models.PROTECT,
         blank=True,
@@ -363,14 +373,14 @@ class Order(core_models.BaseModel):
 
     # Origin: either from a course or from an enrollment
     course = models.ForeignKey(
-        to=core_models.Course,
+        to=Course,
         verbose_name=_("course"),
         on_delete=models.PROTECT,
         blank=True,
         null=True,
     )
     enrollment = models.ForeignKey(
-        to=core_models.Enrollment,
+        to=Enrollment,
         verbose_name=_("enrollment"),
         on_delete=models.PROTECT,
         related_name="related_orders",
@@ -387,7 +397,7 @@ class Order(core_models.BaseModel):
         null=True,
     )
     target_courses = models.ManyToManyField(
-        core_models.Course,
+        Course,
         related_name="target_orders",
         through="OrderTargetCourseRelation",
         through_fields=("order", "course"),
@@ -405,7 +415,7 @@ class Order(core_models.BaseModel):
         validators=[MinValueValidator(0.0)],
     )
     owner = models.ForeignKey(
-        to=core_models.User,
+        to=User,
         verbose_name=_("owner"),
         related_name="orders",
         on_delete=models.RESTRICT,
@@ -581,7 +591,7 @@ class Order(core_models.BaseModel):
             course_runs__isnull=False
         ).only("pk")
 
-        return core_models.CourseRun.objects.filter(
+        return CourseRun.objects.filter(
             models.Q(order_relations__in=course_relations_with_course_runs)
             | models.Q(
                 course__in=self.target_courses.exclude(
@@ -640,7 +650,7 @@ class Order(core_models.BaseModel):
             and self.course_id
             and self.product_id
             and self.organization_id
-            and not core_models.CourseProductRelation.objects.filter(
+            and not CourseProductRelation.objects.filter(
                 course=self.course_id,
                 product=self.product_id,
                 organizations=self.organization_id,
@@ -698,7 +708,7 @@ class Order(core_models.BaseModel):
         if is_active is not None:
             filters.update({"is_active": is_active})
 
-        return core_models.Enrollment.objects.filter(**filters)
+        return Enrollment.objects.filter(**filters)
 
     def enroll_user_to_course_run(self):
         """
@@ -731,7 +741,7 @@ class Order(core_models.BaseModel):
         )
 
         # Annotation queries for retrieving open course runs
-        open_course_run = core_models.CourseRun.objects.filter(
+        open_course_run = CourseRun.objects.filter(
             models.Q(enrollment_end__gt=now) | models.Q(enrollment_end__isnull=True),
             enrollment_start__lte=now,
             course=models.OuterRef("course"),
@@ -765,11 +775,11 @@ class Order(core_models.BaseModel):
                 else course_relation.open_course_run_id
             )
             try:
-                enrollment = core_models.Enrollment.objects.only("is_active").get(
+                enrollment = Enrollment.objects.only("is_active").get(
                     course_run_id=open_course_run_id, user=self.owner
                 )
-            except core_models.Enrollment.DoesNotExist:
-                core_models.Enrollment.objects.create(
+            except Enrollment.DoesNotExist:
+                Enrollment.objects.create(
                     course_run_id=open_course_run_id,
                     is_active=True,
                     user=self.owner,
@@ -825,8 +835,8 @@ class Order(core_models.BaseModel):
             None, False: if the order is not eligible for certification
         """
         try:
-            return core_models.Certificate.objects.get(order=self), False
-        except core_models.Certificate.DoesNotExist:
+            return Certificate.objects.get(order=self), False
+        except Certificate.DoesNotExist:
             pass
 
         if (
@@ -850,7 +860,7 @@ class Order(core_models.BaseModel):
 
         # Retrieve all enrollments in one query. Since these enrollments rely on
         # order course runs, the count will always be pretty small.
-        course_enrollments = core_models.Enrollment.objects.filter(
+        course_enrollments = Enrollment.objects.filter(
             course_run__course__in=graded_courses,
             course_run__is_gradable=True,
             course_run__start__lte=timezone.now(),
@@ -871,7 +881,7 @@ class Order(core_models.BaseModel):
                 return None, False
 
         return (
-            core_models.Certificate.objects.create(
+            Certificate.objects.create(
                 order=self,
                 organization=self.organization,
                 certificate_definition=self.product.certificate_definition,
@@ -899,8 +909,8 @@ class Order(core_models.BaseModel):
 
         try:
             contract = self.contract
-        except core_models.Contract.DoesNotExist:
-            contract = core_models.Contract(order=self, definition=contract_definition)
+        except Contract.DoesNotExist:
+            contract = Contract(order=self, definition=contract_definition)
 
         if self.contract and self.contract.signed_on:
             raise PermissionDenied("Contract is already signed, cannot resubmit.")
@@ -958,7 +968,7 @@ def order_post_transition_callback(
     # course runs targeted by the purchased product, we should change their enrollment mode on
     # these course runs to "verified".
     if instance.state in [enums.ORDER_STATE_VALIDATED, enums.ORDER_STATE_CANCELED]:
-        for enrollment in core_models.Enrollment.objects.filter(
+        for enrollment in Enrollment.objects.filter(
             course_run__course__target_orders=instance
         ).select_related("course_run", "user"):
             enrollment.set()
@@ -976,20 +986,20 @@ def order_post_transition_callback(
         Product.objects.filter(id=instance.product_id).update(updated_on=timezone.now())
 
 
-class OrderTargetCourseRelation(core_models.BaseModel):
+class OrderTargetCourseRelation(BaseModel):
     """
     OrderTargetCourseRelation model allows to define position of each courses to follow
     for an order.
     """
 
     course = models.ForeignKey(
-        to=core_models.Course,
+        to=Course,
         verbose_name=_("course"),
         related_name="order_relations",
         on_delete=models.RESTRICT,
     )
     course_runs = models.ManyToManyField(
-        core_models.CourseRun,
+        CourseRun,
         verbose_name=_("course runs"),
         related_name="order_relations",
         blank=True,

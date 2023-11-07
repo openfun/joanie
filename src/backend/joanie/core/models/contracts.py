@@ -15,7 +15,6 @@ import markdown
 
 from joanie.core import enums
 from joanie.core.models.base import BaseModel
-from joanie.core.models.products import Order
 from joanie.core.utils import contract_definition, issuers
 
 logger = logging.getLogger(__name__)
@@ -88,7 +87,7 @@ class Contract(BaseModel):
         editable=False,
     )
     order = models.OneToOneField(
-        Order,
+        "core.order",
         verbose_name=_("order"),
         on_delete=models.PROTECT,
         editable=False,
