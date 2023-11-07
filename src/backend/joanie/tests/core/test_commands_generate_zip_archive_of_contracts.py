@@ -1,4 +1,5 @@
 """Test suite for the management command `generate_zip_archive_of_contracts`"""
+import random
 import uuid
 from io import BytesIO
 from zipfile import ZipFile
@@ -88,14 +89,17 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         it should raise an error mentionning that it has to abort generating the ZIP archive.
         """
         users = factories.UserFactory.create_batch(3)
-        course = factories.CourseFactory()
-        product = factories.ProductFactory()
-        course_product_relation = factories.CourseProductRelationFactory(
-            course=course, product=product
+        relation = factories.CourseProductRelationFactory()
+        options = random.choice(
+            [
+                {
+                    "course_product_relation": relation.pk,
+                },
+                {
+                    "organization": relation.organizations.first().pk,
+                },
+            ]
         )
-        options = {
-            "course_product_relation": course_product_relation.pk,
-        }
         signature_reference_choices = [
             "wfl_fake_dummy_1",
             "wfl_fake_dummy_2",
@@ -106,14 +110,14 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
             user = users[index]
             order = factories.OrderFactory(
                 owner=user,
-                product=course_product_relation.product,
-                course=course_product_relation.course,
+                product=relation.product,
+                course=relation.course,
                 state=enums.ORDER_STATE_VALIDATED,
             )
             context = contract_definition.generate_document_context(
                 order.product.contract_definition, user, order
             )
-            factories.ContractFactory(
+            contract = factories.ContractFactory(
                 order=order,
                 signature_backend_reference=reference,
                 definition_checksum="1234",
@@ -121,7 +125,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
                 submitted_for_signature_on=timezone.now(),
             )
             pdf_bytes_file = issuers.generate_document(
-                order.product.contract_definition.name, context=context
+                contract.definition.name, context=context
             )
             files_in_bytes.append(pdf_bytes_file)
 
@@ -145,13 +149,9 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         when retrieving in default storage with its filename.
         """
         users = factories.UserFactory.create_batch(3)
-        course = factories.CourseFactory()
-        product = factories.ProductFactory()
-        course_product_relation = factories.CourseProductRelationFactory(
-            course=course, product=product
-        )
+        relation = factories.CourseProductRelationFactory()
         options = {
-            "course_product_relation": course_product_relation.pk,
+            "course_product_relation": relation.pk,
         }
         signature_reference_choices = [
             "wfl_fake_dummy_1",
@@ -163,14 +163,14 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
             user = users[index]
             order = factories.OrderFactory(
                 owner=user,
-                product=course_product_relation.product,
-                course=course_product_relation.course,
+                product=relation.product,
+                course=relation.course,
                 state=enums.ORDER_STATE_VALIDATED,
             )
             context = contract_definition.generate_document_context(
                 order.product.contract_definition, user, order
             )
-            factories.ContractFactory(
+            contract = factories.ContractFactory(
                 order=order,
                 signature_backend_reference=reference,
                 definition_checksum="1234",
@@ -178,7 +178,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
                 signed_on=timezone.now(),
             )
             pdf_bytes_file = issuers.generate_document(
-                order.product.contract_definition.name, context=context
+                contract.definition.name, context=context
             )
             files_in_bytes.append(pdf_bytes_file)
 
@@ -217,12 +217,8 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         in default storage with its filename.
         """
         users = factories.UserFactory.create_batch(3)
-        course = factories.CourseFactory()
-        product = factories.ProductFactory()
-        course_product_relation = factories.CourseProductRelationFactory(
-            course=course, product=product
-        )
-        organization = course_product_relation.organizations.all().first()
+        relation = factories.CourseProductRelationFactory()
+        organization = relation.organizations.first()
         options = {
             "organization": organization.pk,
         }
@@ -236,14 +232,14 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
             user = users[index]
             order = factories.OrderFactory(
                 owner=user,
-                product=course_product_relation.product,
-                course=course_product_relation.course,
+                product=relation.product,
+                course=relation.course,
                 state=enums.ORDER_STATE_VALIDATED,
             )
             context = contract_definition.generate_document_context(
                 order.product.contract_definition, user, order
             )
-            factories.ContractFactory(
+            contract = factories.ContractFactory(
                 order=order,
                 signature_backend_reference=reference,
                 definition_checksum="1234",
@@ -251,7 +247,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
                 signed_on=timezone.now(),
             )
             pdf_bytes_file = issuers.generate_document(
-                order.product.contract_definition.name, context=context
+                contract.definition.name, context=context
             )
             files_in_bytes.append(pdf_bytes_file)
 
