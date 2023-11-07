@@ -536,7 +536,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
 
         # Retrieve user's orders without any filter
-        with self.assertNumQueries(15):
+        with self.assertNumQueries(59):
             response = self.client.get(
                 "/api/v1.0/orders/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -2104,7 +2104,7 @@ class OrderApiTest(BaseAPITestCase):
         }
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(24):
+        with self.assertNumQueries(46):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,

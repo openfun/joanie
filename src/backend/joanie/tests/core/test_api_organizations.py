@@ -42,7 +42,7 @@ class OrganizationApiTest(BaseAPITestCase):
             user=user, organization=organizations[1]
         )
 
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(47):
             response = self.client.get(
                 "/api/v1.0/organizations/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",

@@ -95,14 +95,6 @@ class OrganizationFactory(factory.django.DjangoModelFactory):
         filename="logo.png", format="png", width=1, height=1
     )
 
-    @classmethod
-    def _after_postgeneration(cls, instance, create, results=None):
-        """
-        Generate thumbnails for logo after organization has been created.
-        """
-        if create:
-            generate_thumbnails_for_field(instance.logo)
-
     @factory.post_generation
     def users(self, create, extracted, **kwargs):
         """Add users to organization from a given list of users with or without roles."""
@@ -114,6 +106,18 @@ class OrganizationFactory(factory.django.DjangoModelFactory):
                     UserOrganizationAccessFactory(
                         organization=self, user=item[0], role=item[1]
                     )
+
+
+class OrganizationFactoryWithThumbnails(OrganizationFactory):
+    """A factory to create an organization, with thumbnails generation"""
+
+    @classmethod
+    def _after_postgeneration(cls, instance, create, results=None):
+        """
+        Generate thumbnails for logo after organization has been created.
+        """
+        if create:
+            generate_thumbnails_for_field(instance.logo)
 
 
 class UserOrganizationAccessFactory(factory.django.DjangoModelFactory):
@@ -141,14 +145,6 @@ class CourseFactory(factory.django.DjangoModelFactory):
     cover = factory.django.ImageField(
         filename="cover.png", format="png", width=1, height=1
     )
-
-    @classmethod
-    def _after_postgeneration(cls, instance, create, results=None):
-        """
-        Generate thumbnails for cover after course has been created.
-        """
-        if create:
-            generate_thumbnails_for_field(instance.cover)
 
     @factory.post_generation
     # pylint: disable=unused-argument,no-member
@@ -196,6 +192,18 @@ class CourseFactory(factory.django.DjangoModelFactory):
                     UserCourseAccessFactory(course=self, user=item)
                 else:
                     UserCourseAccessFactory(course=self, user=item[0], role=item[1])
+
+
+class CourseFactoryWithThumbnails(CourseFactory):
+    """A factory to create a course, with thumbnails generation"""
+
+    @classmethod
+    def _after_postgeneration(cls, instance, create, results=None):
+        """
+        Generate thumbnails for cover after course has been created.
+        """
+        if create:
+            generate_thumbnails_for_field(instance.cover)
 
 
 class UserCourseAccessFactory(factory.django.DjangoModelFactory):

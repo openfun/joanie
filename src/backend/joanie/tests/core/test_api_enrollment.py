@@ -403,7 +403,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         # The user can see his/her enrollment
         token = self.generate_token_from_user(enrollment.user)
 
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(27):
             response = self.client.get(
                 "/api/v1.0/enrollments/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -598,7 +598,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             user=user, course_run=cr3, was_created_by_order=True
         )
 
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(49):
             response = self.client.get(
                 "/api/v1.0/enrollments/?was_created_by_order=false",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -608,7 +608,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         content = response.json()
         self.assertEqual(content["count"], 2)
 
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(27):
             response = self.client.get(
                 "/api/v1.0/enrollments/?was_created_by_order=true",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
