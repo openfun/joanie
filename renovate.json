@@ -9,10 +9,7 @@
       "matchManagers": [
         "setup-cfg"
       ],
-      "matchPackageNames": [
-        "obc",
-        "responses"
-      ]
+      "matchPackageNames": []
     },
     {
       "enabled": false,
