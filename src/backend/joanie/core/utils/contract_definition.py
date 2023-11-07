@@ -15,7 +15,9 @@ def generate_document_context(contract_definition, user, order=None):
     We can use this method to preview a contract definition, or to generate its context when all
     the parameters are set.
     """
-    from joanie.core.serializers import AddressSerializer
+    from joanie.core.serializers.client import (  # pylint: disable=cyclic-import
+        AddressSerializer,
+    )
 
     organization_fallback_logo = (
         "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR"
