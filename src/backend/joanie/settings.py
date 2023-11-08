@@ -607,6 +607,22 @@ class Test(Base):
         },
     }
 
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+        "contracts": {
+            "BACKEND": "django.core.files.storage.InMemoryStorage",
+            "OPTIONS": {
+                "location": os.path.join(DATA_DIR, "contracts"),
+                "base_url": "/contracts/",
+            },
+        },
+    }
+
     def __init__(self):
         # pylint: disable=invalid-name
         self.INSTALLED_APPS += ["joanie.tests", "drf_spectacular_sidecar"]
