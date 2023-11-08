@@ -14,6 +14,8 @@ class CourseApiTest(BaseAPITestCase):
     Test suite for Course API endpoint.
     """
 
+    maxDiff = None
+
     def test_api_course_list_anonymous(self):
         """
         Anonymous users should not be able to list courses.
@@ -22,7 +24,7 @@ class CourseApiTest(BaseAPITestCase):
         response = self.client.get("/api/v1.0/courses/")
 
         self.assertEqual(response.status_code, 401)
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
 
@@ -78,7 +80,7 @@ class CourseApiTest(BaseAPITestCase):
             )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "count": 1,
@@ -230,7 +232,7 @@ class CourseApiTest(BaseAPITestCase):
         response = self.client.get(f"/api/v1.0/courses/{course.id}/")
 
         self.assertEqual(response.status_code, 401)
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
 
@@ -250,7 +252,7 @@ class CourseApiTest(BaseAPITestCase):
         )
 
         self.assertEqual(response.status_code, 404)
-        self.assertEqual(response.json(), {"detail": "Not found."})
+        self.assertDictEqual(response.json(), {"detail": "Not found."})
 
     @mock.patch.object(
         fields.ThumbnailDetailField,
@@ -282,7 +284,7 @@ class CourseApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, 200)
         content = response.json()
         self.assertTrue(content.pop("abilities")["get"])
-        self.assertEqual(
+        self.assertDictEqual(
             content,
             {
                 "created_on": course.created_on.isoformat().replace("+00:00", "Z"),
@@ -390,7 +392,7 @@ class CourseApiTest(BaseAPITestCase):
         response = self.client.put(f"/api/v1.0/courses/{course.id}/", data=data)
 
         self.assertEqual(response.status_code, 401)
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
 
@@ -422,7 +424,7 @@ class CourseApiTest(BaseAPITestCase):
         )
 
         self.assertEqual(response.status_code, 405)
-        self.assertEqual(response.json(), {"detail": 'Method "PUT" not allowed.'})
+        self.assertDictEqual(response.json(), {"detail": 'Method "PUT" not allowed.'})
 
         course.refresh_from_db()
         for key, value in data.items():
@@ -457,7 +459,7 @@ class CourseApiTest(BaseAPITestCase):
         )
 
         self.assertEqual(response.status_code, 405)
-        self.assertEqual(response.json(), {"detail": 'Method "PUT" not allowed.'})
+        self.assertDictEqual(response.json(), {"detail": 'Method "PUT" not allowed.'})
 
         course.refresh_from_db()
         for key, value in data.items():
