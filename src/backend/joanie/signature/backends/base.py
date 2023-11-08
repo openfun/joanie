@@ -109,7 +109,7 @@ class BaseSignatureBackend:
 
     def get_signed_file(self, reference_id: str):
         """
-        Return the PDF format of a contrat's signature backend reference at the signature provider.
+        Fetch the PDF bytes format of a contrat from the signature provider.
         """
         raise NotImplementedError(
             "subclasses of BaseSignatureBackend must provide a get_signed_file() method."
