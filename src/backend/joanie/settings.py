@@ -113,6 +113,13 @@ class Base(Configuration):
         "staticfiles": {
             "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
         },
+        "contracts": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+            "OPTIONS": {
+                "location": os.path.join(DATA_DIR, "contracts"),
+                "base_url": "/contracts/",
+            },
+        },
     }
 
     # Internationalization
