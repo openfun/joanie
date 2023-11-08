@@ -68,6 +68,9 @@ data/media:
 data/static:
 	@mkdir -p data/static
 
+data/contracts:
+	@mkdir -p data/contracts
+
 
 # -- Project
 
@@ -75,6 +78,7 @@ bootstrap: ## Prepare Docker images for the project
 bootstrap: \
 	data/media \
 	data/static \
+	data/contracts \
 	env.d/development/crowdin \
 	env.d/development/localtunnel \
 	frontend/admin/env \
