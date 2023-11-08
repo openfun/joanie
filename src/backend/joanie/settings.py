@@ -106,6 +106,15 @@ class Base(Configuration):
 
     SITE_ID = 1
 
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+
     # Internationalization
     # https://docs.djangoproject.com/en/3.1/topics/i18n/
 
@@ -498,12 +507,15 @@ class Build(Base):
 
     SECRET_KEY = values.Value("DummyKey")
     STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
         "staticfiles": {
             "BACKEND": values.Value(
                 "whitenoise.storage.CompressedManifestStaticFilesStorage",
                 environ_name="STORAGES_STATICFILES_BACKEND",
             ),
-        }
+        },
     }
 
 
@@ -572,6 +584,22 @@ class Test(Base):
     ]
     USE_SWAGGER = True
 
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+        "contracts": {
+            "BACKEND": "django.core.files.storage.InMemoryStorage",
+            "OPTIONS": {
+                "location": os.path.join(DATA_DIR, "contracts"),
+                "base_url": "/contracts/",
+            },
+        },
+    }
+
     def __init__(self):
         # pylint: disable=invalid-name
         self.INSTALLED_APPS += ["joanie.tests", "drf_spectacular_sidecar"]
@@ -615,12 +643,13 @@ class Production(Base):
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
 
-    # Privacy
-    SECURE_REFERRER_POLICY = "same-origin"
-
-    # Media
+    # For static files in production, we want to use a backend that includes a hash in
+    # the filename, that is calculated from the file content, so that browsers always
+    # get the updated version of each file.
     STORAGES = {
-        "default": {"BACKEND": "storages.backends.s3.S3Storage"},
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+        },
         "staticfiles": {
             # For static files in production, we want to use a backend that includes a hash in
             # the filename, that is calculated from the file content, so that browsers always
@@ -630,7 +659,22 @@ class Production(Base):
                 environ_name="STORAGES_STATICFILES_BACKEND",
             )
         },
+        "contracts": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {
+                "bucket_name": values.Value(
+                    "tf-default-joanie-contracts-storage",
+                    environ_name="CONTRACTS_AWS_STORAGE_BUCKET_NAME",
+                ),
+                "location": "contracts",
+            },
+        },
     }
+
+    # Privacy
+    SECURE_REFERRER_POLICY = "same-origin"
+
+    # Media
     AWS_S3_ENDPOINT_URL = values.Value()
     AWS_S3_ACCESS_KEY_ID = values.Value()
     AWS_S3_SECRET_ACCESS_KEY = values.Value()
