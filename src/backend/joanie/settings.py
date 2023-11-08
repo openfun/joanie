@@ -103,6 +103,15 @@ class Base(Configuration):
 
     SITE_ID = 1
 
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+
     # Internationalization
     # https://docs.djangoproject.com/en/3.1/topics/i18n/
 
@@ -469,9 +478,14 @@ class Build(Base):
     """
 
     SECRET_KEY = values.Value("DummyKey")
-    STORAGES_STATICFILES_BACKEND = values.Value(
-        "whitenoise.storage.CompressedManifestStaticFilesStorage"
-    )
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
 
 
 class Development(Base):
@@ -595,15 +609,19 @@ class Production(Base):
     # For static files in production, we want to use a backend that includes a hash in
     # the filename, that is calculated from the file content, so that browsers always
     # get the updated version of each file.
-    STORAGES_STATICFILES_BACKEND = values.Value(
-        "whitenoise.storage.CompressedManifestStaticFilesStorage"
-    )
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
 
     # Privacy
     SECURE_REFERRER_POLICY = "same-origin"
 
     # Media
-    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
     AWS_S3_ENDPOINT_URL = values.Value()
     AWS_S3_ACCESS_KEY_ID = values.Value()
     AWS_S3_SECRET_ACCESS_KEY = values.Value()
