@@ -1,9 +1,11 @@
-"""Utility to generate a zipfile of PDF bytes files for contracts that are signed"""
+"""Utility to generate a ZIP archive of PDF bytes files for contracts that are signed"""
 import io
 import zipfile
 from logging import getLogger
+from uuid import uuid4
 
-from django.core.files.storage import default_storage
+from django.conf import settings
+from django.core.files.storage import FileSystemStorage
 from django.db.models import Q
 
 from joanie.core import enums, models
@@ -12,13 +14,14 @@ from joanie.signature.backends import get_signature_backend
 logger = getLogger(__name__)
 
 
-def get_signature_backend_references(
-    course_product_relation=None, organization=None
-) -> list:
+def get_signature_backend_references(course_product_relation=None, organization=None):
     """
-    Get a list of signature backend references from either a Course Product Relation object or an
-    Organization object when the contract is signed. Otherwise, it returns an empty list if there
-    are no signed contracts yet.
+    Get a generator object with signature backend references from either a Course Product Relation
+    object or an Organization object when the contract is signed. Otherwise, it returns an empty
+    generator if there are no signed contracts yet. We use the iterator method because it
+    reduces memory consumption and improve the performance when we work with large dataset. It
+    processes the database records one at a time instead of loading the entire QuerySet into memory
+    all at once.
     """
     base_query = models.Contract.objects.filter(
         order__state=enums.ORDER_STATE_VALIDATED,
@@ -28,24 +31,29 @@ def get_signature_backend_references(
     if course_product_relation:
         base_query = base_query.filter(
             Q(order__course_id=course_product_relation.course_id)
-            & Q(order__product_id=course_product_relation.product_id)
+            | Q(
+                order__enrollment__course_run__course_id=course_product_relation.course_id
+            ),
+            order__product_id=course_product_relation.product_id,
         )
 
     if organization:
-        base_query = base_query.filter(order__organization=organization)
+        base_query = base_query.filter(order__organization_id=organization.pk)
 
     signature_backend_references = (
         base_query.values_list("signature_backend_reference", flat=True)
         .order_by("signature_backend_reference")
         .distinct()
+        .iterator()
     )
 
-    return list(signature_backend_references)
+    return signature_backend_references
 
 
 def fetch_pdf_bytes_of_contracts(signature_backend_references: list) -> list:
     """
-    Retrieve PDF bytes files from a list of signature backend reference at the signature provider.
+    Fetch PDF bytes files from a list of signature backend references at the signature provider.
+    It returns an empty list if the input parameter has no item in its list.
     """
     signature_backend = get_signature_backend()
 
@@ -55,14 +63,17 @@ def fetch_pdf_bytes_of_contracts(signature_backend_references: list) -> list:
     ]
 
 
-def generate_zipfile(pdf_bytes_list: list) -> str:
+def generate_zipfile(pdf_bytes_list: list, user_uuid: str, zip_uuid=None) -> str:
     """
-    Generate a zipfile from a list of PDF bytes and save the ZIP archive in
-    default storage. The method returns the filename of the ZIP archive once done. This filename
-    can be used to retrieve it from default storage.
+    Generate a ZIP archive from a list of PDF bytes and save it in the File System Storage which
+    is located at `data/contracts`. Once it has been generated, we return the filename of the
+    ZIP archive stored.
 
-    Selected compression method `zipfile.ZIP_DEFLATED`. It is efficient in terms of compression and
-    decompression, making it a good choice for general-purpose compression.
+    The filename will be build the following way : `{user_id}/{uuid}.zip`. The filename can be used
+    to fetch it from the file system storage.
+
+    The selected compression method `zipfile.ZIP_DEFLATED`. It is efficient in terms of compression
+    and decompression, making it a good choice for general-purpose compression.
     """
     if not pdf_bytes_list:
         error_message = (
@@ -71,17 +82,24 @@ def generate_zipfile(pdf_bytes_list: list) -> str:
         logger.error(error_message)
         raise ValueError(error_message)
 
-    zip_buffer = io.BytesIO()  # Create the ZIP Archive.
+    # Create the ZIP Archive.
+    zip_buffer = io.BytesIO()
     with zipfile.ZipFile(
         file=zip_buffer, mode="w", compression=zipfile.ZIP_DEFLATED
     ) as zipf:
         for index, pdf_bytes in enumerate(pdf_bytes_list):
             pdf_filename = f"contract_{index}.pdf"
-            zipf.writestr(pdf_filename, pdf_bytes)  # Add PDF bytes file in ZIP archive.
+            # Add PDF bytes file in ZIP archive.
+            zipf.writestr(pdf_filename, pdf_bytes)
         zipf.close()
 
-    zip_file_name = "signed_contracts_extract.zip"
+    zip_uuid = zip_uuid if zip_uuid else uuid4()
+    zip_archive_filename = f"{user_uuid}_{zip_uuid}.zip"
     zip_buffer.seek(0)
-    default_storage.save(name=zip_file_name, content=zip_buffer)
 
-    return zip_file_name
+    file_storage = FileSystemStorage(
+        location=settings.STORAGES.get("contracts").get("OPTIONS").get("location")
+    )
+    file_storage.save(name=zip_archive_filename, content=zip_buffer)
+
+    return zip_archive_filename

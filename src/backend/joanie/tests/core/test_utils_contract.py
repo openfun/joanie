@@ -1,36 +1,35 @@
-"""Test suite to generate a zipfile for signed contract PDF files in bytes utility"""
+"""Test suite to generate a ZIP archive of signed contract PDF files in bytes utility"""
 import random
 from io import BytesIO
+from uuid import uuid4
 from zipfile import ZipFile
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.core.files.storage import default_storage
+from django.core.files.storage import FileSystemStorage
 from django.test import TestCase
 from django.test.utils import override_settings
 from django.utils import timezone
 
 from pdfminer.high_level import extract_text as pdf_extract_text
 
-from joanie.core import enums, factories
+from joanie.core import enums, factories, models
 from joanie.core.utils import contract as contract_utility
 from joanie.core.utils import contract_definition as contract_definition_utility
 from joanie.core.utils import issuers
 
 
 class UtilsContractTestCase(TestCase):
-    """Test suite to generate a zipfile of signed contract PDF files in bytes utility"""
-
-    def setUp(self):
-        default_storage.delete("signed_contracts_extract.zip")
+    """Test suite to generate a ZIP archive of signed contract PDF files in bytes utility"""
 
     def test_utils_contract_get_signature_backend_references_with_no_signed_contracts_yet(
         self,
     ):
         """
-        From a course product relation product object, we should be able to find the contract's
+        From a Course Product Relation product object, we should be able to find the contract's
         signature backend references that are attached to the 'validated' orders only for a
         specific course and product. If all orders found do not have the state validated, it should
-        return an empty list.
+        return an empty generator.
         """
         users = factories.UserFactory.create_batch(3)
         relation = factories.CourseProductRelationFactory()
@@ -59,17 +58,21 @@ class UtilsContractTestCase(TestCase):
                 submitted_for_signature_on=timezone.now(),
             )
 
-        references_found = contract_utility.get_signature_backend_references(
-            course_product_relation=relation, organization=None
+        signature_backend_references_generator = (
+            contract_utility.get_signature_backend_references(
+                course_product_relation=relation, organization=None
+            )
         )
+        signature_backend_references_list = list(signature_backend_references_generator)
 
-        self.assertEqual(references_found, [])
+        self.assertEqual(len(signature_backend_references_list), 0)
+        self.assertEqual(signature_backend_references_list, [])
 
     def test_utils_contract_get_signature_backend_references_with_many_signed_contracts_with_cpr(
         self,
     ):
         """
-        From a course product relation product object, we should be able to find the contract's
+        From a Course Product Relation product object, we should be able to find the contract's
         signature backend references that are attached to the validated orders only for a specific
         course and product. It should return a list with signature backend references.
         """
@@ -92,12 +95,16 @@ class UtilsContractTestCase(TestCase):
                 signed_on=timezone.now(),
             )
 
-        references_found = contract_utility.get_signature_backend_references(
-            course_product_relation=relation, organization=None
+        signature_backend_references_generator = (
+            contract_utility.get_signature_backend_references(
+                course_product_relation=relation, organization=None
+            )
         )
+        signature_backend_references_list = list(signature_backend_references_generator)
 
+        self.assertEqual(len(signature_backend_references_list), 3)
         self.assertEqual(
-            references_found,
+            signature_backend_references_list,
             ["wfl_fake_dummy_1", "wfl_fake_dummy_2", "wfl_fake_dummy_3"],
         )
 
@@ -105,7 +112,7 @@ class UtilsContractTestCase(TestCase):
         self,
     ):
         """
-        From an organization object, if there are no signed contracts attached to the organization,
+        From an Organization object, if there are no signed contracts attached to the organization,
         it should return an empty list.
         """
         users = factories.UserFactory.create_batch(3)
@@ -136,21 +143,22 @@ class UtilsContractTestCase(TestCase):
                 submitted_for_signature_on=timezone.now(),
             )
 
-        references_found = contract_utility.get_signature_backend_references(
-            course_product_relation=None, organization=organization
+        signature_backend_references_generator = (
+            contract_utility.get_signature_backend_references(
+                course_product_relation=None, organization=organization
+            )
         )
+        signature_backend_references_list = list(signature_backend_references_generator)
 
-        self.assertEqual(
-            references_found,
-            [],
-        )
+        self.assertEqual(len(signature_backend_references_list), 0)
+        self.assertEqual(signature_backend_references_list, [])
 
     def test_utils_contract_get_signature_backend_references_signed_contracts_from_organization(
         self,
     ):
         """
-        From an organization object, we should be able to find the contract's signature
-        backend references from signed contracts. It should return a list with signature backend
+        From an Organization object, we should be able to find the contract's signature backend
+        references from signed contracts. It should return a list with signature backend
         references.
         """
         users = factories.UserFactory.create_batch(3)
@@ -173,14 +181,136 @@ class UtilsContractTestCase(TestCase):
                 signed_on=timezone.now(),
             )
 
-        references_found = contract_utility.get_signature_backend_references(
-            course_product_relation=None, organization=organization
+        signature_backend_references_generator = (
+            contract_utility.get_signature_backend_references(
+                course_product_relation=None, organization=organization
+            )
         )
+        signature_backend_references_list = list(signature_backend_references_generator)
 
+        self.assertEqual(len(signature_backend_references_list), 3)
         self.assertEqual(
-            references_found,
+            signature_backend_references_list,
             ["wfl_fake_dummy_1", "wfl_fake_dummy_2", "wfl_fake_dummy_3"],
         )
+
+    def test_utils_contract_get_signature_backend_references_no_signed_contracts_from_enrollment(
+        self,
+    ):
+        """
+        From a Course Product Relation product object where it has an Enrollment but there are no
+        signed contracts, we should be not able to find the contract's signature backend references
+        and get an empty list in return.
+        """
+        users = factories.UserFactory.create_batch(3)
+        product = factories.ProductFactory(type=enums.PRODUCT_TYPE_CERTIFICATE)
+        relation = factories.CourseProductRelationFactory(
+            product=product,
+        )
+        signature_reference_choices = [
+            "wfl_fake_dummy_1",
+            "wfl_fake_dummy_2",
+            "wfl_fake_dummy_3",
+        ]
+        for index, signature_reference in enumerate(signature_reference_choices):
+            enrollment = factories.EnrollmentFactory(
+                user=users[index],
+                course_run__course=relation.course,
+                course_run__state=models.CourseState.ONGOING_OPEN,
+                course_run__is_listed=True,
+            )
+            factories.ContractFactory(
+                order__owner=users[index],
+                order__product=relation.product,
+                order__course=None,
+                order__enrollment=enrollment,
+                order__state=random.choice(
+                    [
+                        enums.ORDER_STATE_CANCELED,
+                        enums.ORDER_STATE_DRAFT,
+                        enums.ORDER_STATE_PENDING,
+                        enums.ORDER_STATE_SUBMITTED,
+                        enums.ORDER_STATE_VALIDATED,
+                    ]
+                ),
+                signature_backend_reference=signature_reference,
+                definition_checksum="1234",
+                context={"foo": "bar"},
+                submitted_for_signature_on=timezone.now(),
+            )
+
+        signature_backend_references_generator = (
+            contract_utility.get_signature_backend_references(
+                course_product_relation=relation, organization=None
+            )
+        )
+        signature_backend_references_list = list(signature_backend_references_generator)
+
+        self.assertEqual(len(signature_backend_references_list), 0)
+        self.assertEqual(signature_backend_references_list, [])
+
+    def test_utils_contract_get_signature_backend_references_signed_contracts_from_enrollment(
+        self,
+    ):
+        """
+        From a Course Product Relation product object, we should be able to find the signed
+        contract signature backend references that are attached to the 'validated' Orders for a
+        specific Enrollment.
+        """
+        users = factories.UserFactory.create_batch(3)
+        product = factories.ProductFactory(type=enums.PRODUCT_TYPE_CERTIFICATE)
+        relation = factories.CourseProductRelationFactory(
+            product=product,
+        )
+        signature_reference_choices = [
+            "wfl_fake_dummy_1",
+            "wfl_fake_dummy_2",
+            "wfl_fake_dummy_3",
+        ]
+        for index, signature_reference in enumerate(signature_reference_choices):
+            enrollment = factories.EnrollmentFactory(
+                user=users[index],
+                course_run__course=relation.course,
+                course_run__state=models.CourseState.ONGOING_OPEN,
+                course_run__is_listed=True,
+            )
+            factories.ContractFactory(
+                order__owner=users[index],
+                order__product=relation.product,
+                order__course=None,
+                order__enrollment=enrollment,
+                order__state=enums.ORDER_STATE_VALIDATED,
+                signature_backend_reference=signature_reference,
+                definition_checksum="1234",
+                context={"foo": "bar"},
+                signed_on=timezone.now(),
+            )
+
+        signature_backend_references_generator = (
+            contract_utility.get_signature_backend_references(
+                course_product_relation=relation, organization=None
+            )
+        )
+        signature_backend_references_list = list(signature_backend_references_generator)
+
+        self.assertEqual(len(signature_backend_references_list), 3)
+        self.assertEqual(
+            signature_backend_references_list,
+            ["wfl_fake_dummy_1", "wfl_fake_dummy_2", "wfl_fake_dummy_3"],
+        )
+
+    def test_utils_contract_fetch_pdf_bytes_of_contracts_with_empty_list_as_input_parameter(
+        self,
+    ):
+        """
+        When parsing an empty list as input parameter to fetch PDF bytes of contracts method, it
+        should return an empty list.
+        """
+        output = contract_utility.fetch_pdf_bytes_of_contracts(
+            signature_backend_references=[]
+        )
+
+        self.assertEqual(output, [])
 
     @override_settings(
         JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend"
@@ -246,7 +376,9 @@ class UtilsContractTestCase(TestCase):
         error because it requires a non-empty list.
         """
         with self.assertRaises(ValueError) as context:
-            contract_utility.generate_zipfile(pdf_bytes_list=[])
+            contract_utility.generate_zipfile(
+                pdf_bytes_list=[], user_uuid=uuid4(), zip_uuid=uuid4()
+            )
 
         self.assertEqual(
             str(context.exception),
@@ -257,11 +389,14 @@ class UtilsContractTestCase(TestCase):
     def test_utils_contract_generate_zipfile_success(self):
         """
         When we give a list of PDF files in bytes to generate zipfile method, it should return
-        the filename and save the ZIP archive into default storage.
-        We will verify what was added into the zipfile, we should find 3 files within.
+        the filename and save the ZIP archive into file system storage.
+        We will verify what has been added into the ZIP Archive, we should find 3 files within.
         """
-        expected_filename_archive = "signed_contracts_extract.zip"
+        file_storage = FileSystemStorage(
+            location=settings.STORAGES.get("contracts").get("OPTIONS").get("location")
+        )
         users = factories.UserFactory.create_batch(3)
+        requesting_user = factories.UserFactory()
         relation = factories.CourseProductRelationFactory()
         signature_reference_choices = [
             "wfl_fake_dummy_4",
@@ -291,13 +426,20 @@ class UtilsContractTestCase(TestCase):
             )
             files_in_bytes.append(pdf_bytes_file)
 
-        generated_zipfile_filename = contract_utility.generate_zipfile(files_in_bytes)
+        expected_zip_uuid = uuid4()
+        generated_zipfile_filename = contract_utility.generate_zipfile(
+            pdf_bytes_list=files_in_bytes,
+            user_uuid=requesting_user.pk,
+            zip_uuid=expected_zip_uuid,
+        )
 
-        self.assertEqual(generated_zipfile_filename, expected_filename_archive)
+        self.assertEqual(
+            generated_zipfile_filename, f"{requesting_user.pk}_{expected_zip_uuid}.zip"
+        )
 
-        # Check the content of the ZIP archive and retrieve from default storage
-        with default_storage.open(expected_filename_archive) as storage_zip_archive:
-            with ZipFile(storage_zip_archive, "r") as zip_archive:
+        # Retrieve the ZIP archive from file system storage
+        with file_storage.open(generated_zipfile_filename) as file_storage_zip_archive:
+            with ZipFile(file_storage_zip_archive, "r") as zip_archive:
                 file_names = zip_archive.namelist()
                 # Check the amount of files inside the ZIP archive
                 self.assertEqual(len(file_names), 3)
@@ -315,3 +457,5 @@ class UtilsContractTestCase(TestCase):
                         self.assertRegex(
                             document_text, r"1 Rue de L'Exemple 75000, Paris."
                         )
+        # Clear file zip archive in data/contracts
+        file_storage.delete(generated_zipfile_filename)
