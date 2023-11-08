@@ -18,7 +18,7 @@ class CourseAccessSerializerTestCase(TestCase):
         user = factories.UserFactory()
 
         data = {
-            "user": str(user.id),
+            "user_id": str(user.id),
             "role": random.choice(models.CourseAccess.ROLE_CHOICES)[0],
         }
         serializer = serializers.CourseAccessSerializer(data=data)
@@ -42,7 +42,7 @@ class CourseAccessSerializerTestCase(TestCase):
         course = factories.CourseFactory()
 
         data = {
-            "user": str(user.id),
+            "user_id": str(user.id),
             "role": random.choice(models.CourseAccess.ROLE_CHOICES)[0],
         }
         serializer = serializers.CourseAccessSerializer(

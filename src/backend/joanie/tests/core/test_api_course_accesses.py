@@ -364,7 +364,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
                 content,
                 {
                     "id": str(access.id),
-                    "user": str(access.user.id),
+                    "user_id": str(access.user.id),
                     "role": access.role,
                 },
             )
@@ -396,7 +396,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
                 content,
                 {
                     "id": str(access.id),
-                    "user": str(access.user.id),
+                    "user_id": str(access.user.id),
                     "role": access.role,
                 },
             )
@@ -426,7 +426,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
                 content,
                 {
                     "id": str(access.id),
-                    "user": str(access.user.id),
+                    "user_id": str(access.user.id),
                     "role": access.role,
                 },
             )
@@ -456,7 +456,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
                 content,
                 {
                     "id": str(access.id),
-                    "user": str(access.user.id),
+                    "user_id": str(access.user.id),
                     "role": access.role,
                 },
             )
@@ -510,7 +510,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         response = self.client.post(
             f"/api/v1.0/courses/{course.id!s}/accesses/",
             {
-                "user": str(other_user.id),
+                "user_id": str(other_user.id),
                 "role": random.choice(
                     ["administrator", "instructor", "manager", "owner"]
                 ),
@@ -537,7 +537,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         response = self.client.post(
             f"/api/v1.0/courses/{course.id!s}/accesses/",
             {
-                "user": str(other_user.id),
+                "user_id": str(other_user.id),
                 "role": random.choice(
                     ["administrator", "instructor", "manager", "owner"]
                 ),
@@ -565,7 +565,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         response = self.client.post(
             f"/api/v1.0/courses/{course.id!s}/accesses/",
             {
-                "user": str(other_user.id),
+                "user_id": str(other_user.id),
                 "role": random.choice(
                     ["administrator", "instructor", "manager", "owner"]
                 ),
@@ -594,7 +594,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         response = self.client.post(
             f"/api/v1.0/courses/{course.id!s}/accesses/",
             {
-                "user": str(other_user.id),
+                "user_id": str(other_user.id),
                 "role": random.choice(["instructor", "manager", "administrator"]),
             },
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
@@ -616,7 +616,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         response = self.client.post(
             f"/api/v1.0/courses/{course.id!s}/accesses/",
             {
-                "user": str(other_user.id),
+                "user_id": str(other_user.id),
                 "role": "owner",
             },
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
@@ -639,7 +639,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             response = self.client.post(
                 f"/api/v1.0/courses/{course.id!s}/accesses/",
                 {
-                    "user": str(other_user.id),
+                    "user_id": str(other_user.id),
                     "role": role,
                 },
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
