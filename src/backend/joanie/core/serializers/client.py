@@ -77,9 +77,15 @@ class CourseLightSerializer(AbilitiesModelSerializer):
 class CourseAccessSerializer(AbilitiesModelSerializer):
     """Serialize course accesses for the API."""
 
+    user_id = serializers.SlugRelatedField(
+        queryset=models.User.objects.all(),
+        slug_field="id",
+        source="user",
+    )
+
     class Meta:
         model = models.CourseAccess
-        fields = ["id", "role", "user"]
+        fields = ["id", "role", "user_id"]
         read_only_fields = ["id"]
 
     def update(self, instance, validated_data):
@@ -162,9 +168,15 @@ class OrganizationSerializer(AbilitiesModelSerializer):
 class OrganizationAccessSerializer(AbilitiesModelSerializer):
     """Serialize Organization accesses for the API."""
 
+    user_id = serializers.SlugRelatedField(
+        queryset=models.User.objects.all(),
+        slug_field="id",
+        source="user",
+    )
+
     class Meta:
         model = models.OrganizationAccess
-        fields = ["id", "role", "user"]
+        fields = ["id", "role", "user_id"]
         read_only_fields = ["id"]
 
     def update(self, instance, validated_data):

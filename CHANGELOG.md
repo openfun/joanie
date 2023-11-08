@@ -94,6 +94,8 @@ and this project adheres to
   - OrderSerializer
   - OrderLightSerializer
   - CourseSerializer
+  - CourseAccessSerializer
+  - OrganizationAccessSerializer
 
 ### Removed
 

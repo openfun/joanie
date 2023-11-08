@@ -19,7 +19,7 @@ class OrganizationAccessSerializerTestCase(TestCase):
         user = factories.UserFactory()
 
         data = {
-            "user": str(user.id),
+            "user_id": str(user.id),
             "role": random.choice(models.OrganizationAccess.ROLE_CHOICES)[0],
         }
         serializer = serializers.OrganizationAccessSerializer(data=data)
@@ -40,7 +40,7 @@ class OrganizationAccessSerializerTestCase(TestCase):
         organization = factories.OrganizationFactory()
 
         data = {
-            "user": str(user.id),
+            "user_id": str(user.id),
             "role": random.choice(models.OrganizationAccess.ROLE_CHOICES)[0],
         }
         serializer = serializers.OrganizationAccessSerializer(

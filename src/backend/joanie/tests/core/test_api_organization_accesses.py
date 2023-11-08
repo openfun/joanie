@@ -358,7 +358,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
                 content,
                 {
                     "id": str(access.id),
-                    "user": str(access.user.id),
+                    "user_id": str(access.user.id),
                     "role": access.role,
                 },
             )
@@ -390,7 +390,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
                 content,
                 {
                     "id": str(access.id),
-                    "user": str(access.user.id),
+                    "user_id": str(access.user.id),
                     "role": access.role,
                 },
             )
@@ -423,7 +423,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
                 {
                     "id": str(access.id),
                     "role": access.role,
-                    "user": str(access.user.id),
+                    "user_id": str(access.user.id),
                 },
             )
 
@@ -476,7 +476,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         response = self.client.post(
             f"/api/v1.0/organizations/{organization.id!s}/accesses/",
             {
-                "user": str(other_user.id),
+                "user_id": str(other_user.id),
                 "role": random.choice(["member", "administrator", "owner"]),
             },
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
@@ -505,7 +505,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         response = self.client.post(
             f"/api/v1.0/organizations/{organization.id!s}/accesses/",
             {
-                "user": str(other_user.id),
+                "user_id": str(other_user.id),
                 "role": random.choice(["member", "administrator", "owner"]),
             },
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
@@ -536,7 +536,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         response = self.client.post(
             f"/api/v1.0/organizations/{organization.id!s}/accesses/",
             {
-                "user": str(other_user.id),
+                "user_id": str(other_user.id),
                 "role": random.choice(["member", "administrator"]),
             },
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
@@ -558,7 +558,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         response = self.client.post(
             f"/api/v1.0/organizations/{organization.id!s}/accesses/",
             {
-                "user": str(other_user.id),
+                "user_id": str(other_user.id),
                 "role": "owner",
             },
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
@@ -581,7 +581,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             response = self.client.post(
                 f"/api/v1.0/organizations/{organization.id!s}/accesses/",
                 {
-                    "user": str(other_user.id),
+                    "user_id": str(other_user.id),
                     "role": role,
                 },
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",

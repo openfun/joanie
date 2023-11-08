@@ -692,7 +692,7 @@ class OrganizationAccessViewSet(
     lookup_field = "pk"
     pagination_class = Pagination
     permission_classes = [permissions.AccessPermission]
-    queryset = models.OrganizationAccess.objects.all()
+    queryset = models.OrganizationAccess.objects.all().select_related("user")
     serializer_class = serializers.OrganizationAccessSerializer
 
     def get_permissions(self):
@@ -767,7 +767,7 @@ class CourseAccessViewSet(
     lookup_field = "pk"
     pagination_class = Pagination
     permission_classes = [permissions.AccessPermission]
-    queryset = models.CourseAccess.objects.all()
+    queryset = models.CourseAccess.objects.all().select_related("user")
     serializer_class = serializers.CourseAccessSerializer
 
     def get_permissions(self):
