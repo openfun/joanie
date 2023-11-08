@@ -84,7 +84,7 @@ class OrderApiTest(BaseAPITestCase):
                 "previous": None,
                 "results": [
                     {
-                        "certificate": None,
+                        "certificate_id": None,
                         "contract": None,
                         "course": {
                             "code": course.code,
@@ -97,11 +97,11 @@ class OrderApiTest(BaseAPITestCase):
                         ),
                         "enrollment": None,
                         "id": str(order.id),
-                        "main_invoice": None,
-                        "order_group": None,
-                        "organization": str(order.organization.id),
+                        "main_invoice_reference": None,
+                        "order_group_id": None,
+                        "organization_id": str(order.organization.id),
                         "owner": order.owner.username,
-                        "product": str(order.product.id),
+                        "product_id": str(order.product.id),
                         "state": order.state,
                         "target_courses": [],
                         "target_enrollments": [],
@@ -130,7 +130,7 @@ class OrderApiTest(BaseAPITestCase):
                 "results": [
                     {
                         "id": str(other_order.id),
-                        "certificate": None,
+                        "certificate_id": None,
                         "contract": None,
                         "course": {
                             "code": other_order.course.code,
@@ -143,13 +143,13 @@ class OrderApiTest(BaseAPITestCase):
                         ),
                         "enrollment": None,
                         "target_enrollments": [],
-                        "main_invoice": None,
-                        "order_group": None,
-                        "organization": str(other_order.organization.id),
+                        "main_invoice_reference": None,
+                        "order_group_id": None,
+                        "organization_id": str(other_order.organization.id),
                         "owner": other_order.owner.username,
                         "total": float(other_order.total),
                         "total_currency": settings.DEFAULT_CURRENCY,
-                        "product": str(other_order.product.id),
+                        "product_id": str(other_order.product.id),
                         "state": other_order.state,
                         "target_courses": [],
                     }
@@ -235,7 +235,7 @@ class OrderApiTest(BaseAPITestCase):
                 "results": [
                     {
                         "id": str(order.id),
-                        "certificate": None,
+                        "certificate_id": None,
                         "contract": None,
                         "course": {
                             "code": order.course.code,
@@ -248,13 +248,13 @@ class OrderApiTest(BaseAPITestCase):
                         ),
                         "enrollment": None,
                         "target_enrollments": [],
-                        "main_invoice": None,
-                        "order_group": None,
-                        "organization": str(order.organization.id),
+                        "main_invoice_reference": None,
+                        "order_group_id": None,
+                        "organization_id": str(order.organization.id),
                         "owner": order.owner.username,
                         "total": float(order.total),
                         "total_currency": settings.DEFAULT_CURRENCY,
-                        "product": str(order.product.id),
+                        "product_id": str(order.product.id),
                         "state": order.state,
                         "target_courses": [],
                     }
@@ -329,7 +329,7 @@ class OrderApiTest(BaseAPITestCase):
                 "results": [
                     {
                         "id": str(order.id),
-                        "certificate": None,
+                        "certificate_id": None,
                         "contract": None,
                         "course": None,
                         "created_on": order.created_on.strftime(
@@ -397,13 +397,13 @@ class OrderApiTest(BaseAPITestCase):
                             "was_created_by_order": enrollment_1.was_created_by_order,
                         },
                         "target_enrollments": [],
-                        "main_invoice": None,
-                        "order_group": None,
-                        "organization": str(order.organization.id),
+                        "main_invoice_reference": None,
+                        "order_group_id": None,
+                        "organization_id": str(order.organization.id),
                         "owner": order.owner.username,
                         "total": float(order.total),
                         "total_currency": settings.DEFAULT_CURRENCY,
-                        "product": str(order.product.id),
+                        "product_id": str(order.product.id),
                         "state": order.state,
                         "target_courses": [],
                     }
@@ -465,7 +465,7 @@ class OrderApiTest(BaseAPITestCase):
                 "results": [
                     {
                         "id": str(order.id),
-                        "certificate": None,
+                        "certificate_id": None,
                         "contract": None,
                         "course": {
                             "code": order.course.code,
@@ -478,13 +478,13 @@ class OrderApiTest(BaseAPITestCase):
                         ),
                         "enrollment": None,
                         "target_enrollments": [],
-                        "main_invoice": None,
-                        "order_group": None,
-                        "organization": str(order.organization.id),
+                        "main_invoice_reference": None,
+                        "order_group_id": None,
+                        "organization_id": str(order.organization.id),
                         "owner": order.owner.username,
                         "total": float(order.total),
                         "total_currency": settings.DEFAULT_CURRENCY,
-                        "product": str(order.product.id),
+                        "product_id": str(order.product.id),
                         "state": order.state,
                         "target_courses": [],
                     }
@@ -538,7 +538,7 @@ class OrderApiTest(BaseAPITestCase):
                 "results": [
                     {
                         "id": str(order.id),
-                        "certificate": None,
+                        "certificate_id": None,
                         "contract": None,
                         "course": None,
                         "created_on": order.created_on.strftime(
@@ -595,13 +595,13 @@ class OrderApiTest(BaseAPITestCase):
                             "state": enrollment.state,
                             "was_created_by_order": enrollment.was_created_by_order,
                         },
-                        "main_invoice": None,
-                        "order_group": None,
-                        "organization": str(order.organization.id),
+                        "main_invoice_reference": None,
+                        "order_group_id": None,
+                        "organization_id": str(order.organization.id),
                         "owner": order.owner.username,
                         "total": float(order.total),
                         "total_currency": settings.DEFAULT_CURRENCY,
-                        "product": str(order.product.id),
+                        "product_id": str(order.product.id),
                         "state": order.state,
                         "target_courses": [],
                         "target_enrollments": [],
@@ -771,7 +771,7 @@ class OrderApiTest(BaseAPITestCase):
                 "results": [
                     {
                         "id": str(order.id),
-                        "certificate": None,
+                        "certificate_id": None,
                         "contract": None,
                         "course": {
                             "code": order.course.code,
@@ -784,13 +784,13 @@ class OrderApiTest(BaseAPITestCase):
                         ),
                         "enrollment": None,
                         "target_enrollments": [],
-                        "main_invoice": None,
-                        "order_group": None,
-                        "organization": str(order.organization.id),
+                        "main_invoice_reference": None,
+                        "order_group_id": None,
+                        "organization_id": str(order.organization.id),
                         "owner": order.owner.username,
                         "total": float(order.total),
                         "total_currency": settings.DEFAULT_CURRENCY,
-                        "product": str(order.product.id),
+                        "product_id": str(order.product.id),
                         "state": order.state,
                         "target_courses": [],
                     }
@@ -833,7 +833,7 @@ class OrderApiTest(BaseAPITestCase):
                 "results": [
                     {
                         "id": str(order.id),
-                        "certificate": None,
+                        "certificate_id": None,
                         "contract": None,
                         "course": {
                             "code": order.course.code,
@@ -846,13 +846,13 @@ class OrderApiTest(BaseAPITestCase):
                         ),
                         "enrollment": None,
                         "target_enrollments": [],
-                        "main_invoice": None,
-                        "order_group": None,
-                        "organization": str(order.organization.id),
+                        "main_invoice_reference": None,
+                        "order_group_id": None,
+                        "organization_id": str(order.organization.id),
                         "owner": order.owner.username,
                         "total": float(order.total),
                         "total_currency": settings.DEFAULT_CURRENCY,
-                        "product": str(order.product.id),
+                        "product_id": str(order.product.id),
                         "state": order.state,
                         "target_courses": [],
                     }
@@ -899,7 +899,7 @@ class OrderApiTest(BaseAPITestCase):
                 "results": [
                     {
                         "id": str(order.id),
-                        "certificate": None,
+                        "certificate_id": None,
                         "contract": None,
                         "course": {
                             "code": order.course.code,
@@ -912,13 +912,13 @@ class OrderApiTest(BaseAPITestCase):
                         ),
                         "enrollment": None,
                         "target_enrollments": [],
-                        "main_invoice": None,
-                        "order_group": None,
-                        "organization": str(order.organization.id),
+                        "main_invoice_reference": None,
+                        "order_group_id": None,
+                        "organization_id": str(order.organization.id),
                         "owner": order.owner.username,
                         "total": float(order.total),
                         "total_currency": settings.DEFAULT_CURRENCY,
-                        "product": str(order.product.id),
+                        "product_id": str(order.product.id),
                         "state": order.state,
                         "target_courses": [],
                     }
@@ -1060,7 +1060,7 @@ class OrderApiTest(BaseAPITestCase):
             response.json(),
             {
                 "id": str(order.id),
-                "certificate": None,
+                "certificate_id": None,
                 "contract": None,
                 "course": {
                     "code": order.course.code,
@@ -1071,13 +1071,13 @@ class OrderApiTest(BaseAPITestCase):
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "enrollment": None,
                 "state": order.state,
-                "main_invoice": None,
-                "order_group": None,
-                "organization": str(order.organization.id),
+                "main_invoice_reference": None,
+                "order_group_id": None,
+                "organization_id": str(order.organization.id),
                 "owner": owner.username,
                 "total": float(product.price),
                 "total_currency": settings.DEFAULT_CURRENCY,
-                "product": str(product.id),
+                "product_id": str(product.id),
                 "target_enrollments": [],
                 "target_courses": [
                     {
@@ -1178,8 +1178,8 @@ class OrderApiTest(BaseAPITestCase):
 
         data = {
             "course": course.code,
-            "organization": str(organization.id),
-            "product": str(product.id),
+            "organization_id": str(organization.id),
+            "product_id": str(product.id),
         }
         token = self.get_user_token("panoramix")
 
@@ -1198,7 +1198,7 @@ class OrderApiTest(BaseAPITestCase):
             response.json(),
             {
                 "id": str(order.id),
-                "certificate": None,
+                "certificate_id": None,
                 "contract": None,
                 "course": {
                     "code": course.code,
@@ -1208,11 +1208,11 @@ class OrderApiTest(BaseAPITestCase):
                 },
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "enrollment": None,
-                "main_invoice": None,
-                "order_group": None,
-                "organization": str(order.organization.id),
+                "main_invoice_reference": None,
+                "order_group_id": None,
+                "organization_id": str(order.organization.id),
                 "owner": "panoramix",
-                "product": str(product.id),
+                "product_id": str(product.id),
                 "state": "draft",
                 "total": float(product.price),
                 "total_currency": settings.DEFAULT_CURRENCY,
@@ -1303,8 +1303,8 @@ class OrderApiTest(BaseAPITestCase):
 
         data = {
             "enrollment_id": str(enrollment.id),
-            "organization": str(organization.id),
-            "product": str(product.id),
+            "organization_id": str(organization.id),
+            "product_id": str(product.id),
         }
         token = self.generate_token_from_user(enrollment.user)
 
@@ -1330,7 +1330,7 @@ class OrderApiTest(BaseAPITestCase):
             response.json(),
             {
                 "id": str(order.id),
-                "certificate": None,
+                "certificate_id": None,
                 "contract": None,
                 "course": None,
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
@@ -1381,11 +1381,11 @@ class OrderApiTest(BaseAPITestCase):
                     "state": enrollment.state,
                     "was_created_by_order": enrollment.was_created_by_order,
                 },
-                "main_invoice": None,
-                "order_group": None,
-                "organization": str(order.organization.id),
+                "main_invoice_reference": None,
+                "order_group_id": None,
+                "organization_id": str(order.organization.id),
                 "owner": enrollment.user.username,
-                "product": str(product.id),
+                "product_id": str(product.id),
                 "state": "draft",
                 "total": float(product.price),
                 "total_currency": settings.DEFAULT_CURRENCY,
@@ -1404,8 +1404,8 @@ class OrderApiTest(BaseAPITestCase):
 
         data = {
             "enrollment_id": uuid.uuid4(),
-            "organization": str(organization.id),
-            "product": str(product.id),
+            "organization_id": str(organization.id),
+            "product_id": str(product.id),
         }
         token = self.generate_token_from_user(enrollment.user)
 
@@ -1446,8 +1446,8 @@ class OrderApiTest(BaseAPITestCase):
 
         data = {
             "enrollment_id": str(enrollment.id),
-            "organization": str(organization.id),
-            "product": str(product.id),
+            "organization_id": str(organization.id),
+            "product_id": str(product.id),
         }
         token = self.get_user_token("panoramix")
 
@@ -1485,7 +1485,7 @@ class OrderApiTest(BaseAPITestCase):
 
         data = {
             "course": course.code,
-            "product": str(product.id),
+            "product_id": str(product.id),
         }
         token = self.get_user_token("panoramix")
 
@@ -1526,7 +1526,7 @@ class OrderApiTest(BaseAPITestCase):
 
         data = {
             "course": course.code,
-            "product": str(product.id),
+            "product_id": str(product.id),
         }
         token = self.get_user_token("panoramix")
 
@@ -1594,7 +1594,7 @@ class OrderApiTest(BaseAPITestCase):
 
         data = {
             "course": course.code,
-            "product": str(product.id),
+            "product_id": str(product.id),
         }
         token = self.get_user_token("panoramix")
 
@@ -1639,8 +1639,8 @@ class OrderApiTest(BaseAPITestCase):
 
         data = {
             "course": course.code,
-            "organization": str(organization.id),
-            "product": str(product.id),
+            "organization_id": str(organization.id),
+            "product_id": str(product.id),
             "id": uuid.uuid4(),
             "amount": 0.00,
         }
@@ -1672,7 +1672,7 @@ class OrderApiTest(BaseAPITestCase):
             response.json(),
             {
                 "id": str(order.id),
-                "certificate": None,
+                "certificate_id": None,
                 "contract": None,
                 "course": {
                     "code": course.code,
@@ -1682,11 +1682,11 @@ class OrderApiTest(BaseAPITestCase):
                 },
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "enrollment": None,
-                "main_invoice": None,
-                "order_group": None,
-                "organization": str(order.organization.id),
+                "main_invoice_reference": None,
+                "order_group_id": None,
+                "organization_id": str(order.organization.id),
                 "owner": "panoramix",
-                "product": str(product.id),
+                "product_id": str(product.id),
                 "target_enrollments": [],
                 "state": "validated",
                 "target_courses": [
@@ -1755,8 +1755,8 @@ class OrderApiTest(BaseAPITestCase):
         course = factories.CourseFactory(title="mathématiques")
         data = {
             "course": course.code,
-            "organization": str(organization.id),
-            "product": str(product.id),
+            "organization_id": str(organization.id),
+            "product_id": str(product.id),
         }
         token = self.get_user_token("panoramix")
 
@@ -1803,8 +1803,8 @@ class OrderApiTest(BaseAPITestCase):
         )
         data = {
             "course": course.code,
-            "organization": str(organization.id),
-            "product": str(product.id),
+            "organization_id": str(organization.id),
+            "product_id": str(product.id),
         }
         token = self.get_user_token("panoramix")
 
@@ -1854,7 +1854,7 @@ class OrderApiTest(BaseAPITestCase):
         self.assertDictEqual(
             response.json(),
             {
-                "product": ["This field is required."],
+                "product_id": ["This field is required."],
             },
         )
 
@@ -1863,7 +1863,7 @@ class OrderApiTest(BaseAPITestCase):
             "/api/v1.0/orders/",
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
-            data={"product": str(product.id)},
+            data={"product_id": str(product.id)},
         )
 
         self.assertEqual(response.status_code, 400)
@@ -1889,9 +1889,9 @@ class OrderApiTest(BaseAPITestCase):
         order = factories.OrderFactory(owner=user, course=course, product=product)
 
         data = {
-            "product": str(product.id),
+            "product_id": str(product.id),
             "course": course.code,
-            "organization": str(organization.id),
+            "organization_id": str(organization.id),
         }
 
         response = self.client.post(
@@ -1931,9 +1931,9 @@ class OrderApiTest(BaseAPITestCase):
         organization = product.course_relations.first().organizations.first()
 
         data = {
-            "product": str(product.id),
+            "product_id": str(product.id),
             "course": course.code,
-            "organization": str(organization.id),
+            "organization_id": str(organization.id),
         }
 
         response = self.client.post(
@@ -1976,8 +1976,8 @@ class OrderApiTest(BaseAPITestCase):
 
         data = {
             "course": course.code,
-            "organization": str(organization.id),
-            "product": str(product.id),
+            "organization_id": str(organization.id),
+            "product_id": str(product.id),
             "billing_address": billing_address,
         }
 
@@ -1997,7 +1997,7 @@ class OrderApiTest(BaseAPITestCase):
             response.json(),
             {
                 "id": str(order.id),
-                "certificate": None,
+                "certificate_id": None,
                 "contract": None,
                 "course": {
                     "code": course.code,
@@ -2007,11 +2007,11 @@ class OrderApiTest(BaseAPITestCase):
                 },
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "enrollment": None,
-                "main_invoice": None,
-                "order_group": None,
-                "organization": str(order.organization.id),
+                "main_invoice_reference": None,
+                "order_group_id": None,
+                "organization_id": str(order.organization.id),
                 "owner": user.username,
-                "product": str(product.id),
+                "product_id": str(product.id),
                 "total": float(product.price),
                 "total_currency": settings.DEFAULT_CURRENCY,
                 "state": "draft",
@@ -2019,7 +2019,7 @@ class OrderApiTest(BaseAPITestCase):
                 "target_courses": [
                     {
                         "code": target_course.code,
-                        "organization": {
+                        "organization_id": {
                             "code": target_course.organization.code,
                             "title": target_course.organization.title,
                         },
@@ -2118,8 +2118,8 @@ class OrderApiTest(BaseAPITestCase):
 
         data = {
             "course": course.code,
-            "organization": str(organization.id),
-            "product": str(product.id),
+            "organization_id": str(organization.id),
+            "product_id": str(product.id),
             "billing_address": billing_address,
             "credit_card_id": str(credit_card.id),
         }
@@ -2135,7 +2135,7 @@ class OrderApiTest(BaseAPITestCase):
         order = models.Order.objects.get(product=product, course=course, owner=user)
         expected_json = {
             "id": str(order.id),
-            "certificate": None,
+            "certificate_id": None,
             "contract": None,
             "course": {
                 "code": course.code,
@@ -2145,11 +2145,11 @@ class OrderApiTest(BaseAPITestCase):
             },
             "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             "enrollment": None,
-            "main_invoice": None,
-            "order_group": None,
-            "organization": str(order.organization.id),
+            "main_invoice_reference": None,
+            "order_group_id": None,
+            "organization_id": str(order.organization.id),
             "owner": user.username,
-            "product": str(product.id),
+            "product_id": str(product.id),
             "total": float(product.price),
             "total_currency": settings.DEFAULT_CURRENCY,
             "state": "draft",
@@ -2191,8 +2191,8 @@ class OrderApiTest(BaseAPITestCase):
 
         data = {
             "course": course.code,
-            "organization": str(organization.id),
-            "product": str(product.id),
+            "organization_id": str(organization.id),
+            "product_id": str(product.id),
             "billing_address": billing_address,
         }
 
@@ -2242,9 +2242,9 @@ class OrderApiTest(BaseAPITestCase):
         )
         data = {
             "course": course.code,
-            "organization": str(relation.organizations.first().id),
-            "order_group": str(order_group.id),
-            "product": str(product.id),
+            "organization_id": str(relation.organizations.first().id),
+            "order_group_id": str(order_group.id),
+            "product_id": str(product.id),
             "billing_address": billing_address,
         }
         token = self.generate_token_from_user(user)
@@ -2291,9 +2291,9 @@ class OrderApiTest(BaseAPITestCase):
         )
         data = {
             "course": course.code,
-            "organization": str(relation.organizations.first().id),
-            "order_group": str(order_group.id),
-            "product": str(product.id),
+            "organization_id": str(relation.organizations.first().id),
+            "order_group_id": str(order_group.id),
+            "product_id": str(product.id),
             "billing_address": billing_address,
         }
         token = self.generate_token_from_user(user)
@@ -2323,8 +2323,8 @@ class OrderApiTest(BaseAPITestCase):
 
         data = {
             "course": course.code,
-            "organization": str(organization.id),
-            "product": str(product.id),
+            "organization_id": str(organization.id),
+            "product_id": str(product.id),
         }
         response = self.client.post(
             "/api/v1.0/orders/",
@@ -2359,8 +2359,8 @@ class OrderApiTest(BaseAPITestCase):
 
         data = {
             "course": course.code,
-            "organization": str(organization.id),
-            "product": str(product.id),
+            "organization_id": str(organization.id),
+            "product_id": str(product.id),
         }
 
         response = self.client.post(
@@ -2406,8 +2406,8 @@ class OrderApiTest(BaseAPITestCase):
         billing_address = BillingAddressDictFactory()
         data = {
             "course": course.code,
-            "organization": str(relation.organizations.first().id),
-            "product": str(product.id),
+            "organization_id": str(relation.organizations.first().id),
+            "product_id": str(product.id),
             "billing_address": billing_address,
         }
         token = self.generate_token_from_user(user)
@@ -2448,9 +2448,9 @@ class OrderApiTest(BaseAPITestCase):
 
         data = {
             "course": relation.course.code,
-            "order_group": str(order_group.id),
-            "organization": str(organization.id),
-            "product": str(relation.product.id),
+            "order_group_id": str(order_group.id),
+            "organization_id": str(organization.id),
+            "product_id": str(relation.product.id),
             "billing_address": billing_address,
         }
 
@@ -2497,8 +2497,8 @@ class OrderApiTest(BaseAPITestCase):
         )
         data = {
             "course": course.code,
-            "organization": str(relation.organizations.first().id),
-            "product": str(product.id),
+            "organization_id": str(relation.organizations.first().id),
+            "product_id": str(product.id),
             "billing_address": billing_address,
         }
         token = self.generate_token_from_user(user)
@@ -2506,7 +2506,7 @@ class OrderApiTest(BaseAPITestCase):
         # Order group 1 should already be full
         response = self.client.post(
             "/api/v1.0/orders/",
-            data={"order_group": str(order_group1.id), **data},
+            data={"order_group_id": str(order_group1.id), **data},
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
@@ -2526,7 +2526,7 @@ class OrderApiTest(BaseAPITestCase):
         # Order group 2 should still have place
         response = self.client.post(
             "/api/v1.0/orders/",
-            data={"order_group": str(order_group2.id), **data},
+            data={"order_group_id": str(order_group2.id), **data},
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
@@ -2551,8 +2551,8 @@ class OrderApiTest(BaseAPITestCase):
         billing_address = BillingAddressDictFactory()
         data = {
             "course": course.code,
-            "organization": str(relation.organizations.first().id),
-            "product": str(product.id),
+            "organization_id": str(relation.organizations.first().id),
+            "product_id": str(product.id),
             "billing_address": billing_address,
         }
         token = self.generate_token_from_user(user)
@@ -2602,17 +2602,17 @@ class OrderApiTest(BaseAPITestCase):
         self.assertListEqual(
             list(data.keys()),
             [
-                "certificate",
+                "certificate_id",
                 "contract",
                 "course",
                 "created_on",
                 "enrollment",
                 "id",
-                "main_invoice",
-                "order_group",
-                "organization",
+                "main_invoice_reference",
+                "order_group_id",
+                "organization_id",
                 "owner",
-                "product",
+                "product_id",
                 "state",
                 "target_courses",
                 "target_enrollments",
@@ -2952,8 +2952,8 @@ class OrderApiTest(BaseAPITestCase):
         # - Create an order and its related payment
         token = self.generate_token_from_user(user)
         data = {
-            "organization": str(organization.id),
-            "product": str(product.id),
+            "organization_id": str(organization.id),
+            "product_id": str(product.id),
             "course": course.code,
             "billing_address": billing_address,
         }

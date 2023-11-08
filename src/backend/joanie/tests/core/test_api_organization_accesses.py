@@ -456,7 +456,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         response = self.client.post(
             f"/api/v1.0/organizations/{organization.id!s}/accesses/",
             {
-                "user": str(user.id),
+                "user_id": str(user.id),
                 "role": random.choice(["member", "administrator", "owner"]),
             },
         )
@@ -600,8 +600,8 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
 
         new_values = {
             "id": uuid4(),
-            "organization": factories.OrganizationFactory().id,
-            "user": factories.UserFactory().id,
+            "organization_id": factories.OrganizationFactory().id,
+            "user_id": factories.UserFactory().id,
             "role": random.choice(OrganizationAccess.ROLE_CHOICES)[0],
         }
 
@@ -626,8 +626,10 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
 
         new_values = {
             "id": uuid4(),
-            "organization": factories.OrganizationFactory(users=[(user, "member")]).id,
-            "user": factories.UserFactory().id,
+            "organization_id": factories.OrganizationFactory(
+                users=[(user, "member")]
+            ).id,
+            "user_id": factories.UserFactory().id,
             "role": random.choice(OrganizationAccess.ROLE_CHOICES)[0],
         }
 
@@ -657,8 +659,10 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
 
         new_values = {
             "id": uuid4(),
-            "organization": factories.OrganizationFactory(users=[(user, "member")]).id,
-            "user": factories.UserFactory().id,
+            "organization_id": factories.OrganizationFactory(
+                users=[(user, "member")]
+            ).id,
+            "user_id": factories.UserFactory().id,
             "role": random.choice(OrganizationAccess.ROLE_CHOICES)[0],
         }
 
@@ -690,10 +694,10 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
 
         new_values = {
             "id": uuid4(),
-            "organization": factories.OrganizationFactory(
+            "organization_id": factories.OrganizationFactory(
                 users=[(user, "administrator")]
             ).id,
-            "user": factories.UserFactory().id,
+            "user_id": factories.UserFactory().id,
             "role": random.choice(["member", "administrator"]),
         }
 
@@ -738,10 +742,10 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
 
         new_values = {
             "id": uuid4(),
-            "organization": factories.OrganizationFactory(
+            "organization_id": factories.OrganizationFactory(
                 users=[(user, "administrator")]
             ).id,
-            "user": factories.UserFactory().id,
+            "user_id": factories.UserFactory().id,
             "role": random.choice(OrganizationAccess.ROLE_CHOICES)[0],
         }
 
@@ -775,10 +779,10 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
 
         new_values = {
             "id": uuid4(),
-            "organization": factories.OrganizationFactory(
+            "organization_id": factories.OrganizationFactory(
                 users=[(user, "administrator")]
             ).id,
-            "user": factories.UserFactory().id,
+            "user_id": factories.UserFactory().id,
             "role": "owner",
         }
 
@@ -816,10 +820,10 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
 
         new_values = {
             "id": uuid4(),
-            "organization": factories.OrganizationFactory(
+            "organization_id": factories.OrganizationFactory(
                 users=[(user, "administrator")]
             ).id,
-            "user": factories.UserFactory().id,
+            "user_id": factories.UserFactory().id,
             "role": random.choice(OrganizationAccess.ROLE_CHOICES)[0],
         }
 
@@ -865,10 +869,10 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
 
         new_values = {
             "id": uuid4(),
-            "organization": factories.OrganizationFactory(
+            "organization_id": factories.OrganizationFactory(
                 users=[(user, "administrator")]
             ).id,
-            "user": factories.UserFactory().id,
+            "user_id": factories.UserFactory().id,
             "role": random.choice(OrganizationAccess.ROLE_CHOICES)[0],
         }
         for field, value in new_values.items():
@@ -931,8 +935,8 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
 
         new_values = {
             "id": uuid4(),
-            "organization": factories.OrganizationFactory().id,
-            "user": factories.UserFactory().id,
+            "organization_id": factories.OrganizationFactory().id,
+            "user_id": factories.UserFactory().id,
             "role": random.choice(OrganizationAccess.ROLE_CHOICES)[0],
         }
 
@@ -957,8 +961,10 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
 
         new_values = {
             "id": uuid4(),
-            "organization": factories.OrganizationFactory(users=[(user, "member")]).id,
-            "user": factories.UserFactory().id,
+            "organization_id": factories.OrganizationFactory(
+                users=[(user, "member")]
+            ).id,
+            "user_id": factories.UserFactory().id,
             "role": random.choice(OrganizationAccess.ROLE_CHOICES)[0],
         }
 
@@ -988,8 +994,10 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
 
         new_values = {
             "id": uuid4(),
-            "organization": factories.OrganizationFactory(users=[(user, "member")]).id,
-            "user": factories.UserFactory().id,
+            "organization_id": factories.OrganizationFactory(
+                users=[(user, "member")]
+            ).id,
+            "user_id": factories.UserFactory().id,
             "role": random.choice(OrganizationAccess.ROLE_CHOICES)[0],
         }
 
@@ -1021,10 +1029,10 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
 
         new_values = {
             "id": uuid4(),
-            "organization": factories.OrganizationFactory(
+            "organization_id": factories.OrganizationFactory(
                 users=[(user, "administrator")]
             ).id,
-            "user": factories.UserFactory().id,
+            "user_id": factories.UserFactory().id,
             "role": random.choice(["member", "administrator"]),
         }
 
@@ -1067,10 +1075,10 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
 
         new_values = {
             "id": uuid4(),
-            "organization": factories.OrganizationFactory(
+            "organization_id": factories.OrganizationFactory(
                 users=[(user, "administrator")]
             ).id,
-            "user": factories.UserFactory().id,
+            "user_id": factories.UserFactory().id,
             "role": random.choice(OrganizationAccess.ROLE_CHOICES)[0],
         }
 
@@ -1104,10 +1112,10 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
 
         new_values = {
             "id": uuid4(),
-            "organization": factories.OrganizationFactory(
+            "organization_id": factories.OrganizationFactory(
                 users=[(user, "administrator")]
             ).id,
-            "user": factories.UserFactory().id,
+            "user_id": factories.UserFactory().id,
             "role": "owner",
         }
 
@@ -1142,10 +1150,10 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
 
         new_values = {
             "id": uuid4(),
-            "organization": factories.OrganizationFactory(
+            "organization_id": factories.OrganizationFactory(
                 users=[(user, "administrator")]
             ).id,
-            "user": factories.UserFactory().id,
+            "user_id": factories.UserFactory().id,
             "role": random.choice(OrganizationAccess.ROLE_CHOICES)[0],
         }
 
@@ -1189,10 +1197,10 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
 
         new_values = {
             "id": uuid4(),
-            "organization": factories.OrganizationFactory(
+            "organization_id": factories.OrganizationFactory(
                 users=[(user, "administrator")]
             ).id,
-            "user": factories.UserFactory().id,
+            "user_id": factories.UserFactory().id,
             "role": random.choice(OrganizationAccess.ROLE_CHOICES)[0],
         }
         for field, value in new_values.items():

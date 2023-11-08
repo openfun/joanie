@@ -726,8 +726,8 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         response = self.client.post(
             "/api/v1.0/courses/products/",
             data={
-                "course": str(course.id),
-                "product": str(product.id),
+                "course_id": str(course.id),
+                "product_id": str(product.id),
             },
         )
 
@@ -754,8 +754,8 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             "/api/v1.0/courses/products/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             data={
-                "course": str(course.id),
-                "product": str(product.id),
+                "course_id": str(course.id),
+                "product_id": str(product.id),
             },
         )
 
@@ -779,8 +779,8 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             f"/api/v1.0/courses/{course.id}/products/{product.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             data={
-                "course": str(course.id),
-                "product": str(product.id),
+                "course_id": str(course.id),
+                "product_id": str(product.id),
             },
         )
 
@@ -802,8 +802,8 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         response = self.client.put(
             f"/api/v1.0/courses/{course.id}/products/{product.id}/",
             data={
-                "course": "abc",
-                "product": "def",
+                "course_id": "abc",
+                "product_id": "def",
             },
         )
 
@@ -829,8 +829,8 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             f"/api/v1.0/courses/{course.id}/products/{product.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             data={
-                "course": str(course.id),
-                "product": str(product.id),
+                "course_id": str(course.id),
+                "product_id": str(product.id),
             },
         )
 
@@ -857,8 +857,8 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             f"/api/v1.0/courses/{course.id}/products/{product.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             data={
-                "course": str(course.id),
-                "product": str(product.id),
+                "course_id": str(course.id),
+                "product_id": str(product.id),
             },
         )
 
@@ -880,7 +880,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         response = self.client.patch(
             f"/api/v1.0/courses/{course.id}/products/{product.id}/",
             data={
-                "product": "def",
+                "product_id": "def",
             },
         )
 
@@ -906,7 +906,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             f"/api/v1.0/courses/{course.id}/products/{product.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             data={
-                "product": "def",
+                "product_id": "def",
             },
         )
 
@@ -933,7 +933,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             f"/api/v1.0/courses/{course.id}/products/{product.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             data={
-                "product": "def",
+                "product_id": "def",
             },
         )
 

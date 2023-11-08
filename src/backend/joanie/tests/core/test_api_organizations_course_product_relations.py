@@ -219,8 +219,8 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
             f"/api/v1.0/organizations/{organization.id}/course-product-relations/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             data={
-                "course": str(course.id),
-                "product": str(product.id),
+                "course_id": str(course.id),
+                "product_id": str(product.id),
             },
         )
 
@@ -239,8 +239,8 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
         response = self.client.post(
             f"/api/v1.0/organizations/{organization.id}/course-product-relations/",
             data={
-                "course": str(course.id),
-                "product": str(product.id),
+                "course_id": str(course.id),
+                "product_id": str(product.id),
             },
         )
 
@@ -265,8 +265,8 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
             f"/api/v1.0/organizations/{organization.id}/course-product-relations/{relation.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             data={
-                "course": "notacourseid",
-                "product": str(product.id),
+                "course_id": "notacourseid",
+                "product_id": str(product.id),
             },
         )
 
@@ -290,8 +290,8 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
         response = self.client.put(
             f"/api/v1.0/organizations/{organization.id}/course-product-relations/{relation.id}/",
             data={
-                "course": "notacourseid",
-                "product": str(product.id),
+                "course_id": "notacourseid",
+                "product_id": str(product.id),
             },
         )
 
@@ -317,7 +317,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
             f"/api/v1.0/organizations/{organization.id}/course-product-relations/{relation.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             data={
-                "course": "notacourseid",
+                "course_id": "notacourseid",
             },
         )
 
@@ -341,7 +341,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
         response = self.client.patch(
             f"/api/v1.0/organizations/{organization.id}/course-product-relations/{relation.id}/",
             data={
-                "course": "notacourseid",
+                "course_id": "notacourseid",
             },
         )
 

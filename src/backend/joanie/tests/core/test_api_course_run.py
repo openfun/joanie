@@ -246,7 +246,7 @@ class CourseRunApiTest(BaseAPITestCase):
         course = factories.CourseFactory()
         data = {
             "resource_link": "https://example.edx:8073/courses/course-v1:edX+DemoX+01/course/",
-            "course": course.id,
+            "course_id": course.id,
         }
 
         response = self.client.post("/api/v1.0/course-runs/", data=data)
@@ -266,7 +266,7 @@ class CourseRunApiTest(BaseAPITestCase):
         course = factories.CourseFactory()
         data = {
             "resource_link": "https://example.edx:8073/courses/course-v1:edX+DemoX+01/course/",
-            "course": course.id,
+            "course_id": course.id,
         }
 
         response = self.client.post(
@@ -289,7 +289,7 @@ class CourseRunApiTest(BaseAPITestCase):
 
         data = {
             "resource_link": "https://perdu.com",
-            "course": course.id,
+            "course_id": course.id,
             "languages": ["en", "fr"],
             "start": "2020-12-09T09:31:59.417817Z",
             "end": "2021-03-14T09:31:59.417895Z",
@@ -317,7 +317,7 @@ class CourseRunApiTest(BaseAPITestCase):
 
         data = {
             "resource_link": "https://perdu.com",
-            "course": course.id,
+            "course_id": course.id,
             "languages": ["en", "fr"],
             "start": "2020-12-09T09:31:59.417817Z",
             "end": "2021-03-14T09:31:59.417895Z",

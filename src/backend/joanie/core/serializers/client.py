@@ -461,7 +461,9 @@ class EnrollmentSerializer(serializers.ModelSerializer):
     """
 
     id = serializers.CharField(read_only=True, required=False)
-    certificate = serializers.SlugRelatedField(read_only=True, slug_field="id")
+    certificate_id = serializers.SlugRelatedField(
+        read_only=True, slug_field="id", source="certificate"
+    )
     course_run = CourseRunSerializer(read_only=True)
     product_relations = serializers.SerializerMethodField(read_only=True)
     orders = serializers.SerializerMethodField(read_only=True)
@@ -471,7 +473,7 @@ class EnrollmentSerializer(serializers.ModelSerializer):
         model = models.Enrollment
         fields = [
             "id",
-            "certificate",
+            "certificate_id",
             "course_run",
             "created_on",
             "is_active",
@@ -584,37 +586,47 @@ class OrderSerializer(serializers.ModelSerializer):
         required=False,
     )
     total_currency = serializers.SerializerMethodField(read_only=True)
-    organization = serializers.SlugRelatedField(
-        queryset=models.Organization.objects.all(), slug_field="id", required=False
+    organization_id = serializers.SlugRelatedField(
+        queryset=models.Organization.objects.all(),
+        slug_field="id",
+        required=False,
+        source="organization",
     )
-    product = serializers.SlugRelatedField(
-        queryset=models.Product.objects.all(), slug_field="id"
+    product_id = serializers.SlugRelatedField(
+        queryset=models.Product.objects.all(), slug_field="id", source="product"
     )
     target_enrollments = serializers.SerializerMethodField(read_only=True)
-    order_group = serializers.SlugRelatedField(
-        queryset=models.OrderGroup.objects.all(), slug_field="id", required=False
+    order_group_id = serializers.SlugRelatedField(
+        queryset=models.OrderGroup.objects.all(),
+        slug_field="id",
+        required=False,
+        source="order_group",
     )
     target_courses = OrderTargetCourseRelationSerializer(
         read_only=True, many=True, source="course_relations"
     )
-    main_invoice = serializers.SlugRelatedField(read_only=True, slug_field="reference")
-    certificate = serializers.SlugRelatedField(read_only=True, slug_field="id")
+    main_invoice_reference = serializers.SlugRelatedField(
+        read_only=True, slug_field="reference", source="main_invoice"
+    )
+    certificate_id = serializers.SlugRelatedField(
+        read_only=True, slug_field="id", source="certificate"
+    )
     contract = ContractSerializer(read_only=True)
 
     class Meta:
         model = models.Order
         fields = [
-            "certificate",
+            "certificate_id",
             "contract",
             "course",
             "created_on",
             "enrollment",
             "id",
-            "main_invoice",
-            "order_group",
-            "organization",
+            "main_invoice_reference",
+            "order_group_id",
+            "organization_id",
             "owner",
-            "product",
+            "product_id",
             "state",
             "target_courses",
             "target_enrollments",
@@ -655,12 +667,19 @@ class OrderSerializer(serializers.ModelSerializer):
 class OrderLightSerializer(serializers.ModelSerializer):
     """Order model light serializer."""
 
+    product_id = serializers.SlugRelatedField(
+        queryset=models.Product.objects.all(), slug_field="id", source="product"
+    )
+    certificate_id = serializers.SlugRelatedField(
+        queryset=models.Certificate.objects.all(), slug_field="id", source="certificate"
+    )
+
     class Meta:
         model = models.Order
         fields = [
             "id",
-            "certificate",
-            "product",
+            "certificate_id",
+            "product_id",
             "state",
         ]
         read_only_fields = fields
@@ -749,9 +768,11 @@ class CourseSerializer(AbilitiesModelSerializer):
 
     cover = ThumbnailDetailField()
     organizations = OrganizationSerializer(many=True, read_only=True)
-    products = serializers.SlugRelatedField(many=True, read_only=True, slug_field="id")
-    course_runs = serializers.SlugRelatedField(
-        many=True, read_only=True, slug_field="id"
+    product_ids = serializers.SlugRelatedField(
+        many=True, read_only=True, slug_field="id", source="products"
+    )
+    course_run_ids = serializers.SlugRelatedField(
+        many=True, read_only=True, slug_field="id", source="course_runs"
     )
 
     class Meta:
@@ -759,11 +780,11 @@ class CourseSerializer(AbilitiesModelSerializer):
         fields = [
             "created_on",
             "code",
-            "course_runs",
+            "course_run_ids",
             "cover",
             "id",
             "organizations",
-            "products",
+            "product_ids",
             "state",
             "title",
         ]
