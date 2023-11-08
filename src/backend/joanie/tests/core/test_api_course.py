@@ -105,10 +105,10 @@ class CourseApiTest(BaseAPITestCase):
                             }
                             for organization in course.organizations.all()
                         ],
-                        "products": [
+                        "product_ids": [
                             str(product.id) for product in course.products.all()
                         ],
-                        "course_runs": [
+                        "course_run_ids": [
                             str(course_run.id)
                             for course_run in course.course_runs.all()
                         ],
@@ -301,8 +301,8 @@ class CourseApiTest(BaseAPITestCase):
                     }
                     for organization in course.organizations.all()
                 ],
-                "products": [str(product.id) for product in course.products.all()],
-                "course_runs": [
+                "product_ids": [str(product.id) for product in course.products.all()],
+                "course_run_ids": [
                     str(course_run.id) for course_run in course.course_runs.all()
                 ],
                 "state": course.state,

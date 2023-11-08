@@ -488,7 +488,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         response = self.client.post(
             f"/api/v1.0/courses/{course.id!s}/accesses/",
             {
-                "user": str(user.id),
+                "user_id": str(user.id),
                 "role": random.choice(
                     ["administrator", "instructor", "manager", "owner"]
                 ),
@@ -658,8 +658,8 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
 
         new_values = {
             "id": uuid4(),
-            "course": factories.CourseFactory().id,
-            "user": factories.UserFactory().id,
+            "course_id": factories.CourseFactory().id,
+            "user_id": factories.UserFactory().id,
             "role": random.choice(CourseAccess.ROLE_CHOICES)[0],
         }
 
@@ -684,8 +684,8 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
 
         new_values = {
             "id": uuid4(),
-            "course": factories.CourseFactory(users=[(user, "instructor")]).id,
-            "user": factories.UserFactory().id,
+            "course_id": factories.CourseFactory(users=[(user, "instructor")]).id,
+            "user_id": factories.UserFactory().id,
             "role": random.choice(CourseAccess.ROLE_CHOICES)[0],
         }
 
@@ -715,8 +715,8 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
 
         new_values = {
             "id": uuid4(),
-            "course": factories.CourseFactory(users=[(user, "instructor")]).id,
-            "user": factories.UserFactory().id,
+            "course_id": factories.CourseFactory(users=[(user, "instructor")]).id,
+            "user_id": factories.UserFactory().id,
             "role": random.choice(CourseAccess.ROLE_CHOICES)[0],
         }
 
@@ -746,8 +746,8 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
 
         new_values = {
             "id": uuid4(),
-            "course": factories.CourseFactory(users=[(user, "manager")]).id,
-            "user": factories.UserFactory().id,
+            "course_id": factories.CourseFactory(users=[(user, "manager")]).id,
+            "user_id": factories.UserFactory().id,
             "role": random.choice(CourseAccess.ROLE_CHOICES)[0],
         }
 
@@ -780,8 +780,8 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
 
         new_values = {
             "id": uuid4(),
-            "course": factories.CourseFactory(users=[(user, "administrator")]).id,
-            "user": factories.UserFactory().id,
+            "course_id": factories.CourseFactory(users=[(user, "administrator")]).id,
+            "user_id": factories.UserFactory().id,
             "role": random.choice(["administrator", "instructor", "manager"]),
         }
 
@@ -826,8 +826,8 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
 
         new_values = {
             "id": uuid4(),
-            "course": factories.CourseFactory(users=[(user, "administrator")]).id,
-            "user": factories.UserFactory().id,
+            "course_id": factories.CourseFactory(users=[(user, "administrator")]).id,
+            "user_id": factories.UserFactory().id,
             "role": random.choice(CourseAccess.ROLE_CHOICES)[0],
         }
 
@@ -861,8 +861,8 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
 
         new_values = {
             "id": uuid4(),
-            "course": factories.CourseFactory(users=[(user, "administrator")]).id,
-            "user": factories.UserFactory().id,
+            "course_id": factories.CourseFactory(users=[(user, "administrator")]).id,
+            "user_id": factories.UserFactory().id,
             "role": "owner",
         }
 
@@ -901,8 +901,8 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
 
         new_values = {
             "id": uuid4(),
-            "course": factories.CourseFactory(users=[(user, "administrator")]).id,
-            "user": factories.UserFactory().id,
+            "course_id": factories.CourseFactory(users=[(user, "administrator")]).id,
+            "user_id": factories.UserFactory().id,
             "role": random.choice(CourseAccess.ROLE_CHOICES)[0],
         }
 
@@ -946,8 +946,8 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
 
         new_values = {
             "id": uuid4(),
-            "course": factories.CourseFactory(users=[(user, "administrator")]).id,
-            "user": factories.UserFactory().id,
+            "course_id": factories.CourseFactory(users=[(user, "administrator")]).id,
+            "user_id": factories.UserFactory().id,
             "role": random.choice(CourseAccess.ROLE_CHOICES)[0],
         }
         for field, value in new_values.items():
@@ -1010,8 +1010,8 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
 
         new_values = {
             "id": uuid4(),
-            "course": factories.CourseFactory().id,
-            "user": factories.UserFactory().id,
+            "course_id": factories.CourseFactory().id,
+            "user_id": factories.UserFactory().id,
             "role": random.choice(CourseAccess.ROLE_CHOICES)[0],
         }
 
@@ -1036,8 +1036,8 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
 
         new_values = {
             "id": uuid4(),
-            "course": factories.CourseFactory(users=[(user, "instructor")]).id,
-            "user": factories.UserFactory().id,
+            "course_id": factories.CourseFactory(users=[(user, "instructor")]).id,
+            "user_id": factories.UserFactory().id,
             "role": random.choice(CourseAccess.ROLE_CHOICES)[0],
         }
 
@@ -1067,8 +1067,8 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
 
         new_values = {
             "id": uuid4(),
-            "course": factories.CourseFactory(users=[(user, "instructor")]).id,
-            "user": factories.UserFactory().id,
+            "course_id": factories.CourseFactory(users=[(user, "instructor")]).id,
+            "user_id": factories.UserFactory().id,
             "role": random.choice(CourseAccess.ROLE_CHOICES)[0],
         }
 
@@ -1098,8 +1098,8 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
 
         new_values = {
             "id": uuid4(),
-            "course": factories.CourseFactory(users=[(user, "manager")]).id,
-            "user": factories.UserFactory().id,
+            "course_id": factories.CourseFactory(users=[(user, "manager")]).id,
+            "user_id": factories.UserFactory().id,
             "role": random.choice(CourseAccess.ROLE_CHOICES)[0],
         }
 
@@ -1132,8 +1132,8 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
 
         new_values = {
             "id": uuid4(),
-            "course": factories.CourseFactory(users=[(user, "administrator")]).id,
-            "user": factories.UserFactory().id,
+            "course_id": factories.CourseFactory(users=[(user, "administrator")]).id,
+            "user_id": factories.UserFactory().id,
             "role": random.choice(["administrator", "instructor", "manager"]),
         }
 
@@ -1158,7 +1158,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
                     updated_values, {**old_values, "role": new_values["role"]}
                 )
             else:
-                self.assertEqual(updated_values, old_values)
+                self.assertDictEqual(updated_values, old_values)
 
     def test_api_course_accesses_patch_administrator_from_owner(self):
         """
@@ -1176,8 +1176,8 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
 
         new_values = {
             "id": uuid4(),
-            "course": factories.CourseFactory(users=[(user, "administrator")]).id,
-            "user": factories.UserFactory().id,
+            "course_id": factories.CourseFactory(users=[(user, "administrator")]).id,
+            "user_id": factories.UserFactory().id,
             "role": random.choice(CourseAccess.ROLE_CHOICES)[0],
         }
 
@@ -1212,8 +1212,8 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
 
         new_values = {
             "id": uuid4(),
-            "course": factories.CourseFactory(users=[(user, "administrator")]).id,
-            "user": factories.UserFactory().id,
+            "course_id": factories.CourseFactory(users=[(user, "administrator")]).id,
+            "user_id": factories.UserFactory().id,
             "role": "owner",
         }
 
@@ -1249,8 +1249,8 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
 
         new_values = {
             "id": uuid4(),
-            "course": factories.CourseFactory(users=[(user, "administrator")]).id,
-            "user": factories.UserFactory().id,
+            "course_id": factories.CourseFactory(users=[(user, "administrator")]).id,
+            "user_id": factories.UserFactory().id,
             "role": random.choice(CourseAccess.ROLE_CHOICES)[0],
         }
 
@@ -1292,8 +1292,8 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
 
         new_values = {
             "id": uuid4(),
-            "course": factories.CourseFactory(users=[(user, "administrator")]).id,
-            "user": factories.UserFactory().id,
+            "course_id": factories.CourseFactory(users=[(user, "administrator")]).id,
+            "user_id": factories.UserFactory().id,
             "role": random.choice(CourseAccess.ROLE_CHOICES)[0],
         }
         for field, value in new_values.items():

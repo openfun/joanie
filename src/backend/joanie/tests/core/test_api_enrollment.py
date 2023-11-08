@@ -127,7 +127,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "results": [
                     {
                         "id": str(enrollment.id),
-                        "certificate": None,
+                        "certificate_id": None,
                         "course_run": {
                             "id": str(enrollment.course_run.id),
                             "course": {
@@ -200,7 +200,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "results": [
                     {
                         "id": str(other_enrollment.id),
-                        "certificate": None,
+                        "certificate_id": None,
                         "course_run": {
                             "id": str(other_enrollment.course_run.id),
                             "course": {
@@ -419,7 +419,7 @@ class EnrollmentApiTest(BaseAPITestCase):
 
         self.assertEqual(len(content["results"]), 1)
         self.assertEqual(
-            content["results"][0]["certificate"],
+            content["results"][0]["certificate_id"],
             str(certificate.pk),
         )
 
@@ -511,7 +511,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "results": [
                     {
                         "id": str(enrollment_1.id),
-                        "certificate": None,
+                        "certificate_id": None,
                         "course_run": {
                             "id": str(course_run_1.id),
                             "resource_link": course_run_1.resource_link,
@@ -678,7 +678,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             response.json(),
             {
                 "id": str(enrollment.id),
-                "certificate": None,
+                "certificate_id": None,
                 "course_run": {
                     "id": str(enrollment.course_run.id),
                     "course": {
@@ -752,8 +752,8 @@ class EnrollmentApiTest(BaseAPITestCase):
             [
                 {
                     "id": str(order.id),
-                    "certificate": str(certificate.id),
-                    "product": str(product.id),
+                    "certificate_id": str(certificate.id),
+                    "product_id": str(product.id),
                     "state": "draft",
                 }
             ],
@@ -865,7 +865,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             content,
             {
                 "id": str(enrollment.id),
-                "certificate": None,
+                "certificate_id": None,
                 "course_run": {
                     "id": str(course_run.id),
                     "course": {
@@ -998,7 +998,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             response.json(),
             {
                 "id": str(enrollment.id),
-                "certificate": None,
+                "certificate_id": None,
                 "course_run": {
                     "id": str(course_run.id),
                     "course": {
@@ -1092,7 +1092,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             response.json(),
             {
                 "id": str(enrollment.id),
-                "certificate": None,
+                "certificate_id": None,
                 "course_run": {
                     "id": str(course_run.id),
                     "course": {
@@ -1341,7 +1341,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             response.json(),
             {
                 "id": str(enrollment.id),
-                "certificate": None,
+                "certificate_id": None,
                 "course_run": {
                     "id": str(course_run.id),
                     "course": {
@@ -1529,7 +1529,8 @@ class EnrollmentApiTest(BaseAPITestCase):
             self.assertEqual(response.status_code, 401)
 
             self.assertDictEqual(
-                response.json(), {"detail": "Authentication credentials were not provided."}
+                response.json(),
+                {"detail": "Authentication credentials were not provided."},
             )
 
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
@@ -1605,7 +1606,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 response.json(),
                 {
                     "id": str(enrollment.id),
-                    "certificate": None,
+                    "certificate_id": None,
                     "course_run": {
                         "id": str(enrollment.course_run.id),
                         "course": {
@@ -1841,7 +1842,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             response.json(),
             {
                 "id": str(enrollment.id),
-                "certificate": None,
+                "certificate_id": None,
                 "course_run": {
                     "id": str(course_run.id),
                     "course": {
@@ -1926,7 +1927,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             response.json(),
             {
                 "id": str(enrollment.id),
-                "certificate": None,
+                "certificate_id": None,
                 "course_run": {
                     "id": str(course_run.id),
                     "course": {
@@ -2004,7 +2005,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             response.json(),
             {
                 "id": str(enrollment.id),
-                "certificate": None,
+                "certificate_id": None,
                 "course_run": {
                     "id": str(course_run.id),
                     "course": {
@@ -2102,7 +2103,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             response.json(),
             {
                 "id": str(enrollment.id),
-                "certificate": None,
+                "certificate_id": None,
                 "course_run": {
                     "id": str(course_run.id),
                     "course": {
@@ -2172,7 +2173,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             response.json(),
             {
                 "id": str(enrollment.id),
-                "certificate": None,
+                "certificate_id": None,
                 "course_run": {
                     "id": str(course_run.id),
                     "course": {
