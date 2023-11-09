@@ -379,6 +379,7 @@ class ProductAdmin(
                     "call_to_action",
                     "price",
                     "certificate_definition",
+                    "contract_definition",
                     "related_courses",
                 )
             },
