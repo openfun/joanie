@@ -13,3 +13,7 @@ export type DTOCertificateDefinition = Optional<CertificateDefinition, "id">;
 export type CertificateDefinitionFormValues = ToFormValues<
   Omit<CertificateDefinition, "id">
 >;
+
+export enum CertificationDefinitionTemplate {
+  CERTIFICATE = "certificate",
+}

@@ -15,6 +15,7 @@ import { genericUpdateFormError } from "@/utils/forms";
 import { TranslatableContent } from "@/components/presentational/translatable-content/TranslatableContent";
 import {
   CertificateDefinition,
+  CertificationDefinitionTemplate,
   DTOCertificateDefinition,
 } from "@/services/api/models/CertificateDefinition";
 
@@ -67,7 +68,7 @@ export function CertificateDefinitionForm({ definition, ...props }: Props) {
       name: defaultDefinition?.name ?? "",
       title: defaultDefinition?.title ?? "",
       description: defaultDefinition?.description ?? "",
-      template: "howard.issuers.CertificateDocument",
+      template: CertificationDefinitionTemplate.CERTIFICATE,
     };
   };
 
@@ -136,7 +137,7 @@ export function CertificateDefinitionForm({ definition, ...props }: Props) {
                 options={[
                   {
                     label: "Default",
-                    value: "howard.issuers.CertificateDocument",
+                    value: CertificationDefinitionTemplate.CERTIFICATE,
                   },
                 ]}
                 label={intl.formatMessage(messages.templateLabel)}
