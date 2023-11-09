@@ -7,7 +7,6 @@ from pdfminer.high_level import extract_text as pdf_extract_text
 from rest_framework.pagination import PageNumberPagination
 
 from joanie.core import enums, factories
-from joanie.core.models import CourseState
 from joanie.core.serializers import fields
 from joanie.tests.base import BaseAPITestCase
 
@@ -43,10 +42,7 @@ class CertificateApiTest(BaseAPITestCase):
         order = factories.OrderFactory(owner=user, product=factories.ProductFactory())
         certificate = factories.OrderCertificateFactory(order=order)
 
-        enrollment = factories.EnrollmentFactory(
-            user=user,
-            course_run__state=CourseState.ONGOING_OPEN,
-        )
+        enrollment = factories.EnrollmentFactory(user=user)
         factories.EnrollmentCertificateFactory(enrollment=enrollment)
         other_order = factories.OrderFactory(
             owner=user,
@@ -98,23 +94,31 @@ class CertificateApiTest(BaseAPITestCase):
                                     },
                                     "end": enrollment.course_run.end.isoformat().replace(
                                         "+00:00", "Z"
-                                    ),
+                                    )
+                                    if enrollment.course_run.end
+                                    else None,
                                     "enrollment_end": (
                                         enrollment.course_run.enrollment_end.isoformat().replace(
                                             "+00:00", "Z"
                                         )
+                                        if enrollment.course_run.enrollment_end
+                                        else None
                                     ),
                                     "enrollment_start": (
                                         enrollment.course_run.enrollment_start.isoformat().replace(
                                             "+00:00", "Z"
                                         )
+                                        if enrollment.course_run.enrollment_start
+                                        else None
                                     ),
                                     "id": str(enrollment.course_run.id),
                                     "languages": enrollment.course_run.languages,
                                     "resource_link": enrollment.course_run.resource_link,
                                     "start": enrollment.course_run.start.isoformat().replace(
                                         "+00:00", "Z"
-                                    ),
+                                    )
+                                    if enrollment.course_run.start
+                                    else None,
                                     "state": {
                                         "call_to_action": enrollment.course_run.state.get(
                                             "call_to_action"
@@ -123,7 +127,9 @@ class CertificateApiTest(BaseAPITestCase):
                                             "datetime"
                                         )
                                         .isoformat()
-                                        .replace("+00:00", "Z"),
+                                        .replace("+00:00", "Z")
+                                        if enrollment.course_run.state.get("datetime")
+                                        else None,
                                         "priority": enrollment.course_run.state.get(
                                             "priority"
                                         ),
