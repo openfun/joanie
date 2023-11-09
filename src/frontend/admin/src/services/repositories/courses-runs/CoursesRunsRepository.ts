@@ -67,6 +67,15 @@ export const CoursesRunsRepository: Repository = class CoursesRunsRepository {
   }
 
   static getAllLanguages(): Promise<JoanieLanguage[]> {
+    if (process.env.NEXT_PUBLIC_API_SOURCE === "test") {
+      return new Promise((resolve) =>
+        resolve([
+          { value: "fr", display_name: "Français" },
+          { value: "en", display_name: "English" },
+        ]),
+      );
+    }
+
     return fetchApi(coursesRunsRoute.getAll(), {
       method: "OPTIONS",
     }).then(async (response) => {

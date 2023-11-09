@@ -29,7 +29,8 @@ export const appendToFormData = (
 };
 
 export const exportToFormData = (payload: any): FormData | any => {
-  if (process.env.NEXT_PUBLIC_API_SOURCE === "mocked") {
+  const apiSource = process.env.NEXT_PUBLIC_API_SOURCE;
+  if (apiSource && ["mocked", "test"].includes(apiSource)) {
     return JSON.stringify(payload);
   }
 
