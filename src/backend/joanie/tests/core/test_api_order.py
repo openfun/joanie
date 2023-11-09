@@ -376,7 +376,9 @@ class OrderApiTest(BaseAPITestCase):
                                         "datetime"
                                     )
                                     .isoformat()
-                                    .replace("+00:00", "Z"),
+                                    .replace("+00:00", "Z")
+                                    if enrollment_1.course_run.state.get("datetime")
+                                    else None,
                                     "priority": enrollment_1.course_run.state.get(
                                         "priority"
                                     ),
