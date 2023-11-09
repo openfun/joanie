@@ -240,20 +240,25 @@ jobs:
           key: v1-mail-dependencies-{{ .Revision }}
 
   # ---- frontend admin jobs ----
-  build-front-admin:
+  build-test-front-admin:
     docker:
       - image: cimg/node:18.18
         auth:
           username: $DOCKER_HUB_USER
           password: $DOCKER_HUB_PASSWORD
+    environment:
+      NEXT_PUBLIC_API_SOURCE: test
+      NEXT_PUBLIC_API_ENDPOINT: http://localhost:8071/api/v1.0/admin
+      NEXT_PUBLIC_DJANGO_ADMIN_BASE_URL: http://localhost:8071/admin
     working_directory: ~/joanie/src/frontend/admin
+    resource_class: large
     steps:
       - checkout:
           path: ~/joanie
       - restore_cache:
           keys:
-            - v3-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
-            - v3-frontend-admin-dependencies-
+            - v4-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
+            - v4-frontend-admin-dependencies-
       - run:
           name: Install front-end dependencies
           command: yarn install
@@ -266,11 +271,13 @@ jobs:
       - persist_to_workspace:
           root: ~/joanie
           paths:
+            - src/frontend/admin/.next
+            - src/frontend/admin/public
             - src/frontend/admin/i18n/frontend.json
       - save_cache:
           paths:
             - ./node_modules
-          key: v3-frontend-admin-dependencies-{{ checksum "yarn.lock" }}
+          key: v4-frontend-admin-dependencies-{{ checksum "yarn.lock" }}
 
   lint-front-admin:
     docker:
@@ -284,8 +291,8 @@ jobs:
           path: ~/joanie
       - restore_cache:
           keys:
-            - v3-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
-            - v3-frontend-admin-dependencies-
+            - v4-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
+            - v4-frontend-admin-dependencies-
       - run:
           name: Run lint command
           command: yarn lint
@@ -304,12 +311,36 @@ jobs:
           path: ~/joanie
       - restore_cache:
           keys:
-            - v3-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
-            - v3-frontend-admin-dependencies-
+            - v4-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
+            - v4-frontend-admin-dependencies-
       - run:
           name: Run test command
           command: yarn test -w 5 --shard "$(($CIRCLE_NODE_INDEX + 1))/$CIRCLE_NODE_TOTAL"
 
+  test-e2e-front-admin:
+    docker:
+      - image: cimg/node:18.18
+        auth:
+          username: $DOCKER_HUB_USER
+          password: $DOCKER_HUB_PASSWORD
+    working_directory: ~/joanie/src/frontend/admin
+    resource_class: large
+    parallelism: 4
+    steps:
+      - checkout:
+          path: ~/joanie
+      - attach_workspace:
+          at: ~/joanie
+      - restore_cache:
+          keys:
+            - v4-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
+            - v4-frontend-admin-dependencies-
+      - run:
+          name: Install Playwright dependencies (platform deps + browser)
+          command: yarn playwright install --with-deps chromium
+      - run:
+          name: Run test command
+          command: SHARD="$((${CIRCLE_NODE_INDEX}+1))"; yarn test:e2e --shard=${SHARD}/${CIRCLE_NODE_TOTAL}
 
   # ---- Internationalization jobs ----
   build-back-i18n:
@@ -619,7 +650,7 @@ workflows:
       # Frontend admin jobs
       #
       # Build, lint and test frontend admin application
-      - build-front-admin:
+      - build-test-front-admin:
           filters:
             tags:
               only: /.*/
@@ -628,13 +659,19 @@ workflows:
             tags:
               only: /.*/
           requires:
-            - build-front-admin
+            - build-test-front-admin
       - test-front-admin:
           filters:
             tags:
               only: /.*/
           requires:
-            - build-front-admin
+            - build-test-front-admin
+      - test-e2e-front-admin:
+          filters:
+            tags:
+              only: /.*/
+          requires:
+            - build-test-front-admin
 
       # Internationalization jobs
       #
@@ -649,7 +686,7 @@ workflows:
       - upload-i18n-strings:
           requires:
             - build-back-i18n
-            - build-front-admin
+            - build-test-front-admin
           filters:
             branches:
               only: main
