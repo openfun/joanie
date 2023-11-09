@@ -9,6 +9,7 @@
     "lint": "next lint",
     "test": "jest --passWithNoTests",
     "test:watch": "jest --watch ",
+    "test:e2e": "playwright test",
     "prettier-write": "prettier --write 'src/**/*.+(ts|tsx|json|js|jsx)' '*.+(ts|tsx|json|js|jsx)' '**/*.+(css|scss)'",
     "i18n:extract": "formatjs extract './**/*.ts*' --ignore ./node_modules --ignore './**/*.d.ts' --ignore './**/*.spec.*' --out-file './i18n/frontend.json' --id-interpolation-pattern '[sha512:contenthash:base64:6]' --format crowdin",
     "i18n:compile": "formatjs compile-folder --format crowdin ./i18n/locales ./src/translations"
@@ -54,6 +55,7 @@
     "@babel/core": "7.23.2",
     "@formatjs/cli": "6.2.1",
     "@jest/globals": "29.7.0",
+    "@playwright/test": "1.39.0",
     "@testing-library/jest-dom": "6.1.4",
     "@testing-library/react": "14.0.0",
     "@testing-library/user-event": "14.5.1",
@@ -70,6 +72,7 @@
     "@uiw/react-md-editor": "3.24.1",
     "babel-loader": "9.1.3",
     "babel-plugin-transform-remove-imports": "1.7.0",
+    "dotenv": "16.3.1",
     "eslint": "8.52.0",
     "eslint-config-airbnb": "19.0.4",
     "eslint-config-airbnb-typescript": "17.1.0",
