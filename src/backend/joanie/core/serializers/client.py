@@ -585,9 +585,7 @@ class OrderSerializer(serializers.ModelSerializer):
     course = CourseLightSerializer(
         read_only=True, exclude_abilities=True, required=False
     )
-    enrollment = serializers.SlugRelatedField(
-        queryset=models.Enrollment.objects.all(), slug_field="id", required=False
-    )
+    enrollment = EnrollmentLightSerializer(read_only=True, required=False)
     total = serializers.DecimalField(
         coerce_to_string=False,
         decimal_places=2,
