@@ -343,23 +343,31 @@ class OrderApiTest(BaseAPITestCase):
                                 },
                                 "end": enrollment_1.course_run.end.isoformat().replace(
                                     "+00:00", "Z"
-                                ),
+                                )
+                                if enrollment_1.course_run.end
+                                else None,
                                 "enrollment_end": (
                                     enrollment_1.course_run.enrollment_end.isoformat().replace(
                                         "+00:00", "Z"
                                     )
-                                ),
+                                )
+                                if enrollment_1.course_run.enrollment_end
+                                else None,
                                 "enrollment_start": (
                                     enrollment_1.course_run.enrollment_start.isoformat().replace(
                                         "+00:00", "Z"
                                     )
-                                ),
+                                )
+                                if enrollment_1.course_run.enrollment_start
+                                else None,
                                 "id": str(enrollment_1.course_run.id),
                                 "languages": enrollment_1.course_run.languages,
                                 "resource_link": enrollment_1.course_run.resource_link,
                                 "start": enrollment_1.course_run.start.isoformat().replace(
                                     "+00:00", "Z"
-                                ),
+                                )
+                                if enrollment_1.course_run.start
+                                else None,
                                 "state": {
                                     "call_to_action": enrollment_1.course_run.state.get(
                                         "call_to_action"
@@ -1383,7 +1391,6 @@ class OrderApiTest(BaseAPITestCase):
     def test_api_order_create_authenticated_for_enrollment_invalid(self):
         """The enrollment id passed in payload to create an order should exist."""
         enrollment = factories.EnrollmentFactory(
-            course_run__state=models.CourseState.ONGOING_OPEN,
             course_run__is_listed=True,
         )
         product = factories.ProductFactory(price=0.00, type="certificate")
