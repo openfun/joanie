@@ -34,6 +34,12 @@
       "error",
       { "accessibility": "no-public" }
     ],
+    "import/no-extraneous-dependencies": [
+      "error",
+      {
+        "devDependencies": ["./src/tests/*", "**/*.?(test|spec).e2e.[jt]s?(x)", "**/*.?(spec|test).[jt]s?(x)"]
+      }
+    ],
     "react-hooks/exhaustive-deps": "off",
     "no-restricted-imports": [
       "error",
