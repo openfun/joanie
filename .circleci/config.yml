@@ -211,7 +211,7 @@ jobs:
   # ---- mail jobs ----
   build-mails:
     docker:
-      - image: cimg/node:16.15
+      - image: cimg/node:18.18
         auth:
           username: $DOCKER_HUB_USER
           password: $DOCKER_HUB_PASSWORD
@@ -242,7 +242,7 @@ jobs:
   # ---- frontend admin jobs ----
   build-front-admin:
     docker:
-      - image: cimg/node:16.15
+      - image: cimg/node:18.18
         auth:
           username: $DOCKER_HUB_USER
           password: $DOCKER_HUB_PASSWORD
@@ -274,7 +274,7 @@ jobs:
 
   lint-front-admin:
     docker:
-      - image: cimg/node:16.15
+      - image: cimg/node:18.18
         auth:
           username: $DOCKER_HUB_USER
           password: $DOCKER_HUB_PASSWORD
@@ -292,7 +292,7 @@ jobs:
 
   test-front-admin:
     docker:
-      - image: cimg/node:16.15
+      - image: cimg/node:18.18
         auth:
           username: $DOCKER_HUB_USER
           password: $DOCKER_HUB_PASSWORD
@@ -486,7 +486,7 @@ jobs:
   # ---- DockerHub publication job ----
   hub:
     docker:
-      - image: cimg/base:2022.05
+      - image: cimg/base:2023.10
     working_directory: ~/joanie
     steps:
       # Checkout repository sources
@@ -496,7 +496,7 @@ jobs:
       - <<: *generate-version-file
       # Activate docker-in-docker
       - setup_remote_docker:
-          version: 20.10.7
+          version: 20.10.23
       - run:
           name: Build production image
           command: docker build -t joanie:${CIRCLE_SHA1} --target production .
