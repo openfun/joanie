@@ -1,5 +1,5 @@
 """Tests for the Order API."""
-# pylint: disable=too-many-lines
+# pylint: disable=too-many-lines,duplicate-code
 import json
 import random
 import uuid
@@ -32,6 +32,8 @@ from joanie.tests.base import BaseAPITestCase
 class OrderApiTest(BaseAPITestCase):
     """Test the API of the Order object."""
 
+    maxDiff = None
+
     def setUp(self):
         """Clear cache after each tests"""
         cache.clear()
@@ -48,10 +50,9 @@ class OrderApiTest(BaseAPITestCase):
             "/api/v1.0/orders/",
         )
         self.assertEqual(response.status_code, 401)
-        content = json.loads(response.content)
 
-        self.assertEqual(
-            content, {"detail": "Authentication credentials were not provided."}
+        self.assertDictEqual(
+            response.json(), {"detail": "Authentication credentials were not provided."}
         )
 
     @mock.patch.object(
@@ -68,14 +69,14 @@ class OrderApiTest(BaseAPITestCase):
         # The owner can see his/her order
         token = self.generate_token_from_user(order.owner)
 
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(5):
             response = self.client.get(
                 "/api/v1.0/orders/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "count": 1,
@@ -120,7 +121,7 @@ class OrderApiTest(BaseAPITestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "count": 1,
@@ -225,7 +226,7 @@ class OrderApiTest(BaseAPITestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "count": 1,
@@ -278,7 +279,7 @@ class OrderApiTest(BaseAPITestCase):
             )
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), {"product": ["Enter a valid UUID."]})
+        self.assertDictEqual(response.json(), {"product": ["Enter a valid UUID."]})
 
     @mock.patch.object(
         fields.ThumbnailDetailField,
@@ -317,7 +318,7 @@ class OrderApiTest(BaseAPITestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "count": 1,
@@ -332,7 +333,57 @@ class OrderApiTest(BaseAPITestCase):
                         "created_on": order.created_on.strftime(
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
-                        "enrollment": str(enrollment_1.id),
+                        "enrollment": {
+                            "course_run": {
+                                "course": {
+                                    "code": enrollment_1.course_run.course.code,
+                                    "cover": "_this_field_is_mocked",
+                                    "id": str(enrollment_1.course_run.course.id),
+                                    "title": enrollment_1.course_run.course.title,
+                                },
+                                "end": enrollment_1.course_run.end.isoformat().replace(
+                                    "+00:00", "Z"
+                                ),
+                                "enrollment_end": (
+                                    enrollment_1.course_run.enrollment_end.isoformat().replace(
+                                        "+00:00", "Z"
+                                    )
+                                ),
+                                "enrollment_start": (
+                                    enrollment_1.course_run.enrollment_start.isoformat().replace(
+                                        "+00:00", "Z"
+                                    )
+                                ),
+                                "id": str(enrollment_1.course_run.id),
+                                "languages": enrollment_1.course_run.languages,
+                                "resource_link": enrollment_1.course_run.resource_link,
+                                "start": enrollment_1.course_run.start.isoformat().replace(
+                                    "+00:00", "Z"
+                                ),
+                                "state": {
+                                    "call_to_action": enrollment_1.course_run.state.get(
+                                        "call_to_action"
+                                    ),
+                                    "datetime": enrollment_1.course_run.state.get(
+                                        "datetime"
+                                    )
+                                    .isoformat()
+                                    .replace("+00:00", "Z"),
+                                    "priority": enrollment_1.course_run.state.get(
+                                        "priority"
+                                    ),
+                                    "text": enrollment_1.course_run.state.get("text"),
+                                },
+                                "title": enrollment_1.course_run.title,
+                            },
+                            "created_on": enrollment_1.created_on.isoformat().replace(
+                                "+00:00", "Z"
+                            ),
+                            "id": str(enrollment_1.id),
+                            "is_active": enrollment_1.is_active,
+                            "state": enrollment_1.state,
+                            "was_created_by_order": enrollment_1.was_created_by_order,
+                        },
                         "target_enrollments": [],
                         "main_invoice": None,
                         "order_group": None,
@@ -365,7 +416,7 @@ class OrderApiTest(BaseAPITestCase):
             )
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), {"enrollment": ["Enter a valid UUID."]})
+        self.assertDictEqual(response.json(), {"enrollment": ["Enter a valid UUID."]})
 
     @mock.patch.object(
         fields.ThumbnailDetailField,
@@ -386,14 +437,14 @@ class OrderApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
 
         # Retrieve user's order related to the first course linked to the product 1
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(6):
             response = self.client.get(
                 f"/api/v1.0/orders/?course={product_1.courses.first().code}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "count": 1,
@@ -458,14 +509,14 @@ class OrderApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
 
         # Retrieve user's order related to the first course linked to the product 1
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(5):
             response = self.client.get(
                 f"/api/v1.0/orders/?product__type={enums.PRODUCT_TYPE_CERTIFICATE}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "count": 1,
@@ -480,7 +531,57 @@ class OrderApiTest(BaseAPITestCase):
                         "created_on": order.created_on.strftime(
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
-                        "enrollment": str(enrollment.id),
+                        "enrollment": {
+                            "course_run": {
+                                "course": {
+                                    "code": enrollment.course_run.course.code,
+                                    "cover": "_this_field_is_mocked",
+                                    "id": str(enrollment.course_run.course.id),
+                                    "title": enrollment.course_run.course.title,
+                                },
+                                "end": enrollment.course_run.end.isoformat().replace(
+                                    "+00:00", "Z"
+                                ),
+                                "enrollment_end": (
+                                    enrollment.course_run.enrollment_end.isoformat().replace(
+                                        "+00:00", "Z"
+                                    )
+                                ),
+                                "enrollment_start": (
+                                    enrollment.course_run.enrollment_start.isoformat().replace(
+                                        "+00:00", "Z"
+                                    )
+                                ),
+                                "id": str(enrollment.course_run.id),
+                                "languages": enrollment.course_run.languages,
+                                "resource_link": enrollment.course_run.resource_link,
+                                "start": enrollment.course_run.start.isoformat().replace(
+                                    "+00:00", "Z"
+                                ),
+                                "state": {
+                                    "call_to_action": enrollment.course_run.state.get(
+                                        "call_to_action"
+                                    ),
+                                    "datetime": enrollment.course_run.state.get(
+                                        "datetime"
+                                    )
+                                    .isoformat()
+                                    .replace("+00:00", "Z"),
+                                    "priority": enrollment.course_run.state.get(
+                                        "priority"
+                                    ),
+                                    "text": enrollment.course_run.state.get("text"),
+                                },
+                                "title": enrollment.course_run.title,
+                            },
+                            "created_on": enrollment.created_on.isoformat().replace(
+                                "+00:00", "Z"
+                            ),
+                            "id": str(enrollment.id),
+                            "is_active": enrollment.is_active,
+                            "state": enrollment.state,
+                            "was_created_by_order": enrollment.was_created_by_order,
+                        },
                         "main_invoice": None,
                         "order_group": None,
                         "organization": str(order.organization.id),
@@ -536,7 +637,7 @@ class OrderApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
 
         # Retrieve user's orders without any filter
-        with self.assertNumQueries(59):
+        with self.assertNumQueries(77):
             response = self.client.get(
                 "/api/v1.0/orders/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -547,7 +648,7 @@ class OrderApiTest(BaseAPITestCase):
         self.assertEqual(content["count"], 3)
 
         # Retrieve user's orders filtered to limit to 2 product types
-        with self.assertNumQueries(11):
+        with self.assertNumQueries(8):
             response = self.client.get(
                 (
                     f"/api/v1.0/orders/?product__type={enums.PRODUCT_TYPE_CERTIFICATE}"
@@ -611,7 +712,7 @@ class OrderApiTest(BaseAPITestCase):
             )
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "product__type": [
@@ -649,7 +750,7 @@ class OrderApiTest(BaseAPITestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "count": 1,
@@ -711,7 +812,7 @@ class OrderApiTest(BaseAPITestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "count": 1,
@@ -777,7 +878,7 @@ class OrderApiTest(BaseAPITestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "count": 1,
@@ -901,7 +1002,7 @@ class OrderApiTest(BaseAPITestCase):
             )
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "state": [
@@ -918,9 +1019,8 @@ class OrderApiTest(BaseAPITestCase):
         response = self.client.get(f"/api/v1.0/orders/{order.id}/")
         self.assertEqual(response.status_code, 401)
 
-        content = json.loads(response.content)
-        self.assertEqual(
-            content,
+        self.assertDictEqual(
+            response.json(),
             {"detail": "Authentication credentials were not provided."},
         )
 
@@ -937,14 +1037,14 @@ class OrderApiTest(BaseAPITestCase):
         order = factories.OrderFactory(product=product, owner=owner)
         token = self.generate_token_from_user(owner)
 
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(4):
             response = self.client.get(
                 f"/api/v1.0/orders/{order.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "id": str(order.id),
@@ -1029,8 +1129,7 @@ class OrderApiTest(BaseAPITestCase):
         )
         self.assertEqual(response.status_code, 404)
 
-        content = json.loads(response.content)
-        self.assertEqual(content, {"detail": "Not found."})
+        self.assertDictEqual(response.json(), {"detail": "Not found."})
 
     # Create
 
@@ -1039,14 +1138,14 @@ class OrderApiTest(BaseAPITestCase):
         product = factories.ProductFactory()
         data = {
             "course": product.courses.first().code,
-            "product": str(product.id),
+            "product_id": str(product.id),
         }
         response = self.client.post(
             "/api/v1.0/orders/", data=data, content_type="application/json"
         )
         self.assertEqual(response.status_code, 401)
 
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
 
@@ -1083,7 +1182,7 @@ class OrderApiTest(BaseAPITestCase):
         self.assertEqual(models.Order.objects.count(), 1)
         order = models.Order.objects.get()
 
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "id": str(order.id),
@@ -1156,7 +1255,7 @@ class OrderApiTest(BaseAPITestCase):
             },
         )
 
-        with self.assertNumQueries(30):
+        with self.assertNumQueries(29):
             response = self.client.patch(
                 f"/api/v1.0/orders/{order.id}/submit/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -1170,7 +1269,7 @@ class OrderApiTest(BaseAPITestCase):
         self.assertEqual(
             list(order.target_courses.order_by("product_relations")), target_courses
         )
-        self.assertEqual(response.json(), {"payment_info": None})
+        self.assertDictEqual(response.json(), {"payment_info": None})
 
     @mock.patch.object(
         fields.ThumbnailDetailField,
@@ -1189,7 +1288,7 @@ class OrderApiTest(BaseAPITestCase):
         organization = product.course_relations.first().organizations.first()
 
         data = {
-            "enrollment": str(enrollment.id),
+            "enrollment_id": str(enrollment.id),
             "organization": str(organization.id),
             "product": str(product.id),
         }
@@ -1213,7 +1312,7 @@ class OrderApiTest(BaseAPITestCase):
         )
 
         self.assertEqual(list(order.target_courses.all()), [])
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "id": str(order.id),
@@ -1221,7 +1320,53 @@ class OrderApiTest(BaseAPITestCase):
                 "contract": None,
                 "course": None,
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                "enrollment": str(enrollment.id),
+                "enrollment": {
+                    "course_run": {
+                        "course": {
+                            "code": enrollment.course_run.course.code,
+                            "cover": "_this_field_is_mocked",
+                            "id": str(enrollment.course_run.course.id),
+                            "title": enrollment.course_run.course.title,
+                        },
+                        "end": enrollment.course_run.end.isoformat().replace(
+                            "+00:00", "Z"
+                        ),
+                        "enrollment_end": (
+                            enrollment.course_run.enrollment_end.isoformat().replace(
+                                "+00:00", "Z"
+                            )
+                        ),
+                        "enrollment_start": (
+                            enrollment.course_run.enrollment_start.isoformat().replace(
+                                "+00:00", "Z"
+                            )
+                        ),
+                        "id": str(enrollment.course_run.id),
+                        "languages": enrollment.course_run.languages,
+                        "resource_link": enrollment.course_run.resource_link,
+                        "start": enrollment.course_run.start.isoformat().replace(
+                            "+00:00", "Z"
+                        ),
+                        "state": {
+                            "call_to_action": enrollment.course_run.state.get(
+                                "call_to_action"
+                            ),
+                            "datetime": enrollment.course_run.state.get("datetime")
+                            .isoformat()
+                            .replace("+00:00", "Z"),
+                            "priority": enrollment.course_run.state.get("priority"),
+                            "text": enrollment.course_run.state.get("text"),
+                        },
+                        "title": enrollment.course_run.title,
+                    },
+                    "created_on": enrollment.created_on.isoformat().replace(
+                        "+00:00", "Z"
+                    ),
+                    "id": str(enrollment.id),
+                    "is_active": enrollment.is_active,
+                    "state": enrollment.state,
+                    "was_created_by_order": enrollment.was_created_by_order,
+                },
                 "main_invoice": None,
                 "order_group": None,
                 "organization": str(order.organization.id),
@@ -1234,6 +1379,37 @@ class OrderApiTest(BaseAPITestCase):
                 "target_courses": [],
             },
         )
+
+    def test_api_order_create_authenticated_for_enrollment_invalid(self):
+        """The enrollment id passed in payload to create an order should exist."""
+        enrollment = factories.EnrollmentFactory(
+            course_run__state=models.CourseState.ONGOING_OPEN,
+            course_run__is_listed=True,
+        )
+        product = factories.ProductFactory(price=0.00, type="certificate")
+        organization = product.course_relations.first().organizations.first()
+
+        data = {
+            "enrollment_id": uuid.uuid4(),
+            "organization": str(organization.id),
+            "product": str(product.id),
+        }
+        token = self.generate_token_from_user(enrollment.user)
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertDictEqual(
+            response.json(),
+            {"enrollment_id": f"Enrollment with id {data['enrollment_id']} not found."},
+        )
+        # no order has been created
+        self.assertEqual(models.Order.objects.count(), 0)
 
     @mock.patch.object(
         fields.ThumbnailDetailField,
@@ -1254,7 +1430,7 @@ class OrderApiTest(BaseAPITestCase):
         organization = product.course_relations.first().organizations.first()
 
         data = {
-            "enrollment": str(enrollment.id),
+            "enrollment_id": str(enrollment.id),
             "organization": str(organization.id),
             "product": str(product.id),
         }
@@ -1269,7 +1445,7 @@ class OrderApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertFalse(models.Order.objects.exists())
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "enrollment": [
@@ -1316,7 +1492,7 @@ class OrderApiTest(BaseAPITestCase):
         self.assertEqual(
             models.Order.objects.get(id=order_id).state, enums.ORDER_STATE_DRAFT
         )
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "__all__": ["Order should have an organization if not in draft state"],
@@ -1477,7 +1653,7 @@ class OrderApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         # - id, price and state has not been set according to data values
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "id": str(order.id),
@@ -1577,7 +1753,7 @@ class OrderApiTest(BaseAPITestCase):
         )
         self.assertEqual(response.status_code, 400)
         self.assertFalse(models.Order.objects.exists())
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "__all__": [
@@ -1625,7 +1801,7 @@ class OrderApiTest(BaseAPITestCase):
         )
         self.assertEqual(response.status_code, 400)
         self.assertFalse(models.Order.objects.exists())
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "__all__": [
@@ -1660,7 +1836,7 @@ class OrderApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, 400)
 
         self.assertFalse(models.Order.objects.exists())
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "product": ["This field is required."],
@@ -1678,7 +1854,7 @@ class OrderApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, 400)
 
         self.assertFalse(models.Order.objects.exists())
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {"__all__": ["Either the course or the enrollment field is required."]},
         )
@@ -1711,7 +1887,7 @@ class OrderApiTest(BaseAPITestCase):
         )
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {"__all__": ["An order for this product and course already exists."]},
         )
@@ -1802,7 +1978,7 @@ class OrderApiTest(BaseAPITestCase):
         order = models.Order.objects.get(product=product, course=course, owner=user)
         self.assertEqual(response.status_code, 201)
 
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "id": str(order.id),
@@ -1878,14 +2054,14 @@ class OrderApiTest(BaseAPITestCase):
                 ],
             },
         )
-        with self.assertNumQueries(12):
+        with self.assertNumQueries(11):
             response = self.client.patch(
                 f"/api/v1.0/orders/{order.id}/submit/",
                 data=data,
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "payment_info": {
@@ -1965,7 +2141,7 @@ class OrderApiTest(BaseAPITestCase):
             "target_enrollments": [],
             "target_courses": [],
         }
-        self.assertEqual(response.json(), expected_json)
+        self.assertDictEqual(response.json(), expected_json)
 
         response = self.client.patch(
             f"/api/v1.0/orders/{order.id}/submit/",
@@ -1983,7 +2159,7 @@ class OrderApiTest(BaseAPITestCase):
                 "is_paid": True,
             },
         }
-        self.assertEqual(response.json(), expected_json)
+        self.assertDictEqual(response.json(), expected_json)
 
     @mock.patch.object(DummyPaymentBackend, "create_payment")
     def test_api_order_create_authenticated_payment_failed(self, mock_create_payment):
@@ -2023,9 +2199,8 @@ class OrderApiTest(BaseAPITestCase):
 
         self.assertEqual(models.Order.objects.exclude(state="draft").count(), 0)
         self.assertEqual(response.status_code, 400)
-        content = json.loads(response.content)
 
-        self.assertEqual(content, {"detail": "Unreachable endpoint"})
+        self.assertDictEqual(response.json(), {"detail": "Unreachable endpoint"})
 
     def test_api_order_create_authenticated_nb_seats(self):
         """
@@ -2065,7 +2240,7 @@ class OrderApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "order_group": [
@@ -2226,7 +2401,7 @@ class OrderApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "order_group": [
@@ -2267,7 +2442,7 @@ class OrderApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "order_group": [
@@ -2312,7 +2487,7 @@ class OrderApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "order_group": [
@@ -2398,7 +2573,7 @@ class OrderApiTest(BaseAPITestCase):
         other_data["id"] = uuid.uuid4()
 
         # Try modifying the order on each field with our alternative data
-        self.assertEqual(
+        self.assertListEqual(
             list(data.keys()),
             [
                 "certificate",
@@ -2526,9 +2701,8 @@ class OrderApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, 401)
 
-        content = json.loads(response.content)
-        self.assertEqual(
-            content,
+        self.assertDictEqual(
+            response.json(),
             {"detail": "Authentication credentials were not provided."},
         )
 
@@ -2581,10 +2755,9 @@ class OrderApiTest(BaseAPITestCase):
         )
 
         self.assertEqual(response.status_code, 401)
-        content = json.loads(response.content)
 
-        self.assertEqual(
-            content, {"detail": "Authentication credentials were not provided."}
+        self.assertDictEqual(
+            response.json(), {"detail": "Authentication credentials were not provided."}
         )
 
     def test_api_order_get_invoice_authenticated_user_with_no_reference(self):
@@ -2601,8 +2774,10 @@ class OrderApiTest(BaseAPITestCase):
         )
 
         self.assertEqual(response.status_code, 400)
-        content = json.loads(response.content)
-        self.assertEqual(content, {"reference": "This parameter is required."})
+
+        self.assertDictEqual(
+            response.json(), {"reference": "This parameter is required."}
+        )
 
     def test_api_order_get_invoice_authenticated_not_linked_to_order(self):
         """
@@ -2620,9 +2795,9 @@ class OrderApiTest(BaseAPITestCase):
         )
 
         self.assertEqual(response.status_code, 404)
-        content = json.loads(response.content)
+
         self.assertEqual(
-            content,
+            response.json(),
             (
                 f"No invoice found for order {order.id} "
                 f"with reference {invoice.reference}."
@@ -2647,9 +2822,9 @@ class OrderApiTest(BaseAPITestCase):
         )
 
         self.assertEqual(response.status_code, 404)
-        content = json.loads(response.content)
+
         self.assertEqual(
-            content,
+            response.json(),
             (
                 f"No invoice found for order {invoice.order.id} "
                 f"with reference {invoice.reference}."
@@ -2690,10 +2865,9 @@ class OrderApiTest(BaseAPITestCase):
 
         response = self.client.post(f"/api/v1.0/orders/{order.id}/abort/")
 
-        content = json.loads(response.content)
         self.assertEqual(response.status_code, 401)
-        self.assertEqual(
-            content, {"detail": "Authentication credentials were not provided."}
+        self.assertDictEqual(
+            response.json(), {"detail": "Authentication credentials were not provided."}
         )
 
     def test_api_order_abort_authenticated_user_not_owner(self):
@@ -3045,7 +3219,7 @@ class OrderApiTest(BaseAPITestCase):
 
         order.refresh_from_db()
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(), {"billing_address": ["This field is required."]}
         )
         self.assertEqual(order.state, enums.ORDER_STATE_DRAFT)
@@ -3198,7 +3372,7 @@ class OrderApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, 400)
 
-        content = json.loads(response.content)
+        content = response.json()
         self.assertEqual(content[0], "No contract definition attached to the product.")
 
     @override_settings(

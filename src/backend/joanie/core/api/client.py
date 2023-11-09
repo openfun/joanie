@@ -299,7 +299,13 @@ class OrderViewSet(
             else self.request.user.username
         )
         return models.Order.objects.filter(owner__username=username).select_related(
-            "certificate", "contract", "course", "owner", "product"
+            "certificate",
+            "contract",
+            "course",
+            "enrollment__course_run__course",
+            "organization",
+            "owner",
+            "product",
         )
 
     def perform_create(self, serializer):
@@ -343,14 +349,25 @@ class OrderViewSet(
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         """Try to create an order and a related payment if the payment is fee."""
+        enrollment = None
+        if enrollment_id := request.data.get("enrollment_id"):
+            try:
+                enrollment = models.Enrollment.objects.get(id=enrollment_id)
+            except models.Enrollment.DoesNotExist:
+                return Response(
+                    {"enrollment_id": f"Enrollment with id {enrollment_id} not found."},
+                    status=400,
+                )
+
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=400)
 
         course_code = serializer.initial_data.get("course")
 
-        enrollment = serializer.validated_data.get("enrollment")
         product = serializer.validated_data.get("product")
+
+        serializer.validated_data["enrollment"] = enrollment
 
         # Retrieve course instance from the provided course code
         if course_code:
