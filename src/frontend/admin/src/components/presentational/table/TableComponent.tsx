@@ -151,6 +151,9 @@ export function TableComponent<T extends GridValidRowModel>({
           columns={getColumns()}
           columnBuffer={props?.columnBuffer ?? 3}
           loading={props.loading}
+          slots={{
+            loadingOverlay: LoaderCircular,
+          }}
           initialState={{
             pagination: {
               paginationModel: {
@@ -174,5 +177,22 @@ export function TableComponent<T extends GridValidRowModel>({
         />
       </Box>
     </>
+  );
+}
+
+export function LoaderCircular() {
+  return (
+    <Box
+      data-testid="circular-loader-container"
+      sx={{
+        height: "100%",
+        width: "100%",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      <CircularProgress data-testid="circular-loader" />
+    </Box>
   );
 }
