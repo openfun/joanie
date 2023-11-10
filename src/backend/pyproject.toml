@@ -73,7 +73,6 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "bandit==1.7.5",
-    "black==23.11.0",
     "cssselect==1.2.0",
     "django-extensions==3.2.3",
     "drf-spectacular-sidecar==2023.10.1",
@@ -93,6 +92,7 @@ dev = [
     "pytest-icdiff==0.8",
     "pytest-xdist==3.5.0",
     "responses==0.24.1",
+    "ruff==0.1.6",
     "types-requests==2.31.0.10",
 ]
 
@@ -103,7 +103,7 @@ zip-safe = true
 [tool.distutils.bdist_wheel]
 universal = true
 
-[tool.flake8]
+[tool.ruff]
 exclude = [
     ".git",
     ".venv",
@@ -112,7 +112,7 @@ exclude = [
     "__pycache__",
     "*/migrations/*",
 ]
-max-line-length = 99
+line-length = 88
 
 [tool.isort]
 known_django = "django"

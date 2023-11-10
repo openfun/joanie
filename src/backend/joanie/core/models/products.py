@@ -970,9 +970,7 @@ class Order(BaseModel):
 
 
 @receiver(post_transition, sender=Order)
-def order_post_transition_callback(
-    sender, instance, **kwargs
-):  # pylint: disable=unused-argument
+def order_post_transition_callback(sender, instance, **kwargs):  # pylint: disable=unused-argument
     """
     Post transition callback for Order model. When an order is validated,
     it automatically enrolls user and when it is canceled, it automatically

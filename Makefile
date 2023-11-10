@@ -133,22 +133,17 @@ demo-dev: ## flush db then create a dataset for dev purpose
 # Nota bene: Black should come after isort just in case they don't agree...
 lint: ## lint back-end python sources
 lint: \
+  lint-ruff-format \
   lint-isort \
-  lint-black \
   lint-flake8 \
   lint-pylint \
   lint-bandit
 .PHONY: lint
 
-lint-bandit: ## lint back-end python sources with bandit
-	@echo 'lint:bandit started…'
-	@$(COMPOSE_RUN_APP) bandit -c .banditrc -qr joanie
-.PHONY: lint-bandit
-
-lint-black: ## lint back-end python sources with black
-	@echo 'lint:black started…'
-	@$(COMPOSE_RUN_APP) black .
-.PHONY: lint-black
+lint-ruff-format: ## format back-end python sources with ruff
+	@echo 'lint:ruff-format started…'
+	@$(COMPOSE_RUN_APP) ruff format .
+.PHONY: lint-ruff-format
 
 lint-flake8: ## lint back-end python sources with flake8
 	@echo 'lint:flake8 started…'

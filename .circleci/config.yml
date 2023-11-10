@@ -133,8 +133,8 @@ jobs:
           name: Lint code with isort
           command: ~/.local/bin/isort --check-only .
       - run:
-          name: Lint code with black
-          command: ~/.local/bin/black --check .
+          name: Check code formatting with ruff
+          command: ~/.local/bin/ruff format joanie --diff
       - run:
           name: Lint code with pylint
           command: ~/.local/bin/pylint joanie
