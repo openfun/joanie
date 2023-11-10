@@ -814,7 +814,7 @@ class EnrollmentApiTest(BaseAPITestCase):
     def test_api_enrollment_create_anonymous(self):
         """Anonymous users should not be able to create an enrollment."""
         course_run = self.create_opened_course_run(is_listed=True)
-        data = {"course_run": course_run.id, "was_created_by_order": False}
+        data = {"course_run_id": course_run.id, "was_created_by_order": False}
         response = self.client.post(
             "/api/v1.0/enrollments/", data=data, content_type="application/json"
         )
@@ -842,7 +842,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             resource_link=resource_link, is_listed=True
         )
         data = {
-            "course_run": str(course_run.id),
+            "course_run_id": str(course_run.id),
             "is_active": is_active,
             "was_created_by_order": False,
             "created_on": "2000-01-01T09:00:00+00:00",
@@ -935,7 +935,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         )
         self.assertTrue(models.Enrollment.objects.filter(is_active=True).exists())
         data = {
-            "course_run": course_run2.id,
+            "course_run_id": course_run2.id,
             "is_active": True,
             "was_created_by_order": True,
         }
@@ -977,7 +977,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             resource_link="http://unknown.com/", is_listed=True
         )
         data = {
-            "course_run": course_run.id,
+            "course_run_id": course_run.id,
             "is_active": is_active,
             "was_created_by_order": False,
         }
@@ -1070,7 +1070,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             resource_link=resource_link, is_listed=True
         )
         data = {
-            "course_run": course_run.id,
+            "course_run_id": course_run.id,
             "is_active": is_active,
             "was_created_by_order": False,
         }
@@ -1143,7 +1143,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         if the "is_active" field is missing.
         """
         course_run = self.create_opened_course_run(is_listed=True)
-        data = {"course_run": course_run.id, "was_created_by_order": False}
+        data = {"course_run_id": course_run.id, "was_created_by_order": False}
         token = self.get_user_token("panoramix")
 
         response = self.client.post(
@@ -1166,7 +1166,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         if the "is_active" field is missing.
         """
         course_run = self.create_opened_course_run(is_listed=True)
-        data = {"course_run": course_run.id, "is_active": True}
+        data = {"course_run_id": course_run.id, "is_active": True}
         token = self.get_user_token("panoramix")
 
         response = self.client.post(
@@ -1195,7 +1195,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         factories.OrderFactory(product=product)
         course_run = target_course_runs[0]
         data = {
-            "course_run": course_run.id,
+            "course_run_id": course_run.id,
             "is_active": True,
             "was_created_by_order": True,
         }
@@ -1235,7 +1235,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             ),
         )
         data = {
-            "course_run": target_course_runs[0].id,
+            "course_run_id": target_course_runs[0].id,
             "is_active": True,
             "was_created_by_order": True,
         }
@@ -1269,7 +1269,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             target_courses=[cr.course for cr in target_course_runs]
         )
         data = {
-            "course_run": target_course_runs[0].id,
+            "course_run_id": target_course_runs[0].id,
             "is_active": True,
             "was_created_by_order": True,
         }
@@ -1314,7 +1314,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             resource_link=resource_link, is_listed=True
         )
         data = {
-            "course_run": course_run.id,
+            "course_run_id": course_run.id,
             "id": uuid.uuid4(),
             "is_active": is_active,
             "state": enums.ENROLLMENT_STATE_FAILED,
@@ -1394,7 +1394,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         )
 
         data = {
-            "course_run": course_run.id,
+            "course_run_id": course_run.id,
             "is_active": True,
             "was_created_by_order": False,
         }
@@ -1423,7 +1423,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
         course_run = factories.CourseRunFactory.build()
         data = {
-            "course_run": str(course_run.id),
+            "course_run_id": str(course_run.id),
             "is_active": True,
             "was_created_by_order": False,
         }
@@ -1444,6 +1444,33 @@ class EnrollmentApiTest(BaseAPITestCase):
                     ("A course run with id " f'"{course_run.id}" does not exist.')
                 ]
             },
+        )
+
+    def test_api_enrollment_create_with_wrong_course_run_payload(self):
+        """Creating an enroll with a wrong course_run parameter should fail."""
+
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        course_run = self.create_opened_course_run(is_listed=True)
+        data = {
+            "course_run": str(course_run.id),
+            "is_active": True,
+            "was_created_by_order": False,
+        }
+
+        response = self.client.post(
+            "/api/v1.0/enrollments/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+        self.assertDictEqual(
+            response.json(),
+            {"__all__": ["You must provide a course_run_id to create an enrollment."]},
         )
 
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
@@ -1685,7 +1712,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         new_data = {
             "id": uuid.uuid4(),
             "user": other_user.username,
-            "course_run": course_run.id,
+            "course_run_id": course_run.id,
             "created_on": "2000-01-01T09:00:00+00:00",
             "state": new_state,
             "was_created_by_order": False,

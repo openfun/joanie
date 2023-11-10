@@ -507,7 +507,11 @@ class EnrollmentSerializer(serializers.ModelSerializer):
         # create/update an enrollment, we do not want the frontend has to provide the
         # whole course run resource but only its id. So we retrieve the course run id
         # from request body and use it to retrieve the course run resource.
-        course_run_id = self.initial_data["course_run"]
+        try:
+            course_run_id = self.initial_data["course_run_id"]
+        except KeyError as exception:
+            message = "You must provide a course_run_id to create an enrollment."
+            raise serializers.ValidationError({"__all__": [message]}) from exception
 
         try:
             course_run = models.CourseRun.objects.get(id=course_run_id)
