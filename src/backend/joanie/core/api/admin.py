@@ -276,9 +276,7 @@ class TargetCoursesViewSet(
         return Response(status=204)
 
     @action(detail=False, methods=["POST"])
-    def reorder(
-        self, request, *args, **kwargs
-    ):  # pylint: disable=no-self-use, unused-argument
+    def reorder(self, request, *args, **kwargs):  # pylint: disable=no-self-use, unused-argument
         """
         Allow to reorder target_courses for a product
         """

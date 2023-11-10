@@ -180,7 +180,8 @@ def create_demo(stdout):
             : defaults.NB_OBJECTS["courses"]
         ]:
             factories.CourseRunFactory.create_batch(
-                random.randint(1, 5), course=course  # nosec
+                random.randint(1, 5),
+                course=course,  # nosec
             )
 
     with Timeit(stdout, "Creating product target course relations"):

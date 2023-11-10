@@ -246,7 +246,8 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
         return {
             language[0]
             for language in random.sample(
-                enums.ALL_LANGUAGES, random.randint(1, 5)  # nosec
+                enums.ALL_LANGUAGES,
+                random.randint(1, 5),  # nosec
             )
         }
 

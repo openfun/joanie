@@ -387,9 +387,7 @@ class OrderViewSet(
         return Response(serializer.data, status=201)
 
     @action(detail=True, methods=["PATCH"])
-    def submit(
-        self, request, pk=None
-    ):  # pylint: disable=no-self-use, invalid-name, unused-argument
+    def submit(self, request, pk=None):  # pylint: disable=no-self-use, invalid-name, unused-argument
         """
         Submit a draft order if the conditions are filled
         """
@@ -409,9 +407,7 @@ class OrderViewSet(
         )
 
     @action(detail=True, methods=["POST"])
-    def abort(
-        self, request, pk=None
-    ):  # pylint: disable=no-self-use, invalid-name, unused-argument
+    def abort(self, request, pk=None):  # pylint: disable=no-self-use, invalid-name, unused-argument
         """Change the state of the order to pending"""
         payment_id = request.data.get("payment_id")
 
@@ -425,9 +421,7 @@ class OrderViewSet(
         return Response(status=204)
 
     @action(detail=True, methods=["POST"])
-    def cancel(
-        self, request, pk=None
-    ):  # pylint: disable=no-self-use, invalid-name, unused-argument
+    def cancel(self, request, pk=None):  # pylint: disable=no-self-use, invalid-name, unused-argument
         """Change the state of the order to cancelled"""
         order = self.get_object()
 
@@ -471,9 +465,7 @@ class OrderViewSet(
         return response
 
     @action(detail=True, methods=["PUT"])
-    def validate(
-        self, request, pk=None
-    ):  # pylint: disable=no-self-use, invalid-name, unused-argument
+    def validate(self, request, pk=None):  # pylint: disable=no-self-use, invalid-name, unused-argument
         """
         Validate the order
         """
@@ -482,9 +474,7 @@ class OrderViewSet(
         return Response(status=200)
 
     @action(detail=True, methods=["POST"])
-    def submit_for_signature(
-        self, request, pk=None
-    ):  # pylint: disable=no-self-use, unused-argument, invalid-name
+    def submit_for_signature(self, request, pk=None):  # pylint: disable=no-self-use, unused-argument, invalid-name
         """
         Create the contract of a product's order that has a contract definition and submit
         the contract to the signature provider. It returns a one-time use invitation link.
@@ -1025,9 +1015,7 @@ class ContractViewSet(GenericContractViewSet):
         detail=True,
         methods=["GET"],
     )
-    def download(
-        self, request, pk=None
-    ):  # pylint: disable=no-self-use, unused-argument, invalid-name
+    def download(self, request, pk=None):  # pylint: disable=no-self-use, unused-argument, invalid-name
         """
         Return the PDF in bytes to download of the contract's definition of an order.
         """
@@ -1195,9 +1183,7 @@ class ContractDefinitionViewset(viewsets.GenericViewSet):
         methods=["GET"],
         url_path="preview_template",
     )
-    def preview_template(
-        self, request, pk=None
-    ):  # pylint: disable=invalid-name, unused-argument
+    def preview_template(self, request, pk=None):  # pylint: disable=invalid-name, unused-argument
         """
         Return the contract definition in PDF in bytes.
         """

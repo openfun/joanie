@@ -460,9 +460,7 @@ class ProductAdmin(
 
         summarize_certification_to_user(request, certificate_generated_count)
 
-    def generate_certificates_for_course(
-        self, request, product_id, course_code
-    ):  # pylint: disable=no-self-use
+    def generate_certificates_for_course(self, request, product_id, course_code):  # pylint: disable=no-self-use
         """
         A custom action to generate certificates for a course - product couple.
         """
