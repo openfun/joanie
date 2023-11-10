@@ -146,7 +146,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
             }
         )
         self.assertEqual(len(payload), 3)
-        self.assertEqual(payload["provider"], "payplug")
+        self.assertEqual(payload["provider_name"], "payplug")
         self.assertIsNotNone(re.fullmatch(r"pay_\d{5}", payload["payment_id"]))
         self.assertIsNotNone(payload["url"])
 
@@ -171,7 +171,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         mock_backend_create_payment.return_value = {
             "order_id": str(order.id),
             "payment_id": "pay_00001",
-            "provider": "payplug",
+            "provider_name": "payplug",
             "url": "https://payplug.test/00001",
         }
 
@@ -211,7 +211,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
             {
                 "order_id": str(order.id),
                 "payment_id": "pay_00001",
-                "provider": "payplug",
+                "provider_name": "payplug",
                 "url": "https://payplug.test/00001",
             },
         )
@@ -263,7 +263,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         )
 
         self.assertEqual(len(payload), 4)
-        self.assertEqual(payload["provider"], "payplug")
+        self.assertEqual(payload["provider_name"], "payplug")
         self.assertIsNotNone(re.fullmatch(r"pay_\d{5}", payload["payment_id"]))
         self.assertIsNotNone(payload["url"])
         self.assertFalse(payload["is_paid"])
@@ -315,7 +315,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         )
 
         self.assertEqual(len(payload), 4)
-        self.assertEqual(payload["provider"], "payplug")
+        self.assertEqual(payload["provider_name"], "payplug")
         self.assertIsNotNone(re.fullmatch(r"pay_\d{5}", payload["payment_id"]))
         self.assertIsNotNone(payload["url"])
         self.assertTrue(payload["is_paid"])

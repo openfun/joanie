@@ -133,7 +133,7 @@ class DummyPaymentBackend(BasePaymentBackend):
 
         return {
             "payment_id": payment_id,
-            "provider": self.name,
+            "provider_name": self.name,
             "url": notification_url,
         }
 
