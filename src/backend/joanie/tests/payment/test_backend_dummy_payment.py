@@ -62,7 +62,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
         self.assertEqual(
             payment_payload,
             {
-                "provider": "dummy",
+                "provider_name": "dummy",
                 "payment_id": payment_id,
                 "url": "http://testserver/api/v1.0/payments/notifications",
             },
@@ -121,7 +121,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
         self.assertEqual(
             payment_payload,
             {
-                "provider": "dummy",
+                "provider_name": "dummy",
                 "payment_id": payment_id,
                 "url": "http://testserver/api/v1.0/payments/notifications",
                 "is_paid": True,

@@ -2081,7 +2081,7 @@ class OrderApiTest(BaseAPITestCase):
             {
                 "payment_info": {
                     "payment_id": f"pay_{order.id}",
-                    "provider": "dummy",
+                    "provider_name": "dummy",
                     "url": "http://testserver/api/v1.0/payments/notifications",
                 }
             },
@@ -2169,7 +2169,7 @@ class OrderApiTest(BaseAPITestCase):
         expected_json = {
             "payment_info": {
                 "payment_id": f"pay_{order.id}",
-                "provider": "dummy",
+                "provider_name": "dummy",
                 "url": "http://testserver/api/v1.0/payments/notifications",
                 "is_paid": True,
             },

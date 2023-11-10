@@ -145,7 +145,7 @@ class PayplugBackend(BasePaymentBackend):
 
         return {
             "payment_id": payment.id,
-            "provider": self.name,
+            "provider_name": self.name,
             "url": payment.hosted_payment.payment_url,
         }
 
@@ -171,7 +171,7 @@ class PayplugBackend(BasePaymentBackend):
 
         return {
             "payment_id": payment.id,
-            "provider": self.name,
+            "provider_name": self.name,
             "url": payment.hosted_payment.payment_url,
             "is_paid": payment.is_paid,
         }
