@@ -1149,7 +1149,7 @@ class OrderApiTest(BaseAPITestCase):
         """Anonymous users should not be able to create an order."""
         product = factories.ProductFactory()
         data = {
-            "course": product.courses.first().code,
+            "course_code": product.courses.first().code,
             "product_id": str(product.id),
         }
         response = self.client.post(
@@ -1177,7 +1177,7 @@ class OrderApiTest(BaseAPITestCase):
         )
 
         data = {
-            "course": course.code,
+            "course_code": course.code,
             "organization_id": str(organization.id),
             "product_id": str(product.id),
         }
@@ -1484,7 +1484,7 @@ class OrderApiTest(BaseAPITestCase):
         )
 
         data = {
-            "course": course.code,
+            "course_code": course.code,
             "product_id": str(product.id),
         }
         token = self.get_user_token("panoramix")
@@ -1525,7 +1525,7 @@ class OrderApiTest(BaseAPITestCase):
         course = product.courses.first()
 
         data = {
-            "course": course.code,
+            "course_code": course.code,
             "product_id": str(product.id),
         }
         token = self.get_user_token("panoramix")
@@ -1593,7 +1593,7 @@ class OrderApiTest(BaseAPITestCase):
                 counter[str(order.organization.id)] += 1
 
         data = {
-            "course": course.code,
+            "course_code": course.code,
             "product_id": str(product.id),
         }
         token = self.get_user_token("panoramix")
@@ -1638,7 +1638,7 @@ class OrderApiTest(BaseAPITestCase):
         )
 
         data = {
-            "course": course.code,
+            "course_code": course.code,
             "organization_id": str(organization.id),
             "product_id": str(product.id),
             "id": uuid.uuid4(),
@@ -1754,7 +1754,7 @@ class OrderApiTest(BaseAPITestCase):
         )
         course = factories.CourseFactory(title="mathématiques")
         data = {
-            "course": course.code,
+            "course_code": course.code,
             "organization_id": str(organization.id),
             "product_id": str(product.id),
         }
@@ -1802,7 +1802,7 @@ class OrderApiTest(BaseAPITestCase):
             courses=[course], title="balançoire", price=0.00
         )
         data = {
-            "course": course.code,
+            "course_code": course.code,
             "organization_id": str(organization.id),
             "product_id": str(product.id),
         }
@@ -1890,7 +1890,7 @@ class OrderApiTest(BaseAPITestCase):
 
         data = {
             "product_id": str(product.id),
-            "course": course.code,
+            "course_code": course.code,
             "organization_id": str(organization.id),
         }
 
@@ -1932,7 +1932,7 @@ class OrderApiTest(BaseAPITestCase):
 
         data = {
             "product_id": str(product.id),
-            "course": course.code,
+            "course_code": course.code,
             "organization_id": str(organization.id),
         }
 
@@ -1975,7 +1975,7 @@ class OrderApiTest(BaseAPITestCase):
         billing_address = BillingAddressDictFactory()
 
         data = {
-            "course": course.code,
+            "course_code": course.code,
             "organization_id": str(organization.id),
             "product_id": str(product.id),
             "billing_address": billing_address,
@@ -2117,7 +2117,7 @@ class OrderApiTest(BaseAPITestCase):
         billing_address = BillingAddressDictFactory()
 
         data = {
-            "course": course.code,
+            "course_code": course.code,
             "organization_id": str(organization.id),
             "product_id": str(product.id),
             "billing_address": billing_address,
@@ -2190,7 +2190,7 @@ class OrderApiTest(BaseAPITestCase):
         billing_address = BillingAddressDictFactory()
 
         data = {
-            "course": course.code,
+            "course_code": course.code,
             "organization_id": str(organization.id),
             "product_id": str(product.id),
             "billing_address": billing_address,
@@ -2241,7 +2241,7 @@ class OrderApiTest(BaseAPITestCase):
             order_group=order_group,
         )
         data = {
-            "course": course.code,
+            "course_code": course.code,
             "organization_id": str(relation.organizations.first().id),
             "order_group_id": str(order_group.id),
             "product_id": str(product.id),
@@ -2290,7 +2290,7 @@ class OrderApiTest(BaseAPITestCase):
             size=100, product=product, course=course, order_group=order_group
         )
         data = {
-            "course": course.code,
+            "course_code": course.code,
             "organization_id": str(relation.organizations.first().id),
             "order_group_id": str(order_group.id),
             "product_id": str(product.id),
@@ -2322,7 +2322,7 @@ class OrderApiTest(BaseAPITestCase):
         organization = product.course_relations.first().organizations.first()
 
         data = {
-            "course": course.code,
+            "course_code": course.code,
             "organization_id": str(organization.id),
             "product_id": str(product.id),
         }
@@ -2358,7 +2358,7 @@ class OrderApiTest(BaseAPITestCase):
         organization = product.course_relations.first().organizations.first()
 
         data = {
-            "course": course.code,
+            "course_code": course.code,
             "organization_id": str(organization.id),
             "product_id": str(product.id),
         }
@@ -2405,7 +2405,7 @@ class OrderApiTest(BaseAPITestCase):
         models.OrderGroup.objects.create(course_product_relation=relation, nb_seats=1)
         billing_address = BillingAddressDictFactory()
         data = {
-            "course": course.code,
+            "course_code": course.code,
             "organization_id": str(relation.organizations.first().id),
             "product_id": str(product.id),
             "billing_address": billing_address,
@@ -2447,7 +2447,7 @@ class OrderApiTest(BaseAPITestCase):
         order_group = factories.OrderGroupFactory()
 
         data = {
-            "course": relation.course.code,
+            "course_code": relation.course.code,
             "order_group_id": str(order_group.id),
             "organization_id": str(organization.id),
             "product_id": str(relation.product.id),
@@ -2496,7 +2496,7 @@ class OrderApiTest(BaseAPITestCase):
             state=random.choice(["submitted", "validated"]),
         )
         data = {
-            "course": course.code,
+            "course_code": course.code,
             "organization_id": str(relation.organizations.first().id),
             "product_id": str(product.id),
             "billing_address": billing_address,
@@ -2550,7 +2550,7 @@ class OrderApiTest(BaseAPITestCase):
         )
         billing_address = BillingAddressDictFactory()
         data = {
-            "course": course.code,
+            "course_code": course.code,
             "organization_id": str(relation.organizations.first().id),
             "product_id": str(product.id),
             "billing_address": billing_address,
@@ -2954,7 +2954,7 @@ class OrderApiTest(BaseAPITestCase):
         data = {
             "organization_id": str(organization.id),
             "product_id": str(product.id),
-            "course": course.code,
+            "course_code": course.code,
             "billing_address": billing_address,
         }
         response = self.client.post(

@@ -341,7 +341,7 @@ class OrderViewSet(
         if not serializer.is_valid():
             return Response(serializer.errors, status=400)
 
-        course_code = serializer.initial_data.get("course")
+        course_code = serializer.initial_data.get("course_code")
 
         product = serializer.validated_data.get("product")
 
