@@ -100,6 +100,7 @@ and this project adheres to
   - OrderViewSetFilter
   - ProductViewSetFilter
   - EnrollmentViewSetFilter
+- Update admin course serializer to return course runs
 
 ### Removed
 
