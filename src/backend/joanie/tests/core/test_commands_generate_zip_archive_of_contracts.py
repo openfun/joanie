@@ -387,7 +387,9 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
 
         self.assertEqual(len(str(zip_uuid_found)), 36)
         self.assertNotEqual(zip_uuid_found, zip_uuid)
-        self.assertEqual(zipfile_filename, [f"{requesting_user.pk}_{zip_uuid_found}.zip"])
+        self.assertEqual(
+            zipfile_filename, [f"{requesting_user.pk}_{zip_uuid_found}.zip"]
+        )
         self.assertNotEqual(zipfile_filename, [f"{requesting_user.pk}_{zip_uuid}.zip"])
         # Clear the file system storage
         file_storage.delete(zipfile_filename[0])
