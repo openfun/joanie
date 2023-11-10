@@ -173,10 +173,9 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
             "Abort generating ZIP archive.",
         )
 
-    # pylint: disable=too-many-locals
     def test_commands_generate_zip_archive_contracts_success_with_courseproductrelation_parameter(
         self,
-    ):
+    ):  # pylint: disable=too-many-locals
         """
         From an existing Course Product Relation UUID paired with an existing User UUID,
         we should be able to fetch signed contracts attached to generate a ZIP archive.
@@ -254,7 +253,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
 
     def test_commands_generate_zip_archive_contracts_success_with_organization_parameter(
         self,
-    ):
+    ):  # pylint: disable=too-many-locals
         """
         From an existing Organization UUID paired with an existing User UUID, we should be
         able to fetch the signed contracts attached to generate a ZIP archive. Then, the ZIP
@@ -386,9 +385,10 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         parts = zipfile_filename[0].split("_")
         zip_uuid_found = parts[1].split(".")[0]
 
-        self.assertNotEqual(zipfile_filename, [f"{requesting_user.pk}_{zip_uuid}.zip"])
-        self.assertNotEqual(zip_uuid_found, zip_uuid)
         self.assertEqual(len(str(zip_uuid_found)), 36)
+        self.assertNotEqual(zip_uuid_found, zip_uuid)
+        self.assertEqual(zipfile_filename, [f"{requesting_user.pk}_{zip_uuid_found}.zip"])
+        self.assertNotEqual(zipfile_filename, [f"{requesting_user.pk}_{zip_uuid}.zip"])
         # Clear the file system storage
         file_storage.delete(zipfile_filename[0])
 
@@ -438,6 +438,10 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
 
         zipfile_filename = command_output.getvalue().splitlines()
 
+        self.assertNotEqual(
+            zipfile_filename,
+            ([f"{requesting_user.pk}_{zip_uuid}.zip"]),
+        )
         self.assertEqual(
             zipfile_filename,
             ([f"{requesting_user.pk}_{expected_zip_uuid_output_in_filename}.zip"]),
