@@ -151,12 +151,12 @@ lint-bandit: ## lint back-end python sources with bandit
 
 lint-black: ## lint back-end python sources with black
 	@echo 'lint:black started…'
-	@$(COMPOSE_RUN_APP) black .
+	@$(COMPOSE_RUN_APP) black joanie
 .PHONY: lint-black
 
 lint-flake8: ## lint back-end python sources with flake8
 	@echo 'lint:flake8 started…'
-	@$(COMPOSE_RUN_APP) flake8 .
+	@$(COMPOSE_RUN_APP) flake8 joanie
 .PHONY: lint-flake8
 
 lint-isort: ## automatically re-arrange python imports in back-end code base
