@@ -13,6 +13,8 @@ class CourseAdminApiTest(TestCase):
     Test suite for Course Admin API.
     """
 
+    maxDiff = None
+
     def test_admin_api_course_request_without_authentication(self):
         """
         Anonymous users should not be able to request courses endpoint.
@@ -135,6 +137,9 @@ class CourseAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
         course = factories.CourseFactory()
+        course_runs = factories.CourseRunFactory.create_batch(
+            2, course=course, languages=["fr"]
+        )
 
         # Add course access to the course
         accesses_count = random.randint(0, 5)
@@ -142,11 +147,30 @@ class CourseAdminApiTest(TestCase):
 
         response = self.client.get(f"/api/v1.0/admin/courses/{course.id}/")
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "id": str(course.id),
                 "code": course.code,
+                "course_runs": [
+                    {
+                        "id": str(course_run.id),
+                        "start": course_run.start.isoformat().replace("+00:00", "Z"),
+                        "end": course_run.end.isoformat().replace("+00:00", "Z"),
+                        "enrollment_start": course_run.enrollment_start.isoformat().replace(
+                            "+00:00", "Z"
+                        ),
+                        "enrollment_end": course_run.enrollment_end.isoformat().replace(
+                            "+00:00", "Z"
+                        ),
+                        "languages": course_run.languages,
+                        "title": course_run.title,
+                        "is_gradable": course_run.is_gradable,
+                        "is_listed": course_run.is_listed,
+                        "resource_link": course_run.resource_link,
+                    }
+                    for course_run in reversed(course_runs)
+                ],
                 "cover": {
                     "size": course.cover.size,
                     "src": f"http://testserver{course.cover.url}.1x1_q85.webp",

@@ -41,6 +41,29 @@ class AdminCourseLightSerializer(serializers.ModelSerializer):
         read_only_fields = ("code", "title", "id", "state")
 
 
+class AdminCourseRunLightSerializer(serializers.ModelSerializer):
+    """Serializer for CourseRun model."""
+
+    title = serializers.CharField()
+    languages = serializers.MultipleChoiceField(choices=ALL_LANGUAGES)
+
+    class Meta:
+        model = models.CourseRun
+        fields = [
+            "id",
+            "resource_link",
+            "title",
+            "is_gradable",
+            "is_listed",
+            "languages",
+            "start",
+            "end",
+            "enrollment_start",
+            "enrollment_end",
+        ]
+        read_only_fields = ["id"]
+
+
 class AdminUserSerializer(serializers.ModelSerializer):
     """Serializer for User model."""
 
@@ -340,6 +363,7 @@ class AdminCourseSerializer(serializers.ModelSerializer):
     organizations = AdminOrganizationLightSerializer(many=True, read_only=True)
     product_relations = AdminProductRelationSerializer(many=True, read_only=True)
     accesses = AdminCourseAccessSerializer(many=True, read_only=True)
+    course_runs = AdminCourseRunLightSerializer(many=True, read_only=True)
 
     class Meta:
         model = models.Course
@@ -347,6 +371,7 @@ class AdminCourseSerializer(serializers.ModelSerializer):
             "accesses",
             "code",
             "cover",
+            "course_runs",
             "id",
             "organizations",
             "product_relations",
@@ -355,6 +380,7 @@ class AdminCourseSerializer(serializers.ModelSerializer):
         )
         read_only_fields = (
             "accesses",
+            "course_runs",
             "id",
             "state",
             "organizations",
@@ -636,29 +662,6 @@ class AdminCourseRelationsSerializer(serializers.ModelSerializer):
             "order_groups",
         ]
         read_only_fields = fields
-
-
-class AdminCourseRunLightSerializer(serializers.ModelSerializer):
-    """Serializer for CourseRun model."""
-
-    title = serializers.CharField()
-    languages = serializers.MultipleChoiceField(choices=ALL_LANGUAGES)
-
-    class Meta:
-        model = models.CourseRun
-        fields = [
-            "id",
-            "resource_link",
-            "title",
-            "is_gradable",
-            "is_listed",
-            "languages",
-            "start",
-            "end",
-            "enrollment_start",
-            "enrollment_end",
-        ]
-        read_only_fields = ["id"]
 
 
 class AdminProductTargetCourseRelationNestedSerializer(serializers.ModelSerializer):
