@@ -1,6 +1,6 @@
 """Management command to generate a ZIP archive of signed contracts into file system storage"""
 import logging
-from uuid import uuid4
+import uuid
 
 from django.core.management import BaseCommand, CommandError
 
@@ -12,10 +12,13 @@ logger = logging.getLogger("joanie.core.generate_zip_archive_of_contracts")
 
 class Command(BaseCommand):
     """
-    A command to generate a ZIP archive of signed contracts in PDF bytes format.
-    You must provide first an existing User UUID. Then, it browses all signed Contracts from
-    either a Course Product Relation object UUID or an Organization object UUID.
-    If you parse a ZIP UUID, we can use it for the filename, else we generate one in the command.
+    This command is exclusive to users who have access rights on a specific organization.
+    It generates a ZIP archive of signed contracts in PDF bytes format.
+    You must provide first an existing User UUID with the right access to an organization. Then,
+    it browses all signed Contracts from either a Course Product Relation object UUID or an
+    Organization object UUID.
+    If you parse a ZIP UUID we will use it for the filename, else we generate one in the command
+    for you.
     """
 
     help = __doc__
@@ -23,10 +26,10 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         """
         For this command, we await 2 parameters in minimum to be executable.
-        First, you should provide an existing User UUID, which is primordial.
-        Then, you may use an existing Course Product Relation UUID, or an Organization UUID in
-        order to fetch signed Contracts attached to the given object.
-        You may give a ZIP UUID if you desire, else we generate one for the filename.
+        First, you should provide an existing User UUID that has the right access permission to an
+        organization, which is primordial. Then, you may use an existing Course Product Relation
+        UUID, or an Organization UUID in order to fetch signed Contracts attached to the given
+        object. You may give a ZIP UUID if you desire, else we generate one for the filename.
         """
         parser.add_argument(
             "-usr",
@@ -54,13 +57,15 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """
+        This command is exclusive to users who have access rights on a specific organization.
         Fetch all signed contracts from a Course Product Relation UUID OR from an Organization UUID
         and generate a ZIP archive into the file system storage that is located at
-        `data/contracts`.
+        `data/contracts`. Important : the user must have access to the organization.
         """
         course_product_relation = None
         organization = None
         user_uuid = None
+        zip_uuid = None
 
         if not options["user"]:
             error_message = (
@@ -77,16 +82,15 @@ class Command(BaseCommand):
             logger.error("Error: %s", error_message)
             raise CommandError(error_message)
 
-        # UUID version 4 is 36 characters of numbers and standard alphabetic letters long
         zip_uuid = (
             str(options["zip"]).replace("_", "-")
             if options["zip"] is not None and len(str(options["zip"])) <= 36
-            else uuid4()
+            else uuid.uuid4()
         )
 
         if user_uuid := options["user"]:
             try:
-                models.User.objects.filter(pk=user_uuid).exists()
+                models.User.objects.get(pk=user_uuid)
             except models.User.DoesNotExist as error:
                 error_message = (
                     "Make sure to give an existing user UUID. "
@@ -121,8 +125,10 @@ class Command(BaseCommand):
                 raise CommandError(error_message) from error
 
         signature_references = contract_utility.get_signature_backend_references(
-            course_product_relation=course_product_relation, organization=organization
-        )
+            course_product_relation=course_product_relation,
+            organization=organization,
+            extra_filters={"order__organization__accesses__user_id": options["user"]},
+        )  # extra filter to check the access of a user on an organization.
 
         pdf_bytes = contract_utility.fetch_pdf_bytes_of_contracts(signature_references)
         if len(pdf_bytes) == 0:

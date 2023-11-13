@@ -4,8 +4,7 @@ import zipfile
 from logging import getLogger
 from uuid import uuid4
 
-from django.conf import settings
-from django.core.files.storage import FileSystemStorage
+from django.core.files.storage import storages
 from django.db.models import Q
 
 from joanie.core import enums, models
@@ -14,18 +13,28 @@ from joanie.signature.backends import get_signature_backend
 logger = getLogger(__name__)
 
 
-def get_signature_backend_references(course_product_relation=None, organization=None):
+def get_signature_backend_references(
+    course_product_relation=None, organization=None, extra_filters=None
+):
     """
     Get a generator object with signature backend references from either a Course Product Relation
     object or an Organization object when the contract is signed. Otherwise, it returns an empty
-    generator if there are no signed contracts yet. We use the iterator method because it
-    reduces memory consumption and improve the performance when we work with large dataset. It
-    processes the database records one at a time instead of loading the entire QuerySet into memory
-    all at once.
+    generator if there are no signed contracts yet.
+
+    You may use an additional parameter `extra_filter` if you need to filter out even more the base
+    queryset of the Contract (check if the user has access to the organization for example).
+
+    We use the iterator method because it reduces memory consumption and improve the performance
+    when we work with large dataset. It processes the database records one at a time instead of
+    loading the entire QuerySet into memory all at once.
     """
+    if not extra_filters:
+        extra_filters = {}
+
     base_query = models.Contract.objects.filter(
         order__state=enums.ORDER_STATE_VALIDATED,
         signed_on__isnull=False,
+        **extra_filters,
     ).select_related("order")
 
     if course_product_relation:
@@ -97,9 +106,7 @@ def generate_zipfile(pdf_bytes_list: list, user_uuid: str, zip_uuid=None) -> str
     zip_archive_filename = f"{user_uuid}_{zip_uuid}.zip"
     zip_buffer.seek(0)
 
-    file_storage = FileSystemStorage(
-        location=settings.STORAGES.get("contracts").get("OPTIONS").get("location")
-    )
-    file_storage.save(name=zip_archive_filename, content=zip_buffer)
+    storage = storages["contracts"]
+    storage.save(name=zip_archive_filename, content=zip_buffer)
 
     return zip_archive_filename

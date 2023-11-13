@@ -6,7 +6,7 @@ from zipfile import ZipFile
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.core.files.storage import FileSystemStorage
+from django.core.files.storage import storages
 from django.test import TestCase
 from django.test.utils import override_settings
 from django.utils import timezone
@@ -299,6 +299,173 @@ class UtilsContractTestCase(TestCase):
             ["wfl_fake_dummy_1", "wfl_fake_dummy_2", "wfl_fake_dummy_3"],
         )
 
+    def test_utils_contract_get_signature_backend_reference_extra_filters_org_access_of_user(
+        self,
+    ):
+        """
+        From a Course Product Relation product object, we should be able to find the signed
+        contract signature backend references when we apply extra filter parameter to check
+        for user access to an organization.
+        """
+        organization = factories.OrganizationFactory()
+        requesting_user = factories.UserFactory()
+        factories.UserOrganizationAccessFactory(
+            organization=organization, user=requesting_user
+        )
+        product = factories.ProductFactory(type=enums.PRODUCT_TYPE_CERTIFICATE)
+        relation = factories.CourseProductRelationFactory(
+            product=product, organizations=[organization]
+        )
+        signature_reference_choices = [
+            "wfl_fake_dummy_1",
+            "wfl_fake_dummy_2",
+            "wfl_fake_dummy_3",
+        ]
+        users = factories.UserFactory.create_batch(3)
+        for index, signature_reference in enumerate(signature_reference_choices):
+            enrollment = factories.EnrollmentFactory(
+                user=users[index],
+                course_run__course=relation.course,
+                course_run__state=models.CourseState.ONGOING_OPEN,
+                course_run__is_listed=True,
+            )
+            factories.ContractFactory(
+                order__owner=users[index],
+                order__product=relation.product,
+                order__course=None,
+                order__enrollment=enrollment,
+                order__state=enums.ORDER_STATE_VALIDATED,
+                signature_backend_reference=signature_reference,
+                definition_checksum="1234",
+                context={"foo": "bar"},
+                signed_on=timezone.now(),
+            )
+        extra_filters = {"order__organization__accesses__user_id": requesting_user.id}
+
+        signature_backend_references_generator = (
+            contract_utility.get_signature_backend_references(
+                course_product_relation=relation, organization=None, extra_filters=extra_filters
+        ))
+        signature_backend_references_list = list(signature_backend_references_generator)
+
+        self.assertEqual(len(signature_backend_references_list), 3)
+        self.assertEqual(
+            signature_backend_references_list,
+            ["wfl_fake_dummy_1", "wfl_fake_dummy_2", "wfl_fake_dummy_3"],
+        )
+
+    def test_utils_contract_get_signature_backend_reference_extra_filters_org_access_of_user(
+        self,
+    ):
+        """
+        From a Course Product Relation product object, we should be able to find the signed
+        contract signature backend references when we apply extra filter parameter to check
+        for user access to an organization.
+        """
+        organization = factories.OrganizationFactory()
+        requesting_user = factories.UserFactory()
+        factories.UserOrganizationAccessFactory(
+            organization=organization, user=requesting_user
+        )
+        product = factories.ProductFactory(type=enums.PRODUCT_TYPE_CERTIFICATE)
+        relation = factories.CourseProductRelationFactory(
+            product=product, organizations=[organization]
+        )
+        signature_reference_choices = [
+            "wfl_fake_dummy_1",
+            "wfl_fake_dummy_2",
+            "wfl_fake_dummy_3",
+        ]
+        users = factories.UserFactory.create_batch(3)
+        for index, signature_reference in enumerate(signature_reference_choices):
+            enrollment = factories.EnrollmentFactory(
+                user=users[index],
+                course_run__course=relation.course,
+                course_run__state=models.CourseState.ONGOING_OPEN,
+                course_run__is_listed=True,
+            )
+            factories.ContractFactory(
+                order__owner=users[index],
+                order__product=relation.product,
+                order__course=None,
+                order__enrollment=enrollment,
+                order__state=enums.ORDER_STATE_VALIDATED,
+                signature_backend_reference=signature_reference,
+                definition_checksum="1234",
+                context={"foo": "bar"},
+                signed_on=timezone.now(),
+            )
+
+        signature_backend_references_generator = (
+            contract_utility.get_signature_backend_references(
+                course_product_relation=relation, organization=None
+            )
+        )
+        signature_backend_references_list = list(signature_backend_references_generator)
+
+        self.assertEqual(len(signature_backend_references_list), 3)
+        self.assertEqual(
+            signature_backend_references_list,
+            ["wfl_fake_dummy_1", "wfl_fake_dummy_2", "wfl_fake_dummy_3"],
+        )
+
+    def test_utils_contract_get_signature_backend_reference_extra_filters_without_org_access(
+        self,
+    ):
+        """
+        From a Course Product Relation product object, we should not be able to find signature
+        backend references if the user has no access to the organization when we add an extra
+        filter in the queryset.
+        """
+        organization_not_providing_course = factories.OrganizationFactory()
+        requesting_user = factories.UserFactory()
+        factories.UserOrganizationAccessFactory(
+            organization=organization_not_providing_course, user=requesting_user
+        )
+        product = factories.ProductFactory(type=enums.PRODUCT_TYPE_CERTIFICATE)
+        organization_providing_course = factories.OrganizationFactory()
+        relation = factories.CourseProductRelationFactory(
+            product=product, organizations=[organization_providing_course]
+        )
+        signature_reference_choices = [
+            "wfl_fake_dummy_1",
+            "wfl_fake_dummy_2",
+            "wfl_fake_dummy_3",
+        ]
+        users = factories.UserFactory.create_batch(3)
+        for index, signature_reference in enumerate(signature_reference_choices):
+            enrollment = factories.EnrollmentFactory(
+                user=users[index],
+                course_run__course=relation.course,
+                course_run__state=models.CourseState.ONGOING_OPEN,
+                course_run__is_listed=True,
+            )
+            factories.ContractFactory(
+                order__owner=users[index],
+                order__product=relation.product,
+                order__course=None,
+                order__enrollment=enrollment,
+                order__state=enums.ORDER_STATE_VALIDATED,
+                signature_backend_reference=signature_reference,
+                definition_checksum="1234",
+                context={"foo": "bar"},
+                signed_on=timezone.now(),
+            )
+        extra_filters = {"order__organization__accesses__user_id": requesting_user.id}
+
+        signature_backend_references_generator = (
+            contract_utility.get_signature_backend_references(
+                course_product_relation=relation, organization=None, extra_filters=extra_filters
+            )
+        )
+        signature_backend_references_list = list(signature_backend_references_generator)
+
+        self.assertEqual(len(signature_backend_references_list), 0)
+        self.assertEqual(
+            signature_backend_references_list,
+            [],
+        )
+
     def test_utils_contract_fetch_pdf_bytes_of_contracts_with_empty_list_as_input_parameter(
         self,
     ):
@@ -392,9 +559,7 @@ class UtilsContractTestCase(TestCase):
         the filename and save the ZIP archive into file system storage.
         We will verify what has been added into the ZIP Archive, we should find 3 files within.
         """
-        file_storage = FileSystemStorage(
-            location=settings.STORAGES.get("contracts").get("OPTIONS").get("location")
-        )
+        storage = storages["contracts"]
         users = factories.UserFactory.create_batch(3)
         requesting_user = factories.UserFactory()
         relation = factories.CourseProductRelationFactory()
@@ -438,8 +603,8 @@ class UtilsContractTestCase(TestCase):
         )
 
         # Retrieve the ZIP archive from file system storage
-        with file_storage.open(generated_zipfile_filename) as file_storage_zip_archive:
-            with ZipFile(file_storage_zip_archive, "r") as zip_archive:
+        with storage.open(generated_zipfile_filename) as storage_zip_archive:
+            with ZipFile(storage_zip_archive, "r") as zip_archive:
                 file_names = zip_archive.namelist()
                 # Check the amount of files inside the ZIP archive
                 self.assertEqual(len(file_names), 3)
@@ -458,4 +623,4 @@ class UtilsContractTestCase(TestCase):
                             document_text, r"1 Rue de L'Exemple 75000, Paris."
                         )
         # Clear file zip archive in data/contracts
-        file_storage.delete(generated_zipfile_filename)
+        storage.delete(generated_zipfile_filename)

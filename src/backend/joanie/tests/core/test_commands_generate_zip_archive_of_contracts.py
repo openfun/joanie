@@ -4,8 +4,7 @@ from io import BytesIO, StringIO
 from uuid import uuid4
 from zipfile import ZipFile
 
-from django.conf import settings
-from django.core.files.storage import FileSystemStorage
+from django.core.files.storage import storages
 from django.core.management import CommandError, call_command
 from django.test import TestCase
 from django.utils import timezone
@@ -21,7 +20,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
 
     def test_commands_generate_zip_archive_contracts_fails_without_parameters(self):
         """
-        This command must have a User UUID to be executed, else the command aborts.
+        The command must have a User UUID to be executed, else the command aborts.
         """
         with self.assertRaises(CommandError) as context:
             call_command("generate_zip_archive_of_contracts")
@@ -55,7 +54,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         self,
     ):
         """
-        This command should accept one out of the two required parameters which are:
+        The command should accept one out of the two required parameters which are:
         a Course Product Relation UUID or an Organition UUID. When the user is declared but
         both optional parameters are missing, the command should raise an error.
         """
@@ -118,16 +117,80 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
             f"No Organization was found with the givin UUID : {random_organization_uuid}.",
         )
 
+    def test_commands_generate_zip_archive_contracts_fails_because_user_does_not_have_org_access(
+        self,
+    ):
+        """
+        Generating a ZIP archive of contracts from a User that does not have access rights
+        to the Organization providing the course product relation should raise an error.
+        """
+        users = factories.UserFactory.create_batch(3)
+        requesting_user = factories.UserFactory()
+        # Organization that is not a course supplier
+        factories.UserOrganizationAccessFactory(user=requesting_user)
+        organization_course_provider = factories.OrganizationFactory()
+        relation = factories.CourseProductRelationFactory(
+            organizations=[organization_course_provider]
+        )
+        options = random.choice(
+            [
+                {
+                    "user": requesting_user.pk,
+                    "course_product_relation": relation.pk,
+                },
+                {
+                    "user": requesting_user.pk,
+                    "organization": relation.organizations.first().pk,
+                },
+            ]
+        )
+        signature_reference_choices = [
+            "wfl_fake_dummy_1",
+            "wfl_fake_dummy_2",
+        ]
+        for index, reference in enumerate(signature_reference_choices):
+            user = users[index]
+            order = factories.OrderFactory(
+                owner=user,
+                product=relation.product,
+                course=relation.course,
+                state=enums.ORDER_STATE_VALIDATED,
+            )
+            context = contract_definition.generate_document_context(
+                order.product.contract_definition, user, order
+            )
+            factories.ContractFactory(
+                order=order,
+                signature_backend_reference=reference,
+                definition_checksum="1234",
+                context=context,
+                signed_on=timezone.now(),
+            )
+
+        with self.assertRaises(CommandError) as context:
+            call_command("generate_zip_archive_of_contracts", **options)
+
+        self.assertEqual(
+            str(context.exception),
+            "There are no signed contracts with the given parameter. "
+            "Abort generating ZIP archive.",
+        )
+
     def test_commands_generate_zip_archive_contracts_aborts_because_no_signed_contracts_yet(
         self,
     ):
         """
-        From an existing Course Product Relation UUID, but there are no signed contracts,
-        it should raise an error mentionning that it has to abort in generating the ZIP archive.
+        From an existing Course Product Relation UUID and a user that has the access rights for the
+        organization, if there are no signed contracts, it should raise an error mentionning that
+        it has to abort in generating the ZIP archive.
         """
         users = factories.UserFactory.create_batch(3)
         requesting_user = factories.UserFactory()
-        relation = factories.CourseProductRelationFactory()
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(
+            organization=organization, user=requesting_user
+        )
+        relation = factories.CourseProductRelationFactory(organizations=[organization])
         options = random.choice(
             [
                 {
@@ -184,12 +247,14 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         Finally, we iterate over each accessible files.
         """
         command_output = StringIO()
-        file_storage = FileSystemStorage(
-            location=settings.STORAGES.get("contracts").get("OPTIONS").get("location")
-        )
+        storage = storages["contracts"]
         users = factories.UserFactory.create_batch(3)
         requesting_user = factories.UserFactory()
-        relation = factories.CourseProductRelationFactory()
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(
+            organization=organization, user=requesting_user
+        )
+        relation = factories.CourseProductRelationFactory(organizations=[organization])
         zip_uuid = uuid4()
         options = {
             "user": requesting_user.pk,
@@ -224,13 +289,13 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
             "generate_zip_archive_of_contracts", stdout=command_output, **options
         )
 
-        zipfile_filename = command_output.getvalue().splitlines()
-        self.assertEqual(zipfile_filename, [f"{requesting_user.pk}_{zip_uuid}.zip"])
+        zipfile_name = command_output.getvalue().splitlines()
+        self.assertEqual(zipfile_name, [f"{requesting_user.pk}_{zip_uuid}.zip"])
 
         # Retrieve the ZIP archive from file system storage
-        zipfile_file = zipfile_filename[0]
-        with file_storage.open(zipfile_file) as file_storage_zip_archive:
-            with ZipFile(file_storage_zip_archive, "r") as zip_archive:
+        zipfile_file = zipfile_name[0]
+        with storage.open(zipfile_file) as storage_zip_archive:
+            with ZipFile(storage_zip_archive, "r") as zip_archive:
                 file_names = zip_archive.namelist()
                 # Check the amount of files inside the ZIP archive
                 self.assertEqual(len(file_names), 3)
@@ -248,8 +313,9 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
                         self.assertRegex(
                             document_text, r"1 Rue de L'Exemple 75000, Paris."
                         )
+
         # Clear file zip archive in data/contracts
-        file_storage.delete(zipfile_file)
+        storage.delete(zipfile_file)
 
     def test_commands_generate_zip_archive_contracts_success_with_organization_parameter(
         self,
@@ -263,13 +329,14 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         accessible files.
         """
         command_output = StringIO()
-        file_storage = FileSystemStorage(
-            location=settings.STORAGES.get("contracts").get("OPTIONS").get("location")
-        )
+        storage = storages["contracts"]
         users = factories.UserFactory.create_batch(3)
         requesting_user = factories.UserFactory()
-        relation = factories.CourseProductRelationFactory()
-        organization = relation.organizations.first()
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(
+            organization=organization, user=requesting_user
+        )
+        relation = factories.CourseProductRelationFactory(organizations=[organization])
         zip_uuid = uuid4()
         options = {
             "user": requesting_user.pk,
@@ -303,14 +370,14 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         call_command(
             "generate_zip_archive_of_contracts", stdout=command_output, **options
         )
-        zipfile_filename = command_output.getvalue().splitlines()
+        zipfile_name = command_output.getvalue().splitlines()
         # Check that the given ZIP UUID is used into the filename
-        self.assertEqual(zipfile_filename, [f"{requesting_user.pk}_{zip_uuid}.zip"])
+        self.assertEqual(zipfile_name, [f"{requesting_user.pk}_{zip_uuid}.zip"])
 
         # Retrieve the ZIP archive from file system storage
-        zipfile_file = zipfile_filename[0]
-        with file_storage.open(zipfile_file) as file_storage_zip_archive:
-            with ZipFile(file_storage_zip_archive, "r") as zip_archive:
+        zipfile_file = zipfile_name[0]
+        with storage.open(zipfile_file) as storage_zip_archive:
+            with ZipFile(storage_zip_archive, "r") as zip_archive:
                 file_names = zip_archive.namelist()
                 # Check the amount of files inside the ZIP archive
                 self.assertEqual(len(file_names), 3)
@@ -328,8 +395,9 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
                         self.assertRegex(
                             document_text, r"1 Rue de L'Exemple 75000, Paris."
                         )
+
         # Clear file zip archive in data/contracts
-        file_storage.delete(zipfile_file)
+        storage.delete(zipfile_file)
 
     def test_commands_generate_zip_archive_with_too_long_zip_uuid_input_parameter(self):
         """
@@ -338,13 +406,14 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         the output of the command to generate a ZIP archive.
         """
         command_output = StringIO()
-        file_storage = FileSystemStorage(
-            location=settings.STORAGES.get("contracts").get("OPTIONS").get("location")
-        )
+        storage = storages["contracts"]
         user = factories.UserFactory()
         requesting_user = factories.UserFactory()
-        relation = factories.CourseProductRelationFactory()
-        organization = relation.organizations.first()
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(
+            organization=organization, user=requesting_user
+        )
+        relation = factories.CourseProductRelationFactory(organizations=[organization])
         zip_uuid = "aH3kRj2ZvXo5Nt1wPq9SbYp4Q8sU6W2G3eL7ia"  # 38 characters long
         options = random.choice(
             [
@@ -381,18 +450,17 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
             "generate_zip_archive_of_contracts", stdout=command_output, **options
         )
 
-        zipfile_filename = command_output.getvalue().splitlines()
-        parts = zipfile_filename[0].split("_")
+        zipfile_name = command_output.getvalue().splitlines()
+        parts = zipfile_name[0].split("_")
         zip_uuid_found = parts[1].split(".")[0]
 
         self.assertEqual(len(str(zip_uuid_found)), 36)
         self.assertNotEqual(zip_uuid_found, zip_uuid)
-        self.assertEqual(
-            zipfile_filename, [f"{requesting_user.pk}_{zip_uuid_found}.zip"]
-        )
-        self.assertNotEqual(zipfile_filename, [f"{requesting_user.pk}_{zip_uuid}.zip"])
+        self.assertEqual(zipfile_name, [f"{requesting_user.pk}_{zip_uuid_found}.zip"])
+        self.assertNotEqual(zipfile_name, [f"{requesting_user.pk}_{zip_uuid}.zip"])
+
         # Clear the file system storage
-        file_storage.delete(zipfile_filename[0])
+        storage.delete(zipfile_name[0])
 
     def test_commands_generate_zip_archive_with_zip_uuid_input_parameter_with_underscores(
         self,
@@ -403,13 +471,14 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         and replace every "_" by "-". We should find a value in the output with this replacement.
         """
         command_output = StringIO()
-        file_storage = FileSystemStorage(
-            location=settings.STORAGES.get("contracts").get("OPTIONS").get("location")
-        )
+        storage = storages["contracts"]
         user = factories.UserFactory()
         requesting_user = factories.UserFactory()
-        relation = factories.CourseProductRelationFactory()
-        organization = relation.organizations.first()
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(
+            organization=organization, user=requesting_user
+        )
+        relation = factories.CourseProductRelationFactory(organizations=[organization])
         zip_uuid = "2a4f1d23_f5eb_4044_bbdc_1fbc2df23f3a"
         expected_zip_uuid_output_in_filename = "2a4f1d23-f5eb-4044-bbdc-1fbc2df23f3a"
         options = {
@@ -438,15 +507,16 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
             "generate_zip_archive_of_contracts", stdout=command_output, **options
         )
 
-        zipfile_filename = command_output.getvalue().splitlines()
+        zipfile_name = command_output.getvalue().splitlines()
 
         self.assertNotEqual(
-            zipfile_filename,
+            zipfile_name,
             ([f"{requesting_user.pk}_{zip_uuid}.zip"]),
         )
         self.assertEqual(
-            zipfile_filename,
+            zipfile_name,
             ([f"{requesting_user.pk}_{expected_zip_uuid_output_in_filename}.zip"]),
         )
+
         # Clear the file system storage
-        file_storage.delete(zipfile_filename[0])
+        storage.delete(zipfile_name[0])
