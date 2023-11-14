@@ -7,9 +7,11 @@ import io
 import uuid
 
 from django.core.exceptions import ValidationError
+from django.core.files.storage import storages
 from django.db import IntegrityError, transaction
 from django.db.models import Count, OuterRef, Prefetch, Q, Subquery
 from django.http import FileResponse, HttpResponse, JsonResponse
+from django.urls import reverse
 
 from rest_framework import mixins, pagination
 from rest_framework import permissions as drf_permissions
@@ -22,6 +24,7 @@ from rest_framework.response import Response
 
 from joanie.core import enums, filters, models, permissions, serializers
 from joanie.core.api.base import NestedGenericViewSet
+from joanie.core.tasks import generate_zip_archive_task
 from joanie.core.utils import contract_definition, issuers
 from joanie.payment.models import Invoice
 
@@ -1011,7 +1014,7 @@ class ContractViewSet(GenericContractViewSet):
     )
     def download(
         self, request, pk=None
-    ):  # pylint: disable=no-self-use, unused-argument, invalid-name
+    ):  # pylint: disable=unused-argument, invalid-name
         """
         Return the PDF in bytes to download of the contract's definition of an order.
         """
@@ -1045,6 +1048,101 @@ class ContractViewSet(GenericContractViewSet):
             as_attachment=True,
             filename=f"{contract.definition.title}.pdf".replace(" ", "_"),
         )
+
+    @action(
+        methods=["GET"],
+        detail=False,
+        url_name="zip_archive",
+        url_path="get_zip_archive",
+    )
+    def get_zip_archive(self, request, **kwargs):
+        """
+        Return the ZIP archive once it has been generated and it exists into storages.
+
+        When the ZIP archive is not ready yet, we will return a response with the status code 404
+        until the ZIP is available to be served. Once available, we return the ZIP archive.
+        If the paired User UUID and the received ZIP UUID do not match any files in storage,
+        it return a response with the status code 404.
+        You must add the ZIP id as a payload.
+        """
+        zip_id = request.query_params.get("zip_id")
+        if zip_id is None:
+            return Response(status=400)
+
+        storage = storages["contracts"]
+        zip_archive_name = f"{request.user.id}_{zip_id}.zip"
+        zip_archive_exists = storage.exists(zip_archive_name)
+
+        if not zip_archive_exists:
+            return Response(status=400)
+
+        return FileResponse(
+            storage.open(f"{storage.location}/{zip_archive_name}", mode="rb"),
+            as_attachment=True,
+            filename=zip_archive_name,
+            content_type="application/zip",
+        )
+
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_name="generate_zip_archive",
+        url_path="zip_archive",
+    )
+    def generate_zip_archive(
+        self, request, **kwargs
+    ):  # pylint: disable=no-self-use, unused-argument,
+        """
+        This endpoint is exclusive to users that have access rights on a specific organization.
+
+        It triggers the generation of a ZIP archive if the requesting has the correct access rights
+        on the organization. If a course product relation UUID is given from key word arguments,
+        the user requires to have access to the organization that is attached to the specific
+        course product relation object.
+        We return in the response the URL for polling the ZIP archive once it has been generated.
+
+        Notes on possible `kwargs` as input parameters :
+            - string of an Organization UUID
+            OR
+            - string of an CourseProductRelation UUID
+        """
+        course_product_relation_uuid = (
+            request.data.get("course_product_relation_id")
+            if request.data.get("course_product_relation_id")
+            else None
+        )
+
+        organization_uuid = (
+            request.data.get("organization_id")
+            if request.data.get("organization_id")
+            else None
+        )
+
+        if course_product_relation_uuid and organization_uuid:
+            raise ValidationError(
+                "You must parse exactly one parameter for the method. It cannot be both. "
+                "You must choose between an Organization UUID or a Course Product Relation UUID."
+            )
+
+        if not course_product_relation_uuid and not organization_uuid:
+            raise ValidationError(
+                "You must parse at least one parameter for the method."
+                "You must choose between an Organization UUID or a Course Product Relation UUID."
+            )
+        # Generate here the zip uuid4 to generate ZIP archive for the requesting user
+        zip_uuid = uuid.uuid4()  # ZIP UUID to build the ZIP archive name
+        options = {
+            "user": request.user.id,
+            "organization": organization_uuid,
+            "course_product_relation": course_product_relation_uuid,
+            "zip": str(zip_uuid),
+        }
+
+        generate_zip_archive_task.delay(options)
+
+        url_base = reverse("contracts-zip_archive")
+
+        return JsonResponse({"url": f"{url_base}{zip_uuid}"}, status=200)
 
 
 class NestedOrganizationContractViewSet(NestedGenericViewSet, GenericContractViewSet):

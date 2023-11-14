@@ -1,15 +1,23 @@
 """Test suite for the Contract API"""
+import json
 import random
 from io import BytesIO
 from unittest import mock
+from uuid import uuid4
 
+from django.core.files.storage import storages
+from django.urls import reverse
 from django.utils import timezone
 
 from pdfminer.high_level import extract_text as pdf_extract_text
 
 from joanie.core import enums, factories
 from joanie.core.serializers import fields
+from joanie.core.utils import contract as contract_utility
+from joanie.core.utils import contract_definition
 from joanie.tests.base import BaseAPITestCase
+
+# pylint: disable=too-many-lines
 
 
 class ContractApiTest(BaseAPITestCase):
@@ -621,3 +629,445 @@ class ContractApiTest(BaseAPITestCase):
             "Cannot download a contract when it is not yet fully signed.",
             status_code=400,
         )
+
+    def test_api_contract_generate_zip_archive_anonymous(self):
+        """
+        Anonymous user should not be able to generate ZIP archive.
+        """
+        response = self.client.get(
+            "/api/v1.0/contracts/zip_archive/",
+        )
+
+        self.assertEqual(response.status_code, 401)
+
+        content = response.json()
+        self.assertEqual(
+            content["detail"], "Authentication credentials were not provided."
+        )
+
+    def test_api_contract_generate_zip_archive_authenticated_get_method_not_allowed(
+        self,
+    ):
+        """
+        Authenticated user should not be able to use GET method on the viewset generate ZIP
+        archive.
+        """
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+
+        response = self.client.get(
+            "/api/v1.0/contracts/zip_archive/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertContains(response, 'Method \\"GET\\" not allowed.', status_code=405)
+
+    def test_api_contract_generate_zip_archive_authenticated_put_method_not_allowed(
+        self,
+    ):
+        """
+        Authenticated user should not be able to use PUT method on the viewset generate ZIP
+        archive.
+        """
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+
+        response = self.client.put(
+            "/api/v1.0/contracts/zip_archive/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertContains(response, 'Method \\"PUT\\" not allowed.', status_code=405)
+
+    def test_api_contract_generate_zip_archive_authenticated_patch_method_not_allowed(
+        self,
+    ):
+        """
+        Authenticated user should not be able to use PATCH method on the viewset generate ZIP
+        archive.
+        """
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+
+        response = self.client.patch(
+            "/api/v1.0/contracts/zip_archive/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertContains(
+            response, 'Method \\"PATCH\\" not allowed.', status_code=405
+        )
+
+    def test_api_contract_generate_zip_archive_authenticated_delete_method_not_allowed(
+        self,
+    ):
+        """
+        Authenticated user should not be able to use DELETE method on the viewset generate ZIP
+        archive.
+        """
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+
+        response = self.client.delete(
+            "/api/v1.0/contracts/zip_archive/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertContains(
+            response, 'Method \\"DELETE\\" not allowed.', status_code=405
+        )
+
+    def test_api_contract_generate_zip_archive_authenticated_post_without_parsing_parameters(
+        self,
+    ):
+        """
+        Authenticated user should be able to use POST method on the viewset to generate ZIP
+        archive but it will raise an error if both parsing arguments are missing : an existing
+        Organization UUID or a Course Product Relation. You need to set one at least.
+        """
+        user = factories.UserFactory()
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(organization=organization, user=user)
+        token = self.get_user_token(user.username)
+
+        response = self.client.post(
+            "/api/v1.0/contracts/zip_archive/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+        content = response.json()
+        self.assertEqual(
+            content[0],
+            "You must parse at least one parameter for the method."
+            "You must choose between an Organization UUID or a Course Product Relation UUID.",
+        )
+
+    def test_api_contract_generate_zip_archive_authenticated_post_parsing_both_parameters(
+        self,
+    ):
+        """
+        Authenticated user should be able to use POST method on the viewset to generate ZIP
+        archive but it will raise an error if both parsing arguments are set. You must choose
+        one out of the two parameters to parse.
+        """
+        user = factories.UserFactory()
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(organization=organization, user=user)
+        token = self.get_user_token(user.username)
+
+        response = self.client.post(
+            "/api/v1.0/contracts/zip_archive/",
+            data={
+                "organization_id": organization.id,
+                "course_product_relation_id": uuid4(),
+            },
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+        content = response.json()
+        self.assertEqual(
+            content[0],
+            "You must parse exactly one parameter for the method. It cannot be both. "
+            "You must choose between an Organization UUID or a Course Product Relation UUID.",
+        )
+
+    def test_api_contract_generate_zip_archive_authenticated_post_with_no_signed_contracts(
+        self,
+    ):
+        """
+        Authenticated user should be able to use POST method on the viewset to generate ZIP
+        archive when parsing an existing Organization UUID where the user has the rights to access,
+        but it won't generate a ZIP archive because there are no signed contracts.
+        """
+        storage = storages["contracts"]
+        user = factories.UserFactory()
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(organization=organization, user=user)
+        token = self.get_user_token(user.username)
+        expected_endpoint_polling = "/api/v1.0/contracts/get_zip_archive/"
+
+        response = self.client.post(
+            "/api/v1.0/contracts/zip_archive/",
+            data={"organization_id": organization.id},
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        content = response.content.decode("utf-8")
+        content_json = json.loads(content)
+        polling_url = content_json["url"]
+        generated_zip_uuid = polling_url[-36:]
+        zip_archive_name = f"{user.id}_{generated_zip_uuid}.zip"
+
+        self.assertIn(expected_endpoint_polling, polling_url)
+        self.assertEqual(len(generated_zip_uuid), 36)
+        self.assertFalse(storage.exists(zip_archive_name))
+
+    # pylint: disable=too-many-locals
+    def test_api_contract_generate_zip_archive_authenticated_post_method_allowed(self):
+        """
+        Authenticated user should be able to use POST method on the viewset to generate ZIP
+        archive when parsing an existing Organization UUID where the user has the rights to access,
+        and it will generate a ZIP archive with the signed contracts.
+        """
+        storage = storages["contracts"]
+        requesting_user = factories.UserFactory()
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(
+            organization=organization, user=requesting_user
+        )
+        relation = factories.CourseProductRelationFactory(organizations=[organization])
+        learners = factories.UserFactory.create_batch(3)
+        signature_reference_choices = [
+            "wfl_fake_dummy_1",
+        ]
+        for index, reference in enumerate(signature_reference_choices):
+            user = learners[index]
+            order = factories.OrderFactory(
+                owner=user,
+                product=relation.product,
+                course=relation.course,
+                state=enums.ORDER_STATE_VALIDATED,
+            )
+            context = contract_definition.generate_document_context(
+                order.product.contract_definition, user, order
+            )
+            factories.ContractFactory(
+                order=order,
+                signature_backend_reference=reference,
+                definition_checksum="1234",
+                context=context,
+                signed_on=timezone.now(),
+            )
+        expected_endpoint_polling = "/api/v1.0/contracts/get_zip_archive/"
+        token = self.get_user_token(requesting_user.username)
+
+        response = self.client.post(
+            "/api/v1.0/contracts/zip_archive/",
+            data={"organization_id": organization.id},
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        content = response.content.decode("utf-8")
+        content_json = json.loads(content)
+        polling_url = content_json["url"]
+        generated_zip_uuid = polling_url[-36:]
+        zip_archive_name = f"{user.id}_{generated_zip_uuid}.zip"
+
+        self.assertIn(expected_endpoint_polling, polling_url)
+        self.assertEqual(len(generated_zip_uuid), 36)
+        # TODO: Need to await for the ZIP archive to be ready for the test. According to the
+        # log messages, it generates the ZIP Archive, but in the execution of the test,
+        # it is not yet ready to seek for it.
+        self.assertTrue(storage.exists(zip_archive_name))
+        # Clear the storage
+        storage.delete(zip_archive_name)
+
+    def test_api_contract_get_zip_archive_anonymous(self):
+        """
+        Anonymous user should not be able to get ZIP archive.
+        """
+        response = self.client.get(reverse("contracts-zip_archive"))
+
+        self.assertEqual(response.status_code, 401)
+
+        content = response.json()
+        self.assertEqual(
+            content["detail"], "Authentication credentials were not provided."
+        )
+
+    def test_api_contract_get_zip_archive_authenticated_post_method_not_allowed(
+        self,
+    ):
+        """
+        Authenticated user should not be able to use POST method on the viewset to get ZIP
+        archive.
+        """
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+
+        response = self.client.post(
+            reverse("contracts-zip_archive"),
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertContains(response, 'Method \\"POST\\" not allowed.', status_code=405)
+
+    def test_api_contract_get_zip_archive_authenticated_put_method_not_allowed(
+        self,
+    ):
+        """
+        Authenticated user should not be able to use PUT method on the viewset get ZIP
+        archive.
+        """
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+
+        response = self.client.put(
+            reverse("contracts-zip_archive"),
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertContains(response, 'Method \\"PUT\\" not allowed.', status_code=405)
+
+    def test_api_contract_get_zip_archive_authenticated_patch_method_not_allowed(
+        self,
+    ):
+        """
+        Authenticated user should not be able to use PATCH method on the viewset get ZIP
+        archive.
+        """
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+
+        response = self.client.patch(
+            reverse("contracts-zip_archive"),
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertContains(
+            response, 'Method \\"PATCH\\" not allowed.', status_code=405
+        )
+
+    def test_api_contract_get_zip_archive_authenticated_delete_method_not_allowed(
+        self,
+    ):
+        """
+        Authenticated user should not be able to use DELETE method on the viewset get ZIP
+        archive.
+        """
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+
+        response = self.client.delete(
+            reverse("contracts-zip_archive"),
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertContains(
+            response, 'Method \\"DELETE\\" not allowed.', status_code=405
+        )
+
+    def test_api_contract_get_zip_archive_authenticated_get_method_but_zip_archive_not_ready(
+        self,
+    ):
+        """
+        Authenticated user should be able to GET method on the viewset get ZIP archive if the
+        ZIP archive exists in storages. In the case where the ZIP archive has not been generated,
+        it should return a status code 400 in the response.
+        """
+        user = factories.UserFactory()
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(organization=organization, user=user)
+        token = self.get_user_token(user.username)
+
+        response = self.client.get(
+            reverse("contracts-zip_archive"),
+            data={"zip_id": str(uuid4())},
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+    def test_api_contract_get_zip_archive_authenticated_missing_zip_archive_uuid_parameter(
+        self,
+    ):
+        """
+        Authenticated user should be able to GET method on the viewset get ZIP archive if the
+        ZIP archive exists in storages. In the case where the ZIP archive has not been generated,
+        it should return a status code 400 in the response.
+        """
+        user = factories.UserFactory()
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(organization=organization, user=user)
+        token = self.get_user_token(user.username)
+
+        response = self.client.get(
+            reverse("contracts-zip_archive"),
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+    def test_api_contract_get_zip_archive_authenticated_get_method_zip_archive_is_ready(
+        self,
+    ):
+        """
+        Authenticated user should be able to GET method on the viewset get ZIP archive when
+        the ZIP archive exists in storages.
+        """
+        user = factories.UserFactory()
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(organization=organization, user=user)
+        token = self.get_user_token(user.username)
+        # Prepare ZIP archive in storage
+        zip_uuid = uuid4()
+        zip_archive_name = contract_utility.generate_zip_archive(
+            pdf_bytes_list=[b"content_1", b"content_2"],
+            user_uuid=user.id,
+            zip_uuid=zip_uuid,
+        )
+
+        response = self.client.get(
+            reverse("contracts-zip_archive") + f"?zip_id={str(zip_uuid)}",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers["Content-Type"], "application/zip")
+        self.assertEqual(
+            response.headers["Content-Disposition"],
+            f'attachment; filename="{zip_archive_name}"',
+        )
+        # Clear the storage
+        storage = storages["contracts"]
+        storage.delete(zip_archive_name)
+
+    def test_api_contract_get_zip_archive_authenticated_simulate_waiting_for_zip_archive_ready(
+        self,
+    ):
+        """
+        Authenticated user should be able to GET his ZIP archive once it is ready.
+        We simulate in this test that the user requested his ZIP archive but it not yet
+        ready. First the response will return a 400 status code, and once it is ready, it
+        will return a status code 200 with the ZIP archive in the response.
+        """
+        user = factories.UserFactory()
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(organization=organization, user=user)
+        zip_uuid = uuid4()
+        token = self.get_user_token(user.username)
+
+        response = self.client.get(
+            reverse("contracts-zip_archive") + f"?zip_id={str(zip_uuid)}",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+        # Prepare ZIP archive in storage
+        zip_archive_name = contract_utility.generate_zip_archive(
+            pdf_bytes_list=[b"content_1", b"content_2"],
+            user_uuid=user.id,
+            zip_uuid=zip_uuid,
+        )
+        response = self.client.get(
+            reverse("contracts-zip_archive") + f"?zip_id={str(zip_uuid)}",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers["Content-Type"], "application/zip")
+        self.assertEqual(
+            response.headers["Content-Disposition"],
+            f'attachment; filename="{zip_archive_name}"',
+        )
+        # Clear the storage
+        storage = storages["contracts"]
+        storage.delete(zip_archive_name)
