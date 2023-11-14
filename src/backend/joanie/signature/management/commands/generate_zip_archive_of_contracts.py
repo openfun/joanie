@@ -13,23 +13,24 @@ logger = logging.getLogger("joanie.core.generate_zip_archive_of_contracts")
 class Command(BaseCommand):
     """
     This command is exclusive to users who have access rights on a specific organization.
-    It generates a ZIP archive of signed contracts in PDF bytes format.
-    You must provide first an existing User UUID with the right access to an organization. Then,
-    it browses all signed Contracts from either a Course Product Relation object UUID or an
-    Organization object UUID.
-    If you parse a ZIP UUID we will use it for the filename, else we generate one in the command
-    for you.
+    It generates a ZIP archive of signed contracts of PDF.
+    First, you must provide an existing User UUID who has the right access to an organization.
+    Then, it gets all signed Contracts from either an existing Course Product Relation object UUID
+    or an Organization object UUID.
+    If you parse a ZIP UUID into the command parameters, we will use it for the filename, else we
+    will generate one in the command
     """
 
     help = __doc__
 
     def add_arguments(self, parser):
         """
-        For this command, we await 2 parameters in minimum to be executable.
-        First, you should provide an existing User UUID that has the right access permission to an
-        organization, which is primordial. Then, you may use an existing Course Product Relation
-        UUID, or an Organization UUID in order to fetch signed Contracts attached to the given
-        object. You may give a ZIP UUID if you desire, else we generate one for the filename.
+        The command awaits of 2 required parameters at minimum to be executable.
+        First, you should provide an existing User UUID who has the correct access rights to an
+        organization, which is primordial. Then, you need to provide either an existing Course
+        Product Relation UUID, or an Organization UUID in order to get signed Contracts that are
+        attached. You may give a ZIP UUID parameter if you desire, else we generate one for
+        the filename.
         """
         parser.add_argument(
             "-usr",
@@ -57,10 +58,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """
-        This command is exclusive to users who have access rights on a specific organization.
-        Fetch all signed contracts from a Course Product Relation UUID OR from an Organization UUID
-        and generate a ZIP archive into the file system storage that is located at
-        `data/contracts`. Important : the user must have access to the organization.
+        The command is exclusive to users who have access rights on a specific organization.
+        Get all signed contracts from an existing Course Product Relation UUID OR from an
+        Organization UUID and generate a ZIP archive into the file system storage.
         """
         course_product_relation = None
         organization = None
@@ -82,11 +82,10 @@ class Command(BaseCommand):
             logger.error("Error: %s", error_message)
             raise CommandError(error_message)
 
-        zip_uuid = (
-            str(options["zip"]).replace("_", "-")
-            if options["zip"] is not None and len(str(options["zip"])) <= 36
-            else uuid.uuid4()
-        )
+        try:
+            zip_uuid = uuid.UUID(str(options["zip"]))
+        except ValueError:
+            zip_uuid = uuid.uuid4()
 
         if user_uuid := options["user"]:
             try:
@@ -130,7 +129,7 @@ class Command(BaseCommand):
             extra_filters={"order__organization__accesses__user_id": options["user"]},
         )  # extra filter to check the access of a user on an organization.
 
-        pdf_bytes = contract_utility.fetch_pdf_bytes_of_contracts(signature_references)
+        pdf_bytes = contract_utility.get_pdf_bytes_of_contracts(signature_references)
         if len(pdf_bytes) == 0:
             error_message = (
                 "There are no signed contracts with the given parameter. "
@@ -139,7 +138,7 @@ class Command(BaseCommand):
             logger.error("Error: %s", error_message)
             raise CommandError(error_message)
 
-        zipfile_filename = contract_utility.generate_zipfile(
+        zipfile_filename = contract_utility.generate_zip_archive(
             pdf_bytes_list=pdf_bytes, user_uuid=user_uuid, zip_uuid=zip_uuid
         )
 

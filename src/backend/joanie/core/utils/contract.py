@@ -59,7 +59,7 @@ def get_signature_backend_references(
     return signature_backend_references
 
 
-def fetch_pdf_bytes_of_contracts(signature_backend_references: list) -> list:
+def get_pdf_bytes_of_contracts(signature_backend_references: list) -> list:
     """
     Fetch PDF bytes files from a list of signature backend references at the signature provider.
     It returns an empty list if the input parameter has no item in its list.
@@ -72,11 +72,10 @@ def fetch_pdf_bytes_of_contracts(signature_backend_references: list) -> list:
     ]
 
 
-def generate_zipfile(pdf_bytes_list: list, user_uuid: str, zip_uuid=None) -> str:
+def generate_zip_archive(pdf_bytes_list: list, user_uuid: str, zip_uuid=None) -> str:
     """
-    Generate a ZIP archive from a list of PDF bytes and save it in the File System Storage which
-    is located at `data/contracts`. Once it has been generated, we return the filename of the
-    ZIP archive stored.
+    Generate a ZIP archive from a list of PDF bytes and save it in the File System Storage.
+    Once it has been generated, we return the filename of the ZIP archive stored.
 
     The filename will be build the following way : `{user_id}/{uuid}.zip`. The filename can be used
     to fetch it from the file system storage.
