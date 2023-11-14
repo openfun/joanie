@@ -295,7 +295,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         self.assertEqual(zip_archive_name, [f"{requesting_user.pk}_{zip_uuid}.zip"])
 
         zip_archive = zip_archive_name[0]
-        # Retrieve the ZIP archive from file system storage
+        # Retrieve the ZIP archive from storages
         with storage.open(zip_archive) as storage_zip_archive:
             with ZipFile(storage_zip_archive, "r") as zip_archive_elements:
                 file_names = zip_archive_elements.namelist()
@@ -316,7 +316,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
                             document_text, r"1 Rue de L'Exemple 75000, Paris."
                         )
 
-        # Clear file zip archive in file system storage
+        # Clear ZIP archive in storages
         storage.delete(zip_archive)
 
     def test_commands_generate_zip_archive_contracts_success_with_organization_parameter(
@@ -379,7 +379,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         self.assertEqual(zip_archive_name, [f"{requesting_user.pk}_{zip_uuid}.zip"])
 
         zip_archive = zip_archive_name[0]
-        # Retrieve the ZIP archive from file system storage
+        # Retrieve the ZIP archive from storages
         with storage.open(zip_archive) as storage_zip_archive:
             with ZipFile(storage_zip_archive, "r") as zip_archive_elements:
                 file_names = zip_archive_elements.namelist()
@@ -400,7 +400,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
                             document_text, r"1 Rue de L'Exemple 75000, Paris."
                         )
 
-        # Clear file zip archive in file system storage
+        # Clear ZIP archive in storages
         storage.delete(zip_archive)
 
     def test_commands_generate_zip_archive_with_parameter_zip_uuid_is_not_a_uuid_structure(
@@ -468,11 +468,10 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         zip_uuid_found = parts[1].split(".")[0]
 
         self.assertEqual(len(str(zip_uuid_found)), 36)
-        self.assertNotEqual(zip_uuid_found, zip_uuid)
+        self.assertNotEqual(zip_uuid, zip_uuid_found)
+        self.assertNotEqual(zip_archive_name, [f"{requesting_user.pk}_{zip_uuid}.zip"])
         self.assertEqual(
             zip_archive_name, [f"{requesting_user.pk}_{zip_uuid_found}.zip"]
         )
-        self.assertNotEqual(zip_archive_name, [f"{requesting_user.pk}_{zip_uuid}.zip"])
-
-        # Clear file zip archive in file system storage
+        # Clear ZIP archive in storages
         storage.delete(zip_archive_name[0])

@@ -21,8 +21,8 @@ def get_signature_backend_references(
     object or an Organization object when the contract is signed. Otherwise, it returns an empty
     generator if there are no signed contracts yet.
 
-    You may use an additional parameter `extra_filter` if you need to filter out even more the base
-    queryset of the Contract (check if the user has access to the organization for example).
+    You may use an additional parameter `extra_filters` if you need to filter out even more the
+    base queryset of the Contract (check if the user has access to the organization for example).
 
     We use the iterator method because it reduces memory consumption and improve the performance
     when we work with large dataset. It processes the database records one at a time instead of
@@ -61,7 +61,7 @@ def get_signature_backend_references(
 
 def get_pdf_bytes_of_contracts(signature_backend_references: list) -> list:
     """
-    Fetch PDF bytes files from a list of signature backend references at the signature provider.
+    Get PDF bytes files from a list of signature backend references at the signature provider.
     It returns an empty list if the input parameter has no item in its list.
     """
     signature_backend = get_signature_backend()
@@ -102,10 +102,10 @@ def generate_zip_archive(pdf_bytes_list: list, user_uuid: str, zip_uuid=None) ->
         zipf.close()
 
     zip_uuid = zip_uuid if zip_uuid else uuid4()
-    zip_archive_filename = f"{user_uuid}_{zip_uuid}.zip"
+    zip_archive_name = f"{user_uuid}_{zip_uuid}.zip"
     zip_buffer.seek(0)
 
     storage = storages["contracts"]
-    storage.save(name=zip_archive_filename, content=zip_buffer)
+    storage.save(name=zip_archive_name, content=zip_buffer)
 
-    return zip_archive_filename
+    return zip_archive_name

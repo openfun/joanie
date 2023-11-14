@@ -490,7 +490,7 @@ class UtilsContractTestCase(TestCase):
         self,
     ):
         """
-        When we give an empty list to generate zip archive method, it should raise an
+        When we give an empty list to generate ZIP archive method, it should raise an
         error because it requires a non-empty list.
         """
         with self.assertRaises(ValueError) as context:
@@ -506,9 +506,9 @@ class UtilsContractTestCase(TestCase):
     # pylint: disable=too-many-locals
     def test_utils_contract_generate_zip_archive_success(self):
         """
-        When we give a list of PDF files in bytes to generate zip archive method, it should return
-        the filename and save the ZIP archive into file system storage.
-        We will verify what has been added into the ZIP Archive, we should find 3 files within.
+        When we give a list of PDF files in bytes to generate ZIP archive method, it should return
+        the filename of the ZIP archive and save the ZIP archive into storages. There should be 3
+        contracts in the ZIP archive.
         """
         storage = storages["contracts"]
         users = factories.UserFactory.create_batch(3)
@@ -553,7 +553,7 @@ class UtilsContractTestCase(TestCase):
             generated_zip_archive_name, f"{requesting_user.pk}_{expected_zip_uuid}.zip"
         )
 
-        # Retrieve the ZIP archive from file system storage
+        # Retrieve the ZIP archive from storages
         with storage.open(generated_zip_archive_name) as storage_zip_archive:
             with ZipFile(storage_zip_archive, "r") as zip_archive_elements:
                 file_names = zip_archive_elements.namelist()
@@ -573,5 +573,5 @@ class UtilsContractTestCase(TestCase):
                         self.assertRegex(
                             document_text, r"1 Rue de L'Exemple 75000, Paris."
                         )
-        # Clear file zip archive in file system storage
+        # Clear file zip archive in storages
         storage.delete(generated_zip_archive_name)
