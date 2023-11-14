@@ -166,7 +166,7 @@ lint-pylint: ## lint back-end python sources with pylint
 .PHONY: lint-pylint
 
 test: ## run project tests
-	@$(MAKE) test-back
+	@$(MAKE) test-back-parallel
 	@$(MAKE) admin-test
 .PHONY: test
 
@@ -174,6 +174,11 @@ test-back: ## run back-end tests
 	@args="$(filter-out $@,$(MAKECMDGOALS))" && \
 	bin/pytest $${args:-${1}}
 .PHONY: test-back
+
+test-back-parallel: ## run all back-end tests in parallel
+	@args="$(filter-out $@,$(MAKECMDGOALS))" && \
+	bin/pytest -n auto $${args:-${1}}
+.PHONY: test-back-parallel
 
 
 makemigrations:  ## run django makemigrations for the joanie project.
