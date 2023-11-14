@@ -873,3 +873,71 @@ class UserSerializer(serializers.ModelSerializer):
         if request:
             return request.user.get_abilities(user)
         return {}
+
+
+class GenerateSignedContractsZipSerializer(serializers.Serializer):
+    """
+    Serializer used by both view and command generating a zip containing signed contracts
+    """
+
+    course_product_relation_id = serializers.UUIDField(required=False)
+    organization_id = serializers.UUIDField(required=False)
+
+    def validate(self, attrs):
+        """
+        Validate that course_product_relation_id and organization_id are mutually exclusive
+        but at least one is required.
+
+        Also, it fetch in database the corresponding object to add them in the validated data.
+        """
+        course_product_relation_id = attrs.get("course_product_relation_id")
+        organization_id = attrs.get("organization_id")
+        if course_product_relation_id and organization_id:
+            raise serializers.ValidationError(
+                "You must set exactly one parameter for the method. It cannot be both. "
+                "You must choose between an Organization UUID or a Course Product Relation UUID."
+            )
+
+        if not course_product_relation_id and not organization_id:
+            raise serializers.ValidationError(
+                "You must set at least one parameter for the method."
+                "You must choose between an Organization UUID or a Course Product Relation UUID."
+            )
+
+        errors = {}
+        if course_product_relation_id:
+            try:
+                attrs[
+                    "course_product_relation"
+                ] = models.CourseProductRelation.objects.get(
+                    pk=course_product_relation_id
+                )
+            except models.CourseProductRelation.DoesNotExist:
+                errors["course_product_relation_id"] = (
+                    "Make sure to give an existing course product relation UUID. "
+                    "No CourseProductRelation was found with the given "
+                    f"UUID : {attrs.get('course_product_relation_id')}."
+                )
+
+        if organization_id:
+            try:
+                attrs["organization"] = models.Organization.objects.get(
+                    pk=organization_id
+                )
+            except models.Organization.DoesNotExist:
+                errors["organization_id"] = (
+                    "Make sure to give an existing organization UUID. "
+                    "No Organization was found with the given UUID : "
+                    f"{attrs.get('organization_id')}."
+                )
+
+        if errors:
+            raise serializers.ValidationError(errors)
+
+        return attrs
+
+    def update(self, instance, validated_data):
+        pass
+
+    def create(self, validated_data):
+        pass
