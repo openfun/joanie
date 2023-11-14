@@ -206,7 +206,7 @@ jobs:
             dockerize \
               -wait tcp://localhost:5432 \
               -timeout 60s \
-                ~/.local/bin/pytest
+                ~/.local/bin/pytest -n 2
 
   # ---- mail jobs ----
   build-mails:
