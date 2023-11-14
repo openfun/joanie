@@ -602,6 +602,69 @@
                 }
             }
         },
+        "/api/v1.0/contracts/zip-archive/": {
+            "post": {
+                "operationId": "contracts_zip_archive_create",
+                "description": "This endpoint is exclusive to users that have access rights on a specific organization.\n\nIt triggers the generation of a ZIP archive if the requesting has the correct access rights\non the organization. If a course product relation UUID is given from key word arguments,\nthe user requires to have access to the organization that is attached to the specific\ncourse product relation object.\nWe return in the response the URL for polling the ZIP archive once it has been generated.\n\nNotes on possible `kwargs` as input parameters :\n    - string of an Organization UUID\n    OR\n    - string of an CourseProductRelation UUID",
+                "tags": [
+                    "contracts"
+                ],
+                "security": [
+                    {
+                        "DelegatedJWTAuthentication": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Contract"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/contracts/zip-archive/{zip_id}/": {
+            "get": {
+                "operationId": "contracts_zip_archive_retrieve",
+                "description": "Return the ZIP archive once it has been generated and it exists into storages.\n\nWhen the ZIP archive is not ready yet, we will return a response with the status code 404\nuntil the ZIP is available to be served. Once available, we return the ZIP archive.\nIf the paired User UUID and the received ZIP UUID do not match any files in storage,\nit return a response with the status code 404.\nYou must add the ZIP id as a payload.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "zip_id",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "contracts"
+                ],
+                "security": [
+                    {
+                        "DelegatedJWTAuthentication": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Contract"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1.0/course-product-relations/": {
             "get": {
                 "operationId": "course_product_relations_list",

@@ -13,20 +13,15 @@ from joanie.signature.backends import get_signature_backend
 logger = getLogger(__name__)
 
 
-def get_signature_backend_references(
+def _get_base_signature_backend_references(
     course_product_relation=None, organization=None, extra_filters=None
 ):
     """
-    Get a generator object with signature backend references from either a Course Product Relation
-    object or an Organization object when the contract is signed. Otherwise, it returns an empty
-    generator if there are no signed contracts yet.
+    Build the base query to get signature backend references from either a Course Product Relation
+    object or an Organization object when the contract is signed.
 
     You may use an additional parameter `extra_filters` if you need to filter out even more the
     base queryset of the Contract (check if the user has access to the organization for example).
-
-    We use the iterator method because it reduces memory consumption and improve the performance
-    when we work with large dataset. It processes the database records one at a time instead of
-    loading the entire QuerySet into memory all at once.
     """
     if not extra_filters:
         extra_filters = {}
@@ -48,6 +43,49 @@ def get_signature_backend_references(
 
     if organization:
         base_query = base_query.filter(order__organization_id=organization.pk)
+
+    return base_query
+
+
+def get_signature_backend_references_exists(
+    course_product_relation=None, organization=None, extra_filters=None
+):
+    """
+    Check if signature backend references exist from either a Course Product Relation
+    object or an Organization object when the contract is signed.
+
+    You may use an additional parameter `extra_filters` if you need to filter out even more the
+    base queryset of the Contract (check if the user has access to the organization for example).
+    """
+    base_query = _get_base_signature_backend_references(
+        course_product_relation=course_product_relation,
+        organization=organization,
+        extra_filters=extra_filters,
+    )
+
+    return base_query.distinct().exists()
+
+
+def get_signature_backend_references(
+    course_product_relation=None, organization=None, extra_filters=None
+):
+    """
+    Get a generator object with signature backend references from either a Course Product Relation
+    object or an Organization object when the contract is signed. Otherwise, it returns an empty
+    generator if there are no signed contracts yet.
+
+    You may use an additional parameter `extra_filters` if you need to filter out even more the
+    base queryset of the Contract (check if the user has access to the organization for example).
+
+    We use the iterator method because it reduces memory consumption and improve the performance
+    when we work with large dataset. It processes the database records one at a time instead of
+    loading the entire QuerySet into memory all at once.
+    """
+    base_query = _get_base_signature_backend_references(
+        course_product_relation=course_product_relation,
+        organization=organization,
+        extra_filters=extra_filters,
+    )
 
     signature_backend_references = (
         base_query.values_list("signature_backend_reference", flat=True)

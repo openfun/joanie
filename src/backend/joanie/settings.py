@@ -607,6 +607,8 @@ class Test(Base):
         },
     }
 
+    CELERY_TASK_ALWAYS_EAGER = values.BooleanValue(True)
+
     def __init__(self):
         # pylint: disable=invalid-name
         self.INSTALLED_APPS += ["joanie.tests", "drf_spectacular_sidecar"]
