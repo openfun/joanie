@@ -43,7 +43,7 @@ class OrderGroupAdminApiTest(TestCase):
         )
         factories.OrderGroupFactory.create_batch(5)
 
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(10):
             response = self.client.get(f"{self.base_url}/{relation.id}/order-groups/")
         self.assertEqual(response.status_code, 200)
         content = response.json()
@@ -55,6 +55,7 @@ class OrderGroupAdminApiTest(TestCase):
                 "nb_available_seats": order_group.nb_seats
                 - order_group.get_nb_binding_orders(),
                 "created_on": order_group.created_on.isoformat().replace("+00:00", "Z"),
+                "can_edit": True,
             }
             for order_group in order_groups
         ]
@@ -108,7 +109,7 @@ class OrderGroupAdminApiTest(TestCase):
         relation = factories.CourseProductRelationFactory()
         order_group = factories.OrderGroupFactory(course_product_relation=relation)
 
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             response = self.client.get(
                 f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/"
             )
@@ -122,6 +123,7 @@ class OrderGroupAdminApiTest(TestCase):
             "nb_available_seats": order_group.nb_seats
             - order_group.get_nb_binding_orders(),
             "created_on": order_group.created_on.isoformat().replace("+00:00", "Z"),
+            "can_edit": True,
         }
         self.assertEqual(content, expected_return)
 
@@ -157,7 +159,7 @@ class OrderGroupAdminApiTest(TestCase):
             "is_active": True,
             "course_product_relation": str(relation.id),
         }
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
             response = self.client.post(
                 f"{self.base_url}/{relation.id}/order-groups/",
                 content_type="application/json",
@@ -201,7 +203,7 @@ class OrderGroupAdminApiTest(TestCase):
             "nb_seats": 505,
             "is_active": True,
         }
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
             response = self.client.put(
                 f"{self.base_url}/{relation.id}/order-groups/{str(order_group.id)}/",
                 content_type="application/json",
@@ -245,7 +247,7 @@ class OrderGroupAdminApiTest(TestCase):
         data = {
             "is_active": True,
         }
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
             response = self.client.patch(
                 f"{self.base_url}/{relation.id}/order-groups/{str(order_group.id)}/",
                 content_type="application/json",
