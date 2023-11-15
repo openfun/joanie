@@ -309,11 +309,12 @@ class AdminProductRelationSerializer(serializers.ModelSerializer):
         model = models.CourseProductRelation
         fields = (
             "id",
+            "can_edit",
             "product",
             "order_groups",
             "organizations",
         )
-        read_only_fields = ["id", "order_groups"]
+        read_only_fields = ["id", "can_edit", "order_groups"]
 
 
 class AdminCourseAccessSerializer(serializers.ModelSerializer):
@@ -657,6 +658,7 @@ class AdminCourseRelationsSerializer(serializers.ModelSerializer):
         model = models.CourseProductRelation
         fields = [
             "id",
+            "can_edit",
             "course",
             "organizations",
             "order_groups",
