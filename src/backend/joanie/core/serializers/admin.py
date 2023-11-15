@@ -319,12 +319,13 @@ class AdminCourseNestedSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "state"]
 
 
-class AdminCourseRelationsSerializer(serializers.ModelSerializer):
+class AdminCourseProductRelationsSerializer(serializers.ModelSerializer):
     """
     Serialize all information about a course relation nested in a product.
     """
 
-    course = AdminCourseNestedSerializer(read_only=True)
+    course = AdminCourseNestedSerializer()
+    product = AdminProductSerializer()
     organizations = AdminOrganizationLightSerializer(many=True, read_only=True)
     order_groups = AdminOrderGroupSerializer(many=True, read_only=True)
 
@@ -336,26 +337,34 @@ class AdminCourseRelationsSerializer(serializers.ModelSerializer):
             "course",
             "organizations",
             "order_groups",
+            "product",
+        ]
+        read_only_fields = ["id", "can_edit", "order_groups"]
+
+
+class AdminCourseRelationsSerializer(AdminCourseProductRelationsSerializer):
+    """
+    Serialize all information about a course relation nested in a product.
+    """
+
+    class Meta(AdminCourseProductRelationsSerializer.Meta):
+        fields = [
+            field
+            for field in AdminCourseProductRelationsSerializer.Meta.fields
+            if field != "product"
         ]
         read_only_fields = fields
 
 
-class AdminProductRelationSerializer(serializers.ModelSerializer):
+class AdminProductRelationSerializer(AdminCourseProductRelationsSerializer):
     """Serializer for CourseProductRelation model."""
 
-    organizations = AdminOrganizationLightSerializer(many=True)
-    product = AdminProductSerializer()
-    order_groups = AdminOrderGroupSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = models.CourseProductRelation
-        fields = (
-            "id",
-            "can_edit",
-            "product",
-            "order_groups",
-            "organizations",
-        )
+    class Meta(AdminCourseProductRelationsSerializer.Meta):
+        fields = [
+            field
+            for field in AdminCourseProductRelationsSerializer.Meta.fields
+            if field != "course"
+        ]
         read_only_fields = ["id", "can_edit", "order_groups"]
 
 
