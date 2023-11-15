@@ -108,6 +108,15 @@ class AdminUserCompleteSerializer(serializers.ModelSerializer):
         return {}
 
 
+class AdminOrganizationLightSerializer(serializers.ModelSerializer):
+    """Read-only light Serializer for Organization model."""
+
+    class Meta:
+        model = models.Organization
+        fields = ("code", "title", "id")
+        read_only_fields = ("code", "title", "id")
+
+
 class AdminOrganizationAccessSerializer(serializers.ModelSerializer):
     """Serializer for OrganizationAccess model."""
 
@@ -176,15 +185,6 @@ class AdminOrganizationSerializer(serializers.ModelSerializer):
             "accesses",
             "id",
         )
-
-
-class AdminOrganizationLightSerializer(serializers.ModelSerializer):
-    """Read-only light Serializer for Organization model."""
-
-    class Meta:
-        model = models.Organization
-        fields = ("code", "title", "id")
-        read_only_fields = ("code", "title", "id")
 
 
 class AdminProductSerializer(serializers.ModelSerializer):
@@ -297,6 +297,47 @@ class AdminOrderGroupCreateSerializer(AdminOrderGroupSerializer):
 
     class Meta(AdminOrderGroupSerializer.Meta):
         fields = [*AdminOrderGroupSerializer.Meta.fields, "course_product_relation"]
+
+
+class AdminCourseNestedSerializer(serializers.ModelSerializer):
+    """Serializer for Course model nested in product."""
+
+    title = serializers.CharField()
+    cover = ThumbnailDetailField(required=False)
+    organizations = AdminOrganizationLightSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = models.Course
+        fields = (
+            "id",
+            "code",
+            "cover",
+            "title",
+            "organizations",
+            "state",
+        )
+        read_only_fields = ["id", "state"]
+
+
+class AdminCourseRelationsSerializer(serializers.ModelSerializer):
+    """
+    Serialize all information about a course relation nested in a product.
+    """
+
+    course = AdminCourseNestedSerializer(read_only=True)
+    organizations = AdminOrganizationLightSerializer(many=True, read_only=True)
+    order_groups = AdminOrderGroupSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = models.CourseProductRelation
+        fields = [
+            "id",
+            "can_edit",
+            "course",
+            "organizations",
+            "order_groups",
+        ]
+        read_only_fields = fields
 
 
 class AdminProductRelationSerializer(serializers.ModelSerializer):
@@ -624,47 +665,6 @@ class AdminProductTargetCourseRelationSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         serializer = AdminProductTargetCourseRelationDisplaySerializer(instance)
         return serializer.data
-
-
-class AdminCourseNestedSerializer(serializers.ModelSerializer):
-    """Serializer for Course model nested in product."""
-
-    title = serializers.CharField()
-    cover = ThumbnailDetailField(required=False)
-    organizations = AdminOrganizationLightSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = models.Course
-        fields = (
-            "id",
-            "code",
-            "cover",
-            "title",
-            "organizations",
-            "state",
-        )
-        read_only_fields = ["id", "state"]
-
-
-class AdminCourseRelationsSerializer(serializers.ModelSerializer):
-    """
-    Serialize all information about a course relation nested in a product.
-    """
-
-    course = AdminCourseNestedSerializer(read_only=True)
-    organizations = AdminOrganizationLightSerializer(many=True, read_only=True)
-    order_groups = AdminOrderGroupSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = models.CourseProductRelation
-        fields = [
-            "id",
-            "can_edit",
-            "course",
-            "organizations",
-            "order_groups",
-        ]
-        read_only_fields = fields
 
 
 class AdminProductTargetCourseRelationNestedSerializer(serializers.ModelSerializer):
