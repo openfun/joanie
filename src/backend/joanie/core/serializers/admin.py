@@ -278,8 +278,9 @@ class AdminOrderGroupSerializer(serializers.ModelSerializer):
             "is_active",
             "nb_available_seats",
             "created_on",
+            "can_edit",
         ]
-        read_only_fields = ["id", "created_on"]
+        read_only_fields = ["id", "can_edit", "created_on"]
 
     def get_nb_available_seats(self, order_group):
         """Return the number of available seats for this order group."""

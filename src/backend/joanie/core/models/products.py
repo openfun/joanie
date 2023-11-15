@@ -355,6 +355,11 @@ class OrderGroup(BaseModel):
             state__in=enums.BINDING_ORDER_STATES,
         ).count()
 
+    @property
+    def can_edit(self):
+        """Return True if the order group can be edited."""
+        return not self.orders.exists()
+
 
 class Order(BaseModel):
     """
