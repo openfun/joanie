@@ -23,3 +23,17 @@ class CourseProductRelationModelTestCase(TestCase):
                 f"courses/{relation.course.code}/products/{relation.product.id}/"
             ),
         )
+
+    def test_model_course_product_relation_can_edit(self):
+        """
+        CourseProductRelation can_edit property should return True if the
+        relation is not linked to any order, False otherwise.
+        """
+        relation = factories.CourseProductRelationFactory()
+        self.assertTrue(relation.can_edit)
+
+        factories.OrderFactory(
+            product=relation.product,
+            course=relation.course,
+        )
+        self.assertFalse(relation.can_edit)

@@ -7,6 +7,7 @@ from collections.abc import Mapping
 from datetime import MAXYEAR, datetime
 from datetime import timezone as tz
 
+from django.apps import apps
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.cache import cache
@@ -603,6 +604,14 @@ class CourseProductRelation(BaseModel):
         )
 
         return f"https://{site.domain:s}{resource_path:s}"
+
+    @property
+    def can_edit(self):
+        """Return True if the relation can be edited, False otherwise."""
+        Order = apps.get_model("core", "Order")  # pylint: disable=invalid-name
+        return not Order.objects.filter(
+            product=self.product, course=self.course
+        ).exists()
 
 
 class CourseRun(parler_models.TranslatableModel, BaseModel):
