@@ -10,6 +10,8 @@ and this project adheres to
 
 ## Added
 
+- Add a management command to synchronize course run or product 
+  on a remote catalog
 - Install and configure celery with redis
 - Add CachedModelSerializer
 - Allow to leave organization empty while order is in draft
