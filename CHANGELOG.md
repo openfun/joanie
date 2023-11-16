@@ -61,6 +61,7 @@ and this project adheres to
 - Add some objects to demo-dev command. A credit card, a billing address and
   one order of each state. Also add some order target courses.
 - Add markdown editor inside the BO
+- Add admin endpoint to manage course product relations
 
 ### Changed
 

@@ -103,6 +103,6 @@
     "workerDirectory": "public"
   },
   "volta": {
-    "node": "16.15.1"
+    "node": "18.18.2"
   }
 }
