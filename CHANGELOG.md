@@ -96,6 +96,10 @@ and this project adheres to
   - CourseSerializer
   - CourseAccessSerializer
   - OrganizationAccessSerializer
+- Rename query parameters to be more descriptive:
+  - OrderViewSetFilter
+  - ProductViewSetFilter
+  - EnrollmentViewSetFilter
 
 ### Removed
 

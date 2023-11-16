@@ -221,7 +221,7 @@ class OrderApiTest(BaseAPITestCase):
 
         # Retrieve user's order related to the product 1
         response = self.client.get(
-            f"/api/v1.0/orders/?product={product_1.id}",
+            f"/api/v1.0/orders/?product_id={product_1.id}",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -274,12 +274,12 @@ class OrderApiTest(BaseAPITestCase):
         # should return a 400 error
         with self.assertNumQueries(0):
             response = self.client.get(
-                "/api/v1.0/orders/?product=invalid_product_id",
+                "/api/v1.0/orders/?product_id=invalid_product_id",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
         self.assertEqual(response.status_code, 400)
-        self.assertDictEqual(response.json(), {"product": ["Enter a valid UUID."]})
+        self.assertDictEqual(response.json(), {"product_id": ["Enter a valid UUID."]})
 
     @mock.patch.object(
         fields.ThumbnailDetailField,
@@ -315,7 +315,7 @@ class OrderApiTest(BaseAPITestCase):
 
         # Retrieve user's order related to the enrollment 1
         response = self.client.get(
-            f"/api/v1.0/orders/?enrollment={enrollment_1.id}",
+            f"/api/v1.0/orders/?enrollment_id={enrollment_1.id}",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -423,12 +423,14 @@ class OrderApiTest(BaseAPITestCase):
         # should return a 400 error
         with self.assertNumQueries(0):
             response = self.client.get(
-                "/api/v1.0/orders/?enrollment=invalid_enrollment_id",
+                "/api/v1.0/orders/?enrollment_id=invalid_enrollment_id",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
         self.assertEqual(response.status_code, 400)
-        self.assertDictEqual(response.json(), {"enrollment": ["Enter a valid UUID."]})
+        self.assertDictEqual(
+            response.json(), {"enrollment_id": ["Enter a valid UUID."]}
+        )
 
     @mock.patch.object(
         fields.ThumbnailDetailField,
@@ -451,7 +453,7 @@ class OrderApiTest(BaseAPITestCase):
         # Retrieve user's order related to the first course linked to the product 1
         with self.assertNumQueries(6):
             response = self.client.get(
-                f"/api/v1.0/orders/?course={product_1.courses.first().code}",
+                f"/api/v1.0/orders/?course_code={product_1.courses.first().code}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
@@ -524,7 +526,7 @@ class OrderApiTest(BaseAPITestCase):
         # Retrieve user's order related to the first course linked to the product 1
         with self.assertNumQueries(5):
             response = self.client.get(
-                f"/api/v1.0/orders/?product__type={enums.PRODUCT_TYPE_CERTIFICATE}",
+                f"/api/v1.0/orders/?product_type={enums.PRODUCT_TYPE_CERTIFICATE}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
@@ -664,8 +666,8 @@ class OrderApiTest(BaseAPITestCase):
         with self.assertNumQueries(8):
             response = self.client.get(
                 (
-                    f"/api/v1.0/orders/?product__type={enums.PRODUCT_TYPE_CERTIFICATE}"
-                    f"&product__type={enums.PRODUCT_TYPE_CREDENTIAL}"
+                    f"/api/v1.0/orders/?product_type={enums.PRODUCT_TYPE_CERTIFICATE}"
+                    f"&product_type={enums.PRODUCT_TYPE_CREDENTIAL}"
                 ),
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
@@ -680,7 +682,7 @@ class OrderApiTest(BaseAPITestCase):
 
         # Retrieve user's orders filtered to exclude one product type
         response = self.client.get(
-            f"/api/v1.0/orders/?product__type__exclude={enums.PRODUCT_TYPE_CERTIFICATE}",
+            f"/api/v1.0/orders/?product_type_exclude={enums.PRODUCT_TYPE_CERTIFICATE}",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -719,7 +721,7 @@ class OrderApiTest(BaseAPITestCase):
         # Retrieve user's order related to the first course linked to the product 1
         with self.assertNumQueries(0):
             response = self.client.get(
-                "/api/v1.0/orders/?product__type=invalid_product_type",
+                "/api/v1.0/orders/?product_type=invalid_product_type",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
@@ -727,7 +729,7 @@ class OrderApiTest(BaseAPITestCase):
         self.assertDictEqual(
             response.json(),
             {
-                "product__type": [
+                "product_type": [
                     (
                         "Select a valid choice. "
                         "invalid_product_type is not one of the available choices."
@@ -979,7 +981,7 @@ class OrderApiTest(BaseAPITestCase):
 
         # Retrieve user's orders filtered to exclude 2 states
         response = self.client.get(
-            "/api/v1.0/orders/?state__exclude=validated&state__exclude=pending",
+            "/api/v1.0/orders/?state_exclude=validated&state_exclude=pending",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
