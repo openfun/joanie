@@ -497,7 +497,7 @@ class EnrollmentApiTest(BaseAPITestCase):
 
         # Retrieve user's enrollment related to the first course_run
         response = self.client.get(
-            f"/api/v1.0/enrollments/?course_run={str(course_run_1.id)}",
+            f"/api/v1.0/enrollments/?course_run_id={str(course_run_1.id)}",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -570,12 +570,14 @@ class EnrollmentApiTest(BaseAPITestCase):
 
         # Retrieve user's enrollment related to the first course_run
         response = self.client.get(
-            "/api/v1.0/enrollments/?course_run=invalid_course_run_id",
+            "/api/v1.0/enrollments/?course_run_id=invalid_course_run_id",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
         self.assertEqual(response.status_code, 400)
-        self.assertDictEqual(response.json(), {"course_run": ["Enter a valid UUID."]})
+        self.assertDictEqual(
+            response.json(), {"course_run_id": ["Enter a valid UUID."]}
+        )
 
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
     def test_api_enrollment_read_list_filtered_by_was_created_by_order(self, _mock_set):
