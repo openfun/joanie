@@ -168,6 +168,27 @@ class CertificateDefinitionAdminFilterSet(filters.FilterSet):
         ).distinct()
 
 
+class ContractDefinitionAdminFilterSet(filters.FilterSet):
+    """
+    ContractDefinitionAdminFilter allows to filter this resource with a query
+    for name and title.
+    """
+
+    class Meta:
+        model = models.ContractDefinition
+        fields: List[str] = ["query"]
+
+    query = filters.CharFilter(method="filter_by_query")
+
+    def filter_by_query(self, queryset, _name, value):
+        """
+        Filter resource by looking for title which contains provided value in
+        "query" query parameter.
+        """
+
+        return queryset.filter(title__icontains=value).distinct()
+
+
 class UserAdminFilterSet(filters.FilterSet):
     """
     UserAdminFilter allows to filter this resource with a query for username,

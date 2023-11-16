@@ -13,6 +13,8 @@ class ContractDefinitionAdminApiTest(TestCase):
     Test suite for Contract definition Admin API.
     """
 
+    maxDiff = None
+
     def test_admin_api_contract_definition_request_without_authentication(self):
         """
         Anonymous users should not be able to request contract definition endpoint.
@@ -54,6 +56,42 @@ class ContractDefinitionAdminApiTest(TestCase):
         self.assertEqual(response.status_code, 200)
         content = response.json()
         self.assertEqual(content["count"], contract_definitions_count)
+
+    def test_admin_api_contract_definition_list_filter_by_query(self):
+        """
+        Staff user should be able to get a paginated list of contract definition.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        contract_definitions_count = random.randint(1, 10)
+        items = factories.ContractDefinitionFactory.create_batch(
+            contract_definitions_count
+        )
+        contract_definition_1 = items[0]
+
+        response = self.client.get(
+            f"/api/v1.0/admin/contract-definitions/?query={contract_definition_1.title}"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "count": 1,
+                "next": None,
+                "previous": None,
+                "results": [
+                    {
+                        "body": contract_definition_1.body,
+                        "description": contract_definition_1.description,
+                        "id": str(contract_definition_1.id),
+                        "language": contract_definition_1.language,
+                        "name": contract_definition_1.name,
+                        "title": contract_definition_1.title,
+                    }
+                ],
+            },
+        )
 
     def test_admin_api_contract_definition_get(self):
         """
