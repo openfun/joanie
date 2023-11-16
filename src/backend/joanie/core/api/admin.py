@@ -311,6 +311,20 @@ class ContractDefinitionViewSet(viewsets.ModelViewSet):
     queryset = models.ContractDefinition.objects.all()
 
 
+class CourseProductRelationViewSet(viewsets.ModelViewSet):
+    """
+    CourseProductRelation ViewSet
+    """
+
+    authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
+    permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
+    serializer_class = serializers.AdminCourseProductRelationsSerializer
+    queryset = models.CourseProductRelation.objects.all().select_related(
+        "course", "product"
+    )
+    ordering = "created_on"
+
+
 class NestedCourseProductRelationOrderGroupViewSet(
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,

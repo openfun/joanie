@@ -123,7 +123,13 @@ sections = ["FUTURE","STDLIB","DJANGO","THIRDPARTY","JOANIE","FIRSTPARTY","LOCAL
 skip_glob = "venv"
 
 [tool.pytest.ini_options]
-addopts = "-v --cov-report term-missing"
+addopts = [
+    "-v",
+    "--cov-report",
+    "term-missing",
+    # Allow test files to have the same name in different directories.
+    "--import-mode=importlib",
+]
 python_files = [
     "test_*.py",
     "tests.py",

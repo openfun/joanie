@@ -119,6 +119,11 @@ admin_router = DefaultRouter()
 admin_router.register(
     "organizations", api_admin.OrganizationViewSet, basename="admin_organizations"
 )
+admin_router.register(
+    "course-product-relations",
+    api_admin.CourseProductRelationViewSet,
+    basename="admin_products",
+)
 admin_router.register("products", api_admin.ProductViewSet, basename="admin_products")
 admin_router.register("courses", api_admin.CourseViewSet, basename="admin_courses")
 admin_router.register(

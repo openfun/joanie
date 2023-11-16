@@ -324,8 +324,8 @@ class AdminCourseProductRelationsSerializer(serializers.ModelSerializer):
     Serialize all information about a course relation nested in a product.
     """
 
-    course = AdminCourseNestedSerializer()
-    product = AdminProductSerializer()
+    course = AdminCourseNestedSerializer(read_only=True)
+    product = AdminProductSerializer(read_only=True)
     organizations = AdminOrganizationLightSerializer(many=True, read_only=True)
     order_groups = AdminOrderGroupSerializer(many=True, read_only=True)
 
@@ -340,6 +340,48 @@ class AdminCourseProductRelationsSerializer(serializers.ModelSerializer):
             "product",
         ]
         read_only_fields = ["id", "can_edit", "order_groups"]
+
+    def create(self, validated_data):
+        """
+        Create a new course relation and attach provided organizations to it
+        """
+        validation_error = {}
+        course_id = self.initial_data.get("course_id")
+        product_id = self.initial_data.get("product_id")
+
+        if course_id is None:
+            validation_error["course_id"] = "This field is required."
+        if product_id is None:
+            validation_error["product_id"] = "This field is required."
+
+        if validation_error:
+            raise serializers.ValidationError(validation_error)
+
+        course = get_object_or_404(models.Course, id=course_id)
+        validated_data["course"] = course
+
+        product = get_object_or_404(models.Product, id=product_id)
+        validated_data["product"] = product
+
+        if organization_id := self.initial_data.get("organization_id"):
+            organization = get_object_or_404(models.Organization, id=organization_id)
+            validated_data["organizations"] = [organization]
+
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        if course_id := self.initial_data.get("course_id"):
+            course = get_object_or_404(models.Course, id=course_id)
+            validated_data["course"] = course
+
+        if product_id := self.initial_data.get("product_id"):
+            product = get_object_or_404(models.Product, id=product_id)
+            validated_data["product"] = product
+
+        if organization_id := self.initial_data.get("organization_id"):
+            organization = get_object_or_404(models.Organization, id=organization_id)
+            validated_data["organizations"] = [organization]
+        return super().update(instance, validated_data)
 
 
 class AdminCourseRelationsSerializer(AdminCourseProductRelationsSerializer):
