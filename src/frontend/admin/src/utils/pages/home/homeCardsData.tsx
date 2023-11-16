@@ -5,6 +5,7 @@ import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import CorporateFareRoundedIcon from "@mui/icons-material/CorporateFareRounded";
 import TaskRoundedIcon from "@mui/icons-material/TaskRounded";
 import * as React from "react";
+import GavelIcon from "@mui/icons-material/Gavel";
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { cardHomePagesTranslation } from "@/translations/pages/home/cardTranslations";
 
@@ -55,5 +56,16 @@ export const getHomeCardData = (intl: IntlShape) => [
     ),
     href: PATH_ADMIN.certificates.create,
     icon: <TaskRoundedIcon />,
+  },
+  {
+    title: intl.formatMessage(cardHomePagesTranslation.contractDefinitionTitle),
+    description: intl.formatMessage(
+      cardHomePagesTranslation.contractDefinitionDescription,
+    ),
+    badgeLabel: intl.formatMessage(
+      cardHomePagesTranslation.contractDefinitionBadge,
+    ),
+    href: PATH_ADMIN.contract_definition.create,
+    icon: <GavelIcon />,
   },
 ];

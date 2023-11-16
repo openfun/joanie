@@ -85,4 +85,21 @@ export const cardHomePagesTranslation = defineMessages({
     defaultMessage: "Certificate definition",
     description: "Label for the badge inside certificate definition card",
   },
+  contractDefinitionTitle: {
+    id: "pages.admin.home.cardHomePagesTranslation.contractDefinitionTitle",
+    defaultMessage: "Create a contract definition",
+    description:
+      "Title for the contract certificate definition card inside the home page",
+  },
+  contractDefinitionDescription: {
+    id: "pages.admin.home.cardHomePagesTranslation.contractDefinitionDescription",
+    defaultMessage: "A contract definition is based on a template",
+    description:
+      "Description for the create contract definition card inside the home page",
+  },
+  contractDefinitionBadge: {
+    id: "pages.admin.home.cardHomePagesTranslation.contractDefinitionBadge",
+    defaultMessage: "Contract definition",
+    description: "Label for the badge inside certificate definition card",
+  },
 });
