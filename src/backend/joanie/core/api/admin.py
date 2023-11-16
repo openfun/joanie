@@ -309,6 +309,8 @@ class ContractDefinitionViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_class = serializers.AdminContractDefinitionSerializer
     queryset = models.ContractDefinition.objects.all()
+    filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
+    filterset_class = filters.ContractDefinitionAdminFilterSet
 
 
 class CourseProductRelationViewSet(viewsets.ModelViewSet):
