@@ -87,7 +87,7 @@ class CourseAccessAdminApiTest(TestCase):
         response = self.client.post(
             f"/api/v1.0/admin/courses/{course.id}/accesses/",
             data={
-                "user": str(user.id),
+                "user_id": str(user.id),
                 "role": enums.MANAGER,
             },
         )
@@ -122,13 +122,13 @@ class CourseAccessAdminApiTest(TestCase):
         response = self.client.post(
             f"/api/v1.0/admin/courses/{course.id}/accesses/",
             data={
-                "user": str(user.id),
+                "user_id": str(user.id),
                 "role": enums.MANAGER,
             },
         )
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), {"user": ["Resource does not exist."]})
+        self.assertEqual(response.json(), {"user_id": ["Resource does not exist."]})
 
     def test_admin_api_course_accesses_request_create_with_unknown_course_id(self):
         """
@@ -143,7 +143,7 @@ class CourseAccessAdminApiTest(TestCase):
         response = self.client.post(
             f"/api/v1.0/admin/courses/{course.id}/accesses/",
             data={
-                "user": str(user.id),
+                "user_id": str(user.id),
                 "role": enums.MANAGER,
             },
         )
@@ -163,7 +163,7 @@ class CourseAccessAdminApiTest(TestCase):
         response = self.client.post(
             f"/api/v1.0/admin/courses/{course.id}/accesses/",
             data={
-                "user": str(user.id),
+                "user_id": str(user.id),
                 "role": "invalid_role",
             },
         )
@@ -189,7 +189,7 @@ class CourseAccessAdminApiTest(TestCase):
             f"/api/v1.0/admin/courses/{course.id}/accesses/{course_access.id}/",
             content_type="application/json",
             data={
-                "user": str(user.id),
+                "user_id": str(user.id),
                 "role": enums.INSTRUCTOR,
             },
         )
@@ -222,7 +222,7 @@ class CourseAccessAdminApiTest(TestCase):
         response = self.client.put(
             f"/api/v1.0/admin/courses/{course.id}/accesses/{uuid.uuid4()}/",
             data={
-                "user": str(user.id),
+                "user_id": str(user.id),
                 "role": enums.MANAGER,
             },
         )
@@ -251,7 +251,7 @@ class CourseAccessAdminApiTest(TestCase):
 
         self.assertEqual(response.status_code, 400)
         content = response.json()
-        self.assertEqual(content, {"user": ["This field is required."]})
+        self.assertEqual(content, {"user_id": ["This field is required."]})
 
     def test_admin_api_course_accesses_request_update_with_unknown_user(self):
         """
@@ -266,13 +266,13 @@ class CourseAccessAdminApiTest(TestCase):
         response = self.client.post(
             f"/api/v1.0/admin/courses/{course.id}/accesses/",
             data={
-                "user": str(user.id),
+                "user_id": str(user.id),
                 "role": enums.MANAGER,
             },
         )
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), {"user": ["Resource does not exist."]})
+        self.assertEqual(response.json(), {"user_id": ["Resource does not exist."]})
 
     def test_admin_api_course_accesses_request_partial_update(self):
         """

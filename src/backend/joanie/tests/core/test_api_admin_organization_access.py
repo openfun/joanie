@@ -95,7 +95,7 @@ class OrganizationAccessAdminApiTest(TestCase):
         response = self.client.post(
             f"/api/v1.0/admin/organizations/{organization.id}/accesses/",
             data={
-                "user": str(user.id),
+                "user_id": str(user.id),
                 "role": enums.MEMBER,
             },
         )
@@ -130,13 +130,13 @@ class OrganizationAccessAdminApiTest(TestCase):
         response = self.client.post(
             f"/api/v1.0/admin/organizations/{organization.id}/accesses/",
             data={
-                "user": str(user.id),
+                "user_id": str(user.id),
                 "role": enums.MEMBER,
             },
         )
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), {"user": ["Resource does not exist."]})
+        self.assertEqual(response.json(), {"user_id": ["Resource does not exist."]})
 
     def test_admin_api_organization_accesses_request_create_with_unknown_course_id(
         self,
@@ -153,7 +153,7 @@ class OrganizationAccessAdminApiTest(TestCase):
         response = self.client.post(
             f"/api/v1.0/admin/organizations/{organization.id}/accesses/",
             data={
-                "user": str(user.id),
+                "user_id": str(user.id),
                 "role": enums.MEMBER,
             },
         )
@@ -173,7 +173,7 @@ class OrganizationAccessAdminApiTest(TestCase):
         response = self.client.post(
             f"/api/v1.0/admin/organizations/{organization.id}/accesses/",
             data={
-                "user": str(user.id),
+                "user_id": str(user.id),
                 "role": "invalid_role",
             },
         )
@@ -199,7 +199,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             f"/api/v1.0/admin/organizations/{organization.id}/accesses/{organization_access.id}/",
             content_type="application/json",
             data={
-                "user": str(user.id),
+                "user_id": str(user.id),
                 "role": enums.OWNER,
             },
         )
@@ -234,7 +234,7 @@ class OrganizationAccessAdminApiTest(TestCase):
         response = self.client.put(
             f"/api/v1.0/admin/organizations/{organization.id}/accesses/{uuid.uuid4()}/",
             data={
-                "user": str(user.id),
+                "user_id": str(user.id),
                 "role": enums.MEMBER,
             },
         )
@@ -263,7 +263,7 @@ class OrganizationAccessAdminApiTest(TestCase):
 
         self.assertEqual(response.status_code, 400)
         content = response.json()
-        self.assertEqual(content, {"user": ["This field is required."]})
+        self.assertEqual(content, {"user_id": ["This field is required."]})
 
     def test_admin_api_organization_accesses_request_update_with_unknown_user(self):
         """
@@ -278,13 +278,13 @@ class OrganizationAccessAdminApiTest(TestCase):
         response = self.client.post(
             f"/api/v1.0/admin/organizations/{organization.id}/accesses/",
             data={
-                "user": str(user.id),
+                "user_id": str(user.id),
                 "role": enums.MEMBER,
             },
         )
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), {"user": ["Resource does not exist."]})
+        self.assertEqual(response.json(), {"user_id": ["Resource does not exist."]})
 
     def test_admin_api_organization_accesses_request_partial_update(self):
         """

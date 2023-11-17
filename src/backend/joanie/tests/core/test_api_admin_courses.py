@@ -227,9 +227,12 @@ class CourseAdminApiTest(TestCase):
         data = {
             "code": "COURSE-001",
             "title": "Course 001",
-            "organizations": [str(organization.id)],
+            "organization_ids": [str(organization.id)],
             "product_relations": [
-                {"product": str(product.id), "organizations": [str(organization.id)]}
+                {
+                    "product_id": str(product.id),
+                    "organization_ids": [str(organization.id)],
+                }
             ],
         }
 
@@ -265,7 +268,7 @@ class CourseAdminApiTest(TestCase):
         payload = {
             "code": "UPDATED-COURSE-001",
             "title": "Updated Course 001",
-            "organizations": [str(organization.id)],
+            "organization_ids": [str(organization.id)],
         }
 
         response = self.client.put(
@@ -305,11 +308,11 @@ class CourseAdminApiTest(TestCase):
             content_type="application/json",
             data={
                 "title": "Updated Course 001",
-                "organizations": [str(organization.id)],
+                "organization_ids": [str(organization.id)],
                 "product_relations": [
                     {
-                        "product": str(product.id),
-                        "organizations": [str(organization.id)],
+                        "product_id": str(product.id),
+                        "organization_ids": [str(organization.id)],
                     }
                 ],
             },

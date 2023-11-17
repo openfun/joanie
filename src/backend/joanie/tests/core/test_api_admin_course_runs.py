@@ -149,7 +149,7 @@ class CourseRunAdminApiTest(TestCase):
             "title": "Run 001",
             "languages": ["fr"],
             "resource_link": "https://my-lms.org/course-001/run-001",
-            "course": str(course.id),
+            "course_id": str(course.id),
             "enrollment_start": "2023-01-01T00:00:00Z",
             "enrollment_end": "2023-01-02T00:00:00Z",
             "start": "2023-01-03T00:00:00Z",
@@ -186,7 +186,7 @@ class CourseRunAdminApiTest(TestCase):
             "title": "Updated Run 001",
             "languages": ["en"],
             "resource_link": "https://my-lms.org/course-001/updated-run-001",
-            "course": str(course_run.course.id),
+            "course_id": str(course_run.course.id),
         }
 
         response = self.client.put(
