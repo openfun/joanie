@@ -14,5 +14,5 @@ schema = json.load(response)
 schema["host"] = "testserver"
 
 path = os.path.join(os.path.dirname(__file__), "../src/backend/joanie/tests/swagger/swagger.json")
-with open(path, "w") as f:
-    json.dump(schema, f, indent=2)
+with open(path, "w") as schema_file:
+    json.dump(schema, schema_file, indent=2)
