@@ -491,6 +491,7 @@ class Development(Base):
     LOGIN_URL = "/admin/login/"
     LOGOUT_URL = "/admin/logout/"
 
+    USE_SWAGGER = True
     # Swagger security settings
     # e.g: For API routes which requires a jwt token to authenticate user, you can
     # fulfill this field with `Bearer <USER_JWT_TOKEN>`
@@ -548,10 +549,20 @@ class Test(Base):
     PASSWORD_HASHERS = [
         "django.contrib.auth.hashers.MD5PasswordHasher",
     ]
+    USE_SWAGGER = True
+    SWAGGER_SETTINGS = {
+        "SECURITY_DEFINITIONS": {
+            "Bearer": {
+                "type": "apiKey",
+                "name": "Authorization",
+                "in": "header",
+            }
+        }
+    }
 
     def __init__(self):
         # pylint: disable=invalid-name
-        self.INSTALLED_APPS += ["joanie.tests"]
+        self.INSTALLED_APPS += ["drf_yasg", "joanie.tests"]
 
 
 class ContinuousIntegration(Test):

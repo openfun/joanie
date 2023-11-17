@@ -1,0 +1,6549 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Joanie API",
+    "description": "This is the Joanie API schema.",
+    "version": "v1.0"
+  },
+  "host": "testserver",
+  "schemes": [
+    "http"
+  ],
+  "basePath": "/api/v1.0",
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "securityDefinitions": {
+    "Bearer": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header"
+    }
+  },
+  "security": [
+    {
+      "Bearer": []
+    }
+  ],
+  "paths": {
+    "/addresses/": {
+      "get": {
+        "operationId": "addresses_list",
+        "summary": "API view allows to get all addresses or create or update a new one for a user.",
+        "description": "GET /api/addresses/\n    Return list of all addresses for a user\n\nPOST /api/addresses/ with expected data:\n    - address: str\n    - city: str\n    - country: str, country code\n    - first_name: str, recipient first name\n    - last_name: str, recipient last name\n    - is_main?: bool, if True set address as main\n    - postcode: str\n    - title: str, address title\n    Return new address just created\n\nPUT /api/addresses/<address_id>/ with expected data:\n    - address: str\n    - city: str\n    - country: str, country code\n    - first_name: str, recipient first name\n    - last_name: str, recipient last name\n    - is_main?: bool, if True set address as main\n    - postcode: str\n    - title: str, address title\n    Return address just updated\n\nDELETE /api/addresses/<address_id>/\n    Delete selected address",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Address"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "addresses"
+        ]
+      },
+      "post": {
+        "operationId": "addresses_create",
+        "summary": "API view allows to get all addresses or create or update a new one for a user.",
+        "description": "GET /api/addresses/\n    Return list of all addresses for a user\n\nPOST /api/addresses/ with expected data:\n    - address: str\n    - city: str\n    - country: str, country code\n    - first_name: str, recipient first name\n    - last_name: str, recipient last name\n    - is_main?: bool, if True set address as main\n    - postcode: str\n    - title: str, address title\n    Return new address just created\n\nPUT /api/addresses/<address_id>/ with expected data:\n    - address: str\n    - city: str\n    - country: str, country code\n    - first_name: str, recipient first name\n    - last_name: str, recipient last name\n    - is_main?: bool, if True set address as main\n    - postcode: str\n    - title: str, address title\n    Return address just updated\n\nDELETE /api/addresses/<address_id>/\n    Delete selected address",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Address"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Address"
+            }
+          }
+        },
+        "tags": [
+          "addresses"
+        ]
+      },
+      "parameters": []
+    },
+    "/addresses/{id}/": {
+      "get": {
+        "operationId": "addresses_read",
+        "summary": "API view allows to get all addresses or create or update a new one for a user.",
+        "description": "GET /api/addresses/\n    Return list of all addresses for a user\n\nPOST /api/addresses/ with expected data:\n    - address: str\n    - city: str\n    - country: str, country code\n    - first_name: str, recipient first name\n    - last_name: str, recipient last name\n    - is_main?: bool, if True set address as main\n    - postcode: str\n    - title: str, address title\n    Return new address just created\n\nPUT /api/addresses/<address_id>/ with expected data:\n    - address: str\n    - city: str\n    - country: str, country code\n    - first_name: str, recipient first name\n    - last_name: str, recipient last name\n    - is_main?: bool, if True set address as main\n    - postcode: str\n    - title: str, address title\n    Return address just updated\n\nDELETE /api/addresses/<address_id>/\n    Delete selected address",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Address"
+            }
+          }
+        },
+        "tags": [
+          "addresses"
+        ]
+      },
+      "put": {
+        "operationId": "addresses_update",
+        "summary": "API view allows to get all addresses or create or update a new one for a user.",
+        "description": "GET /api/addresses/\n    Return list of all addresses for a user\n\nPOST /api/addresses/ with expected data:\n    - address: str\n    - city: str\n    - country: str, country code\n    - first_name: str, recipient first name\n    - last_name: str, recipient last name\n    - is_main?: bool, if True set address as main\n    - postcode: str\n    - title: str, address title\n    Return new address just created\n\nPUT /api/addresses/<address_id>/ with expected data:\n    - address: str\n    - city: str\n    - country: str, country code\n    - first_name: str, recipient first name\n    - last_name: str, recipient last name\n    - is_main?: bool, if True set address as main\n    - postcode: str\n    - title: str, address title\n    Return address just updated\n\nDELETE /api/addresses/<address_id>/\n    Delete selected address",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Address"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Address"
+            }
+          }
+        },
+        "tags": [
+          "addresses"
+        ]
+      },
+      "patch": {
+        "operationId": "addresses_partial_update",
+        "summary": "API view allows to get all addresses or create or update a new one for a user.",
+        "description": "GET /api/addresses/\n    Return list of all addresses for a user\n\nPOST /api/addresses/ with expected data:\n    - address: str\n    - city: str\n    - country: str, country code\n    - first_name: str, recipient first name\n    - last_name: str, recipient last name\n    - is_main?: bool, if True set address as main\n    - postcode: str\n    - title: str, address title\n    Return new address just created\n\nPUT /api/addresses/<address_id>/ with expected data:\n    - address: str\n    - city: str\n    - country: str, country code\n    - first_name: str, recipient first name\n    - last_name: str, recipient last name\n    - is_main?: bool, if True set address as main\n    - postcode: str\n    - title: str, address title\n    Return address just updated\n\nDELETE /api/addresses/<address_id>/\n    Delete selected address",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Address"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Address"
+            }
+          }
+        },
+        "tags": [
+          "addresses"
+        ]
+      },
+      "delete": {
+        "operationId": "addresses_delete",
+        "summary": "API view allows to get all addresses or create or update a new one for a user.",
+        "description": "GET /api/addresses/\n    Return list of all addresses for a user\n\nPOST /api/addresses/ with expected data:\n    - address: str\n    - city: str\n    - country: str, country code\n    - first_name: str, recipient first name\n    - last_name: str, recipient last name\n    - is_main?: bool, if True set address as main\n    - postcode: str\n    - title: str, address title\n    Return new address just created\n\nPUT /api/addresses/<address_id>/ with expected data:\n    - address: str\n    - city: str\n    - country: str, country code\n    - first_name: str, recipient first name\n    - last_name: str, recipient last name\n    - is_main?: bool, if True set address as main\n    - postcode: str\n    - title: str, address title\n    Return address just updated\n\nDELETE /api/addresses/<address_id>/\n    Delete selected address",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "addresses"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/admin/certificate-definitions/": {
+      "get": {
+        "operationId": "admin_certificate-definitions_list",
+        "description": "Admin Certificate ViewSet",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "description": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/AdminCertificateDefinition"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "operationId": "admin_certificate-definitions_create",
+        "description": "Admin Certificate ViewSet",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminCertificateDefinition"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminCertificateDefinition"
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "parameters": []
+    },
+    "/admin/certificate-definitions/{id}/": {
+      "get": {
+        "operationId": "admin_certificate-definitions_read",
+        "description": "Admin Certificate ViewSet",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminCertificateDefinition"
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "put": {
+        "operationId": "admin_certificate-definitions_update",
+        "description": "Admin Certificate ViewSet",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminCertificateDefinition"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminCertificateDefinition"
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "patch": {
+        "operationId": "admin_certificate-definitions_partial_update",
+        "description": "Admin Certificate ViewSet",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminCertificateDefinition"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminCertificateDefinition"
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "delete": {
+        "operationId": "admin_certificate-definitions_delete",
+        "description": "Admin Certificate ViewSet",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "description": "primary key for the record as UUID",
+          "required": true,
+          "type": "string",
+          "format": "uuid"
+        }
+      ]
+    },
+    "/admin/contract-definitions/": {
+      "get": {
+        "operationId": "admin_contract-definitions_list",
+        "description": "Admin Contract Definition ViewSet",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/AdminContractDefinition"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "operationId": "admin_contract-definitions_create",
+        "description": "Admin Contract Definition ViewSet",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminContractDefinition"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminContractDefinition"
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "parameters": []
+    },
+    "/admin/contract-definitions/{id}/": {
+      "get": {
+        "operationId": "admin_contract-definitions_read",
+        "description": "Admin Contract Definition ViewSet",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminContractDefinition"
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "put": {
+        "operationId": "admin_contract-definitions_update",
+        "description": "Admin Contract Definition ViewSet",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminContractDefinition"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminContractDefinition"
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "patch": {
+        "operationId": "admin_contract-definitions_partial_update",
+        "description": "Admin Contract Definition ViewSet",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminContractDefinition"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminContractDefinition"
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "delete": {
+        "operationId": "admin_contract-definitions_delete",
+        "description": "Admin Contract Definition ViewSet",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "description": "primary key for the record as UUID",
+          "required": true,
+          "type": "string",
+          "format": "uuid"
+        }
+      ]
+    },
+    "/admin/course-product-relations/{course_product_relation_id}/order-groups/": {
+      "get": {
+        "operationId": "admin_course-product-relations_order-groups_list",
+        "description": "OrderGroup ViewSet",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/AdminOrderGroup"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "operationId": "admin_course-product-relations_order-groups_create",
+        "description": "OrderGroup ViewSet",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminOrderGroupCreate"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminOrderGroupCreate"
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "course_product_relation_id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/admin/course-product-relations/{course_product_relation_id}/order-groups/{id}/": {
+      "get": {
+        "operationId": "admin_course-product-relations_order-groups_read",
+        "description": "OrderGroup ViewSet",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminOrderGroup"
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "put": {
+        "operationId": "admin_course-product-relations_order-groups_update",
+        "description": "OrderGroup ViewSet",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminOrderGroup"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminOrderGroup"
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "patch": {
+        "operationId": "admin_course-product-relations_order-groups_partial_update",
+        "description": "OrderGroup ViewSet",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminOrderGroup"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminOrderGroup"
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "course_product_relation_id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "description": "primary key for the record as UUID",
+          "required": true,
+          "type": "string",
+          "format": "uuid"
+        }
+      ]
+    },
+    "/admin/course-runs/": {
+      "get": {
+        "operationId": "admin_course-runs_list",
+        "description": "Admin CourseRun ViewSet",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "description": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "description": "start",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "description": "state",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "resource_link",
+            "in": "query",
+            "description": "resource_link",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/AdminCourseRun"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "operationId": "admin_course-runs_create",
+        "description": "Admin CourseRun ViewSet",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminCourseRun"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminCourseRun"
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "parameters": []
+    },
+    "/admin/course-runs/{id}/": {
+      "get": {
+        "operationId": "admin_course-runs_read",
+        "description": "Admin CourseRun ViewSet",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminCourseRun"
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "put": {
+        "operationId": "admin_course-runs_update",
+        "description": "Admin CourseRun ViewSet",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminCourseRun"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminCourseRun"
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "patch": {
+        "operationId": "admin_course-runs_partial_update",
+        "description": "Admin CourseRun ViewSet",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminCourseRun"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminCourseRun"
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "delete": {
+        "operationId": "admin_course-runs_delete",
+        "description": "Admin CourseRun ViewSet",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "description": "primary key for the record as UUID",
+          "required": true,
+          "type": "string",
+          "format": "uuid"
+        }
+      ]
+    },
+    "/admin/courses/": {
+      "get": {
+        "operationId": "admin_courses_list",
+        "description": "Admin Course ViewSet",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "description": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/AdminCourseLight"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "operationId": "admin_courses_create",
+        "description": "Admin Course ViewSet",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminCourse"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminCourse"
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "parameters": []
+    },
+    "/admin/courses/{course_id}/accesses/": {
+      "post": {
+        "operationId": "admin_courses_accesses_create",
+        "description": "Write only Course Access ViewSet",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "course_id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/admin/courses/{course_id}/accesses/{id}/": {
+      "put": {
+        "operationId": "admin_courses_accesses_update",
+        "description": "Write only Course Access ViewSet",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "patch": {
+        "operationId": "admin_courses_accesses_partial_update",
+        "description": "Write only Course Access ViewSet",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "delete": {
+        "operationId": "admin_courses_accesses_delete",
+        "description": "Write only Course Access ViewSet",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "course_id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "description": "primary key for the record as UUID",
+          "required": true,
+          "type": "string",
+          "format": "uuid"
+        }
+      ]
+    },
+    "/admin/courses/{course_id}/course-runs/": {
+      "get": {
+        "operationId": "admin_courses_course-runs_list",
+        "description": "Admin CourseRun ViewSet",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "description": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "description": "start",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "description": "state",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "resource_link",
+            "in": "query",
+            "description": "resource_link",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/AdminCourseRun"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "operationId": "admin_courses_course-runs_create",
+        "description": "Admin CourseRun ViewSet",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminCourseRun"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminCourseRun"
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "course_id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/admin/courses/{course_id}/course-runs/{id}/": {
+      "get": {
+        "operationId": "admin_courses_course-runs_read",
+        "description": "Admin CourseRun ViewSet",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminCourseRun"
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "put": {
+        "operationId": "admin_courses_course-runs_update",
+        "description": "Admin CourseRun ViewSet",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminCourseRun"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminCourseRun"
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "patch": {
+        "operationId": "admin_courses_course-runs_partial_update",
+        "description": "Admin CourseRun ViewSet",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminCourseRun"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminCourseRun"
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "delete": {
+        "operationId": "admin_courses_course-runs_delete",
+        "description": "Admin CourseRun ViewSet",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "course_id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "description": "primary key for the record as UUID",
+          "required": true,
+          "type": "string",
+          "format": "uuid"
+        }
+      ]
+    },
+    "/admin/courses/{id}/": {
+      "get": {
+        "operationId": "admin_courses_read",
+        "description": "Admin Course ViewSet",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminCourse"
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "put": {
+        "operationId": "admin_courses_update",
+        "description": "Admin Course ViewSet",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminCourse"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminCourse"
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "patch": {
+        "operationId": "admin_courses_partial_update",
+        "description": "Admin Course ViewSet",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminCourse"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminCourse"
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "delete": {
+        "operationId": "admin_courses_delete",
+        "description": "Admin Course ViewSet",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "description": "primary key for the record as UUID",
+          "required": true,
+          "type": "string",
+          "format": "uuid"
+        }
+      ]
+    },
+    "/admin/organizations/": {
+      "get": {
+        "operationId": "admin_organizations_list",
+        "description": "Admin Organization ViewSet",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "description": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/AdminOrganizationLight"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "operationId": "admin_organizations_create",
+        "description": "Admin Organization ViewSet",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminOrganization"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminOrganization"
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "parameters": []
+    },
+    "/admin/organizations/{id}/": {
+      "get": {
+        "operationId": "admin_organizations_read",
+        "description": "Admin Organization ViewSet",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminOrganization"
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "put": {
+        "operationId": "admin_organizations_update",
+        "description": "Admin Organization ViewSet",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminOrganization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminOrganization"
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "patch": {
+        "operationId": "admin_organizations_partial_update",
+        "description": "Admin Organization ViewSet",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminOrganization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminOrganization"
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "delete": {
+        "operationId": "admin_organizations_delete",
+        "description": "Admin Organization ViewSet",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "description": "primary key for the record as UUID",
+          "required": true,
+          "type": "string",
+          "format": "uuid"
+        }
+      ]
+    },
+    "/admin/organizations/{organization_id}/accesses/": {
+      "post": {
+        "operationId": "admin_organizations_accesses_create",
+        "description": "Write only Organization Access ViewSet",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/admin/organizations/{organization_id}/accesses/{id}/": {
+      "put": {
+        "operationId": "admin_organizations_accesses_update",
+        "description": "Write only Organization Access ViewSet",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "patch": {
+        "operationId": "admin_organizations_accesses_partial_update",
+        "description": "Write only Organization Access ViewSet",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "delete": {
+        "operationId": "admin_organizations_accesses_delete",
+        "description": "Write only Organization Access ViewSet",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "description": "primary key for the record as UUID",
+          "required": true,
+          "type": "string",
+          "format": "uuid"
+        }
+      ]
+    },
+    "/admin/products/": {
+      "get": {
+        "operationId": "admin_products_list",
+        "description": "Admin Product ViewSet",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "description": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/AdminProductLight"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "operationId": "admin_products_create",
+        "description": "Admin Product ViewSet",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminProduct"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminProduct"
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "parameters": []
+    },
+    "/admin/products/{id}/": {
+      "get": {
+        "operationId": "admin_products_read",
+        "description": "Admin Product ViewSet",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminProduct"
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "put": {
+        "operationId": "admin_products_update",
+        "description": "Admin Product ViewSet",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminProduct"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminProduct"
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "patch": {
+        "operationId": "admin_products_partial_update",
+        "description": "Admin Product ViewSet",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminProduct"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminProduct"
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "delete": {
+        "operationId": "admin_products_delete",
+        "description": "Admin Product ViewSet",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "description": "primary key for the record as UUID",
+          "required": true,
+          "type": "string",
+          "format": "uuid"
+        }
+      ]
+    },
+    "/admin/products/{product_id}/target-courses/": {
+      "post": {
+        "operationId": "admin_products_target-courses_create",
+        "description": "Parse and create the ProductTargetCourseRelation",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminProductTargetCourseRelation"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminProductTargetCourseRelation"
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "product_id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/admin/products/{product_id}/target-courses/reorder/": {
+      "post": {
+        "operationId": "admin_products_target-courses_reorder",
+        "description": "Allow to reorder target_courses for a product",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminProductTargetCourseRelation"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminProductTargetCourseRelation"
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "product_id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/admin/products/{product_id}/target-courses/{id}/": {
+      "put": {
+        "operationId": "admin_products_target-courses_update",
+        "description": "Write only Product's TargetCourse ViewSet",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminProductTargetCourseRelation"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminProductTargetCourseRelation"
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "patch": {
+        "operationId": "admin_products_target-courses_partial_update",
+        "description": "Parse and patch the ProductTargetCourseRelation",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminProductTargetCourseRelation"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminProductTargetCourseRelation"
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "delete": {
+        "operationId": "admin_products_target-courses_delete",
+        "description": "Delete the relation between product_id and course_id",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "product_id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "description": "primary key for the record as UUID",
+          "required": true,
+          "type": "string",
+          "format": "uuid"
+        }
+      ]
+    },
+    "/admin/users/": {
+      "get": {
+        "operationId": "admin_users_list",
+        "description": "Admin User ViewSet",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "description": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/AdminUser"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "parameters": []
+    },
+    "/admin/users/me/": {
+      "get": {
+        "operationId": "admin_users_get_me",
+        "description": "Return information on currently logged user",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "description": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/AdminUser"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "parameters": []
+    },
+    "/certificates/": {
+      "get": {
+        "operationId": "certificates_list",
+        "summary": "API views to get all certificates for a user",
+        "description": "GET /api/certificates/:certificate_id\n    Return list of all certificates for a user or one certificate if an id is\n    provided.\n\nGET /api/certificates/:certificate_id/download\n    Return the certificate document in PDF format.",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Certificate"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "certificates"
+        ]
+      },
+      "parameters": []
+    },
+    "/certificates/{id}/": {
+      "get": {
+        "operationId": "certificates_read",
+        "summary": "API views to get all certificates for a user",
+        "description": "GET /api/certificates/:certificate_id\n    Return list of all certificates for a user or one certificate if an id is\n    provided.\n\nGET /api/certificates/:certificate_id/download\n    Return the certificate document in PDF format.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Certificate"
+            }
+          }
+        },
+        "tags": [
+          "certificates"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "description": "primary key for the record as UUID",
+          "required": true,
+          "type": "string",
+          "format": "uuid"
+        }
+      ]
+    },
+    "/certificates/{id}/download/": {
+      "get": {
+        "operationId": "certificates_download",
+        "description": "Retrieve a certificate through its id if it is owned by the authenticated user.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Certificate"
+            }
+          }
+        },
+        "tags": [
+          "certificates"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "description": "primary key for the record as UUID",
+          "required": true,
+          "type": "string",
+          "format": "uuid"
+        }
+      ]
+    },
+    "/contract_definitions/{id}/preview_template/": {
+      "get": {
+        "operationId": "contract_definitions_preview_template",
+        "description": "Return the contract definition in PDF in bytes.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "contract_definitions"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "description": "primary key for the record as UUID",
+          "required": true,
+          "type": "string",
+          "format": "uuid"
+        }
+      ]
+    },
+    "/contracts/": {
+      "get": {
+        "operationId": "contracts_list",
+        "summary": "Contract Viewset to list & retrieve contracts owned by the authenticated user.",
+        "description": "GET /api/contracts/\n    Return list of all contracts owned by the logged-in user.\n\nGET /api/contracts/<contract_id>/\n    Return a contract if one matches the provided id,\n    and it is owned by the logged-in user.\n\nGET /api/contracts/<contract_id>/download/\n    Return a contract in PDF format when it is signed on.",
+        "parameters": [
+          {
+            "name": "is_signed",
+            "in": "query",
+            "description": "is_signed",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Contract"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "contracts"
+        ]
+      },
+      "parameters": []
+    },
+    "/contracts/{id}/": {
+      "get": {
+        "operationId": "contracts_read",
+        "summary": "Contract Viewset to list & retrieve contracts owned by the authenticated user.",
+        "description": "GET /api/contracts/\n    Return list of all contracts owned by the logged-in user.\n\nGET /api/contracts/<contract_id>/\n    Return a contract if one matches the provided id,\n    and it is owned by the logged-in user.\n\nGET /api/contracts/<contract_id>/download/\n    Return a contract in PDF format when it is signed on.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Contract"
+            }
+          }
+        },
+        "tags": [
+          "contracts"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "description": "primary key for the record as UUID",
+          "required": true,
+          "type": "string",
+          "format": "uuid"
+        }
+      ]
+    },
+    "/contracts/{id}/download/": {
+      "get": {
+        "operationId": "contracts_download",
+        "description": "Return the PDF in bytes to download of the contract's definition of an order.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Contract"
+            }
+          }
+        },
+        "tags": [
+          "contracts"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "description": "primary key for the record as UUID",
+          "required": true,
+          "type": "string",
+          "format": "uuid"
+        }
+      ]
+    },
+    "/course-product-relations/": {
+      "get": {
+        "operationId": "course-product-relations_list",
+        "description": "API ViewSet for all interactions with course-product relations.\nCan be accessed through multiple URLs\nGET /courses/\n    Return all courses the user has access to\nGET /organizations/<organization_id>/courses/\n    Return all courses from the specified organization if user\n    has access to the organization",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/CourseProductRelation"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "course-product-relations"
+        ]
+      },
+      "parameters": []
+    },
+    "/course-product-relations/{pk_or_product_id}/": {
+      "get": {
+        "operationId": "course-product-relations_read",
+        "description": "API ViewSet for all interactions with course-product relations.\nCan be accessed through multiple URLs\nGET /courses/\n    Return all courses the user has access to\nGET /organizations/<organization_id>/courses/\n    Return all courses from the specified organization if user\n    has access to the organization",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/CourseProductRelation"
+            }
+          }
+        },
+        "tags": [
+          "course-product-relations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "pk_or_product_id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/course-runs-sync/": {
+      "post": {
+        "operationId": "course-runs-sync_create",
+        "summary": "View for the web hook to create or update course runs based on their resource link.",
+        "description": "- A new course run is created or the existing course run is updated\n\nParameters\n----------\nrequest : Type[django.http.request.HttpRequest]\n    The request on the API endpoint, it should contain a payload with course run fields.\n\nReturns\n-------\nType[rest_framework.response.Response]\n    HttpResponse acknowledging the success or failure of the synchronization operation.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "course-runs-sync"
+        ]
+      },
+      "parameters": []
+    },
+    "/course-runs/": {
+      "get": {
+        "operationId": "course-runs_list",
+        "description": "API ViewSet for all interactions with course runs.",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/CourseRun"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "course-runs"
+        ]
+      },
+      "parameters": []
+    },
+    "/course-runs/{id}/": {
+      "get": {
+        "operationId": "course-runs_read",
+        "description": "API ViewSet for all interactions with course runs.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/CourseRun"
+            }
+          }
+        },
+        "tags": [
+          "course-runs"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "description": "primary key for the record as UUID",
+          "required": true,
+          "type": "string",
+          "format": "uuid"
+        }
+      ]
+    },
+    "/courses/": {
+      "get": {
+        "operationId": "courses_list",
+        "summary": "API ViewSet for all interactions with courses.",
+        "description": "GET /api/courses/\n    Return list of all courses related to the logged-in user.\n\nGET /api/courses/:<course_id|course_code>\n    Return one course if an id is provided.\n\nGET /api/courses/:<course_id|course_code>/wish\n    Return wish status on this course for the authenticated user\n\nPOST /api/courses/:<course_id|course_code>/wish\n    Confirm a wish on this course for the authenticated user\n\nDELETE /api/courses/:<course_id|course_code>/wish\n    Delete any existing wish on this course for the authenticated user",
+        "parameters": [
+          {
+            "name": "has_listed_course_runs",
+            "in": "query",
+            "description": "has_listed_course_runs",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "product_type",
+            "in": "query",
+            "description": "product_type",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "credential",
+              "enrollment",
+              "certificate"
+            ]
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Course"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "courses"
+        ]
+      },
+      "parameters": []
+    },
+    "/courses/{course_id}/accesses/": {
+      "get": {
+        "operationId": "courses_accesses_list",
+        "summary": "API ViewSet for all interactions with course accesses.",
+        "description": "GET /api/courses/<course_id|course_code>/accesses/:<course_access_id>\n    Return list of all course accesses related to the logged-in user or one\n    course access if an id is provided.\n\nPOST /api/courses/<course_id|course_code>/accesses/ with expected data:\n    - user: str\n    - role: str [owner|admin|member]\n    Return newly created course access\n\nPUT /api/courses/<course_id|course_code>/accesses/<course_access_id>/ with expected data:\n    - role: str [owner|admin|member]\n    Return updated course access\n\nPATCH /api/courses/<course_id|course_code>/accesses/<course_access_id>/ with expected data:\n    - role: str [owner|admin|member]\n    Return partially updated course access\n\nDELETE /api/courses/<course_id|course_code>/accesses/<course_access_id>/\n    Delete targeted course access",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "courses"
+        ]
+      },
+      "post": {
+        "operationId": "courses_accesses_create",
+        "summary": "API ViewSet for all interactions with course accesses.",
+        "description": "GET /api/courses/<course_id|course_code>/accesses/:<course_access_id>\n    Return list of all course accesses related to the logged-in user or one\n    course access if an id is provided.\n\nPOST /api/courses/<course_id|course_code>/accesses/ with expected data:\n    - user: str\n    - role: str [owner|admin|member]\n    Return newly created course access\n\nPUT /api/courses/<course_id|course_code>/accesses/<course_access_id>/ with expected data:\n    - role: str [owner|admin|member]\n    Return updated course access\n\nPATCH /api/courses/<course_id|course_code>/accesses/<course_access_id>/ with expected data:\n    - role: str [owner|admin|member]\n    Return partially updated course access\n\nDELETE /api/courses/<course_id|course_code>/accesses/<course_access_id>/\n    Delete targeted course access",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "courses"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "course_id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/courses/{course_id}/accesses/{id}/": {
+      "get": {
+        "operationId": "courses_accesses_read",
+        "summary": "API ViewSet for all interactions with course accesses.",
+        "description": "GET /api/courses/<course_id|course_code>/accesses/:<course_access_id>\n    Return list of all course accesses related to the logged-in user or one\n    course access if an id is provided.\n\nPOST /api/courses/<course_id|course_code>/accesses/ with expected data:\n    - user: str\n    - role: str [owner|admin|member]\n    Return newly created course access\n\nPUT /api/courses/<course_id|course_code>/accesses/<course_access_id>/ with expected data:\n    - role: str [owner|admin|member]\n    Return updated course access\n\nPATCH /api/courses/<course_id|course_code>/accesses/<course_access_id>/ with expected data:\n    - role: str [owner|admin|member]\n    Return partially updated course access\n\nDELETE /api/courses/<course_id|course_code>/accesses/<course_access_id>/\n    Delete targeted course access",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "courses"
+        ]
+      },
+      "put": {
+        "operationId": "courses_accesses_update",
+        "summary": "API ViewSet for all interactions with course accesses.",
+        "description": "GET /api/courses/<course_id|course_code>/accesses/:<course_access_id>\n    Return list of all course accesses related to the logged-in user or one\n    course access if an id is provided.\n\nPOST /api/courses/<course_id|course_code>/accesses/ with expected data:\n    - user: str\n    - role: str [owner|admin|member]\n    Return newly created course access\n\nPUT /api/courses/<course_id|course_code>/accesses/<course_access_id>/ with expected data:\n    - role: str [owner|admin|member]\n    Return updated course access\n\nPATCH /api/courses/<course_id|course_code>/accesses/<course_access_id>/ with expected data:\n    - role: str [owner|admin|member]\n    Return partially updated course access\n\nDELETE /api/courses/<course_id|course_code>/accesses/<course_access_id>/\n    Delete targeted course access",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "courses"
+        ]
+      },
+      "patch": {
+        "operationId": "courses_accesses_partial_update",
+        "summary": "API ViewSet for all interactions with course accesses.",
+        "description": "GET /api/courses/<course_id|course_code>/accesses/:<course_access_id>\n    Return list of all course accesses related to the logged-in user or one\n    course access if an id is provided.\n\nPOST /api/courses/<course_id|course_code>/accesses/ with expected data:\n    - user: str\n    - role: str [owner|admin|member]\n    Return newly created course access\n\nPUT /api/courses/<course_id|course_code>/accesses/<course_access_id>/ with expected data:\n    - role: str [owner|admin|member]\n    Return updated course access\n\nPATCH /api/courses/<course_id|course_code>/accesses/<course_access_id>/ with expected data:\n    - role: str [owner|admin|member]\n    Return partially updated course access\n\nDELETE /api/courses/<course_id|course_code>/accesses/<course_access_id>/\n    Delete targeted course access",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "courses"
+        ]
+      },
+      "delete": {
+        "operationId": "courses_accesses_delete",
+        "summary": "API ViewSet for all interactions with course accesses.",
+        "description": "GET /api/courses/<course_id|course_code>/accesses/:<course_access_id>\n    Return list of all course accesses related to the logged-in user or one\n    course access if an id is provided.\n\nPOST /api/courses/<course_id|course_code>/accesses/ with expected data:\n    - user: str\n    - role: str [owner|admin|member]\n    Return newly created course access\n\nPUT /api/courses/<course_id|course_code>/accesses/<course_access_id>/ with expected data:\n    - role: str [owner|admin|member]\n    Return updated course access\n\nPATCH /api/courses/<course_id|course_code>/accesses/<course_access_id>/ with expected data:\n    - role: str [owner|admin|member]\n    Return partially updated course access\n\nDELETE /api/courses/<course_id|course_code>/accesses/<course_access_id>/\n    Delete targeted course access",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "courses"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "course_id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "description": "primary key for the record as UUID",
+          "required": true,
+          "type": "string",
+          "format": "uuid"
+        }
+      ]
+    },
+    "/courses/{course_id}/contracts/": {
+      "get": {
+        "operationId": "courses_contracts_list",
+        "description": "Nested Contract Viewset inside course route.\nIt allows to list & retrieve course's contracts if the user is an administrator\nor an owner of the contract's organization.\n\nGET /api/courses/<course_id|course_code>/contracts/\n    Return list of all course's contracts\n\nGET /api/courses/<course_id|course_code>/contracts/<contract_id>/\n    Return a course's contract if one matches the provided id",
+        "parameters": [
+          {
+            "name": "is_signed",
+            "in": "query",
+            "description": "is_signed",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Contract"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "courses"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "course_id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/courses/{course_id}/contracts/{id}/": {
+      "get": {
+        "operationId": "courses_contracts_read",
+        "description": "Nested Contract Viewset inside course route.\nIt allows to list & retrieve course's contracts if the user is an administrator\nor an owner of the contract's organization.\n\nGET /api/courses/<course_id|course_code>/contracts/\n    Return list of all course's contracts\n\nGET /api/courses/<course_id|course_code>/contracts/<contract_id>/\n    Return a course's contract if one matches the provided id",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Contract"
+            }
+          }
+        },
+        "tags": [
+          "courses"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "course_id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "description": "primary key for the record as UUID",
+          "required": true,
+          "type": "string",
+          "format": "uuid"
+        }
+      ]
+    },
+    "/courses/{course_id}/course-runs/": {
+      "get": {
+        "operationId": "courses_course-runs_list",
+        "description": "API ViewSet for all interactions with course runs.",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/CourseRun"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "courses"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "course_id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/courses/{course_id}/course-runs/{id}/": {
+      "get": {
+        "operationId": "courses_course-runs_read",
+        "description": "API ViewSet for all interactions with course runs.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/CourseRun"
+            }
+          }
+        },
+        "tags": [
+          "courses"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "course_id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "description": "primary key for the record as UUID",
+          "required": true,
+          "type": "string",
+          "format": "uuid"
+        }
+      ]
+    },
+    "/courses/{course_id}/products/": {
+      "get": {
+        "operationId": "courses_products_list",
+        "description": "API ViewSet for all interactions with course-product relations.\nCan be accessed through multiple URLs\nGET /courses/\n    Return all courses the user has access to\nGET /organizations/<organization_id>/courses/\n    Return all courses from the specified organization if user\n    has access to the organization",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/CourseProductRelation"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "courses"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "course_id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/courses/{course_id}/products/{pk_or_product_id}/": {
+      "get": {
+        "operationId": "courses_products_read",
+        "description": "API ViewSet for all interactions with course-product relations.\nCan be accessed through multiple URLs\nGET /courses/\n    Return all courses the user has access to\nGET /organizations/<organization_id>/courses/\n    Return all courses from the specified organization if user\n    has access to the organization",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/CourseProductRelation"
+            }
+          }
+        },
+        "tags": [
+          "courses"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "course_id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "pk_or_product_id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/courses/{id}/": {
+      "get": {
+        "operationId": "courses_read",
+        "summary": "API ViewSet for all interactions with courses.",
+        "description": "GET /api/courses/\n    Return list of all courses related to the logged-in user.\n\nGET /api/courses/:<course_id|course_code>\n    Return one course if an id is provided.\n\nGET /api/courses/:<course_id|course_code>/wish\n    Return wish status on this course for the authenticated user\n\nPOST /api/courses/:<course_id|course_code>/wish\n    Confirm a wish on this course for the authenticated user\n\nDELETE /api/courses/:<course_id|course_code>/wish\n    Delete any existing wish on this course for the authenticated user",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Course"
+            }
+          }
+        },
+        "tags": [
+          "courses"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/courses/{id}/wish/": {
+      "get": {
+        "operationId": "courses_wish_read",
+        "description": "Action to handle the wish on this course for the logged-in user.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Course"
+            }
+          }
+        },
+        "tags": [
+          "courses"
+        ]
+      },
+      "post": {
+        "operationId": "courses_wish_create",
+        "description": "Action to handle the wish on this course for the logged-in user.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Course"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Course"
+            }
+          }
+        },
+        "tags": [
+          "courses"
+        ]
+      },
+      "delete": {
+        "operationId": "courses_wish_delete",
+        "description": "Action to handle the wish on this course for the logged-in user.",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "courses"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/credit-cards/": {
+      "get": {
+        "operationId": "credit-cards_list",
+        "summary": "API views allows to get all credit cards, update or delete one\nfor the authenticated user.",
+        "description": "GET /api/credit-cards/\n    Return the list of all credit cards owned by the authenticated user\n\nPUT /api/credit-cards/<credit_card_id> with expected data:\n    - title: str\n    - is_main?: bool\n\nDELETE /api/credit-cards/<credit_card_id>\n    Delete the selected credit card",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/CreditCard"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "credit-cards"
+        ]
+      },
+      "parameters": []
+    },
+    "/credit-cards/{id}/": {
+      "get": {
+        "operationId": "credit-cards_read",
+        "summary": "API views allows to get all credit cards, update or delete one\nfor the authenticated user.",
+        "description": "GET /api/credit-cards/\n    Return the list of all credit cards owned by the authenticated user\n\nPUT /api/credit-cards/<credit_card_id> with expected data:\n    - title: str\n    - is_main?: bool\n\nDELETE /api/credit-cards/<credit_card_id>\n    Delete the selected credit card",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/CreditCard"
+            }
+          }
+        },
+        "tags": [
+          "credit-cards"
+        ]
+      },
+      "put": {
+        "operationId": "credit-cards_update",
+        "summary": "API views allows to get all credit cards, update or delete one\nfor the authenticated user.",
+        "description": "GET /api/credit-cards/\n    Return the list of all credit cards owned by the authenticated user\n\nPUT /api/credit-cards/<credit_card_id> with expected data:\n    - title: str\n    - is_main?: bool\n\nDELETE /api/credit-cards/<credit_card_id>\n    Delete the selected credit card",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CreditCard"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/CreditCard"
+            }
+          }
+        },
+        "tags": [
+          "credit-cards"
+        ]
+      },
+      "patch": {
+        "operationId": "credit-cards_partial_update",
+        "summary": "API views allows to get all credit cards, update or delete one\nfor the authenticated user.",
+        "description": "GET /api/credit-cards/\n    Return the list of all credit cards owned by the authenticated user\n\nPUT /api/credit-cards/<credit_card_id> with expected data:\n    - title: str\n    - is_main?: bool\n\nDELETE /api/credit-cards/<credit_card_id>\n    Delete the selected credit card",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CreditCard"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/CreditCard"
+            }
+          }
+        },
+        "tags": [
+          "credit-cards"
+        ]
+      },
+      "delete": {
+        "operationId": "credit-cards_delete",
+        "summary": "API views allows to get all credit cards, update or delete one\nfor the authenticated user.",
+        "description": "GET /api/credit-cards/\n    Return the list of all credit cards owned by the authenticated user\n\nPUT /api/credit-cards/<credit_card_id> with expected data:\n    - title: str\n    - is_main?: bool\n\nDELETE /api/credit-cards/<credit_card_id>\n    Delete the selected credit card",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "credit-cards"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/enrollments/": {
+      "get": {
+        "operationId": "enrollments_list",
+        "description": "API ViewSet for all interactions with enrollments.",
+        "parameters": [
+          {
+            "name": "course_run",
+            "in": "query",
+            "description": "course_run",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "was_created_by_order",
+            "in": "query",
+            "description": "was_created_by_order",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Enrollment"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "enrollments"
+        ]
+      },
+      "post": {
+        "operationId": "enrollments_create",
+        "description": "API ViewSet for all interactions with enrollments.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Enrollment"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Enrollment"
+            }
+          }
+        },
+        "tags": [
+          "enrollments"
+        ]
+      },
+      "parameters": []
+    },
+    "/enrollments/{id}/": {
+      "get": {
+        "operationId": "enrollments_read",
+        "description": "API ViewSet for all interactions with enrollments.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Enrollment"
+            }
+          }
+        },
+        "tags": [
+          "enrollments"
+        ]
+      },
+      "put": {
+        "operationId": "enrollments_update",
+        "description": "API ViewSet for all interactions with enrollments.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Enrollment"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Enrollment"
+            }
+          }
+        },
+        "tags": [
+          "enrollments"
+        ]
+      },
+      "patch": {
+        "operationId": "enrollments_partial_update",
+        "description": "API ViewSet for all interactions with enrollments.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Enrollment"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Enrollment"
+            }
+          }
+        },
+        "tags": [
+          "enrollments"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/orders/": {
+      "get": {
+        "operationId": "orders_list",
+        "summary": "API view for a user to consult the orders he/she owns or create a new one.",
+        "description": "GET /api/orders/\n    Return list of all orders for a user with pagination\n\nPOST /api/orders/ with expected data:\n    - course: course code\n    - product: product id (product must be associated to the course. Otherwise,\n      a 400 error is returned)\n    Return new order just created\n\nPOST /api/orders/:order_id/submit_for_signature/\n    Return an invitation link to sign the contract definition",
+        "parameters": [
+          {
+            "name": "product",
+            "in": "query",
+            "description": "product",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "enrollment",
+            "in": "query",
+            "description": "enrollment",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "course",
+            "in": "query",
+            "description": "course",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "description": "state",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "draft",
+              "submitted",
+              "pending",
+              "canceled",
+              "validated"
+            ]
+          },
+          {
+            "name": "state__exclude",
+            "in": "query",
+            "description": "state__exclude",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "draft",
+              "submitted",
+              "pending",
+              "canceled",
+              "validated"
+            ]
+          },
+          {
+            "name": "product__type",
+            "in": "query",
+            "description": "product__type",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "credential",
+              "enrollment",
+              "certificate"
+            ]
+          },
+          {
+            "name": "product__type__exclude",
+            "in": "query",
+            "description": "product__type__exclude",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "credential",
+              "enrollment",
+              "certificate"
+            ]
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Order"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "orders"
+        ]
+      },
+      "post": {
+        "operationId": "orders_create",
+        "description": "Try to create an order and a related payment if the payment is fee.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Order"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Order"
+            }
+          }
+        },
+        "tags": [
+          "orders"
+        ]
+      },
+      "parameters": []
+    },
+    "/orders/{id}/": {
+      "get": {
+        "operationId": "orders_read",
+        "summary": "API view for a user to consult the orders he/she owns or create a new one.",
+        "description": "GET /api/orders/\n    Return list of all orders for a user with pagination\n\nPOST /api/orders/ with expected data:\n    - course: course code\n    - product: product id (product must be associated to the course. Otherwise,\n      a 400 error is returned)\n    Return new order just created\n\nPOST /api/orders/:order_id/submit_for_signature/\n    Return an invitation link to sign the contract definition",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Order"
+            }
+          }
+        },
+        "tags": [
+          "orders"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/orders/{id}/abort/": {
+      "post": {
+        "operationId": "orders_abort",
+        "description": "Change the state of the order to pending",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Order"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Order"
+            }
+          }
+        },
+        "tags": [
+          "orders"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/orders/{id}/cancel/": {
+      "post": {
+        "operationId": "orders_cancel",
+        "description": "Change the state of the order to cancelled",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Order"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Order"
+            }
+          }
+        },
+        "tags": [
+          "orders"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/orders/{id}/invoice/": {
+      "get": {
+        "operationId": "orders_invoice",
+        "description": "Retrieve an invoice through its reference if it is related to\nthe order instance and owned by the authenticated user.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Order"
+            }
+          }
+        },
+        "tags": [
+          "orders"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/orders/{id}/submit/": {
+      "patch": {
+        "operationId": "orders_submit",
+        "description": "Submit a draft order if the conditions are filled",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Order"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Order"
+            }
+          }
+        },
+        "tags": [
+          "orders"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/orders/{id}/submit_for_signature/": {
+      "post": {
+        "operationId": "orders_submit_for_signature",
+        "description": "Create the contract of a product's order that has a contract definition and submit\nthe contract to the signature provider. It returns a one-time use invitation link.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Order"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Order"
+            }
+          }
+        },
+        "tags": [
+          "orders"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/orders/{id}/validate/": {
+      "put": {
+        "operationId": "orders_validate",
+        "description": "Validate the order",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Order"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Order"
+            }
+          }
+        },
+        "tags": [
+          "orders"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/": {
+      "get": {
+        "operationId": "organizations_list",
+        "summary": "API ViewSet for all interactions with organizations.",
+        "description": "GET /api/organizations/:organization_id\n    Return list of all organizations related to the logged-in user or one organization\n    if an id is provided.",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Organization"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": []
+    },
+    "/organizations/{id}/": {
+      "get": {
+        "operationId": "organizations_read",
+        "summary": "API ViewSet for all interactions with organizations.",
+        "description": "GET /api/organizations/:organization_id\n    Return list of all organizations related to the logged-in user or one organization\n    if an id is provided.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Organization"
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_id}/accesses/": {
+      "get": {
+        "operationId": "organizations_accesses_list",
+        "summary": "API ViewSet for all interactions with organization accesses.",
+        "description": "GET /api/organization/<organization_id>/accesses/:<organization_access_id>\n    Return list of all organization accesses related to the logged-in user or one\n    organization access if an id is provided.\n\nPOST /api/<organization_id>/accesses/ with expected data:\n    - user: str\n    - role: str [owner|admin|member]\n    Return newly created organization access\n\nPUT /api/<organization_id>/accesses/<organization_access_id>/ with expected data:\n    - role: str [owner|admin|member]\n    Return updated organization access\n\nPATCH /api/<organization_id>/accesses/<organization_access_id>/ with expected data:\n    - role: str [owner|admin|member]\n    Return partially updated organization access\n\nDELETE /api/<organization_id>/accesses/<organization_access_id>/\n    Delete targeted organization access",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "post": {
+        "operationId": "organizations_accesses_create",
+        "summary": "API ViewSet for all interactions with organization accesses.",
+        "description": "GET /api/organization/<organization_id>/accesses/:<organization_access_id>\n    Return list of all organization accesses related to the logged-in user or one\n    organization access if an id is provided.\n\nPOST /api/<organization_id>/accesses/ with expected data:\n    - user: str\n    - role: str [owner|admin|member]\n    Return newly created organization access\n\nPUT /api/<organization_id>/accesses/<organization_access_id>/ with expected data:\n    - role: str [owner|admin|member]\n    Return updated organization access\n\nPATCH /api/<organization_id>/accesses/<organization_access_id>/ with expected data:\n    - role: str [owner|admin|member]\n    Return partially updated organization access\n\nDELETE /api/<organization_id>/accesses/<organization_access_id>/\n    Delete targeted organization access",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_id}/accesses/{id}/": {
+      "get": {
+        "operationId": "organizations_accesses_read",
+        "summary": "API ViewSet for all interactions with organization accesses.",
+        "description": "GET /api/organization/<organization_id>/accesses/:<organization_access_id>\n    Return list of all organization accesses related to the logged-in user or one\n    organization access if an id is provided.\n\nPOST /api/<organization_id>/accesses/ with expected data:\n    - user: str\n    - role: str [owner|admin|member]\n    Return newly created organization access\n\nPUT /api/<organization_id>/accesses/<organization_access_id>/ with expected data:\n    - role: str [owner|admin|member]\n    Return updated organization access\n\nPATCH /api/<organization_id>/accesses/<organization_access_id>/ with expected data:\n    - role: str [owner|admin|member]\n    Return partially updated organization access\n\nDELETE /api/<organization_id>/accesses/<organization_access_id>/\n    Delete targeted organization access",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "put": {
+        "operationId": "organizations_accesses_update",
+        "summary": "API ViewSet for all interactions with organization accesses.",
+        "description": "GET /api/organization/<organization_id>/accesses/:<organization_access_id>\n    Return list of all organization accesses related to the logged-in user or one\n    organization access if an id is provided.\n\nPOST /api/<organization_id>/accesses/ with expected data:\n    - user: str\n    - role: str [owner|admin|member]\n    Return newly created organization access\n\nPUT /api/<organization_id>/accesses/<organization_access_id>/ with expected data:\n    - role: str [owner|admin|member]\n    Return updated organization access\n\nPATCH /api/<organization_id>/accesses/<organization_access_id>/ with expected data:\n    - role: str [owner|admin|member]\n    Return partially updated organization access\n\nDELETE /api/<organization_id>/accesses/<organization_access_id>/\n    Delete targeted organization access",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "patch": {
+        "operationId": "organizations_accesses_partial_update",
+        "summary": "API ViewSet for all interactions with organization accesses.",
+        "description": "GET /api/organization/<organization_id>/accesses/:<organization_access_id>\n    Return list of all organization accesses related to the logged-in user or one\n    organization access if an id is provided.\n\nPOST /api/<organization_id>/accesses/ with expected data:\n    - user: str\n    - role: str [owner|admin|member]\n    Return newly created organization access\n\nPUT /api/<organization_id>/accesses/<organization_access_id>/ with expected data:\n    - role: str [owner|admin|member]\n    Return updated organization access\n\nPATCH /api/<organization_id>/accesses/<organization_access_id>/ with expected data:\n    - role: str [owner|admin|member]\n    Return partially updated organization access\n\nDELETE /api/<organization_id>/accesses/<organization_access_id>/\n    Delete targeted organization access",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "delete": {
+        "operationId": "organizations_accesses_delete",
+        "summary": "API ViewSet for all interactions with organization accesses.",
+        "description": "GET /api/organization/<organization_id>/accesses/:<organization_access_id>\n    Return list of all organization accesses related to the logged-in user or one\n    organization access if an id is provided.\n\nPOST /api/<organization_id>/accesses/ with expected data:\n    - user: str\n    - role: str [owner|admin|member]\n    Return newly created organization access\n\nPUT /api/<organization_id>/accesses/<organization_access_id>/ with expected data:\n    - role: str [owner|admin|member]\n    Return updated organization access\n\nPATCH /api/<organization_id>/accesses/<organization_access_id>/ with expected data:\n    - role: str [owner|admin|member]\n    Return partially updated organization access\n\nDELETE /api/<organization_id>/accesses/<organization_access_id>/\n    Delete targeted organization access",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "description": "primary key for the record as UUID",
+          "required": true,
+          "type": "string",
+          "format": "uuid"
+        }
+      ]
+    },
+    "/organizations/{organization_id}/contracts/": {
+      "get": {
+        "operationId": "organizations_contracts_list",
+        "description": "Nested Contract Viewset inside organization route.\nIt allows to list & retrieve organization's contracts if the user is\nan administrator or an owner of the organization.\n\nGET /api/courses/<organization_id|organization_code>/contracts/\n    Return list of all organization's contracts\n\nGET /api/courses/<organization_id|organization_code>/contracts/<contract_id>/\n    Return an organization's contract if one matches the provided id",
+        "parameters": [
+          {
+            "name": "is_signed",
+            "in": "query",
+            "description": "is_signed",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Contract"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_id}/contracts/{id}/": {
+      "get": {
+        "operationId": "organizations_contracts_read",
+        "description": "Nested Contract Viewset inside organization route.\nIt allows to list & retrieve organization's contracts if the user is\nan administrator or an owner of the organization.\n\nGET /api/courses/<organization_id|organization_code>/contracts/\n    Return list of all organization's contracts\n\nGET /api/courses/<organization_id|organization_code>/contracts/<contract_id>/\n    Return an organization's contract if one matches the provided id",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Contract"
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "description": "primary key for the record as UUID",
+          "required": true,
+          "type": "string",
+          "format": "uuid"
+        }
+      ]
+    },
+    "/organizations/{organization_id}/course-product-relations/": {
+      "get": {
+        "operationId": "organizations_course-product-relations_list",
+        "description": "API ViewSet for all interactions with course-product relations.\nCan be accessed through multiple URLs\nGET /courses/\n    Return all courses the user has access to\nGET /organizations/<organization_id>/courses/\n    Return all courses from the specified organization if user\n    has access to the organization",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/CourseProductRelation"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_id}/course-product-relations/{pk_or_product_id}/": {
+      "get": {
+        "operationId": "organizations_course-product-relations_read",
+        "description": "API ViewSet for all interactions with course-product relations.\nCan be accessed through multiple URLs\nGET /courses/\n    Return all courses the user has access to\nGET /organizations/<organization_id>/courses/\n    Return all courses from the specified organization if user\n    has access to the organization",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/CourseProductRelation"
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "pk_or_product_id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_id}/courses/": {
+      "get": {
+        "operationId": "organizations_courses_list",
+        "summary": "API ViewSet for all interactions with courses.",
+        "description": "GET /api/courses/\n    Return list of all courses related to the logged-in user.\n\nGET /api/courses/:<course_id|course_code>\n    Return one course if an id is provided.\n\nGET /api/courses/:<course_id|course_code>/wish\n    Return wish status on this course for the authenticated user\n\nPOST /api/courses/:<course_id|course_code>/wish\n    Confirm a wish on this course for the authenticated user\n\nDELETE /api/courses/:<course_id|course_code>/wish\n    Delete any existing wish on this course for the authenticated user",
+        "parameters": [
+          {
+            "name": "has_listed_course_runs",
+            "in": "query",
+            "description": "has_listed_course_runs",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "product_type",
+            "in": "query",
+            "description": "product_type",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "credential",
+              "enrollment",
+              "certificate"
+            ]
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Course"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_id}/courses/{id}/": {
+      "get": {
+        "operationId": "organizations_courses_read",
+        "summary": "API ViewSet for all interactions with courses.",
+        "description": "GET /api/courses/\n    Return list of all courses related to the logged-in user.\n\nGET /api/courses/:<course_id|course_code>\n    Return one course if an id is provided.\n\nGET /api/courses/:<course_id|course_code>/wish\n    Return wish status on this course for the authenticated user\n\nPOST /api/courses/:<course_id|course_code>/wish\n    Confirm a wish on this course for the authenticated user\n\nDELETE /api/courses/:<course_id|course_code>/wish\n    Delete any existing wish on this course for the authenticated user",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Course"
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_id}/courses/{id}/wish/": {
+      "get": {
+        "operationId": "organizations_courses_wish_read",
+        "description": "Action to handle the wish on this course for the logged-in user.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Course"
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "post": {
+        "operationId": "organizations_courses_wish_create",
+        "description": "Action to handle the wish on this course for the logged-in user.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Course"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Course"
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "delete": {
+        "operationId": "organizations_courses_wish_delete",
+        "description": "Action to handle the wish on this course for the logged-in user.",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/payments/notifications/": {
+      "post": {
+        "operationId": "payments_notifications_create",
+        "description": "The webhook called by payment provider\nwhen a payment has been created/updated/refunded...",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "payments"
+        ]
+      },
+      "parameters": []
+    },
+    "/signature/notifications/": {
+      "post": {
+        "operationId": "signature_notifications_create",
+        "description": "The webhook called by the signature provider when a file has been signed/refused.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "signature"
+        ]
+      },
+      "parameters": []
+    },
+    "/users/me/": {
+      "get": {
+        "operationId": "users_get_me",
+        "description": "Return information on currently logged user",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/User"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "users"
+        ]
+      },
+      "parameters": []
+    },
+    "/users/{id}/": {
+      "get": {
+        "operationId": "users_read",
+        "description": "User ViewSet",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/User"
+            }
+          }
+        },
+        "tags": [
+          "users"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    }
+  },
+  "definitions": {
+    "Address": {
+      "required": [
+        "address",
+        "city",
+        "country",
+        "first_name",
+        "last_name",
+        "postcode",
+        "title"
+      ],
+      "type": "object",
+      "properties": {
+        "address": {
+          "title": "Address",
+          "type": "string",
+          "maxLength": 255,
+          "minLength": 1
+        },
+        "city": {
+          "title": "City",
+          "type": "string",
+          "maxLength": 255,
+          "minLength": 1
+        },
+        "country": {
+          "title": "Country",
+          "type": "string",
+          "enum": [
+            "AF",
+            "AX",
+            "AL",
+            "DZ",
+            "AS",
+            "AD",
+            "AO",
+            "AI",
+            "AQ",
+            "AG",
+            "AR",
+            "AM",
+            "AW",
+            "AU",
+            "AT",
+            "AZ",
+            "BS",
+            "BH",
+            "BD",
+            "BB",
+            "BY",
+            "BE",
+            "BZ",
+            "BJ",
+            "BM",
+            "BT",
+            "BO",
+            "BQ",
+            "BA",
+            "BW",
+            "BV",
+            "BR",
+            "IO",
+            "BN",
+            "BG",
+            "BF",
+            "BI",
+            "CV",
+            "KH",
+            "CM",
+            "CA",
+            "KY",
+            "CF",
+            "TD",
+            "CL",
+            "CN",
+            "CX",
+            "CC",
+            "CO",
+            "KM",
+            "CG",
+            "CD",
+            "CK",
+            "CR",
+            "CI",
+            "HR",
+            "CU",
+            "CW",
+            "CY",
+            "CZ",
+            "DK",
+            "DJ",
+            "DM",
+            "DO",
+            "EC",
+            "EG",
+            "SV",
+            "GQ",
+            "ER",
+            "EE",
+            "SZ",
+            "ET",
+            "FK",
+            "FO",
+            "FJ",
+            "FI",
+            "FR",
+            "GF",
+            "PF",
+            "TF",
+            "GA",
+            "GM",
+            "GE",
+            "DE",
+            "GH",
+            "GI",
+            "GR",
+            "GL",
+            "GD",
+            "GP",
+            "GU",
+            "GT",
+            "GG",
+            "GN",
+            "GW",
+            "GY",
+            "HT",
+            "HM",
+            "VA",
+            "HN",
+            "HK",
+            "HU",
+            "IS",
+            "IN",
+            "ID",
+            "IR",
+            "IQ",
+            "IE",
+            "IM",
+            "IL",
+            "IT",
+            "JM",
+            "JP",
+            "JE",
+            "JO",
+            "KZ",
+            "KE",
+            "KI",
+            "KW",
+            "KG",
+            "LA",
+            "LV",
+            "LB",
+            "LS",
+            "LR",
+            "LY",
+            "LI",
+            "LT",
+            "LU",
+            "MO",
+            "MG",
+            "MW",
+            "MY",
+            "MV",
+            "ML",
+            "MT",
+            "MH",
+            "MQ",
+            "MR",
+            "MU",
+            "YT",
+            "MX",
+            "FM",
+            "MD",
+            "MC",
+            "MN",
+            "ME",
+            "MS",
+            "MA",
+            "MZ",
+            "MM",
+            "NA",
+            "NR",
+            "NP",
+            "NL",
+            "NC",
+            "NZ",
+            "NI",
+            "NE",
+            "NG",
+            "NU",
+            "NF",
+            "KP",
+            "MK",
+            "MP",
+            "NO",
+            "OM",
+            "PK",
+            "PW",
+            "PS",
+            "PA",
+            "PG",
+            "PY",
+            "PE",
+            "PH",
+            "PN",
+            "PL",
+            "PT",
+            "PR",
+            "QA",
+            "RE",
+            "RO",
+            "RU",
+            "RW",
+            "BL",
+            "SH",
+            "KN",
+            "LC",
+            "MF",
+            "PM",
+            "VC",
+            "WS",
+            "SM",
+            "ST",
+            "SA",
+            "SN",
+            "RS",
+            "SC",
+            "SL",
+            "SG",
+            "SX",
+            "SK",
+            "SI",
+            "SB",
+            "SO",
+            "ZA",
+            "GS",
+            "KR",
+            "SS",
+            "ES",
+            "LK",
+            "SD",
+            "SR",
+            "SJ",
+            "SE",
+            "CH",
+            "SY",
+            "TW",
+            "TJ",
+            "TZ",
+            "TH",
+            "TL",
+            "TG",
+            "TK",
+            "TO",
+            "TT",
+            "TN",
+            "TR",
+            "TM",
+            "TC",
+            "TV",
+            "UG",
+            "UA",
+            "AE",
+            "GB",
+            "UM",
+            "US",
+            "UY",
+            "UZ",
+            "VU",
+            "VE",
+            "VN",
+            "VG",
+            "VI",
+            "WF",
+            "EH",
+            "YE",
+            "ZM",
+            "ZW"
+          ]
+        },
+        "first_name": {
+          "title": "First name",
+          "type": "string",
+          "maxLength": 255,
+          "minLength": 1
+        },
+        "last_name": {
+          "title": "Last name",
+          "type": "string",
+          "maxLength": 255,
+          "minLength": 1
+        },
+        "id": {
+          "title": "Id",
+          "type": "string",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "is_main": {
+          "title": "Main",
+          "type": "boolean"
+        },
+        "postcode": {
+          "title": "Postcode",
+          "type": "string",
+          "maxLength": 50,
+          "minLength": 1
+        },
+        "title": {
+          "title": "Title",
+          "type": "string",
+          "maxLength": 100,
+          "minLength": 1
+        }
+      }
+    },
+    "AdminCertificateDefinition": {
+      "required": [
+        "name",
+        "title"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "description": "primary key for the record as UUID",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "name": {
+          "title": "Name",
+          "type": "string",
+          "maxLength": 255,
+          "minLength": 1
+        },
+        "title": {
+          "title": "Title",
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "title": "Description",
+          "type": "string",
+          "minLength": 1
+        },
+        "template": {
+          "title": "Template to generate pdf",
+          "type": "string",
+          "enum": [
+            "certificate",
+            "degree"
+          ],
+          "x-nullable": true
+        }
+      }
+    },
+    "AdminContractDefinition": {
+      "required": [
+        "language",
+        "title"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "description": "primary key for the record as UUID",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "body": {
+          "title": "Body",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "language": {
+          "title": "Language",
+          "description": "Language of the contract definition",
+          "type": "string",
+          "enum": [
+            "en-us",
+            "fr-fr"
+          ]
+        },
+        "title": {
+          "title": "Title",
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "title": "Template name",
+          "type": "string",
+          "enum": [
+            "contract_definition"
+          ]
+        }
+      }
+    },
+    "AdminOrderGroup": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "description": "primary key for the record as UUID",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "nb_seats": {
+          "title": "Number of seats",
+          "description": "The maximum number of orders that can be validated for a given order group",
+          "type": "integer",
+          "maximum": 32767,
+          "minimum": 0
+        },
+        "is_active": {
+          "title": "Is active",
+          "type": "boolean"
+        },
+        "nb_available_seats": {
+          "title": "Nb available seats",
+          "type": "string",
+          "readOnly": true
+        },
+        "created_on": {
+          "title": "Created on",
+          "description": "date and time at which a record was created",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        }
+      }
+    },
+    "AdminOrderGroupCreate": {
+      "required": [
+        "course_product_relation"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "description": "primary key for the record as UUID",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "nb_seats": {
+          "title": "Number of seats",
+          "description": "The maximum number of orders that can be validated for a given order group",
+          "type": "integer",
+          "maximum": 32767,
+          "minimum": 0
+        },
+        "is_active": {
+          "title": "Is active",
+          "type": "boolean"
+        },
+        "nb_available_seats": {
+          "title": "Nb available seats",
+          "type": "string",
+          "readOnly": true
+        },
+        "created_on": {
+          "title": "Created on",
+          "description": "date and time at which a record was created",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "course_product_relation": {
+          "title": "Course product relation",
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    },
+    "AdminCourseLight": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "title": {
+          "title": "Title",
+          "type": "string",
+          "readOnly": true
+        },
+        "id": {
+          "title": "Id",
+          "description": "primary key for the record as UUID",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "state": {
+          "title": "State",
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "AdminCourseRun": {
+      "required": [
+        "resource_link",
+        "title",
+        "languages"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "description": "primary key for the record as UUID",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "course": {
+          "$ref": "#/definitions/AdminCourseLight"
+        },
+        "resource_link": {
+          "title": "Resource link",
+          "type": "string",
+          "maxLength": 200,
+          "minLength": 1
+        },
+        "title": {
+          "title": "Title",
+          "type": "string",
+          "minLength": 1
+        },
+        "is_gradable": {
+          "title": "Is gradable",
+          "type": "boolean"
+        },
+        "is_listed": {
+          "title": "Is listed",
+          "description": "If checked the course run will be included in the list of course runs available for enrollment on the related course page.",
+          "type": "boolean"
+        },
+        "languages": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "af",
+              "ar",
+              "ar-dz",
+              "ast",
+              "az",
+              "bg",
+              "be",
+              "bn",
+              "br",
+              "bs",
+              "ca",
+              "ckb",
+              "cs",
+              "cy",
+              "da",
+              "de",
+              "dsb",
+              "el",
+              "en",
+              "en-au",
+              "en-gb",
+              "eo",
+              "es",
+              "es-ar",
+              "es-co",
+              "es-mx",
+              "es-ni",
+              "es-ve",
+              "et",
+              "eu",
+              "fa",
+              "fi",
+              "fr",
+              "fy",
+              "ga",
+              "gd",
+              "gl",
+              "he",
+              "hi",
+              "hr",
+              "hsb",
+              "hu",
+              "hy",
+              "ia",
+              "id",
+              "ig",
+              "io",
+              "is",
+              "it",
+              "ja",
+              "ka",
+              "kab",
+              "kk",
+              "km",
+              "kn",
+              "ko",
+              "ky",
+              "lb",
+              "lt",
+              "lv",
+              "mk",
+              "ml",
+              "mn",
+              "mr",
+              "ms",
+              "my",
+              "nb",
+              "ne",
+              "nl",
+              "nn",
+              "os",
+              "pa",
+              "pl",
+              "pt",
+              "pt-br",
+              "ro",
+              "ru",
+              "sk",
+              "sl",
+              "sq",
+              "sr",
+              "sr-latn",
+              "sv",
+              "sw",
+              "ta",
+              "te",
+              "tg",
+              "th",
+              "tk",
+              "tr",
+              "tt",
+              "udm",
+              "uk",
+              "ur",
+              "uz",
+              "vi",
+              "zh-hans",
+              "zh-hant"
+            ]
+          }
+        },
+        "start": {
+          "title": "Course start",
+          "type": "string",
+          "format": "date-time",
+          "x-nullable": true
+        },
+        "end": {
+          "title": "Course end",
+          "type": "string",
+          "format": "date-time",
+          "x-nullable": true
+        },
+        "enrollment_start": {
+          "title": "Enrollment date",
+          "type": "string",
+          "format": "date-time",
+          "x-nullable": true
+        },
+        "enrollment_end": {
+          "title": "Enrollment end",
+          "type": "string",
+          "format": "date-time",
+          "x-nullable": true
+        }
+      }
+    },
+    "AdminUser": {
+      "required": [
+        "full_name"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "description": "primary key for the record as UUID",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "username": {
+          "title": "Username",
+          "description": "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.",
+          "type": "string",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "full_name": {
+          "title": "Full name",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "AdminCourseAccess": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "description": "primary key for the record as UUID",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "user": {
+          "$ref": "#/definitions/AdminUser"
+        },
+        "role": {
+          "title": "Role",
+          "type": "string",
+          "enum": [
+            "owner",
+            "administrator",
+            "instructor",
+            "manager"
+          ]
+        }
+      }
+    },
+    "AdminOrganizationLight": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "title": {
+          "title": "Title",
+          "type": "string",
+          "readOnly": true
+        },
+        "id": {
+          "title": "Id",
+          "description": "primary key for the record as UUID",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        }
+      }
+    },
+    "AdminProduct": {
+      "required": [
+        "title",
+        "call_to_action",
+        "price",
+        "type"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "description": "primary key for the record as UUID",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "title": {
+          "title": "Title",
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "call_to_action": {
+          "title": "Call to action",
+          "type": "string",
+          "minLength": 1
+        },
+        "price": {
+          "title": "Price",
+          "type": "number",
+          "format": "decimal",
+          "minimum": 0
+        },
+        "price_currency": {
+          "title": "Price currency",
+          "type": "string",
+          "readOnly": true
+        },
+        "type": {
+          "title": "Type",
+          "type": "string",
+          "enum": [
+            "credential",
+            "enrollment",
+            "certificate"
+          ]
+        },
+        "instructions": {
+          "title": "Instructions",
+          "type": "string"
+        },
+        "certificate_definition": {
+          "title": "Certificate definition",
+          "type": "string",
+          "format": "uuid",
+          "x-nullable": true
+        },
+        "target_courses": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "readOnly": true,
+          "uniqueItems": true
+        }
+      }
+    },
+    "AdminProductRelation": {
+      "required": [
+        "product",
+        "organizations"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "description": "primary key for the record as UUID",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "product": {
+          "$ref": "#/definitions/AdminProduct"
+        },
+        "order_groups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AdminOrderGroup"
+          },
+          "readOnly": true
+        },
+        "organizations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AdminOrganizationLight"
+          }
+        }
+      }
+    },
+    "AdminCourse": {
+      "required": [
+        "code",
+        "title"
+      ],
+      "type": "object",
+      "properties": {
+        "accesses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AdminCourseAccess"
+          },
+          "readOnly": true
+        },
+        "code": {
+          "title": "Code",
+          "type": "string",
+          "maxLength": 100,
+          "minLength": 1
+        },
+        "cover": {
+          "title": "Cover",
+          "type": "string",
+          "readOnly": true,
+          "format": "uri"
+        },
+        "id": {
+          "title": "Id",
+          "description": "primary key for the record as UUID",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "organizations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AdminOrganizationLight"
+          },
+          "readOnly": true
+        },
+        "product_relations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AdminProductRelation"
+          },
+          "readOnly": true
+        },
+        "state": {
+          "title": "State",
+          "type": "string",
+          "readOnly": true
+        },
+        "title": {
+          "title": "Title",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "AdminOrganizationAccess": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "description": "primary key for the record as UUID",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "user": {
+          "$ref": "#/definitions/AdminUser"
+        },
+        "role": {
+          "title": "Role",
+          "type": "string",
+          "enum": [
+            "owner",
+            "administrator",
+            "member"
+          ]
+        }
+      }
+    },
+    "AdminOrganization": {
+      "required": [
+        "code",
+        "title"
+      ],
+      "type": "object",
+      "properties": {
+        "accesses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AdminOrganizationAccess"
+          },
+          "readOnly": true
+        },
+        "code": {
+          "title": "Code",
+          "type": "string",
+          "maxLength": 100,
+          "minLength": 1
+        },
+        "id": {
+          "title": "Id",
+          "description": "primary key for the record as UUID",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "logo": {
+          "title": "Logo",
+          "type": "string",
+          "readOnly": true,
+          "format": "uri"
+        },
+        "representative": {
+          "title": "Representative",
+          "description": "representative fullname (to sign certificate for example)",
+          "type": "string",
+          "maxLength": 100
+        },
+        "signature": {
+          "title": "Signature",
+          "type": "string",
+          "readOnly": true,
+          "format": "uri"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "AdminProductLight": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "description": "primary key for the record as UUID",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "title": {
+          "title": "Title",
+          "type": "string",
+          "readOnly": true
+        },
+        "description": {
+          "title": "Description",
+          "type": "string",
+          "readOnly": true
+        },
+        "call_to_action": {
+          "title": "Call to action",
+          "type": "string",
+          "readOnly": true
+        },
+        "price": {
+          "title": "Price",
+          "description": "tax included",
+          "type": "string",
+          "format": "decimal",
+          "readOnly": true
+        },
+        "price_currency": {
+          "title": "Price currency",
+          "type": "string",
+          "readOnly": true
+        },
+        "type": {
+          "title": "Type",
+          "type": "string",
+          "enum": [
+            "credential",
+            "enrollment",
+            "certificate"
+          ],
+          "readOnly": true
+        },
+        "certificate_definition": {
+          "title": "Certificate definition",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true,
+          "x-nullable": true
+        },
+        "target_courses": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "readOnly": true,
+          "uniqueItems": true
+        }
+      }
+    },
+    "AdminProductTargetCourseRelation": {
+      "required": [
+        "course",
+        "product"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "description": "primary key for the record as UUID",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "course": {
+          "title": "Course",
+          "type": "string",
+          "format": "uuid"
+        },
+        "product": {
+          "title": "Product",
+          "type": "string",
+          "format": "uuid"
+        },
+        "is_graded": {
+          "title": "Take into account for certification",
+          "description": "Take into account the course grade for certification.",
+          "type": "boolean"
+        },
+        "position": {
+          "title": "Position in product",
+          "type": "integer",
+          "maximum": 32767,
+          "minimum": 0
+        },
+        "course_runs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "CertificationDefinition": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "title": "Description",
+          "type": "string",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "name": {
+          "title": "Name",
+          "type": "string",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "title": {
+          "title": "Title",
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "CourseLight": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "cover": {
+          "title": "Cover",
+          "type": "string",
+          "readOnly": true,
+          "format": "uri"
+        },
+        "id": {
+          "title": "Id",
+          "description": "primary key for the record as UUID",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "title": {
+          "title": "Title",
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "CourseRun": {
+      "type": "object",
+      "properties": {
+        "course": {
+          "$ref": "#/definitions/CourseLight"
+        },
+        "end": {
+          "title": "Course end",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true,
+          "x-nullable": true
+        },
+        "enrollment_end": {
+          "title": "Enrollment end",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true,
+          "x-nullable": true
+        },
+        "enrollment_start": {
+          "title": "Enrollment date",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true,
+          "x-nullable": true
+        },
+        "id": {
+          "title": "Id",
+          "description": "primary key for the record as UUID",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "languages": {
+          "title": "Languages",
+          "description": "The list of languages in which the course content is available.",
+          "type": "string",
+          "enum": [
+            "af",
+            "ar",
+            "ar-dz",
+            "ast",
+            "az",
+            "bg",
+            "be",
+            "bn",
+            "br",
+            "bs",
+            "ca",
+            "ckb",
+            "cs",
+            "cy",
+            "da",
+            "de",
+            "dsb",
+            "el",
+            "en",
+            "en-au",
+            "en-gb",
+            "eo",
+            "es",
+            "es-ar",
+            "es-co",
+            "es-mx",
+            "es-ni",
+            "es-ve",
+            "et",
+            "eu",
+            "fa",
+            "fi",
+            "fr",
+            "fy",
+            "ga",
+            "gd",
+            "gl",
+            "he",
+            "hi",
+            "hr",
+            "hsb",
+            "hu",
+            "hy",
+            "ia",
+            "id",
+            "ig",
+            "io",
+            "is",
+            "it",
+            "ja",
+            "ka",
+            "kab",
+            "kk",
+            "km",
+            "kn",
+            "ko",
+            "ky",
+            "lb",
+            "lt",
+            "lv",
+            "mk",
+            "ml",
+            "mn",
+            "mr",
+            "ms",
+            "my",
+            "nb",
+            "ne",
+            "nl",
+            "nn",
+            "os",
+            "pa",
+            "pl",
+            "pt",
+            "pt-br",
+            "ro",
+            "ru",
+            "sk",
+            "sl",
+            "sq",
+            "sr",
+            "sr-latn",
+            "sv",
+            "sw",
+            "ta",
+            "te",
+            "tg",
+            "th",
+            "tk",
+            "tr",
+            "tt",
+            "udm",
+            "uk",
+            "ur",
+            "uz",
+            "vi",
+            "zh-hans",
+            "zh-hant"
+          ],
+          "readOnly": true
+        },
+        "resource_link": {
+          "title": "Resource link",
+          "type": "string",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "start": {
+          "title": "Course start",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true,
+          "x-nullable": true
+        },
+        "title": {
+          "title": "Title",
+          "type": "string",
+          "readOnly": true
+        },
+        "state": {
+          "title": "State",
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "EnrollmentLight": {
+      "required": [
+        "was_created_by_order"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "course_run": {
+          "$ref": "#/definitions/CourseRun"
+        },
+        "created_on": {
+          "title": "Created on",
+          "description": "date and time at which a record was created",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "is_active": {
+          "title": "Is active",
+          "description": "Ticked if the user is enrolled to the course run.",
+          "type": "boolean",
+          "readOnly": true
+        },
+        "state": {
+          "title": "State",
+          "type": "string",
+          "enum": [
+            "set",
+            "failed"
+          ],
+          "readOnly": true
+        },
+        "was_created_by_order": {
+          "title": "Was created by order",
+          "type": "boolean"
+        }
+      }
+    },
+    "Organization": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "description": "primary key for the record as UUID",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "code": {
+          "title": "Code",
+          "type": "string",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "logo": {
+          "title": "Logo",
+          "type": "string",
+          "readOnly": true,
+          "format": "uri"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "NestedOrder": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "course": {
+          "$ref": "#/definitions/CourseLight"
+        },
+        "enrollment": {
+          "$ref": "#/definitions/EnrollmentLight"
+        },
+        "organization": {
+          "$ref": "#/definitions/Organization"
+        },
+        "owner_name": {
+          "title": "Owner name",
+          "type": "string",
+          "readOnly": true
+        },
+        "product_title": {
+          "title": "Product title",
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "Certificate": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "certificate_definition": {
+          "$ref": "#/definitions/CertificationDefinition"
+        },
+        "issued_on": {
+          "title": "Date of issuance",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "order": {
+          "$ref": "#/definitions/NestedOrder"
+        }
+      }
+    },
+    "ContractDefinition": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "description": "primary key for the record as UUID",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "description": {
+          "title": "Description",
+          "type": "string",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "language": {
+          "title": "Language",
+          "description": "Language of the contract definition",
+          "type": "string",
+          "enum": [
+            "en-us",
+            "fr-fr"
+          ],
+          "readOnly": true
+        },
+        "title": {
+          "title": "Title",
+          "type": "string",
+          "readOnly": true,
+          "minLength": 1
+        }
+      }
+    },
+    "Contract": {
+      "required": [
+        "definition",
+        "order"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "definition": {
+          "$ref": "#/definitions/ContractDefinition"
+        },
+        "order": {
+          "$ref": "#/definitions/NestedOrder"
+        },
+        "signed_on": {
+          "title": "Date and time of issuance",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true,
+          "x-nullable": true
+        },
+        "created_on": {
+          "title": "Created on",
+          "description": "date and time at which a record was created",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        }
+      }
+    },
+    "OrderGroup": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "description": "primary key for the record as UUID",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "is_active": {
+          "title": "Is active",
+          "type": "boolean",
+          "readOnly": true
+        },
+        "nb_seats": {
+          "title": "Number of seats",
+          "description": "The maximum number of orders that can be validated for a given order group",
+          "type": "integer",
+          "readOnly": true
+        },
+        "nb_available_seats": {
+          "title": "Nb available seats",
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "ProductTargetCourseRelation": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string",
+          "readOnly": true
+        },
+        "course_runs": {
+          "title": "Course runs",
+          "type": "string",
+          "readOnly": true
+        },
+        "is_graded": {
+          "title": "Is graded",
+          "type": "boolean",
+          "readOnly": true
+        },
+        "position": {
+          "title": "Position",
+          "type": "integer",
+          "readOnly": true
+        },
+        "title": {
+          "title": "Title",
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "Product": {
+      "type": "object",
+      "properties": {
+        "call_to_action": {
+          "title": "Call to action",
+          "type": "string",
+          "readOnly": true
+        },
+        "certificate_definition": {
+          "$ref": "#/definitions/CertificationDefinition"
+        },
+        "contract_definition": {
+          "$ref": "#/definitions/ContractDefinition"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "instructions": {
+          "title": "Instructions",
+          "type": "string",
+          "readOnly": true
+        },
+        "price": {
+          "title": "Price",
+          "type": "number",
+          "format": "decimal",
+          "readOnly": true,
+          "minimum": 0
+        },
+        "price_currency": {
+          "title": "Price currency",
+          "type": "string",
+          "readOnly": true
+        },
+        "state": {
+          "title": "State",
+          "type": "string",
+          "readOnly": true
+        },
+        "target_courses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ProductTargetCourseRelation"
+          },
+          "readOnly": true
+        },
+        "title": {
+          "title": "Title",
+          "type": "string",
+          "readOnly": true
+        },
+        "type": {
+          "title": "Type",
+          "type": "string",
+          "enum": [
+            "credential",
+            "enrollment",
+            "certificate"
+          ],
+          "readOnly": true
+        }
+      }
+    },
+    "CourseProductRelation": {
+      "type": "object",
+      "properties": {
+        "course": {
+          "$ref": "#/definitions/CourseLight"
+        },
+        "created_on": {
+          "title": "Created on",
+          "description": "date and time at which a record was created",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "id": {
+          "title": "Id",
+          "description": "primary key for the record as UUID",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "order_groups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/OrderGroup"
+          },
+          "readOnly": true
+        },
+        "organizations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Organization"
+          },
+          "readOnly": true
+        },
+        "product": {
+          "$ref": "#/definitions/Product"
+        }
+      }
+    },
+    "Course": {
+      "type": "object",
+      "properties": {
+        "created_on": {
+          "title": "Created on",
+          "description": "date and time at which a record was created",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "code": {
+          "title": "Code",
+          "type": "string",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "course_run_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "readOnly": true,
+          "uniqueItems": true
+        },
+        "cover": {
+          "title": "Cover",
+          "type": "string",
+          "readOnly": true,
+          "format": "uri"
+        },
+        "id": {
+          "title": "Id",
+          "description": "primary key for the record as UUID",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "organizations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Organization"
+          },
+          "readOnly": true
+        },
+        "product_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "readOnly": true,
+          "uniqueItems": true
+        },
+        "state": {
+          "title": "State",
+          "type": "string",
+          "readOnly": true
+        },
+        "title": {
+          "title": "Title",
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "CreditCard": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "title": {
+          "title": "Title",
+          "type": "string",
+          "maxLength": 100,
+          "x-nullable": true
+        },
+        "brand": {
+          "title": "Brand",
+          "type": "string",
+          "readOnly": true,
+          "minLength": 1,
+          "x-nullable": true
+        },
+        "expiration_month": {
+          "title": "Expiration month",
+          "type": "integer",
+          "readOnly": true
+        },
+        "expiration_year": {
+          "title": "Expiration year",
+          "type": "integer",
+          "readOnly": true
+        },
+        "last_numbers": {
+          "title": "Last 4 numbers",
+          "type": "string",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "is_main": {
+          "title": "Main",
+          "type": "boolean"
+        }
+      }
+    },
+    "Enrollment": {
+      "required": [
+        "is_active",
+        "was_created_by_order"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "certificate_id": {
+          "title": "Certificate id",
+          "type": "string",
+          "readOnly": true
+        },
+        "course_run": {
+          "$ref": "#/definitions/CourseRun"
+        },
+        "created_on": {
+          "title": "Created on",
+          "description": "date and time at which a record was created",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "is_active": {
+          "title": "Is active",
+          "description": "Ticked if the user is enrolled to the course run.",
+          "type": "boolean"
+        },
+        "orders": {
+          "title": "Orders",
+          "type": "string",
+          "readOnly": true
+        },
+        "product_relations": {
+          "title": "Product relations",
+          "type": "string",
+          "readOnly": true
+        },
+        "state": {
+          "title": "State",
+          "type": "string",
+          "enum": [
+            "set",
+            "failed"
+          ],
+          "readOnly": true
+        },
+        "was_created_by_order": {
+          "title": "Was created by order",
+          "type": "boolean"
+        }
+      }
+    },
+    "OrderTargetCourseRelation": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string",
+          "readOnly": true
+        },
+        "course_runs": {
+          "title": "Course runs",
+          "type": "string",
+          "readOnly": true
+        },
+        "is_graded": {
+          "title": "Is graded",
+          "type": "boolean",
+          "readOnly": true
+        },
+        "position": {
+          "title": "Position",
+          "type": "integer",
+          "readOnly": true
+        },
+        "title": {
+          "title": "Title",
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "Order": {
+      "required": [
+        "product_id"
+      ],
+      "type": "object",
+      "properties": {
+        "certificate_id": {
+          "title": "Certificate id",
+          "type": "string",
+          "readOnly": true
+        },
+        "contract": {
+          "$ref": "#/definitions/Contract"
+        },
+        "course": {
+          "$ref": "#/definitions/CourseLight"
+        },
+        "created_on": {
+          "title": "Created on",
+          "description": "date and time at which a record was created",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "enrollment": {
+          "$ref": "#/definitions/EnrollmentLight"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "main_invoice_reference": {
+          "title": "Main invoice reference",
+          "type": "string",
+          "readOnly": true
+        },
+        "order_group_id": {
+          "title": "Order group id",
+          "type": "string",
+          "format": "uuid"
+        },
+        "organization_id": {
+          "title": "Organization id",
+          "type": "string",
+          "format": "uuid"
+        },
+        "owner": {
+          "title": "Owner",
+          "type": "string",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "product_id": {
+          "title": "Product id",
+          "type": "string",
+          "format": "uuid"
+        },
+        "state": {
+          "title": "State",
+          "type": "string",
+          "enum": [
+            "draft",
+            "submitted",
+            "pending",
+            "canceled",
+            "validated"
+          ],
+          "readOnly": true
+        },
+        "target_courses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/OrderTargetCourseRelation"
+          },
+          "readOnly": true
+        },
+        "target_enrollments": {
+          "title": "Target enrollments",
+          "type": "string",
+          "readOnly": true
+        },
+        "total": {
+          "title": "Total",
+          "type": "number",
+          "format": "decimal",
+          "readOnly": true,
+          "minimum": 0
+        },
+        "total_currency": {
+          "title": "Total currency",
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "User": {
+      "required": [
+        "full_name"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "description": "primary key for the record as UUID",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "username": {
+          "title": "Username",
+          "description": "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.",
+          "type": "string",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "full_name": {
+          "title": "Full name",
+          "type": "string",
+          "minLength": 1
+        },
+        "is_superuser": {
+          "title": "Superuser status",
+          "description": "Designates that this user has all permissions without explicitly assigning them.",
+          "type": "boolean",
+          "readOnly": true
+        },
+        "is_staff": {
+          "title": "Staff status",
+          "description": "Designates whether the user can log into this admin site.",
+          "type": "boolean",
+          "readOnly": true
+        },
+        "abilities": {
+          "title": "Abilities",
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    }
+  }
+}

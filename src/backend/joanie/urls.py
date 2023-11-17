@@ -247,6 +247,7 @@ if settings.DEBUG:
         + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     )
 
+if settings.USE_SWAGGER or settings.DEBUG:
     try:
         # Try to import `drf_yasg` dynamically as this dependency is installed only
         # in a development context then configure schema views and routes
