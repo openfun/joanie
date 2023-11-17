@@ -65,6 +65,7 @@ class Base(Configuration):
     """
 
     DEBUG = False
+    USE_SWAGGER = False
 
     # Security
     ALLOWED_HOSTS = values.ListValue([])
