@@ -110,6 +110,11 @@ and this project adheres to
 - Update admin course serializer to return course runs
 - Allow group order deletion through course product relation
 - Delete group orders when deleting a course product relation
+- Rename admin api payload parameters to be more descriptive:
+  - AdminOrganizationAccessSerializer
+  - AdminCourseAccessSerializer
+  - AdminCourseSerializer
+  - AdminCourseRunSerializer
 
 ### Removed
 

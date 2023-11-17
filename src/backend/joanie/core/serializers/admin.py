@@ -150,16 +150,16 @@ class AdminOrganizationAccessSerializer(serializers.ModelSerializer):
         )
 
         # Retrieve user instance from context and add it to validated_data
-        user_id = self.initial_data.get("user")
+        user_id = self.initial_data.get("user_id")
         if user_id is not None:
             try:
                 validated_data["user"] = models.User.objects.get(id=user_id)
             except models.User.DoesNotExist as exception:
                 raise serializers.ValidationError(
-                    {"user": "Resource does not exist."}
+                    {"user_id": "Resource does not exist."}
                 ) from exception
         elif self.partial is False and user_id is None:
-            raise serializers.ValidationError({"user": "This field is required."})
+            raise serializers.ValidationError({"user_id": "This field is required."})
 
         return validated_data
 
@@ -457,16 +457,16 @@ class AdminCourseAccessSerializer(serializers.ModelSerializer):
         validated_data["course"] = get_object_or_404(models.Course, id=course_id)
 
         # Retrieve user instance from context and add it to validated_data
-        user_id = self.initial_data.get("user")
+        user_id = self.initial_data.get("user_id")
         if user_id is not None:
             try:
                 validated_data["user"] = models.User.objects.get(id=user_id)
             except models.User.DoesNotExist as exception:
                 raise serializers.ValidationError(
-                    {"user": "Resource does not exist."}
+                    {"user_id": "Resource does not exist."}
                 ) from exception
         elif self.partial is False and user_id is None:
-            raise serializers.ValidationError({"user": "This field is required."})
+            raise serializers.ValidationError({"user_id": "This field is required."})
 
         return validated_data
 
@@ -510,17 +510,21 @@ class AdminCourseSerializer(serializers.ModelSerializer):
         serializer instance accepts partial data.
         """
         validated_data = super().validate(attrs)
-        validated_data["organizations"] = self.initial_data.get("organizations", [])
+        validated_data["organizations"] = self.initial_data.get("organization_ids", [])
         product_relations = self.initial_data.get("product_relations")
 
         if product_relations is not None:
             validated_data["product_relations"] = []
             products = models.Product.objects.filter(
-                id__in=[p["product"] for p in product_relations]
+                id__in=[p["product_id"] for p in product_relations]
             )
             for product in products:
                 relation = next(
-                    (p for p in product_relations if p["product"] == str(product.id)),
+                    (
+                        p
+                        for p in product_relations
+                        if p["product_id"] == str(product.id)
+                    ),
                     None,
                 )
                 if relation is not None:
@@ -546,7 +550,7 @@ class AdminCourseSerializer(serializers.ModelSerializer):
                 relation = course.product_relations.create(
                     product=product_relation["product"]
                 )
-                relation.organizations.set(product_relation["organizations"])
+                relation.organizations.set(product_relation["organization_ids"])
 
         return course
 
@@ -568,7 +572,7 @@ class AdminCourseSerializer(serializers.ModelSerializer):
                     (relation, _) = instance.product_relations.get_or_create(
                         product=product_relation["product"]
                     )
-                    relation.organizations.set(product_relation["organizations"])
+                    relation.organizations.set(product_relation["organization_ids"])
 
         return super().update(instance, validated_data)
 
@@ -603,17 +607,19 @@ class AdminCourseRunSerializer(serializers.ModelSerializer):
         to validated_data until serializer instance accepts partial data.
         """
         validated_data = super().validate(attrs)
-        course_id = self.initial_data.get("course", None)
+        course_id = self.initial_data.get("course_id", None)
 
         if self.partial is False and course_id is None:
-            raise serializers.ValidationError({"course": "This field cannot be null."})
+            raise serializers.ValidationError(
+                {"course_id": "This field cannot be null."}
+            )
 
         if course_id:
             try:
                 validated_data["course"] = models.Course.objects.get(id=course_id)
             except models.Course.DoesNotExist as exception:
                 raise serializers.ValidationError(
-                    {"course": "Resource {course_id} does not exist."}, exception
+                    {"course_id": "Resource {course_id} does not exist."}, exception
                 ) from exception
 
         return validated_data
