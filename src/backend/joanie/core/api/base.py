@@ -40,6 +40,9 @@ class NestedGenericViewSet(viewsets.GenericViewSet):
             else self.lookup_fields[:-1]
         )
 
+        if getattr(self, "swagger_fake_view", False):
+            return queryset
+
         filter_kwargs = {}
         for index, lookup_url_kwarg in enumerate(lookup_url_kwargs):
             if lookup_url_kwarg not in self.kwargs:

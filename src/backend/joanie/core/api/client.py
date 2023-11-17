@@ -707,13 +707,13 @@ class OrganizationAccessViewSet(
     def get_serializer_context(self):
         """Extra context provided to the serializer class."""
         context = super().get_serializer_context()
-        context["organization_id"] = self.kwargs["organization_id"]
+        context["organization_id"] = self.kwargs.get("organization_id")
         return context
 
     def get_queryset(self):
         """Return the queryset according to the action."""
         queryset = super().get_queryset()
-        queryset = queryset.filter(organization=self.kwargs["organization_id"])
+        queryset = queryset.filter(organization=self.kwargs.get("organization_id"))
 
         if self.action == "list":
             # Limit to accesses that are linked to an organization THAT has an access
@@ -782,13 +782,13 @@ class CourseAccessViewSet(
     def get_serializer_context(self):
         """Extra context provided to the serializer class."""
         context = super().get_serializer_context()
-        context["course_id"] = self.kwargs["course_id"]
+        context["course_id"] = self.kwargs.get("course_id")
         return context
 
     def get_queryset(self):
         """Return the queryset according to the action."""
         queryset = super().get_queryset()
-        queryset = queryset.filter(course=self.kwargs["course_id"])
+        queryset = queryset.filter(course=self.kwargs.get("course_id"))
 
         if self.action == "list":
             # Limit to accesses that are linked to a course THAT has an access
@@ -928,6 +928,9 @@ class UserViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         """
         Only return users if a query is provided to filter them.
         """
+        if getattr(self, "swagger_fake_view", True):
+            return models.User.objects.none()
+
         user = self.request.user
 
         return models.User.objects.get(id=user.id)

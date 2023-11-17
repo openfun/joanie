@@ -996,10 +996,22 @@
       "post": {
         "operationId": "admin_courses_accesses_create",
         "description": "Write only Course Access ViewSet",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminCourseAccess"
+            }
+          }
+        ],
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminCourseAccess"
+            }
           }
         },
         "tags": [
@@ -1019,10 +1031,22 @@
       "put": {
         "operationId": "admin_courses_accesses_update",
         "description": "Write only Course Access ViewSet",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminCourseAccess"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminCourseAccess"
+            }
           }
         },
         "tags": [
@@ -1032,10 +1056,22 @@
       "patch": {
         "operationId": "admin_courses_accesses_partial_update",
         "description": "Write only Course Access ViewSet",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminCourseAccess"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminCourseAccess"
+            }
           }
         },
         "tags": [
@@ -1551,10 +1587,22 @@
       "post": {
         "operationId": "admin_organizations_accesses_create",
         "description": "Write only Organization Access ViewSet",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminOrganizationAccess"
+            }
+          }
+        ],
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminOrganizationAccess"
+            }
           }
         },
         "tags": [
@@ -1574,10 +1622,22 @@
       "put": {
         "operationId": "admin_organizations_accesses_update",
         "description": "Write only Organization Access ViewSet",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminOrganizationAccess"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminOrganizationAccess"
+            }
           }
         },
         "tags": [
@@ -1587,10 +1647,22 @@
       "patch": {
         "operationId": "admin_organizations_accesses_partial_update",
         "description": "Write only Organization Access ViewSet",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminOrganizationAccess"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdminOrganizationAccess"
+            }
           }
         },
         "tags": [
@@ -2621,7 +2693,35 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/CourseAccess"
+                  }
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -2632,10 +2732,22 @@
         "operationId": "courses_accesses_create",
         "summary": "API ViewSet for all interactions with course accesses.",
         "description": "GET /api/courses/<course_id|course_code>/accesses/:<course_access_id>\n    Return list of all course accesses related to the logged-in user or one\n    course access if an id is provided.\n\nPOST /api/courses/<course_id|course_code>/accesses/ with expected data:\n    - user: str\n    - role: str [owner|admin|member]\n    Return newly created course access\n\nPUT /api/courses/<course_id|course_code>/accesses/<course_access_id>/ with expected data:\n    - role: str [owner|admin|member]\n    Return updated course access\n\nPATCH /api/courses/<course_id|course_code>/accesses/<course_access_id>/ with expected data:\n    - role: str [owner|admin|member]\n    Return partially updated course access\n\nDELETE /api/courses/<course_id|course_code>/accesses/<course_access_id>/\n    Delete targeted course access",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CourseAccess"
+            }
+          }
+        ],
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/CourseAccess"
+            }
           }
         },
         "tags": [
@@ -2659,7 +2771,10 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/CourseAccess"
+            }
           }
         },
         "tags": [
@@ -2670,10 +2785,22 @@
         "operationId": "courses_accesses_update",
         "summary": "API ViewSet for all interactions with course accesses.",
         "description": "GET /api/courses/<course_id|course_code>/accesses/:<course_access_id>\n    Return list of all course accesses related to the logged-in user or one\n    course access if an id is provided.\n\nPOST /api/courses/<course_id|course_code>/accesses/ with expected data:\n    - user: str\n    - role: str [owner|admin|member]\n    Return newly created course access\n\nPUT /api/courses/<course_id|course_code>/accesses/<course_access_id>/ with expected data:\n    - role: str [owner|admin|member]\n    Return updated course access\n\nPATCH /api/courses/<course_id|course_code>/accesses/<course_access_id>/ with expected data:\n    - role: str [owner|admin|member]\n    Return partially updated course access\n\nDELETE /api/courses/<course_id|course_code>/accesses/<course_access_id>/\n    Delete targeted course access",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CourseAccess"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/CourseAccess"
+            }
           }
         },
         "tags": [
@@ -2684,10 +2811,22 @@
         "operationId": "courses_accesses_partial_update",
         "summary": "API ViewSet for all interactions with course accesses.",
         "description": "GET /api/courses/<course_id|course_code>/accesses/:<course_access_id>\n    Return list of all course accesses related to the logged-in user or one\n    course access if an id is provided.\n\nPOST /api/courses/<course_id|course_code>/accesses/ with expected data:\n    - user: str\n    - role: str [owner|admin|member]\n    Return newly created course access\n\nPUT /api/courses/<course_id|course_code>/accesses/<course_access_id>/ with expected data:\n    - role: str [owner|admin|member]\n    Return updated course access\n\nPATCH /api/courses/<course_id|course_code>/accesses/<course_access_id>/ with expected data:\n    - role: str [owner|admin|member]\n    Return partially updated course access\n\nDELETE /api/courses/<course_id|course_code>/accesses/<course_access_id>/\n    Delete targeted course access",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CourseAccess"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/CourseAccess"
+            }
           }
         },
         "tags": [
@@ -3930,7 +4069,35 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/OrganizationAccess"
+                  }
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -3941,10 +4108,22 @@
         "operationId": "organizations_accesses_create",
         "summary": "API ViewSet for all interactions with organization accesses.",
         "description": "GET /api/organization/<organization_id>/accesses/:<organization_access_id>\n    Return list of all organization accesses related to the logged-in user or one\n    organization access if an id is provided.\n\nPOST /api/<organization_id>/accesses/ with expected data:\n    - user: str\n    - role: str [owner|admin|member]\n    Return newly created organization access\n\nPUT /api/<organization_id>/accesses/<organization_access_id>/ with expected data:\n    - role: str [owner|admin|member]\n    Return updated organization access\n\nPATCH /api/<organization_id>/accesses/<organization_access_id>/ with expected data:\n    - role: str [owner|admin|member]\n    Return partially updated organization access\n\nDELETE /api/<organization_id>/accesses/<organization_access_id>/\n    Delete targeted organization access",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/OrganizationAccess"
+            }
+          }
+        ],
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/OrganizationAccess"
+            }
           }
         },
         "tags": [
@@ -3968,7 +4147,10 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/OrganizationAccess"
+            }
           }
         },
         "tags": [
@@ -3979,10 +4161,22 @@
         "operationId": "organizations_accesses_update",
         "summary": "API ViewSet for all interactions with organization accesses.",
         "description": "GET /api/organization/<organization_id>/accesses/:<organization_access_id>\n    Return list of all organization accesses related to the logged-in user or one\n    organization access if an id is provided.\n\nPOST /api/<organization_id>/accesses/ with expected data:\n    - user: str\n    - role: str [owner|admin|member]\n    Return newly created organization access\n\nPUT /api/<organization_id>/accesses/<organization_access_id>/ with expected data:\n    - role: str [owner|admin|member]\n    Return updated organization access\n\nPATCH /api/<organization_id>/accesses/<organization_access_id>/ with expected data:\n    - role: str [owner|admin|member]\n    Return partially updated organization access\n\nDELETE /api/<organization_id>/accesses/<organization_access_id>/\n    Delete targeted organization access",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/OrganizationAccess"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/OrganizationAccess"
+            }
           }
         },
         "tags": [
@@ -3993,10 +4187,22 @@
         "operationId": "organizations_accesses_partial_update",
         "summary": "API ViewSet for all interactions with organization accesses.",
         "description": "GET /api/organization/<organization_id>/accesses/:<organization_access_id>\n    Return list of all organization accesses related to the logged-in user or one\n    organization access if an id is provided.\n\nPOST /api/<organization_id>/accesses/ with expected data:\n    - user: str\n    - role: str [owner|admin|member]\n    Return newly created organization access\n\nPUT /api/<organization_id>/accesses/<organization_access_id>/ with expected data:\n    - role: str [owner|admin|member]\n    Return updated organization access\n\nPATCH /api/<organization_id>/accesses/<organization_access_id>/ with expected data:\n    - role: str [owner|admin|member]\n    Return partially updated organization access\n\nDELETE /api/<organization_id>/accesses/<organization_access_id>/\n    Delete targeted organization access",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/OrganizationAccess"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/OrganizationAccess"
+            }
           }
         },
         "tags": [
@@ -6272,6 +6478,36 @@
         }
       }
     },
+    "CourseAccess": {
+      "required": [
+        "user_id"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "description": "primary key for the record as UUID",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "role": {
+          "title": "Role",
+          "type": "string",
+          "enum": [
+            "owner",
+            "administrator",
+            "instructor",
+            "manager"
+          ]
+        },
+        "user_id": {
+          "title": "User id",
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    },
     "CreditCard": {
       "type": "object",
       "properties": {
@@ -6498,6 +6734,35 @@
           "title": "Total currency",
           "type": "string",
           "readOnly": true
+        }
+      }
+    },
+    "OrganizationAccess": {
+      "required": [
+        "user_id"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "description": "primary key for the record as UUID",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "role": {
+          "title": "Role",
+          "type": "string",
+          "enum": [
+            "owner",
+            "administrator",
+            "member"
+          ]
+        },
+        "user_id": {
+          "title": "User id",
+          "type": "string",
+          "format": "uuid"
         }
       }
     },

@@ -172,7 +172,7 @@ class CourseAccessViewSet(
         Extra context provided to the serializer class.
         """
         context = super().get_serializer_context()
-        context["course_id"] = self.kwargs["course_id"]
+        context["course_id"] = self.kwargs.get("course_id")
         return context
 
 
@@ -196,7 +196,7 @@ class OrganizationAccessViewSet(
         Extra context provided to the serializer class.
         """
         context = super().get_serializer_context()
-        context["organization_id"] = self.kwargs["organization_id"]
+        context["organization_id"] = self.kwargs.get("organization_id")
         return context
 
 
