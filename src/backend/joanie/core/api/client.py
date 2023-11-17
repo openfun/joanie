@@ -11,8 +11,11 @@ from django.db import IntegrityError, transaction
 from django.db.models import Count, OuterRef, Prefetch, Q, Subquery
 from django.http import FileResponse, HttpResponse, JsonResponse
 
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, pagination
 from rest_framework import permissions as drf_permissions
+from rest_framework import serializers as drf_serializers
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
@@ -591,6 +594,18 @@ class CertificateViewSet(
         )
         return queryset.filter(order__owner__username=username)
 
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response(
+                "File Attachment",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_FILE, produces="application/pdf"
+                ),
+            ),
+            404: serializers.ErrorResponseSerializer,
+            422: serializers.ErrorResponseSerializer,
+        },
+    )
     @action(detail=True, methods=["GET"])
     def download(self, request, pk=None):  # pylint: disable=no-self-use, invalid-name
         """
@@ -1168,6 +1183,7 @@ class ContractDefinitionViewset(viewsets.GenericViewSet):
     """
 
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = drf_serializers.Serializer
     queryset = models.ContractDefinition.objects.all()
 
     @action(

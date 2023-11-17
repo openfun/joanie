@@ -2239,9 +2239,22 @@
         "parameters": [],
         "responses": {
           "200": {
+            "description": "File Attachment",
+            "schema": {
+              "type": "file",
+              "produces": "application/pdf"
+            }
+          },
+          "404": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/Certificate"
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "422": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
             }
           }
         },
@@ -2267,7 +2280,11 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {}
+            }
           }
         },
         "tags": [
@@ -6177,6 +6194,19 @@
         },
         "order": {
           "$ref": "#/definitions/NestedOrder"
+        }
+      }
+    },
+    "ErrorResponse": {
+      "required": [
+        "details"
+      ],
+      "type": "object",
+      "properties": {
+        "details": {
+          "title": "Details",
+          "type": "string",
+          "minLength": 1
         }
       }
     },
