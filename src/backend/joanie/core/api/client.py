@@ -943,7 +943,7 @@ class UserViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         """
         Only return users if a query is provided to filter them.
         """
-        if getattr(self, "swagger_fake_view", True):
+        if getattr(self, "swagger_fake_view", False):
             return models.User.objects.none()
 
         user = self.request.user
