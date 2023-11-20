@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+source "$(dirname "${BASH_SOURCE[0]}")/_config.sh"
+
+_dc_run \
+    -e DJANGO_CONFIGURATION=Test \
+    app-dev \
+    python manage.py spectacular \
+    --api-version 'v1.0' \
+    --format openapi-json \
+    --file /app/joanie/tests/swagger/swagger.json
