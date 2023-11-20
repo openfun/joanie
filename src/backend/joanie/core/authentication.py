@@ -4,6 +4,8 @@ from django.utils.functional import SimpleLazyObject
 from django.utils.translation import get_supported_language_variant
 from django.utils.translation import gettext_lazy as _
 
+from drf_spectacular.authentication import SessionScheme, TokenScheme
+from drf_spectacular.plumbing import build_bearer_security_scheme_object
 from rest_framework import authentication
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import InvalidToken
@@ -53,6 +55,20 @@ class DelegatedJWTAuthentication(JWTAuthentication):
         return SimpleLazyObject(get_or_create_and_update_user)
 
 
+class OpenApiJWTAuthenticationExtension(TokenScheme):
+    """Extension for specifying JWT authentication schemes."""
+
+    target_class = "joanie.core.authentication.DelegatedJWTAuthentication"
+    name = "DelegatedJWTAuthentication"
+
+    def get_security_definition(self, auto_schema):
+        """Return the security definition for JWT authentication."""
+        return build_bearer_security_scheme_object(
+            header_name="Authorization",
+            token_prefix="Bearer",  # nosec B106
+        )
+
+
 class SessionAuthenticationWithAuthenticateHeader(authentication.SessionAuthentication):
     """
     This class is needed, because REST Framework's default SessionAuthentication does
@@ -69,3 +85,11 @@ class SessionAuthenticationWithAuthenticateHeader(authentication.SessionAuthenti
 
     def authenticate_header(self, request):
         return "Session"
+
+
+class OpenApiSessionAuthenticationExtension(SessionScheme):
+    """Extension for specifying session authentication schemes."""
+
+    target_class = (
+        "joanie.core.authentication.SessionAuthenticationWithAuthenticateHeader"
+    )
