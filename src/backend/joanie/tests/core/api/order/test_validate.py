@@ -1,36 +1,14 @@
-"""Tests for the Order API."""
-# pylint: disable=too-many-lines,duplicate-code
-import json
-import random
-import uuid
-from datetime import timedelta
-from io import BytesIO
-from unittest import mock
-
-from django.conf import settings
+"""Tests for the Order validate API."""
 from django.core.cache import cache
 from django.test.client import RequestFactory
-from django.test.utils import override_settings
-from django.urls import reverse
-from django.utils import timezone as django_timezone
 
-from pdfminer.high_level import extract_text as pdf_extract_text
-
-from joanie.core import enums, factories, models
-from joanie.core.models import CourseState
-from joanie.core.serializers import fields
-from joanie.payment.backends.dummy import DummyPaymentBackend
-from joanie.payment.exceptions import CreatePaymentFailed
-from joanie.payment.factories import (
-    BillingAddressDictFactory,
-    CreditCardFactory,
-    InvoiceFactory,
-)
+from joanie.core import enums, factories
+from joanie.payment.factories import BillingAddressDictFactory, InvoiceFactory
 from joanie.tests.base import BaseAPITestCase
 
 
-class OrderApiTest(BaseAPITestCase):
-    """Test the API of the Order object."""
+class OrderValidateApiTest(BaseAPITestCase):
+    """Test the API of the Order validate endpoint."""
 
     maxDiff = None
 
