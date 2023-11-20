@@ -3548,3 +3548,4 @@ class OrderApiTest(BaseAPITestCase):
         invitation_link = content_json["invitation_link"]
 
         self.assertIn(expected_substring_invite_url, invitation_link)
+ 
