@@ -356,7 +356,7 @@ class Course(parler_models.TranslatableModel, BaseModel):
         return self.safe_translation_getter("title", any_language=True)
 
     @property
-    def state(self):
+    def state(self) -> str:
         """
         The state of the course carrying information on what to display on a course glimpse.
 
@@ -759,7 +759,7 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
         return CourseState(CourseState.FUTURE_CLOSED)
 
     @property
-    def state(self):
+    def state(self) -> str:
         """Return the state of the course run at the current time."""
         return self.compute_state(
             self.start, self.end, self.enrollment_start, self.enrollment_end

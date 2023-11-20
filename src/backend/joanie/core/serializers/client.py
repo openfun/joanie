@@ -316,7 +316,7 @@ class NestedOrderSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = fields
 
-    def get_owner_name(self, instance):
+    def get_owner_name(self, instance) -> str:
         """
         Return the name full name of the order's owner or fallback to username
         """
@@ -350,7 +350,7 @@ class CertificateSerializer(serializers.ModelSerializer):
         fields = ["id", "certificate_definition", "issued_on", "order"]
         read_only_fields = fields
 
-    def get_context(self, certificate):
+    def get_context(self, certificate) -> dict:
         """
         Compute the serialized value for the "context" field.
         """
@@ -417,7 +417,7 @@ class ProductTargetCourseRelationSerializer(serializers.ModelSerializer):
         fields = ("code", "course_runs", "is_graded", "position", "title")
         read_only_fields = fields
 
-    def get_course_runs(self, relation):
+    def get_course_runs(self, relation) -> list[dict]:
         """Return all course runs for courses targeted by the product."""
         queryset = relation.product.target_course_runs.filter(
             course=relation.course
@@ -425,11 +425,11 @@ class ProductTargetCourseRelationSerializer(serializers.ModelSerializer):
 
         return CourseRunLightSerializer(queryset, many=True).data
 
-    def get_code(self, relation):
+    def get_code(self, relation) -> str:
         """Return the code of the targeted course"""
         return relation.course.code
 
-    def get_title(self, relation):
+    def get_title(self, relation) -> str:
         """Return the title of the targeted course"""
         return relation.course.title
 
@@ -450,7 +450,7 @@ class OrderTargetCourseRelationSerializer(serializers.ModelSerializer):
         fields = ("code", "course_runs", "is_graded", "position", "title")
         read_only_fields = fields
 
-    def get_course_runs(self, relation):
+    def get_course_runs(self, relation) -> list[dict]:
         """Return all course runs targeted by the order."""
         queryset = relation.order.target_course_runs.filter(
             course=relation.course
@@ -458,11 +458,11 @@ class OrderTargetCourseRelationSerializer(serializers.ModelSerializer):
 
         return CourseRunLightSerializer(queryset, many=True).data
 
-    def get_code(self, relation):
+    def get_code(self, relation) -> str:
         """Return the code of the targeted course"""
         return relation.course.code
 
-    def get_title(self, relation):
+    def get_title(self, relation) -> str:
         """Return the title of the targeted course"""
         return relation.course.title
 
@@ -534,7 +534,7 @@ class EnrollmentSerializer(serializers.ModelSerializer):
 
         return super().update(instance, validated_data)
 
-    def get_product_relations(self, instance):
+    def get_product_relations(self, instance) -> list[dict]:
         """
         Get products related to the enrollment's course run.
         """
@@ -557,7 +557,7 @@ class EnrollmentSerializer(serializers.ModelSerializer):
             many=True,
         ).data
 
-    def get_orders(self, instance):
+    def get_orders(self, instance) -> list[dict]:
         """Get orders pointing to the enrollment."""
         if instance.was_created_by_order:
             return []
@@ -651,7 +651,7 @@ class OrderSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = fields
 
-    def get_target_enrollments(self, order):
+    def get_target_enrollments(self, order) -> list[dict]:
         """
         For the current order, retrieve its related enrollments.
         """
@@ -673,7 +673,7 @@ class OrderSerializer(serializers.ModelSerializer):
         validated_data.pop("order_group", None)
         return super().update(instance, validated_data)
 
-    def get_total_currency(self, *args, **kwargs):
+    def get_total_currency(self, *args, **kwargs) -> str:
         """
         Return the currency used
         """
@@ -711,7 +711,7 @@ class OrderGroupSerializer(serializers.ModelSerializer):
         fields = ["id", "is_active", "nb_seats", "nb_available_seats"]
         read_only_fields = fields
 
-    def get_nb_available_seats(self, order_group):
+    def get_nb_available_seats(self, order_group) -> int:
         """Return the number of available seats for this order group."""
         return order_group.nb_seats - order_group.get_nb_binding_orders()
 
@@ -762,11 +762,11 @@ class ProductSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = fields
 
-    def get_price_currency(self, *args, **kwargs):
+    def get_price_currency(self, *args, **kwargs) -> str:
         """Return the code of currency used by the instance"""
         return settings.DEFAULT_CURRENCY
 
-    def get_instructions(self, instance):
+    def get_instructions(self, instance) -> str:
         """Return the instruction of the instance in html format."""
         instructions = instance.safe_translation_getter(
             "instructions", any_language=True
@@ -867,7 +867,7 @@ class UserSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = fields
 
-    def get_abilities(self, user):
+    def get_abilities(self, user) -> dict:
         """Return abilities of the logged-in user on itself."""
         request = self.context.get("request")
         if request:
