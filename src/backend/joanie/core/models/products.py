@@ -232,7 +232,7 @@ class Product(parler_models.TranslatableModel, BaseModel):
         return equivalent_course_runs
 
     @property
-    def state(self):
+    def state(self) -> str:
         """
         Process the state of the product based on its equivalent course run dates.
         """
@@ -611,7 +611,7 @@ class Order(BaseModel):
         )
 
     @cached_property
-    def main_invoice(self):
+    def main_invoice(self) -> dict | None:
         """
         Return main order's invoice.
         It corresponds to the only invoice related

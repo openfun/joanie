@@ -6069,6 +6069,7 @@
                     },
                     "state": {
                         "type": "string",
+                        "description": "The state of the course carrying information on what to display on a course glimpse.\n\nThe game is to find the highest priority state for this course among\nits course runs and its products.",
                         "readOnly": true
                     },
                     "title": {
@@ -6133,6 +6134,7 @@
                     },
                     "state": {
                         "type": "string",
+                        "description": "The state of the course carrying information on what to display on a course glimpse.\n\nThe game is to find the highest priority state for this course among\nits course runs and its products.",
                         "readOnly": true
                     }
                 },
@@ -6173,6 +6175,7 @@
                     },
                     "state": {
                         "type": "string",
+                        "description": "The state of the course carrying information on what to display on a course glimpse.\n\nThe game is to find the highest priority state for this course among\nits course runs and its products.",
                         "readOnly": true
                     }
                 },
@@ -6390,7 +6393,8 @@
                         "type": "boolean"
                     },
                     "nb_available_seats": {
-                        "type": "string",
+                        "type": "integer",
+                        "description": "Return the number of available seats for this order group.",
                         "readOnly": true
                     },
                     "created_on": {
@@ -6432,7 +6436,8 @@
                         "type": "boolean"
                     },
                     "nb_available_seats": {
-                        "type": "string",
+                        "type": "integer",
+                        "description": "Return the number of available seats for this order group.",
                         "readOnly": true
                     },
                     "created_on": {
@@ -6584,6 +6589,7 @@
                     },
                     "price_currency": {
                         "type": "string",
+                        "description": "Return the code of currency used by the instance",
                         "readOnly": true
                     },
                     "type": {
@@ -6649,6 +6655,7 @@
                     },
                     "price_currency": {
                         "type": "string",
+                        "description": "Return the code of currency used by the instance",
                         "readOnly": true
                     },
                     "type": {
@@ -7247,6 +7254,7 @@
                     },
                     "state": {
                         "type": "string",
+                        "description": "The state of the course carrying information on what to display on a course glimpse.\n\nThe game is to find the highest priority state for this course among\nits course runs and its products.",
                         "readOnly": true
                     },
                     "title": {
@@ -7450,6 +7458,7 @@
                     },
                     "state": {
                         "type": "string",
+                        "description": "Return the state of the course run at the current time.",
                         "readOnly": true
                     }
                 },
@@ -7543,11 +7552,21 @@
                         "description": "Ticked if the user is enrolled to the course run."
                     },
                     "orders": {
-                        "type": "string",
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": {}
+                        },
+                        "description": "Get orders pointing to the enrollment.",
                         "readOnly": true
                     },
                     "product_relations": {
-                        "type": "string",
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": {}
+                        },
+                        "description": "Get products related to the enrollment's course run.",
                         "readOnly": true
                     },
                     "state": {
@@ -7783,6 +7802,7 @@
                     },
                     "owner_name": {
                         "type": "string",
+                        "description": "Return the name full name of the order's owner or fallback to username",
                         "readOnly": true
                     },
                     "product_title": {
@@ -7887,7 +7907,12 @@
                         "readOnly": true
                     },
                     "target_enrollments": {
-                        "type": "string",
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": {}
+                        },
+                        "description": "For the current order, retrieve its related enrollments.",
                         "readOnly": true
                     },
                     "total": {
@@ -7900,6 +7925,7 @@
                     },
                     "total_currency": {
                         "type": "string",
+                        "description": "Return the currency used",
                         "readOnly": true
                     }
                 },
@@ -7941,7 +7967,8 @@
                         "description": "The maximum number of orders that can be validated for a given order group"
                     },
                     "nb_available_seats": {
-                        "type": "string",
+                        "type": "integer",
+                        "description": "Return the number of available seats for this order group.",
                         "readOnly": true
                     }
                 },
@@ -7969,10 +7996,16 @@
                 "properties": {
                     "code": {
                         "type": "string",
+                        "description": "Return the code of the targeted course",
                         "readOnly": true
                     },
                     "course_runs": {
-                        "type": "string",
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": {}
+                        },
+                        "description": "Return all course runs targeted by the order.",
                         "readOnly": true
                     },
                     "is_graded": {
@@ -7985,6 +8018,7 @@
                     },
                     "title": {
                         "type": "string",
+                        "description": "Return the title of the targeted course",
                         "readOnly": true
                     }
                 },
@@ -8788,6 +8822,7 @@
                     },
                     "state": {
                         "type": "string",
+                        "description": "The state of the course carrying information on what to display on a course glimpse.\n\nThe game is to find the highest priority state for this course among\nits course runs and its products.",
                         "readOnly": true
                     },
                     "title": {
@@ -8948,7 +8983,8 @@
                         "type": "boolean"
                     },
                     "nb_available_seats": {
-                        "type": "string",
+                        "type": "integer",
+                        "description": "Return the number of available seats for this order group.",
                         "readOnly": true
                     },
                     "created_on": {
@@ -9053,6 +9089,7 @@
                     },
                     "price_currency": {
                         "type": "string",
+                        "description": "Return the code of currency used by the instance",
                         "readOnly": true
                     },
                     "type": {
@@ -9209,11 +9246,21 @@
                         "description": "Ticked if the user is enrolled to the course run."
                     },
                     "orders": {
-                        "type": "string",
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": {}
+                        },
+                        "description": "Get orders pointing to the enrollment.",
                         "readOnly": true
                     },
                     "product_relations": {
-                        "type": "string",
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": {}
+                        },
+                        "description": "Get products related to the enrollment's course run.",
                         "readOnly": true
                     },
                     "state": {
@@ -9312,7 +9359,12 @@
                         "readOnly": true
                     },
                     "target_enrollments": {
-                        "type": "string",
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": {}
+                        },
+                        "description": "For the current order, retrieve its related enrollments.",
                         "readOnly": true
                     },
                     "total": {
@@ -9325,6 +9377,7 @@
                     },
                     "total_currency": {
                         "type": "string",
+                        "description": "Return the currency used",
                         "readOnly": true
                     }
                 }
@@ -9379,6 +9432,7 @@
                     },
                     "instructions": {
                         "type": "string",
+                        "description": "Return the instruction of the instance in html format.",
                         "readOnly": true
                     },
                     "price": {
@@ -9391,10 +9445,12 @@
                     },
                     "price_currency": {
                         "type": "string",
+                        "description": "Return the code of currency used by the instance",
                         "readOnly": true
                     },
                     "state": {
                         "type": "string",
+                        "description": "Process the state of the product based on its equivalent course run dates.",
                         "readOnly": true
                     },
                     "target_courses": {
@@ -9437,10 +9493,16 @@
                 "properties": {
                     "code": {
                         "type": "string",
+                        "description": "Return the code of the targeted course",
                         "readOnly": true
                     },
                     "course_runs": {
-                        "type": "string",
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": {}
+                        },
+                        "description": "Return all course runs for courses targeted by the product.",
                         "readOnly": true
                     },
                     "is_graded": {
@@ -9453,6 +9515,7 @@
                     },
                     "title": {
                         "type": "string",
+                        "description": "Return the title of the targeted course",
                         "readOnly": true
                     }
                 },
@@ -9512,7 +9575,9 @@
                         "description": "Designates whether the user can log into this admin site."
                     },
                     "abilities": {
-                        "type": "string",
+                        "type": "object",
+                        "additionalProperties": {},
+                        "description": "Return abilities of the logged-in user on itself.",
                         "readOnly": true
                     }
                 },

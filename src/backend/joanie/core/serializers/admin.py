@@ -219,7 +219,7 @@ class AdminProductSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id"]
 
-    def get_price_currency(self, *args, **kwargs):
+    def get_price_currency(self, *args, **kwargs) -> str:
         """Return the code of currency used by the instance"""
         return settings.DEFAULT_CURRENCY
 
@@ -258,7 +258,7 @@ class AdminProductLightSerializer(serializers.ModelSerializer):
             "target_courses",
         ]
 
-    def get_price_currency(self, *args, **kwargs):
+    def get_price_currency(self, *args, **kwargs) -> str:
         """Return the code of currency used by the instance"""
         return settings.DEFAULT_CURRENCY
 
@@ -282,7 +282,7 @@ class AdminOrderGroupSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "can_edit", "created_on"]
 
-    def get_nb_available_seats(self, order_group):
+    def get_nb_available_seats(self, order_group) -> int:
         """Return the number of available seats for this order group."""
         return order_group.nb_seats - order_group.get_nb_binding_orders()
 
@@ -680,7 +680,7 @@ class AdminTargetCourseSerializer(serializers.ModelSerializer):
 
         return relation.is_graded
 
-    def get_course_runs(self, target_course):
+    def get_course_runs(self, target_course) -> list[dict]:
         """
         Return related course runs ordered by start date asc
         """
@@ -773,6 +773,6 @@ class AdminProductDetailSerializer(serializers.ModelSerializer):
             instance=relations, many=True, context=context
         ).data
 
-    def get_price_currency(self, *args, **kwargs):
+    def get_price_currency(self, *args, **kwargs) -> str:
         """Return the code of currency used by the instance"""
         return settings.DEFAULT_CURRENCY

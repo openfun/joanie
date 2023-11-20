@@ -99,7 +99,7 @@ class Invoice(BaseModel):
         return f"{types[self.type]} {self.reference}"
 
     @property
-    def state(self):
+    def state(self) -> str:
         """
         Process the state of the invoice
         """
