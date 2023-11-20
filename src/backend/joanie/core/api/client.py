@@ -11,6 +11,8 @@ from django.db import IntegrityError, transaction
 from django.db.models import Count, OuterRef, Prefetch, Q, Subquery
 from django.http import FileResponse, HttpResponse, JsonResponse
 
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema
 from rest_framework import mixins, pagination
 from rest_framework import permissions as drf_permissions
 from rest_framework import viewsets
@@ -591,6 +593,13 @@ class CertificateViewSet(
         )
         return queryset.filter(order__owner__username=username)
 
+    @extend_schema(
+        responses={
+            (200, "application/pdf"): OpenApiTypes.BINARY,
+            404: serializers.ErrorResponseSerializer,
+            422: serializers.ErrorResponseSerializer,
+        },
+    )
     @action(detail=True, methods=["GET"])
     def download(self, request, pk=None):  # pylint: disable=no-self-use, invalid-name
         """
@@ -1005,6 +1014,13 @@ class ContractViewSet(GenericContractViewSet):
 
         return queryset.filter(**query_filters)
 
+    @extend_schema(
+        responses={
+            (200, "application/pdf"): OpenApiTypes.BINARY,
+            404: serializers.ErrorResponseSerializer,
+            422: serializers.ErrorResponseSerializer,
+        },
+    )
     @action(
         detail=True,
         methods=["GET"],
@@ -1167,6 +1183,13 @@ class ContractDefinitionViewset(viewsets.GenericViewSet):
     permission_classes = [permissions.IsAuthenticated]
     queryset = models.ContractDefinition.objects.all()
 
+    @extend_schema(
+        responses={
+            (200, "application/pdf"): OpenApiTypes.BINARY,
+            404: serializers.ErrorResponseSerializer,
+            422: serializers.ErrorResponseSerializer,
+        },
+    )
     @action(
         detail=True,
         methods=["GET"],
