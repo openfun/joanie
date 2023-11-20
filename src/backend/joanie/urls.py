@@ -20,7 +20,11 @@ from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import include, path, re_path
 
-from rest_framework import permissions
+from drf_spectacular.views import (
+    SpectacularJSONAPIView,
+    SpectacularRedocView,
+    SpectacularSwaggerView,
+)
 from rest_framework.routers import DefaultRouter
 
 from joanie.core.api import admin as api_admin
@@ -252,37 +256,21 @@ if settings.DEBUG:
         + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     )
 
-    try:
-        # Try to import `drf_yasg` dynamically as this dependency is installed only
-        # in a development context then configure schema views and routes
-        from drf_yasg import openapi, views
-    except ModuleNotFoundError:
-        pass
-    else:
-        SchemaView = views.get_schema_view(
-            openapi.Info(
-                title="Joanie API",
-                default_version=API_VERSION,
-                description="This is the Joanie API schema.",
-            ),
-            public=True,
-            permission_classes=[permissions.AllowAny],
-        )
-
-        urlpatterns += [
-            re_path(
-                rf"^{API_VERSION}/swagger(?P<format>\.json|\.yaml)$",
-                SchemaView.without_ui(cache_timeout=0),
-                name="api-schema",
-            ),
-            re_path(
-                rf"^{API_VERSION}/swagger/$",
-                SchemaView.with_ui("swagger", cache_timeout=0),
-                name="swagger-ui-schema",
-            ),
-            re_path(
-                rf"^{API_VERSION}/redoc/$",
-                SchemaView.with_ui("redoc", cache_timeout=0),
-                name="redoc-schema",
-            ),
-        ]
+if settings.USE_SWAGGER or settings.DEBUG:
+    urlpatterns += [
+        path(
+            f"{API_VERSION}/swagger.json",
+            SpectacularJSONAPIView.as_view(api_version=API_VERSION),
+            name="api-schema",
+        ),
+        path(
+            f"{API_VERSION}/swagger/",
+            SpectacularSwaggerView.as_view(url_name="api-schema"),
+            name="swagger-ui-schema",
+        ),
+        re_path(
+            f"{API_VERSION}/redoc/",
+            SpectacularRedocView.as_view(url_name="api-schema"),
+            name="redoc-schema",
+        ),
+    ]
