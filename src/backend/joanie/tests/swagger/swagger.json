@@ -3087,9 +3087,30 @@
                 "responses": {
                     "200": {
                         "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        },
+                        "description": ""
+                    },
+                    "404": {
+                        "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Certificate"
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": ""
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
                                 }
                             }
                         },
@@ -3119,7 +3140,35 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "No response body"
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        },
+                        "description": ""
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": ""
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": ""
                     }
                 }
             }
@@ -3227,9 +3276,30 @@
                 "responses": {
                     "200": {
                         "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        },
+                        "description": ""
+                    },
+                    "404": {
+                        "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Contract"
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": ""
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
                                 }
                             }
                         },
@@ -7648,6 +7718,18 @@
                 ],
                 "type": "string",
                 "description": "* `set` - Set\n* `failed` - Failed"
+            },
+            "ErrorResponse": {
+                "type": "object",
+                "description": "Serializer used to format error responses.",
+                "properties": {
+                    "details": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "details"
+                ]
             },
             "LanguageEnum": {
                 "enum": [
