@@ -65,6 +65,7 @@ class Base(Configuration):
     """
 
     DEBUG = False
+    USE_SWAGGER = False
 
     # Security
     ALLOWED_HOSTS = values.ListValue([])
@@ -199,6 +200,7 @@ class Base(Configuration):
         "joanie.badges",
         "joanie.demo",
         "joanie.signature",
+        "drf_spectacular",
     ]
 
     # Joanie
@@ -260,6 +262,29 @@ class Base(Configuration):
         "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
         "PAGE_SIZE": 20,
         "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.URLPathVersioning",
+        "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    }
+
+    SPECTACULAR_SETTINGS = {
+        "TITLE": "Joanie API",
+        "DESCRIPTION": "This is the Joanie API schema.",
+        "VERSION": "1.0.0",
+        "SERVE_INCLUDE_SCHEMA": False,
+        "ENABLE_DJANGO_DEPLOY_CHECK": values.BooleanValue(
+            default=False,
+            environ_name="SPECTACULAR_SETTINGS_ENABLE_DJANGO_DEPLOY_CHECK",
+        ),
+        "ENUM_NAME_OVERRIDES": {
+            "EnrollmentStateEnum": "joanie.core.enums.ENROLLMENT_STATE_CHOICES",
+            "OrganizationAccessRoleChoiceEnum": (
+                "joanie.core.models.OrganizationAccess.ROLE_CHOICES"
+            ),
+            "CourseAccessRoleChoiceEnum": "joanie.core.models.CourseAccess.ROLE_CHOICES",
+        },
+        # OTHER SETTINGS
+        "SWAGGER_UI_DIST": "SIDECAR",  # shorthand to use the sidecar instead
+        "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
+        "REDOC_DIST": "SIDECAR",
     }
 
     SIMPLE_JWT = {
@@ -491,22 +516,11 @@ class Development(Base):
     LOGIN_URL = "/admin/login/"
     LOGOUT_URL = "/admin/logout/"
 
-    # Swagger security settings
-    # e.g: For API routes which requires a jwt token to authenticate user, you can
-    # fulfill this field with `Bearer <USER_JWT_TOKEN>`
-    SWAGGER_SETTINGS = {
-        "SECURITY_DEFINITIONS": {
-            "Bearer": {
-                "type": "apiKey",
-                "name": "Authorization",
-                "in": "header",
-            }
-        }
-    }
+    USE_SWAGGER = True
 
     def __init__(self):
         # pylint: disable=invalid-name
-        self.INSTALLED_APPS += ["drf_yasg", "django_extensions"]
+        self.INSTALLED_APPS += ["django_extensions", "drf_spectacular_sidecar"]
 
 
 class Test(Base):
@@ -548,10 +562,11 @@ class Test(Base):
     PASSWORD_HASHERS = [
         "django.contrib.auth.hashers.MD5PasswordHasher",
     ]
+    USE_SWAGGER = True
 
     def __init__(self):
         # pylint: disable=invalid-name
-        self.INSTALLED_APPS += ["joanie.tests"]
+        self.INSTALLED_APPS += ["joanie.tests", "drf_spectacular_sidecar"]
 
 
 class ContinuousIntegration(Test):
