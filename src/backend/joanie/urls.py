@@ -91,21 +91,31 @@ if settings.USE_SWAGGER or settings.DEBUG:
             name="admin-api-schema",
         ),
         path(
+            f"{API_VERSION}/admin-swagger/",
+            SpectacularSwaggerView.as_view(url_name="admin-api-schema"),
+            name="swagger-ui-schema",
+        ),
+        re_path(
+            f"{API_VERSION}/admin-redoc/",
+            SpectacularRedocView.as_view(url_name="admin-api-schema"),
+            name="redoc-schema",
+        ),
+        path(
             f"{API_VERSION}/swagger.json",
             SpectacularJSONAPIView.as_view(
                 api_version=API_VERSION,
                 urlconf="joanie.client_urls",
             ),
-            name="api-schema",
+            name="client-api-schema",
         ),
         path(
             f"{API_VERSION}/swagger/",
-            SpectacularSwaggerView.as_view(url_name="api-schema"),
+            SpectacularSwaggerView.as_view(url_name="client-api-schema"),
             name="swagger-ui-schema",
         ),
         re_path(
             f"{API_VERSION}/redoc/",
-            SpectacularRedocView.as_view(url_name="api-schema"),
+            SpectacularRedocView.as_view(url_name="client-api-schema"),
             name="redoc-schema",
         ),
     ]
