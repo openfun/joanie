@@ -283,6 +283,7 @@ class Base(Configuration):
             ),
             "CourseAccessRoleChoiceEnum": "joanie.core.models.CourseAccess.ROLE_CHOICES",
         },
+        "COMPONENT_SPLIT_REQUEST": True,
         # OTHER SETTINGS
         "SWAGGER_UI_DIST": "SIDECAR",  # shorthand to use the sidecar instead
         "SWAGGER_UI_FAVICON_HREF": "SIDECAR",

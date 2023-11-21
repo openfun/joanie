@@ -52,12 +52,12 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/Address"
+                                "$ref": "#/components/schemas/AddressRequest"
                             }
                         },
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/Address"
+                                "$ref": "#/components/schemas/AddressRequest"
                             }
                         }
                     },
@@ -141,12 +141,12 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/Address"
+                                "$ref": "#/components/schemas/AddressRequest"
                             }
                         },
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/Address"
+                                "$ref": "#/components/schemas/AddressRequest"
                             }
                         }
                     },
@@ -192,12 +192,12 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/PatchedAddress"
+                                "$ref": "#/components/schemas/PatchedAddressRequest"
                             }
                         },
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/PatchedAddress"
+                                "$ref": "#/components/schemas/PatchedAddressRequest"
                             }
                         }
                     }
@@ -924,12 +924,12 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/CourseAccess"
+                                "$ref": "#/components/schemas/CourseAccessRequest"
                             }
                         },
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/CourseAccess"
+                                "$ref": "#/components/schemas/CourseAccessRequest"
                             }
                         }
                     },
@@ -1031,12 +1031,12 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/CourseAccess"
+                                "$ref": "#/components/schemas/CourseAccessRequest"
                             }
                         },
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/CourseAccess"
+                                "$ref": "#/components/schemas/CourseAccessRequest"
                             }
                         }
                     },
@@ -1091,12 +1091,12 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/PatchedCourseAccess"
+                                "$ref": "#/components/schemas/PatchedCourseAccessRequest"
                             }
                         },
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/PatchedCourseAccess"
+                                "$ref": "#/components/schemas/PatchedCourseAccessRequest"
                             }
                         }
                     }
@@ -1558,12 +1558,12 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/Course"
+                                "$ref": "#/components/schemas/CourseRequest"
                             }
                         },
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/Course"
+                                "$ref": "#/components/schemas/CourseRequest"
                             }
                         }
                     },
@@ -1712,12 +1712,12 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/CreditCard"
+                                "$ref": "#/components/schemas/CreditCardRequest"
                             }
                         },
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/CreditCard"
+                                "$ref": "#/components/schemas/CreditCardRequest"
                             }
                         }
                     }
@@ -1762,12 +1762,12 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/PatchedCreditCard"
+                                "$ref": "#/components/schemas/PatchedCreditCardRequest"
                             }
                         },
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/PatchedCreditCard"
+                                "$ref": "#/components/schemas/PatchedCreditCardRequest"
                             }
                         }
                     }
@@ -1890,12 +1890,12 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/Enrollment"
+                                "$ref": "#/components/schemas/EnrollmentRequest"
                             }
                         },
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/Enrollment"
+                                "$ref": "#/components/schemas/EnrollmentRequest"
                             }
                         }
                     },
@@ -1979,12 +1979,12 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/Enrollment"
+                                "$ref": "#/components/schemas/EnrollmentRequest"
                             }
                         },
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/Enrollment"
+                                "$ref": "#/components/schemas/EnrollmentRequest"
                             }
                         }
                     },
@@ -2030,12 +2030,12 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/PatchedEnrollment"
+                                "$ref": "#/components/schemas/PatchedEnrollmentRequest"
                             }
                         },
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/PatchedEnrollment"
+                                "$ref": "#/components/schemas/PatchedEnrollmentRequest"
                             }
                         }
                     }
@@ -2213,12 +2213,12 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/Order"
+                                "$ref": "#/components/schemas/OrderRequest"
                             }
                         },
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/Order"
+                                "$ref": "#/components/schemas/OrderRequest"
                             }
                         }
                     },
@@ -2304,12 +2304,12 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/Order"
+                                "$ref": "#/components/schemas/OrderRequest"
                             }
                         },
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/Order"
+                                "$ref": "#/components/schemas/OrderRequest"
                             }
                         }
                     },
@@ -2357,12 +2357,12 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/Order"
+                                "$ref": "#/components/schemas/OrderRequest"
                             }
                         },
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/Order"
+                                "$ref": "#/components/schemas/OrderRequest"
                             }
                         }
                     },
@@ -2448,12 +2448,12 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/PatchedOrder"
+                                "$ref": "#/components/schemas/PatchedOrderRequest"
                             }
                         },
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/PatchedOrder"
+                                "$ref": "#/components/schemas/PatchedOrderRequest"
                             }
                         }
                     }
@@ -2500,12 +2500,12 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/Order"
+                                "$ref": "#/components/schemas/OrderRequest"
                             }
                         },
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/Order"
+                                "$ref": "#/components/schemas/OrderRequest"
                             }
                         }
                     },
@@ -2553,12 +2553,12 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/Order"
+                                "$ref": "#/components/schemas/OrderRequest"
                             }
                         },
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/Order"
+                                "$ref": "#/components/schemas/OrderRequest"
                             }
                         }
                     },
@@ -2704,12 +2704,12 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/OrganizationAccess"
+                                "$ref": "#/components/schemas/OrganizationAccessRequest"
                             }
                         },
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/OrganizationAccess"
+                                "$ref": "#/components/schemas/OrganizationAccessRequest"
                             }
                         }
                     },
@@ -2811,12 +2811,12 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/OrganizationAccess"
+                                "$ref": "#/components/schemas/OrganizationAccessRequest"
                             }
                         },
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/OrganizationAccess"
+                                "$ref": "#/components/schemas/OrganizationAccessRequest"
                             }
                         }
                     },
@@ -2871,12 +2871,12 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/PatchedOrganizationAccess"
+                                "$ref": "#/components/schemas/PatchedOrganizationAccessRequest"
                             }
                         },
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/PatchedOrganizationAccess"
+                                "$ref": "#/components/schemas/PatchedOrganizationAccessRequest"
                             }
                         }
                     }
@@ -3336,12 +3336,12 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/Course"
+                                "$ref": "#/components/schemas/CourseRequest"
                             }
                         },
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/Course"
+                                "$ref": "#/components/schemas/CourseRequest"
                             }
                         }
                     },
@@ -3592,6 +3592,58 @@
                     "country",
                     "first_name",
                     "id",
+                    "last_name",
+                    "postcode",
+                    "title"
+                ]
+            },
+            "AddressRequest": {
+                "type": "object",
+                "description": "Address model serializer",
+                "properties": {
+                    "address": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                    },
+                    "city": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                    },
+                    "country": {
+                        "$ref": "#/components/schemas/CountryEnum"
+                    },
+                    "first_name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                    },
+                    "last_name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                    },
+                    "is_main": {
+                        "type": "boolean",
+                        "title": "Main"
+                    },
+                    "postcode": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 50
+                    },
+                    "title": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 100
+                    }
+                },
+                "required": [
+                    "address",
+                    "city",
+                    "country",
+                    "first_name",
                     "last_name",
                     "postcode",
                     "title"
@@ -4079,6 +4131,23 @@
                     "user_id"
                 ]
             },
+            "CourseAccessRequest": {
+                "type": "object",
+                "description": "Serialize course accesses for the API.",
+                "properties": {
+                    "role": {
+                        "$ref": "#/components/schemas/CourseAccessRoleChoiceEnum"
+                    },
+                    "user_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID"
+                    }
+                },
+                "required": [
+                    "user_id"
+                ]
+            },
             "CourseAccessRoleChoiceEnum": {
                 "enum": [
                     "owner",
@@ -4117,6 +4186,19 @@
                     "cover",
                     "id",
                     "title"
+                ]
+            },
+            "CourseLightRequest": {
+                "type": "object",
+                "description": "Serialize all non-sensitive course information. This serializer is read only.",
+                "properties": {
+                    "cover": {
+                        "type": "string",
+                        "format": "binary"
+                    }
+                },
+                "required": [
+                    "cover"
                 ]
             },
             "CourseProductRelation": {
@@ -4173,6 +4255,19 @@
                     "order_groups",
                     "organizations",
                     "product"
+                ]
+            },
+            "CourseRequest": {
+                "type": "object",
+                "description": "Serialize all non-sensitive course information. This serializer is read only.",
+                "properties": {
+                    "cover": {
+                        "type": "string",
+                        "format": "binary"
+                    }
+                },
+                "required": [
+                    "cover"
                 ]
             },
             "CourseRun": {
@@ -4300,6 +4395,21 @@
                     "last_numbers"
                 ]
             },
+            "CreditCardRequest": {
+                "type": "object",
+                "description": "CreditCard Serializer",
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "nullable": true,
+                        "maxLength": 100
+                    },
+                    "is_main": {
+                        "type": "boolean",
+                        "title": "Main"
+                    }
+                }
+            },
             "Enrollment": {
                 "type": "object",
                 "description": "Enrollment model serializer",
@@ -4419,6 +4529,35 @@
                     "id",
                     "is_active",
                     "state",
+                    "was_created_by_order"
+                ]
+            },
+            "EnrollmentLightRequest": {
+                "type": "object",
+                "description": "Enrollment model light serializer",
+                "properties": {
+                    "was_created_by_order": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "was_created_by_order"
+                ]
+            },
+            "EnrollmentRequest": {
+                "type": "object",
+                "description": "Enrollment model serializer",
+                "properties": {
+                    "is_active": {
+                        "type": "boolean",
+                        "description": "Ticked if the user is enrolled to the course run."
+                    },
+                    "was_created_by_order": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "is_active",
                     "was_created_by_order"
                 ]
             },
@@ -4760,6 +4899,30 @@
                     "nb_seats"
                 ]
             },
+            "OrderRequest": {
+                "type": "object",
+                "description": "Order model serializer",
+                "properties": {
+                    "order_group_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID"
+                    },
+                    "organization_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID"
+                    },
+                    "product_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID"
+                    }
+                },
+                "required": [
+                    "product_id"
+                ]
+            },
             "OrderStateEnum": {
                 "enum": [
                     "draft",
@@ -4864,6 +5027,23 @@
                     "user_id"
                 ]
             },
+            "OrganizationAccessRequest": {
+                "type": "object",
+                "description": "Serialize Organization accesses for the API.",
+                "properties": {
+                    "role": {
+                        "$ref": "#/components/schemas/OrganizationAccessRoleChoiceEnum"
+                    },
+                    "user_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID"
+                    }
+                },
+                "required": [
+                    "user_id"
+                ]
+            },
             "OrganizationAccessRoleChoiceEnum": {
                 "enum": [
                     "owner",
@@ -4872,6 +5052,16 @@
                 ],
                 "type": "string",
                 "description": "* `owner` - owner\n* `administrator` - administrator\n* `member` - member"
+            },
+            "OrganizationRequest": {
+                "type": "object",
+                "description": "Serialize all non-sensitive information about an organization",
+                "properties": {
+                    "logo": {
+                        "type": "string",
+                        "format": "binary"
+                    }
+                }
             },
             "PaginatedAddressList": {
                 "type": "object",
@@ -5197,16 +5387,18 @@
                     }
                 }
             },
-            "PatchedAddress": {
+            "PatchedAddressRequest": {
                 "type": "object",
                 "description": "Address model serializer",
                 "properties": {
                     "address": {
                         "type": "string",
+                        "minLength": 1,
                         "maxLength": 255
                     },
                     "city": {
                         "type": "string",
+                        "minLength": 1,
                         "maxLength": 255
                     },
                     "country": {
@@ -5214,15 +5406,13 @@
                     },
                     "first_name": {
                         "type": "string",
+                        "minLength": 1,
                         "maxLength": 255
                     },
                     "last_name": {
                         "type": "string",
+                        "minLength": 1,
                         "maxLength": 255
-                    },
-                    "id": {
-                        "type": "string",
-                        "readOnly": true
                     },
                     "is_main": {
                         "type": "boolean",
@@ -5230,24 +5420,20 @@
                     },
                     "postcode": {
                         "type": "string",
+                        "minLength": 1,
                         "maxLength": 50
                     },
                     "title": {
                         "type": "string",
+                        "minLength": 1,
                         "maxLength": 100
                     }
                 }
             },
-            "PatchedCourseAccess": {
+            "PatchedCourseAccessRequest": {
                 "type": "object",
                 "description": "Serialize course accesses for the API.",
                 "properties": {
-                    "id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "readOnly": true,
-                        "description": "primary key for the record as UUID"
-                    },
                     "role": {
                         "$ref": "#/components/schemas/CourseAccessRoleChoiceEnum"
                     },
@@ -5258,36 +5444,14 @@
                     }
                 }
             },
-            "PatchedCreditCard": {
+            "PatchedCreditCardRequest": {
                 "type": "object",
                 "description": "CreditCard Serializer",
                 "properties": {
-                    "id": {
-                        "type": "string",
-                        "readOnly": true
-                    },
                     "title": {
                         "type": "string",
                         "nullable": true,
                         "maxLength": 100
-                    },
-                    "brand": {
-                        "type": "string",
-                        "readOnly": true,
-                        "nullable": true
-                    },
-                    "expiration_month": {
-                        "type": "integer",
-                        "readOnly": true
-                    },
-                    "expiration_year": {
-                        "type": "integer",
-                        "readOnly": true
-                    },
-                    "last_numbers": {
-                        "type": "string",
-                        "readOnly": true,
-                        "title": "Last 4 numbers"
                     },
                     "is_main": {
                         "type": "boolean",
@@ -5295,117 +5459,23 @@
                     }
                 }
             },
-            "PatchedEnrollment": {
+            "PatchedEnrollmentRequest": {
                 "type": "object",
                 "description": "Enrollment model serializer",
                 "properties": {
-                    "id": {
-                        "type": "string",
-                        "readOnly": true
-                    },
-                    "certificate_id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "primary key for the record as UUID",
-                        "readOnly": true
-                    },
-                    "course_run": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/CourseRun"
-                            }
-                        ],
-                        "readOnly": true
-                    },
-                    "created_on": {
-                        "type": "string",
-                        "format": "date-time",
-                        "readOnly": true,
-                        "description": "date and time at which a record was created"
-                    },
                     "is_active": {
                         "type": "boolean",
                         "description": "Ticked if the user is enrolled to the course run."
-                    },
-                    "orders": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "additionalProperties": {}
-                        },
-                        "description": "Get orders pointing to the enrollment.",
-                        "readOnly": true
-                    },
-                    "product_relations": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "additionalProperties": {}
-                        },
-                        "description": "Get products related to the enrollment's course run.",
-                        "readOnly": true
-                    },
-                    "state": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/EnrollmentStateEnum"
-                            }
-                        ],
-                        "readOnly": true
                     },
                     "was_created_by_order": {
                         "type": "boolean"
                     }
                 }
             },
-            "PatchedOrder": {
+            "PatchedOrderRequest": {
                 "type": "object",
                 "description": "Order model serializer",
                 "properties": {
-                    "certificate_id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "primary key for the record as UUID",
-                        "readOnly": true
-                    },
-                    "contract": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/Contract"
-                            }
-                        ],
-                        "readOnly": true
-                    },
-                    "course": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/CourseLight"
-                            }
-                        ],
-                        "readOnly": true
-                    },
-                    "created_on": {
-                        "type": "string",
-                        "format": "date-time",
-                        "readOnly": true,
-                        "description": "date and time at which a record was created"
-                    },
-                    "enrollment": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/EnrollmentLight"
-                            }
-                        ],
-                        "readOnly": true
-                    },
-                    "id": {
-                        "type": "string",
-                        "readOnly": true
-                    },
-                    "main_invoice_reference": {
-                        "type": "string",
-                        "readOnly": true
-                    },
                     "order_group_id": {
                         "type": "string",
                         "format": "uuid",
@@ -5416,64 +5486,17 @@
                         "format": "uuid",
                         "description": "primary key for the record as UUID"
                     },
-                    "owner": {
-                        "type": "string",
-                        "readOnly": true
-                    },
                     "product_id": {
                         "type": "string",
                         "format": "uuid",
                         "description": "primary key for the record as UUID"
-                    },
-                    "state": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/OrderStateEnum"
-                            }
-                        ],
-                        "readOnly": true
-                    },
-                    "target_courses": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/OrderTargetCourseRelation"
-                        },
-                        "readOnly": true
-                    },
-                    "target_enrollments": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "additionalProperties": {}
-                        },
-                        "description": "For the current order, retrieve its related enrollments.",
-                        "readOnly": true
-                    },
-                    "total": {
-                        "type": "number",
-                        "format": "double",
-                        "maximum": 10000000,
-                        "minimum": 0,
-                        "exclusiveMaximum": true,
-                        "readOnly": true
-                    },
-                    "total_currency": {
-                        "type": "string",
-                        "description": "Return the currency used",
-                        "readOnly": true
                     }
                 }
             },
-            "PatchedOrganizationAccess": {
+            "PatchedOrganizationAccessRequest": {
                 "type": "object",
                 "description": "Serialize Organization accesses for the API.",
                 "properties": {
-                    "id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "readOnly": true,
-                        "description": "primary key for the record as UUID"
-                    },
                     "role": {
                         "$ref": "#/components/schemas/OrganizationAccessRoleChoiceEnum"
                     },

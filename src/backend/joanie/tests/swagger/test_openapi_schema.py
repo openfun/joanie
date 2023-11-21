@@ -13,12 +13,22 @@ class OpenApiSchemaTest(TestCase):
 
     maxDiff = None
 
-    def test_openapi_schema(self):
+    def test_openapi_client_schema(self):
         """
-        Generated OpenAPI schema should be correct.
+        Generated OpenAPI client schema should be correct.
         """
         response = self.client.get("/v1.0/swagger.json")
 
         self.assertEqual(response.status_code, 200)
         with open("joanie/tests/swagger/swagger.json") as expected_schema:
+            assert response.json() == json.load(expected_schema)
+
+    def test_openapi_admin_schema(self):
+        """
+        Generated OpenAPI admin schema should be correct.
+        """
+        response = self.client.get("/v1.0/admin-swagger.json")
+
+        self.assertEqual(response.status_code, 200)
+        with open("joanie/tests/swagger/admin-swagger.json") as expected_schema:
             assert response.json() == json.load(expected_schema)
