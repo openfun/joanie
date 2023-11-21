@@ -7,5 +7,6 @@ _dc_run \
     app-dev \
     python manage.py spectacular \
     --api-version 'v1.0' \
+    --urlconf 'joanie.client_urls' \
     --format openapi-json \
     --file /app/joanie/tests/swagger/swagger.json
