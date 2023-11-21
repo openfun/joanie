@@ -67,6 +67,8 @@ class Base(Configuration):
     DEBUG = False
     USE_SWAGGER = False
 
+    API_VERSION = "v1.0"
+
     # Security
     ALLOWED_HOSTS = values.ListValue([])
     SECRET_KEY = values.Value(None)
