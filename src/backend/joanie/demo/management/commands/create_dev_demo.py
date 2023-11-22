@@ -1,4 +1,4 @@
-# ruff: noqa: S311
+# ruff: noqa: S311, PLR0913
 """Management command to initialize some fake data (products, courses and course runs)"""
 import random
 
@@ -64,7 +64,9 @@ class Command(BaseCommand):
                 )
         return courses
 
-    def create_product_credential(self, user, organization, batch_size=1):
+    def create_product_credential(
+        self, user, organization, contract_definition=None, batch_size=1
+    ):
         """Create batch or products for given user and organization."""
         if batch_size == 1:
             course = factories.CourseFactory(
@@ -74,6 +76,7 @@ class Command(BaseCommand):
             product = factories.ProductFactory(
                 type=enums.PRODUCT_TYPE_CREDENTIAL,
                 courses=[course],
+                contract_definition=contract_definition,
             )
             target_course_list = factories.CourseFactory.create_batch(
                 2,
@@ -140,7 +143,9 @@ class Command(BaseCommand):
                 ),
             )
             product = factories.ProductFactory(
-                type=enums.PRODUCT_TYPE_CERTIFICATE, courses=[course]
+                type=enums.PRODUCT_TYPE_CERTIFICATE,
+                courses=[course],
+                contract_definition=None,
             )
             self.stdout.write(
                 self.style.SUCCESS(
@@ -165,13 +170,20 @@ class Command(BaseCommand):
         )
 
     def create_product_purchased(
-        self, user, organization, product_type, order_status=enums.ORDER_STATE_VALIDATED
-    ):
-        """Create a product certificate, it's enrollment and it's order."""
+        self,
+        user,
+        organization,
+        product_type=enums.PRODUCT_TYPE_CERTIFICATE,
+        order_status=enums.ORDER_STATE_VALIDATED,
+        contract_definition=None,
+    ):  # pylint: disable=too-many-arguments
+        """Create a product, it's enrollment and it's order."""
         if product_type == enums.PRODUCT_TYPE_CERTIFICATE:
             product = self.create_product_certificate(user, organization)
         elif product_type == enums.PRODUCT_TYPE_CREDENTIAL:
-            product = self.create_product_credential(user, organization)
+            product = self.create_product_credential(
+                user, organization, contract_definition
+            )
         else:
             raise ValueError(f"Given product_type ({product_type}) is not allowed.")
 
@@ -200,13 +212,19 @@ class Command(BaseCommand):
         return order
 
     def create_product_purchased_with_certificate(
-        self, user, organization, product_type
+        self, user, organization, product_type, contract_definition=None
     ):
         """
         Create a product, it's enrollment and it's order.
         Also create the order's linked certificate.
         """
-        order = self.create_product_purchased(user, organization, product_type)
+        order = self.create_product_purchased(
+            user,
+            organization,
+            product_type,
+            enums.ORDER_STATE_VALIDATED,
+            contract_definition,
+        )
         return factories.OrderCertificateFactory(order=order)
 
     def create_enrollment_certificate(self, user, organization):
@@ -382,7 +400,9 @@ class Command(BaseCommand):
 
         # Order for a PRODUCT_CREDENTIAL with a generated certificate
         self.create_product_purchased_with_certificate(
-            admin_user, organization, enums.PRODUCT_TYPE_CREDENTIAL
+            admin_user,
+            organization,
+            enums.PRODUCT_TYPE_CREDENTIAL,
         )
         self.stdout.write(
             self.style.SUCCESS(
@@ -392,7 +412,11 @@ class Command(BaseCommand):
 
         # Order for a PRODUCT_CREDENTIAL with a unsigned contract
         order = self.create_product_purchased(
-            admin_user, organization, enums.PRODUCT_TYPE_CREDENTIAL
+            admin_user,
+            organization,
+            enums.PRODUCT_TYPE_CREDENTIAL,
+            enums.ORDER_STATE_VALIDATED,
+            factories.ContractDefinitionFactory(),
         )
         factories.ContractFactory(
             order=order, definition=order.product.contract_definition, signed_on=None
@@ -405,7 +429,11 @@ class Command(BaseCommand):
 
         # Order for a PRODUCT_CREDENTIAL with a signed contract
         order = self.create_product_purchased(
-            admin_user, organization, enums.PRODUCT_TYPE_CREDENTIAL
+            admin_user,
+            organization,
+            enums.PRODUCT_TYPE_CREDENTIAL,
+            enums.ORDER_STATE_VALIDATED,
+            factories.ContractDefinitionFactory(),
         )
 
         factories.ContractFactory(
@@ -437,7 +465,10 @@ class Command(BaseCommand):
             enums.ORDER_STATE_VALIDATED,
         ]:
             self.create_product_purchased(
-                admin_user, organization, enums.PRODUCT_TYPE_CREDENTIAL, order_status
+                admin_user,
+                organization,
+                enums.PRODUCT_TYPE_CREDENTIAL,
+                order_status,
             )
 
         self.stdout.write(self.style.SUCCESS("Successfully fake data creation"))
