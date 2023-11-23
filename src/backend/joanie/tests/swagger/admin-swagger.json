@@ -647,7 +647,7 @@
             },
             "post": {
                 "operationId": "course_product_relations_order_groups_create",
-                "description": "OrderGroup ViewSet",
+                "description": "Create a new OrderGroup using the course_product_relation_id from the URL",
                 "parameters": [
                     {
                         "in": "path",
@@ -674,8 +674,7 @@
                                 "$ref": "#/components/schemas/AdminOrderGroupCreateRequest"
                             }
                         }
-                    },
-                    "required": true
+                    }
                 },
                 "security": [
                     {
@@ -3916,16 +3915,10 @@
                     "can_edit": {
                         "type": "string",
                         "readOnly": true
-                    },
-                    "course_product_relation": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "primary key for the record as UUID"
                     }
                 },
                 "required": [
                     "can_edit",
-                    "course_product_relation",
                     "created_on",
                     "id",
                     "nb_available_seats"
@@ -3944,16 +3937,8 @@
                     },
                     "is_active": {
                         "type": "boolean"
-                    },
-                    "course_product_relation": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "primary key for the record as UUID"
                     }
-                },
-                "required": [
-                    "course_product_relation"
-                ]
+                }
             },
             "AdminOrderGroupRequest": {
                 "type": "object",

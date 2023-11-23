@@ -1,6 +1,7 @@
 """Admin serializers for Joanie Core app."""
 from django.conf import settings
 
+from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
 
@@ -287,6 +288,7 @@ class AdminOrderGroupSerializer(serializers.ModelSerializer):
         return order_group.nb_seats - order_group.get_nb_binding_orders()
 
 
+@extend_schema_serializer(exclude_fields=("course_product_relation",))
 class AdminOrderGroupCreateSerializer(AdminOrderGroupSerializer):
     """
     Admin Serializer for OrderGroup model reserved to create action.
