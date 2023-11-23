@@ -101,6 +101,7 @@ class Address(BaseModel):
         on_delete=models.CASCADE,
     )
     is_main = models.BooleanField(_("main"), default=False)
+    is_reusable = models.BooleanField(_("reusable"), default=False)
 
     class Meta:
         db_table = "joanie_address"
@@ -112,7 +113,12 @@ class Address(BaseModel):
                 condition=models.Q(is_main=True),
                 fields=["owner"],
                 name="unique_main_address_per_user",
-            )
+            ),
+            models.CheckConstraint(
+                check=(models.Q(is_reusable=True) | models.Q(is_main=False)),
+                name="main_address_must_be_reusable",
+                violation_error_message=_("Main address must be reusable."),
+            ),
         ]
 
     def __str__(self):
@@ -120,20 +126,21 @@ class Address(BaseModel):
 
     def clean(self):
         """
+        If the address is reusable, we enforce some rules:
         First if this is the user's first address, we enforce is_main to True.
         Else if we are promoting an address as main, we demote the existing main address
         Finally prevent to demote the main address directly.
         """
-        if not self.owner.addresses.exists():
-            self.is_main = True
-        elif self.is_main is True:
-            self.owner.addresses.filter(is_main=True).update(is_main=False)
-        elif (
-            self.created_on
-            and self.is_main is False
-            and self.owner.addresses.filter(is_main=True, pk=self.pk).exists()
-        ):
-            raise ValidationError(_("Demote a main address is forbidden"))
+        if self.is_reusable:
+            if not self.owner.addresses.exists():
+                self.is_main = True
+            elif self.is_main:
+                self.owner.addresses.filter(is_main=True).update(is_main=False)
+            elif (
+                self.created_on
+                and self.owner.addresses.filter(is_main=True, pk=self.pk).exists()
+            ):
+                raise ValidationError(_("Demote a main address is forbidden"))
 
         return super().clean()
 
