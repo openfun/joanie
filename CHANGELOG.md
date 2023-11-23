@@ -102,6 +102,7 @@ and this project adheres to
   - ProductViewSetFilter
   - EnrollmentViewSetFilter
 - Update admin course serializer to return course runs
+- Allow group order deletion through course product relation
 
 ### Removed
 
