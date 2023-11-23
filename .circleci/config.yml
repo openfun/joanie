@@ -400,7 +400,7 @@ jobs:
     working_directory: ~/joanie
     resource_class: large
     environment:
-      DJANGO_CONFIGURATION: ContinuousIntegration
+      DJANGO_CONFIGURATION: Staging
     steps:
       - checkout:
           path: ~/joanie
