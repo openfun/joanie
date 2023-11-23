@@ -157,7 +157,6 @@ class OrderGroupAdminApiTest(TestCase):
         data = {
             "nb_seats": 5,
             "is_active": True,
-            "course_product_relation": str(relation.id),
         }
         with self.assertNumQueries(6):
             response = self.client.post(

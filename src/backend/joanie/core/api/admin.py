@@ -4,7 +4,7 @@ Admin API Endpoints
 import django_filters.rest_framework
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
-from rest_framework import mixins, permissions, viewsets
+from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -392,3 +392,17 @@ class NestedCourseProductRelationOrderGroupViewSet(
         Return the serializer class to use depending on the action.
         """
         return self.serializer_classes.get(self.action, self.default_serializer_class)
+
+    def create(self, request, *args, **kwargs):
+        """
+        Create a new OrderGroup using the course_product_relation_id from the URL
+        """
+        data = request.data
+        data["course_product_relation"] = kwargs.get("course_product_relation_id")
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
