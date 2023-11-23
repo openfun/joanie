@@ -590,6 +590,12 @@ class CourseProductRelation(BaseModel):
         self.full_clean()
         super().save(*args, **kwargs)
 
+    def delete(self, using=None, keep_parents=False):
+        """Delete the relation if it can be edited, raise a ValidationError otherwise."""
+        if not self.can_edit:
+            raise ValidationError(_("You cannot delete this course product relation."))
+        return super().delete(using=using, keep_parents=keep_parents)
+
     def get_read_detail_api_url(self):
         """
         Build the api url to get the detail of the provided course product relation.

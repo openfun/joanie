@@ -1063,7 +1063,7 @@
             },
             "delete": {
                 "operationId": "course_product_relations_destroy",
-                "description": "CourseProductRelation ViewSet",
+                "description": "Delete the relation between course_id and product_id",
                 "parameters": [
                     {
                         "in": "path",
