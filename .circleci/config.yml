@@ -147,7 +147,6 @@ jobs:
       - image: cimg/python:3.10
         environment:
           DJANGO_SETTINGS_MODULE: joanie.settings
-          DJANGO_CONFIGURATION: Test
           DJANGO_SECRET_KEY: ThisIsAnExampleKeyForTestPurposeOnly
           DJANGO_JWT_PRIVATE_SIGNING_KEY: ThisIsAnExampleKeyForDevPurposeOnly
           PYTHONPATH: /home/circleci/joanie/src/backend
@@ -163,6 +162,8 @@ jobs:
           POSTGRES_USER: fun
           POSTGRES_PASSWORD: pass
     working_directory: ~/joanie/src/backend
+    environment:
+        DJANGO_CONFIGURATION: Test
     steps:
       - checkout:
           path: ~/joanie
