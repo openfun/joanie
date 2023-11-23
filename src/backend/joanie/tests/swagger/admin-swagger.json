@@ -547,6 +547,37 @@
             "post": {
                 "operationId": "course_product_relations_create",
                 "description": "CourseProductRelation ViewSet",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "course_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "organization_ids",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "format": "uuid"
+                            }
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "product_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
                 "tags": [
                     "course-product-relations"
                 ],
@@ -872,6 +903,14 @@
                 "description": "CourseProductRelation ViewSet",
                 "parameters": [
                     {
+                        "in": "query",
+                        "name": "course_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
                         "in": "path",
                         "name": "id",
                         "schema": {
@@ -880,6 +919,25 @@
                             "description": "primary key for the record as UUID"
                         },
                         "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "organization_ids",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "format": "uuid"
+                            }
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "product_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
                     }
                 ],
                 "tags": [
@@ -908,6 +966,14 @@
                 "description": "CourseProductRelation ViewSet",
                 "parameters": [
                     {
+                        "in": "query",
+                        "name": "course_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
                         "in": "path",
                         "name": "id",
                         "schema": {
@@ -916,6 +982,25 @@
                             "description": "primary key for the record as UUID"
                         },
                         "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "organization_ids",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "format": "uuid"
+                            }
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "product_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
                     }
                 ],
                 "tags": [

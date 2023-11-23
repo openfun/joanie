@@ -363,9 +363,18 @@ class AdminCourseProductRelationsSerializer(serializers.ModelSerializer):
         product = get_object_or_404(models.Product, id=product_id)
         validated_data["product"] = product
 
-        if organization_id := self.initial_data.get("organization_id"):
-            organization = get_object_or_404(models.Organization, id=organization_id)
-            validated_data["organizations"] = [organization]
+        validated_data["organizations"] = []
+        validation_error["organization_ids"] = []
+        for organization_id in self.initial_data.get("organization_ids", []):
+            if models.Organization.objects.filter(id=organization_id).exists():
+                validated_data["organizations"].append(organization_id)
+            else:
+                validation_error["organization_ids"].append(
+                    f"{organization_id} does not exist."
+                )
+
+        if validation_error["organization_ids"]:
+            raise serializers.ValidationError(validation_error)
 
         return super().create(validated_data)
 
@@ -378,9 +387,19 @@ class AdminCourseProductRelationsSerializer(serializers.ModelSerializer):
             product = get_object_or_404(models.Product, id=product_id)
             validated_data["product"] = product
 
-        if organization_id := self.initial_data.get("organization_id"):
-            organization = get_object_or_404(models.Organization, id=organization_id)
-            validated_data["organizations"] = [organization]
+        validated_data["organizations"] = []
+        validation_error = {"organization_ids": []}
+        for organization_id in self.initial_data.get("organization_ids", []):
+            if models.Organization.objects.filter(id=organization_id).exists():
+                validated_data["organizations"].append(organization_id)
+            else:
+                validation_error["organization_ids"].append(
+                    f"{organization_id} does not exist."
+                )
+
+        if validation_error["organization_ids"]:
+            raise serializers.ValidationError(validation_error)
+
         return super().update(instance, validated_data)
 
 

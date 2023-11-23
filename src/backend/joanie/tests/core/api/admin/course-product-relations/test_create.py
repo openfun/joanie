@@ -1,6 +1,7 @@
 """
 Test suite for CourseProductRelation create Admin API.
 """
+import uuid
 from unittest import mock
 
 from django.conf import settings
@@ -29,8 +30,9 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
             {
                 "course_id": course.id,
                 "product_id": product.id,
-                "organization_id": organization.id,
+                "organization_ids": [organization.id],
             },
+            content_type="application/json",
         )
 
         self.assertEqual(response.status_code, 401)
@@ -52,8 +54,9 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
             {
                 "course_id": course.id,
                 "product_id": product.id,
-                "organization_id": organization.id,
+                "organization_ids": [organization.id],
             },
+            content_type="application/json",
         )
 
         self.assertEqual(response.status_code, 403)
@@ -83,8 +86,9 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
             {
                 "course_id": course.id,
                 "product_id": product.id,
-                "organization_id": organization.id,
+                "organization_ids": [organization.id],
             },
+            content_type="application/json",
         )
         self.assertEqual(response.status_code, 201)
 
@@ -237,8 +241,9 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
             "/api/v1.0/admin/course-product-relations/",
             {
                 "product_id": product.id,
-                "organization_id": organization.id,
+                "organization_ids": [organization.id],
             },
+            content_type="application/json",
         )
 
         self.assertEqual(response.status_code, 400)
@@ -260,8 +265,9 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
             "/api/v1.0/admin/course-product-relations/",
             {
                 "course_id": course.id,
-                "organization_id": organization.id,
+                "organization_ids": [organization.id],
             },
+            content_type="application/json",
         )
 
         self.assertEqual(response.status_code, 400)
@@ -292,6 +298,7 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
                 "course_id": course.id,
                 "product_id": product.id,
             },
+            content_type="application/json",
         )
         self.assertEqual(response.status_code, 201)
 
@@ -436,3 +443,36 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
                 "product_id": "This field is required.",
             },
         )
+
+    def test_admin_api_course_products_relation_create_unknown_organization(self):
+        """
+        Creating a relation with unknown organization ids should fail.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        course = factories.CourseFactory()
+        unknown_id_1 = uuid.uuid4()
+        unknown_id_2 = uuid.uuid4()
+        organization = factories.OrganizationFactory()
+        product = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CREDENTIAL, courses=[]
+        )
+        response = self.client.post(
+            "/api/v1.0/admin/course-product-relations/",
+            {
+                "course_id": course.id,
+                "product_id": product.id,
+                "organization_ids": [unknown_id_1, unknown_id_2, organization.id],
+            },
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 400)
+
+        assert response.json() == {
+            "organization_ids": [
+                f"{unknown_id_1} does not exist.",
+                f"{unknown_id_2} does not exist.",
+            ]
+        }
+        organization.refresh_from_db()
+        self.assertEqual(organization.product_relations.count(), 0)
