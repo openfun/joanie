@@ -339,7 +339,7 @@ class OrderGroup(BaseModel):
         to=CourseProductRelation,
         verbose_name=_("course product relation"),
         related_name="order_groups",
-        on_delete=models.RESTRICT,
+        on_delete=models.CASCADE,
     )
     is_active = models.BooleanField(_("is active"), default=True)
 

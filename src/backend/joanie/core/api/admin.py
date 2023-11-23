@@ -1,6 +1,8 @@
 """
 Admin API Endpoints
 """
+from django.core.exceptions import ValidationError
+
 import django_filters.rest_framework
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -363,6 +365,18 @@ class CourseProductRelationViewSet(viewsets.ModelViewSet):
     @extend_schema(parameters=get_request_schema_parameters())
     def partial_update(self, request, *args, **kwargs):
         return super().partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Delete the relation between course_id and product_id
+        """
+        try:
+            return super().destroy(request, *args, **kwargs)
+        except ValidationError as error:
+            return Response(
+                {"detail": str(error)},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
 
 class NestedCourseProductRelationOrderGroupViewSet(

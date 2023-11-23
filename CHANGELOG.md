@@ -103,6 +103,7 @@ and this project adheres to
   - EnrollmentViewSetFilter
 - Update admin course serializer to return course runs
 - Allow group order deletion through course product relation
+- Delete group orders when deleting a course product relation
 
 ### Removed
 

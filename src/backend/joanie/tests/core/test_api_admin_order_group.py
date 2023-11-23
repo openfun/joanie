@@ -297,3 +297,19 @@ class OrderGroupAdminApiTest(TestCase):
             )
         self.assertEqual(response.status_code, 204)
         self.assertFalse(models.OrderGroup.objects.filter(id=order_group.id).exists())
+
+    def test_admin_api_order_group_delete_cannot_edit(self):
+        """
+        Deleting an order group that cannot be edited should fail.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        relation = factories.CourseProductRelationFactory()
+        order_group = factories.OrderGroupFactory(course_product_relation=relation)
+        with self.assertNumQueries(5):
+            response = self.client.delete(
+                f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/",
+            )
+        self.assertEqual(response.status_code, 204)
+        self.assertFalse(models.OrderGroup.objects.filter(id=order_group.id).exists())

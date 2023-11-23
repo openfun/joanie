@@ -70,3 +70,60 @@ class CourseProductRelationDeleteAdminApiTest(TestCase):
         self.assertEqual(response.status_code, 204)
         with self.assertRaises(models.CourseProductRelation.DoesNotExist):
             relation.refresh_from_db()
+
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_admin_api_course_products_relation_delete_restrict(self, _):
+        """
+        Order group with an existing order should not be deleted.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        relation = factories.CourseProductRelationFactory()
+        order_group = factories.OrderGroupFactory(
+            course_product_relation=relation,
+        )
+        factories.OrderFactory(
+            order_group=order_group,
+            product=relation.product,
+        )
+        response = self.client.delete(
+            f"/api/v1.0/admin/course-product-relations/{relation.id}/",
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertDictEqual(
+            response.json(),
+            {"detail": "['You cannot delete this course product relation.']"},
+        )
+        relation.refresh_from_db()
+        self.assertIsNotNone(relation)
+
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_admin_api_course_products_relation_delete_order_group(self, _):
+        """
+        Order groups without an existing order should be deleted
+        when deleting a course product relation.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        relation = factories.CourseProductRelationFactory()
+        order_group = factories.OrderGroupFactory(
+            course_product_relation=relation,
+        )
+        response = self.client.delete(
+            f"/api/v1.0/admin/course-product-relations/{relation.id}/",
+        )
+
+        self.assertEqual(response.status_code, 204)
+        with self.assertRaises(models.CourseProductRelation.DoesNotExist):
+            relation.refresh_from_db()
+        with self.assertRaises(models.OrderGroup.DoesNotExist):
+            order_group.refresh_from_db()
