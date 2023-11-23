@@ -538,11 +538,11 @@ class AddressViewSet(
             if self.request.auth
             else self.request.user.username
         )
-        return models.Address.objects.filter(owner__username=username)
+        return models.Address.objects.filter(owner__username=username, is_reusable=True)
 
     def perform_create(self, serializer):
         """Create a new address for user authenticated"""
-        serializer.save(owner=self.request.user)
+        serializer.save(owner=self.request.user, is_reusable=True)
 
 
 class CertificateViewSet(
