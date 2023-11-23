@@ -38,7 +38,7 @@ class InvoiceAdmin(admin.ModelAdmin):
     """Admin class for the Invoice model."""
 
     autocomplete_fields = ["order", "parent"]
-    list_display = ("type", "reference", "recipient_name", "total", "balance")
+    list_display = ("type", "reference", "recipient_full_name", "total", "balance")
     readonly_fields = (
         "balance",
         "children",
@@ -50,7 +50,12 @@ class InvoiceAdmin(admin.ModelAdmin):
         "type",
         "updated_on",
     )
-    search_fields = ["reference", "recipient_name", "parent__reference"]
+    search_fields = [
+        "reference",
+        "recipient_address__first_name",
+        "recipient_address__last_name",
+        "parent__reference",
+    ]
     fieldsets = (
         (
             None,
@@ -61,7 +66,6 @@ class InvoiceAdmin(admin.ModelAdmin):
                         "order",
                         "parent",
                     ),
-                    "recipient_name",
                     "recipient_address",
                 )
             },
@@ -93,7 +97,6 @@ class InvoiceAdmin(admin.ModelAdmin):
                 "total",
                 "order",
                 "parent",
-                "recipient_name",
                 "recipient_address",
             )
         return self.readonly_fields
@@ -107,6 +110,10 @@ class InvoiceAdmin(admin.ModelAdmin):
         """Return human-readable state of the invoice."""
         states = dict(enums.INVOICE_STATES)
         return states[obj.state]
+
+    def recipient_full_name(self, obj):  # pylint: disable=no-self-use
+        """Return the recipient name of the invoice."""
+        return obj.recipient_address.full_name
 
     def children(self, obj):  # pylint: disable=no-self-use
         """Return a list of children."""
