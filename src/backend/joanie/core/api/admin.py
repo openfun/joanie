@@ -2,6 +2,8 @@
 Admin API Endpoints
 """
 import django_filters.rest_framework
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import mixins, permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -325,6 +327,42 @@ class CourseProductRelationViewSet(viewsets.ModelViewSet):
         "course", "product"
     )
     ordering = "created_on"
+
+    @staticmethod
+    def get_request_schema_parameters(create=False):
+        """
+        Return the parameters to use in the OpenAPI schema.
+        """
+        return [
+            OpenApiParameter(
+                name="course_id",
+                required=create,
+                type=OpenApiTypes.UUID,
+            ),
+            OpenApiParameter(
+                name="product_id",
+                required=create,
+                type=OpenApiTypes.UUID,
+            ),
+            OpenApiParameter(
+                name="organization_ids",
+                required=False,
+                type=OpenApiTypes.UUID,
+                many=True,
+            ),
+        ]
+
+    @extend_schema(parameters=get_request_schema_parameters(create=True))
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
+
+    @extend_schema(parameters=get_request_schema_parameters())
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
+
+    @extend_schema(parameters=get_request_schema_parameters())
+    def partial_update(self, request, *args, **kwargs):
+        return super().partial_update(request, *args, **kwargs)
 
 
 class NestedCourseProductRelationOrderGroupViewSet(
