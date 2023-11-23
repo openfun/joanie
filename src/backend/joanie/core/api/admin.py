@@ -366,10 +366,7 @@ class CourseProductRelationViewSet(viewsets.ModelViewSet):
 
 
 class NestedCourseProductRelationOrderGroupViewSet(
-    mixins.CreateModelMixin,
-    mixins.UpdateModelMixin,
-    mixins.RetrieveModelMixin,
-    mixins.ListModelMixin,
+    viewsets.ModelViewSet,
     NestedGenericViewSet,
 ):
     """

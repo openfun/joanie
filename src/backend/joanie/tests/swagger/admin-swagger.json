@@ -858,6 +858,44 @@
                         "description": ""
                     }
                 }
+            },
+            "delete": {
+                "operationId": "course_product_relations_order_groups_destroy",
+                "description": "OrderGroup ViewSet",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "course_product_relation_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "course-product-relations"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
             }
         },
         "/api/v1.0/admin/course-product-relations/{id}/": {
