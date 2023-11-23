@@ -68,6 +68,7 @@ and this project adheres to
 
 ### Changed
 
+- Link Invoice to Address object
 - Update psycopg to version 3
 - Update contract api endpoint to retrieve contracts by ownership
 - Internalize degree template

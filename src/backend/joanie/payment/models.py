@@ -61,11 +61,11 @@ class Invoice(BaseModel):
         null=False,
         blank=False,
     )
-    recipient_name = models.CharField(
-        _("invoice recipient"), max_length=40, null=False, blank=False
-    )
-    recipient_address = models.TextField(
-        _("invoice address"), max_length=255, null=False, blank=False
+    recipient_address = models.ForeignKey(
+        to="core.Address",
+        verbose_name=_("invoice address"),
+        related_name="invoices",
+        on_delete=models.RESTRICT,
     )
     localized_context = models.JSONField(
         _("context"),
@@ -227,8 +227,8 @@ class Invoice(BaseModel):
                 },
                 "company": settings.JOANIE_INVOICE_COMPANY_CONTEXT,
                 "customer": {
-                    "address": self.recipient_address,
-                    "name": self.recipient_name,
+                    "address": self.recipient_address.full_address,
+                    "name": self.recipient_address.full_name,
                 },
                 "seller": {
                     "address": settings.JOANIE_INVOICE_SELLER_ADDRESS,
@@ -270,7 +270,6 @@ class Invoice(BaseModel):
             )
 
         if self.parent:
-            self.recipient_name = self.parent.recipient_name
             self.recipient_address = self.parent.recipient_address
 
         if self.type == payment_enums.INVOICE_TYPE_CREDIT_NOTE:
