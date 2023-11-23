@@ -497,9 +497,14 @@ class Build(Base):
     """
 
     SECRET_KEY = values.Value("DummyKey")
-    STORAGES_STATICFILES_BACKEND = values.Value(
-        "whitenoise.storage.CompressedManifestStaticFilesStorage"
-    )
+    STORAGES = {
+        "staticfiles": {
+            "BACKEND": values.Value(
+                "whitenoise.storage.CompressedManifestStaticFilesStorage",
+                environ_name="STORAGES_STATICFILES_BACKEND",
+            ),
+        }
+    }
 
 
 class Development(Base):
@@ -610,18 +615,22 @@ class Production(Base):
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
 
-    # For static files in production, we want to use a backend that includes a hash in
-    # the filename, that is calculated from the file content, so that browsers always
-    # get the updated version of each file.
-    STORAGES_STATICFILES_BACKEND = values.Value(
-        "whitenoise.storage.CompressedManifestStaticFilesStorage"
-    )
-
     # Privacy
     SECURE_REFERRER_POLICY = "same-origin"
 
     # Media
-    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+    STORAGES = {
+        "default": {"BACKEND": "storages.backends.s3.S3Storage"},
+        "staticfiles": {
+            # For static files in production, we want to use a backend that includes a hash in
+            # the filename, that is calculated from the file content, so that browsers always
+            # get the updated version of each file.
+            "BACKEND": values.Value(
+                "whitenoise.storage.CompressedManifestStaticFilesStorage",
+                environ_name="STORAGES_STATICFILES_BACKEND",
+            )
+        },
+    }
     AWS_S3_ENDPOINT_URL = values.Value()
     AWS_S3_ACCESS_KEY_ID = values.Value()
     AWS_S3_SECRET_ACCESS_KEY = values.Value()
