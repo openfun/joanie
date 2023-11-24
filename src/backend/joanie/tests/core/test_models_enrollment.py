@@ -587,7 +587,8 @@ class EnrollmentModelsTestCase(TestCase):
         factories.ContractFactory(
             order=order,
             definition=product.contract_definition,
-            signed_on=timezone.now(),
+            submitted_for_signature_on=timezone.now(),
+            student_signed_on=timezone.now(),
         )
 
         # - Now the enrollment should be allowed

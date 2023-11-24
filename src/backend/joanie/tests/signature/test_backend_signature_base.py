@@ -83,7 +83,7 @@ class BaseSignatureBackendTestCase(TestCase):
     def test_backend_signature_base_backend_confirm_signature(self, _mock_enroll_user):
         """
         This test verifies that the `confirm_signature` method updates the contract with a
-        timestamps for the field 'signed_on', and it should set 'None' to the field
+        timestamps for the field 'student_signed_on', and it should set 'None' to the field
         'submitted_for_signature_on'.
 
         Furthermore, it should call the method
@@ -110,7 +110,7 @@ class BaseSignatureBackendTestCase(TestCase):
 
         contract.refresh_from_db()
         self.assertIsNone(contract.submitted_for_signature_on)
-        self.assertIsNotNone(contract.signed_on)
+        self.assertIsNotNone(contract.student_signed_on)
 
         # contract.order.enroll_user_to_course should have been called once
         _mock_enroll_user.assert_called_once()
@@ -187,7 +187,7 @@ class BaseSignatureBackendTestCase(TestCase):
         backend.reset_contract(reference="wfl_fake_dummy_id")
 
         contract.refresh_from_db()
-        self.assertIsNone(contract.signed_on)
+        self.assertIsNone(contract.student_signed_on)
         self.assertIsNone(contract.submitted_for_signature_on)
         self.assertIsNone(contract.context)
         self.assertIsNone(contract.definition_checksum)

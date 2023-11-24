@@ -1067,7 +1067,7 @@ class OrderModelsTestCase(TestCase):
 
         order.contract.refresh_from_db()
         self.assertIsNotNone(order.contract)
-        self.assertIsNotNone(order.contract.signed_on)
+        self.assertIsNotNone(order.contract.student_signed_on)
         self.assertIsNone(order.contract.submitted_for_signature_on)
         self.assertIsNotNone(order.contract.context)
         self.assertIsNotNone(order.contract.definition)
@@ -1156,7 +1156,7 @@ class OrderModelsTestCase(TestCase):
         self.assertIn("wfl_fake_dummy_", contract.signature_backend_reference)
         self.assertIn("fake_dummy_file_hash", contract.definition_checksum)
         self.assertIsNone(contract.submitted_for_signature_on)
-        self.assertIsNotNone(contract.signed_on)
+        self.assertIsNotNone(contract.student_signed_on)
 
     @override_settings(
         JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend",
@@ -1200,7 +1200,7 @@ class OrderModelsTestCase(TestCase):
         self.assertIn("fake_dummy_file_hash", contract.definition_checksum)
         self.assertNotEqual("wfl_fake_dummy_id_1", contract.signature_backend_reference)
         self.assertIsNone(contract.submitted_for_signature_on)
-        self.assertIsNotNone(contract.signed_on)
+        self.assertIsNotNone(contract.student_signed_on)
 
     def test_models_order_submit_for_signature_but_contract_is_already_signed_should_fail(
         self,
@@ -1224,7 +1224,7 @@ class OrderModelsTestCase(TestCase):
             definition_checksum="fake_test_file_hash_1",
             context="context",
             submitted_for_signature_on=None,
-            signed_on=now,
+            student_signed_on=now,
         )
 
         with self.assertRaises(PermissionDenied) as context:

@@ -111,4 +111,4 @@ class ContractViewSetFilter(filters.FilterSet):
         """
         Filter Contracts by signature status
         """
-        return queryset.filter(signed_on__isnull=not value)
+        return queryset.filter(student_signed_on__isnull=not value)

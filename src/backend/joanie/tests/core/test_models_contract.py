@@ -23,7 +23,7 @@ class ContractModelTestCase(TestCase):
         self,
     ):
         """
-        'signed_on' and 'submitted_for_signature_on' cannot be both set.
+        'student_signed_on' and 'submitted_for_signature_on' cannot be both set.
         """
         user = factories.UserFactory()
         factories.AddressFactory.create(owner=user)
@@ -40,7 +40,7 @@ class ContractModelTestCase(TestCase):
         with self.assertRaises(ValidationError) as context:
             factories.ContractFactory(
                 **data,
-                signed_on=datetime(2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")),
+                student_signed_on=datetime(2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")),
                 submitted_for_signature_on=datetime(
                     2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")
                 ),
@@ -50,7 +50,7 @@ class ContractModelTestCase(TestCase):
         with self.assertRaises(ValidationError) as context:
             factories.ContractFactory(
                 **data,
-                signed_on=datetime(2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")),
+                student_signed_on=datetime(2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")),
                 submitted_for_signature_on=datetime(
                     2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")
                 ),
@@ -62,7 +62,7 @@ class ContractModelTestCase(TestCase):
         self,
     ):
         """
-        'signed_on' and 'submitted_for_signature_on' can both be None.
+        'student_signed_on' and 'submitted_for_signature_on' can both be None.
         """
         user = factories.UserFactory()
         factories.AddressFactory.create(owner=user)
@@ -71,17 +71,18 @@ class ContractModelTestCase(TestCase):
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
         factories.ContractFactory(
-            order=order, signed_on=None, submitted_for_signature_on=None
+            order=order, student_signed_on=None, submitted_for_signature_on=None
         )
         contract = models.Contract.objects.get()
-        self.assertIsNone(contract.signed_on)
+        self.assertIsNone(contract.student_signed_on)
         self.assertIsNone(contract.submitted_for_signature_on)
 
-    def test_models_contract_reference_datetime_not_both_set_signed_on(
+    def test_models_contract_reference_datetime_not_both_set_student_signed_on(
         self,
     ):
         """
-        'signed_on' can be None and 'submitted_for_signature_on' can be set with a datetime value.
+        'student_signed_on' can be None and 'submitted_for_signature_on' can be set
+        with a datetime value.
         """
         user = factories.UserFactory()
         factories.AddressFactory.create(owner=user)
@@ -93,20 +94,21 @@ class ContractModelTestCase(TestCase):
             order=order,
             context={"foo": "bar"},
             definition_checksum="1234",
-            signed_on=None,
+            student_signed_on=None,
             submitted_for_signature_on=datetime(
                 2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")
             ),
         )
         contract = models.Contract.objects.get()
-        self.assertIsNone(contract.signed_on)
+        self.assertIsNone(contract.student_signed_on)
         self.assertIsNotNone(contract.submitted_for_signature_on)
 
     def test_models_contract_reference_datetime_not_both_set_submitted_for_signature_on(
         self,
     ):
         """
-        'submitted_for_signature_on' can be None and 'signed_on' can be set with a datetime value.
+        'submitted_for_signature_on' can be None and 'student_signed_on' can be set
+        with a datetime value.
         """
         user = factories.UserFactory()
         factories.AddressFactory.create(owner=user)
@@ -119,19 +121,19 @@ class ContractModelTestCase(TestCase):
             order=order,
             context={"foo": "bar"},
             definition_checksum="1234",
-            signed_on=datetime(2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")),
+            student_signed_on=datetime(2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")),
             submitted_for_signature_on=None,
         )
         contract = models.Contract.objects.get()
         self.assertIsNone(contract.submitted_for_signature_on)
-        self.assertIsNotNone(contract.signed_on)
+        self.assertIsNotNone(contract.student_signed_on)
 
     def test_models_contract_signature_backend_reference_constraint(
         self,
     ):
         """
-        If 'signature_backend_reference' is set, either 'signed_on' or 'submitted_for_signature_on'
-        must also be set.
+        If 'signature_backend_reference' is set, either 'student_signed_on'
+        or 'submitted_for_signature_on' must also be set.
         """
         user = factories.UserFactory()
         factories.AddressFactory.create(owner=user)
@@ -146,7 +148,7 @@ class ContractModelTestCase(TestCase):
                 context={"foo": "bar"},
                 definition_checksum="1234",
                 signature_backend_reference="wfl_dummy",
-                signed_on=None,
+                student_signed_on=None,
                 submitted_for_signature_on=None,
             )
 
@@ -156,12 +158,12 @@ class ContractModelTestCase(TestCase):
         )
         self.assertEqual(str(context.exception), message)
 
-    def test_models_contract_signature_backend_reference_signed_on(
+    def test_models_contract_signature_backend_reference_student_signed_on(
         self,
     ):
         """
-        If 'signature_backend_reference' is set, the 'signed_on' datetime can be set as long as
-        the 'submitted_for_signature' datetime is not set.
+        If 'signature_backend_reference' is set, the 'student_signed_on' datetime
+        can be set as long as the 'submitted_for_signature' datetime is not set.
         """
         user = factories.UserFactory()
         factories.AddressFactory.create(owner=user)
@@ -175,12 +177,12 @@ class ContractModelTestCase(TestCase):
             context={"foo": "bar"},
             definition_checksum="1234",
             signature_backend_reference="wfl_dummy",
-            signed_on=datetime(2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")),
+            student_signed_on=datetime(2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")),
             submitted_for_signature_on=None,
         )
         contract = models.Contract.objects.get()
         self.assertIsNotNone(contract.signature_backend_reference)
-        self.assertIsNotNone(contract.signed_on)
+        self.assertIsNotNone(contract.student_signed_on)
         self.assertIsNone(contract.submitted_for_signature_on)
 
     def test_models_contract_signature_backend_reference_submitted_for_signature_on(
@@ -188,7 +190,7 @@ class ContractModelTestCase(TestCase):
     ):
         """
         If 'signature_backend_reference' is set, the 'submitted_for_signature_on' datetime can
-        be set as long as the 'signed_on' datetime is not set.
+        be set as long as the 'student_signed_on' datetime is not set.
         """
         user = factories.UserFactory()
         factories.AddressFactory.create(owner=user)
@@ -202,7 +204,7 @@ class ContractModelTestCase(TestCase):
             context={"foo": "bar"},
             definition_checksum="1234",
             signature_backend_reference="wfl_dummy",
-            signed_on=None,
+            student_signed_on=None,
             submitted_for_signature_on=datetime(
                 2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")
             ),
@@ -210,7 +212,7 @@ class ContractModelTestCase(TestCase):
         contract = models.Contract.objects.get()
         self.assertIsNotNone(contract.signature_backend_reference)
         self.assertIsNotNone(contract.submitted_for_signature_on)
-        self.assertIsNone(contract.signed_on)
+        self.assertIsNone(contract.student_signed_on)
 
     def test_models_contract_generate_complete_constraints(
         self,
@@ -277,7 +279,7 @@ class ContractModelTestCase(TestCase):
         self.assertIsNone(contract.context)
         self.assertIsNone(contract.definition_checksum)
 
-    def test_models_contract_signed_on_complete_when_context_and_definition_checksum_both_none(
+    def test_models_contract_student_signed_on_when_context_and_definition_checksum_both_none(
         self,
     ):
         """
@@ -298,14 +300,14 @@ class ContractModelTestCase(TestCase):
                 order=order,
                 context=None,
                 definition_checksum=None,
-                signed_on=datetime(2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")),
+                student_signed_on=datetime(2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")),
             )
 
         self.assertEqual(str(context.exception), message)
 
-    def test_models_contract_signed_on_complete_when_context_is_none_only(self):
+    def test_models_contract_student_signed_on_when_context_is_none_only(self):
         """
-        'signed_on' and 'definition_checksum' have values and
+        'student_signed_on' and 'definition_checksum' have values and
         'context' is set to None.
         """
         user = factories.UserFactory()
@@ -320,7 +322,7 @@ class ContractModelTestCase(TestCase):
                 order=order,
                 context=None,
                 definition_checksum="1234",
-                signed_on=datetime(2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")),
+                student_signed_on=datetime(2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")),
             )
 
         self.assertEqual(
@@ -332,7 +334,7 @@ class ContractModelTestCase(TestCase):
             ),
         )
 
-    def test_models_contract_signed_on_complete_when_context_and_signed_on_are_both_none(
+    def test_models_contract_student_signed_on_when_context_and_student_signed_on_are_both_none(
         self,
     ):
         """
@@ -345,7 +347,7 @@ class ContractModelTestCase(TestCase):
             product=factories.ProductFactory(),
         )
 
-        message_signed_on = (
+        message_student_signed_on = (
             "{'__all__': ['Make sure to complete all fields before signing contract.']}"
         )
         with self.assertRaises(ValidationError) as context:
@@ -353,17 +355,17 @@ class ContractModelTestCase(TestCase):
                 order=order,
                 context=None,
                 definition_checksum=None,
-                signed_on=datetime(2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")),
+                student_signed_on=datetime(2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")),
             )
 
-        self.assertEqual(str(context.exception), message_signed_on)
+        self.assertEqual(str(context.exception), message_student_signed_on)
 
-    def test_models_contract_signed_on_complete_context_empty_dict_or_none_and_checksum_is_none(
+    def test_models_contract_student_signed_on_context_empty_dict_or_none_and_checksum_is_none(
         self,
     ):
         """
         'context' is an empty dictionary or 'None', and 'definition_checksum' is 'None'
-        when 'signed_on' has a value.
+        when 'student_signed_on' has a value.
         """
         user = factories.UserFactory()
         factories.AddressFactory.create(owner=user)
@@ -377,7 +379,7 @@ class ContractModelTestCase(TestCase):
                 order=order,
                 context={},
                 definition_checksum=None,
-                signed_on=datetime(2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")),
+                student_signed_on=datetime(2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")),
             )
 
         self.assertEqual(

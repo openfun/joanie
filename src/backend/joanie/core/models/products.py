@@ -940,7 +940,7 @@ class Order(BaseModel):
         except Contract.DoesNotExist:
             contract = Contract(order=self, definition=contract_definition)
 
-        if self.contract and self.contract.signed_on:
+        if self.contract and self.contract.student_signed_on:
             raise PermissionDenied("Contract is already signed, cannot resubmit.")
 
         backend_signature = get_signature_backend()

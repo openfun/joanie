@@ -977,7 +977,7 @@ class Enrollment(BaseModel):
                     (
                         models.Q(
                             product__contract_definition__isnull=False,
-                            contract__signed_on__isnull=False,
+                            contract__student_signed_on__isnull=False,
                         )
                         | models.Q(
                             product__contract_definition__isnull=True,

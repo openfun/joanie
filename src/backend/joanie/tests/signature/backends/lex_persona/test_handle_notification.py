@@ -287,7 +287,8 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
         """
         When an incoming event type is 'workflowFinished', and the event has been verified,
         then the contract which has the signature backend reference should get updated
-        with a new 'signed_on' date and update the value of 'submitted_for_signature_on' to None.
+        with a new 'student_signed_on' date and update the value of 'submitted_for_signature_on'
+        to None.
         """
         user = factories.UserFactory(email="johnnydo@example.fr")
         order = factories.OrderFactory(
@@ -342,7 +343,7 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
         backend.handle_notification(request)
 
         contract.refresh_from_db()
-        self.assertIsNotNone(contract.signed_on)
+        self.assertIsNotNone(contract.student_signed_on)
         self.assertIsNone(contract.submitted_for_signature_on)
 
     @override_settings(
@@ -415,7 +416,7 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
             "['The contract validity date of expiration has passed.']",
         )
         self.assertIsNotNone(contract.submitted_for_signature_on)
-        self.assertIsNone(contract.signed_on)
+        self.assertIsNone(contract.student_signed_on)
 
     @responses.activate
     def test_backend_lex_persona_handle_notification_recipient_refused_should_reset_contract(
@@ -480,7 +481,7 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
         backend.handle_notification(request)
 
         contract.refresh_from_db()
-        self.assertIsNone(contract.signed_on)
+        self.assertIsNone(contract.student_signed_on)
         self.assertIsNone(contract.context)
         self.assertIsNone(contract.submitted_for_signature_on)
         self.assertIsNone(contract.signature_backend_reference)

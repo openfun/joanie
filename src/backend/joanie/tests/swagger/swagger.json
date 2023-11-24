@@ -3787,7 +3787,7 @@
                     "order": {
                         "$ref": "#/components/schemas/NestedOrder"
                     },
-                    "signed_on": {
+                    "student_signed_on": {
                         "type": "string",
                         "format": "date-time",
                         "readOnly": true,
@@ -3806,7 +3806,7 @@
                     "definition",
                     "id",
                     "order",
-                    "signed_on"
+                    "student_signed_on"
                 ]
             },
             "ContractDefinition": {

@@ -414,7 +414,9 @@ class Command(BaseCommand):
             factories.ContractDefinitionFactory(),
         )
         factories.ContractFactory(
-            order=order, definition=order.product.contract_definition, signed_on=None
+            order=order,
+            definition=order.product.contract_definition,
+            student_signed_on=None,
         )
         self.stdout.write(
             self.style.SUCCESS(
@@ -434,7 +436,7 @@ class Command(BaseCommand):
         factories.ContractFactory(
             order=order,
             definition=order.product.contract_definition,
-            signed_on=django_timezone.now(),
+            student_signed_on=django_timezone.now(),
         )
 
         self.stdout.write(
