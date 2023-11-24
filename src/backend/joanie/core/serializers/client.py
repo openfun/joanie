@@ -376,7 +376,7 @@ class ContractSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Contract
-        fields = ["id", "definition", "order", "signed_on", "created_on"]
+        fields = ["id", "definition", "order", "student_signed_on", "created_on"]
         read_only_fields = fields
 
 

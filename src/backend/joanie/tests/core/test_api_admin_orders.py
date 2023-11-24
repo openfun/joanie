@@ -117,7 +117,11 @@ class OrdersAdminApiTestCase(TestCase):
         )
 
         # Create signed contract
-        factories.ContractFactory(order=order, signed_on=order.created_on)
+        factories.ContractFactory(
+            order=order,
+            student_signed_on=order.created_on,
+            organization_signed_on=order.created_on,
+        )
 
         with self.assertNumQueries(16):
             response = self.client.get(f"/api/v1.0/admin/orders/{order.id}/")
@@ -172,7 +176,7 @@ class OrdersAdminApiTestCase(TestCase):
                 "contract": {
                     "id": str(order.contract.id),
                     "definition_title": order.contract.definition.title,
-                    "signed_on": order.contract.signed_on.isoformat().replace(
+                    "student_signed_on": order.contract.student_signed_on.isoformat().replace(
                         "+00:00", "Z"
                     ),
                     "submitted_for_signature_on": None,

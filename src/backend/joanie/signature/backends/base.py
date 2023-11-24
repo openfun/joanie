@@ -46,7 +46,7 @@ class BaseSignatureBackend:
         """
         Update the contract object when the file has been signed with the signature provider.
         We verify if the contract is still in its validity period to be sign, and if it's True
-        we update the field 'signed_on' with a new timestamp.
+        we update the field 'student_signed_on' with a new timestamp.
         """
         contract = models.Contract.objects.get(signature_backend_reference=reference)
 
@@ -60,7 +60,7 @@ class BaseSignatureBackend:
             )
 
         contract.submitted_for_signature_on = None
-        contract.signed_on = django_timezone.now()
+        contract.student_signed_on = django_timezone.now()
         contract.save()
 
         # The student has signed the contract, we can now try to automatically enroll

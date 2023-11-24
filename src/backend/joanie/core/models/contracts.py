@@ -112,16 +112,17 @@ class Contract(BaseModel):
         verbose_name=_("Reference in the external signature backend"),
     )
 
-    # Set on student signature
-    signed_on = models.DateTimeField(
-        _("Date and time of issuance"), null=True, blank=True, editable=False
-    )
     # Set when contract is sent to signature provider
     submitted_for_signature_on = models.DateTimeField(
         _("Date and time we send the contract to signature provider"),
         null=True,
         blank=True,
         editable=False,
+    )
+
+    # Set on student signature
+    student_signed_on = models.DateTimeField(
+        _("Date and time of issuance"), null=True, blank=True, editable=False
     )
 
     class Meta:
@@ -151,22 +152,23 @@ class Contract(BaseModel):
             models.CheckConstraint(
                 check=(
                     (
-                        models.Q(signed_on__isnull=False)
+                        models.Q(student_signed_on__isnull=False)
                         & ~models.Q(definition_checksum="")
                         & ~models.Q(definition_checksum__isnull=True)
                         & ~models.Q(context=None)
                         & ~models.Q(context={})
                     )
-                    | (models.Q(signed_on__isnull=True))
+                    | (models.Q(student_signed_on__isnull=True))
                 ),
-                name="signed_on_complete",
+                name="student_signed_on_complete",
                 violation_error_message=(
                     "Make sure to complete all fields before signing contract."
                 ),
             ),
             models.CheckConstraint(
                 check=~models.Q(
-                    signed_on__isnull=False, submitted_for_signature_on__isnull=False
+                    student_signed_on__isnull=False,
+                    submitted_for_signature_on__isnull=False,
                 ),
                 name="reference_datetime_not_both_set",
                 violation_error_message=(
@@ -176,7 +178,7 @@ class Contract(BaseModel):
             models.CheckConstraint(
                 check=(
                     (
-                        models.Q(signed_on__isnull=False)
+                        models.Q(student_signed_on__isnull=False)
                         | models.Q(submitted_for_signature_on__isnull=False)
                     )
                     | models.Q(signature_backend_reference__isnull=True)
