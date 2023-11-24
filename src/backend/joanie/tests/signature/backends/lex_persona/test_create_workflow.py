@@ -1228,3 +1228,4 @@ class LexPersonaBackendTestCase(TestCase):
         recipient_data = backend._prepare_recipient_information_of_the_signer(order)
 
         self.assertEqual(recipient_data, expected_prepared_recipient_data)
+ 
