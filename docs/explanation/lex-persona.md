@@ -42,6 +42,11 @@ In the case of Joanie, it is possible that the **users** that we will **create**
 Lex Persona can keep the document in their archives from 6 up to 10 years. We also have the possibility to retrieve a signed document from 6 up to 10 years as well. The document signed has an hash signature that certifies that the document was not altered since the signature took place.
 
 
+## Lex persona documentation
+
+- Request manager : https://sgs-demo-test01.sunnystamp.com/rm-docs
+- Workflow manager : https://sgs-demo-test01.sunnystamp.com/wm-docs
+
 ## API Tutorial - Workflow Manager
 As we have mentioned in the first section of this document, there are a few API calls (5) to execute in order to launch the workflow and get back the document fully signed.
 
