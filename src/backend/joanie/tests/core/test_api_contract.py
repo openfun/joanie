@@ -111,10 +111,10 @@ class ContractApiTest(BaseAPITestCase):
                         "created_on": contract.created_on.isoformat().replace(
                             "+00:00", "Z"
                         ),
-                        "signed_on": contract.signed_on.isoformat().replace(
+                        "student_signed_on": contract.student_signed_on.isoformat().replace(
                             "+00:00", "Z"
                         )
-                        if contract.signed_on
+                        if contract.student_signed_on
                         else None,
                         "definition": {
                             "description": contract.definition.description,
@@ -159,7 +159,7 @@ class ContractApiTest(BaseAPITestCase):
 
         signed_contract = factories.ContractFactory.create(
             order__owner=user,
-            signed_on=timezone.now(),
+            student_signed_on=timezone.now(),
             definition_checksum="test",
             context={"title": "test"},
         )
@@ -276,8 +276,10 @@ class ContractApiTest(BaseAPITestCase):
             {
                 "id": str(contract.id),
                 "created_on": contract.created_on.isoformat().replace("+00:00", "Z"),
-                "signed_on": contract.signed_on.isoformat().replace("+00:00", "Z")
-                if contract.signed_on
+                "student_signed_on": contract.student_signed_on.isoformat().replace(
+                    "+00:00", "Z"
+                )
+                if contract.student_signed_on
                 else None,
                 "definition": {
                     "description": contract.definition.description,
@@ -438,7 +440,7 @@ class ContractApiTest(BaseAPITestCase):
             definition_checksum="1234",
             context="context",
             submitted_for_signature_on=None,
-            signed_on=timezone.now(),
+            student_signed_on=timezone.now(),
         )
         token = self.get_user_token(user.username)
         expected_filename = f"{contract.definition.title}".replace(" ", "_")
@@ -589,7 +591,7 @@ class ContractApiTest(BaseAPITestCase):
             definition_checksum="1234",
             context="context",
             submitted_for_signature_on=None,
-            signed_on=timezone.now(),
+            student_signed_on=timezone.now(),
         )
         user = factories.UserFactory()
         token = self.get_user_token(user.username)
@@ -623,7 +625,7 @@ class ContractApiTest(BaseAPITestCase):
             definition_checksum="1234",
             context="context",
             submitted_for_signature_on=timezone.now(),
-            signed_on=None,
+            student_signed_on=None,
         )
         token = self.get_user_token(owner.username)
 
@@ -856,7 +858,7 @@ class ContractApiTest(BaseAPITestCase):
                 signature_backend_reference=reference,
                 definition_checksum="1234",
                 context=context,
-                signed_on=timezone.now(),
+                student_signed_on=timezone.now(),
             )
         expected_endpoint_polling = "/api/v1.0/contracts/zip-archive/"
         token = self.get_user_token(requesting_user.username)

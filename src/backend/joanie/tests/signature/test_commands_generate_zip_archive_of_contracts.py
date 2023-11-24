@@ -189,7 +189,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
                 signature_backend_reference=reference,
                 definition_checksum="1234",
                 context=context,
-                signed_on=timezone.now(),
+                student_signed_on=timezone.now(),
             )
 
         with self.assertRaises(CommandError) as context:
@@ -321,7 +321,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
                 signature_backend_reference=reference,
                 definition_checksum="1234",
                 context=context,
-                signed_on=timezone.now(),
+                student_signed_on=timezone.now(),
             )
 
         call_command(
@@ -413,7 +413,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
                 signature_backend_reference=reference,
                 definition_checksum="1234",
                 context=context,
-                signed_on=timezone.now(),
+                student_signed_on=timezone.now(),
             )
 
         call_command(
@@ -506,7 +506,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
             signature_backend_reference="wfl_fake_dummy_1",
             definition_checksum="1234",
             context=context,
-            signed_on=timezone.now(),
+            student_signed_on=timezone.now(),
         )
 
         call_command(

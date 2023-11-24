@@ -120,11 +120,11 @@ class ContractDefinitionAdmin(admin.ModelAdmin):
 class ContractAdmin(admin.ModelAdmin):
     """Admin class for the Contract model"""
 
-    list_display = ("order", "owner", "signed_on")
+    list_display = ("order", "owner", "student_signed_on")
     readonly_fields = (
         "definition",
         "definition_checksum",
-        "signed_on",
+        "student_signed_on",
         "order",
         "owner",
     )

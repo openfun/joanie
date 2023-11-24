@@ -58,7 +58,7 @@ class DummySignatureBackend(BaseSignatureBackend):
     def handle_notification(self, request):
         """
         Dummy method that handles an incoming webhook event from the signature provider.
-        When the event type is "finished", it updates the field of 'signed_on' of the
+        When the event type is "finished", it updates the field of 'student_signed_on' of the
         contract with a timestamp.
         """
         event_type = request.get("event_type")

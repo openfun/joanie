@@ -166,10 +166,10 @@ class CourseContractApiTest(BaseAPITestCase):
                         "created_on": contract.created_on.isoformat().replace(
                             "+00:00", "Z"
                         ),
-                        "signed_on": contract.signed_on.isoformat().replace(
+                        "student_signed_on": contract.student_signed_on.isoformat().replace(
                             "+00:00", "Z"
                         )
-                        if contract.signed_on
+                        if contract.student_signed_on
                         else None,
                         "definition": {
                             "description": contract.definition.description,
@@ -230,7 +230,7 @@ class CourseContractApiTest(BaseAPITestCase):
             order__product=relation.product,
             order__course=relation.course,
             order__organization=organization,
-            signed_on=timezone.now(),
+            student_signed_on=timezone.now(),
             definition_checksum="test",
             context={"title": "test"},
         )
@@ -410,8 +410,10 @@ class CourseContractApiTest(BaseAPITestCase):
             {
                 "id": str(contract.id),
                 "created_on": contract.created_on.isoformat().replace("+00:00", "Z"),
-                "signed_on": contract.signed_on.isoformat().replace("+00:00", "Z")
-                if contract.signed_on
+                "student_signed_on": contract.student_signed_on.isoformat().replace(
+                    "+00:00", "Z"
+                )
+                if contract.student_signed_on
                 else None,
                 "definition": {
                     "description": contract.definition.description,

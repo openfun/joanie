@@ -3396,7 +3396,7 @@
                         "type": "string",
                         "readOnly": true
                     },
-                    "signed_on": {
+                    "student_signed_on": {
                         "type": "string",
                         "format": "date-time",
                         "readOnly": true,
@@ -3414,7 +3414,7 @@
                 "required": [
                     "definition_title",
                     "id",
-                    "signed_on",
+                    "student_signed_on",
                     "submitted_for_signature_on"
                 ]
             },

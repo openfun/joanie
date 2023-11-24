@@ -678,7 +678,7 @@ class ContractFactory(factory.django.DjangoModelFactory):
         product__type=enums.PRODUCT_TYPE_CREDENTIAL,
         product__contract_definition=factory.SubFactory(ContractDefinitionFactory),
     )
-    signed_on = None
+    student_signed_on = None
 
     @factory.lazy_attribute
     def definition(self):
@@ -692,7 +692,7 @@ class ContractFactory(factory.django.DjangoModelFactory):
         """
         Lazily generate the contract context from the related order and contract definition.
         """
-        if self.signed_on:
+        if self.student_signed_on:
             student_address = self.order.owner.addresses.filter(is_main=True).first()
             return {
                 "student": {
@@ -724,7 +724,7 @@ class ContractFactory(factory.django.DjangoModelFactory):
         """
         Lazily generate the definition_checksum from context.
         """
-        if self.signed_on:
+        if self.student_signed_on:
             return hashlib.sha256(
                 json.dumps(self.context, sort_keys=True).encode("utf-8")
             ).hexdigest()

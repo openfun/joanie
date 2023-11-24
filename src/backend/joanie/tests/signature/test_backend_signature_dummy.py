@@ -109,7 +109,7 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
         self.assertIn(expected_substring, response)
 
         contract.refresh_from_db()
-        self.assertIsNotNone(contract.signed_on)
+        self.assertIsNotNone(contract.student_signed_on)
         self.assertIsNone(contract.submitted_for_signature_on)
         # Check that an email has been sent
         self._check_signature_completed_email_sent("student_do@example.fr")
@@ -161,7 +161,8 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
     def test_backend_dummy_signature_handle_notification_finished_event(self):
         """
         Dummy backend instance handles notification from incoming webhook event where the type
-        is "finished". It updates the contract for the field signed_on' with a timestamp value.
+        is "finished".
+        It updates the contract for the field student_signed_on' with a timestamp value.
         """
         backend = DummySignatureBackend()
         reference, file_hash = backend.submit_for_signature(
@@ -181,7 +182,7 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
         backend.handle_notification(mocked_request)
 
         contract.refresh_from_db()
-        self.assertIsNotNone(contract.signed_on)
+        self.assertIsNotNone(contract.student_signed_on)
         self.assertIsNone(contract.submitted_for_signature_on)
 
     def test_backend_dummy_signature_handle_notification_wrong_event_type(self):
@@ -216,7 +217,7 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
             str(context.exception),
             f"['The notification {event_type} is not supported.']",
         )
-        self.assertIsNone(contract.signed_on)
+        self.assertIsNone(contract.student_signed_on)
         self.assertIsNotNone(contract.submitted_for_signature_on)
 
     def test_backend_dummy_signature_get_signed_file_with_reference_that_does_not_exist(
@@ -246,7 +247,7 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
         contract = factories.ContractFactory(
             signature_backend_reference="wfl_fake_dummy_id",
             definition_checksum="1234",
-            signed_on=django_timezone.now(),
+            student_signed_on=django_timezone.now(),
             context="a small context",
         )
         InvoiceFactory(

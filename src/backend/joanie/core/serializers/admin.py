@@ -831,7 +831,7 @@ class AdminContractSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "definition_title",
-            "signed_on",
+            "student_signed_on",
             "submitted_for_signature_on",
         ]
         read_only_fields = fields
