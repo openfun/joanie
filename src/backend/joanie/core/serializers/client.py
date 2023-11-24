@@ -880,8 +880,8 @@ class GenerateSignedContractsZipSerializer(serializers.Serializer):
     Serializer used by both view and command generating a zip containing signed contracts
     """
 
-    course_product_relation_id = serializers.UUIDField(required=False)
-    organization_id = serializers.UUIDField(required=False)
+    course_product_relation_id = serializers.UUIDField(allow_null=True, required=False)
+    organization_id = serializers.UUIDField(allow_null=True, required=False)
 
     def validate(self, attrs):
         """

@@ -18,6 +18,8 @@ from joanie.core.utils import contract_definition
 class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
     """Test case for the management command `generate_zip_archive_of_contracts`"""
 
+    maxDiff = None
+
     def test_commands_generate_zip_archive_contracts_fails_without_parameters(self):
         """
         The command must have a User UUID to be executed, else the command aborts.
@@ -39,7 +41,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         """
         random_organization_uuid = uuid4()
         options = {
-            "organization": random_organization_uuid,
+            "organization_id": random_organization_uuid,
         }
 
         with self.assertRaises(CommandError) as context:
@@ -66,8 +68,15 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
 
         self.assertEqual(
             str(context.exception),
-            "You must to provide at least one of the two required parameters. "
-            "It can be a Course Product Relation UUID, or an Organization UUID.",
+            str(
+                {
+                    "non_field_errors": (
+                        "You must set at least one parameter for the method."
+                        "You must choose between an Organization UUID or a Course Product Relation"
+                        " UUID."
+                    )
+                }
+            ),
         )
 
     def test_commands_generate_zip_archive_contracts_fails_courseproductrelation_does_not_exist(
@@ -81,17 +90,22 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         random_course_product_relation_uuid = uuid4()
         options = {
             "user": user.pk,
-            "course_product_relation": random_course_product_relation_uuid,
+            "course_product_relation_id": random_course_product_relation_uuid,
         }
-
         with self.assertRaises(CommandError) as context:
             call_command("generate_zip_archive_of_contracts", **options)
 
         self.assertEqual(
             str(context.exception),
-            "Make sure to give an existing course product relation UUID. "
-            "No CourseProductRelation was found with the given "
-            f"UUID : {random_course_product_relation_uuid}.",
+            str(
+                {
+                    "course_product_relation_id": (
+                        "Make sure to give an existing course product relation UUID. "
+                        "No CourseProductRelation was found with the given "
+                        f"UUID : {random_course_product_relation_uuid}."
+                    ),
+                }
+            ),
         )
 
     def test_commands_generate_zip_archive_contracts_fails_organization_does_not_exist(
@@ -105,7 +119,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         random_organization_uuid = uuid4()
         options = {
             "user": user.pk,
-            "organization": random_organization_uuid,
+            "organization_id": random_organization_uuid,
         }
 
         with self.assertRaises(CommandError) as context:
@@ -113,8 +127,15 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
 
         self.assertEqual(
             str(context.exception),
-            "Make sure to give an existing organization UUID. "
-            f"No Organization was found with the givin UUID : {random_organization_uuid}.",
+            str(
+                {
+                    "organization_id": (
+                        "Make sure to give an existing organization UUID. "
+                        "No Organization was found with the givin UUID : "
+                        f"{random_organization_uuid}."
+                    )
+                }
+            ),
         )
 
     def test_commands_generate_zip_archive_contracts_fails_because_user_does_not_have_org_access(
@@ -137,11 +158,11 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
             [
                 {
                     "user": requesting_user.pk,
-                    "course_product_relation": relation.pk,
+                    "course_product_relation_id": relation.pk,
                 },
                 {
                     "user": requesting_user.pk,
-                    "organization": relation.organizations.first().pk,
+                    "organization_id": relation.organizations.first().pk,
                 },
             ]
         )
@@ -196,11 +217,11 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
             [
                 {
                     "user": requesting_user.pk,
-                    "course_product_relation": relation.pk,
+                    "course_product_relation_id": relation.pk,
                 },
                 {
                     "user": requesting_user.pk,
-                    "organization": relation.organizations.first().pk,
+                    "organization_id": relation.organizations.first().pk,
                 },
             ]
         )
@@ -260,7 +281,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         zip_uuid = uuid4()
         options = {
             "user": requesting_user.pk,
-            "course_product_relation": relation.pk,
+            "course_product_relation_id": relation.pk,
             "zip": zip_uuid,
         }
         signature_reference_choices = [
@@ -343,7 +364,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         zip_uuid = uuid4()
         options = {
             "user": requesting_user.pk,
-            "organization": organization.pk,
+            "organization_id": organization.pk,
             "zip": zip_uuid,
         }
         signature_reference_choices = [
@@ -432,12 +453,12 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
             [
                 {
                     "user": requesting_user.pk,
-                    "organization": organization.pk,
+                    "organization_id": organization.pk,
                     "zip": zip_uuid,
                 },
                 {
                     "user": requesting_user.pk,
-                    "course_product_relation": relation.pk,
+                    "course_product_relation_id": relation.pk,
                     "zip": zip_uuid,
                 },
             ]
