@@ -110,15 +110,13 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             "student": {
                 "name": user.get_full_name(),
                 "address": {
-                    "address": "5 Rue de L'Exemple",
-                    "city": "Paris",
-                    "country": "FR",
-                    "first_name": "John",
-                    "last_name": "Doe",
-                    "id": str(address.id),
-                    "is_main": True,
-                    "postcode": "75000",
-                    "title": "Office",
+                    "address": "<STUDENT_ADDRESS_STREET_NAME>",
+                    "city": "<STUDENT_ADDRESS_CITY>",
+                    "country": "<STUDENT_ADDRESS_COUNTRY>",
+                    "last_name": "<STUDENT_LAST_NAME>",
+                    "first_name": "<STUDENT_FIRST_NAME>",
+                    "postcode": "<STUDENT_ADDRESS_POSTCODE>",
+                    "title": "",
                 },
             },
             "organization": {
@@ -148,14 +146,13 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             "42mO8cPX6fwAIdgN9pHTGJwAAAABJRU5ErkJggg=="
         )
         student_fallback_address = {
-            "address": "1 Rue de L'Exemple",
-            "city": "Paris",
-            "country": "France",
-            "last_name": "Doe",
-            "first_name": "John",
-            "postcode": "75000",
-            "is_main": True,
-            "title": "Office",
+            "address": "<STUDENT_ADDRESS_STREET_NAME>",
+            "city": "<STUDENT_ADDRESS_CITY>",
+            "country": "<STUDENT_ADDRESS_COUNTRY>",
+            "last_name": "<STUDENT_LAST_NAME>",
+            "first_name": "<STUDENT_FIRST_NAME>",
+            "postcode": "<STUDENT_ADDRESS_POSTCODE>",
+            "title": "",
         }
         user = factories.UserFactory(
             email="student@exmaple.fr", first_name="John Doe", last_name=""
