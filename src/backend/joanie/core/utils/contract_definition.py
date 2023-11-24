@@ -25,14 +25,13 @@ def generate_document_context(contract_definition, user, order=None):
     )
 
     fallback_address = {
-        "address": "1 Rue de L'Exemple",
-        "city": "Paris",
-        "country": "France",
-        "last_name": "Doe",
-        "first_name": "John",
-        "postcode": "75000",
-        "is_main": True,
-        "title": "Office",
+        "address": _("<STUDENT_ADDRESS_STREET_NAME>"),
+        "city": _("<STUDENT_ADDRESS_CITY>"),
+        "country": _("<STUDENT_ADDRESS_COUNTRY>"),
+        "last_name": _("<STUDENT_LAST_NAME>"),
+        "first_name": _("<STUDENT_FIRST_NAME>"),
+        "postcode": _("<STUDENT_ADDRESS_POSTCODE>"),
+        "title": "",
     }
 
     user_address = user.addresses.filter(is_main=True).first() or fallback_address

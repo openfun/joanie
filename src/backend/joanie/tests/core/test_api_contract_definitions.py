@@ -113,13 +113,13 @@ class ContractDefinitionApiTest(BaseAPITestCase):
         self,
     ):
         """
-        Authenticated users should be able to get the PDF in bytes of the contract definition
-        to preview the template.
+        Authenticated users should be able to get the PDF in bytes of the contract
+        definition to preview the template.
         """
         user = factories.UserFactory(
             email="student_do@example.fr", first_name="John Doe", last_name=""
         )
-        address = factories.AddressFactory(owner=user)
+        factories.AddressFactory(owner=user)
         contract_definition = factories.ContractDefinitionFactory()
         token = self.get_user_token(user.username)
 
@@ -148,5 +148,6 @@ class ContractDefinitionApiTest(BaseAPITestCase):
         self.assertRegex(document_text, r"[SignatureField#1]")
         self.assertRegex(document_text, rf"{user.first_name}")
         self.assertRegex(
-            document_text, rf"{address.address} {address.postcode}, {address.city}"
+            document_text,
+            r"<STUDENT_ADDRESS_STREET_NAME> <STUDENT_ADDRESS_POSTCODE>,\n<STUDENT_ADDRESS_CITY>.",
         )
