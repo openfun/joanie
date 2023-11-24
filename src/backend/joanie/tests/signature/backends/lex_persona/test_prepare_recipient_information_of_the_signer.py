@@ -1,21 +1,9 @@
-"""Test suite for the Lex Persona Signature Backend with mocking responses"""
-# pylint: disable=too-many-public-methods, too-many-lines, protected-access
-import json
-from datetime import timedelta
-from unittest import mock
-
-from django.core.exceptions import ValidationError
-from django.http import HttpRequest
+"""Test suite for the Lex Persona Signature Backend prepare_recipient_information_of_the_signer"""
 from django.test import TestCase
 from django.test.utils import override_settings
-from django.utils import timezone as django_timezone
-
-import responses
 
 from joanie.core import factories
-from joanie.signature import exceptions
 from joanie.signature.backends import get_signature_backend
-from joanie.signature.backends.lex_persona import LexPersonaBackend
 
 
 @override_settings(
@@ -28,8 +16,9 @@ from joanie.signature.backends.lex_persona import LexPersonaBackend
     JOANIE_SIGNATURE_VALIDITY_PERIOD=60 * 60 * 24 * 15,
     JOANIE_SIGNATURE_TIMEOUT=3,
 )
-class LexPersonaBackendTestCase(TestCase):
-    """Test suite for Lex Persona Signature provider Backend."""
+class LexPersonaBackendPrepareRecipientInformationOfTheSignerTestCase(TestCase):
+    """Test suite for Lex Persona Signature provider Backend
+    prepare_recipient_information_of_the_signer."""
 
     def test_backend_lex_persona_prepare_recipient_information_of_the_signer(self):
         """
@@ -55,4 +44,3 @@ class LexPersonaBackendTestCase(TestCase):
         recipient_data = backend._prepare_recipient_information_of_the_signer(order)
 
         self.assertEqual(recipient_data, expected_prepared_recipient_data)
- 

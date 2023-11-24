@@ -1,5 +1,4 @@
 """Test suite for the Lex Persona Signature Backend create_workflow"""
-# pylint: protected-access
 from django.test import TestCase
 from django.test.utils import override_settings
 

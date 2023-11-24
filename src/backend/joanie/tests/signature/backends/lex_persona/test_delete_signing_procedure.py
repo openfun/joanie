@@ -1,21 +1,11 @@
-"""Test suite for the Lex Persona Signature Backend with mocking responses"""
-# pylint: disable=too-many-public-methods, too-many-lines, protected-access
-import json
-from datetime import timedelta
-from unittest import mock
-
-from django.core.exceptions import ValidationError
-from django.http import HttpRequest
+"""Test suite for the Lex Persona Signature Backend delete_signing_procedure"""
 from django.test import TestCase
 from django.test.utils import override_settings
-from django.utils import timezone as django_timezone
 
 import responses
 
-from joanie.core import factories
 from joanie.signature import exceptions
 from joanie.signature.backends import get_signature_backend
-from joanie.signature.backends.lex_persona import LexPersonaBackend
 
 
 @override_settings(
@@ -29,7 +19,7 @@ from joanie.signature.backends.lex_persona import LexPersonaBackend
     JOANIE_SIGNATURE_TIMEOUT=3,
 )
 class LexPersonaBackendTestCase(TestCase):
-    """Test suite for Lex Persona Signature provider Backend."""
+    """Test suite for Lex Persona Signature provider Backend delete_signing_procedure."""
 
     @responses.activate
     def test_backend_lex_persona_delete_signing_procedure(self):
