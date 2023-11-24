@@ -4,7 +4,9 @@ import uuid
 
 from django.core.management import BaseCommand, CommandError
 
-from joanie.core import models
+from rest_framework.exceptions import ValidationError
+
+from joanie.core import models, serializers
 from joanie.core.utils import contract as contract_utility
 
 logger = logging.getLogger("joanie.core.generate_zip_archive_of_contracts")
@@ -40,13 +42,13 @@ class Command(BaseCommand):
 
         parser.add_argument(
             "-cpr",
-            "--course_product_relation",
+            "--course_product_relation_id",
             help=("Accept a single UUID of Course Product Relation object."),
         )
 
         parser.add_argument(
             "-org",
-            "--organization",
+            "--organization_id",
             help=("Accept a single UUID of Organization object."),
         )
 
@@ -62,8 +64,6 @@ class Command(BaseCommand):
         Get all signed contracts from an existing Course Product Relation UUID OR from an
         Organization UUID and generate a ZIP archive into the file system storage.
         """
-        course_product_relation = None
-        organization = None
         zip_uuid = None
 
         if not (user_id := options["user"]):
@@ -72,15 +72,19 @@ class Command(BaseCommand):
             )
             logger.error("Error: %s", error_message)
             raise CommandError(error_message)
+        serializer = serializers.GenerateSignedContractsZipSerializer(data=options)
 
-        if not options["organization"] and not options["course_product_relation"]:
-            error_message = (
-                "You must to provide at least one of the two required parameters. "
-                "It can be a Course Product Relation UUID, or an Organization UUID."
-            )
-            logger.error("Error: %s", error_message)
-            raise CommandError(error_message)
-
+        try:
+            serializer.is_valid(raise_exception=True)
+        except ValidationError as error:
+            full_details = error.get_full_details()
+            errors = {}
+            for name in full_details:
+                logger.error(
+                    "Error %s: %s", name, str(full_details[name][0]["message"])
+                )
+                errors[name] = str(full_details[name][0]["message"])
+            raise CommandError(errors) from error
         try:
             zip_uuid = uuid.UUID(str(options["zip"]))
         except ValueError:
@@ -94,34 +98,9 @@ class Command(BaseCommand):
             logger.error("Error: %s", error_message)
             raise CommandError(error_message)
 
-        if course_product_relation_id := options["course_product_relation"]:
-            try:
-                course_product_relation = models.CourseProductRelation.objects.get(
-                    pk=course_product_relation_id
-                )
-            except models.CourseProductRelation.DoesNotExist as error:
-                error_message = (
-                    "Make sure to give an existing course product relation UUID. "
-                    "No CourseProductRelation was found with the given "
-                    f"UUID : {course_product_relation_id}."
-                )
-                logger.error("Error: %s", error_message)
-                raise CommandError(error_message) from error
-
-        if organization_id := options["organization"]:
-            try:
-                organization = models.Organization.objects.get(pk=organization_id)
-            except models.Organization.DoesNotExist as error:
-                error_message = (
-                    "Make sure to give an existing organization UUID. "
-                    f"No Organization was found with the givin UUID : {organization_id}."
-                )
-                logger.error("Error: %s", error_message)
-                raise CommandError(error_message) from error
-
         signature_references = contract_utility.get_signature_backend_references(
-            course_product_relation=course_product_relation,
-            organization=organization,
+            course_product_relation=serializer.data.get("course_product_relation"),
+            organization=serializer.data.get("organization"),
             extra_filters={"order__organization__accesses__user_id": user_id},
         )  # extra filter to check the access of a user on an organization.
 
