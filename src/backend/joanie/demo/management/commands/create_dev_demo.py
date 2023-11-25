@@ -27,7 +27,7 @@ class Command(BaseCommand):
         want to use ALL_LANGUAGES to set course run languages to prevent synchronization
         issues between Joanie & Richie.
         """
-        return random.sample(["de", "en", "fr", "pt"], random.randint(1, 4))  # nosec
+        return random.sample(["de", "en", "fr", "pt"], random.randint(1, 4))
 
     def create_course(self, user, organization, batch_size=1, with_course_runs=False):
         """Create courses for given user and organization."""

@@ -245,10 +245,7 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
         """
         return {
             language[0]
-            for language in random.sample(
-                enums.ALL_LANGUAGES,
-                random.randint(1, 5),  # nosec
-            )
+            for language in random.sample(enums.ALL_LANGUAGES, random.randint(1, 5))
         }
 
     @factory.lazy_attribute_sequence
@@ -271,9 +268,7 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
         if self.state == models.CourseState.TO_BE_SCHEDULED:
             return None
 
-        period = timedelta(
-            days=random.randrange(1, 365, 1)  # nosec
-        )  # between 1 and 365 days
+        period = timedelta(days=random.randrange(1, 365, 1))  # between 1 and 365 days
 
         if self.state in [
             models.CourseState.ONGOING_OPEN,
@@ -300,9 +295,7 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
             max_date = self.ref_date + period
 
         return datetime.utcfromtimestamp(
-            random.randrange(  # nosec
-                int(min_date.timestamp()), int(max_date.timestamp())
-            )
+            random.randrange(int(min_date.timestamp()), int(max_date.timestamp()))
         ).replace(tzinfo=timezone.utc)
 
     @factory.lazy_attribute
@@ -314,9 +307,7 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
         if not self.start:
             return None
 
-        period = timedelta(
-            days=random.randrange(1, 365, 1)  # nosec
-        )  # between 1 and 365 days
+        period = timedelta(days=random.randrange(1, 365, 1))  # between 1 and 365 days
 
         if self.state in [
             models.CourseState.ARCHIVED_OPEN,
@@ -347,9 +338,7 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
             max_date = min_date + period
 
         return datetime.utcfromtimestamp(
-            random.randrange(  # nosec
-                int(min_date.timestamp()), int(max_date.timestamp())
-            )
+            random.randrange(int(min_date.timestamp()), int(max_date.timestamp()))
         ).replace(tzinfo=timezone.utc)
 
     @factory.lazy_attribute
@@ -362,9 +351,7 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
         if not self.start:
             return None
 
-        period = timedelta(
-            days=random.randrange(1, 90, 1)  # nosec
-        )  # between 1 and 90 days
+        period = timedelta(days=random.randrange(1, 90, 1))  # between 1 and 90 days
 
         if self.state in [
             models.CourseState.FUTURE_OPEN,
@@ -387,9 +374,7 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
             max_date = self.start
 
         return datetime.utcfromtimestamp(
-            random.randrange(  # nosec
-                int(min_date.timestamp()), int(max_date.timestamp())
-            )
+            random.randrange(int(min_date.timestamp()), int(max_date.timestamp()))
         ).replace(tzinfo=timezone.utc)
 
     @factory.lazy_attribute
@@ -408,9 +393,7 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
             # The course run has ended but enrollment is still opened.
             return None
 
-        period = timedelta(
-            days=random.randrange(1, 90, 1)  # nosec
-        )  # between 1 and 90 days
+        period = timedelta(days=random.randrange(1, 90, 1))  # between 1 and 90 days
 
         if self.state in [
             models.CourseState.ONGOING_OPEN,
@@ -442,9 +425,7 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
             max_date = self.end or self.enrollment_start + period
 
         return datetime.utcfromtimestamp(
-            random.randrange(  # nosec
-                int(min_date.timestamp()), int(max_date.timestamp())
-            )
+            random.randrange(int(min_date.timestamp()), int(max_date.timestamp()))
         ).replace(tzinfo=timezone.utc)
 
 

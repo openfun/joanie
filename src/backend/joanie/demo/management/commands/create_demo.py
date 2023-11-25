@@ -18,7 +18,7 @@ logger = logging.getLogger("joanie.commands.demo.create_demo")
 
 def random_true_with_probability(probability):
     """return True with the requested probability, False otherwise."""
-    return random.random() < probability  # nosec
+    return random.random() < probability
 
 
 class BulkQueue:
@@ -112,10 +112,10 @@ def create_free_enrollments(queue):
     for _i in range(nb_enrollments):
         queue.push(
             models.Enrollment(
-                user_id=random.choice(users_ids),  # nosec
-                course_run_id=random.choice(course_runs_ids),  # nosec
+                user_id=random.choice(users_ids),
+                course_run_id=random.choice(course_runs_ids),
                 is_active=random_true_with_probability(0.7),
-                state=random.choice(state_choices),  # nosec
+                state=random.choice(state_choices),
                 was_created_by_order=False,
             )
         )
@@ -140,7 +140,7 @@ def create_demo(stdout):
                 models.User(
                     username=f"user{i:d}",
                     email=f"user{i:d}@example.com",
-                    password="!",  # nosec
+                    password="!",
                     is_superuser=False,
                     is_active=True,
                     is_staff=False,
@@ -181,7 +181,7 @@ def create_demo(stdout):
         ]:
             factories.CourseRunFactory.create_batch(
                 random.randint(1, 5),
-                course=course,  # nosec
+                course=course,
             )
 
     with Timeit(stdout, "Creating product target course relations"):
@@ -193,7 +193,7 @@ def create_demo(stdout):
         for product_id in models.Product.objects.values_list("id", flat=True):
             for target_course_id in random.sample(
                 ids_of_courses_with_runs,
-                random.randint(2, min(30, len(ids_of_courses_with_runs))),  # nosec
+                random.randint(2, min(30, len(ids_of_courses_with_runs))),
             ):
                 queue.push(
                     models.ProductTargetCourseRelation(
@@ -225,7 +225,7 @@ def create_demo(stdout):
         )
         for course_product_relation in models.CourseProductRelation.objects.iterator():
             course_product_relation.organizations.set(
-                random.sample(organization_ids, random.randint(1, 3))  # nosec
+                random.sample(organization_ids, random.randint(1, 3))
             )
         del organization_ids
 
@@ -241,14 +241,14 @@ def create_demo(stdout):
             min_orders = max(1, defaults.NB_OBJECTS["max_orders_per_product"] // 10)
             for user_id in random.sample(
                 users_ids,
-                random.randint(  # nosec
+                random.randint(
                     min_orders, defaults.NB_OBJECTS["max_orders_per_product"]
                 ),
             ):
-                course_id = random.choice(list(course_dict.keys()))  # nosec
+                course_id = random.choice(list(course_dict.keys()))
                 queue.push(
                     models.Order(
-                        organization_id=random.choice(course_dict[course_id]),  # nosec
+                        organization_id=random.choice(course_dict[course_id]),
                         course_id=course_id,
                         product_id=product.id,
                         owner_id=user_id,
@@ -280,11 +280,11 @@ def create_demo(stdout):
                     queue.push(
                         models.Enrollment(
                             user_id=order.owner_id,
-                            course_run_id=random.choice(  # nosec
+                            course_run_id=random.choice(
                                 course_runs_dict[relation.course_id]
                             ),
                             is_active=random_true_with_probability(0.7),
-                            state=random.choice(state_choices),  # nosec
+                            state=random.choice(state_choices),
                             was_created_by_order=True,
                         )
                     )
@@ -300,26 +300,26 @@ def create_demo(stdout):
             .distinct()
             .values_list("id", flat=True)
         ):
-            for i in range(random.randint(1, 3)):  # nosec
+            for i in range(random.randint(1, 3)):
                 queue.push(
                     models.Address(
                         title=f"Title {user_sequence:d}-{i:d}",
                         address=f"Address {user_sequence:d}-{i:d}",
                         postcode=f"Postcode {user_sequence:d}-{i:d}",
                         city=f"City {user_sequence:d}-{i:d}",
-                        country=random.choice(["fr", "de"]),  # nosec
+                        country=random.choice(["fr", "de"]),
                         first_name=f"Fistname {user_sequence:d}-{i:d}",
                         last_name=f"Lastname {user_sequence:d}-{i:d}",
                         owner_id=user_id,
                     )
                 )
-            for i in range(random.randint(1, 3)):  # nosec
+            for i in range(random.randint(1, 3)):
                 queue.push(
                     payment_models.CreditCard(
                         title=f"Title {user_sequence:d}-{i:d}",
                         token=f"Token {user_sequence:d}-{i:d}",
                         brand=f"Brand {i:d}",
-                        expiration_month=f"{random.randint(1, 12):02d}",  # nosec
+                        expiration_month=f"{random.randint(1, 12):02d}",
                         expiration_year="2024",
                         last_numbers="1234",
                         owner_id=user_id,
