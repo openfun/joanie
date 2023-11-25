@@ -127,20 +127,14 @@ jobs:
           keys:
             - v1-back-dependencies-{{ .Revision }}
       - run:
-          name: Lint code with flake8
-          command: ~/.local/bin/flake8 .
-      - run:
-          name: Lint code with isort
-          command: ~/.local/bin/isort --check-only .
-      - run:
           name: Check code formatting with ruff
           command: ~/.local/bin/ruff format joanie --diff
       - run:
+          name: Lint code with ruff
+          command: ~/.local/bin/ruff check joanie
+      - run:
           name: Lint code with pylint
           command: ~/.local/bin/pylint joanie
-      - run:
-          name: Lint code with bandit
-          command: ~/.local/bin/bandit -c .banditrc -qr .
 
   test-back:
     docker:

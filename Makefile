@@ -134,10 +134,8 @@ demo-dev: ## flush db then create a dataset for dev purpose
 lint: ## lint back-end python sources
 lint: \
   lint-ruff-format \
-  lint-isort \
-  lint-flake8 \
-  lint-pylint \
-  lint-bandit
+  lint-ruff-check \
+  lint-pylint
 .PHONY: lint
 
 lint-ruff-format: ## format back-end python sources with ruff
@@ -145,15 +143,10 @@ lint-ruff-format: ## format back-end python sources with ruff
 	@$(COMPOSE_RUN_APP) ruff format .
 .PHONY: lint-ruff-format
 
-lint-flake8: ## lint back-end python sources with flake8
-	@echo 'lint:flake8 started…'
-	@$(COMPOSE_RUN_APP) flake8 .
-.PHONY: lint-flake8
-
-lint-isort: ## automatically re-arrange python imports in back-end code base
-	@echo 'lint:isort started…'
-	@$(COMPOSE_RUN_APP) isort --atomic .
-.PHONY: lint-isort
+lint-ruff-check: ## lint back-end python sources with ruff
+	@echo 'lint:ruff-check started…'
+	@$(COMPOSE_RUN_APP) ruff check . --fix
+.PHONY: lint-ruff-check
 
 lint-pylint: ## lint back-end python sources with pylint
 	@echo 'lint:pylint started…'
