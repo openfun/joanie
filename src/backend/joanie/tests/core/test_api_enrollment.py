@@ -138,10 +138,10 @@ class EnrollmentApiTest(BaseAPITestCase):
                             },
                             "resource_link": enrollment.course_run.resource_link,
                             "title": enrollment.course_run.title,
-                            "enrollment_start": enrollment.course_run.enrollment_start.isoformat().replace(  # noqa pylint: disable=line-too-long
+                            "enrollment_start": enrollment.course_run.enrollment_start.isoformat().replace(  # pylint: disable=line-too-long
                                 "+00:00", "Z"
                             ),
-                            "enrollment_end": enrollment.course_run.enrollment_end.isoformat().replace(  # noqa pylint: disable=line-too-long
+                            "enrollment_end": enrollment.course_run.enrollment_end.isoformat().replace(  # pylint: disable=line-too-long
                                 "+00:00", "Z"
                             )
                             if enrollment.course_run.state["priority"]
@@ -211,10 +211,10 @@ class EnrollmentApiTest(BaseAPITestCase):
                             },
                             "resource_link": other_enrollment.course_run.resource_link,
                             "title": other_enrollment.course_run.title,
-                            "enrollment_start": other_enrollment.course_run.enrollment_start.isoformat().replace(  # noqa pylint: disable=line-too-long
+                            "enrollment_start": other_enrollment.course_run.enrollment_start.isoformat().replace(  # pylint: disable=line-too-long
                                 "+00:00", "Z"
                             ),
-                            "enrollment_end": other_enrollment.course_run.enrollment_end.isoformat().replace(  # noqa pylint: disable=line-too-long
+                            "enrollment_end": other_enrollment.course_run.enrollment_end.isoformat().replace(  # pylint: disable=line-too-long
                                 "+00:00", "Z"
                             )
                             if other_enrollment.course_run.state["priority"]
@@ -522,7 +522,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                                 "cover": "_this_field_is_mocked",
                             },
                             "title": course_run_1.title,
-                            "enrollment_start": course_run_1.enrollment_start.isoformat().replace(  # noqa pylint: disable=line-too-long
+                            "enrollment_start": course_run_1.enrollment_start.isoformat().replace(  # pylint: disable=line-too-long
                                 "+00:00", "Z"
                             ),
                             "enrollment_end": course_run_1.enrollment_end.isoformat().replace(
@@ -1646,7 +1646,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         },
                         "resource_link": enrollment.course_run.resource_link,
                         "title": enrollment.course_run.title,
-                        "enrollment_start": enrollment.course_run.enrollment_start.isoformat().replace(  # noqa pylint: disable=line-too-long
+                        "enrollment_start": enrollment.course_run.enrollment_start.isoformat().replace(  # pylint: disable=line-too-long
                             "+00:00", "Z"
                         ),
                         "enrollment_end": enrollment.course_run.enrollment_end.isoformat().replace(

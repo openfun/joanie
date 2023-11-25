@@ -13,9 +13,8 @@ from django.http import FileResponse, HttpResponse, JsonResponse
 
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
-from rest_framework import mixins, pagination
+from rest_framework import mixins, pagination, viewsets
 from rest_framework import permissions as drf_permissions
-from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
 from rest_framework.exceptions import ValidationError as DRFValidationError

@@ -613,7 +613,7 @@ class AdminCourseRunSerializer(serializers.ModelSerializer):
             except models.Course.DoesNotExist as exception:
                 raise serializers.ValidationError(
                     {"course": "Resource {course_id} does not exist."}, exception
-                )
+                ) from exception
 
         return validated_data
 

@@ -427,7 +427,7 @@ class SyncCourseRunApiTestCase(TestCase):
         course_run = CourseRun.objects.get(course=course)
         serializer = SyncCourseRunSerializer(instance=course_run)
 
-        no_update_fields = getattr(settings, "JOANIE_LMS_BACKENDS")[0].get(
+        no_update_fields = settings.JOANIE_LMS_BACKENDS[0].get(
             "COURSE_RUN_SYNC_NO_UPDATE_FIELDS"
         )
         for field in serializer.fields:

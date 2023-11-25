@@ -175,13 +175,13 @@ class CourseAdminApiTest(TestCase):
                     "size": course.cover.size,
                     "src": f"http://testserver{course.cover.url}.1x1_q85.webp",
                     "srcset": (
-                        f"http://testserver{course.cover.url}.1920x1080_q85_crop-smart_upscale.webp "  # noqa pylint: disable=line-too-long
+                        f"http://testserver{course.cover.url}.1920x1080_q85_crop-smart_upscale.webp "  # pylint: disable=line-too-long
                         "1920w, "
-                        f"http://testserver{course.cover.url}.1280x720_q85_crop-smart_upscale.webp "  # noqa pylint: disable=line-too-long
+                        f"http://testserver{course.cover.url}.1280x720_q85_crop-smart_upscale.webp "  # pylint: disable=line-too-long
                         "1280w, "
-                        f"http://testserver{course.cover.url}.768x432_q85_crop-smart_upscale.webp "  # noqa pylint: disable=line-too-long
+                        f"http://testserver{course.cover.url}.768x432_q85_crop-smart_upscale.webp "  # pylint: disable=line-too-long
                         "768w, "
-                        f"http://testserver{course.cover.url}.384x216_q85_crop-smart_upscale.webp "  # noqa pylint: disable=line-too-long
+                        f"http://testserver{course.cover.url}.384x216_q85_crop-smart_upscale.webp "  # pylint: disable=line-too-long
                         "384w"
                     ),
                     "height": course.cover.height,

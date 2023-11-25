@@ -174,7 +174,7 @@ class Product(parler_models.TranslatableModel, BaseModel):
             "languages", flat=True
         ).distinct()
         # Go through a set for uniqueness of each language then return an ordered list
-        return sorted(list(set(itertools.chain.from_iterable(languages))))
+        return sorted(set(itertools.chain.from_iterable(languages)))
 
     def get_equivalent_course_run_dates(self):
         """
@@ -623,6 +623,7 @@ class Order(BaseModel):
             return None
 
     # pylint: disable=too-many-branches
+    # ruff: noqa: PLR0912
     def clean(self):
         """Clean instance fields and raise a ValidationError in case of issue."""
         error_dict = defaultdict(list)

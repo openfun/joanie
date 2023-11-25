@@ -65,7 +65,7 @@ class OpenApiJWTAuthenticationExtension(TokenScheme):
         """Return the security definition for JWT authentication."""
         return build_bearer_security_scheme_object(
             header_name="Authorization",
-            token_prefix="Bearer",  # nosec B106
+            token_prefix="Bearer",  # noqa S106
         )
 
 

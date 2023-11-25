@@ -301,7 +301,7 @@ class ProductModelsTestCase(TestCase):
             ],
         )
 
-    def test_models_product_get_equivalent_serialized_course_runs_for_products_with_visibility(  # noqa pylint: disable=line-too-long
+    def test_models_product_get_equivalent_serialized_course_runs_for_products_with_visibility(  # pylint: disable=line-too-long
         self,
     ):
         """
@@ -343,7 +343,7 @@ class ProductModelsTestCase(TestCase):
             ],
         )
 
-    def test_models_product_get_equivalent_serialized_course_runs_for_products_without_course_relations(  # noqa pylint: disable=line-too-long
+    def test_models_product_get_equivalent_serialized_course_runs_for_products_without_course_relations(  # pylint: disable=line-too-long
         self,
     ):
         """

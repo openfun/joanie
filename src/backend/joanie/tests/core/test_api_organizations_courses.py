@@ -72,8 +72,8 @@ class OrganizationCourseApiTest(BaseAPITestCase):
         content = response.json()
         self.assertEqual(content["count"], 3)
         self.assertEqual(
-            set(map(lambda x: str(x["id"]), content["results"])),
-            set(map(lambda x: str(x.id), courses)),
+            {str(x["id"]) for x in content["results"]},
+            {str(x.id) for x in courses},
         )
 
     def test_api_organizations_courses_read_list_without_access(self):

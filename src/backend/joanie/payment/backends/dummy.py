@@ -113,7 +113,7 @@ class DummyPaymentBackend(BasePaymentBackend):
     @classmethod
     def _send_mail_payment_success(cls, order):
         logger.info("Mail is sent to %s from dummy payment", order.owner.email)
-        BasePaymentBackend._send_mail_payment_success(order)
+        super()._send_mail_payment_success(order)
 
     def create_payment(self, request, order, billing_address):
         """

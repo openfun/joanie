@@ -120,10 +120,10 @@ class OrderCreateApiTest(BaseAPITestCase):
                                 "end": course_run.end.isoformat().replace(
                                     "+00:00", "Z"
                                 ),
-                                "enrollment_start": course_run.enrollment_start.isoformat().replace(  # noqa pylint: disable=line-too-long
+                                "enrollment_start": course_run.enrollment_start.isoformat().replace(  # pylint: disable=line-too-long
                                     "+00:00", "Z"
                                 ),
-                                "enrollment_end": course_run.enrollment_end.isoformat().replace(  # noqa pylint: disable=line-too-long
+                                "enrollment_end": course_run.enrollment_end.isoformat().replace(  # pylint: disable=line-too-long
                                     "+00:00", "Z"
                                 ),
                             }
@@ -596,10 +596,10 @@ class OrderCreateApiTest(BaseAPITestCase):
                                 "end": course_run.end.isoformat().replace(
                                     "+00:00", "Z"
                                 ),
-                                "enrollment_start": course_run.enrollment_start.isoformat().replace(  # noqa pylint: disable=line-too-long
+                                "enrollment_start": course_run.enrollment_start.isoformat().replace(  # pylint: disable=line-too-long
                                     "+00:00", "Z"
                                 ),
-                                "enrollment_end": course_run.enrollment_end.isoformat().replace(  # noqa pylint: disable=line-too-long
+                                "enrollment_end": course_run.enrollment_end.isoformat().replace(  # pylint: disable=line-too-long
                                     "+00:00", "Z"
                                 ),
                             }
@@ -923,10 +923,10 @@ class OrderCreateApiTest(BaseAPITestCase):
                                 "end": course_run.end.isoformat().replace(
                                     "+00:00", "Z"
                                 ),
-                                "enrollment_start": course_run.enrollment_start.isoformat().replace(  # noqa pylint: disable=line-too-long
+                                "enrollment_start": course_run.enrollment_start.isoformat().replace(  # pylint: disable=line-too-long
                                     "+00:00", "Z"
                                 ),
-                                "enrollment_end": course_run.enrollment_end.isoformat().replace(  # noqa pylint: disable=line-too-long
+                                "enrollment_end": course_run.enrollment_end.isoformat().replace(  # pylint: disable=line-too-long
                                     "+00:00", "Z"
                                 ),
                             }
