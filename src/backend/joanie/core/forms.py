@@ -15,7 +15,8 @@ class CourseProductRelationAdminForm(forms.ModelForm):
     organizations = forms.ModelMultipleChoiceField(
         queryset=models.Organization.objects.all(),
         widget=widgets.FilteredSelectMultiple(
-            models.Organization._meta.verbose_name_plural, is_stacked=False
+            models.Organization._meta.verbose_name_plural,  # noqa: SLF001
+            is_stacked=False,
         ),
         required=True,
     )
@@ -36,7 +37,8 @@ class ProductTargetCourseRelationAdminForm(forms.ModelForm):
     course_runs = forms.ModelMultipleChoiceField(
         queryset=models.CourseRun.objects.none(),
         widget=widgets.FilteredSelectMultiple(
-            models.CourseRun._meta.verbose_name_plural, is_stacked=False
+            models.CourseRun._meta.verbose_name_plural,  # noqa: SLF001
+            is_stacked=False,
         ),
         required=False,
     )

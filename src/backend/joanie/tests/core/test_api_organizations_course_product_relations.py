@@ -21,7 +21,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
         products = factories.ProductFactory.create_batch(5)
         factories.UserOrganizationAccessFactory(organization=organizations[0])
         relations = []
-        for course, product in zip(courses, products):
+        for course, product in zip(courses, products, strict=True):
             relations.append(
                 factories.CourseProductRelationFactory(
                     course=course, product=product, organizations=[organizations[0]]
@@ -48,7 +48,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
             organization=organizations[0], user=user
         )
         relations = []
-        for course, product in zip(courses, products):
+        for course, product in zip(courses, products, strict=True):
             relations.append(
                 factories.CourseProductRelationFactory(
                     course=course, product=product, organizations=[organizations[0]]
@@ -71,8 +71,8 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
         content = response.json()
         self.assertEqual(content["count"], 5)
         self.assertEqual(
-            set(map(lambda x: str(x["id"]), content["results"])),
-            set(map(lambda x: str(x.id), relations)),
+            {str(x["id"]) for x in content["results"]},
+            {str(x.id) for x in relations},
         )
 
     def test_api_organizations_course_product_relations_read_list_without_access(self):
@@ -87,7 +87,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
         products = factories.ProductFactory.create_batch(5)
 
         relations = []
-        for course, product in zip(courses, products):
+        for course, product in zip(courses, products, strict=True):
             relations.append(
                 factories.CourseProductRelationFactory(
                     course=course, product=product, organizations=[organizations[0]]
@@ -114,7 +114,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
         products = factories.ProductFactory.create_batch(5)
         factories.UserOrganizationAccessFactory(organization=organizations[0])
         relations = []
-        for course, product in zip(courses, products):
+        for course, product in zip(courses, products, strict=True):
             relations.append(
                 factories.CourseProductRelationFactory(
                     course=course, product=product, organizations=[organizations[0]]
@@ -144,7 +144,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
             organization=organizations[0], user=user
         )
         relations = []
-        for course, product in zip(courses, products):
+        for course, product in zip(courses, products, strict=True):
             relations.append(
                 factories.CourseProductRelationFactory(
                     course=course, product=product, organizations=[organizations[0]]
@@ -187,7 +187,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
         products = factories.ProductFactory.create_batch(5)
 
         relations = []
-        for course, product in zip(courses, products):
+        for course, product in zip(courses, products, strict=True):
             relations.append(
                 factories.CourseProductRelationFactory(
                     course=course, product=product, organizations=[organizations[0]]

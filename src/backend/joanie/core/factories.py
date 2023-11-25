@@ -1,3 +1,4 @@
+# ruff: noqa: S311
 """
 Core application factories
 """

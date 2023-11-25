@@ -500,7 +500,7 @@ class EnrollmentModelsTestCase(TestCase):
             ),
         )
 
-    def test_models_enrollment_forbid_for_listed_course_run_not_linked_to_product_in_scope_of_order(  # noqa pylint: disable=line-too-long
+    def test_models_enrollment_forbid_for_listed_course_run_not_linked_to_product_in_scope_of_order(  # pylint: disable=line-too-long
         self,
     ):
         """

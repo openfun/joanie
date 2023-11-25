@@ -1,3 +1,4 @@
+# ruff: noqa: S311
 """Management command to initialize some fake data (products, courses and course runs)"""
 import random
 

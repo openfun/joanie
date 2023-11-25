@@ -726,6 +726,7 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
         )
 
     # pylint: disable=too-many-return-statements
+    # ruff: noqa: PLR0911
     @staticmethod
     def compute_state(start=None, end=None, enrollment_start=None, enrollment_end=None):
         """

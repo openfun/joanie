@@ -141,7 +141,7 @@ class PayplugBackend(BasePaymentBackend):
         try:
             payment = payplug.Payment.create(**payment_data)
         except BadRequest as error:
-            raise exceptions.CreatePaymentFailed(str(error))
+            raise exceptions.CreatePaymentFailed(str(error)) from error
 
         return {
             "payment_id": payment.id,
@@ -227,4 +227,4 @@ class PayplugBackend(BasePaymentBackend):
         try:
             payplug.Payment.abort(payment_id)
         except (Forbidden, NotFound) as error:
-            raise exceptions.AbortPaymentFailed(str(error))
+            raise exceptions.AbortPaymentFailed(str(error)) from error

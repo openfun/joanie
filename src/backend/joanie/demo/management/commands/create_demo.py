@@ -1,4 +1,6 @@
+# ruff: noqa: S311, S106, PLR0915
 """Create_demo management command."""
+
 import logging
 import random
 import time
@@ -36,14 +38,14 @@ class BulkQueue:
         if not objects:
             return
 
-        objects[0]._meta.model.objects.bulk_create(objects, ignore_conflicts=True)
+        objects[0]._meta.model.objects.bulk_create(objects, ignore_conflicts=True)  # noqa: SLF001
         # In debug mode, Django keeps query cache which creates a memory leak in this case
         db.reset_queries()
-        self.queue[objects[0]._meta.model.__name__] = []
+        self.queue[objects[0]._meta.model.__name__] = []  # noqa: SLF001
 
     def push(self, obj):
         """Add a model instance to queue to that it gets created in bulk."""
-        objects = self.queue[obj._meta.model.__name__]
+        objects = self.queue[obj._meta.model.__name__]  # noqa: SLF001
         objects.append(obj)
         if len(objects) > self.BATCH_SIZE:
             self._bulk_create(objects)
@@ -211,7 +213,7 @@ def create_demo(stdout):
         )
         product_ids = models.Product.objects.order_by("?").values_list("id", flat=True)
 
-        for course_id, product_id in zip(course_ids, product_ids):
+        for course_id, product_id in zip(course_ids, product_ids, strict=True):
             queue.push(
                 models.CourseProductRelation(course_id=course_id, product_id=product_id)
             )

@@ -14,7 +14,7 @@ class ListMultipleChoiceField(serializers.MultipleChoiceField):
     """
 
     def to_representation(self, value):
-        return sorted(list(super().to_representation(value)))
+        return sorted(super().to_representation(value))
 
 
 class SyncCourseRunSerializer(serializers.ModelSerializer):

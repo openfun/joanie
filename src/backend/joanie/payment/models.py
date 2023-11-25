@@ -192,7 +192,7 @@ class Invoice(BaseModel):
                     "order": {
                         "product": {
                             "name": related_product.title,  # pylint: disable=no-member
-                            "description": related_product.description,  # noqa pylint: disable=no-member,line-too-long
+                            "description": related_product.description,  # pylint: disable=no-member,line-too-long
                         }
                     }
                 }
