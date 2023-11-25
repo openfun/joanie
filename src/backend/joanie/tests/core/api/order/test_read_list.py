@@ -1,4 +1,5 @@
 """Tests for the Order read list API."""
+# pylint: disable=too-many-lines
 from unittest import mock
 
 from django.conf import settings
