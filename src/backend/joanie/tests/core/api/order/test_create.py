@@ -1,4 +1,5 @@
 """Tests for the Order create API."""
+# pylint: disable=too-many-lines
 import random
 import uuid
 from unittest import mock
