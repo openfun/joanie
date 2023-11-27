@@ -8,7 +8,8 @@ from django.core import mail
 from rest_framework.test import APIRequestFactory
 
 from joanie.core import enums
-from joanie.core.factories import OrderFactory, UserFactory
+from joanie.core.factories import AddressFactory, OrderFactory, UserFactory
+from joanie.core.models import Address
 from joanie.payment.backends.base import BasePaymentBackend
 from joanie.payment.factories import BillingAddressDictFactory
 from joanie.payment.models import Invoice, Transaction
@@ -132,8 +133,9 @@ class BasePaymentBackendTestCase(BasePaymentTestCase):
         """
         Base backend contains a method _do_on_payment_success which aims to be
         call by subclasses when a payment succeeded. It should create
-        an invoice related to the provided order, create a transaction from
-        payment information provided then mark order as validated.
+        an invoice related to the provided order, create a non-reusable billing address,
+        create a transaction from payment information provided
+        then mark order as validated.
         """
         backend = TestBasePaymentBackend()
         owner = UserFactory(email="sam@fun-test.fr", language="en-us")
@@ -153,8 +155,70 @@ class BasePaymentBackendTestCase(BasePaymentTestCase):
             1,
         )
 
+        # - Billing address has been registered, it should be non-reusable and
+        #   the title should be the same as the owner's full name
+        address = Address.objects.get(**billing_address)
+        self.assertEqual(
+            address.title,
+            f"Billing address of order {order.id}",
+        )
+        self.assertEqual(address.is_reusable, False)
+        self.assertEqual(address.owner, owner)
+
         # - Invoice has been created
         self.assertEqual(Invoice.objects.filter(order=order).count(), 1)
+
+        # - Order has been validated
+        self.assertEqual(order.state, "validated")
+
+        # - Email has been sent
+        self._check_order_validated_email_sent(
+            "sam@fun-test.fr", owner.get_full_name(), order
+        )
+
+    def test_payment_backend_base_do_on_payment_success_with_existing_billing_address(
+        self,
+    ):
+        """
+        When an Invoice is created, if the billing address matches an existing one,
+        no new address should be created.
+        """
+        backend = TestBasePaymentBackend()
+        owner = UserFactory(email="sam@fun-test.fr", language="en-us")
+        order = OrderFactory(owner=owner, state=enums.ORDER_STATE_SUBMITTED)
+        billing_address = AddressFactory(owner=owner, is_reusable=True)
+        payment = {
+            "id": "pay_0",
+            "amount": order.total,
+            "billing_address": {
+                "address": billing_address.address,
+                "city": billing_address.city,
+                "country": billing_address.country,
+                "first_name": billing_address.first_name,
+                "last_name": billing_address.last_name,
+                "postcode": billing_address.postcode,
+            },
+        }
+
+        # Only one address should exist
+        self.assertEqual(Address.objects.count(), 1)
+
+        backend.call_do_on_payment_success(order, payment)
+
+        # - Payment transaction has been registered
+        self.assertEqual(
+            Transaction.objects.filter(reference="pay_0", total=order.total).count(),
+            1,
+        )
+
+        # - Invoice has been created
+        self.assertEqual(Invoice.objects.filter(order=order).count(), 1)
+
+        # - No new address should have been created and the existing one should be
+        #   reused
+        self.assertEqual(Address.objects.count(), 1)
+        invoice = Invoice.objects.get(order=order)
+        self.assertEqual(invoice.recipient_address, billing_address)
 
         # - Order has been validated
         self.assertEqual(order.state, "validated")

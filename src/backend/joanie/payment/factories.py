@@ -6,7 +6,7 @@ import string
 import factory.fuzzy
 from faker import Faker
 
-from joanie.core.factories import OrderFactory, UserFactory
+from joanie.core.factories import AddressFactory, OrderFactory, UserFactory
 from joanie.payment import models
 
 
@@ -35,8 +35,7 @@ class InvoiceFactory(factory.django.DjangoModelFactory):
 
         model = models.Invoice
 
-    recipient_address = factory.Faker("address")
-    recipient_name = factory.Faker("name")
+    recipient_address = factory.SubFactory(AddressFactory, is_reusable=False)
     order = factory.SubFactory(OrderFactory)
     total = Faker().pydecimal(left_digits=3, right_digits=2, min_value=0)
 

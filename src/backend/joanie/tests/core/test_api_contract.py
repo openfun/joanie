@@ -9,6 +9,7 @@ from pdfminer.high_level import extract_text as pdf_extract_text
 
 from joanie.core import enums, factories
 from joanie.core.serializers import fields
+from joanie.payment.factories import InvoiceFactory
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -404,18 +405,19 @@ class ContractApiTest(BaseAPITestCase):
 
     def test_api_contract_download_authenticated_with_validate_order_succeeds(self):
         """
-        Authenticated user should be download his contract in PDF format if the order is in
-        state 'validate'.
+        Authenticated user should be able to download his contract in PDF format if the
+        order is in state 'validated'.
         """
         user = factories.UserFactory(
             email="student_do@example.fr", first_name="John Doe", last_name=""
         )
-        address = factories.AddressFactory.create(owner=user)
         order = factories.OrderFactory(
             owner=user,
             state=enums.ORDER_STATE_VALIDATED,
             product=factories.ProductFactory(),
         )
+        invoice = InvoiceFactory(order=order)
+        address = invoice.recipient_address
         contract = factories.ContractFactory(
             order=order,
             definition=order.product.contract_definition,
@@ -446,7 +448,8 @@ class ContractApiTest(BaseAPITestCase):
         self.assertRegex(document_text, r"DEFINITION")
         self.assertRegex(document_text, rf"{user.first_name}")
         self.assertRegex(
-            document_text, rf"{address.address} {address.postcode}, {address.city}."
+            document_text,
+            rf"{address.address} {address.postcode}, {address.city}.",
         )
 
     def test_api_contract_download_authenticated_with_not_validate_order(self):

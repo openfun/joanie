@@ -4033,15 +4033,9 @@
                         "description": "Process the state of the invoice",
                         "readOnly": true
                     },
-                    "recipient_name": {
-                        "type": "string",
-                        "readOnly": true,
-                        "title": "Invoice recipient"
-                    },
                     "recipient_address": {
                         "type": "string",
-                        "readOnly": true,
-                        "title": "Invoice address"
+                        "readOnly": true
                     },
                     "reference": {
                         "type": "string",
@@ -4062,7 +4056,6 @@
                     "balance",
                     "created_on",
                     "recipient_address",
-                    "recipient_name",
                     "reference",
                     "state",
                     "type",
