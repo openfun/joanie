@@ -10,6 +10,7 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.utils.translation import override
 
+from joanie.core.models import Address
 from joanie.payment.enums import INVOICE_STATE_REFUNDED
 from joanie.payment.models import Invoice, Transaction
 
@@ -37,21 +38,19 @@ class BasePaymentBackend:
         then mark the order as validated
         """
         # - Create an invoice
-        recipient_name = (
-            f"{payment['billing_address']['first_name']} "
-            f"{payment['billing_address']['last_name']}"
-        )
-        recipient_address = (
-            f"{payment['billing_address']['address']}\n"
-            f"{payment['billing_address']['postcode']} {payment['billing_address']['city']}, "
-            f"{payment['billing_address']['country']}"
+        address, _ = Address.objects.get_or_create(
+            **payment["billing_address"],
+            owner=order.owner,
+            defaults={
+                "is_reusable": False,
+                "title": f"Billing address of order {order.id}",
+            },
         )
 
         invoice = Invoice.objects.create(
             order=order,
             total=order.total,
-            recipient_name=recipient_name,
-            recipient_address=recipient_address,
+            recipient_address=address,
         )
 
         # - Store the payment transaction
@@ -125,7 +124,6 @@ class BasePaymentBackend:
             order=invoice.order,
             parent=invoice,
             total=-amount,
-            recipient_name=invoice.recipient_name,
             recipient_address=invoice.recipient_address,
         )
 

@@ -258,8 +258,8 @@ class Invoice(BaseModel):
         """
         First ensure that the invoice is at least linked to an order or
         a parent but not both.
-        Then, if the invoice is linked to a parent, set `recipient_name` and
-        `recipient_address` with its parent values.
+        Then, if the invoice is linked to a parent, `recipient_address`
+        with its parent values.
         Finally, if the invoice is a credit note, ensure its total amount is
         not greater than its parent total amount.
         """

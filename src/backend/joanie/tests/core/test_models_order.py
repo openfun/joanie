@@ -980,12 +980,12 @@ class OrderModelsTestCase(TestCase):
         'signature_backend_reference'.
         """
         user = factories.UserFactory()
-        factories.AddressFactory(owner=user)
         order = factories.OrderFactory(
             owner=user,
             state=enums.ORDER_STATE_VALIDATED,
             product=factories.ProductFactory(),
         )
+        InvoiceFactory(order=order)
 
         raw_invitation_link = order.submit_for_signature()
 
@@ -1015,12 +1015,12 @@ class OrderModelsTestCase(TestCase):
         'signature_backend_reference' of the contract.
         """
         user = factories.UserFactory()
-        factories.AddressFactory(owner=user)
         order = factories.OrderFactory(
             owner=user,
             state=enums.ORDER_STATE_VALIDATED,
             product=factories.ProductFactory(),
         )
+        InvoiceFactory(order=order)
         context = contract_definition.generate_document_context(
             contract_definition=order.product.contract_definition,
             user=user,
@@ -1060,12 +1060,12 @@ class OrderModelsTestCase(TestCase):
         'signature_backend_reference'
         """
         user = factories.UserFactory()
-        factories.AddressFactory(owner=user)
         order = factories.OrderFactory(
             owner=user,
             state=enums.ORDER_STATE_VALIDATED,
             product=factories.ProductFactory(),
         )
+        InvoiceFactory(order=order)
         contract = factories.ContractFactory(
             order=order,
             definition=order.product.contract_definition,
@@ -1099,12 +1099,12 @@ class OrderModelsTestCase(TestCase):
         and 'signature_backend_reference'.
         """
         user = factories.UserFactory()
-        factories.AddressFactory(owner=user)
         order = factories.OrderFactory(
             owner=user,
             state=enums.ORDER_STATE_VALIDATED,
             product=factories.ProductFactory(),
         )
+        InvoiceFactory(order=order)
         context = contract_definition.generate_document_context(
             contract_definition=order.product.contract_definition,
             user=user,

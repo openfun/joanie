@@ -851,19 +851,24 @@ class AdminCertificateSerializer(serializers.ModelSerializer):
 class AdminInvoiceSerializer(serializers.ModelSerializer):
     """Read only serializer for Invoice model."""
 
+    recipient_address = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = payment_models.Invoice
         fields = [
             "balance",
             "created_on",
             "state",
-            "recipient_name",
             "recipient_address",
             "reference",
             "type",
             "updated_on",
         ]
         read_only_fields = fields
+
+    def get_recipient_address(self, invoice):
+        """Return the serialized recipient address."""
+        return f"{invoice.recipient_address.full_name}\n{invoice.recipient_address.full_address}"
 
 
 class AdminOrderSerializer(serializers.ModelSerializer):

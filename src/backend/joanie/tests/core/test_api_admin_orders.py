@@ -124,7 +124,7 @@ class OrdersAdminApiTestCase(TestCase):
         # Create signed contract
         factories.ContractFactory(order=order, signed_on=order.created_on)
 
-        with self.assertNumQueries(15):
+        with self.assertNumQueries(16):
             response = self.client.get(f"/api/v1.0/admin/orders/{order.id}/")
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -193,8 +193,10 @@ class OrdersAdminApiTestCase(TestCase):
                     "balance": float(invoice.balance),
                     "created_on": invoice.created_on.isoformat().replace("+00:00", "Z"),
                     "state": invoice.state,
-                    "recipient_name": invoice.recipient_name,
-                    "recipient_address": invoice.recipient_address,
+                    "recipient_address": (
+                        f"{invoice.recipient_address.full_name}\n"
+                        f"{invoice.recipient_address.full_address}"
+                    ),
                     "reference": invoice.reference,
                     "type": invoice.type,
                     "updated_on": invoice.updated_on.isoformat().replace("+00:00", "Z"),

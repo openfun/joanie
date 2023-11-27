@@ -11,6 +11,7 @@ from django.utils import timezone as django_timezone
 from pdfminer.high_level import extract_text as pdf_extract_text
 
 from joanie.core import factories, models
+from joanie.payment.factories import InvoiceFactory
 
 
 class ContractModelTestCase(TestCase):
@@ -395,12 +396,12 @@ class ContractModelTestCase(TestCase):
         user = factories.UserFactory(
             email="student@example.fr", first_name="John", last_name="Doe"
         )
-        factories.AddressFactory.create(
+        address = factories.AddressFactory(
             owner=user,
             address="1 Rue de L'Exemple",
             postcode="75000",
             city="Paris",
-            is_main=True,
+            is_reusable=False,
             title="Office",
             country="FR",
         )
@@ -408,6 +409,7 @@ class ContractModelTestCase(TestCase):
             owner=user,
             product=factories.ProductFactory(),
         )
+        InvoiceFactory(order=order, recipient_address=address)
         contract = factories.ContractFactory(order=order)
 
         _, file_bytes = contract.definition.generate_document(order)
