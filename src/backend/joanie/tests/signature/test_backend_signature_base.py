@@ -78,9 +78,9 @@ class BaseSignatureBackendTestCase(TestCase):
             ]
         )
     )
-    def test_backend_signature_base_backend_confirm_signature(self):
+    def test_backend_signature_base_backend_confirm_student_signature(self):
         """
-        This test verifies that the `confirm_signature` method updates the contract with a
+        This test verifies that the `confirm_student_signature` method updates the contract with a
         timestamps for the field 'student_signed_on', and it should set 'None' to the field
         'submitted_for_signature_on'.
         """
@@ -99,7 +99,7 @@ class BaseSignatureBackendTestCase(TestCase):
         )
         backend = get_signature_backend()
 
-        backend.confirm_signature(reference="wfl_fake_dummy_id")
+        backend.confirm_student_signature(reference="wfl_fake_dummy_id")
 
         contract.refresh_from_db()
         self.assertIsNone(contract.submitted_for_signature_on)
@@ -114,11 +114,11 @@ class BaseSignatureBackendTestCase(TestCase):
         ),
         JOANIE_SIGNATURE_VALIDITY_PERIOD=60 * 60 * 24 * 15,
     )
-    def test_backend_signature_base_backend_confirm_signature_but_validity_period_is_passed(
+    def test_backend_signature_base_backend_confirm_student_signature_but_validity_period_is_passed(
         self,
     ):
         """
-        This test verifies that the `confirm_signature` method does not update the contract
+        This test verifies that the `confirm_student_signature` method does not update the contract
         if the validity period is passed. It should raise an error mentionning the validity of
         the signature is passed.
         """
@@ -138,7 +138,7 @@ class BaseSignatureBackendTestCase(TestCase):
         backend = get_signature_backend()
 
         with self.assertRaises(ValidationError) as context:
-            backend.confirm_signature(reference="wfl_fake_dummy_id")
+            backend.confirm_student_signature(reference="wfl_fake_dummy_id")
 
         self.assertEqual(
             str(context.exception),

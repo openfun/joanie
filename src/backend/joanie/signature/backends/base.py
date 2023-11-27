@@ -42,7 +42,7 @@ class BaseSignatureBackend:
 
         return getattr(settings, setting_name, None)
 
-    def confirm_signature(self, reference):
+    def confirm_student_signature(self, reference):
         """
         Update the contract object when the file has been signed with the signature provider.
         We verify if the contract is still in its validity period to be sign, and if it's True

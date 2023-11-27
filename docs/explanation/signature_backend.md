@@ -26,7 +26,7 @@ backend classes.
 
 - **`get_setting(cls, name)`**
 
-- **`confirm_signature(self, reference_id)`**
+- **`confirm_student_signature(self, reference_id)`**
 
 - **`reset_contract(self, reference_id)`**
 

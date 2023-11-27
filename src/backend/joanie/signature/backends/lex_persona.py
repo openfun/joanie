@@ -29,7 +29,7 @@ class LexPersonaBackend(BaseSignatureBackend):
         "TOKEN",
     ]
 
-    def _prepare_recipient_information_of_the_signer(self, order: models.Order) -> list:
+    def _prepare_recipient_data_for_student_signer(self, order: models.Order) -> list:
         """
         Prepare recipient data of a user in order to include it in the creation payload of a
         signature procedure of a file. It returns a dictionary containing signer's information.
@@ -320,7 +320,7 @@ class LexPersonaBackend(BaseSignatureBackend):
         It returns the signature backend reference and the hash of the file from the signature
         provider.
         """
-        recipient_data = self._prepare_recipient_information_of_the_signer(order)
+        recipient_data = self._prepare_recipient_data_for_student_signer(order)
         reference_id = self._create_workflow(title, recipient_data)
         file_hash = self._upload_file_to_workflow(file_bytes, reference_id)
         self._start_procedure(reference_id=reference_id)
@@ -366,7 +366,7 @@ class LexPersonaBackend(BaseSignatureBackend):
         reference_id = trusted_event_signature_provider.get("workflowId")
         event_type = trusted_event_signature_provider.get("eventType")
         if event_type == "workflowFinished":
-            self.confirm_signature(reference_id)
+            self.confirm_student_signature(reference_id)
         elif event_type == "recipientRefused":
             self.reset_contract(reference_id)
         else:
