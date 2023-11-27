@@ -34,7 +34,8 @@ def generate_document_context(contract_definition, user, order=None):
         "title": "",
     }
 
-    user_address = user.addresses.filter(is_main=True).first() or fallback_address
+    user_address = order.main_invoice.recipient_address if order else fallback_address
+
     address = AddressSerializer(user_address).data
 
     return {

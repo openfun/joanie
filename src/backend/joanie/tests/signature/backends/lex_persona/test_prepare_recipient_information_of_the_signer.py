@@ -3,6 +3,7 @@ from django.test import TestCase
 from django.test.utils import override_settings
 
 from joanie.core import factories
+from joanie.payment.factories import InvoiceFactory
 from joanie.signature.backends import get_signature_backend
 
 
@@ -28,7 +29,8 @@ class LexPersonaBackendPrepareRecipientInformationOfTheSignerTestCase(TestCase):
         user = factories.UserFactory(email="johnnydo@example.fr")
         factories.AddressFactory.create(owner=user)
         order = factories.OrderFactory(owner=user)
-        country = order.owner.addresses.filter(is_main=True).first().country.code
+        invoice = InvoiceFactory(order=order)
+        country = invoice.recipient_address.country.code
         backend = get_signature_backend()
         expected_prepared_recipient_data = [
             {
