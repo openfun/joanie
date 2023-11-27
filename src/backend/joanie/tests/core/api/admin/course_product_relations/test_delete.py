@@ -89,6 +89,7 @@ class CourseProductRelationDeleteAdminApiTest(TestCase):
         factories.OrderFactory(
             order_group=order_group,
             product=relation.product,
+            course=relation.course,
         )
         response = self.client.delete(
             f"/api/v1.0/admin/course-product-relations/{relation.id}/",
