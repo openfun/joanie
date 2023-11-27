@@ -34,7 +34,7 @@ class LexPersonaBackend(BaseSignatureBackend):
         Prepare recipient data of a user in order to include it in the creation payload of a
         signature procedure of a file. It returns a dictionary containing signer's information.
         """
-        country = order.owner.addresses.filter(is_main=True).first().country.code
+        country = order.main_invoice.recipient_address.country.code
 
         consent_page_id = self.get_setting("CONSENT_PAGE_ID")
 

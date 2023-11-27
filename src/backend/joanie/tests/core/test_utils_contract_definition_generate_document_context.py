@@ -3,6 +3,7 @@ from django.test import TestCase
 
 from joanie.core import factories
 from joanie.core.utils import contract_definition, image_to_base64
+from joanie.payment.factories import InvoiceFactory
 
 
 class UtilsGenerateDocumentContextTestCase(TestCase):
@@ -25,8 +26,8 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             postcode="75000",
             city="Paris",
             country="FR",
-            is_main=True,
             title="Office",
+            is_main=False,
         )
         order = factories.OrderFactory(
             owner=user,
@@ -36,6 +37,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                 )
             ),
         )
+        InvoiceFactory(order=order, recipient_address=address)
         definition = order.product.contract_definition
         expected_context = {
             "contract": {
@@ -54,7 +56,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                     "first_name": "John",
                     "last_name": "Doe",
                     "id": str(address.id),
-                    "is_main": True,
+                    "is_main": False,
                     "postcode": "75000",
                     "title": "Office",
                 },
@@ -84,17 +86,6 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         )
         user = factories.UserFactory(
             email="student@exmaple.fr", first_name="John Doe", last_name=""
-        )
-        address = factories.AddressFactory(
-            owner=user,
-            first_name="John",
-            last_name="Doe",
-            address="5 Rue de L'Exemple",
-            postcode="75000",
-            city="Paris",
-            country="FR",
-            is_main=True,
-            title="Office",
         )
         definition = factories.ContractDefinitionFactory(
             title="CONTRACT DEFINITION 2", body="Articles de la convention"
