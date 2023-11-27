@@ -1,8 +1,5 @@
 import { Organization } from "./Organization";
-import {
-  CourseRelationToProduct,
-  DTOCourseRelationToProduct,
-} from "./Relations";
+import { CourseRelationToProduct } from "./Relations";
 import { CourseRun } from "./CourseRun";
 import { Accesses } from "@/services/api/models/Accesses";
 
@@ -27,7 +24,12 @@ export enum CourseRoles {
 
 export type CourseFormValues = Omit<
   Course,
-  "accesses" | "id" | "state" | "courses_runs" | "is_graded"
+  | "accesses"
+  | "id"
+  | "state"
+  | "courses_runs"
+  | "is_graded"
+  | "product_relations"
 >;
 
 export interface DTOCourse {
@@ -35,7 +37,7 @@ export interface DTOCourse {
   code: string;
   title: string;
   organization_ids: string[];
-  product_relations?: DTOCourseRelationToProduct[];
+  // product_relations?: DTOCourseRelationToProduct[];
 }
 
 export const transformCourseToDTO = (course: CourseFormValues): DTOCourse => {
@@ -43,21 +45,9 @@ export const transformCourseToDTO = (course: CourseFormValues): DTOCourse => {
     return item.id;
   });
 
-  const productRelations = course.product_relations?.map((item) => {
-    const orgsIds = item.organizations.map((org) => {
-      return org.id;
-    });
-    const result: DTOCourseRelationToProduct = {
-      product_id: item.product.id,
-      organization_ids: orgsIds,
-    };
-    return result;
-  });
-
   return {
     ...course,
     organization_ids: organizationIds,
-    product_relations: productRelations ?? [],
   };
 };
 

@@ -9,6 +9,7 @@ import { OrganizationFactory } from "@/services/factories/organizations";
 import { ProductFactory } from "@/services/factories/product";
 import { CourseRelationToProduct } from "@/services/api/models/Relations";
 import { AccessesFactory } from "@/services/factories/accesses";
+import { OrderGroupFactory } from "@/services/factories/order-group";
 
 const build = (): Course => {
   return {
@@ -17,7 +18,7 @@ const build = (): Course => {
     code: faker.company.name().substring(0, 3),
     is_graded: true,
     organizations: OrganizationFactory(2),
-    product_relations: CourseRelationsToProductFactory(0),
+    product_relations: CourseRelationsToProductFactory(2),
     state: CourseStateFactory(),
     accesses: AccessesFactory(Object.values(CourseRoles), 3),
   };
@@ -40,9 +41,13 @@ export const CourseStateFactory = (): CourseState => {
 };
 
 export const CourseRelationToProductFactory = (): CourseRelationToProduct => {
+  const product = ProductFactory();
   return {
-    product: ProductFactory(),
-    organizations: OrganizationFactory(10),
+    id: faker.string.uuid(),
+    can_edit: faker.datatype.boolean(),
+    product,
+    organizations: OrganizationFactory(3),
+    order_groups: OrderGroupFactory(2),
   };
 };
 
