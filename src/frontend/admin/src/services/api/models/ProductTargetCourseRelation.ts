@@ -20,6 +20,13 @@ export type ProductTargetCourseRelationOptionalId = Omit<
   id?: string;
 };
 
+export type ProductTargetCourseDummy = Omit<
+  ProductTargetCourseRelation,
+  "id"
+> & {
+  dummyId?: string;
+};
+
 export type ProductTargetCourseRelationFormValues = {
   course: Course;
   course_runs?: CourseRun[];

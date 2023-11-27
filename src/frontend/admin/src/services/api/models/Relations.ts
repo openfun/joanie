@@ -5,14 +5,26 @@ import { Product } from "@/services/api/models/Product";
 import { CourseFactory } from "@/services/factories/courses";
 import { OrganizationFactory } from "@/services/factories/organizations";
 import { randomNumber } from "@/utils/numbers";
+import { OrderGroup } from "@/services/api/models/OrderGroup";
 
 export type CourseRelationToProduct = {
+  can_edit: boolean;
+  id: string;
   product: Product;
   organizations: Organization[];
+  order_groups: OrderGroup[];
+};
+
+export type CourseRelationToProductDummy = Omit<
+  CourseRelationToProduct,
+  "id"
+> & {
+  dummyId?: string;
 };
 
 export type DTOCourseRelationToProduct = {
   product_id: string;
+  course_id: string;
   organization_ids: string[];
 };
 
