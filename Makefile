@@ -215,7 +215,7 @@ resetdb: ## flush database and create a superuser "admin"
 
 # -- Frontend admin
 frontend/admin/env:
-	cp src/frontend/admin/.env.example src/frontend/admin/.env
+	cp -n src/frontend/admin/.env.example src/frontend/admin/.env
 
 admin-install: ## Install node_modules
 	@${ADMIN_YARN} install
@@ -247,10 +247,10 @@ env.d/development/common:
 # -- Internationalization
 
 env.d/development/crowdin:
-	cp env.d/development/crowdin.dist env.d/development/crowdin
+	cp -n env.d/development/crowdin.dist env.d/development/crowdin
 
 env.d/development/localtunnel:
-	cp env.d/development/localtunnel.dist env.d/development/localtunnel
+	cp -n env.d/development/localtunnel.dist env.d/development/localtunnel
 
 crowdin-download: ## Download translated message from crowdin
 	@$(COMPOSE_RUN_CROWDIN) download -c crowdin/config.yml
