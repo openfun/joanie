@@ -21,13 +21,31 @@ from joanie.signature.backends import get_signature_backend
 class LexPersonaBackendGetSignatureInvitationLinkTestCase(TestCase):
     """Tests for Lex persona get_signature_invitation_link"""
 
-    @responses.activate
-    def test_backend_lex_persona_get_signature_invitation_link(self):
+    # pylint: disable=unexpected-keyword-arg,no-value-for-parameter
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_lex_persona_get_signature_invitation_link_success(self):
         """
         When retrieving the invitation link to sign a specific selection of workflow
         that exist, it should return the 'consentPageUrl' to go sign the files.
         """
-        api_url = "https://lex_persona.test01.com/api/requests/"
+
+        responses.add(
+            responses.POST,
+            "https://lex_persona.test01.com/api/workflows/wfl_id_fake/invite",
+            json={"inviteUrl": "https://example.com/invite?token=jwt_token"},
+            status=200,
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        "Authorization": "Bearer token_id_fake",
+                    },
+                ),
+                responses.matchers.json_params_matcher(
+                    {"recipientEmail": "johnnydo@example.com"}
+                ),
+            ],
+        )
+
         expected_response_data = {
             "consentPageId": "cop_id_fake",
             "consentPageUrl": (
@@ -49,17 +67,21 @@ class LexPersonaBackendGetSignatureInvitationLinkTestCase(TestCase):
 
         responses.add(
             responses.POST,
-            api_url,
+            "https://lex_persona.test01.com/api/requests/",
             json=expected_response_data,
             status=200,
-        )
-
-        # Managed invitation link
-        responses.add(
-            responses.POST,
-            "https://lex_persona.test01.com/api/workflows/wfl_id_fake/invite",
-            json={"inviteUrl": "https://example.com/invite?token=jwt_token"},
-            status=200,
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        "Authorization": "Bearer jwt_token",
+                    },
+                ),
+                responses.matchers.json_params_matcher(
+                    {
+                        "workflows": ["wfl_id_fake"],
+                    }
+                ),
+            ],
         )
 
         backend = get_signature_backend()
@@ -71,25 +93,6 @@ class LexPersonaBackendGetSignatureInvitationLinkTestCase(TestCase):
             result,
             expected_response_data["consentPageUrl"],
         )
-        self.assertEqual(len(responses.calls), 2)
-        # jwt request
-        self.assertEqual(
-            responses.calls[0].request.url,
-            "https://lex_persona.test01.com/api/workflows/wfl_id_fake/invite",
-        )
-        self.assertEqual(
-            responses.calls[0].request.headers["Authorization"], "Bearer token_id_fake"
-        )
-
-        # signature invitation link
-        self.assertEqual(
-            responses.calls[1].request.body, b'{"workflows": ["wfl_id_fake"]}'
-        )
-        self.assertEqual(responses.calls[1].request.url, api_url)
-        self.assertEqual(
-            responses.calls[1].request.headers["Authorization"], "Bearer jwt_token"
-        )
-        self.assertEqual(responses.calls[1].request.method, "POST")
 
     @responses.activate
     def test_backend_lex_persona_get_signature_invitation_link_get_jwt_token_fails(

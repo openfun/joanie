@@ -492,7 +492,7 @@ class OrderViewSet(
         """
         order = self.get_object()
 
-        invitation_link = order.submit_for_signature()
+        invitation_link = order.submit_for_signature(request.user)
 
         return JsonResponse({"invitation_link": invitation_link}, status=200)
 

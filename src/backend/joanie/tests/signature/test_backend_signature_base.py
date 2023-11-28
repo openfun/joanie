@@ -80,7 +80,9 @@ class BaseSignatureBackendTestCase(TestCase):
         )
     )
     @mock.patch("joanie.core.models.Order.enroll_user_to_course_run")
-    def test_backend_signature_base_backend_confirm_student_signature(self, _mock_enroll_user):
+    def test_backend_signature_base_backend_confirm_student_signature(
+        self, _mock_enroll_user
+    ):
         """
         This test verifies that the `confirm_student_signature` method updates the contract with a
         timestamps for the field 'student_signed_on', and it should set 'None' to the field

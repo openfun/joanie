@@ -66,6 +66,7 @@ and this project adheres to
   one order of each state. Also add some order target courses.
 - Add markdown editor inside the BO
 - Add admin endpoint to manage course product relations
+- Add organization contract signature
 
 ### Changed
 
