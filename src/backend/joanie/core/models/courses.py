@@ -18,6 +18,7 @@ from django.utils.functional import lazy
 from django.utils.text import capfirst
 from django.utils.translation import gettext_lazy as _
 
+from django_countries.fields import CountryField
 from easy_thumbnails.fields import ThumbnailerImageField
 from parler import models as parler_models
 from rest_framework.reverse import reverse
@@ -160,6 +161,7 @@ class Organization(parler_models.TranslatableModel, BaseModel):
     )
     signature = models.ImageField(_("signature"), blank=True)
     logo = ThumbnailerImageField(_("logo"), blank=True)
+    country = CountryField(_("country"), default=settings.JOANIE_DEFAULT_COUNTRY_CODE)
 
     class Meta:
         db_table = "joanie_organization"

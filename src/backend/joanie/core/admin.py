@@ -126,6 +126,8 @@ class ContractAdmin(admin.ModelAdmin):
         "definition_checksum",
         "student_signed_on",
         "order",
+        "organization_signatory",
+        "organization_signed_on",
         "owner",
     )
 

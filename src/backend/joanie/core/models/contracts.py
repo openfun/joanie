@@ -125,6 +125,23 @@ class Contract(BaseModel):
         _("Date and time of issuance"), null=True, blank=True, editable=False
     )
 
+    # Set on organization signature
+    organization_signatory = models.ForeignKey(
+        to="core.user",
+        verbose_name=_("organization signatory"),
+        related_name="signed_contracts",
+        on_delete=models.RESTRICT,
+        null=True,
+        blank=True,
+        editable=False,
+    )
+    organization_signed_on = models.DateTimeField(
+        _("Date and time the organization signed the contract"),
+        blank=True,
+        null=True,
+        editable=False,
+    )
+
     class Meta:
         db_table = "joanie_contract"
         verbose_name = _("Contract")
