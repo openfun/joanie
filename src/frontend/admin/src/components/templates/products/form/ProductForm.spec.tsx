@@ -84,7 +84,12 @@ describe("<ProductForm/>", () => {
     await userEvent.click(credential);
 
     // 3 wizard steps title
-    await screen.findByText("Main");
+
+    expect(
+      screen.queryByRole("button", {
+        name: "Main",
+      }),
+    ).not.toBeInTheDocument();
 
     expect(
       screen.queryByRole("button", { name: "Next" }),

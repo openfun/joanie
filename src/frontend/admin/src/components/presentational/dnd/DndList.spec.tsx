@@ -8,7 +8,7 @@ interface DummyRow {
 }
 
 interface DummyCreatingRow {
-  id?: string;
+  dummyId?: string;
   title: string;
 }
 
@@ -20,17 +20,19 @@ describe("<DndList />", () => {
       { id: "2", title: "Alfred Teach" },
     ];
 
-    const creatingRows: DummyCreatingRow[] = [{ title: "Louis Albert" }];
+    const creatingRows: DummyCreatingRow[] = [
+      { dummyId: "3", title: "Louis Albert" },
+    ];
 
     render(
-      <DndList
+      <DndList<DummyRow, DummyCreatingRow>
         droppableId="test-drop"
         rows={rows}
         creatingRows={creatingRows}
-        renderCreatingRow={(item) => (
-          <div data-testid="creating-row">{item.title}</div>
+        renderCreatingRow={(row) => (
+          <div data-testid="creating-row">{row.item.title}</div>
         )}
-        renderRow={(item) => <div data-testid="row">{item.title}</div>}
+        renderRow={(row) => <div data-testid="row">{row.item.title}</div>}
         onSorted={onSorted}
       />,
       { wrapper: TestingWrapper },

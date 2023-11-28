@@ -11,6 +11,7 @@ export interface DndDefaultRowProps {
   mainTitle: string;
   subTitle?: string | ReactNode;
   rightActions?: React.ReactNode;
+  permanentRightActions?: React.ReactNode;
   enableEdit?: boolean;
   enableDelete?: boolean;
   onEdit?: () => void;
@@ -44,26 +45,43 @@ export function DndDefaultRow({
         <Typography variant="caption">{props.subTitle}</Typography>
       </Box>
       <Box
-        className="right-actions"
         sx={{
-          opacity: 0,
           display: "flex",
-          justifyContent: "flex-end",
-          gap: "5px",
           alignItems: "center",
         }}
       >
-        {props.rightActions}
-        {enableEdit && (
-          <IconButton size="small" onClick={props.onEdit}>
-            <ModeEditOutlineTwoToneIcon color="action" fontSize="small" />
-          </IconButton>
-        )}
-        {enableDelete && (
-          <IconButton size="small" onClick={props.onDelete}>
-            <DeleteOutlineRoundedIcon color="error" fontSize="small" />
-          </IconButton>
-        )}
+        <Box
+          className="right-actions"
+          sx={{
+            opacity: 0,
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: "5px",
+            alignItems: "center",
+          }}
+        >
+          {props.rightActions}
+          {enableEdit && (
+            <IconButton size="small" onClick={props.onEdit}>
+              <ModeEditOutlineTwoToneIcon color="action" fontSize="small" />
+            </IconButton>
+          )}
+          {enableDelete && (
+            <IconButton size="small" onClick={props.onDelete}>
+              <DeleteOutlineRoundedIcon color="error" fontSize="small" />
+            </IconButton>
+          )}
+        </Box>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: "5px",
+            alignItems: "center",
+          }}
+        >
+          {props.permanentRightActions}
+        </Box>
       </Box>
     </Box>
   );

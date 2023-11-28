@@ -23,31 +23,39 @@ export interface Row {
   id?: string;
 }
 
+export interface DummyRow {
+  dummyId?: string;
+}
+
 export interface RowPropsExtended<T> {
   item: T;
 }
 
 export interface DndListProps<
   TRowProps extends Row,
-  TCreatingRowProps extends Row,
+  TCreatingRowProps extends DummyRow,
 > {
-  droppableId: string;
+  droppableId?: string;
   disableDnd?: boolean;
   rows: TRowProps[];
-  renderRow: (item: TRowProps, index: number) => React.ReactNode;
+  renderRow: (props: { item: TRowProps; index: number }) => React.ReactNode;
   creatingRows?: TCreatingRowProps[];
-  renderCreatingRow?: (
-    item: TCreatingRowProps,
-    index: number,
-  ) => React.ReactNode;
-  onSorted: (items: TRowProps[]) => void;
+  renderCreatingRow?: (data: {
+    item: TCreatingRowProps;
+    index: number;
+  }) => React.ReactNode;
+  onSorted?: (items: TRowProps[]) => void;
   addButtonLabel?: string;
   addButtonClick?: () => void;
   emptyLabel?: string;
   headerActions?: React.ReactNode;
 }
 
-export function DndList<TRowProps extends Row, TCreatingRowProps extends Row>({
+export function DndList<
+  TRowProps extends Row,
+  TCreatingRowProps extends DummyRow,
+>({
+  droppableId = "droppable-container",
   ...props
 }: DndListProps<TRowProps, TCreatingRowProps>) {
   const intl = useIntl();
@@ -60,15 +68,15 @@ export function DndList<TRowProps extends Row, TCreatingRowProps extends Row>({
       newItems.splice(destination.index, 0, ...old);
     }
 
-    props.onSorted(newItems);
+    props.onSorted?.(newItems);
   };
 
   useEffect(() => {
     const result: TCreatingRowProps[] = [];
     props.creatingRows?.forEach((item) => {
       const clone = { ...item };
-      if (!clone.id) {
-        clone.id = faker.string.uuid();
+      if (!clone.dummyId) {
+        clone.dummyId = faker.string.uuid();
       }
       result.push(clone);
     });
@@ -80,7 +88,7 @@ export function DndList<TRowProps extends Row, TCreatingRowProps extends Row>({
     <Box>
       {props.headerActions}
       <DragDropContext onDragEnd={onDragEnd}>
-        <StrictModeDroppable droppableId={props.droppableId}>
+        <StrictModeDroppable droppableId={droppableId}>
           {(provided, snapshot) => (
             <div {...provided.droppableProps} ref={provided.innerRef}>
               {props.rows.map((item, index) => (
@@ -88,10 +96,10 @@ export function DndList<TRowProps extends Row, TCreatingRowProps extends Row>({
                   isDisabled={props.disableDnd}
                   isDragging={snapshot.isDraggingOver}
                   index={index}
-                  id={`row-${props.droppableId}-${item.id}`}
-                  key={`key-${props.droppableId}-${item.id}`}
+                  id={`row-${droppableId}-${item.id}`}
+                  key={`key-${droppableId}-${item.id}`}
                 >
-                  {props.renderRow(item, index)}
+                  {props.renderRow({ item, index })}
                 </DndItem>
               ))}
               {dummyRows.map((item, index) => (
@@ -101,9 +109,9 @@ export function DndList<TRowProps extends Row, TCreatingRowProps extends Row>({
                   isLoading={true}
                   id={`row-${index}`}
                   index={props.rows.length + index}
-                  key={`creating-key-${item.id}`}
+                  key={`creating-key-${item.dummyId}`}
                 >
-                  {props.renderCreatingRow?.(item, index)}
+                  {props.renderCreatingRow?.({ item, index })}
                 </DndItem>
               ))}
               {provided.placeholder}
