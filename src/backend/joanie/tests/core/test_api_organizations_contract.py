@@ -9,6 +9,8 @@ from joanie.core import enums, factories, models
 from joanie.core.serializers import fields
 from joanie.tests.base import BaseAPITestCase
 
+# pylint: disable=duplicate-code
+
 
 class OrganizationContractApiTest(BaseAPITestCase):
     """Test suite for the Organizations Contract API"""
@@ -152,52 +154,55 @@ class OrganizationContractApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, 200)
         contracts = models.Contract.objects.filter(order__organization=organizations[0])
         expected_contracts = sorted(contracts, key=lambda x: x.created_on, reverse=True)
-        self.assertDictEqual(
-            response.json(),
-            {
-                "count": 5,
-                "next": None,
-                "previous": None,
-                "results": [
-                    {
-                        "id": str(contract.id),
-                        "created_on": contract.created_on.isoformat().replace(
-                            "+00:00", "Z"
-                        ),
-                        "student_signed_on": contract.student_signed_on.isoformat().replace(
-                            "+00:00", "Z"
-                        )
-                        if contract.student_signed_on
-                        else None,
-                        "definition": {
-                            "description": contract.definition.description,
-                            "id": str(contract.definition.id),
-                            "language": contract.definition.language,
-                            "title": contract.definition.title,
+        assert response.json() == {
+            "count": 5,
+            "next": None,
+            "previous": None,
+            "results": [
+                {
+                    "id": str(contract.id),
+                    "created_on": contract.created_on.isoformat().replace(
+                        "+00:00", "Z"
+                    ),
+                    "student_signed_on": contract.student_signed_on.isoformat().replace(
+                        "+00:00", "Z"
+                    )
+                    if contract.student_signed_on
+                    else None,
+                    "organization_signatory": None,
+                    "organization_signed_on": contract.organization_signed_on.isoformat().replace(
+                        "+00:00", "Z"
+                    )
+                    if contract.organization_signed_on
+                    else None,
+                    "definition": {
+                        "description": contract.definition.description,
+                        "id": str(contract.definition.id),
+                        "language": contract.definition.language,
+                        "title": contract.definition.title,
+                    },
+                    "order": {
+                        "id": str(contract.order.id),
+                        "course": {
+                            "code": contract.order.course.code,
+                            "cover": "_this_field_is_mocked",
+                            "id": str(contract.order.course.id),
+                            "title": contract.order.course.title,
                         },
-                        "order": {
-                            "id": str(contract.order.id),
-                            "course": {
-                                "code": contract.order.course.code,
-                                "cover": "_this_field_is_mocked",
-                                "id": str(contract.order.course.id),
-                                "title": contract.order.course.title,
-                            },
-                            "enrollment": None,
-                            "organization": {
-                                "id": str(contract.order.organization.id),
-                                "code": contract.order.organization.code,
-                                "logo": "_this_field_is_mocked",
-                                "title": contract.order.organization.title,
-                            },
-                            "owner_name": contract.order.owner.username,
-                            "product_title": contract.order.product.title,
+                        "enrollment": None,
+                        "organization": {
+                            "id": str(contract.order.organization.id),
+                            "code": contract.order.organization.code,
+                            "logo": "_this_field_is_mocked",
+                            "title": contract.order.organization.title,
                         },
-                    }
-                    for contract in expected_contracts
-                ],
-            },
-        )
+                        "owner_name": contract.order.owner.username,
+                        "product_title": contract.order.product.title,
+                    },
+                }
+                for contract in expected_contracts
+            ],
+        }
 
     def test_api_organizations_contracts_list_filter_is_signed(self):
         """
@@ -398,42 +403,45 @@ class OrganizationContractApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, 200)
 
-        self.assertDictEqual(
-            response.json(),
-            {
-                "id": str(contract.id),
-                "created_on": contract.created_on.isoformat().replace("+00:00", "Z"),
-                "student_signed_on": contract.student_signed_on.isoformat().replace(
-                    "+00:00", "Z"
-                )
-                if contract.student_signed_on
-                else None,
-                "definition": {
-                    "description": contract.definition.description,
-                    "id": str(contract.definition.id),
-                    "language": contract.definition.language,
-                    "title": contract.definition.title,
-                },
-                "order": {
-                    "id": str(contract.order.id),
-                    "course": {
-                        "code": contract.order.course.code,
-                        "cover": "_this_field_is_mocked",
-                        "id": str(contract.order.course.id),
-                        "title": contract.order.course.title,
-                    },
-                    "enrollment": None,
-                    "organization": {
-                        "id": str(contract.order.organization.id),
-                        "code": contract.order.organization.code,
-                        "logo": "_this_field_is_mocked",
-                        "title": contract.order.organization.title,
-                    },
-                    "owner_name": contract.order.owner.username,
-                    "product_title": contract.order.product.title,
-                },
+        assert response.json() == {
+            "id": str(contract.id),
+            "created_on": contract.created_on.isoformat().replace("+00:00", "Z"),
+            "student_signed_on": contract.student_signed_on.isoformat().replace(
+                "+00:00", "Z"
+            )
+            if contract.student_signed_on
+            else None,
+            "organization_signatory": None,
+            "organization_signed_on": contract.organization_signed_on.isoformat().replace(
+                "+00:00", "Z"
+            )
+            if contract.organization_signed_on
+            else None,
+            "definition": {
+                "description": contract.definition.description,
+                "id": str(contract.definition.id),
+                "language": contract.definition.language,
+                "title": contract.definition.title,
             },
-        )
+            "order": {
+                "id": str(contract.order.id),
+                "course": {
+                    "code": contract.order.course.code,
+                    "cover": "_this_field_is_mocked",
+                    "id": str(contract.order.course.id),
+                    "title": contract.order.course.title,
+                },
+                "enrollment": None,
+                "organization": {
+                    "id": str(contract.order.organization.id),
+                    "code": contract.order.organization.code,
+                    "logo": "_this_field_is_mocked",
+                    "title": contract.order.organization.title,
+                },
+                "owner_name": contract.order.owner.username,
+                "product_title": contract.order.product.title,
+            },
+        }
 
     def test_api_organizations_contracts_retrieve_with_accesses_and_organization_code(
         self,

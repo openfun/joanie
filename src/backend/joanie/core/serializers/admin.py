@@ -177,6 +177,7 @@ class AdminOrganizationSerializer(serializers.ModelSerializer):
         fields = (
             "accesses",
             "code",
+            "country",
             "id",
             "logo",
             "representative",

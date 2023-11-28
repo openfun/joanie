@@ -31,6 +31,32 @@ class AbilitiesModelSerializer(serializers.ModelSerializer):
         return representation
 
 
+class UserSerializer(serializers.ModelSerializer):
+    """Serializer for User model."""
+
+    full_name = serializers.CharField(source="get_full_name")
+    abilities = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = models.User
+        fields = [
+            "id",
+            "username",
+            "full_name",
+            "is_superuser",
+            "is_staff",
+            "abilities",
+        ]
+        read_only_fields = fields
+
+    def get_abilities(self, user) -> dict:
+        """Return abilities of the logged-in user on itself."""
+        request = self.context.get("request")
+        if request:
+            return request.user.get_abilities(user)
+        return {}
+
+
 class AddressSerializer(serializers.ModelSerializer):
     """
     Address model serializer
@@ -373,10 +399,19 @@ class ContractSerializer(serializers.ModelSerializer):
     id = serializers.CharField(read_only=True, required=False)
     definition = ContractDefinitionSerializer()
     order = NestedOrderSerializer()
+    organization_signatory = UserSerializer(read_only=True)
 
     class Meta:
         model = models.Contract
-        fields = ["id", "definition", "order", "student_signed_on", "created_on"]
+        fields = [
+            "created_on",
+            "definition",
+            "id",
+            "order",
+            "organization_signatory",
+            "organization_signed_on",
+            "student_signed_on",
+        ]
         read_only_fields = fields
 
 
@@ -847,32 +882,6 @@ class ProductRelationSerializer(CachedModelSerializer):
             "product",
         ]
         read_only_fields = fields
-
-
-class UserSerializer(serializers.ModelSerializer):
-    """Serializer for User model."""
-
-    full_name = serializers.CharField(source="get_full_name")
-    abilities = serializers.SerializerMethodField(read_only=True)
-
-    class Meta:
-        model = models.User
-        fields = [
-            "id",
-            "username",
-            "full_name",
-            "is_superuser",
-            "is_staff",
-            "abilities",
-        ]
-        read_only_fields = fields
-
-    def get_abilities(self, user) -> dict:
-        """Return abilities of the logged-in user on itself."""
-        request = self.context.get("request")
-        if request:
-            return request.user.get_abilities(user)
-        return {}
 
 
 class GenerateSignedContractsZipSerializer(serializers.Serializer):
