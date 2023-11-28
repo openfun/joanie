@@ -75,6 +75,7 @@ bootstrap: ## Prepare Docker images for the project
 bootstrap: \
 	data/media \
 	data/static \
+	env.d/development/common \
 	env.d/development/crowdin \
 	env.d/development/localtunnel \
 	frontend/admin/env \
@@ -239,6 +240,9 @@ admin-i18n-extract: ## Extract translations of frontend admin app
 admin-i18n-compile: ## Compile translations of frontend admin app
 	@${ADMIN_YARN} i18n:compile
 .PHONY: admin-i18n-compile
+
+env.d/development/common:
+	cp -n env.d/development/common.dist env.d/development/common
 
 # -- Internationalization
 
