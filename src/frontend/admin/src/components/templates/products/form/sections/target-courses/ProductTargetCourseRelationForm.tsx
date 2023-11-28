@@ -104,23 +104,6 @@ export function ProductTargetCourseRelationForm(props: Props) {
                     productFormMessages.useSpecificCourseRunsCheckboxLabel,
                   )}
                 />
-                {/* <FormControlLabel */}
-                {/*  control={ */}
-                {/*    <Checkbox */}
-                {/*      onChange={(event: ChangeEvent<HTMLInputElement>) => { */}
-                {/*        const { checked } = event.target; */}
-                {/*        if (!checked) { */}
-                {/*          courseRunsArray.replace([]); */}
-                {/*        } */}
-                {/*        setUseSpecificCourseRuns(checked); */}
-                {/*      }} */}
-                {/*      checked={useSpecificCourseRuns} */}
-                {/*    /> */}
-                {/*  } */}
-                {/*  label={intl.formatMessage( */}
-                {/*    productFormMessages.useSpecificCourseRunsCheckboxLabel, */}
-                {/*  )} */}
-                {/* /> */}
                 {useSpecificCourseRuns && (
                   <>
                     <CourseRunControlledSearch
