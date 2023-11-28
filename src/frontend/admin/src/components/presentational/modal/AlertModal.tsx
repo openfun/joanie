@@ -30,23 +30,23 @@ export function AlertModal({
   handleAccept,
   validateLabel,
   message,
-  ...props
+  ...modalProps
 }: AlertModalProps) {
   const intl = useIntl();
-  const handleAcceptAndClose = (): void => {
-    props.handleClose();
+  const onHandleAccept = (): void => {
+    modalProps.handleClose();
     handleAccept();
   };
 
   return (
     <CustomModal
-      {...props}
+      {...modalProps}
       actions={
         <>
-          <Button onClick={props.handleClose}>
+          <Button onClick={modalProps.handleClose}>
             {intl.formatMessage(messages.cancel)}
           </Button>
-          <Button onClick={handleAcceptAndClose} autoFocus>
+          <Button onClick={onHandleAccept} autoFocus>
             {validateLabel ?? intl.formatMessage(messages.validate)}
           </Button>
         </>
