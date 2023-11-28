@@ -61,16 +61,14 @@
       <footer class="footer">
         <div class="signature_zone">
           {% translate "Student's signature" %}:
-          <div class="signature-student">
+          <div class="signature-recipient">
             [SignatureField#1]
           </div>
         </div>
         <div class="signature_zone">
           {% translate "Representative's signature" %}:
-          <div class="signature-slot">
-            {% if organization %}
-              <img src="{{ organization.signature }}" />
-            {% endif %}
+          <div class="signature-recipient">
+            [SignatureField#2]
           </div>
         </div>
       </footer>

@@ -137,17 +137,18 @@ class ContractDefinitionApiTest(BaseAPITestCase):
 
         document_text = pdf_extract_text(BytesIO(b"".join(response.streaming_content)))
 
-        self.assertRegex(document_text, r"CONTRACT")
-        self.assertRegex(document_text, r"DEFINITION")
-        self.assertRegex(
+        self.assertIn("CONTRACT", document_text)
+        self.assertIn("DEFINITION", document_text)
+        self.assertIn(
+            "This document certifies that the student wants to enroll to the course",
             document_text,
-            r"This document certifies that the student wants to enroll to the course",
         )
-        self.assertRegex(document_text, r"Student's signature")
-        self.assertRegex(document_text, r"Representative's signature")
-        self.assertRegex(document_text, r"[SignatureField#1]")
-        self.assertRegex(document_text, rf"{user.first_name}")
-        self.assertRegex(
+        self.assertIn("Student's signature", document_text)
+        self.assertIn("[SignatureField#1]", document_text)
+        self.assertIn("Representative's signature", document_text)
+        self.assertIn("[SignatureField#2]", document_text)
+        self.assertIn(user.first_name, document_text)
+        self.assertIn(
+            "<STUDENT_ADDRESS_STREET_NAME> <STUDENT_ADDRESS_POSTCODE>,\n<STUDENT_ADDRESS_CITY>.",
             document_text,
-            r"<STUDENT_ADDRESS_STREET_NAME> <STUDENT_ADDRESS_POSTCODE>,\n<STUDENT_ADDRESS_CITY>.",
         )

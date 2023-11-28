@@ -93,12 +93,7 @@ body {
     margin: 10mm;
   }
 
-  .signature-student {
+  .signature-recipient {
     margin-top: 10mm;
-  }
-
-  .signature-slot > img {
-    width: 50mm;
-    margin-top: 12mm;
   }
 }
