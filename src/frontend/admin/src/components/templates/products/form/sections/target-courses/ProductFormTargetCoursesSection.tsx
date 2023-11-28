@@ -15,9 +15,9 @@ import { CustomModal } from "@/components/presentational/modal/Modal";
 import { ProductTargetCourseRelationForm } from "@/components/templates/products/form/sections/target-courses/ProductTargetCourseRelationForm";
 import { Maybe, ToFormValues } from "@/types/utils";
 import {
+  ProductTargetCourseDummy,
   ProductTargetCourseRelation,
   ProductTargetCourseRelationFormValues,
-  ProductTargetCourseRelationOptionalId,
 } from "@/services/api/models/ProductTargetCourseRelation";
 import { WizardStepProps } from "@/components/presentational/wizard/Wizard";
 import { RHFProvider } from "@/components/presentational/hook-form/RHFProvider";
@@ -52,7 +52,7 @@ export function ProductFormTargetCoursesSection(props: Props) {
     useState<Maybe<EditRelationState>>();
 
   const { items: creatingList, ...creatingListMethods } =
-    useList<ProductTargetCourseRelationOptionalId>([]);
+    useList<ProductTargetCourseDummy>([]);
 
   const getDefaultValues = (): ProductTargetCoursesFormValues => {
     return {
@@ -103,7 +103,7 @@ export function ProductFormTargetCoursesSection(props: Props) {
   const handleCreate = (
     values: ProductTargetCourseRelationFormValues,
   ): void => {
-    const newValue: ProductTargetCourseRelationOptionalId = {
+    const newValue: ProductTargetCourseDummy = {
       course: values.course,
       course_runs: values.course_runs ?? [],
       position: targetCourses.fields.length,
@@ -177,10 +177,7 @@ export function ProductFormTargetCoursesSection(props: Props) {
         </Grid>
 
         <Grid xs={12}>
-          <DndList<
-            ProductTargetCourseRelation,
-            ProductTargetCourseRelationOptionalId
-          >
+          <DndList<ProductTargetCourseRelation, ProductTargetCourseDummy>
             creatingRows={creatingList}
             emptyLabel={intl.formatMessage(productFormMessages.noTargetCourses)}
             addButtonLabel={intl.formatMessage(
@@ -193,7 +190,8 @@ export function ProductFormTargetCoursesSection(props: Props) {
             }}
             droppableId="course-sections"
             rows={targetCourses.fields}
-            renderRow={(item, index) => {
+            renderRow={(data) => {
+              const { item, index } = data;
               return (
                 <ProductFormTargetCourseRow
                   item={item}
@@ -206,11 +204,11 @@ export function ProductFormTargetCoursesSection(props: Props) {
                 />
               );
             }}
-            renderCreatingRow={(item) => {
+            renderCreatingRow={(renderProps) => {
               return (
                 <ProductFormTargetCourseRow
-                  item={item}
-                  key={`creating-row-${item.course.id}`}
+                  item={renderProps.item}
+                  key={`creating-row-${renderProps.item.course.id}`}
                 />
               );
             }}
