@@ -5,8 +5,14 @@ import {
   CustomModal,
   CustomModalProps,
 } from "@/components/presentational/modal/Modal";
-import { CourseRelationToProduct } from "@/services/api/models/Relations";
-import { CourseProductRelationForm } from "@/components/templates/courses/form/product-relation/CourseProductRelationForm";
+import {
+  CourseRelationToProduct,
+  DTOCourseRelationToProduct,
+} from "@/services/api/models/Relations";
+import {
+  CourseProductRelationForm,
+  CourseProductRelationFormValues,
+} from "@/components/templates/courses/form/product-relation/CourseProductRelationForm";
 
 const messages = defineMessages({
   addModalTitle: {
@@ -37,9 +43,17 @@ enum Mode {
 }
 
 interface Props extends Omit<CustomModalProps, "title"> {
+  courseId: string;
   courseRelationToProduct?: CourseRelationToProduct;
-  onAdd: (relation: CourseRelationToProduct) => void;
-  onEdit: (relation: CourseRelationToProduct) => void;
+  onAdd: (
+    payload: DTOCourseRelationToProduct,
+    formValues: CourseProductRelationFormValues,
+  ) => void;
+  onEdit: (
+    id: string,
+    payload: DTOCourseRelationToProduct,
+    formValues: CourseProductRelationFormValues,
+  ) => void;
 }
 
 export function CourseFormProductRelationModal(props: Props) {
@@ -49,11 +63,14 @@ export function CourseFormProductRelationModal(props: Props) {
     return props.courseRelationToProduct !== undefined ? Mode.EDIT : Mode.ADD;
   }, [props.courseRelationToProduct]);
 
-  const validate = async (value: CourseRelationToProduct): Promise<void> => {
+  const validate = async (
+    payload: DTOCourseRelationToProduct,
+    formValues: CourseProductRelationFormValues,
+  ): Promise<void> => {
     if (mode === Mode.ADD) {
-      props.onAdd(value);
+      props.onAdd(payload, formValues);
     } else {
-      props.onEdit(value);
+      props.onEdit(props.courseRelationToProduct!.id, payload, formValues);
     }
   };
 
@@ -66,6 +83,7 @@ export function CourseFormProductRelationModal(props: Props) {
       handleClose={props.handleClose}
     >
       <CourseProductRelationForm
+        courseId={props.courseId}
         relation={props.courseRelationToProduct}
         onSubmit={validate}
       />
