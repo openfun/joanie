@@ -961,7 +961,7 @@ class OrderModelsTestCase(TestCase):
         )
 
         with self.assertRaises(ValidationError) as context:
-            order.submit_for_signature()
+            order.submit_for_signature(user=user)
 
         self.assertEqual(
             str(context.exception),
@@ -991,7 +991,7 @@ class OrderModelsTestCase(TestCase):
         )
 
         with self.assertRaises(ValidationError) as context:
-            order.submit_for_signature()
+            order.submit_for_signature(user=user)
 
         self.assertEqual(
             str(context.exception),
@@ -1019,7 +1019,7 @@ class OrderModelsTestCase(TestCase):
         )
         InvoiceFactory(order=order)
 
-        raw_invitation_link = order.submit_for_signature()
+        raw_invitation_link = order.submit_for_signature(user=user)
 
         order.contract.refresh_from_db()
         self.assertIsNotNone(order.contract)
@@ -1067,7 +1067,7 @@ class OrderModelsTestCase(TestCase):
             submitted_for_signature_on=django_timezone.now(),
         )
 
-        invitation_url = order.submit_for_signature()
+        invitation_url = order.submit_for_signature(user=user)
 
         contract.refresh_from_db()
         self.assertEqual(contract.context, context)
@@ -1107,7 +1107,7 @@ class OrderModelsTestCase(TestCase):
             submitted_for_signature_on=django_timezone.now(),
         )
 
-        invitation_url = order.submit_for_signature()
+        invitation_url = order.submit_for_signature(user=user)
 
         contract.refresh_from_db()
         self.assertIn("https://dummysignaturebackend.fr/?requestToken=", invitation_url)
@@ -1151,7 +1151,7 @@ class OrderModelsTestCase(TestCase):
             submitted_for_signature_on=django_timezone.now() - timedelta(days=16),
         )
 
-        invitation_url = order.submit_for_signature()
+        invitation_url = order.submit_for_signature(user=user)
 
         contract.refresh_from_db()
         self.assertEqual(contract.context, context)
@@ -1187,7 +1187,7 @@ class OrderModelsTestCase(TestCase):
         )
 
         with self.assertRaises(PermissionDenied) as context:
-            order.submit_for_signature()
+            order.submit_for_signature(user=user)
 
         self.assertEqual(
             str(context.exception), "Contract is already signed, cannot resubmit."

@@ -10,7 +10,7 @@ from django.core.exceptions import ValidationError
 import requests
 from rest_framework.request import Request
 
-from joanie.core import models
+from joanie.core import enums, models
 from joanie.signature import exceptions
 from joanie.signature.backends.base import BaseSignatureBackend
 
@@ -29,31 +29,70 @@ class LexPersonaBackend(BaseSignatureBackend):
         "TOKEN",
     ]
 
-    def _prepare_recipient_data_for_student_signer(self, order: models.Order) -> list:
+    def _prepare_recipient_data_for_student_signer(
+        self, order: models.Order
+    ) -> list[dict]:
         """
         Prepare recipient data of a user in order to include it in the creation payload of a
         signature procedure of a file. It returns a dictionary containing signer's information.
         """
-        country = order.main_invoice.recipient_address.country.code
+        try:
+            country = order.main_invoice.recipient_address.country.code
+        except AttributeError:
+            country = settings.JOANIE_DEFAULT_COUNTRY_CODE
 
         consent_page_id = self.get_setting("CONSENT_PAGE_ID")
 
-        recipient_data = {
-            "email": order.owner.email,
-            "firstName": order.owner.first_name,
-            # Currently, we only have the `full_name` from OpenEdx that we set in the user's
-            # `first_name` in Joanie. We don't have yet the `last_name` and `first_name` that
-            # are separated in our database. In order to prepare the awaited payload for the
-            # signature provider, we set a dot : ".", for the `lastName` key.
-            "lastName": ".",
-            "country": country.upper(),
-            "preferred_locale": order.owner.language.lower(),
-            "consentPageId": consent_page_id,
-        }
+        return [
+            {
+                "email": order.owner.email,
+                "firstName": order.owner.first_name,
+                # Currently, we only have the `full_name` from OpenEdx that we set in the user's
+                # `first_name` in Joanie. We don't have yet the `last_name` and `first_name` that
+                # are separated in our database. In order to prepare the awaited payload for the
+                # signature provider, we set a dot : ".", for the `lastName` key.
+                "lastName": ".",
+                "country": country.upper(),
+                "preferred_locale": order.owner.language.lower(),
+                "consentPageId": consent_page_id,
+            }
+        ]
 
-        return [recipient_data]
+    def _prepare_recipient_data_for_organization_signer(
+        self, order: models.Order
+    ) -> list[dict]:
+        """
+        Prepare recipient data of an organization in order to include it in the creation payload
+        of a signature procedure of a file. It returns a dictionary containing signer's information.
+        """
+        try:
+            country = order.organization.country.code
+        except AttributeError:
+            country = settings.JOANIE_DEFAULT_COUNTRY_CODE
 
-    def _create_workflow(self, title: str, recipient_data: list):
+        consent_page_id = self.get_setting("CONSENT_PAGE_ID")
+        accesses = models.OrganizationAccess.objects.filter(
+            organization=order.organization, role=enums.OWNER
+        )
+
+        return [
+            {
+                "email": access.user.email,
+                "firstName": access.user.first_name,
+                "lastName": access.user.last_name,
+                "country": country.upper(),
+                "preferred_locale": access.user.language.lower(),
+                "consentPageId": consent_page_id,
+            }
+            for access in accesses
+        ]
+
+    def _create_workflow(
+        self,
+        title: str,
+        student_recipient_data: list,
+        organization_recipient_data: list,
+    ):
         """
         Create a workflow to initiate a signature procedure to sign a file with the signature
         provider.
@@ -76,7 +115,7 @@ class LexPersonaBackend(BaseSignatureBackend):
             "steps": [
                 {
                     "stepType": "signature",
-                    "recipients": recipient_data,
+                    "recipients": student_recipient_data,
                     "requiredRecipients": 1,
                     "validityPeriod": validity_period,
                     "invitePeriod": None,
@@ -85,10 +124,23 @@ class LexPersonaBackend(BaseSignatureBackend):
                     "allowComments": False,
                     "hideAttachments": False,
                     "hideWorkflowRecipients": False,
-                }
+                },
+                {
+                    "stepType": "signature",
+                    "recipients": organization_recipient_data,
+                    "requiredRecipients": 1,
+                    "validityPeriod": validity_period,
+                    "invitePeriod": None,
+                    "maxInvites": 0,
+                    "sendDownloadLink": True,
+                    "allowComments": False,
+                    "hideAttachments": False,
+                    "hideWorkflowRecipients": False,
+                },
             ],
             "notifiedEvents": [
                 "recipientRefused",
+                "recipientFinished",
                 "workflowFinished",
             ],
             "watchers": [],
@@ -320,8 +372,13 @@ class LexPersonaBackend(BaseSignatureBackend):
         It returns the signature backend reference and the hash of the file from the signature
         provider.
         """
-        recipient_data = self._prepare_recipient_data_for_student_signer(order)
-        reference_id = self._create_workflow(title, recipient_data)
+        student_recipient_data = self._prepare_recipient_data_for_student_signer(order)
+        organization_recipient_data = (
+            self._prepare_recipient_data_for_organization_signer(order)
+        )
+        reference_id = self._create_workflow(
+            title, student_recipient_data, organization_recipient_data
+        )
         file_hash = self._upload_file_to_workflow(file_bytes, reference_id)
         self._start_procedure(reference_id=reference_id)
 

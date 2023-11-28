@@ -146,7 +146,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             },
         )
 
-        with self.assertNumQueries(28):
+        with self.assertNumQueries(31):
             response = self.client.patch(
                 f"/api/v1.0/orders/{order.id}/submit/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -948,7 +948,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 ],
             },
         )
-        with self.assertNumQueries(10):
+        with self.assertNumQueries(13):
             response = self.client.patch(
                 f"/api/v1.0/orders/{order.id}/submit/",
                 data=data,

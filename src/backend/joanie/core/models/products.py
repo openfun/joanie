@@ -918,7 +918,7 @@ class Order(BaseModel):
         )
 
     # pylint: disable=no-member
-    def submit_for_signature(self):
+    def submit_for_signature(self, user: User):
         """
         When the product has a contract definition, it prepares the order's contract.
         If needed we prepare a new contract or we retrieve the existing one. Then, we check
@@ -972,7 +972,7 @@ class Order(BaseModel):
             contract.tag_submission_for_signature(reference, checksum, context)
 
         return backend_signature.get_signature_invitation_link(
-            self.owner.email, [contract.signature_backend_reference]
+            user.email, [contract.signature_backend_reference]
         )
 
 

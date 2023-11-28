@@ -281,12 +281,17 @@ class OrderViewSet(
 
     def get_queryset(self):
         """Custom queryset to limit to orders owned by the logged-in user."""
-        username = (
-            self.request.auth["username"]
-            if self.request.auth
-            else self.request.user.username
-        )
-        return models.Order.objects.filter(owner__username=username).select_related(
+        query_filter = Q()
+        if hasattr(self.request.user, "get_abilities"):
+            abilities = self.request.user.get_abilities(self.request.user)
+            if not abilities["has_organization_access"]:
+                username = (
+                    self.request.auth["username"]
+                    if self.request.auth
+                    else self.request.user.username
+                )
+                query_filter = Q(owner__username=username)
+        return models.Order.objects.filter(query_filter).select_related(
             "certificate",
             "contract",
             "course",
@@ -492,7 +497,7 @@ class OrderViewSet(
         """
         order = self.get_object()
 
-        invitation_link = order.submit_for_signature()
+        invitation_link = order.submit_for_signature(request.user)
 
         return JsonResponse({"invitation_link": invitation_link}, status=200)
 

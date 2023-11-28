@@ -144,8 +144,9 @@ class ContractDefinitionApiTest(BaseAPITestCase):
             r"This document certifies that the student wants to enroll to the course",
         )
         self.assertRegex(document_text, r"Student's signature")
-        self.assertRegex(document_text, r"Representative's signature")
         self.assertRegex(document_text, r"[SignatureField#1]")
+        self.assertRegex(document_text, r"Representative's signature")
+        self.assertRegex(document_text, r"[SignatureField#2]")
         self.assertRegex(document_text, rf"{user.first_name}")
         self.assertRegex(
             document_text,

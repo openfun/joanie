@@ -1,4 +1,5 @@
 """Lex Persona backend test for submit_for_signature."""
+from django.conf import settings
 from django.test import TestCase
 from django.test.utils import override_settings
 
@@ -25,15 +26,20 @@ from . import get_expected_workflow_payload
 class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
     """Lex Persona backend test for submit_for_signature."""
 
-    @responses.activate
-    def test_submit_for_signature(self):
+    # pylint: disable=too-many-locals,unexpected-keyword-arg,no-value-for-parameter
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_submit_for_signature_success(self):
         """valid test submit for signature"""
         user = factories.UserFactory(email="johnnydo@example.fr")
         factories.AddressFactory.create(owner=user)
         order = factories.OrderFactory(owner=user)
-        InvoiceFactory(order=order)
+        accesses = factories.UserOrganizationAccessFactory.create_batch(
+            3, organization=order.organization, role="owner"
+        )
+        invoice = InvoiceFactory(order=order)
         file_bytes = b"Some fake content"
         workflow_id = "wfl_id_fake"
+        title = "Contract Definition"
 
         ## Create workflow
         create_workflow_api_url = (
@@ -98,6 +104,70 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
             create_workflow_api_url,
             status=200,
             json=create_workflow_response_data,
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        "Authorization": "Bearer token_id_fake",
+                    },
+                ),
+                responses.matchers.json_params_matcher(
+                    {
+                        "name": title,
+                        "description": title,
+                        "steps": [
+                            {
+                                "stepType": "signature",
+                                "recipients": [
+                                    {
+                                        "consentPageId": "cop_id_fake",
+                                        "country": invoice.recipient_address.country.code.upper(),
+                                        "email": user.email,
+                                        "firstName": user.first_name,
+                                        "lastName": ".",
+                                        "preferred_locale": user.language.lower(),
+                                    }
+                                ],
+                                "requiredRecipients": 1,
+                                "validityPeriod": settings.JOANIE_SIGNATURE_VALIDITY_PERIOD,
+                                "invitePeriod": None,
+                                "maxInvites": 0,
+                                "sendDownloadLink": True,
+                                "allowComments": False,
+                                "hideAttachments": False,
+                                "hideWorkflowRecipients": False,
+                            },
+                            {
+                                "stepType": "signature",
+                                "recipients": [
+                                    {
+                                        "email": access.user.email,
+                                        "firstName": access.user.first_name,
+                                        "lastName": access.user.last_name,
+                                        "country": order.organization.country.code.upper(),
+                                        "preferred_locale": access.user.language.lower(),
+                                        "consentPageId": "cop_id_fake",
+                                    }
+                                    for access in reversed(accesses)
+                                ],
+                                "requiredRecipients": 1,
+                                "validityPeriod": settings.JOANIE_SIGNATURE_VALIDITY_PERIOD,
+                                "invitePeriod": None,
+                                "maxInvites": 0,
+                                "sendDownloadLink": True,
+                                "allowComments": False,
+                                "hideAttachments": False,
+                                "hideWorkflowRecipients": False,
+                            },
+                        ],
+                        "notifiedEvents": [
+                            "recipientRefused",
+                            "recipientFinished",
+                            "workflowFinished",
+                        ],
+                        "watchers": [],
+                    }
+                ),
+            ],
         )
 
         ## upload file to workflow
@@ -146,6 +216,22 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
             upload_file_api_url,
             status=200,
             json=upload_file_response_data,
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        "Authorization": "Bearer token_id_fake",
+                    },
+                ),
+                responses.matchers.multipart_matcher(
+                    {
+                        "file1": (
+                            "contract_definition.pdf",
+                            file_bytes,
+                            "application/pdf",
+                        ),
+                    },
+                ),
+            ],
         )
 
         ## Start procedure
@@ -158,44 +244,28 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
             start_procedure_api_url,
             status=200,
             json=start_procedure_response_data,
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        "Authorization": "Bearer token_id_fake",
+                    },
+                ),
+                responses.matchers.json_params_matcher(
+                    {
+                        "workflowStatus": "started",
+                    }
+                ),
+            ],
         )
 
         lex_persona_backend = get_signature_backend()
 
         reference_id, file_hash = lex_persona_backend.submit_for_signature(
-            title="Contract Definition", file_bytes=file_bytes, order=order
+            title=title, file_bytes=file_bytes, order=order
         )
 
         self.assertEqual(workflow_id, reference_id)
         self.assertEqual(file_hash, upload_file_response_data["parts"][0].get("hash"))
-
-        self.assertEqual(len(responses.calls), 3)
-
-        # First create workflow
-        self.assertEqual(responses.calls[0].request.url, create_workflow_api_url)
-        self.assertIsNotNone(responses.calls[0].request.body)
-        self.assertEqual(
-            responses.calls[0].request.headers["Authorization"], "Bearer token_id_fake"
-        )
-        self.assertEqual(responses.calls[0].request.method, "POST")
-
-        # Second upoad file
-        self.assertEqual(responses.calls[1].request.url, upload_file_api_url)
-        self.assertIsNotNone(responses.calls[1].request.body)
-        self.assertEqual(
-            responses.calls[1].request.headers["Authorization"], "Bearer token_id_fake"
-        )
-        self.assertEqual(responses.calls[1].request.method, "POST")
-
-        # third start procedure
-        self.assertEqual(responses.calls[2].request.url, start_procedure_api_url)
-        self.assertEqual(
-            responses.calls[2].request.body, b'{"workflowStatus": "started"}'
-        )
-        self.assertEqual(
-            responses.calls[2].request.headers["Authorization"], "Bearer token_id_fake"
-        )
-        self.assertEqual(responses.calls[2].request.method, "PATCH")
 
     @responses.activate
     def test_submit_for_signature_create_worklow_failed(self):
