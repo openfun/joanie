@@ -483,6 +483,7 @@ class OrderViewSet(
         order.validate()
         return Response(status=200)
 
+    @extend_schema(request=None)
     @action(detail=True, methods=["POST"])
     def submit_for_signature(self, request, pk=None):  # pylint: disable=no-self-use, unused-argument, invalid-name
         """
@@ -996,6 +997,7 @@ class GenericContractViewSet(
         "order__enrollment__course_run__course",
         "order__owner",
         "order__product",
+        "organization_signatory",
     )
 
 
