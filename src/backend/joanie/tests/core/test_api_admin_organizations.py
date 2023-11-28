@@ -206,12 +206,13 @@ class OrganizationAdminApiTest(TestCase):
         response = self.client.get(f"/api/v1.0/admin/organizations/{organization.id}/")
 
         self.assertEqual(response.status_code, 200)
-        content = response.json()
-        self.assertEqual(
-            content,
-            {
+
+        assert (
+            response.json()
+            == {
                 "id": str(organization.id),
                 "code": organization.code,
+                "country": organization.country,
                 "title": organization.title,
                 "representative": organization.representative,
                 "signature": {
@@ -250,7 +251,7 @@ class OrganizationAdminApiTest(TestCase):
                     }
                     for access in organization.accesses.all()
                 ],
-            },
+            }
         )
 
     def test_admin_api_organization_create(self):

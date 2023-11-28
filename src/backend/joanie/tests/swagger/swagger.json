@@ -2559,21 +2559,6 @@
                 "tags": [
                     "orders"
                 ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/OrderRequest"
-                            }
-                        },
-                        "multipart/form-data": {
-                            "schema": {
-                                "$ref": "#/components/schemas/OrderRequest"
-                            }
-                        }
-                    },
-                    "required": true
-                },
                 "security": [
                     {
                         "DelegatedJWTAuthentication": []
@@ -3777,15 +3762,36 @@
                 "type": "object",
                 "description": "Serializer for Contract model serializer",
                 "properties": {
-                    "id": {
+                    "created_on": {
                         "type": "string",
-                        "readOnly": true
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "date and time at which a record was created"
                     },
                     "definition": {
                         "$ref": "#/components/schemas/ContractDefinition"
                     },
+                    "id": {
+                        "type": "string",
+                        "readOnly": true
+                    },
                     "order": {
                         "$ref": "#/components/schemas/NestedOrder"
+                    },
+                    "organization_signatory": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/User"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "organization_signed_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true,
+                        "title": "Date and time the organization signed the contract"
                     },
                     "student_signed_on": {
                         "type": "string",
@@ -3793,12 +3799,6 @@
                         "readOnly": true,
                         "nullable": true,
                         "title": "Date and time of issuance"
-                    },
-                    "created_on": {
-                        "type": "string",
-                        "format": "date-time",
-                        "readOnly": true,
-                        "description": "date and time at which a record was created"
                     }
                 },
                 "required": [
@@ -3806,6 +3806,8 @@
                     "definition",
                     "id",
                     "order",
+                    "organization_signatory",
+                    "organization_signed_on",
                     "student_signed_on"
                 ]
             },
@@ -5748,6 +5750,19 @@
                     "is_staff",
                     "is_superuser",
                     "username"
+                ]
+            },
+            "UserRequest": {
+                "type": "object",
+                "description": "Serializer for User model.",
+                "properties": {
+                    "full_name": {
+                        "type": "string",
+                        "minLength": 1
+                    }
+                },
+                "required": [
+                    "full_name"
                 ]
             }
         },
