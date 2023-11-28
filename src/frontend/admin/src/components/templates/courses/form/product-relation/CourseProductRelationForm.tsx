@@ -6,20 +6,27 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { RHFProvider } from "@/components/presentational/hook-form/RHFProvider";
-import { CourseRelationToProduct } from "@/services/api/models/Relations";
+import {
+  CourseRelationToProduct,
+  DTOCourseRelationToProduct,
+} from "@/services/api/models/Relations";
 import { Organization } from "@/services/api/models/Organization";
 import { DndDefaultRow } from "@/components/presentational/dnd/DndDefaultRow";
 import { ProductSearch } from "@/components/templates/products/inputs/search/ProductSearch";
 import { OrganizationControlledSearch } from "@/components/templates/organizations/inputs/search/OrganizationControlledSearch";
 import { Product } from "@/services/api/models/Product";
 
-interface FormValues {
+export interface CourseProductRelationFormValues {
   product: Product | null;
   organizations: Organization[];
 }
 
 interface Props {
-  onSubmit?: (relation: CourseRelationToProduct) => void;
+  courseId: string;
+  onSubmit?: (
+    payload: DTOCourseRelationToProduct,
+    formValues: CourseProductRelationFormValues,
+  ) => void;
   relation?: CourseRelationToProduct;
 }
 
@@ -28,8 +35,12 @@ export const CourseProductRelationFormSchema = Yup.object().shape({
   organizations: Yup.array().required(),
 });
 
-export function CourseProductRelationForm({ relation, onSubmit }: Props) {
-  const methods = useForm<FormValues>({
+export function CourseProductRelationForm({
+  relation,
+  onSubmit,
+  courseId,
+}: Props) {
+  const methods = useForm<CourseProductRelationFormValues>({
     resolver: yupResolver(CourseProductRelationFormSchema),
     defaultValues: {
       product: relation?.product ?? null,
@@ -47,7 +58,12 @@ export function CourseProductRelationForm({ relation, onSubmit }: Props) {
       methods={methods}
       id="course-relation-to-products-form"
       onSubmit={methods.handleSubmit((values) => {
-        onSubmit?.(values as CourseRelationToProduct);
+        const payload: DTOCourseRelationToProduct = {
+          product_id: values.product!.id,
+          course_id: courseId,
+          organization_ids: values.organizations.map((org) => org.id),
+        };
+        onSubmit?.(payload, values);
       })}
     >
       <Grid container spacing={2}>
