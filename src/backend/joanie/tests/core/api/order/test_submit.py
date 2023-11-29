@@ -1,9 +1,13 @@
 """Tests for the Order submit API."""
+import random
 from http import HTTPStatus
+from unittest import mock
 
 from django.core.cache import cache
+from django.db.models import Count, Q
 
 from joanie.core import enums, factories
+from joanie.core.api.client import OrderViewSet
 from joanie.payment.factories import BillingAddressDictFactory
 from joanie.tests.base import BaseAPITestCase
 
@@ -174,3 +178,94 @@ class OrderSubmitApiTest(BaseAPITestCase):
             self.assertEqual(response.status_code, HTTPStatus.CREATED)
             # Now order should have an organization set
             self.assertIsNotNone(order.organization)
+
+    @mock.patch.object(
+        OrderViewSet, "_get_organization_with_least_active_orders", return_value=None
+    )
+    def test_api_order_submit_should_auto_assign_organization_if_needed(self, mocked_round_robin):
+        """
+        Order should have organization auto assigned only on submit if it has
+        not already one linked.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        # Auto assignment should have been triggered if order has no organization linked
+        order = factories.OrderFactory(owner=user, organization=None)
+        self.client.patch(
+            f"/api/v1.0/orders/{order.id}/submit/",
+            content_type="application/json",
+            data={"billing_address": BillingAddressDictFactory()},
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        mocked_round_robin.assert_called_once()
+
+        mocked_round_robin.reset_mock()
+
+        # Auto assignment should not have been
+        # triggered if order already has an organization linked
+        order = factories.OrderFactory(owner=user)
+        self.client.patch(
+            f"/api/v1.0/orders/{order.id}/submit/",
+            content_type="application/json",
+            data={"billing_address": BillingAddressDictFactory()},
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        mocked_round_robin.assert_not_called()
+
+    def test_api_order_submit_auto_assign_organization_with_least_orders(self):
+        """
+        Order auto-assignment logic should always return the organization with the least
+        active orders count for the given product course relation.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        organizations = factories.OrganizationFactory.create_batch(2)
+
+        relation = factories.CourseProductRelationFactory(organizations=organizations)
+
+        # Create randomly several orders linked to one of both organization
+        for _ in range(5):
+            factories.OrderFactory(
+                organization=random.choice(organizations),
+                product=relation.product,
+                course=relation.course,
+                state=random.choice(
+                    [enums.ORDER_STATE_DRAFT, enums.ORDER_STATE_CANCELED]
+                ),
+            )
+
+        organization_with_least_active_orders = (
+            relation.organizations.annotate(
+                order_count=Count(
+                    "order",
+                    filter=Q(order__course=relation.course)
+                    & Q(order__product=relation.product)
+                    & ~Q(order__state=enums.ORDER_STATE_CANCELED),
+                )
+            )
+            .order_by("order_count")
+            .first()
+        )
+
+        # Then create an order without organization
+        order = factories.OrderFactory(
+            owner=user,
+            product=relation.product,
+            course=relation.course,
+            organization=None,
+        )
+
+        # Submit it should auto assign organization with least active orders
+        self.client.patch(
+            f"/api/v1.0/orders/{order.id}/submit/",
+            content_type="application/json",
+            data={"billing_address": BillingAddressDictFactory()},
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        order.refresh_from_db()
+        self.assertEqual(order.organization, organization_with_least_active_orders)
