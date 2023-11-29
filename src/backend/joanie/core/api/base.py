@@ -54,3 +54,21 @@ class NestedGenericViewSet(viewsets.GenericViewSet):
             )
 
         return queryset.filter(**filter_kwargs)
+
+
+class SerializerPerActionMixin:
+    """
+    A mixin to allow to define serializer classes for each action.
+
+    This mixin is useful to avoid to define a serializer class for each action in the
+    `get_serializer_class` method.
+    """
+
+    serializer_classes: dict[str, type] = {}
+    default_serializer_class: type = None
+
+    def get_serializer_class(self):
+        """
+        Return the serializer class to use depending on the action.
+        """
+        return self.serializer_classes.get(self.action, self.default_serializer_class)

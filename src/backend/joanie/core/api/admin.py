@@ -11,7 +11,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from joanie.core import filters, models, serializers
-from joanie.core.api.base import NestedGenericViewSet
+from joanie.core.api.base import NestedGenericViewSet, SerializerPerActionMixin
 from joanie.core.authentication import SessionAuthenticationWithAuthenticateHeader
 
 
@@ -378,6 +378,7 @@ class CourseProductRelationViewSet(viewsets.ModelViewSet):
 
 
 class NestedCourseProductRelationOrderGroupViewSet(
+    SerializerPerActionMixin,
     viewsets.ModelViewSet,
     NestedGenericViewSet,
 ):
@@ -395,12 +396,6 @@ class NestedCourseProductRelationOrderGroupViewSet(
     ordering = "created_on"
     lookup_fields = ["course_product_relation", "pk"]
     lookup_url_kwargs = ["course_product_relation_id", "pk"]
-
-    def get_serializer_class(self):
-        """
-        Return the serializer class to use depending on the action.
-        """
-        return self.serializer_classes.get(self.action, self.default_serializer_class)
 
     def create(self, request, *args, **kwargs):
         """
