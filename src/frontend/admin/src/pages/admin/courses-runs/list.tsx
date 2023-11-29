@@ -10,7 +10,7 @@ import { commonTranslations } from "@/translations/common/commonTranslations";
 const messages = defineMessages({
   pageTitle: {
     id: "pages.admin.coursesRuns.list.pageTitle",
-    defaultMessage: "Course sessions",
+    defaultMessage: "Course runs",
     description: "Label for the courses runs list page title",
   },
 });

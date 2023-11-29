@@ -24,6 +24,7 @@ import {
 } from "@/components/presentational/hook-form/RHFSelectLanguage";
 import { genericUpdateFormError } from "@/utils/forms";
 import { TranslatableContent } from "@/components/presentational/translatable-content/TranslatableContent";
+import { RHFCheckbox } from "@/components/presentational/hook-form/RHFCheckbox";
 
 interface FormValues
   extends ToFormValues<
@@ -186,6 +187,26 @@ export function CourseRunForm({ courseRun, ...props }: Props) {
                 name="enrollment_end"
                 label={intl.formatMessage(
                   courseRunFormMessages.enrollmentEndLabel,
+                )}
+              />
+            </Grid>
+            <Grid xs={12} sm={6}>
+              <RHFCheckbox
+                name="is_gradable"
+                label={intl.formatMessage(
+                  courseRunFormMessages.isGradableLabel,
+                )}
+                helperText={intl.formatMessage(
+                  courseRunFormMessages.isGradableHelpText,
+                )}
+              />
+            </Grid>
+            <Grid xs={12} sm={6}>
+              <RHFCheckbox
+                name="is_listed"
+                label={intl.formatMessage(courseRunFormMessages.isListedLabel)}
+                helperText={intl.formatMessage(
+                  courseRunFormMessages.isListedHelpText,
                 )}
               />
             </Grid>

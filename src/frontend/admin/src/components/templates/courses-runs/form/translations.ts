@@ -41,4 +41,26 @@ export const courseRunFormMessages = defineMessages({
     defaultMessage: "Enrollment end",
     description: "Label for the enrollment start input",
   },
+  isGradableLabel: {
+    id: "components.templates.courseRuns.form.translations.isGradableLabel",
+    defaultMessage: "Is gradable?",
+    description: "Label for the is_gradable input",
+  },
+  isGradableHelpText: {
+    id: "components.templates.courseRuns.form.translations.isGradableHelpText",
+    defaultMessage:
+      "If checked, the course run can be taken into account for the grading.",
+    description: "Help text for the is_gradable input",
+  },
+  isListedLabel: {
+    id: "components.templates.courseRuns.form.translations.isListedLabel",
+    defaultMessage: "Is listed?",
+    description: "Label for the is_listed input",
+  },
+  isListedHelpText: {
+    id: "components.templates.courseRuns.form.translations.isListedHelpText",
+    defaultMessage:
+      "If checked the course run will be included in the list of course runs available for enrollment on the related course page.",
+    description: "Help text for the is_listed input",
+  },
 });
