@@ -311,7 +311,9 @@ class OrderViewSet(
         )
 
         try:
-            course_relation = product.course_relations.get(course=course)
+            course_relation = product.course_relations.get(
+                course_id=course.id if course else enrollment.course_run.course_id
+            )
         except models.CourseProductRelation.DoesNotExist:
             return None
 

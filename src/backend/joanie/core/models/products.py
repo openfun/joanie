@@ -482,7 +482,7 @@ class Order(BaseModel):
         an owner, and a product
         """
         return (
-            self.course is not None
+            (self.course is not None or self.enrollment is not None)
             and self.organization is not None
             and self.owner is not None
             and self.product is not None
