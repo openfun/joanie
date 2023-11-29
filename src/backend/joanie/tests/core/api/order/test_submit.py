@@ -1,4 +1,6 @@
 """Tests for the Order submit API."""
+from http import HTTPStatus
+
 from django.core.cache import cache
 
 from joanie.core import enums, factories
@@ -10,6 +12,32 @@ class OrderSubmitApiTest(BaseAPITestCase):
     """Test the API of the Order submit endpoint."""
 
     maxDiff = None
+
+    def _get_fee_order(self, **kwargs):
+        """Return a fee order linked to a course."""
+        return factories.OrderFactory(**kwargs)
+
+    def _get_fee_enrollment_order(self, **kwargs):
+        """Return a fee order linked to an enrollment."""
+        relation = factories.CourseProductRelationFactory(
+            product__type=enums.PRODUCT_TYPE_CERTIFICATE
+        )
+        enrollment = factories.EnrollmentFactory(
+            user=kwargs["owner"], course_run__course=relation.course
+        )
+
+        return factories.OrderFactory(
+            **kwargs,
+            course=None,
+            enrollment=enrollment,
+            product=relation.product,
+        )
+
+    def _get_free_order(self, **kwargs):
+        """Return a free order."""
+        product = factories.ProductFactory(price=0.00)
+
+        return factories.OrderFactory(**kwargs, product=product)
 
     def setUp(self):
         """Clear cache after each tests"""
@@ -82,36 +110,67 @@ class OrderSubmitApiTest(BaseAPITestCase):
         )
         self.assertEqual(order.state, enums.ORDER_STATE_DRAFT)
 
-    def test_api_order_submit_authenticated_sucess(self):
+    def test_api_order_submit_authenticated_success(self):
         """
         User should be able to submit a fee order with a billing address
         or a free order without a billing address
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        fee_order = factories.OrderFactory(owner=user)
-        product = factories.ProductFactory(price=0.00)
-        free_order = factories.OrderFactory(owner=user, product=product)
 
-        # Submitting the fee order
-        response = self.client.patch(
-            f"/api/v1.0/orders/{fee_order.id}/submit/",
-            content_type="application/json",
-            data={"billing_address": BillingAddressDictFactory()},
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
+        orders = [
+            self._get_free_order(owner=user),
+            self._get_fee_order(owner=user),
+            self._get_fee_enrollment_order(owner=user),
+        ]
 
-        fee_order.refresh_from_db()
-        self.assertEqual(response.status_code, 201)
-        self.assertEqual(fee_order.state, enums.ORDER_STATE_SUBMITTED)
+        for order in orders:
+            # Submitting the fee order
+            response = self.client.patch(
+                f"/api/v1.0/orders/{order.id}/submit/",
+                content_type="application/json",
+                data={"billing_address": BillingAddressDictFactory()},
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
 
-        # Submitting the free order
-        response = self.client.patch(
-            f"/api/v1.0/orders/{free_order.id}/submit/",
-            content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
+            order.refresh_from_db()
+            self.assertEqual(response.status_code, HTTPStatus.CREATED)
+            # Order should have been automatically validated if it is free
+            # Otherwise it should have been submitted
+            self.assertEqual(
+                order.state,
+                enums.ORDER_STATE_SUBMITTED
+                if order.total > 0
+                else enums.ORDER_STATE_VALIDATED,
+            )
 
-        free_order.refresh_from_db()
-        self.assertEqual(response.status_code, 201)
-        self.assertEqual(free_order.state, enums.ORDER_STATE_VALIDATED)
+    def test_api_order_submit_should_auto_assign_organization(self):
+        """
+        On submit request, if the related order has no organization linked yet, the one
+        implied in the course product organization with the least order should be
+        assigned.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        orders = [
+            self._get_free_order(owner=user, organization=None),
+            self._get_fee_order(owner=user, organization=None),
+            self._get_fee_enrollment_order(owner=user, organization=None),
+        ]
+
+        for order in orders:
+            # Order should have no organization set yet
+            self.assertIsNone(order.organization)
+
+            response = self.client.patch(
+                f"/api/v1.0/orders/{order.id}/submit/",
+                content_type="application/json",
+                data={"billing_address": BillingAddressDictFactory()},
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+            order.refresh_from_db()
+            self.assertEqual(response.status_code, HTTPStatus.CREATED)
+            # Now order should have an organization set
+            self.assertIsNotNone(order.organization)
