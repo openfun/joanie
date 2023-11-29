@@ -410,3 +410,35 @@ class NestedCourseProductRelationOrderGroupViewSet(
         return Response(
             serializer.data, status=status.HTTP_201_CREATED, headers=headers
         )
+
+
+class OrderViewSet(
+    SerializerPerActionMixin,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet,
+):
+    """
+    Admin Order ViewSet
+    """
+
+    authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
+    permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
+    serializer_classes = {
+        "list": serializers.AdminOrderLightSerializer,
+    }
+    default_serializer_class = serializers.AdminOrderSerializer
+    queryset = models.Order.objects.all().select_related(
+        "product",
+        "owner",
+        "course",
+        "organization",
+        "enrollment",
+        "enrollment__course_run",
+        "contract",
+        "contract__definition",
+        "certificate",
+        "certificate__certificate_definition",
+        "order_group",
+    )
+    ordering = "created_on"

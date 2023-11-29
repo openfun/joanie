@@ -8,6 +8,7 @@ from rest_framework.generics import get_object_or_404
 from joanie.core import models
 from joanie.core.enums import ALL_LANGUAGES
 from joanie.core.serializers.fields import ImageDetailField, ThumbnailDetailField
+from joanie.payment import models as payment_models
 
 
 class AdminContractDefinitionSerializer(serializers.ModelSerializer):
@@ -795,5 +796,161 @@ class AdminProductDetailSerializer(serializers.ModelSerializer):
         ).data
 
     def get_price_currency(self, *args, **kwargs) -> str:
+        """Return the code of currency used by the instance"""
+        return settings.DEFAULT_CURRENCY
+
+
+class AdminOrderEnrollmentSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Enrollment Order model
+    """
+
+    course_run = AdminCourseRunLightSerializer(read_only=True)
+
+    class Meta:
+        model = models.Enrollment
+        fields = ["id", "course_run"]
+        read_only_fields = fields
+
+
+class AdminContractSerializer(serializers.ModelSerializer):
+    """Read only serializer for Contract model."""
+
+    definition_title = serializers.SlugRelatedField(
+        read_only=True, slug_field="title", source="definition"
+    )
+
+    class Meta:
+        model = models.Contract
+        fields = [
+            "id",
+            "definition_title",
+            "signed_on",
+            "submitted_for_signature_on",
+        ]
+        read_only_fields = fields
+
+
+class AdminCertificateSerializer(serializers.ModelSerializer):
+    """Read only serializer for Certificate model."""
+
+    definition_title = serializers.SlugRelatedField(
+        read_only=True, slug_field="title", source="certificate_definition"
+    )
+
+    class Meta:
+        model = models.Certificate
+        fields = [
+            "id",
+            "definition_title",
+            "issued_on",
+        ]
+        read_only_fields = fields
+
+
+class AdminInvoiceSerializer(serializers.ModelSerializer):
+    """Read only serializer for Invoice model."""
+
+    class Meta:
+        model = payment_models.Invoice
+        fields = [
+            "balance",
+            "created_on",
+            "state",
+            "recipient_name",
+            "recipient_address",
+            "reference",
+            "type",
+            "updated_on",
+        ]
+        read_only_fields = fields
+
+
+class AdminOrderSerializer(serializers.ModelSerializer):
+    """Read only Serializer for Order model."""
+
+    product_title = serializers.SlugRelatedField(
+        read_only=True, slug_field="title", source="product"
+    )
+    course = AdminCourseLightSerializer(read_only=True)
+    enrollment = AdminOrderEnrollmentSerializer(read_only=True)
+    owner = AdminUserSerializer(read_only=True)
+    total = serializers.DecimalField(
+        coerce_to_string=False, decimal_places=2, max_digits=9, min_value=0
+    )
+    total_currency = serializers.SerializerMethodField(read_only=True)
+    contract = AdminContractSerializer()
+    certificate = AdminCertificateSerializer()
+    main_invoice = AdminInvoiceSerializer()
+    organization = AdminOrganizationLightSerializer(read_only=True)
+    order_group = AdminOrderGroupSerializer(read_only=True)
+
+    class Meta:
+        model = models.Order
+        fields = (
+            "id",
+            "created_on",
+            "state",
+            "owner",
+            "product_title",
+            "course",
+            "enrollment",
+            "organization",
+            "order_group",
+            "total",
+            "total_currency",
+            "contract",
+            "certificate",
+            "main_invoice",
+        )
+        read_only_fields = fields
+
+    def get_total_currency(self, *args, **kwargs) -> str:
+        """Return the code of currency used by the instance"""
+        return settings.DEFAULT_CURRENCY
+
+
+class AdminOrderLightSerializer(serializers.ModelSerializer):
+    """
+    Read only light serializer for Order model.
+    """
+
+    product_title = serializers.SlugRelatedField(
+        read_only=True, slug_field="title", source="product"
+    )
+    course_code = serializers.SlugRelatedField(
+        read_only=True, slug_field="code", source="course"
+    )
+    enrollment_id = serializers.SlugRelatedField(
+        read_only=True, slug_field="id", source="enrollment"
+    )
+    organization_title = serializers.SlugRelatedField(
+        read_only=True, slug_field="title", source="organization"
+    )
+    owner_username = serializers.SlugRelatedField(
+        read_only=True, slug_field="username", source="owner"
+    )
+    total = serializers.DecimalField(
+        coerce_to_string=False, decimal_places=2, max_digits=9, min_value=0
+    )
+    total_currency = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = models.Order
+        fields = (
+            "course_code",
+            "created_on",
+            "enrollment_id",
+            "id",
+            "organization_title",
+            "owner_username",
+            "product_title",
+            "state",
+            "total",
+            "total_currency",
+        )
+        read_only_fields = fields
+
+    def get_total_currency(self, *args, **kwargs) -> str:
         """Return the code of currency used by the instance"""
         return settings.DEFAULT_CURRENCY

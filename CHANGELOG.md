@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Add read-only api admin endpoint to list/retrieve orders
 - Add a management command to synchronize course run or product 
   on a remote catalog
 - Install and configure celery with redis

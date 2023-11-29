@@ -2153,6 +2153,81 @@
                 }
             }
         },
+        "/api/v1.0/admin/orders/": {
+            "get": {
+                "operationId": "orders_list",
+                "description": "Admin Order ViewSet",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "A page number within the paginated result set.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedAdminOrderLightList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/admin/orders/{id}/": {
+            "get": {
+                "operationId": "orders_retrieve",
+                "description": "Admin Order ViewSet",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminOrder"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1.0/admin/organizations/": {
             "get": {
                 "operationId": "organizations_list",
@@ -3200,6 +3275,33 @@
     },
     "components": {
         "schemas": {
+            "AdminCertificate": {
+                "type": "object",
+                "description": "Read only serializer for Certificate model.",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "description": "primary key for the record as UUID"
+                    },
+                    "definition_title": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "issued_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "title": "Date of issuance"
+                    }
+                },
+                "required": [
+                    "definition_title",
+                    "id",
+                    "issued_on"
+                ]
+            },
             "AdminCertificateDefinition": {
                 "type": "object",
                 "description": "Serializer for CertificationDefinition model.",
@@ -3278,6 +3380,42 @@
                 "required": [
                     "name",
                     "title"
+                ]
+            },
+            "AdminContract": {
+                "type": "object",
+                "description": "Read only serializer for Contract model.",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "description": "primary key for the record as UUID"
+                    },
+                    "definition_title": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "signed_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true,
+                        "title": "Date and time of issuance"
+                    },
+                    "submitted_for_signature_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true,
+                        "title": "Date and time we send the contract to signature provider"
+                    }
+                },
+                "required": [
+                    "definition_title",
+                    "id",
+                    "signed_on",
+                    "submitted_for_signature_on"
                 ]
             },
             "AdminContractDefinition": {
@@ -3876,6 +4014,192 @@
                     "title"
                 ]
             },
+            "AdminInvoice": {
+                "type": "object",
+                "description": "Read only serializer for Invoice model.",
+                "properties": {
+                    "balance": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "created_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "date and time at which a record was created"
+                    },
+                    "state": {
+                        "type": "string",
+                        "description": "Process the state of the invoice",
+                        "readOnly": true
+                    },
+                    "recipient_name": {
+                        "type": "string",
+                        "readOnly": true,
+                        "title": "Invoice recipient"
+                    },
+                    "recipient_address": {
+                        "type": "string",
+                        "readOnly": true,
+                        "title": "Invoice address"
+                    },
+                    "reference": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "type": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "updated_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "date and time at which a record was last updated"
+                    }
+                },
+                "required": [
+                    "balance",
+                    "created_on",
+                    "recipient_address",
+                    "recipient_name",
+                    "reference",
+                    "state",
+                    "type",
+                    "updated_on"
+                ]
+            },
+            "AdminOrder": {
+                "type": "object",
+                "description": "Read only Serializer for Order model.",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "description": "primary key for the record as UUID"
+                    },
+                    "created_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "date and time at which a record was created"
+                    },
+                    "state": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/StateEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "owner": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AdminUser"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "product_title": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "course": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AdminCourseLight"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "enrollment": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AdminOrderEnrollment"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "organization": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AdminOrganizationLight"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "order_group": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AdminOrderGroup"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "total": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000000,
+                        "minimum": 0,
+                        "exclusiveMaximum": true
+                    },
+                    "total_currency": {
+                        "type": "string",
+                        "description": "Return the code of currency used by the instance",
+                        "readOnly": true
+                    },
+                    "contract": {
+                        "$ref": "#/components/schemas/AdminContract"
+                    },
+                    "certificate": {
+                        "$ref": "#/components/schemas/AdminCertificate"
+                    },
+                    "main_invoice": {
+                        "$ref": "#/components/schemas/AdminInvoice"
+                    }
+                },
+                "required": [
+                    "certificate",
+                    "contract",
+                    "course",
+                    "created_on",
+                    "enrollment",
+                    "id",
+                    "main_invoice",
+                    "order_group",
+                    "organization",
+                    "owner",
+                    "product_title",
+                    "state",
+                    "total",
+                    "total_currency"
+                ]
+            },
+            "AdminOrderEnrollment": {
+                "type": "object",
+                "description": "Serializer for Enrollment Order model",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "description": "primary key for the record as UUID"
+                    },
+                    "course_run": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AdminCourseRunLight"
+                            }
+                        ],
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "course_run",
+                    "id"
+                ]
+            },
             "AdminOrderGroup": {
                 "type": "object",
                 "description": "Admin Serializer for OrderGroup model",
@@ -3993,6 +4317,79 @@
                         "type": "boolean"
                     }
                 }
+            },
+            "AdminOrderLight": {
+                "type": "object",
+                "description": "Read only light serializer for Order model.",
+                "properties": {
+                    "course_code": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "created_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "date and time at which a record was created"
+                    },
+                    "enrollment_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "readOnly": true
+                    },
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "description": "primary key for the record as UUID"
+                    },
+                    "organization_title": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "owner_username": {
+                        "type": "string",
+                        "description": "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.",
+                        "readOnly": true
+                    },
+                    "product_title": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "state": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/StateEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "total": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000000,
+                        "minimum": 0,
+                        "exclusiveMaximum": true
+                    },
+                    "total_currency": {
+                        "type": "string",
+                        "description": "Return the code of currency used by the instance",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "course_code",
+                    "created_on",
+                    "enrollment_id",
+                    "id",
+                    "organization_title",
+                    "owner_username",
+                    "product_title",
+                    "state",
+                    "total",
+                    "total_currency"
+                ]
             },
             "AdminOrganization": {
                 "type": "object",
@@ -4786,6 +5183,33 @@
                     }
                 }
             },
+            "PaginatedAdminOrderLightList": {
+                "type": "object",
+                "properties": {
+                    "count": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "next": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=4"
+                    },
+                    "previous": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=2"
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AdminOrderLight"
+                        }
+                    }
+                }
+            },
             "PaginatedAdminOrganizationLightList": {
                 "type": "object",
                 "properties": {
@@ -5135,6 +5559,17 @@
                         }
                     }
                 }
+            },
+            "StateEnum": {
+                "enum": [
+                    "draft",
+                    "submitted",
+                    "pending",
+                    "canceled",
+                    "validated"
+                ],
+                "type": "string",
+                "description": "* `draft` - Draft\n* `submitted` - Submitted\n* `pending` - Pending\n* `canceled` - Canceled\n* `validated` - Validated"
             },
             "TemplateEnum": {
                 "enum": [
