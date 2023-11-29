@@ -49,6 +49,7 @@ admin_router.register(
     basename="admin_contract-definitions",
 )
 admin_router.register("users", api_admin.UserViewSet, basename="admin_user")
+admin_router.register("orders", api_admin.OrderViewSet, basename="admin_orders")
 
 # Admin API routes nested under a course
 admin_course_related_router = DefaultRouter()
