@@ -393,7 +393,7 @@ class ContractDefinitionSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
-class ContractSerializer(serializers.ModelSerializer):
+class ContractSerializer(AbilitiesModelSerializer):
     """Serializer for Contract model serializer"""
 
     id = serializers.CharField(read_only=True, required=False)
@@ -662,7 +662,7 @@ class OrderSerializer(serializers.ModelSerializer):
     certificate_id = serializers.SlugRelatedField(
         read_only=True, slug_field="id", source="certificate"
     )
-    contract = ContractSerializer(read_only=True)
+    contract = ContractSerializer(read_only=True, exclude_abilities=True)
 
     class Meta:
         model = models.Order
