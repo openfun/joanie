@@ -423,6 +423,8 @@ class LexPersonaBackend(BaseSignatureBackend):
         reference_id = trusted_event_signature_provider.get("workflowId")
         event_type = trusted_event_signature_provider.get("eventType")
         if event_type == "workflowFinished":
+            self.confirm_organization_signature(reference_id)
+        elif event_type == "recipientFinished":
             self.confirm_student_signature(reference_id)
         elif event_type == "recipientRefused":
             self.reset_contract(reference_id)

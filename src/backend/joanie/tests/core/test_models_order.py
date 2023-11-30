@@ -1024,7 +1024,7 @@ class OrderModelsTestCase(TestCase):
         order.contract.refresh_from_db()
         self.assertIsNotNone(order.contract)
         self.assertIsNotNone(order.contract.student_signed_on)
-        self.assertIsNone(order.contract.submitted_for_signature_on)
+        self.assertIsNotNone(order.contract.submitted_for_signature_on)
         self.assertIsNotNone(order.contract.context)
         self.assertIsNotNone(order.contract.definition)
         self.assertIsNotNone(order.contract.signature_backend_reference)
@@ -1113,7 +1113,7 @@ class OrderModelsTestCase(TestCase):
         self.assertIn("https://dummysignaturebackend.fr/?requestToken=", invitation_url)
         self.assertIn("wfl_fake_dummy_", contract.signature_backend_reference)
         self.assertIn("fake_dummy_file_hash", contract.definition_checksum)
-        self.assertIsNone(contract.submitted_for_signature_on)
+        self.assertIsNotNone(contract.submitted_for_signature_on)
         self.assertIsNotNone(contract.student_signed_on)
 
     @override_settings(
@@ -1158,7 +1158,7 @@ class OrderModelsTestCase(TestCase):
         self.assertIn("https://dummysignaturebackend.fr/?requestToken=", invitation_url)
         self.assertIn("fake_dummy_file_hash", contract.definition_checksum)
         self.assertNotEqual("wfl_fake_dummy_id_1", contract.signature_backend_reference)
-        self.assertIsNone(contract.submitted_for_signature_on)
+        self.assertIsNotNone(contract.submitted_for_signature_on)
         self.assertIsNotNone(contract.student_signed_on)
 
     def test_models_order_submit_for_signature_but_contract_is_already_signed_should_fail(
