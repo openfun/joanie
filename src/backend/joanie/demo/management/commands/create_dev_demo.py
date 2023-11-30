@@ -442,6 +442,7 @@ class Command(BaseCommand):
             order=order,
             definition=order.product.contract_definition,
             student_signed_on=django_timezone.now(),
+            organization_signed_on=django_timezone.now(),
         )
 
         self.stdout.write(

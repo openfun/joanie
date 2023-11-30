@@ -248,6 +248,7 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
             signature_backend_reference="wfl_fake_dummy_id",
             definition_checksum="1234",
             student_signed_on=django_timezone.now(),
+            organization_signed_on=django_timezone.now(),
             context="a small context",
         )
         InvoiceFactory(

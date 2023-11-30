@@ -98,6 +98,7 @@ class UtilsContractTestCase(TestCase):
                 definition_checksum="1234",
                 context={"foo": "bar"},
                 student_signed_on=timezone.now(),
+                organization_signed_on=timezone.now(),
             )
 
         signature_backend_references_generator = (
@@ -188,6 +189,7 @@ class UtilsContractTestCase(TestCase):
                 definition_checksum="1234",
                 context={"foo": "bar"},
                 student_signed_on=timezone.now(),
+                organization_signed_on=timezone.now(),
             )
 
         signature_backend_references_generator = (
@@ -293,6 +295,7 @@ class UtilsContractTestCase(TestCase):
                 definition_checksum="1234",
                 context={"foo": "bar"},
                 student_signed_on=timezone.now(),
+                organization_signed_on=timezone.now(),
             )
 
         signature_backend_references_generator = (
@@ -350,6 +353,7 @@ class UtilsContractTestCase(TestCase):
                 definition_checksum="1234",
                 context={"foo": "bar"},
                 student_signed_on=timezone.now(),
+                organization_signed_on=timezone.now(),
             )
         extra_filters = {"order__organization__accesses__user_id": requesting_user.id}
 
@@ -409,6 +413,7 @@ class UtilsContractTestCase(TestCase):
                 definition_checksum="1234",
                 context={"foo": "bar"},
                 student_signed_on=timezone.now(),
+                organization_signed_on=timezone.now(),
             )
         extra_filters = {"order__organization__accesses__user_id": requesting_user.id}
 
@@ -559,6 +564,7 @@ class UtilsContractTestCase(TestCase):
                 definition_checksum="1234",
                 context=context,
                 student_signed_on=timezone.now(),
+                organization_signed_on=timezone.now(),
             )
             pdf_bytes_file = issuers.generate_document(
                 order.product.contract_definition.name, context=context

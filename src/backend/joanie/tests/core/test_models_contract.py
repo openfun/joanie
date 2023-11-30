@@ -19,11 +19,15 @@ class ContractModelTestCase(TestCase):
     Test case for the Contract Model
     """
 
-    def test_models_contract_reference_datetime_not_both_set_constraint(
+    def _check_signature_dates_constraint(
         self,
+        submitted_for_signature_on: bool = False,
+        student_signed_on: bool = False,
+        organization_signed_on: bool = False,
+        should_raise: bool = False,
     ):
         """
-        'student_signed_on' and 'submitted_for_signature_on' cannot be both set.
+        Check the signature dates constraints.
         """
         user = factories.UserFactory()
         factories.AddressFactory.create(owner=user)
@@ -36,29 +40,105 @@ class ContractModelTestCase(TestCase):
             "context": {"foo": "bar"},
             "definition_checksum": "1234",
         }
-        message = "{'__all__': ['Make sure to not have both datetime fields set simultaneously.']}"
-        with self.assertRaises(ValidationError) as context:
+        signature_date = datetime(2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC"))
+        submitted_for_signature_on = (
+            signature_date if submitted_for_signature_on else None
+        )
+        student_signed_on = signature_date if student_signed_on else None
+        organization_signed_on = signature_date if organization_signed_on else None
+
+        if not should_raise:
             factories.ContractFactory(
                 **data,
-                student_signed_on=datetime(2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")),
-                submitted_for_signature_on=datetime(
-                    2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")
-                ),
+                submitted_for_signature_on=submitted_for_signature_on,
+                student_signed_on=student_signed_on,
+                organization_signed_on=organization_signed_on,
             )
-        self.assertEqual(str(context.exception), message)
+            return
 
         with self.assertRaises(ValidationError) as context:
             factories.ContractFactory(
                 **data,
-                student_signed_on=datetime(2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")),
-                submitted_for_signature_on=datetime(
-                    2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")
-                ),
-                signature_backend_reference="wfl_dummy",
+                submitted_for_signature_on=submitted_for_signature_on,
+                student_signed_on=student_signed_on,
+                organization_signed_on=organization_signed_on,
             )
-        self.assertEqual(str(context.exception), message)
+        self.assertEqual(
+            str(context.exception), "{'__all__': ['Signature dates are incoherent.']}"
+        )
 
-    def test_models_contract_reference_datetime_not_both_set_none(
+    def _check_signature_dates_constraint_raises(
+        self,
+        submitted_for_signature_on: bool = False,
+        student_signed_on: bool = False,
+        organization_signed_on: bool = False,
+    ):
+        self._check_signature_dates_constraint(
+            submitted_for_signature_on,
+            student_signed_on,
+            organization_signed_on,
+            should_raise=True,
+        )
+
+    def _check_signature_dates_constraint_passes(
+        self,
+        submitted_for_signature_on: bool = False,
+        student_signed_on: bool = False,
+        organization_signed_on: bool = False,
+    ):
+        self._check_signature_dates_constraint(
+            submitted_for_signature_on,
+            student_signed_on,
+            organization_signed_on,
+            should_raise=False,
+        )
+
+    def test_models_contract_incoherent_signature_dates_constraint_fails(
+        self,
+    ):
+        """
+        Constraint fails if:
+
+        | submitted_for_signature_on | student_signed_on | organization_signed_on |
+        |----------------------------|-------------------|------------------------|
+        | None                       | Defined           | None                   |
+        | None                       | None              | Defined                |
+        | Defined                    | None              | Defined                |
+        | Defined                    | Defined           | Defined                |
+        """
+        expected_fails = [
+            (False, True, False),
+            (False, False, True),
+            (True, False, True),
+            (True, True, True),
+        ]
+
+        for expected_fail in expected_fails:
+            self._check_signature_dates_constraint_raises(*expected_fail)
+
+    def test_models_contract_incoherent_signature_dates_constraint_passes(
+        self,
+    ):
+        """
+        Constraint pass if:
+
+        | submitted_for_signature_on | student_signed_on | organization_signed_on |
+        |----------------------------|-------------------|------------------------|
+        | None                       | None              | None                   |
+        | Defined                    | None              | None                   |
+        | Defined                    | Defined           | None                   |
+        | None                       | Defined           | Defined                |
+        """
+        expected_passes = [
+            (False, False, False),
+            (True, False, False),
+            (True, True, False),
+            (False, True, True),
+        ]
+        for expected_pass in expected_passes:
+            self._check_signature_dates_constraint_passes(*expected_pass)
+
+    def test_models_contract_incoherent_signature_dates_none(
         self,
     ):
         """
@@ -77,7 +157,7 @@ class ContractModelTestCase(TestCase):
         self.assertIsNone(contract.student_signed_on)
         self.assertIsNone(contract.submitted_for_signature_on)
 
-    def test_models_contract_reference_datetime_not_both_set_student_signed_on(
+    def test_models_contract_incoherent_signature_dates_student_signed_on(
         self,
     ):
         """
@@ -103,7 +183,7 @@ class ContractModelTestCase(TestCase):
         self.assertIsNone(contract.student_signed_on)
         self.assertIsNotNone(contract.submitted_for_signature_on)
 
-    def test_models_contract_reference_datetime_not_both_set_submitted_for_signature_on(
+    def test_models_contract_incoherent_signature_dates_submitted_for_signature_on(
         self,
     ):
         """
@@ -122,6 +202,7 @@ class ContractModelTestCase(TestCase):
             context={"foo": "bar"},
             definition_checksum="1234",
             student_signed_on=datetime(2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")),
+            organization_signed_on=datetime(2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")),
             submitted_for_signature_on=None,
         )
         contract = models.Contract.objects.get()
@@ -177,8 +258,9 @@ class ContractModelTestCase(TestCase):
             context={"foo": "bar"},
             definition_checksum="1234",
             signature_backend_reference="wfl_dummy",
-            student_signed_on=datetime(2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")),
             submitted_for_signature_on=None,
+            student_signed_on=datetime(2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")),
+            organization_signed_on=datetime(2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")),
         )
         contract = models.Contract.objects.get()
         self.assertIsNotNone(contract.signature_backend_reference)
@@ -301,6 +383,9 @@ class ContractModelTestCase(TestCase):
                 context=None,
                 definition_checksum=None,
                 student_signed_on=datetime(2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")),
+                organization_signed_on=datetime(
+                    2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")
+                ),
             )
 
         self.assertEqual(str(context.exception), message)
@@ -323,6 +408,9 @@ class ContractModelTestCase(TestCase):
                 context=None,
                 definition_checksum="1234",
                 student_signed_on=datetime(2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")),
+                organization_signed_on=datetime(
+                    2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")
+                ),
             )
 
         self.assertEqual(
@@ -356,6 +444,9 @@ class ContractModelTestCase(TestCase):
                 context=None,
                 definition_checksum=None,
                 student_signed_on=datetime(2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")),
+                organization_signed_on=datetime(
+                    2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")
+                ),
             )
 
         self.assertEqual(str(context.exception), message_student_signed_on)
@@ -380,6 +471,9 @@ class ContractModelTestCase(TestCase):
                 context={},
                 definition_checksum=None,
                 student_signed_on=datetime(2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")),
+                organization_signed_on=datetime(
+                    2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")
+                ),
             )
 
         self.assertEqual(

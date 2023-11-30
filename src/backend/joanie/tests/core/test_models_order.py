@@ -1184,6 +1184,7 @@ class OrderModelsTestCase(TestCase):
             context="context",
             submitted_for_signature_on=None,
             student_signed_on=now,
+            organization_signed_on=now,
         )
 
         with self.assertRaises(PermissionDenied) as context:
