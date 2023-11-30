@@ -5,6 +5,7 @@ Client API endpoints
 
 import io
 import uuid
+from http import HTTPStatus
 
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
@@ -543,6 +544,24 @@ class AddressViewSet(
     def perform_create(self, serializer):
         """Create a new address for user authenticated"""
         serializer.save(owner=self.request.user, is_reusable=True)
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Delete an address for user authenticated. If the address is linked to
+        invoices it is not deleted but marked as not reusable.
+        """
+        instance = self.get_object()
+
+        if instance.invoices.count() > 0:
+            instance.is_main = False
+            instance.is_reusable = False
+            instance.save()
+
+            serializer = self.get_serializer(instance)
+            return Response(serializer.data)
+
+        self.perform_destroy(instance)
+        return Response(status=HTTPStatus.NO_CONTENT)
 
 
 class CertificateViewSet(
