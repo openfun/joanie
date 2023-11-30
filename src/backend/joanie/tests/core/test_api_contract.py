@@ -91,7 +91,7 @@ class ContractApiTest(BaseAPITestCase):
         # - Create random contracts that should not be returned
         factories.ContractFactory.create_batch(5)
 
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(8):
             response = self.client.get(
                 "/api/v1.0/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -106,6 +106,9 @@ class ContractApiTest(BaseAPITestCase):
             "results": [
                 {
                     "id": str(contract.id),
+                    "abilities": {
+                        "sign": contract.get_abilities(user)["sign"],
+                    },
                     "created_on": contract.created_on.isoformat().replace(
                         "+00:00", "Z"
                     ),
@@ -173,7 +176,7 @@ class ContractApiTest(BaseAPITestCase):
         factories.ContractFactory.create_batch(5)
 
         # - List without filter should return 6 contracts
-        with self.assertNumQueries(266):
+        with self.assertNumQueries(273):
             response = self.client.get(
                 "/api/v1.0/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -184,7 +187,7 @@ class ContractApiTest(BaseAPITestCase):
         self.assertEqual(content["count"], 6)
 
         # - Filter by is_signed=false should return 5 contracts
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(8):
             response = self.client.get(
                 "/api/v1.0/contracts/?is_signed=false",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -200,7 +203,7 @@ class ContractApiTest(BaseAPITestCase):
         )
 
         # - Filter by is_signed=true should return 1 contract
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(4):
             response = self.client.get(
                 "/api/v1.0/contracts/?is_signed=true",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -271,7 +274,7 @@ class ContractApiTest(BaseAPITestCase):
             order__owner=user, organization_signatory=organization_signatory
         )
 
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             response = self.client.get(
                 f"/api/v1.0/contracts/{str(contract.id)}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -281,6 +284,9 @@ class ContractApiTest(BaseAPITestCase):
 
         assert response.json() == {
             "id": str(contract.id),
+            "abilities": {
+                "sign": contract.get_abilities(user)["sign"],
+            },
             "created_on": contract.created_on.isoformat().replace("+00:00", "Z"),
             "student_signed_on": contract.student_signed_on.isoformat().replace(
                 "+00:00", "Z"

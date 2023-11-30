@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from io import BytesIO
 from zoneinfo import ZoneInfo
 
+from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.test.utils import override_settings
@@ -10,8 +11,10 @@ from django.utils import timezone as django_timezone
 
 from pdfminer.high_level import extract_text as pdf_extract_text
 
-from joanie.core import factories, models
+from joanie.core import enums, factories, models
 from joanie.payment.factories import InvoiceFactory
+
+# pylint: disable=too-many-public-methods
 
 
 class ContractModelTestCase(TestCase):
@@ -636,3 +639,80 @@ class ContractModelTestCase(TestCase):
         response = contract.is_eligible_for_signing()
 
         self.assertEqual(response, False)
+
+    def test_models_contract_get_abilities_anonymous(self):
+        """Check abilities returned for an anonymous user."""
+        contract = factories.ContractFactory()
+        user = AnonymousUser()
+
+        assert contract.get_abilities(user) == {"sign": False}
+
+    def test_models_contract_get_abilities_authenticated(self):
+        """Check abilities returned for an authenticated user."""
+        contract = factories.ContractFactory()
+        user = factories.UserFactory()
+
+        assert contract.get_abilities(user) == {"sign": False}
+
+    def test_models_contract_get_abilities_owner(self):
+        """Check abilities returned for the owner of an organization."""
+        user = factories.UserFactory()
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(
+            user=user,
+            organization=organization,
+            role=enums.OWNER,
+        )
+        relation = factories.CourseProductRelationFactory(organizations=[organization])
+        contract = factories.ContractFactory(
+            order__product=relation.product,
+            order__course=relation.course,
+            order__organization=organization,
+        )
+
+        assert contract.get_abilities(user) == {"sign": True}
+
+    def test_models_contract_get_abilities_administrator(self):
+        """Check abilities returned for the administrator of a organization."""
+        user = factories.UserFactory()
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(
+            user=user,
+            organization=organization,
+            role=enums.ADMIN,
+        )
+        relation = factories.CourseProductRelationFactory(organizations=[organization])
+        contract = factories.ContractFactory(
+            order__product=relation.product,
+            order__course=relation.course,
+            order__organization=organization,
+        )
+
+        assert contract.get_abilities(user) == {"sign": False}
+
+    def test_models_contract_get_abilities_member_user(self):
+        """Check abilities returned for the member of a organization."""
+        user = factories.UserFactory()
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(
+            user=user,
+            organization=organization,
+            role=enums.MEMBER,
+        )
+        relation = factories.CourseProductRelationFactory(organizations=[organization])
+        contract = factories.ContractFactory(
+            order__product=relation.product,
+            order__course=relation.course,
+            order__organization=organization,
+        )
+
+        assert contract.get_abilities(user) == {"sign": False}
+
+    def test_models_contract_get_abilities_preset_role(self):
+        """No query is done if the role is preset e.g. with query annotation."""
+        user = factories.UserFactory()
+        contract = factories.ContractFactory()
+        contract.user_role = "owner"
+
+        with self.assertNumQueries(0):
+            assert contract.get_abilities(user) == {"sign": True}

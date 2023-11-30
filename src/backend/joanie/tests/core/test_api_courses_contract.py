@@ -147,7 +147,7 @@ class CourseContractApiTest(BaseAPITestCase):
         factories.ContractFactory.create_batch(5)
         factories.ContractFactory(order__owner=user)
 
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(13):
             response = self.client.get(
                 f"/api/v1.0/courses/{str(courses[0].id)}/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -163,6 +163,9 @@ class CourseContractApiTest(BaseAPITestCase):
             "results": [
                 {
                     "id": str(contract.id),
+                    "abilities": {
+                        "sign": contract.get_abilities(user)["sign"],
+                    },
                     "created_on": contract.created_on.isoformat().replace(
                         "+00:00", "Z"
                     ),
@@ -246,7 +249,7 @@ class CourseContractApiTest(BaseAPITestCase):
         factories.ContractFactory(order__owner=user)
 
         # - List without filter should return 6 contracts
-        with self.assertNumQueries(46):
+        with self.assertNumQueries(53):
             response = self.client.get(
                 f"/api/v1.0/courses/{str(relation.course.id)}/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -257,7 +260,7 @@ class CourseContractApiTest(BaseAPITestCase):
         self.assertEqual(content["count"], 6)
 
         # - Filter by is_signed=false should return 5 contracts
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(8):
             response = self.client.get(
                 f"/api/v1.0/courses/{str(relation.course.id)}/contracts/?is_signed=false",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -273,7 +276,7 @@ class CourseContractApiTest(BaseAPITestCase):
         )
 
         # - Filter by is_signed=true should return 1 contract
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(4):
             response = self.client.get(
                 f"/api/v1.0/courses/{str(relation.course.id)}/contracts/?is_signed=true",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -403,7 +406,7 @@ class CourseContractApiTest(BaseAPITestCase):
 
         contract = models.Contract.objects.filter(order__course=courses[0]).first()
 
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(3):
             response = self.client.get(
                 f"/api/v1.0/courses/{str(courses[0].id)}/contracts/{str(contract.id)}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -413,6 +416,9 @@ class CourseContractApiTest(BaseAPITestCase):
 
         assert response.json() == {
             "id": str(contract.id),
+            "abilities": {
+                "sign": contract.get_abilities(user)["sign"],
+            },
             "created_on": contract.created_on.isoformat().replace("+00:00", "Z"),
             "student_signed_on": contract.student_signed_on.isoformat().replace(
                 "+00:00", "Z"
@@ -476,7 +482,7 @@ class CourseContractApiTest(BaseAPITestCase):
             order__organization=organization,
         )
 
-        with self.assertNumQueries(45):
+        with self.assertNumQueries(47):
             response = self.client.get(
                 f"/api/v1.0/courses/{relation.course.code}/contracts/{str(contract.id)}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
