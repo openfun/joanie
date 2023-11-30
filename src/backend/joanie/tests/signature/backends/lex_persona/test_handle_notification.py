@@ -187,7 +187,7 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
                     "webhookId": "wbh_id_fake",
                     "workflowId": "wfl_id_fake",
                     "stepId": "stp_id_fake",
-                    "eventType": "workflowFinished",
+                    "eventType": "recipientFinished",
                     "created": 1693404075146,
                     "updated": 1693404075146,
                 }
@@ -233,7 +233,7 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
         self,
     ):
         """
-        When an incoming event type is 'workflowFinished', but we can't verify that webhook event
+        When an incoming event type is 'recipientFinished', but we can't verify that webhook event
         authenticity and integrity, it should raise ValidationError.
         """
         request_data = {
@@ -247,7 +247,7 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
                     "webhookId": "wbh_id_fake",
                     "workflowId": "wfl_id_fake",
                     "stepId": "stp_id_fake",
-                    "eventType": "workflowFinished",
+                    "eventType": "recipientFinished",
                     "created": 1693404075146,
                     "updated": 1693404075146,
                 }
@@ -285,7 +285,7 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
     @responses.activate
     def test_backend_lex_persona_handle_notification_workflow_finished_event(self):
         """
-        When an incoming event type is 'workflowFinished', and the event has been verified,
+        When an incoming event type is 'recipientFinished', and the event has been verified,
         then the contract which has the signature backend reference should get updated
         with a new 'student_signed_on' date and update the value of 'submitted_for_signature_on'
         to None.
@@ -314,7 +314,7 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
                     "webhookId": "wbh_id_fake",
                     "workflowId": "wfl_id_fake",
                     "stepId": "stp_id_fake",
-                    "eventType": "workflowFinished",
+                    "eventType": "recipientFinished",
                     "created": 1693404075146,
                     "updated": 1693404075146,
                 }
@@ -332,7 +332,7 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
             "webhookId": "wbh_id_fake",
             "workflowId": "wfl_id_fake",
             "stepId": "stp_id_fake",
-            "eventType": "workflowFinished",
+            "eventType": "recipientFinished",
             "created": 1693404075146,
             "updated": 1693404075146,
         }
@@ -344,7 +344,7 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
 
         contract.refresh_from_db()
         self.assertIsNotNone(contract.student_signed_on)
-        self.assertIsNone(contract.submitted_for_signature_on)
+        self.assertIsNotNone(contract.submitted_for_signature_on)
 
     @override_settings(
         JOANIE_SIGNATURE_VALIDITY_PERIOD=60 * 60 * 24 * 15,
@@ -354,7 +354,7 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
         self,
     ):
         """
-        When an incoming event type is 'workflowFinished' and the 'id' has been verified at the
+        When an incoming event type is 'recipientFinished' and the 'id' has been verified at the
         signature provider, but the expiration date to sign has passed, then we should raise an
         error. The file is eligible for a signature for a period of 15 days.
         """
@@ -382,7 +382,7 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
                     "webhookId": "wbh_id_fake",
                     "workflowId": "wfl_id_fake",
                     "stepId": "stp_id_fake",
-                    "eventType": "workflowFinished",
+                    "eventType": "recipientFinished",
                     "created": 1693404075146,
                     "updated": 1693404075146,
                 }
@@ -400,7 +400,7 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
             "webhookId": "wbh_id_fake",
             "workflowId": "wfl_id_fake",
             "stepId": "stp_id_fake",
-            "eventType": "workflowFinished",
+            "eventType": "recipientFinished",
             "created": 1693404075146,
             "updated": 1693404075146,
         }
