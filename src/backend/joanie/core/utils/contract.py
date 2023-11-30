@@ -29,6 +29,7 @@ def _get_base_signature_backend_references(
     base_query = models.Contract.objects.filter(
         order__state=enums.ORDER_STATE_VALIDATED,
         student_signed_on__isnull=False,
+        organization_signed_on__isnull=False,
         **extra_filters,
     ).select_related("order")
 

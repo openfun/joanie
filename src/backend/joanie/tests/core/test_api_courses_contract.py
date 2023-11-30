@@ -236,6 +236,7 @@ class CourseContractApiTest(BaseAPITestCase):
             order__course=relation.course,
             order__organization=organization,
             student_signed_on=timezone.now(),
+            organization_signed_on=timezone.now(),
             definition_checksum="test",
             context={"title": "test"},
         )

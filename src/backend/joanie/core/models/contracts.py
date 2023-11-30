@@ -183,14 +183,24 @@ class Contract(BaseModel):
                 ),
             ),
             models.CheckConstraint(
-                check=~models.Q(
-                    student_signed_on__isnull=False,
-                    submitted_for_signature_on__isnull=False,
+                check=models.Q(
+                    models.Q(
+                        student_signed_on__isnull=True,
+                        organization_signed_on__isnull=True,
+                    )
+                    | models.Q(
+                        submitted_for_signature_on__isnull=False,
+                        student_signed_on__isnull=False,
+                        organization_signed_on__isnull=True,
+                    )
+                    | models.Q(
+                        submitted_for_signature_on__isnull=True,
+                        student_signed_on__isnull=False,
+                        organization_signed_on__isnull=False,
+                    )
                 ),
-                name="reference_datetime_not_both_set",
-                violation_error_message=(
-                    "Make sure to not have both datetime fields set simultaneously."
-                ),
+                name="incoherent_signature_dates",
+                violation_error_message="Signature dates are incoherent.",
             ),
             models.CheckConstraint(
                 check=(
