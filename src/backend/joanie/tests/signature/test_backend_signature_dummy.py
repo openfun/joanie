@@ -110,7 +110,7 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
 
         contract.refresh_from_db()
         self.assertIsNotNone(contract.student_signed_on)
-        self.assertIsNone(contract.submitted_for_signature_on)
+        self.assertIsNotNone(contract.submitted_for_signature_on)
         # Check that an email has been sent
         self._check_signature_completed_email_sent("student_do@example.fr")
 
@@ -158,10 +158,10 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
         # Check that an email has not been sent
         self._check_uncomplete_signature_no_email_sent()
 
-    def test_backend_dummy_signature_handle_notification_finished_event(self):
+    def test_backend_dummy_signature_handle_notification_signed_event(self):
         """
         Dummy backend instance handles notification from incoming webhook event where the type
-        is "finished".
+        is "signed".
         It updates the contract for the field student_signed_on' with a timestamp value.
         """
         backend = DummySignatureBackend()
@@ -175,6 +175,34 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
             context="a small context content",
         )
         mocked_request = {
+            "event_type": "signed",
+            "reference": reference,
+        }
+
+        backend.handle_notification(mocked_request)
+
+        contract.refresh_from_db()
+        self.assertIsNotNone(contract.student_signed_on)
+        self.assertIsNotNone(contract.submitted_for_signature_on)
+
+    def test_backend_dummy_signature_handle_notification_finished_event(self):
+        """
+        Dummy backend instance handles notification from incoming webhook event where the type
+        is "finished".
+        It updates the contract for the field organization_signed_on' with a timestamp value.
+        """
+        backend = DummySignatureBackend()
+        reference, file_hash = backend.submit_for_signature(
+            "definition_1", b"file_bytes", {}
+        )
+        contract = factories.ContractFactory(
+            signature_backend_reference=reference,
+            definition_checksum=file_hash,
+            submitted_for_signature_on=django_timezone.now(),
+            student_signed_on=django_timezone.now(),
+            context="a small context content",
+        )
+        mocked_request = {
             "event_type": "finished",
             "reference": reference,
         }
@@ -183,6 +211,7 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
 
         contract.refresh_from_db()
         self.assertIsNotNone(contract.student_signed_on)
+        self.assertIsNotNone(contract.organization_signed_on)
         self.assertIsNone(contract.submitted_for_signature_on)
 
     def test_backend_dummy_signature_handle_notification_wrong_event_type(self):

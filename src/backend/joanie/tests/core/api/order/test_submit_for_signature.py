@@ -168,7 +168,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         self.assertIsNotNone(order.contract.context)
         self.assertIsNotNone(order.contract.definition_checksum)
         self.assertIsNotNone(order.contract.student_signed_on)
-        self.assertIsNone(order.contract.submitted_for_signature_on)
+        self.assertIsNotNone(order.contract.submitted_for_signature_on)
 
         content = response.content.decode("utf-8")
         content_json = json.loads(content)

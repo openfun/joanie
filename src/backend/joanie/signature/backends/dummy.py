@@ -40,7 +40,7 @@ class DummySignatureBackend(BaseSignatureBackend):
         file is available to download to the signer by email.
         """
         self.handle_notification(
-            {"event_type": "finished", "reference": reference_ids[0]}
+            {"event_type": "signed", "reference": reference_ids[0]}
         )
         self._send_email(recipient_email=recipient_email, reference_id=reference_ids[0])
 
@@ -58,14 +58,18 @@ class DummySignatureBackend(BaseSignatureBackend):
     def handle_notification(self, request):
         """
         Dummy method that handles an incoming webhook event from the signature provider.
-        When the event type is "finished", it updates the field of 'student_signed_on' of the
+        When the event type is "signed", it updates the field of 'student_signed_on' of the
+        contract with a timestamp.
+        When the event type is "finished", it updates the field of 'organization_signed_on' of the
         contract with a timestamp.
         """
         event_type = request.get("event_type")
         reference_id = request.get("reference")
 
-        if event_type == "finished":
+        if event_type == "signed":
             self.confirm_student_signature(reference_id)
+        elif event_type == "finished":
+            self.confirm_organization_signature(reference_id)
         else:
             logger.error("'%s' is not an event type that we handle.")
             raise ValidationError(
