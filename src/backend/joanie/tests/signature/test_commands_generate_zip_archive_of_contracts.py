@@ -189,6 +189,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
                 definition_checksum="1234",
                 context=context,
                 student_signed_on=timezone.now(),
+                organization_signed_on=timezone.now(),
             )
 
         with self.assertRaises(CommandError) as context:
@@ -319,6 +320,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
                 definition_checksum="1234",
                 context=context,
                 student_signed_on=timezone.now(),
+                organization_signed_on=timezone.now(),
             )
 
         call_command(
@@ -410,6 +412,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
                 definition_checksum="1234",
                 context=context,
                 student_signed_on=timezone.now(),
+                organization_signed_on=timezone.now(),
             )
 
         call_command(
@@ -502,6 +505,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
             definition_checksum="1234",
             context=context,
             student_signed_on=timezone.now(),
+            organization_signed_on=timezone.now(),
         )
 
         call_command(
