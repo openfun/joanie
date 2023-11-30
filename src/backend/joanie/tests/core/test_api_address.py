@@ -10,6 +10,7 @@ import arrow
 from rest_framework.pagination import PageNumberPagination
 
 from joanie.core import factories, models
+from joanie.payment.factories import InvoiceFactory
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -566,3 +567,35 @@ class AddressAPITestCase(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
         self.assertEqual(models.Address.objects.exists(), True)
+
+    def test_api_address_delete_with_invoices(self):
+        """
+        Authenticated user should be able to delete an address linked to invoices but
+        this one should not be really delete but just marked as not reusable.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        address = factories.AddressFactory.create(owner=user, is_reusable=True)
+        InvoiceFactory(recipient_address=address)
+        response = self.client.delete(
+            f"/api/v1.0/addresses/{address.id}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        address = models.Address.objects.first()
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(
+            response.json(),
+            {
+                "id": str(address.id),
+                "address": address.address,
+                "city": address.city,
+                "country": str(address.country),
+                "first_name": address.first_name,
+                "is_main": address.is_main,
+                "last_name": address.last_name,
+                "postcode": address.postcode,
+                "title": address.title,
+            },
+        )
+        self.assertEqual(address.is_reusable, False)

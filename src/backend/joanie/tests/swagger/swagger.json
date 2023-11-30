@@ -222,7 +222,7 @@
             },
             "delete": {
                 "operationId": "addresses_destroy",
-                "description": "API view allows to get all addresses or create or update a new one for a user.\n\nGET /api/addresses/\n    Return list of all addresses for a user\n\nPOST /api/addresses/ with expected data:\n    - address: str\n    - city: str\n    - country: str, country code\n    - first_name: str, recipient first name\n    - last_name: str, recipient last name\n    - is_main?: bool, if True set address as main\n    - postcode: str\n    - title: str, address title\n    Return new address just created\n\nPUT /api/addresses/<address_id>/ with expected data:\n    - address: str\n    - city: str\n    - country: str, country code\n    - first_name: str, recipient first name\n    - last_name: str, recipient last name\n    - is_main?: bool, if True set address as main\n    - postcode: str\n    - title: str, address title\n    Return address just updated\n\nDELETE /api/addresses/<address_id>/\n    Delete selected address",
+                "description": "Delete an address for user authenticated. If the address is linked to\ninvoices it is not deleted but marked as not reusable.",
                 "parameters": [
                     {
                         "in": "path",
