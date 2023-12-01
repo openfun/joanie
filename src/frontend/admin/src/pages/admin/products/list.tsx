@@ -6,6 +6,7 @@ import { PATH_ADMIN } from "@/utils/routes/path";
 import { productsPagesTranslation } from "@/translations/pages/products/breadcrumbsTranslations";
 import { ProductList } from "@/components/templates/products/list/ProductsList";
 import { commonTranslations } from "@/translations/common/commonTranslations";
+import { SimpleCard } from "@/components/presentational/card/SimpleCard";
 
 const messages = defineMessages({
   pageTitle: {
@@ -41,7 +42,9 @@ export default function ProductListPage() {
         </Button>
       }
     >
-      <ProductList />
+      <SimpleCard>
+        <ProductList />
+      </SimpleCard>
     </DashboardLayoutPage>
   );
 }

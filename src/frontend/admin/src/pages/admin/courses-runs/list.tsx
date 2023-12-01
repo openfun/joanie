@@ -6,6 +6,7 @@ import { CoursesRunsList } from "@/components/templates/courses-runs/list/Course
 import { coursesRunsPagesTranslation } from "@/translations/pages/courses-runs/breadcrumbsTranslations";
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { commonTranslations } from "@/translations/common/commonTranslations";
+import { SimpleCard } from "@/components/presentational/card/SimpleCard";
 
 const messages = defineMessages({
   pageTitle: {
@@ -39,7 +40,9 @@ export default function CoursesRunsListPage() {
         </Button>
       }
     >
-      <CoursesRunsList />
+      <SimpleCard>
+        <CoursesRunsList />
+      </SimpleCard>
     </DashboardLayoutPage>
   );
 }
