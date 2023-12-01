@@ -1,8 +1,12 @@
-import { render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import { TestingWrapper } from "@/components/testing/TestingWrapper";
 import { CourseProductRelationForm } from "@/components/templates/courses/form/product-relation/CourseProductRelationForm";
 
 describe("<CourseProductRelationForm/>", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   it("renders ", async () => {
     render(
       <TestingWrapper>

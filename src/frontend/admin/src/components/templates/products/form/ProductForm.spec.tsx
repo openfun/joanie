@@ -1,8 +1,15 @@
-import { act, render, screen, waitFor, within } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { rest } from "msw";
 import userEvent from "@testing-library/user-event";
 import { SnackbarProvider } from "notistack";
-import { server } from "../../../../../mocks/server";
+import { server } from "mocks/server";
 import { ProductForm } from "@/components/templates/products/form/ProductForm";
 import { TestingWrapper } from "@/components/testing/TestingWrapper";
 import { CourseFactory } from "@/services/factories/courses";
@@ -34,8 +41,7 @@ jest.mock("notistack", () => ({
 
 describe("<ProductForm/>", () => {
   beforeEach(() => {
-    jest.useFakeTimers({ advanceTimers: true });
-
+    jest.useFakeTimers({ advanceTimers: 10 });
     server.use(
       rest.get(buildApiUrl(coursesRoute.getAll()), (req, res, ctx) => {
         return res(ctx.json([course]));
@@ -53,11 +59,12 @@ describe("<ProductForm/>", () => {
   });
 
   afterEach(() => {
+    cleanup();
+    jest.runOnlyPendingTimers();
     jest.useRealTimers();
   });
 
   it("renders ProductForm without product and select certificate type", async () => {
-    jest.useFakeTimers({ advanceTimers: true });
     const { container } = render(
       <SnackbarProvider>
         <ProductForm />
@@ -142,12 +149,15 @@ describe("<ProductForm/>", () => {
     const user = userEvent.setup();
     const product = ProductFactory();
     product.target_courses = [];
-    render(
-      <SnackbarProvider>
-        <ProductForm product={product} />
-      </SnackbarProvider>,
-      { wrapper: TestingWrapper },
-    );
+
+    await act(async () => {
+      render(
+        <SnackbarProvider>
+          <ProductForm product={product} />
+        </SnackbarProvider>,
+        { wrapper: TestingWrapper },
+      );
+    });
 
     // Buttons Back and Next
     const nextButton = await screen.findByRole("button", { name: "Next" });

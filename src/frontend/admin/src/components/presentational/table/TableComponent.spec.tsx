@@ -22,7 +22,7 @@ describe("<TableComponent/>", () => {
 
     render(
       <IntlProvider locale="en">
-        <TableComponent rows={data} columns={columns} />
+        <TableComponent rows={data} columns={columns} rowCount={data.length} />
       </IntlProvider>,
     );
 

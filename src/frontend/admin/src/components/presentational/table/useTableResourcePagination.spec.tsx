@@ -5,6 +5,15 @@ import { useOrganizations } from "@/hooks/useOrganizations/useOrganizations";
 import { TestingWrapper } from "@/components/testing/TestingWrapper";
 
 describe("usePaginatedTableResource Hook", () => {
+  beforeEach(() => {
+    jest.useFakeTimers({ advanceTimers: true });
+  });
+
+  afterEach(() => {
+    jest.runOnlyPendingTimers();
+    jest.useRealTimers();
+  });
+
   it("sets initial values and check states after a success request", async () => {
     const { result } = renderHook(
       () =>
@@ -52,7 +61,6 @@ describe("usePaginatedTableResource Hook", () => {
   });
 
   it("resets current page on onSearch", async () => {
-    jest.useFakeTimers({ advanceTimers: true });
     const { result } = renderHook(
       () =>
         usePaginatedTableResource<Organization>({
@@ -66,10 +74,8 @@ describe("usePaginatedTableResource Hook", () => {
     expect(result.current.tableProps.paginationModel.pageSize).toBe(20);
     result.current.tableProps.onSearch("Search");
     await act(async () => {
-      jest.advanceTimersByTime(400);
+      jest.runOnlyPendingTimers();
     });
     expect(result.current.tableProps.paginationModel.page).toBe(0);
-    jest.runOnlyPendingTimers();
-    jest.useRealTimers();
   });
 });
