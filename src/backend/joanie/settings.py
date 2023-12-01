@@ -538,6 +538,11 @@ class Development(Base):
     CORS_ALLOW_ALL_ORIGINS = True
     CSRF_TRUSTED_ORIGINS = ["http://localhost:3000", "http://localhost:8072"]
     DEBUG = True
+    DEVELOPER_EMAIL = values.Value(
+        "developer@example.com",
+        environ_name="DEVELOPER_EMAIL",
+        environ_prefix=None,
+    )
 
     SESSION_COOKIE_NAME = "joanie_sessionid"
 
@@ -591,6 +596,7 @@ class Test(Base):
         "django.contrib.auth.hashers.MD5PasswordHasher",
     ]
     USE_SWAGGER = True
+    DEVELOPER_EMAIL = "developer@example.com"
 
     STORAGES = {
         "default": {
