@@ -26,6 +26,11 @@ export const courseRunFormMessages = defineMessages({
     defaultMessage: "Course start",
     description: "Label for the course start input",
   },
+  courseLabel: {
+    id: "components.templates.courseRuns.form.translations.courseLabel",
+    defaultMessage: "Course",
+    description: "Label for the course search input",
+  },
   courseEndLabel: {
     id: "components.templates.courseRuns.form.translations.courseEndLabel",
     defaultMessage: "Course end",

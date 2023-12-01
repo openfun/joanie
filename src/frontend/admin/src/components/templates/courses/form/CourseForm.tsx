@@ -25,21 +25,18 @@ import { genericUpdateFormError } from "@/utils/forms";
 import { TranslatableContent } from "@/components/presentational/translatable-content/TranslatableContent";
 import { Organization } from "@/services/api/models/Organization";
 import { SimpleCard } from "@/components/presentational/card/SimpleCard";
+import { CourseFormTargetCourseRunsSection } from "@/components/templates/courses/form/sections/target-course-runs/CourseFormTargetCourseRunsSection";
 import { CourseFormAccessesSection } from "@/components/templates/courses/form/sections/accesses/CourseFormAccessesSection";
 import { CourseFormProductRelationsSection } from "@/components/templates/courses/form/sections/product-relation/CourseFormProductRelationsSection";
 
 interface Props {
-  showProductRelationSection?: boolean;
   afterSubmit?: (course: Course) => void;
   course?: Course;
+  shortcutMode?: boolean;
   fromCourse?: Course;
 }
 
-export function CourseForm({
-  course,
-  showProductRelationSection = true,
-  ...props
-}: Props) {
+export function CourseForm({ course, shortcutMode = false, ...props }: Props) {
   const intl = useIntl();
   const coursesQuery = useCourses({}, { enabled: false });
   const defaultCourse = course ?? props.fromCourse;
@@ -126,6 +123,7 @@ export function CourseForm({
 
                 <Grid xs={12}>
                   <OrganizationSearch
+                    enableAdd={true}
                     multiple={true}
                     name="organizations"
                     label={intl.formatMessage(
@@ -139,7 +137,9 @@ export function CourseForm({
         </TranslatableContent>
       </SimpleCard>
 
-      {course && showProductRelationSection && (
+      {course && <CourseFormTargetCourseRunsSection course={course} />}
+
+      {course && !shortcutMode && (
         <CourseFormProductRelationsSection
           invalidateCourse={() => coursesQuery.methods.invalidate()}
           course={course}

@@ -2,8 +2,8 @@ import { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import * as React from "react";
 import { defineMessages, IntlShape } from "react-intl";
 import Box from "@mui/material/Box";
-import IconButton from "@mui/material/IconButton";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import Tooltip from "@mui/material/Tooltip";
+import { ProviderContext } from "notistack";
 import { CourseRun } from "@/services/api/models/CourseRun";
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { CustomLink } from "@/components/presentational/link/CustomLink";
@@ -41,10 +41,21 @@ const messages = defineMessages({
     defaultMessage: "Is gradable",
     description: "Label for the isGradable attribute header inside the table  ",
   },
+  clickToCopy: {
+    id: "components.templates.courseRuns.list.clickToCopy",
+    defaultMessage: "Click to copy this link",
+    description: "Label for the click to copy tooltip",
+  },
+  successCopy: {
+    id: "components.templates.courseRuns.list.successCopy",
+    defaultMessage: "Link added to your clipboard",
+    description: "Text for the success click to copy notification",
+  },
 });
 
 export const getCoursesRunsListColumns = (
   intl: IntlShape,
+  snackbar: ProviderContext,
 ): GridColDef<CourseRun>[] => {
   return [
     {
@@ -69,29 +80,28 @@ export const getCoursesRunsListColumns = (
       flex: 1,
       renderCell: (params) => {
         return (
-          <Box
-            sx={{
-              "&:hover": {
-                ".copy-resource-link": {
-                  display: "block",
-                },
-              },
-            }}
-          >
-            {params.row.resource_link}
-            <IconButton
-              onClick={() =>
-                navigator.clipboard.writeText(params.row.resource_link)
-              }
-              sx={{ ml: 0.3 }}
+          <Tooltip arrow title={intl.formatMessage(messages.clickToCopy)}>
+            <Box
+              onClick={() => {
+                navigator.clipboard
+                  .writeText(params.row.resource_link)
+                  .then(() => {
+                    snackbar.enqueueSnackbar(
+                      intl.formatMessage(messages.successCopy),
+                      {
+                        variant: "success",
+                        preventDuplicate: true,
+                      },
+                    );
+                  });
+              }}
+              sx={{
+                cursor: "pointer",
+              }}
             >
-              <ContentCopyIcon
-                className="copy-resource-link"
-                fontSize="inherit"
-                sx={{ display: "none", fontSize: "15px" }}
-              />
-            </IconButton>
-          </Box>
+              {params.row.resource_link}
+            </Box>
+          </Tooltip>
         );
       },
     },

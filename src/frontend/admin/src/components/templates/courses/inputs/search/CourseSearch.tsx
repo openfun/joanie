@@ -6,7 +6,7 @@ import {
   RHFAutocompleteSearchProps,
   RHFSearch,
 } from "@/components/presentational/hook-form/RHFSearch";
-import { Maybe } from "@/types/utils";
+import { Maybe, Nullable } from "@/types/utils";
 import { Course } from "@/services/api/models/Course";
 import { useCourses } from "@/hooks/useCourses/useCourses";
 import { CreateOrEditCourseModal } from "@/components/templates/courses/modals/CreateOrEditCourseModal";
@@ -22,10 +22,12 @@ const messages = defineMessages({
 
 export function CourseSearch(props: RHFAutocompleteSearchProps<Course>) {
   const intl = useIntl();
+  const form = useFormContext();
+  const currentCourse: Nullable<Course> = form.getValues(props.name);
   const [query, setQuery] = useState("");
   const courses = useCourses({ query }, { enabled: query !== "" });
   const createModal = useModal();
-  const form = useFormContext();
+  const editModal = useModal();
   return (
     <>
       <RHFSearch
@@ -34,14 +36,20 @@ export function CourseSearch(props: RHFAutocompleteSearchProps<Course>) {
         label={props.label ?? intl.formatMessage(messages.searchLabel)}
         loading={courses.states.fetching}
         onAddClick={createModal.handleOpen}
+        onEditClick={editModal.handleOpen}
         onFilter={setQuery}
         getOptionLabel={(option: Maybe<Course>) => option?.title ?? ""}
         isOptionEqualToValue={(option, value) => option.code === value.code}
       />
       <CreateOrEditCourseModal
         createModalUtils={createModal}
+        editModalUtils={editModal}
+        courseId={
+          currentCourse && props.enableEdit ? currentCourse.id : undefined
+        }
         afterSubmit={(course) => {
           createModal.handleClose();
+          editModal.handleClose();
           form.setValue(props.name, course);
         }}
       />
