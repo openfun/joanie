@@ -2,6 +2,7 @@
 """Management command to initialize some fake data (products, courses and course runs)"""
 import random
 
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.utils import timezone as django_timezone
 from django.utils import translation
@@ -203,6 +204,10 @@ class Command(BaseCommand):
             product=product,
             state=order_status,
         )
+        payment_factories.InvoiceFactory(
+            order=order,
+            recipient_address__owner=user,
+        )
 
         for target_course in product.target_courses.all():
             factories.OrderTargetCourseRelationFactory(
@@ -242,16 +247,35 @@ class Command(BaseCommand):
         translation.activate("en-us")
 
         # Create an organization
-        admin_user = models.User.objects.get(username="admin")
+        other_owners = factories.UserFactory.create_batch(
+            5,
+            first_name="Other",
+            last_name="Owner",
+        )
+        email = settings.DEVELOPER_EMAIL
+        email_user, email_domain = email.split("@")
+
+        organization_owner = factories.UserFactory(
+            username="organization_owner",
+            email=email_user + "+organization_owner@" + email_domain,
+            first_name="Orga",
+            last_name="Owner",
+        )
         organization = factories.OrganizationFactory(
             title="The school of glory",
             # Give access to admin user
-            users=[[admin_user, enums.OWNER]],
+            users=[[organization_owner, enums.OWNER]]
+            + [[owner, enums.OWNER] for owner in other_owners],
         )
 
-        # Add one credit card to admin user
-        payment_factories.CreditCardFactory(owner=admin_user)
-        factories.AddressFactory(owner=admin_user)
+        # Add one credit card to student user
+        student_user = factories.UserFactory(
+            username="student_user",
+            email=email_user + "+student_user@" + email_domain,
+            first_name="Étudiant",
+        )
+        payment_factories.CreditCardFactory(owner=student_user)
+        factories.AddressFactory(owner=student_user)
 
         # First create a course product to learn how to become a botanist
         # 1/ some course runs are required to become a botanist
@@ -260,8 +284,8 @@ class Command(BaseCommand):
             resource_link=OPENEDX_COURSE_RUN_URI.format(
                 course="00001", course_run="BasesOfBotany_run1"
             ),
-            # Give access to admin user
-            course__users=[[admin_user, enums.OWNER]],
+            # Give access to organization owner user
+            course__users=[[organization_owner, enums.OWNER]],
             course__organizations=[organization],
             languages=self.get_random_languages(),
             state=CourseState.ONGOING_OPEN,
@@ -280,8 +304,8 @@ class Command(BaseCommand):
             resource_link=OPENEDX_COURSE_RUN_URI.format(
                 course="00002", course_run="HowToMakeHerbarium_run1"
             ),
-            # Give access to admin user
-            course__users=[[admin_user, enums.OWNER]],
+            # Give access to organization owner user
+            course__users=[[organization_owner, enums.OWNER]],
             course__organizations=[organization],
             languages=self.get_random_languages(),
             state=CourseState.ONGOING_OPEN,
@@ -340,7 +364,7 @@ class Command(BaseCommand):
 
         # We need some pagination going on, let's create few more courses and products
         self.create_course(
-            admin_user,
+            organization_owner,
             organization,
             batch_size=NB_DEV_OBJECTS["course"],
             with_course_runs=True,
@@ -352,7 +376,9 @@ class Command(BaseCommand):
         )
 
         self.create_product_credential(
-            admin_user, organization, batch_size=NB_DEV_OBJECTS["product_credential"]
+            organization_owner,
+            organization,
+            batch_size=NB_DEV_OBJECTS["product_credential"],
         )
         self.stdout.write(
             self.style.SUCCESS(
@@ -362,7 +388,9 @@ class Command(BaseCommand):
         )
 
         self.create_product_certificate(
-            admin_user, organization, batch_size=NB_DEV_OBJECTS["product_certificate"]
+            organization_owner,
+            organization,
+            batch_size=NB_DEV_OBJECTS["product_certificate"],
         )
         self.stdout.write(
             self.style.SUCCESS(
@@ -372,7 +400,7 @@ class Command(BaseCommand):
         )
 
         # Enrollments and orders
-        self.create_product_certificate_enrollment(admin_user, organization)
+        self.create_product_certificate_enrollment(student_user, organization)
         self.stdout.write(
             self.style.SUCCESS(
                 "Successfully create a enrollment for a course with a PRODUCT_CERTIFICATE"
@@ -381,7 +409,7 @@ class Command(BaseCommand):
 
         # Order for a PRODUCT_CERTIFICATE
         self.create_product_purchased(
-            admin_user, organization, enums.PRODUCT_TYPE_CERTIFICATE
+            student_user, organization, enums.PRODUCT_TYPE_CERTIFICATE
         )
         self.stdout.write(
             self.style.SUCCESS("Successfully create a order for a PRODUCT_CERTIFICATE")
@@ -389,7 +417,7 @@ class Command(BaseCommand):
 
         # Order for a PRODUCT_CERTIFICATE with a generated certificate
         self.create_product_purchased_with_certificate(
-            admin_user, organization, enums.PRODUCT_TYPE_CERTIFICATE
+            student_user, organization, enums.PRODUCT_TYPE_CERTIFICATE
         )
         self.stdout.write(
             self.style.SUCCESS(
@@ -400,7 +428,7 @@ class Command(BaseCommand):
 
         # Order for a PRODUCT_CREDENTIAL with a generated certificate
         self.create_product_purchased_with_certificate(
-            admin_user,
+            student_user,
             organization,
             enums.PRODUCT_TYPE_CREDENTIAL,
         )
@@ -412,7 +440,7 @@ class Command(BaseCommand):
 
         # Order for a PRODUCT_CREDENTIAL with a unsigned contract
         order = self.create_product_purchased(
-            admin_user,
+            student_user,
             organization,
             enums.PRODUCT_TYPE_CREDENTIAL,
             enums.ORDER_STATE_VALIDATED,
@@ -431,7 +459,7 @@ class Command(BaseCommand):
 
         # Order for a PRODUCT_CREDENTIAL with a signed contract
         order = self.create_product_purchased(
-            admin_user,
+            student_user,
             organization,
             enums.PRODUCT_TYPE_CREDENTIAL,
             enums.ORDER_STATE_VALIDATED,
@@ -443,6 +471,7 @@ class Command(BaseCommand):
             definition=order.product.contract_definition,
             student_signed_on=django_timezone.now(),
             organization_signed_on=django_timezone.now(),
+            organization_signatory=organization_owner,
         )
 
         self.stdout.write(
@@ -452,7 +481,7 @@ class Command(BaseCommand):
         )
 
         # Enrollment with a certificate
-        self.create_enrollment_certificate(admin_user, organization)
+        self.create_enrollment_certificate(student_user, organization)
         self.stdout.write(
             self.style.SUCCESS(
                 "Successfully create a enrollment with a generated certificate"
@@ -468,10 +497,29 @@ class Command(BaseCommand):
             enums.ORDER_STATE_VALIDATED,
         ]:
             self.create_product_purchased(
-                admin_user,
+                student_user,
                 organization,
                 enums.PRODUCT_TYPE_CREDENTIAL,
                 order_status,
             )
+
+        # Set organization owner for each organization
+        for organization in models.Organization.objects.all():
+            models.OrganizationAccess.objects.get_or_create(
+                user=organization_owner,
+                organization=organization,
+                role=enums.OWNER,
+            )
+            for other_owner in other_owners:
+                models.OrganizationAccess.objects.get_or_create(
+                    user=other_owner,
+                    organization=organization,
+                    role=enums.OWNER,
+                )
+        self.stdout.write(
+            self.style.SUCCESS(
+                "Successfully set organization owner access for each organization"
+            )
+        )
 
         self.stdout.write(self.style.SUCCESS("Successfully fake data creation"))
