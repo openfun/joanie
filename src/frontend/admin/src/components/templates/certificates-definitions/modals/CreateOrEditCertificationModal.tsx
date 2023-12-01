@@ -4,7 +4,8 @@ import { ModalUtils } from "@/components/presentational/modal/useModal";
 import { CertificateDefinition } from "@/services/api/models/CertificateDefinition";
 import { SimpleCard } from "@/components/presentational/card/SimpleCard";
 import { CertificateDefinitionForm } from "@/components/templates/certificates-definitions/form/CertificateDefinitionForm";
-import { CustomModal } from "@/components/presentational/modal/Modal";
+import { FullScreenModal } from "@/components/presentational/modal/FullScreenModal";
+import { useCertificateDefinition } from "@/hooks/useCertificateDefinitions/useCertificateDefinitions";
 
 const messages = defineMessages({
   add: {
@@ -23,14 +24,17 @@ const messages = defineMessages({
 type Props = {
   createModalUtils: ModalUtils;
   editModalUtils?: ModalUtils;
-  definition?: CertificateDefinition;
+  definitionId?: string;
   afterSubmit: (definition: CertificateDefinition) => void;
 };
 export function CreateOrEditCertificationModal(props: Props) {
   const intl = useIntl();
+  const definitionQuery = useCertificateDefinition(
+    props.definitionId ?? undefined,
+  );
   return (
     <>
-      <CustomModal
+      <FullScreenModal
         disablePadding={true}
         title={intl.formatMessage(messages.add)}
         {...props.createModalUtils}
@@ -38,23 +42,23 @@ export function CreateOrEditCertificationModal(props: Props) {
         <SimpleCard>
           <CertificateDefinitionForm afterSubmit={props.afterSubmit} />
         </SimpleCard>
-      </CustomModal>
+      </FullScreenModal>
 
-      {props.editModalUtils && props.definition && (
-        <CustomModal
+      {props.editModalUtils && props.definitionId && definitionQuery.item && (
+        <FullScreenModal
           disablePadding={true}
           title={intl.formatMessage(messages.edit, {
-            name: props.definition.title,
+            name: definitionQuery.item.title,
           })}
           {...props.editModalUtils}
         >
           <SimpleCard>
             <CertificateDefinitionForm
-              definition={props.definition}
+              definition={definitionQuery.item}
               afterSubmit={props.afterSubmit}
             />
           </SimpleCard>
-        </CustomModal>
+        </FullScreenModal>
       )}
     </>
   );

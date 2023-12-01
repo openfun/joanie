@@ -45,7 +45,9 @@ export function CertificateSearch(
 
       <CreateOrEditCertificationModal
         afterSubmit={afterSubmit}
-        definition={definition && props.enableEdit ? definition : undefined}
+        definitionId={
+          definition && props.enableEdit ? definition.id : undefined
+        }
         createModalUtils={addModal}
         editModalUtils={editModal}
       />
