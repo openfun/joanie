@@ -1,7 +1,7 @@
 import { Organization } from "./Organization";
 import { CourseRelationToProduct } from "./Relations";
-import { CourseRun } from "./CourseRun";
 import { Accesses } from "@/services/api/models/Accesses";
+import { CourseRun } from "@/services/api/models/CourseRun";
 
 export type Course = {
   id: string;
