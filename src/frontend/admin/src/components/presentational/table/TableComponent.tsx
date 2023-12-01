@@ -3,44 +3,65 @@ import { useState } from "react";
 import { DataGrid, GridColDef, GridRowSelectionModel } from "@mui/x-data-grid";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
-import IconButton from "@mui/material/IconButton";
 import InputAdornment from "@mui/material/InputAdornment";
 import TextField from "@mui/material/TextField";
-import { Delete, SearchOutlined } from "@mui/icons-material";
+import { SearchOutlined } from "@mui/icons-material";
 import { useIntl } from "react-intl";
 import { useDebouncedCallback } from "use-debounce";
 import { DataGridProps } from "@mui/x-data-grid/models/props/DataGridProps";
 import { GridValidRowModel } from "@mui/x-data-grid/models/gridRows";
-import { TableDefaultActions } from "@/components/presentational/table/TableDefaultActions";
+import {
+  TableDefaultActions,
+  TableDefaultMenuItem,
+} from "@/components/presentational/table/TableDefaultActions";
 import { tableTranslations } from "@/components/presentational/table/translations";
 import { DEFAULT_PAGE_SIZE } from "@/utils/constants";
+import { mergeArrayUnique } from "@/utils/array";
 
-interface Props<T extends GridValidRowModel> extends DataGridProps<T> {
-  rows: T[];
-  columns: GridColDef[];
-  enableEdit?: boolean;
-  onEditClick?: (row: T) => void;
-  onUseAsTemplateClick?: (row: T) => void;
-  onRemoveClick?: (row: T) => void;
-  getEntityName?: (row: T) => string;
-  onSelectRows?: (ids: GridRowSelectionModel) => void;
-  onSearch?: (term: string) => void;
+export type DefaultTableProps<T extends GridValidRowModel> = {
+  enableSelect?: boolean;
+  selectAllByDefault?: boolean;
+  onSelectRows?: (ids: string[], items: T[]) => void;
+  defaultSelectedRows?: string[];
   multiSelectActions?: React.ReactElement;
-  loading?: boolean;
-  columnBuffer?: number;
   topActions?: React.ReactElement;
-}
+  enableSearch?: boolean;
+};
+
+export type TableComponentProps<T extends GridValidRowModel> =
+  DataGridProps<T> &
+    DefaultTableProps<T> & {
+      rows?: T[];
+      columns?: GridColDef[];
+      enableEdit?: boolean;
+      onEditClick?: (row: T) => void;
+      onUseAsTemplateClick?: (row: T) => void;
+      onRemoveClick?: (row: T) => void;
+      getEntityName?: (row: T) => string;
+      onSearch?: (term: string) => void;
+      multiSelectActions?: React.ReactElement;
+      loading?: boolean;
+      columnBuffer?: number;
+      getOptions?: (row: T) => TableDefaultMenuItem[];
+    };
 
 export function TableComponent<T extends GridValidRowModel>({
   enableEdit = true,
+  enableSelect = false,
   paginationMode = "server",
+  enableSearch = true,
   ...props
-}: Props<T>) {
+}: TableComponentProps<T>) {
   const intl = useIntl();
-  const [selectedRows, setSelectedRow] = useState<GridRowSelectionModel>([]);
+  const [selectedRows, setSelectedRows] = useState<GridRowSelectionModel>(
+    props.defaultSelectedRows ?? [],
+  );
+  const [selectedItems, setSelectedItems] = useState<T[]>([]);
+
+  const rows = props.rows ?? [];
 
   const getColumns = (): GridColDef[] => {
-    const columns = [...props.columns];
+    const columns = [...(props.columns ?? [])];
     if (enableEdit) {
       columns.push({
         field: "action",
@@ -54,8 +75,10 @@ export function TableComponent<T extends GridValidRowModel>({
         resizable: false,
         renderCell: (params) => {
           const entityName = props.getEntityName?.(params.row) ?? undefined;
+          const extendedOptions = props.getOptions?.(params.row) ?? [];
           return (
             <TableDefaultActions
+              extendedOptions={extendedOptions}
               entityName={entityName}
               onDelete={
                 props.onRemoveClick && (() => props.onRemoveClick?.(params.row))
@@ -79,11 +102,50 @@ export function TableComponent<T extends GridValidRowModel>({
     props.onSearch?.(term);
   });
 
+  const onSelectItems = (ids: string[]) => {
+    if (ids.length === 0) {
+      setSelectedItems([]);
+      setSelectedRows(ids);
+      props.onSelectRows?.(ids, []);
+      return;
+    }
+
+    const keepPrevious = selectedItems.filter((item) => {
+      return ids.some((id) => {
+        return id === item.id;
+      });
+    });
+
+    const newResult = rows.filter((row) => {
+      return ids.some((id) => {
+        return id === row.id;
+      });
+    });
+
+    const items = mergeArrayUnique(
+      keepPrevious,
+      newResult,
+      (first, second) => first.id === second.id,
+    );
+
+    setSelectedItems(items);
+    setSelectedRows(ids);
+    props.onSelectRows?.(ids, items);
+  };
+
   return (
     <>
-      <Box padding={3}>
-        {props.onSearch && (
+      <Box
+        sx={{ marginTop: "0px !important" }}
+        padding={enableSearch || props.topActions ? 2 : 0}
+      >
+        {props.topActions && (
+          <Box mb={enableSearch ? 2 : 0}>{props.topActions}</Box>
+        )}
+        {enableSearch && props.onSearch && (
           <TextField
+            margin="none"
+            autoComplete="off"
             defaultValue=""
             onChange={(event) => onChangeSearchInput(event.target.value)}
             fullWidth
@@ -101,10 +163,9 @@ export function TableComponent<T extends GridValidRowModel>({
             }}
           />
         )}
-        {props.topActions}
       </Box>
       <Box position="relative">
-        {selectedRows.length > 0 && (
+        {props.multiSelectActions && selectedRows.length > 0 && (
           <Box
             display="flex"
             justifyContent="flex-end"
@@ -121,11 +182,7 @@ export function TableComponent<T extends GridValidRowModel>({
               backgroundColor: "rgb(244, 246, 248)",
             }}
           >
-            <Box>
-              <IconButton size="small" color="primary">
-                <Delete sx={{ fontSize: "20px" }} />
-              </IconButton>
-            </Box>
+            {props.multiSelectActions}
           </Box>
         )}
 
@@ -147,7 +204,7 @@ export function TableComponent<T extends GridValidRowModel>({
               backgroundColor: "rgb(244, 246, 248)",
             },
           }}
-          rows={props.rows}
+          rows={rows}
           columns={getColumns()}
           columnBuffer={props?.columnBuffer ?? 3}
           loading={props.loading}
@@ -168,11 +225,12 @@ export function TableComponent<T extends GridValidRowModel>({
               intl.formatMessage(tableTranslations.rowsSelected, { count }),
           }}
           pageSizeOptions={[DEFAULT_PAGE_SIZE]}
-          onRowSelectionModelChange={(ids) => {
-            setSelectedRow(ids);
-            props.onSelectRows?.(ids);
+          checkboxSelection={enableSelect}
+          onRowSelectionModelChange={(newRowSelectionModel) => {
+            onSelectItems(newRowSelectionModel as string[]);
           }}
-          checkboxSelection={false}
+          keepNonExistentRowsSelected
+          rowSelectionModel={selectedRows}
           disableRowSelectionOnClick
         />
       </Box>
