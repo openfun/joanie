@@ -1,9 +1,10 @@
 import * as React from "react";
 import { defineMessages, useIntl } from "react-intl";
 import { ModalUtils } from "@/components/presentational/modal/useModal";
-import { CustomModal } from "@/components/presentational/modal/Modal";
 import { Course } from "@/services/api/models/Course";
 import { CourseForm } from "@/components/templates/courses/form/CourseForm";
+import { FullScreenModal } from "@/components/presentational/modal/FullScreenModal";
+import { useCourse } from "@/hooks/useCourses/useCourses";
 
 const messages = defineMessages({
   add: {
@@ -22,38 +23,35 @@ const messages = defineMessages({
 type Props = {
   createModalUtils: ModalUtils;
   editModalUtils?: ModalUtils;
-  course?: Course;
+  courseId?: string;
   afterSubmit: (course: Course) => void;
 };
 export function CreateOrEditCourseModal(props: Props) {
   const intl = useIntl();
+  const courseRun = useCourse(props.courseId ?? undefined);
+
   return (
     <>
-      <CustomModal
-        disablePadding={true}
+      <FullScreenModal
         title={intl.formatMessage(messages.add)}
         {...props.createModalUtils}
       >
-        <CourseForm
-          showProductRelationSection={false}
-          afterSubmit={props.afterSubmit}
-        />
-      </CustomModal>
+        <CourseForm shortcutMode={true} afterSubmit={props.afterSubmit} />
+      </FullScreenModal>
 
-      {props.editModalUtils && props.course && (
-        <CustomModal
-          disablePadding={true}
+      {props.editModalUtils && props.courseId && courseRun.item && (
+        <FullScreenModal
           title={intl.formatMessage(messages.edit, {
-            name: props.course.title,
+            name: courseRun.item.title,
           })}
           {...props.editModalUtils}
         >
           <CourseForm
-            course={props.course}
-            showProductRelationSection={false}
+            course={courseRun.item}
+            shortcutMode={true}
             afterSubmit={props.afterSubmit}
           />
-        </CustomModal>
+        </FullScreenModal>
       )}
     </>
   );

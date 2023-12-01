@@ -50,7 +50,7 @@ describe("<CourseForm/>", () => {
     const course = CourseFactory();
     render(
       <TestingWrapper>
-        <CourseForm course={course} showProductRelationSection={false} />
+        <CourseForm course={course} shortcutMode={true} />
       </TestingWrapper>,
     );
     const title: HTMLInputElement = await screen.findByRole("textbox", {

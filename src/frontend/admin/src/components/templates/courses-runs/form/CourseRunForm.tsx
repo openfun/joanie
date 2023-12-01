@@ -38,12 +38,15 @@ interface Props {
   afterSubmit?: (courseRun: CourseRun) => void;
   courseRun?: CourseRun;
   fromCourseRun?: CourseRun;
+  addToCourse?: Course;
 }
 
-export function CourseRunForm({ courseRun, ...props }: Props) {
+export function CourseRunForm({ courseRun, addToCourse, ...props }: Props) {
   const intl = useIntl();
+  const disableCourseInput = !!addToCourse;
+
   const selectLanguageUtils = useSelectLanguageUtils();
-  const courseRuns = useCoursesRuns({}, { enabled: false });
+  const courseRunsQuery = useCoursesRuns({}, { enabled: false });
   const defaultCourseRun = courseRun ?? props.fromCourseRun;
 
   const RegisterSchema = Yup.object().shape({
@@ -62,7 +65,7 @@ export function CourseRunForm({ courseRun, ...props }: Props) {
   const getDefaultValues = () => {
     return {
       title: defaultCourseRun?.title ?? "",
-      course: defaultCourseRun?.course ?? (null as any), // to not trigger type validation for the default values
+      course: defaultCourseRun?.course ?? addToCourse ?? (null as any), // to not trigger type validation for the default values
       resource_link: defaultCourseRun?.resource_link ?? "",
       start: defaultCourseRun?.start ?? null,
       end: defaultCourseRun?.end ?? null,
@@ -98,12 +101,12 @@ export function CourseRunForm({ courseRun, ...props }: Props) {
 
     if (courseRun) {
       payload.id = courseRun.id;
-      courseRuns.methods.update(payload, {
+      courseRunsQuery.methods.update(payload, {
         onSuccess: (data) => props.afterSubmit?.(data),
         onError: (error) => updateFormError(error.data),
       });
     } else {
-      courseRuns.methods.create(payload, {
+      courseRunsQuery.methods.create(payload, {
         onSuccess: (data) => props.afterSubmit?.(data),
         onError: (error) => {
           updateFormError(error.data);
@@ -115,12 +118,15 @@ export function CourseRunForm({ courseRun, ...props }: Props) {
   return (
     <TranslatableContent
       onSelectLang={() => {
-        if (courseRun) courseRuns.methods.invalidate();
+        if (courseRun) courseRunsQuery.methods.invalidate();
       }}
     >
       <Box padding={4}>
         <RHFProvider
           methods={methods}
+          isSubmitting={
+            courseRunsQuery.states.creating || courseRunsQuery.states.updating
+          }
           id="course-run-form"
           onSubmit={methods.handleSubmit(onSubmit)}
         >
@@ -131,7 +137,13 @@ export function CourseRunForm({ courseRun, ...props }: Props) {
               </Typography>
             </Grid>
             <Grid xs={12} md={6}>
-              <CourseSearch name="course" label="Course" />
+              <CourseSearch
+                disabled={disableCourseInput}
+                enableAdd={!disableCourseInput}
+                enableEdit={!disableCourseInput}
+                name="course"
+                label={intl.formatMessage(courseRunFormMessages.courseLabel)}
+              />
             </Grid>
             <Grid xs={12} md={6}>
               <RHFTextField

@@ -16,6 +16,21 @@ export const courseFormMessages = defineMessages({
     defaultMessage: "Organizations",
     description: "Label for the organizations input form",
   },
+  targetCourseRunTitle: {
+    id: "components.templates.course.form.translations.targetCourseRunTitle",
+    defaultMessage: "Course runs of this course",
+    description: "Title for the course run section inside the course form",
+  },
+  addCourseRunModalTitle: {
+    id: "components.templates.course.form.translations.addCourseRunModalTitle",
+    defaultMessage: "Add a course run",
+    description: "Label for the add course run modal",
+  },
+  addCourseRunButton: {
+    id: "components.templates.course.form.translations.addCourseRunButton",
+    defaultMessage: "Add a course run",
+    description: "Label for the add course run button",
+  },
   productRelationSubtitle: {
     id: "components.templates.course.form.translations.productRelationSubtitle",
     defaultMessage: "Relation to products",
