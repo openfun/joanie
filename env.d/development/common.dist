@@ -50,3 +50,6 @@ JOANIE_BACKOFFICE_BASE_URL="http://localhost:8072"
 # JOANIE_SIGNATURE_LEXPERSONA_SESSION_USER_ID =
 # JOANIE_SIGNATURE_LEXPERSONA_PROFILE_ID =
 # JOANIE_SIGNATURE_LEXPERSONA_TOKEN =
+
+# must be reachable for signature email notifications
+DEVELOPER_EMAIL="developer@example.com"

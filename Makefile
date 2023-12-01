@@ -133,7 +133,12 @@ demo: ## flush db then create a demo for load testing purpose
 demo-dev: ## flush db then create a dataset for dev purpose
 	@${MAKE} resetdb
 	@$(MANAGE) create_dev_demo
+	@$(MANAGE) generate_jwt_tokens
 .PHONY: demo-dev
+
+generate-jwt-tokens: ## generate JWT tokens for all users
+	@$(MANAGE) generate_jwt_tokens
+.PHONY: generate-jwt-tokens
 
 # Nota bene: Black should come after isort just in case they don't agree...
 lint: ## lint back-end python sources
