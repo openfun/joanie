@@ -1,4 +1,4 @@
-import { act, render, screen, within } from "@testing-library/react";
+import { act, cleanup, render, screen, within } from "@testing-library/react";
 import Button from "@mui/material/Button";
 import userEvent from "@testing-library/user-event";
 import { PropsWithChildren } from "react";
@@ -9,9 +9,20 @@ import {
 import { TestingWrapper } from "@/components/testing/TestingWrapper";
 
 describe("<Wizard />", () => {
+  beforeEach(() => {
+    jest.useFakeTimers({ advanceTimers: true });
+  });
+
+  afterEach(() => {
+    cleanup();
+    jest.runOnlyPendingTimers();
+    jest.useRealTimers();
+  });
+
   function WizardTestStep(props: PropsWithChildren<WizardStepProps>) {
     return <div>{props.children}</div>;
   }
+
   it("renders a Wizard component", async () => {
     const before = jest.fn();
 
@@ -95,8 +106,8 @@ describe("<Wizard />", () => {
     expect(before).toBeCalledWith(2);
     screen.getByText("Step two");
   });
+
   it("renders a Wizard component and test invalid step", async () => {
-    jest.useFakeTimers({ advanceTimers: true });
     const before = jest.fn();
 
     render(

@@ -26,11 +26,16 @@ export interface AlertModalProps extends CustomModalProps {
   validateLabel?: string;
 }
 
-export function AlertModal(props: AlertModalProps) {
+export function AlertModal({
+  handleAccept,
+  validateLabel,
+  message,
+  ...props
+}: AlertModalProps) {
   const intl = useIntl();
-  const handleAccept = (): void => {
+  const handleAcceptAndClose = (): void => {
     props.handleClose();
-    props.handleAccept();
+    handleAccept();
   };
 
   return (
@@ -41,13 +46,13 @@ export function AlertModal(props: AlertModalProps) {
           <Button onClick={props.handleClose}>
             {intl.formatMessage(messages.cancel)}
           </Button>
-          <Button onClick={handleAccept} autoFocus>
-            {props.validateLabel ?? intl.formatMessage(messages.validate)}
+          <Button onClick={handleAcceptAndClose} autoFocus>
+            {validateLabel ?? intl.formatMessage(messages.validate)}
           </Button>
         </>
       }
     >
-      <DialogContentText>{props.message}</DialogContentText>
+      <DialogContentText>{message}</DialogContentText>
     </CustomModal>
   );
 }

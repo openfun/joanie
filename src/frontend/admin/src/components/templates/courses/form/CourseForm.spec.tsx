@@ -45,7 +45,7 @@ describe("<CourseForm/>", () => {
     }
   });
 
-  it("renders a populated form without the product relation  section", async () => {
+  it("renders a populated form without the product relation section", async () => {
     const course = CourseFactory();
     render(
       <TestingWrapper>
