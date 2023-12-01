@@ -217,7 +217,7 @@ export function ProductFormTargetCoursesSection(props: Props) {
       </Grid>
       <CustomModal
         fullWidth={true}
-        maxWidth="md"
+        maxWidth="lg"
         title={intl.formatMessage(
           productFormMessages.addTargetCourseRelationModalTitle,
         )}

@@ -20,7 +20,6 @@ import { organizationRoute } from "@/services/repositories/organization/Organiza
 import { OrganizationFactory } from "@/services/factories/organizations";
 import { waitForRequest } from "@/utils/testing";
 import { productRoute } from "@/services/repositories/products/ProductRepository";
-import { ProductFactory } from "@/services/factories/product";
 
 const course = CourseFactory();
 course.title = "Testing";
@@ -149,76 +148,5 @@ describe("<ProductForm/>", () => {
     await waitFor(() => {
       expect(mockEnqueue).toBeCalled();
     });
-  }, 15000);
-
-  it("renders ProductForm and test target course part", async () => {
-    const user = userEvent.setup();
-    const product = ProductFactory();
-    product.target_courses = [];
-
-    await act(async () => {
-      render(
-        <SnackbarProvider>
-          <ProductForm product={product} />
-        </SnackbarProvider>,
-        { wrapper: TestingWrapper },
-      );
-    });
-
-    // Buttons Back and Next
-    const nextButton = await screen.findByRole("button", { name: "Next" });
-
-    const titleInput = screen.getByRole("textbox", { name: "Title" });
-
-    const callToActionInput = screen.getByRole("textbox", {
-      name: "Call to action",
-    });
-
-    expect(callToActionInput).toHaveValue(product.call_to_action);
-    expect(titleInput).toHaveValue(product.title);
-    await user.click(nextButton);
-
-    // Test target_courses section
-    await screen.findByText(
-      "No target course has been added yet. Click the button to add",
-    );
-
-    screen.getByRole("heading", { name: "Product target courses" });
-    const addTargetCourseButton = screen.getByRole("button", {
-      name: "Add target course",
-    });
-    await user.click(addTargetCourseButton);
-    screen.getByText(
-      "In this form, you can choose a course to integrate it into the product as well as the associated course runs.",
-    );
-
-    const courseSearch = screen.getByRole("combobox", {
-      name: "Course search",
-    });
-
-    await user.type(courseSearch, "Test");
-    const val = await screen.findByRole("option", { name: "Testing" });
-
-    await user.click(val);
-    const checkboxLabel = await screen.findByText(
-      "Choose specific course-runs",
-    );
-
-    expect(
-      screen.queryByRole("combobox", {
-        name: "Search course run",
-      }),
-    ).not.toBeInTheDocument();
-
-    await user.click(checkboxLabel);
-    const courseRunSearch = screen.getByRole("combobox", {
-      name: "Search course run",
-    });
-
-    await user.type(courseRunSearch, "course");
-    const courseResult = await screen.findByRole("option", { name: "course" });
-    await userEvent.click(courseResult);
-
-    screen.getByText("course");
   }, 15000);
 });

@@ -1,25 +1,25 @@
 import * as React from "react";
 import { useEffect } from "react";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import Grid from "@mui/material/Unstable_Grid2";
 import Stack from "@mui/material/Stack";
-import { useIntl } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import Alert from "@mui/material/Alert";
+import Typography from "@mui/material/Typography";
+import Box from "@mui/material/Box";
 import {
   ProductTargetCourseRelation,
   ProductTargetCourseRelationFormValues,
 } from "@/services/api/models/ProductTargetCourseRelation";
 import { RHFProvider } from "@/components/presentational/hook-form/RHFProvider";
 import { CourseSearch } from "@/components/templates/courses/inputs/search/CourseSearch";
-import { DndDefaultRow } from "@/components/presentational/dnd/DndDefaultRow";
-import { CourseRunControlledSearch } from "@/components/templates/courses-runs/input/search/CourseRunControlledSearch";
-import { CourseRun } from "@/services/api/models/CourseRun";
 import { productFormMessages } from "@/components/templates/products/form/translations";
-import { Course } from "@/services/api/models/Course";
 import { Optional } from "@/types/utils";
-import { RHFCheckbox } from "@/components/presentational/hook-form/RHFCheckbox";
+import { CoursesRunsList } from "@/components/templates/courses-runs/list/CoursesRunsList";
+import { Course } from "@/services/api/models/Course";
+import { CourseRun } from "@/services/api/models/CourseRun";
 
 type Props = {
   targetCourse?: Optional<ProductTargetCourseRelation, "id">;
@@ -31,7 +31,6 @@ export function ProductTargetCourseRelationForm(props: Props) {
   const Schema = Yup.object().shape({
     course: Yup.mixed<Course>().required(),
     course_runs: Yup.array<any, CourseRun>().min(0).optional(),
-    enable_course_runs: Yup.boolean().optional(),
   });
 
   const getDefaultValues = (): ProductTargetCourseRelationFormValues => {
@@ -42,19 +41,14 @@ export function ProductTargetCourseRelationForm(props: Props) {
       courseRunsDefault = courseRuns ?? [];
       courseDefault = course.course;
     }
-    let enableCourseRuns = false;
-    if (props?.targetCourse?.course_runs) {
-      enableCourseRuns = props.targetCourse.course_runs.length > 0;
-    }
 
     return {
       course: courseDefault,
       course_runs: courseRunsDefault,
-      enable_course_runs: enableCourseRuns,
     };
   };
 
-  const form = useForm({
+  const methods = useForm({
     resolver: yupResolver(Schema),
     defaultValues: getDefaultValues(),
   });
@@ -63,29 +57,22 @@ export function ProductTargetCourseRelationForm(props: Props) {
     props.onSubmit({
       course: values.course,
       course_runs: values.course_runs ?? [],
-      enable_course_runs: undefined,
     });
   };
 
-  const courseRunsArray = useFieldArray({
-    control: form.control,
-    name: "course_runs",
-  });
-
-  const valueCourse = form.watch("course", undefined);
-  const useSpecificCourseRuns = form.watch("enable_course_runs", false);
+  const valueCourse = methods.watch("course");
 
   useEffect(() => {
-    form.reset(getDefaultValues());
+    methods.reset(getDefaultValues());
   }, [props.targetCourse]);
 
   return (
     <RHFProvider
       id="product-target-course-form"
-      methods={form}
-      onSubmit={form.handleSubmit(onSubmit)}
+      methods={methods}
+      onSubmit={methods.handleSubmit(onSubmit)}
     >
-      <Grid container>
+      <Grid container spacing={2}>
         <Grid xs={12}>
           <Alert severity="info">
             {intl.formatMessage(
@@ -93,40 +80,30 @@ export function ProductTargetCourseRelationForm(props: Props) {
             )}
           </Alert>
         </Grid>
-        <Grid xs={12} mt={2}>
+        <Grid xs={12} mt={3}>
           <Stack spacing={2}>
-            <CourseSearch name="course" />
+            <CourseSearch enableAdd enableEdit name="course" />
+
             {valueCourse != null && (
-              <>
-                <RHFCheckbox
-                  name="enable_course_runs"
-                  label={intl.formatMessage(
-                    productFormMessages.useSpecificCourseRunsCheckboxLabel,
-                  )}
+              <Box mt={4}>
+                <Typography variant="subtitle2" component="h6">
+                  <FormattedMessage
+                    {...productFormMessages.addTargetCourseCourseRunModalTitle}
+                  />
+                </Typography>
+                <CoursesRunsList
+                  defaultSelectedRows={
+                    props.targetCourse?.course_runs.map(
+                      (courseRun) => courseRun.id,
+                    ) ?? []
+                  }
+                  enableSelect
+                  onSelectRows={(ids, selectedCourseRuns) => {
+                    methods.setValue("course_runs", selectedCourseRuns);
+                  }}
+                  courseId={valueCourse.id}
                 />
-                {useSpecificCourseRuns && (
-                  <>
-                    <CourseRunControlledSearch
-                      courseId={valueCourse.id}
-                      selectedOptions={courseRunsArray.fields}
-                      onSelectItem={(item) => {
-                        courseRunsArray.append(item);
-                      }}
-                    />
-                    <Stack spacing={1}>
-                      {courseRunsArray.fields.map((courseRun, index) => {
-                        return (
-                          <DndDefaultRow
-                            key={courseRun.id}
-                            mainTitle={courseRun.title}
-                            onDelete={() => courseRunsArray.remove(index)}
-                          />
-                        );
-                      })}
-                    </Stack>
-                  </>
-                )}
-              </>
+              </Box>
             )}
           </Stack>
         </Grid>
