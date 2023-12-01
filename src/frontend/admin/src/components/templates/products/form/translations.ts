@@ -124,7 +124,8 @@ export const productFormMessages = defineMessages({
   productTargetCourseFormInfo: {
     id: "components.templates.products.form.translations.productTargetCourseFormInfo",
     defaultMessage:
-      "In this form, you can choose a course to integrate it into the product as well as the associated course runs.",
+      "In this form, you can choose a course to integrate into the product as well as the associated course paths. " +
+      "If you do not select any race runs, they will all be selected by default.",
     description: "Text for the alert info",
   },
   productRelatedCoursesFormInfo: {
@@ -143,5 +144,10 @@ export const productFormMessages = defineMessages({
     id: "components.templates.products.form.translations.addTargetCourseRelationModalTitle",
     defaultMessage: "Add target courses",
     description: "Title for the add target courses modal",
+  },
+  addTargetCourseCourseRunModalTitle: {
+    id: "components.templates.products.form.translations.addTargetCourseCourseRunModalTitle",
+    defaultMessage: "List of available course runs",
+    description: "Title for the course runs selection section",
   },
 });
