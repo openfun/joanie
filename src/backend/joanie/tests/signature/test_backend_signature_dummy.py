@@ -11,6 +11,7 @@ from django.utils import timezone as django_timezone
 from pdfminer.high_level import extract_text as pdf_extract_text
 
 from joanie.core import factories
+from joanie.payment.factories import InvoiceFactory
 from joanie.signature.backends.base import BaseSignatureBackend
 from joanie.signature.backends.dummy import DummySignatureBackend
 
@@ -247,6 +248,12 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
             definition_checksum="1234",
             signed_on=django_timezone.now(),
             context="a small context",
+        )
+        InvoiceFactory(
+            order=contract.order,
+            recipient_address__address="1 Rue de L'Exemple",
+            recipient_address__postcode=75000,
+            recipient_address__city="Paris",
         )
         backend = DummySignatureBackend()
 

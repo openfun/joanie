@@ -838,6 +838,7 @@ class ContractApiTest(BaseAPITestCase):
                 course=relation.course,
                 state=enums.ORDER_STATE_VALIDATED,
             )
+            InvoiceFactory(order=order)
             context = contract_definition.generate_document_context(
                 order.product.contract_definition, user, order
             )

@@ -16,6 +16,7 @@ from joanie.core import enums, factories, models
 from joanie.core.utils import contract as contract_utility
 from joanie.core.utils import contract_definition as contract_definition_utility
 from joanie.core.utils import issuers
+from joanie.payment.factories import InvoiceFactory
 
 
 class UtilsContractTestCase(TestCase):
@@ -436,18 +437,20 @@ class UtilsContractTestCase(TestCase):
         When we call this method with 2 existing signature backend references at the signature
         provider, it should return a list with 2 PDF bytes.
         """
-        factories.ContractFactory(
+        contract1 = factories.ContractFactory(
             signature_backend_reference="wfl_fake_dummy_4",
             definition_checksum="1234",
             submitted_for_signature_on=timezone.now(),
             context="a small context content 1",
         )
-        factories.ContractFactory(
+        InvoiceFactory(order=contract1.order)
+        contract2 = factories.ContractFactory(
             signature_backend_reference="wfl_fake_dummy_5",
             definition_checksum="5678",
             submitted_for_signature_on=timezone.now(),
             context="a small context content 2",
         )
+        InvoiceFactory(order=contract2.order)
         backend_signature_references = [
             "wfl_fake_dummy_4",
             "wfl_fake_dummy_5",
@@ -467,12 +470,13 @@ class UtilsContractTestCase(TestCase):
         When we call this method with 1 non-existent signature backend reference at the signature
         provider, it should raise an error with the reference that has failed.
         """
-        factories.ContractFactory(
+        contract = factories.ContractFactory(
             signature_backend_reference="wfl_fake_dummy_4",
             definition_checksum="1234",
             submitted_for_signature_on=timezone.now(),
             context="a small context content 1",
         )
+        InvoiceFactory(order=contract.order)
         backend_signature_references = [
             "wfl_fake_dummy_4",
             "wfl_wrong_dummy_5",
@@ -526,6 +530,12 @@ class UtilsContractTestCase(TestCase):
                 product=relation.product,
                 course=relation.course,
                 state=enums.ORDER_STATE_VALIDATED,
+            )
+            InvoiceFactory(
+                order=order,
+                recipient_address__address="1 Rue de L'Exemple",
+                recipient_address__postcode=75000,
+                recipient_address__city="Paris",
             )
             context = contract_definition_utility.generate_document_context(
                 order.product.contract_definition, users[index], order

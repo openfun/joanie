@@ -13,6 +13,7 @@ from pdfminer.high_level import extract_text as pdf_extract_text
 
 from joanie.core import enums, factories
 from joanie.core.utils import contract_definition
+from joanie.payment.factories import InvoiceFactory
 
 
 class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
@@ -178,6 +179,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
                 course=relation.course,
                 state=enums.ORDER_STATE_VALIDATED,
             )
+            InvoiceFactory(order=order)
             context = contract_definition.generate_document_context(
                 order.product.contract_definition, user, order
             )
@@ -238,6 +240,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
                 course=relation.course,
                 state=enums.ORDER_STATE_VALIDATED,
             )
+            InvoiceFactory(order=order)
             context = contract_definition.generate_document_context(
                 order.product.contract_definition, user, order
             )
@@ -296,6 +299,12 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
                 product=relation.product,
                 course=relation.course,
                 state=enums.ORDER_STATE_VALIDATED,
+            )
+            InvoiceFactory(
+                order=order,
+                recipient_address__address="1 Rue de L'Exemple",
+                recipient_address__postcode=75000,
+                recipient_address__city="Paris",
             )
             context = contract_definition.generate_document_context(
                 order.product.contract_definition, user, order
@@ -379,6 +388,12 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
                 product=relation.product,
                 course=relation.course,
                 state=enums.ORDER_STATE_VALIDATED,
+            )
+            InvoiceFactory(
+                order=order,
+                recipient_address__address="1 Rue de L'Exemple",
+                recipient_address__postcode=75000,
+                recipient_address__city="Paris",
             )
             context = contract_definition.generate_document_context(
                 order.product.contract_definition, user, order
@@ -469,6 +484,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
             course=relation.course,
             state=enums.ORDER_STATE_VALIDATED,
         )
+        InvoiceFactory(order=order)
         context = contract_definition.generate_document_context(
             order.product.contract_definition, user, order
         )
