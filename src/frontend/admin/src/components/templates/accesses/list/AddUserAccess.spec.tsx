@@ -1,6 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { rest } from "msw";
+import { http, HttpResponse } from "msw";
 import { server } from "mocks/server";
 import { CourseRoles } from "@/services/api/models/Course";
 import { TestingWrapper } from "@/components/testing/TestingWrapper";
@@ -13,8 +13,8 @@ describe("<AddUserAccess />", () => {
   it("render component and test onAdd callback", async () => {
     const returnedUser = UsersFactory();
     server.use(
-      rest.get(buildApiUrl(userRoutes.getAll()), (req, res, ctx) => {
-        return res(ctx.json([returnedUser]));
+      http.get(buildApiUrl(userRoutes.getAll()), () => {
+        return HttpResponse.json([returnedUser]);
       }),
     );
     const allAccesses = Object.values(CourseRoles);

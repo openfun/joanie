@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from "@testing-library/react";
-import { rest } from "msw";
+import { http, HttpResponse } from "msw";
 import { server } from "../../../../../mocks/server";
 import { ProductList } from "@/components/templates/products/list/ProductsList";
 import { TestingWrapper } from "@/components/testing/TestingWrapper";
@@ -11,8 +11,8 @@ describe("<ProductList />", () => {
   const allProducts = ProductFactory(4);
   beforeEach(() => {
     server.use(
-      rest.get(buildApiUrl(productRoute.getAll()), (req, res, ctx) => {
-        return res(ctx.json(allProducts));
+      http.get(buildApiUrl(productRoute.getAll()), () => {
+        return HttpResponse.json(allProducts);
       }),
     );
   });

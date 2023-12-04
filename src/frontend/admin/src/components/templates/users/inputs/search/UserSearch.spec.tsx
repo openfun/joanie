@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { rest } from "msw";
+import { http, HttpResponse } from "msw";
 import * as React from "react";
 
 import userEvent from "@testing-library/user-event";
@@ -16,8 +16,8 @@ const returnedUser = UsersFactory();
 describe("<UserSearch />", () => {
   beforeAll(() => {
     server.use(
-      rest.get(buildApiUrl(userRoutes.getAll()), (req, res, ctx) => {
-        return res(ctx.json([returnedUser]));
+      http.get(buildApiUrl(userRoutes.getAll()), () => {
+        return HttpResponse.json([returnedUser]);
       }),
     );
   });

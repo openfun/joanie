@@ -1,4 +1,4 @@
-import { act, renderHook, waitFor } from "@testing-library/react";
+import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { usePaginatedTableResource } from "@/components/presentational/table/usePaginatedTableResource";
 import { Organization } from "@/services/api/models/Organization";
 import { useOrganizations } from "@/hooks/useOrganizations/useOrganizations";
@@ -6,10 +6,15 @@ import { TestingWrapper } from "@/components/testing/TestingWrapper";
 
 describe("usePaginatedTableResource Hook", () => {
   beforeEach(() => {
-    jest.useFakeTimers({ advanceTimers: true });
+    jest.useFakeTimers({
+      // Explicitly tell Jest not to affect the "queueMicrotask" calls.
+      advanceTimers: true,
+      doNotFake: ["queueMicrotask"],
+    });
   });
 
   afterEach(() => {
+    cleanup();
     jest.runOnlyPendingTimers();
     jest.useRealTimers();
   });
@@ -72,10 +77,12 @@ describe("usePaginatedTableResource Hook", () => {
 
     expect(result.current.tableProps.paginationModel.page).toBe(2);
     expect(result.current.tableProps.paginationModel.pageSize).toBe(20);
+
     result.current.tableProps.onSearch("Search");
     await act(async () => {
       jest.runOnlyPendingTimers();
     });
+
     expect(result.current.tableProps.paginationModel.page).toBe(0);
   });
 });
