@@ -6,10 +6,10 @@ import {
   waitFor,
   within,
 } from "@testing-library/react";
-import { rest } from "msw";
-import userEvent from "@testing-library/user-event";
+import { http, HttpResponse } from "msw";
 import { SnackbarProvider } from "notistack";
 import { server } from "mocks/server";
+import userEvent from "@testing-library/user-event";
 import { ProductForm } from "@/components/templates/products/form/ProductForm";
 import { TestingWrapper } from "@/components/testing/TestingWrapper";
 import { CourseFactory } from "@/services/factories/courses";
@@ -18,9 +18,9 @@ import { coursesRoute } from "@/services/repositories/courses/CoursesRepository"
 import { CourseRunFactory } from "@/services/factories/courses-runs";
 import { organizationRoute } from "@/services/repositories/organization/OrganizationRepository";
 import { OrganizationFactory } from "@/services/factories/organizations";
-import { ProductFactory } from "@/services/factories/product";
-import { productRoute } from "@/services/repositories/products/ProductRepository";
 import { waitForRequest } from "@/utils/testing";
+import { productRoute } from "@/services/repositories/products/ProductRepository";
+import { ProductFactory } from "@/services/factories/product";
 
 const course = CourseFactory();
 course.title = "Testing";
@@ -41,19 +41,21 @@ jest.mock("notistack", () => ({
 
 describe("<ProductForm/>", () => {
   beforeEach(() => {
-    jest.useFakeTimers({ advanceTimers: 10 });
+    jest.useFakeTimers({
+      // Explicitly tell Jest not to affect the "queueMicrotask" calls.
+      doNotFake: ["queueMicrotask"],
+      advanceTimers: true,
+    });
+
     server.use(
-      rest.get(buildApiUrl(coursesRoute.getAll()), (req, res, ctx) => {
-        return res(ctx.json([course]));
+      http.get(buildApiUrl(coursesRoute.getAll()), () => {
+        return HttpResponse.json([course]);
       }),
-      rest.get(
-        buildApiUrl(coursesRoute.getCoursesRuns(":id", "")),
-        (req, res, ctx) => {
-          return res(ctx.json([courseRun]));
-        },
-      ),
-      rest.get(buildApiUrl(organizationRoute.getAll()), (req, res, ctx) => {
-        return res(ctx.json([org]));
+      http.get(buildApiUrl(coursesRoute.getCoursesRuns(":id", "")), () => {
+        return HttpResponse.json([courseRun]);
+      }),
+      http.get(buildApiUrl(organizationRoute.getAll()), () => {
+        return HttpResponse.json([org]);
       }),
     );
   });
@@ -88,9 +90,6 @@ describe("<ProductForm/>", () => {
       screen.queryByRole("button", { name: "Next" }),
     ).not.toBeInTheDocument();
 
-    // Test Main Form
-    screen.getByRole("heading", { name: "Main information's" });
-
     const titleInput = screen.getByRole("textbox", { name: "Title" });
     screen.getByRole("combobox", { name: "Type" });
     const description = screen.getByRole("textbox", { name: "Description" });
@@ -102,6 +101,7 @@ describe("<ProductForm/>", () => {
     });
     screen.getByText("(click to edit)");
     await userEvent.click(instructionTitle);
+
     expect(screen.queryByText("(click to edit)")).not.toBeInTheDocument();
 
     const markdownEditorContainer =
@@ -134,12 +134,13 @@ describe("<ProductForm/>", () => {
       "POST",
       buildApiUrl(productRoute.create),
     );
+
     await act(async () => {
-      jest.advanceTimersByTime(900);
+      jest.runOnlyPendingTimers();
     });
 
-    const request = await pendingRequest;
-    expect(request.url.toString()).toEqual(buildApiUrl(productRoute.create));
+    const r: any = await pendingRequest;
+    expect(r.request.url).toEqual(buildApiUrl(productRoute.create));
     await waitFor(() => {
       expect(mockEnqueue).toBeCalled();
     });

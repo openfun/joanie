@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { useForm } from "react-hook-form";
-import { rest } from "msw";
+import { http, HttpResponse } from "msw";
 import userEvent from "@testing-library/user-event";
 import { server } from "../../../../../../mocks/server";
 import { Nullable } from "@/types/utils";
@@ -49,12 +49,9 @@ describe("<CertificateSearch />", () => {
 
   beforeEach(() => {
     server.use(
-      rest.get(
-        buildApiUrl(certificateDefinitionRoutes.getAll()),
-        (req, res, ctx) => {
-          return res(ctx.json([definition]));
-        },
-      ),
+      http.get(buildApiUrl(certificateDefinitionRoutes.getAll()), () => {
+        return HttpResponse.json([definition]);
+      }),
     );
   });
 

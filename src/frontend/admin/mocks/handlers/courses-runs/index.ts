@@ -1,16 +1,16 @@
-import { rest } from "msw";
+import { http, HttpResponse } from "msw";
 import { buildApiUrl } from "@/services/http/HttpService";
 import { coursesRunsRoute } from "@/services/repositories/courses-runs/CoursesRunsRepository";
 import { CourseRunFactory } from "@/services/factories/courses-runs";
 
 export const coursesRunsHandlers = [
-  rest.get(buildApiUrl(coursesRunsRoute.getAll()), (req, res, ctx) => {
-    return res(ctx.json(CourseRunFactory(10)));
+  http.get(buildApiUrl(coursesRunsRoute.getAll()), () => {
+    return HttpResponse.json(CourseRunFactory(10));
   }),
-  rest.get(buildApiUrl(coursesRunsRoute.get(":id")), (req, res, ctx) => {
-    return res(ctx.json(CourseRunFactory()));
+  http.get(buildApiUrl(coursesRunsRoute.get(":id")), () => {
+    return HttpResponse.json(CourseRunFactory());
   }),
-  rest.options(buildApiUrl(coursesRunsRoute.getAll()), (req, res, ctx) => {
+  http.options(buildApiUrl(coursesRunsRoute.getAll()), () => {
     const result = {
       actions: {
         POST: {
@@ -23,6 +23,6 @@ export const coursesRunsHandlers = [
         },
       },
     };
-    return res(ctx.json(result));
+    return HttpResponse.json(result);
   }),
 ];

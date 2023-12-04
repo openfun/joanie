@@ -1,30 +1,35 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
-import { matchRequestUrl, MockedRequest } from "msw";
+import { matchRequestUrl } from "msw";
 import { server } from "../../mocks/server";
 
 export function waitForRequest(method: string, url: string) {
   let requestId = "";
 
-  return new Promise<MockedRequest>((resolve, reject) => {
-    server.events.on("request:start", (req) => {
+  return new Promise((resolve, reject) => {
+    server.events.on("request:start", ({ request: req, requestId: toto }) => {
       const matchesMethod = req.method.toLowerCase() === method.toLowerCase();
-      const matchesUrl = matchRequestUrl(req.url, url).matches;
+      // eslint-disable-next-line compat/compat
+      const requestUrl = new URL(req.url);
+      const matchesUrl = matchRequestUrl(requestUrl, url).matches;
 
       if (matchesMethod && matchesUrl) {
-        requestId = req.id;
+        requestId = toto;
       }
     });
 
     server.events.on("request:match", (req) => {
-      if (req.id === requestId) {
+      if (req.requestId === requestId) {
         resolve(req);
       }
     });
 
     server.events.on("request:unhandled", (req) => {
-      if (req.id === requestId) {
+      if (req.requestId === requestId) {
+        const requestUrl = new URL(req.request.url);
         reject(
-          new Error(`The ${req.method} ${req.url.href} request was unhandled.`),
+          new Error(
+            `The ${req.request.method} ${requestUrl.href} request was unhandled.`,
+          ),
         );
       }
     });

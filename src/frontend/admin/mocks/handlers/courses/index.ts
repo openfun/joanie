@@ -1,23 +1,20 @@
-import { rest } from "msw";
+import { http, HttpResponse } from "msw";
 import { buildApiUrl } from "@/services/http/HttpService";
 import { coursesRoute } from "@/services/repositories/courses/CoursesRepository";
 import { CourseFactory } from "@/services/factories/courses";
 import { CourseRunFactory } from "@/services/factories/courses-runs";
 
 export const coursesHandlers = [
-  rest.get(buildApiUrl(coursesRoute.getAll()), (req, res, ctx) => {
-    return res(ctx.json(CourseFactory(10)));
+  http.get(buildApiUrl(coursesRoute.getAll()), () => {
+    return HttpResponse.json(CourseFactory(10));
   }),
-  rest.get(buildApiUrl(coursesRoute.get(":id")), (req, res, ctx) => {
-    return res(ctx.json(CourseFactory()));
+  http.get(buildApiUrl(coursesRoute.get(":id")), () => {
+    return HttpResponse.json(CourseFactory());
   }),
-  rest.get(
-    buildApiUrl(coursesRoute.getCoursesRuns(":id", "")),
-    (req, res, ctx) => {
-      return res(ctx.json(CourseRunFactory(2)));
-    },
-  ),
-  rest.options(buildApiUrl(coursesRoute.options), (req, res, ctx) => {
+  http.get(buildApiUrl(coursesRoute.getCoursesRuns(":id", "")), () => {
+    return HttpResponse.json(CourseRunFactory(2));
+  }),
+  http.options(buildApiUrl(coursesRoute.options), () => {
     const result = {
       actions: {
         POST: {
@@ -50,6 +47,6 @@ export const coursesHandlers = [
         },
       },
     };
-    return res(ctx.json(result));
+    return HttpResponse.json(result);
   }),
 ];
