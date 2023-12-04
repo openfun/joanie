@@ -13,7 +13,7 @@ def get_expected_workflow_payload(workflow_status):
         "firstName": "John",
         "groupId": "grp_id_fake",
         "id": "wfl_id_fake",
-        "lastName": "Doe",
+        "lastName": ".",
         "logs": [],
         "name": "Heavy Duty Wool Watch",
         "notifiedEvents": [

@@ -9,8 +9,6 @@ from joanie.signature.backends import get_signature_backend
 
 from . import get_expected_workflow_payload
 
-# pylint: disable=protected-access
-
 
 @override_settings(
     JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.lex_persona.LexPersonaBackend",
