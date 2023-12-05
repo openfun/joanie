@@ -29,22 +29,22 @@ class CourseContractApiTest(BaseAPITestCase):
         organization's contracts for a course.
         """
         organization = factories.OrganizationFactory()
-        course = factories.CourseFactory()
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         relation = factories.CourseProductRelationFactory(
-            organizations=[organization], course=course
+            organizations=[organization],
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
         factories.ContractFactory.create_batch(
             5,
             order__product=relation.product,
-            order__course=course,
+            order__course=relation.course,
             order__organization=organization,
         )
 
         with self.assertNumQueries(1):
             response = self.client.get(
-                f"/api/v1.0/courses/{str(course.id)}/contracts/",
+                f"/api/v1.0/courses/{str(relation.course.id)}/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
@@ -65,7 +65,6 @@ class CourseContractApiTest(BaseAPITestCase):
         cannot query organization's contracts for a course.
         """
         organization = factories.OrganizationFactory()
-        course = factories.CourseFactory()
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         factories.UserOrganizationAccessFactory(
@@ -75,21 +74,22 @@ class CourseContractApiTest(BaseAPITestCase):
         )
 
         relation = factories.CourseProductRelationFactory(
-            organizations=[organization], course=course
+            organizations=[organization],
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
         factories.ContractFactory.create_batch(
             5,
             order__product=relation.product,
-            order__course=course,
+            order__course=relation.course,
             order__organization=organization,
         )
 
         # Having course access does not imply to be able to access to course's contract
-        factories.UserCourseAccessFactory(course=course, user=user)
+        factories.UserCourseAccessFactory(course=relation.course, user=user)
 
         with self.assertNumQueries(1):
             response = self.client.get(
-                f"/api/v1.0/courses/{str(course.id)}/contracts/",
+                f"/api/v1.0/courses/{str(relation.course.id)}/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
@@ -129,7 +129,9 @@ class CourseContractApiTest(BaseAPITestCase):
 
             for course in courses:
                 relation = factories.CourseProductRelationFactory(
-                    organizations=[organization], course=course
+                    organizations=[organization],
+                    course=course,
+                    product__contract_definition=factories.ContractDefinitionFactory(),
                 )
                 factories.ContractFactory.create_batch(
                     5,
@@ -204,7 +206,6 @@ class CourseContractApiTest(BaseAPITestCase):
         can query organization's course contracts and filter them by signature state.
         """
         organization = factories.OrganizationFactory()
-        course = factories.CourseFactory()
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         factories.UserOrganizationAccessFactory(
@@ -214,18 +215,19 @@ class CourseContractApiTest(BaseAPITestCase):
         )
 
         relation = factories.CourseProductRelationFactory(
-            organizations=[organization], course=course
+            organizations=[organization],
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
         unsigned_contracts = factories.ContractFactory.create_batch(
             5,
             order__product=relation.product,
-            order__course=course,
+            order__course=relation.course,
             order__organization=organization,
         )
 
         signed_contract = factories.ContractFactory.create(
             order__product=relation.product,
-            order__course=course,
+            order__course=relation.course,
             order__organization=organization,
             signed_on=timezone.now(),
             definition_checksum="test",
@@ -239,7 +241,7 @@ class CourseContractApiTest(BaseAPITestCase):
         # - List without filter should return 6 contracts
         with self.assertNumQueries(46):
             response = self.client.get(
-                f"/api/v1.0/courses/{str(course.id)}/contracts/",
+                f"/api/v1.0/courses/{str(relation.course.id)}/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
@@ -250,7 +252,7 @@ class CourseContractApiTest(BaseAPITestCase):
         # - Filter by is_signed=false should return 5 contracts
         with self.assertNumQueries(2):
             response = self.client.get(
-                f"/api/v1.0/courses/{str(course.id)}/contracts/?is_signed=false",
+                f"/api/v1.0/courses/{str(relation.course.id)}/contracts/?is_signed=false",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
@@ -266,7 +268,7 @@ class CourseContractApiTest(BaseAPITestCase):
         # - Filter by is_signed=true should return 1 contract
         with self.assertNumQueries(2):
             response = self.client.get(
-                f"/api/v1.0/courses/{str(course.id)}/contracts/?is_signed=true",
+                f"/api/v1.0/courses/{str(relation.course.id)}/contracts/?is_signed=true",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
@@ -297,20 +299,20 @@ class CourseContractApiTest(BaseAPITestCase):
         an organization's course contract.
         """
         organization = factories.OrganizationFactory()
-        course = factories.CourseFactory()
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         relation = factories.CourseProductRelationFactory(
-            organizations=[organization], course=course
+            organizations=[organization],
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(
             order__product=relation.product,
-            order__course=course,
+            order__course=relation.course,
             order__organization=organization,
         )
 
         # Having course access does not imply to be able to access to course's contract
-        factories.UserCourseAccessFactory(course=course, user=user)
+        factories.UserCourseAccessFactory(course=relation.course, user=user)
 
         with self.assertNumQueries(1):
             response = self.client.get(
@@ -326,7 +328,6 @@ class CourseContractApiTest(BaseAPITestCase):
         cannot query an organization's course contract.
         """
         organization = factories.OrganizationFactory()
-        course = factories.CourseFactory()
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         factories.UserOrganizationAccessFactory(
@@ -336,17 +337,18 @@ class CourseContractApiTest(BaseAPITestCase):
         )
 
         relation = factories.CourseProductRelationFactory(
-            organizations=[organization], course=course
+            organizations=[organization],
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(
             order__product=relation.product,
-            order__course=course,
+            order__course=relation.course,
             order__organization=organization,
         )
 
         with self.assertNumQueries(1):
             response = self.client.get(
-                f"/api/v1.0/courses/{str(course.id)}/contracts/{str(contract.id)}/",
+                f"/api/v1.0/courses/{str(relation.course.id)}/contracts/{str(contract.id)}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
@@ -377,7 +379,9 @@ class CourseContractApiTest(BaseAPITestCase):
 
             for course in courses:
                 relation = factories.CourseProductRelationFactory(
-                    organizations=[organization], course=course
+                    organizations=[organization],
+                    course=course,
+                    product__contract_definition=factories.ContractDefinitionFactory(),
                 )
                 factories.ContractFactory.create_batch(
                     5,
@@ -442,7 +446,6 @@ class CourseContractApiTest(BaseAPITestCase):
         should work with the course code instead of the course id.
         """
         organization = factories.OrganizationFactory()
-        course = factories.CourseFactory()
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         factories.UserOrganizationAccessFactory(
@@ -452,17 +455,18 @@ class CourseContractApiTest(BaseAPITestCase):
         )
 
         relation = factories.CourseProductRelationFactory(
-            organizations=[organization], course=course
+            organizations=[organization],
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(
             order__product=relation.product,
-            order__course=course,
+            order__course=relation.course,
             order__organization=organization,
         )
 
         with self.assertNumQueries(45):
             response = self.client.get(
-                f"/api/v1.0/courses/{course.code}/contracts/{str(contract.id)}/",
+                f"/api/v1.0/courses/{relation.course.code}/contracts/{str(contract.id)}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 

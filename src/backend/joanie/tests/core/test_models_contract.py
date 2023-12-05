@@ -68,9 +68,9 @@ class ContractModelTestCase(TestCase):
         factories.AddressFactory.create(owner=user)
         order = factories.OrderFactory(
             owner=user,
-            product=factories.ProductFactory(),
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
-        contract = factories.ContractFactory(
+        factories.ContractFactory(
             order=order, signed_on=None, submitted_for_signature_on=None
         )
         contract = models.Contract.objects.get()
@@ -87,7 +87,7 @@ class ContractModelTestCase(TestCase):
         factories.AddressFactory.create(owner=user)
         order = factories.OrderFactory(
             owner=user,
-            product=factories.ProductFactory(),
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
         factories.ContractFactory(
             order=order,
@@ -112,7 +112,7 @@ class ContractModelTestCase(TestCase):
         factories.AddressFactory.create(owner=user)
         order = factories.OrderFactory(
             owner=user,
-            product=factories.ProductFactory(),
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
 
         factories.ContractFactory(
@@ -167,7 +167,7 @@ class ContractModelTestCase(TestCase):
         factories.AddressFactory.create(owner=user)
         order = factories.OrderFactory(
             owner=user,
-            product=factories.ProductFactory(),
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
 
         factories.ContractFactory(
@@ -194,7 +194,7 @@ class ContractModelTestCase(TestCase):
         factories.AddressFactory.create(owner=user)
         order = factories.OrderFactory(
             owner=user,
-            product=factories.ProductFactory(),
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
 
         factories.ContractFactory(
@@ -270,7 +270,7 @@ class ContractModelTestCase(TestCase):
         factories.AddressFactory.create(owner=user)
         order = factories.OrderFactory(
             owner=user,
-            product=factories.ProductFactory(),
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
         factories.ContractFactory(order=order, context=None, definition_checksum=None)
         contract = models.Contract.objects.get()
@@ -407,7 +407,7 @@ class ContractModelTestCase(TestCase):
         )
         order = factories.OrderFactory(
             owner=user,
-            product=factories.ProductFactory(),
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
         InvoiceFactory(order=order, recipient_address=address)
         contract = factories.ContractFactory(order=order)
@@ -429,7 +429,7 @@ class ContractModelTestCase(TestCase):
         'submitted_for_signature_on'.
         """
         order = factories.OrderFactory(
-            product=factories.ProductFactory(),
+            product__contract_definition=factories.ContractDefinitionFactory()
         )
         contract = factories.ContractFactory(order=order)
 
@@ -453,7 +453,7 @@ class ContractModelTestCase(TestCase):
         and 'submitted_for_signature_on'.
         """
         order = factories.OrderFactory(
-            product=factories.ProductFactory(),
+            product__contract_definition=factories.ContractDefinitionFactory()
         )
         contract = factories.ContractFactory(
             order=order,
@@ -482,7 +482,7 @@ class ContractModelTestCase(TestCase):
         the validity period to be signed, it should return True to get signed.
         """
         order = factories.OrderFactory(
-            product=factories.ProductFactory(),
+            product__contract_definition=factories.ContractDefinitionFactory()
         )
         contract = factories.ContractFactory(
             order=order,
@@ -503,10 +503,12 @@ class ContractModelTestCase(TestCase):
     )
     def test_model_contract_is_eligible_for_signature_must_be_false(self):
         """
-        When the contract field 'submitted_for_signature_on' is not within the validity period
-        to be signed, it should return False to get signed.
+        When the contract field 'submitted_for_signature_on' is not within the validity
+        period to be signed, it should return False to get signed.
         """
-        order = factories.OrderFactory(product=factories.ProductFactory())
+        order = factories.OrderFactory(
+            product__contract_definition=factories.ContractDefinitionFactory()
+        )
         contract = factories.ContractFactory(
             order=order,
             definition=order.product.contract_definition,
@@ -527,7 +529,9 @@ class ContractModelTestCase(TestCase):
         If the contract does not have a value for 'submitted_for_signature_on', it should
         return False to get signed.
         """
-        order = factories.OrderFactory(product=factories.ProductFactory())
+        order = factories.OrderFactory(
+            product__contract_definition=factories.ContractDefinitionFactory()
+        )
         contract = factories.ContractFactory(
             order=order,
             submitted_for_signature_on=None,

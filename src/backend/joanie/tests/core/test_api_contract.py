@@ -46,7 +46,10 @@ class ContractApiTest(BaseAPITestCase):
             role=random.choice([enums.ADMIN, enums.OWNER]),
         )
 
-        relation = factories.CourseProductRelationFactory(organizations=[organization])
+        relation = factories.CourseProductRelationFactory(
+            organizations=[organization],
+            product__contract_definition=factories.ContractDefinitionFactory(),
+        )
         factories.ContractFactory.create_batch(
             5,
             order__product=relation.product,
@@ -230,7 +233,10 @@ class ContractApiTest(BaseAPITestCase):
             role=random.choice([enums.ADMIN, enums.OWNER]),
         )
 
-        relation = factories.CourseProductRelationFactory(organizations=[organization])
+        relation = factories.CourseProductRelationFactory(
+            organizations=[organization],
+            product__contract_definition=factories.ContractDefinitionFactory(),
+        )
         contract = factories.ContractFactory(
             order__product=relation.product,
             order__course=relation.course,
@@ -421,7 +427,7 @@ class ContractApiTest(BaseAPITestCase):
         order = factories.OrderFactory(
             owner=user,
             state=enums.ORDER_STATE_VALIDATED,
-            product=factories.ProductFactory(),
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
         invoice = InvoiceFactory(order=order)
         address = invoice.recipient_address
@@ -477,7 +483,7 @@ class ContractApiTest(BaseAPITestCase):
                     enums.ORDER_STATE_SUBMITTED,
                 ]
             ),
-            product=factories.ProductFactory(),
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(order=order)
         token = self.get_user_token(user.username)
@@ -503,7 +509,7 @@ class ContractApiTest(BaseAPITestCase):
         order = factories.OrderFactory(
             owner=user,
             state=enums.ORDER_STATE_VALIDATED,
-            product=factories.ProductFactory(),
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(order=order)
         token = self.get_user_token(user.username)
@@ -525,7 +531,7 @@ class ContractApiTest(BaseAPITestCase):
         order = factories.OrderFactory(
             owner=user,
             state=enums.ORDER_STATE_VALIDATED,
-            product=factories.ProductFactory(),
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(order=order)
         token = self.get_user_token(user.username)
@@ -547,7 +553,7 @@ class ContractApiTest(BaseAPITestCase):
         order = factories.OrderFactory(
             owner=user,
             state=enums.ORDER_STATE_VALIDATED,
-            product=factories.ProductFactory(),
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(order=order)
         token = self.get_user_token(user.username)
@@ -574,7 +580,7 @@ class ContractApiTest(BaseAPITestCase):
         order = factories.OrderFactory(
             owner=owner,
             state=enums.ORDER_STATE_VALIDATED,
-            product=factories.ProductFactory(),
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(
             order=order,
@@ -608,7 +614,7 @@ class ContractApiTest(BaseAPITestCase):
         order = factories.OrderFactory(
             owner=owner,
             state=enums.ORDER_STATE_VALIDATED,
-            product=factories.ProductFactory(),
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(
             order=order,
@@ -825,7 +831,10 @@ class ContractApiTest(BaseAPITestCase):
         factories.UserOrganizationAccessFactory(
             organization=organization, user=requesting_user
         )
-        relation = factories.CourseProductRelationFactory(organizations=[organization])
+        relation = factories.CourseProductRelationFactory(
+            product__contract_definition=factories.ContractDefinitionFactory(),
+            organizations=[organization],
+        )
         learners = factories.UserFactory.create_batch(3)
         signature_reference_choices = [
             "wfl_fake_dummy_1",

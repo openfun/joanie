@@ -955,7 +955,7 @@ class OrderModelsTestCase(TestCase):
                     enums.ORDER_STATE_PENDING,
                 ]
             ),
-            product=factories.ProductFactory(),
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
 
         with self.assertRaises(ValidationError) as context:
@@ -983,7 +983,7 @@ class OrderModelsTestCase(TestCase):
         order = factories.OrderFactory(
             owner=user,
             state=enums.ORDER_STATE_VALIDATED,
-            product=factories.ProductFactory(),
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
         InvoiceFactory(order=order)
 
@@ -1018,7 +1018,7 @@ class OrderModelsTestCase(TestCase):
         order = factories.OrderFactory(
             owner=user,
             state=enums.ORDER_STATE_VALIDATED,
-            product=factories.ProductFactory(),
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
         InvoiceFactory(order=order)
         context = contract_definition.generate_document_context(
@@ -1063,7 +1063,7 @@ class OrderModelsTestCase(TestCase):
         order = factories.OrderFactory(
             owner=user,
             state=enums.ORDER_STATE_VALIDATED,
-            product=factories.ProductFactory(),
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
         InvoiceFactory(order=order)
         contract = factories.ContractFactory(
@@ -1102,7 +1102,7 @@ class OrderModelsTestCase(TestCase):
         order = factories.OrderFactory(
             owner=user,
             state=enums.ORDER_STATE_VALIDATED,
-            product=factories.ProductFactory(),
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
         InvoiceFactory(order=order)
         context = contract_definition.generate_document_context(
@@ -1141,7 +1141,7 @@ class OrderModelsTestCase(TestCase):
         order = factories.OrderFactory(
             owner=user,
             state=enums.ORDER_STATE_VALIDATED,
-            product=factories.ProductFactory(),
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
         now = django_timezone.now()
         factories.ContractFactory(

@@ -32,7 +32,9 @@ class UtilsContractTestCase(TestCase):
         return an empty generator.
         """
         users = factories.UserFactory.create_batch(3)
-        relation = factories.CourseProductRelationFactory()
+        relation = factories.CourseProductRelationFactory(
+            product__contract_definition=factories.ContractDefinitionFactory()
+        )
         signature_reference_choices = [
             "wfl_fake_dummy_1",
             "wfl_fake_dummy_2",
@@ -72,12 +74,15 @@ class UtilsContractTestCase(TestCase):
         self,
     ):
         """
-        From a Course Product Relation product object, we should be able to find the contract's
-        signature backend references that are attached to the validated orders only for a specific
-        course and product. It should return an iterator with signature backend references.
+        From a Course Product Relation product object, we should be able to find the
+        contract's signature backend references that are attached to the validated
+        orders only for a specific course and product. It should return an iterator with
+        signature backend references.
         """
         users = factories.UserFactory.create_batch(3)
-        relation = factories.CourseProductRelationFactory()
+        relation = factories.CourseProductRelationFactory(
+            product__contract_definition=factories.ContractDefinitionFactory()
+        )
         signature_reference_choices = [
             "wfl_fake_dummy_1",
             "wfl_fake_dummy_2",
@@ -112,11 +117,13 @@ class UtilsContractTestCase(TestCase):
         self,
     ):
         """
-        From an Organization object, if there are no signed contracts attached to the organization,
-        it should return an empty iterator.
+        From an Organization object, if there are no signed contracts attached to the
+        organization, it should return an empty iterator.
         """
         users = factories.UserFactory.create_batch(3)
-        relation = factories.CourseProductRelationFactory()
+        relation = factories.CourseProductRelationFactory(
+            product__contract_definition=factories.ContractDefinitionFactory()
+        )
         organization = relation.organizations.first()
         signature_reference_choices = [
             "wfl_fake_dummy_1",
@@ -157,12 +164,14 @@ class UtilsContractTestCase(TestCase):
         self,
     ):
         """
-        From an Organization object, we should be able to find the contract's signature backend
-        references from signed contracts. It should return an iterator with signature backend
-        references.
+        From an Organization object, we should be able to find the contract's signature
+        backend references from signed contracts. It should return an iterator with
+        signature backend references.
         """
         users = factories.UserFactory.create_batch(3)
-        relation = factories.CourseProductRelationFactory()
+        relation = factories.CourseProductRelationFactory(
+            product__contract_definition=factories.ContractDefinitionFactory()
+        )
         organization = relation.organizations.first()
         signature_reference_choices = [
             "wfl_fake_dummy_1",
@@ -203,9 +212,9 @@ class UtilsContractTestCase(TestCase):
         reference and get an empty iterator in return.
         """
         users = factories.UserFactory.create_batch(3)
-        product = factories.ProductFactory(type=enums.PRODUCT_TYPE_CERTIFICATE)
         relation = factories.CourseProductRelationFactory(
-            product=product,
+            product__type=enums.PRODUCT_TYPE_CERTIFICATE,
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
         signature_reference_choices = [
             "wfl_fake_dummy_1",
@@ -253,14 +262,14 @@ class UtilsContractTestCase(TestCase):
         self,
     ):
         """
-        From a Course Product Relation product object, we should be able to find the signed
-        contract signature backend references that are attached to the 'validated' Orders of a
-        specific Enrollment.
+        From a Course Product Relation product object, we should be able to find the
+        signed contract signature backend references that are attached to the
+        'validated' Orders of a specific Enrollment.
         """
         users = factories.UserFactory.create_batch(3)
-        product = factories.ProductFactory(type=enums.PRODUCT_TYPE_CERTIFICATE)
         relation = factories.CourseProductRelationFactory(
-            product=product,
+            product__type=enums.PRODUCT_TYPE_CERTIFICATE,
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
         signature_reference_choices = [
             "wfl_fake_dummy_1",
@@ -313,9 +322,10 @@ class UtilsContractTestCase(TestCase):
         factories.UserOrganizationAccessFactory(
             organization=organization, user=requesting_user
         )
-        product = factories.ProductFactory(type=enums.PRODUCT_TYPE_CERTIFICATE)
         relation = factories.CourseProductRelationFactory(
-            product=product, organizations=[organization]
+            product__type=enums.PRODUCT_TYPE_CERTIFICATE,
+            product__contract_definition=factories.ContractDefinitionFactory(),
+            organizations=[organization],
         )
         signature_reference_choices = [
             "wfl_fake_dummy_1",
@@ -371,9 +381,10 @@ class UtilsContractTestCase(TestCase):
             organization=factories.OrganizationFactory(), user=requesting_user
         )
         organization_course_supplier = factories.OrganizationFactory()
-        product = factories.ProductFactory(type=enums.PRODUCT_TYPE_CERTIFICATE)
         relation = factories.CourseProductRelationFactory(
-            product=product, organizations=[organization_course_supplier]
+            product__type=enums.PRODUCT_TYPE_CERTIFICATE,
+            product__contract_definition=factories.ContractDefinitionFactory(),
+            organizations=[organization_course_supplier],
         )
         signature_reference_choices = [
             "wfl_fake_dummy_1",
@@ -517,7 +528,9 @@ class UtilsContractTestCase(TestCase):
         storage = storages["contracts"]
         users = factories.UserFactory.create_batch(3)
         requesting_user = factories.UserFactory()
-        relation = factories.CourseProductRelationFactory()
+        relation = factories.CourseProductRelationFactory(
+            product__contract_definition=factories.ContractDefinitionFactory()
+        )
         signature_reference_choices = [
             "wfl_fake_dummy_4",
             "wfl_fake_dummy_5",

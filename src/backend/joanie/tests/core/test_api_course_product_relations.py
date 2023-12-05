@@ -66,7 +66,10 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         courses = factories.CourseFactory.create_batch(2)
         for course in courses:
             factories.UserCourseAccessFactory(user=user, course=course)
-        product = factories.ProductFactory(type=enums.PRODUCT_TYPE_CREDENTIAL)
+        product = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CREDENTIAL,
+            contract_definition=factories.ContractDefinitionFactory(),
+        )
         product.instructions = (
             "# An h1 header\n"
             "Paragraphs are separated by a blank line.\n"
@@ -449,9 +452,10 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         course = factories.CourseFactory()
-        product = factories.ProductFactory(type=enums.PRODUCT_TYPE_CREDENTIAL)
         relation = factories.CourseProductRelationFactory(
-            course=course, product=product
+            course=course,
+            product__type=enums.PRODUCT_TYPE_CREDENTIAL,
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
         factories.UserCourseAccessFactory(user=user, course=course)
 
@@ -492,20 +496,20 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                         "title": relation.product.certificate_definition.title,
                     },
                     "contract_definition": {
-                        "id": str(product.contract_definition.id),
-                        "description": product.contract_definition.description,
-                        "language": product.contract_definition.language,
-                        "title": product.contract_definition.title,
+                        "id": str(relation.product.contract_definition.id),
+                        "description": relation.product.contract_definition.description,
+                        "language": relation.product.contract_definition.language,
+                        "title": relation.product.contract_definition.title,
                     },
                     "state": {
-                        "priority": product.state["priority"],
-                        "datetime": product.state["datetime"]
+                        "priority": relation.product.state["priority"],
+                        "datetime": relation.product.state["datetime"]
                         .isoformat()
                         .replace("+00:00", "Z")
-                        if product.state["datetime"]
+                        if relation.product.state["datetime"]
                         else None,
-                        "call_to_action": product.state["call_to_action"],
-                        "text": product.state["text"],
+                        "call_to_action": relation.product.state["call_to_action"],
+                        "text": relation.product.state["text"],
                     },
                     "id": str(relation.product.id),
                     "price": float(relation.product.price),

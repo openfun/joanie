@@ -292,7 +292,7 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
         user = factories.UserFactory(email="johnnydo@example.fr")
         order = factories.OrderFactory(
             owner=user,
-            product=factories.ProductFactory(),
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(
             order=order,
@@ -360,7 +360,7 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
         user = factories.UserFactory(email="johnnydo@example.fr")
         order = factories.OrderFactory(
             owner=user,
-            product=factories.ProductFactory(),
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(
             order=order,
@@ -430,7 +430,7 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
         user = factories.UserFactory(email="johnnydo@example.fr")
         order = factories.OrderFactory(
             owner=user,
-            product=factories.ProductFactory(),
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(
             order=order,
