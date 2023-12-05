@@ -896,7 +896,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         self.assertNotIn("2000", content["created_on"])
 
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment", return_value=True)
-    def test_models_enrollment_duplicate_course_run_with_order(self, _mock_set):
+    def test_api_enrollment_duplicate_course_run_with_order(self, _mock_set):
         """
         It should not be possible to enroll to course runs of the same course for a
         given order.

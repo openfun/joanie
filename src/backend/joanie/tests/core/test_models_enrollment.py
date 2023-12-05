@@ -514,7 +514,7 @@ class EnrollmentModelsTestCase(TestCase):
 
         with self.assertRaises(ValidationError) as context:
             factories.EnrollmentFactory(
-                course_run=course_run, was_created_by_order=True
+                course_run=course_run, was_created_by_order=True, is_active=True
             )
 
         self.assertEqual(
@@ -525,3 +525,77 @@ class EnrollmentModelsTestCase(TestCase):
                 "created in the scope of an order.']}"
             ),
         )
+
+    def test_models_enrollment_forbid_for_listed_course_run_linked_to_product_require_contract(  # pylint: disable=line-too-long
+        self,
+    ):
+        """
+        If a user tries to enroll to a not listed course run which is linked to a
+        product requiring to sign a contract and that user has not signed this contract
+        yet, a ValidationError should be raised.
+        """
+        course_run = factories.CourseRunFactory.create(
+            state=CourseState.ONGOING_OPEN,
+            is_listed=False,
+        )
+
+        factories.CourseRunFactory.create(
+            state=CourseState.ONGOING_OPEN,
+            is_listed=False,
+            course=course_run.course,
+        )
+
+        product = factories.ProductFactory(
+            contract_definition=factories.ContractDefinitionFactory(),
+            target_courses=[course_run.course],
+            price="0.00",
+        )
+
+        relation = factories.CourseProductRelationFactory(product=product)
+
+        order = factories.OrderFactory(
+            product=product,
+            course=relation.course,
+            organization=relation.organizations.first(),
+        )
+        order.submit()
+
+        factories.ContractFactory(
+            order=order,
+            definition=product.contract_definition,
+        )
+
+        with self.assertRaises(ValidationError) as context:
+            factories.EnrollmentFactory(
+                course_run=course_run,
+                was_created_by_order=True,
+                is_active=True,
+                user=order.owner,
+            )
+
+        self.assertEqual(order.owner.enrollments.count(), 0)
+        self.assertEqual(
+            str(context.exception),
+            (
+                "{'__all__': ["
+                f"'Course run \"{course_run.id}\" requires a valid order to enroll.']}}"
+            ),
+        )
+
+        # - Recreate a signed contract for the order
+        order.contract.delete()
+        factories.ContractFactory(
+            order=order,
+            definition=product.contract_definition,
+            signed_on=timezone.now(),
+        )
+
+        # - Now the enrollment should be allowed
+        factories.EnrollmentFactory(
+            course_run=course_run,
+            was_created_by_order=True,
+            is_active=True,
+            user=order.owner,
+        )
+
+        self.assertEqual(order.owner.enrollments.count(), 1)

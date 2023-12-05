@@ -974,6 +974,15 @@ class Enrollment(BaseModel):
                         )
                         | models.Q(course_relations__course_runs=self.course_run)
                     ),
+                    (
+                        models.Q(
+                            product__contract_definition__isnull=False,
+                            contract__signed_on__isnull=False,
+                        )
+                        | models.Q(
+                            product__contract_definition__isnull=True,
+                        )
+                    ),
                     state=enums.ORDER_STATE_VALIDATED,
                 )
                 if validated_user_orders.count() == 0:
