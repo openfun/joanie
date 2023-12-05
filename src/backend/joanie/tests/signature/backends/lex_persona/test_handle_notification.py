@@ -1,7 +1,6 @@
 """Test suite for the Lex Persona Signature Backend handle_notification"""
 import json
 from datetime import timedelta
-from unittest import mock
 
 from django.core.exceptions import ValidationError
 from django.http import HttpRequest
@@ -9,9 +8,10 @@ from django.test import TestCase
 from django.test.utils import override_settings
 from django.utils import timezone as django_timezone
 
+import responses
+
 from joanie.core import factories
 from joanie.signature.backends import get_signature_backend
-from joanie.signature.backends.lex_persona import LexPersonaBackend
 
 
 @override_settings(
@@ -27,9 +27,9 @@ from joanie.signature.backends.lex_persona import LexPersonaBackend
 class LexPersonaBackendHandleNotificationTestCase(TestCase):
     """Test suite for Lex Persona Signature provider Backend handle_notification."""
 
-    @mock.patch.object(LexPersonaBackend, "_verify_webhook_event")
+    @responses.activate
     def test_backend_lex_persona_handle_notification_workflowstarted_unsupported_event_type(
-        self, mock_verify_webhook_event
+        self
     ):
         """
         When an incoming webhook event type is 'workflowStarted', and the event is verified,
@@ -56,7 +56,9 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
         }
         request = HttpRequest()
         request.__dict__.update(request_data)
-        mock_verify_webhook_event.return_value = {
+
+        api_url = "https://lex_persona.test01.com/api/webhookEvents/wbe_id_fake"
+        expected_response_data = {
             "id": "wbe_id_fake",
             "tenantId": "ten_id_fake",
             "userId": "usr_id_fake",
@@ -67,6 +69,8 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
             "created": 1693404075146,
             "updated": 1693404075146,
         }
+        responses.add(responses.GET, api_url, json=expected_response_data, status=200)
+
         backend = get_signature_backend()
 
         with self.assertRaises(ValidationError) as context:
@@ -77,9 +81,16 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
             "['The notification workflowStarted is not supported.']",
         )
 
-    @mock.patch.object(LexPersonaBackend, "_verify_webhook_event")
+        self.assertEqual(len(responses.calls), 1)
+        self.assertEqual(responses.calls[0].request.url, api_url)
+        self.assertEqual(
+            responses.calls[0].request.headers["Authorization"], "Bearer token_id_fake"
+        )
+        self.assertEqual(responses.calls[0].request.method, "GET")
+
+    @responses.activate
     def test_backend_lex_persona_handle_notification_workflowstopped_unsupported_event_type(
-        self, mock_verify_webhook_event
+        self
     ):
         """
         When an incoming webhook event type is 'workflowStopped', and the event is verified,
@@ -105,7 +116,9 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
         }
         request = HttpRequest()
         request.__dict__.update(request_data)
-        mock_verify_webhook_event.return_value = {
+
+        api_url = "https://lex_persona.test01.com/api/webhookEvents/wbe_id_fake"
+        expected_response_data = {
             "id": "wbe_id_fake",
             "tenantId": "ten_id_fake",
             "userId": "usr_id_fake",
@@ -116,6 +129,7 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
             "created": 1693404075146,
             "updated": 1693404075146,
         }
+        responses.add(responses.GET, api_url, json=expected_response_data, status=200)
         backend = get_signature_backend()
 
         with self.assertRaises(ValidationError) as context:
@@ -125,6 +139,13 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
             str(context.exception),
             "['The notification workflowStopped is not supported.']",
         )
+
+        self.assertEqual(len(responses.calls), 1)
+        self.assertEqual(responses.calls[0].request.url, api_url)
+        self.assertEqual(
+            responses.calls[0].request.headers["Authorization"], "Bearer token_id_fake"
+        )
+        self.assertEqual(responses.calls[0].request.method, "GET")
 
     def test_backend_lex_persona_handle_notification_incoming_request_body_is_an_empty_dictionary(
         self,
@@ -207,9 +228,9 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
             str(context.exception), "['The JSON body of the request is malformed']"
         )
 
-    @mock.patch.object(LexPersonaBackend, "_verify_webhook_event")
+    @responses.activate
     def test_backend_lex_persona_handle_notification_verify_webhook_event_failed_to_verify(
-        self, mock_verify_webhook_event
+        self
     ):
         """
         When an incoming event type is 'workflowFinished', but we can't verify that webhook event
@@ -235,9 +256,16 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
         }
         request = HttpRequest()
         request.__dict__.update(request_data)
-        mock_verify_webhook_event.side_effect = ValidationError(
-            "['Lex Persona: Unable to verify the webhook event with the signature provider.']"
-        )
+        api_url = "https://lex_persona.test01.com/api/webhookEvents/wbe_id_fake"
+        expected_response_data = {
+            "status": 404,
+            "error": "Not Found",
+            "message": "The specified webhook event can not be found.",
+            "requestId": "379a3980-481772",
+            "code": "WebhookEventNotFound",
+        }
+
+        responses.add(responses.GET, api_url, json=expected_response_data, status=400)
         backend = get_signature_backend()
 
         with self.assertRaises(ValidationError) as context:
@@ -247,11 +275,15 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
             str(context.exception),
             "['Lex Persona: Unable to verify the webhook event with the signature provider.']",
         )
+        self.assertEqual(len(responses.calls), 1)
+        self.assertEqual(responses.calls[0].request.url, api_url)
+        self.assertEqual(
+            responses.calls[0].request.headers["Authorization"], "Bearer token_id_fake"
+        )
+        self.assertEqual(responses.calls[0].request.method, "GET")
 
-    @mock.patch.object(LexPersonaBackend, "_verify_webhook_event")
-    def test_backend_lex_persona_handle_notification_workflow_finished_event(
-        self, mock_verify_webhook_event
-    ):
+    @responses.activate
+    def test_backend_lex_persona_handle_notification_workflow_finished_event(self):
         """
         When an incoming event type is 'workflowFinished', and the event has been verified,
         then the contract which has the signature backend reference should get updated
@@ -290,7 +322,9 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
         }
         request = HttpRequest()
         request.__dict__.update(request_data)
-        mock_verify_webhook_event.return_value = {
+
+        api_url = "https://lex_persona.test01.com/api/webhookEvents/wbe_id_fake"
+        expected_response_data = {
             "id": "wbe_id_fake",
             "tenantId": "ten_id_fake",
             "userId": "usr_id_fake",
@@ -301,6 +335,8 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
             "created": 1693404075146,
             "updated": 1693404075146,
         }
+        responses.add(responses.GET, api_url, json=expected_response_data, status=200)
+
         backend = get_signature_backend()
 
         backend.handle_notification(request)
@@ -312,9 +348,9 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
     @override_settings(
         JOANIE_SIGNATURE_VALIDITY_PERIOD=60 * 60 * 24 * 15,
     )
-    @mock.patch.object(LexPersonaBackend, "_verify_webhook_event")
+    @responses.activate
     def test_backend_lex_persona_handle_notification_workflow_finished_event_but_signature_expired(
-        self, mock_verify_webhook_event
+        self
     ):
         """
         When an incoming event type is 'workflowFinished' and the 'id' has been verified at the
@@ -354,7 +390,9 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
         }
         request = HttpRequest()
         request.__dict__.update(request_data)
-        mock_verify_webhook_event.return_value = {
+
+        api_url = "https://lex_persona.test01.com/api/webhookEvents/wbe_id_fake"
+        expected_response_data = {
             "id": "wbe_id_fake",
             "tenantId": "ten_id_fake",
             "userId": "usr_id_fake",
@@ -365,6 +403,8 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
             "created": 1693404075146,
             "updated": 1693404075146,
         }
+        responses.add(responses.GET, api_url, json=expected_response_data, status=200)
+
         backend = get_signature_backend()
 
         with self.assertRaises(ValidationError) as context:
@@ -377,9 +417,9 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
         self.assertIsNotNone(contract.submitted_for_signature_on)
         self.assertIsNone(contract.signed_on)
 
-    @mock.patch.object(LexPersonaBackend, "_verify_webhook_event")
+    @responses.activate
     def test_backend_lex_persona_handle_notification_recipient_refused_should_reset_contract(
-        self, mock_verify_webhook_event
+        self
     ):
         """
         When an incoming event type is 'recipientRefused', and the event has been verified,
@@ -420,7 +460,9 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
         }
         request = HttpRequest()
         request.__dict__.update(request_data)
-        mock_verify_webhook_event.return_value = {
+
+        api_url = "https://lex_persona.test01.com/api/webhookEvents/wbe_id_fake"
+        expected_response_data = {
             "id": "wbe_id_fake",
             "tenantId": "ten_id_fake",
             "userId": "usr_id_fake",
@@ -431,6 +473,8 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
             "created": 1693404075146,
             "updated": 1693404075146,
         }
+        responses.add(responses.GET, api_url, json=expected_response_data, status=200)
+
         backend = get_signature_backend()
 
         backend.handle_notification(request)

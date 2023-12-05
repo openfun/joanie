@@ -166,3 +166,55 @@ class LexPersonaBackendGetSignatureInvitationLinkTestCase(TestCase):
             responses.calls[1].request.headers["Authorization"], "Bearer jwt_token"
         )
         self.assertEqual(responses.calls[1].request.method, "POST")
+
+    @responses.activate
+    def test_signature_invitation_link_missing_token_in_invite_url(self):
+        """
+        When there is no token to extract from the invitation URL, it should raise the exception
+        ValueError
+        """
+        api_url = "https://lex_persona.test01.com/api/requests/"
+        expected_response_data = {
+            "consentPageId": "cop_id_fake",
+            "consentPageUrl": (
+                "https://lex_persona.test01.com/?"
+                "requestToken=eyJhbGciOiJIUzI1NiJ9#requestId=req_8KVKj7qNKNDgsN7Txx1sdvaT"
+            ),
+            "created": 1696238302063,
+            "id": "req_id_fake",
+            "steps": [
+                {
+                    "allowComments": True,
+                    "stepId": "stp_id_fake",
+                    "workflowId": "wfl_id_fake",
+                }
+            ],
+            "tenantId": "ten_id_fake",
+            "updated": 1696238302063,
+        }
+
+        responses.add(
+            responses.POST,
+            api_url,
+            json=expected_response_data,
+            status=200,
+        )
+
+        # Managed invitation link
+        responses.add(
+            responses.POST,
+            "https://lex_persona.test01.com/api/workflows/wfl_id_fake/invite",
+            json={"inviteUrl": "https://example.com/invite"},
+            status=200,
+        )
+
+        backend = get_signature_backend()
+        with self.assertRaises(ValueError) as context:
+            backend.get_signature_invitation_link(
+                recipient_email="johnnydo@example.com", reference_ids=["wfl_id_fake"]
+            )
+
+        self.assertEqual(
+            str(context.exception),
+            "Cannot extract JWT Token from the invite url of the signature provider",
+        )
