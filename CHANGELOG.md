@@ -69,6 +69,7 @@ and this project adheres to
 
 ### Changed
 
+- If a product has a contract, delay auto enroll logic on leaner signature
 - Prevent to enroll to not listed course runs related to an order awaiting
   signature of a contract by the learner
 - Use Invoice.recipient_address to populate Contract address context

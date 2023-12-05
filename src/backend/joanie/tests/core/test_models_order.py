@@ -416,6 +416,51 @@ class OrderModelsTestCase(TestCase):
 
         self.assertEqual(Enrollment.objects.count(), 1)
 
+    def test_models_order_validate_with_contract(self):
+        """
+        Order has a validate method which is in charge to enroll owner to courses
+        with only one course run if order state is equal to validated. But if the
+        related product has a contract, the user should not be enrolled at this step.
+        """
+        owner = factories.UserFactory()
+        [course, target_course] = factories.CourseFactory.create_batch(2)
+
+        # - Link only one course run to target_course
+        factories.CourseRunFactory(
+            course=target_course,
+            state=CourseState.ONGOING_OPEN,
+        )
+
+        product = factories.ProductFactory(
+            courses=[course],
+            target_courses=[target_course],
+            contract_definition=factories.ContractDefinitionFactory(),
+        )
+
+        order = factories.OrderFactory(
+            owner=owner,
+            product=product,
+            course=course,
+        )
+        order.submit(
+            request=RequestFactory().request(),
+            billing_address=BillingAddressDictFactory(),
+        )
+
+        self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
+        self.assertEqual(Enrollment.objects.count(), 0)
+
+        # - Create an invoice to mark order as validated
+        InvoiceFactory(order=order, total=order.total)
+
+        # - Validate the order should not have automatically enrolled user to course run
+        with self.assertNumQueries(10):
+            order.validate()
+
+        self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
+
+        self.assertEqual(Enrollment.objects.count(), 0)
+
     def test_models_order_validate_with_inactive_enrollment(self):
         """
         Order has a validate method which is in charge to enroll owner to courses
