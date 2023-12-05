@@ -326,12 +326,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                             "name": str(product2.certificate_definition.name),
                             "title": str(product2.certificate_definition.title),
                         },
-                        "contract_definition": {
-                            "id": str(product2.contract_definition.id),
-                            "description": product2.contract_definition.description,
-                            "language": product2.contract_definition.language,
-                            "title": product2.contract_definition.title,
-                        },
+                        "contract_definition": None,
                         "id": str(product2.id),
                         "price": float(product2.price),
                         "price_currency": "EUR",
@@ -361,12 +356,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                             "name": str(product1.certificate_definition.name),
                             "title": str(product1.certificate_definition.title),
                         },
-                        "contract_definition": {
-                            "id": str(product1.contract_definition.id),
-                            "description": product1.contract_definition.description,
-                            "language": product1.contract_definition.language,
-                            "title": product1.contract_definition.title,
-                        },
+                        "contract_definition": None,
                         "state": {
                             "priority": product1.state["priority"],
                             "datetime": product1.state["datetime"]
@@ -773,12 +763,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                             "name": product.certificate_definition.name,
                             "title": product.certificate_definition.title,
                         },
-                        "contract_definition": {
-                            "id": str(product.contract_definition.id),
-                            "description": product.contract_definition.description,
-                            "language": product.contract_definition.language,
-                            "title": product.contract_definition.title,
-                        },
+                        "contract_definition": None,
                         "id": str(product.id),
                         "instructions": "",
                         "price": float(product.price),

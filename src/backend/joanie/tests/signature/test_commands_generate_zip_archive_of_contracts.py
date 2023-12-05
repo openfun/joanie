@@ -153,7 +153,8 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         factories.UserOrganizationAccessFactory(user=requesting_user)
         organization_course_provider = factories.OrganizationFactory()
         relation = factories.CourseProductRelationFactory(
-            organizations=[organization_course_provider]
+            organizations=[organization_course_provider],
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
         options = random.choice(
             [
@@ -214,7 +215,10 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         factories.UserOrganizationAccessFactory(
             organization=organization, user=requesting_user
         )
-        relation = factories.CourseProductRelationFactory(organizations=[organization])
+        relation = factories.CourseProductRelationFactory(
+            organizations=[organization],
+            product__contract_definition=factories.ContractDefinitionFactory(),
+        )
         options = random.choice(
             [
                 {
@@ -280,7 +284,10 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         factories.UserOrganizationAccessFactory(
             organization=organization, user=requesting_user
         )
-        relation = factories.CourseProductRelationFactory(organizations=[organization])
+        relation = factories.CourseProductRelationFactory(
+            organizations=[organization],
+            product__contract_definition=factories.ContractDefinitionFactory(),
+        )
         zip_uuid = uuid4()
         options = {
             "user": requesting_user.pk,
@@ -369,7 +376,10 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         factories.UserOrganizationAccessFactory(
             organization=organization, user=requesting_user
         )
-        relation = factories.CourseProductRelationFactory(organizations=[organization])
+        relation = factories.CourseProductRelationFactory(
+            organizations=[organization],
+            product__contract_definition=factories.ContractDefinitionFactory(),
+        )
         zip_uuid = uuid4()
         options = {
             "user": requesting_user.pk,
@@ -455,7 +465,10 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         factories.UserOrganizationAccessFactory(
             organization=organization, user=requesting_user
         )
-        relation = factories.CourseProductRelationFactory(organizations=[organization])
+        relation = factories.CourseProductRelationFactory(
+            organizations=[organization],
+            product__contract_definition=factories.ContractDefinitionFactory(),
+        )
         zip_uuid = random.choice(
             [
                 "aH3kRj2ZvXo5Nt1wPq9SbYp4Q8sU6W2G3eL7ia",  # 38 characters long

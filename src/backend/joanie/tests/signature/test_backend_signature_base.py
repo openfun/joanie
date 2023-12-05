@@ -87,7 +87,7 @@ class BaseSignatureBackendTestCase(TestCase):
         user = factories.UserFactory()
         order = factories.OrderFactory(
             owner=user,
-            product=factories.ProductFactory(),
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(
             order=order,
@@ -125,7 +125,7 @@ class BaseSignatureBackendTestCase(TestCase):
         user = factories.UserFactory()
         order = factories.OrderFactory(
             owner=user,
-            product=factories.ProductFactory(),
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
         factories.ContractFactory(
             order=order,
@@ -162,7 +162,7 @@ class BaseSignatureBackendTestCase(TestCase):
         user = factories.UserFactory()
         order = factories.OrderFactory(
             owner=user,
-            product=factories.ProductFactory(),
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(
             order=order,

@@ -35,7 +35,10 @@ class OrganizationContractApiTest(BaseAPITestCase):
         organization = factories.OrganizationFactory()
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        relation = factories.CourseProductRelationFactory(organizations=[organization])
+        relation = factories.CourseProductRelationFactory(
+            organizations=[organization],
+            product__contract_definition=factories.ContractDefinitionFactory(),
+        )
         factories.ContractFactory.create_batch(
             5,
             order__product=relation.product,
@@ -74,7 +77,10 @@ class OrganizationContractApiTest(BaseAPITestCase):
             role=enums.MEMBER,
         )
 
-        relation = factories.CourseProductRelationFactory(organizations=[organization])
+        relation = factories.CourseProductRelationFactory(
+            organizations=[organization],
+            product__contract_definition=factories.ContractDefinitionFactory(),
+        )
         factories.ContractFactory.create_batch(
             5,
             order__product=relation.product,
@@ -122,7 +128,8 @@ class OrganizationContractApiTest(BaseAPITestCase):
             )
 
             relation = factories.CourseProductRelationFactory(
-                organizations=[organization]
+                organizations=[organization],
+                product__contract_definition=factories.ContractDefinitionFactory(),
             )
             factories.ContractFactory.create_batch(
                 5,
@@ -205,7 +212,10 @@ class OrganizationContractApiTest(BaseAPITestCase):
             role=random.choice([enums.ADMIN, enums.OWNER]),
         )
 
-        relation = factories.CourseProductRelationFactory(organizations=[organization])
+        relation = factories.CourseProductRelationFactory(
+            organizations=[organization],
+            product__contract_definition=factories.ContractDefinitionFactory(),
+        )
         unsigned_contracts = factories.ContractFactory.create_batch(
             5,
             order__product=relation.product,
@@ -289,7 +299,10 @@ class OrganizationContractApiTest(BaseAPITestCase):
         organization = factories.OrganizationFactory()
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        relation = factories.CourseProductRelationFactory(organizations=[organization])
+        relation = factories.CourseProductRelationFactory(
+            organizations=[organization],
+            product__contract_definition=factories.ContractDefinitionFactory(),
+        )
         contract = factories.ContractFactory(
             order__product=relation.product,
             order__course=relation.course,
@@ -318,7 +331,10 @@ class OrganizationContractApiTest(BaseAPITestCase):
             role=enums.MEMBER,
         )
 
-        relation = factories.CourseProductRelationFactory(organizations=[organization])
+        relation = factories.CourseProductRelationFactory(
+            organizations=[organization],
+            product__contract_definition=factories.ContractDefinitionFactory(),
+        )
         contract = factories.ContractFactory(
             order__product=relation.product,
             order__course=relation.course,
@@ -356,7 +372,8 @@ class OrganizationContractApiTest(BaseAPITestCase):
             )
 
             relation = factories.CourseProductRelationFactory(
-                organizations=[organization]
+                organizations=[organization],
+                product__contract_definition=factories.ContractDefinitionFactory(),
             )
             factories.ContractFactory.create_batch(
                 5,
@@ -432,7 +449,10 @@ class OrganizationContractApiTest(BaseAPITestCase):
             role=random.choice([enums.ADMIN, enums.OWNER]),
         )
 
-        relation = factories.CourseProductRelationFactory(organizations=[organization])
+        relation = factories.CourseProductRelationFactory(
+            organizations=[organization],
+            product__contract_definition=factories.ContractDefinitionFactory(),
+        )
         contract = factories.ContractFactory(
             order__product=relation.product,
             order__course=relation.course,

@@ -511,19 +511,6 @@ class ProductFactory(factory.django.DjangoModelFactory):
 
         return CertificateDefinitionFactory()
 
-    @factory.lazy_attribute
-    def contract_definition(self):
-        """
-        Return a ContractDefinition object with a random title
-        if the product type is credential or certificate.
-        """
-        if self.type in [
-            enums.PRODUCT_TYPE_CREDENTIAL,
-            enums.PRODUCT_TYPE_CERTIFICATE,
-        ]:
-            return ContractDefinitionFactory()
-        return None
-
 
 class CourseProductRelationFactory(factory.django.DjangoModelFactory):
     """A factory to create CourseProductRelation object"""
@@ -689,6 +676,7 @@ class ContractFactory(factory.django.DjangoModelFactory):
     order = factory.SubFactory(
         OrderFactory,
         product__type=enums.PRODUCT_TYPE_CREDENTIAL,
+        product__contract_definition=factory.SubFactory(ContractDefinitionFactory),
     )
     signed_on = None
 
