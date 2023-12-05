@@ -94,7 +94,7 @@ export const OrganizationRepository: Repository = class OrganizationRepository {
   ): Promise<void> {
     return fetchApi(organizationRoute.addUserAccess(orgId), {
       method: "POST",
-      body: exportToFormData({ user, role }),
+      body: exportToFormData({ user_id: user, role }),
     }).then(checkStatus);
   }
 

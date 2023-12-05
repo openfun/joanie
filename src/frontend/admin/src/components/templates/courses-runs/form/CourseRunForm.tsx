@@ -92,7 +92,7 @@ export function CourseRunForm({ courseRun, ...props }: Props) {
   const onSubmit = (values: FormValues) => {
     const payload: DTOCourseRun = {
       ...values,
-      course: values.course.id,
+      course_id: values.course.id,
       languages: selectLanguageUtils.getValuesFromObjects(values.languages),
     };
 

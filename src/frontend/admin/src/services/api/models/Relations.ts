@@ -12,8 +12,8 @@ export type CourseRelationToProduct = {
 };
 
 export type DTOCourseRelationToProduct = {
-  product: string;
-  organizations: string[];
+  product_id: string;
+  organization_ids: string[];
 };
 
 export type ProductRelationToCourse = {

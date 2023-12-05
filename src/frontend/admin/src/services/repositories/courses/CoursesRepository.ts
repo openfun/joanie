@@ -118,7 +118,7 @@ export const CourseRepository: Repository = class CourseRepository {
   ): Promise<void> {
     return fetchApi(coursesRoute.addUserAccess(courseId), {
       method: "POST",
-      body: exportToFormData({ user, role }),
+      body: exportToFormData({ user_id: user, role }),
     }).then(checkStatus);
   }
 

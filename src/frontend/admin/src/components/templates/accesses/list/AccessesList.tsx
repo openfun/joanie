@@ -65,6 +65,7 @@ export function AccessesList(props: Props) {
 
   return (
     <TableComponent
+      paginationMode="client"
       rows={props.accesses}
       columns={columns}
       onRemoveClick={(row) => {
