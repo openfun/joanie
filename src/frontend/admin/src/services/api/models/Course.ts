@@ -34,7 +34,7 @@ export interface DTOCourse {
   id?: string;
   code: string;
   title: string;
-  organizations: string[];
+  organization_ids: string[];
   product_relations?: DTOCourseRelationToProduct[];
 }
 
@@ -48,15 +48,15 @@ export const transformCourseToDTO = (course: CourseFormValues): DTOCourse => {
       return org.id;
     });
     const result: DTOCourseRelationToProduct = {
-      product: item.product.id,
-      organizations: orgsIds,
+      product_id: item.product.id,
+      organization_ids: orgsIds,
     };
     return result;
   });
 
   return {
     ...course,
-    organizations: organizationIds,
+    organization_ids: organizationIds,
     product_relations: productRelations ?? [],
   };
 };

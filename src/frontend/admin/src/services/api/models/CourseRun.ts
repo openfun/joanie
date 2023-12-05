@@ -17,5 +17,5 @@ export type CourseRun = {
 
 export interface DTOCourseRun extends Omit<CourseRun, "course" | "id"> {
   id?: string;
-  course: string;
+  course_id: string;
 }

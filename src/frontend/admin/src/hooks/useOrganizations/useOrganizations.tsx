@@ -120,6 +120,7 @@ export const useOrganizations = (
           custom.methods.setError(
             intl.formatMessage(useOrganizationsMessages.errorUpdate),
           );
+          throw e;
         }
       },
       removeAccessUser: async (orgId: string, accessId: string) => {

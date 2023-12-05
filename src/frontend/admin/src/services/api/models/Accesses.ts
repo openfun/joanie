@@ -7,7 +7,7 @@ export type Accesses<Roles extends string = string> = {
 };
 
 export type DTOAccesses<Roles extends string = string> = {
-  user?: string;
+  user_id?: string;
   role: Roles;
 };
 

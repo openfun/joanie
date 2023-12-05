@@ -110,6 +110,7 @@ export const useCourses = (
           custom.methods.setError(
             intl.formatMessage(useCoursesMessages.errorUpdate),
           );
+          throw e;
         }
       },
       removeAccessUser: async (courseId: string, accessId: string) => {
