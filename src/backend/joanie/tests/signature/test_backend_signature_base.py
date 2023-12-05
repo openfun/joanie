@@ -1,13 +1,14 @@
 """Test suite of common methods for Base, to Dummy and Client Signature Backend."""
 import random
 from datetime import timedelta
+from unittest import mock
 
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.test.utils import override_settings
 from django.utils import timezone as django_timezone
 
-from joanie.core import factories
+from joanie.core import enums, factories
 from joanie.signature.backends import get_signature_backend
 
 
@@ -78,16 +79,22 @@ class BaseSignatureBackendTestCase(TestCase):
             ]
         )
     )
-    def test_backend_signature_base_backend_confirm_signature(self):
+    @mock.patch("joanie.core.models.Order.enroll_user_to_course_run")
+    def test_backend_signature_base_backend_confirm_signature(self, _mock_enroll_user):
         """
         This test verifies that the `confirm_signature` method updates the contract with a
         timestamps for the field 'signed_on', and it should set 'None' to the field
         'submitted_for_signature_on'.
+
+        Furthermore, it should call the method
+        `enroll_user_to_course_run` on the contract's order. In this way, when user has signed
+        its contract, it should be enrolled to courses with only one course run.
         """
         user = factories.UserFactory()
         order = factories.OrderFactory(
             owner=user,
             product__contract_definition=factories.ContractDefinitionFactory(),
+            state=enums.ORDER_STATE_VALIDATED,
         )
         contract = factories.ContractFactory(
             order=order,
@@ -104,6 +111,9 @@ class BaseSignatureBackendTestCase(TestCase):
         contract.refresh_from_db()
         self.assertIsNone(contract.submitted_for_signature_on)
         self.assertIsNotNone(contract.signed_on)
+
+        # contract.order.enroll_user_to_course should have been called once
+        _mock_enroll_user.assert_called_once()
 
     @override_settings(
         JOANIE_SIGNATURE_BACKEND=random.choice(

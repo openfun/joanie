@@ -984,7 +984,12 @@ def order_post_transition_callback(sender, instance, **kwargs):  # pylint: disab
     unenrolls user.
     """
     instance.save()
-    if instance.state == enums.ORDER_STATE_VALIDATED:
+    # Only enroll user if the product has no contract to sign, otherwise we should wait
+    # for the contract to be signed before enrolling the user.
+    if (
+        instance.state == enums.ORDER_STATE_VALIDATED
+        and instance.product.contract_definition is None
+    ):
         instance.enroll_user_to_course_run()
 
     if instance.state == enums.ORDER_STATE_CANCELED:
