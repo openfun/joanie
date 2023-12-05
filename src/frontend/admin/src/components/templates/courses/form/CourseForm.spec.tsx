@@ -15,8 +15,7 @@ describe("<CourseForm/>", () => {
     screen.getByRole("textbox", { name: "Code" });
     screen.getByRole("textbox", { name: "Title" });
     screen.getByRole("combobox", { name: "Organizations" });
-    screen.getByText("Relation to products");
-    screen.getByRole("button", { name: "Add relation" });
+
     screen.getByRole("button", { name: "Submit" });
     expect(screen.queryByText("Course members")).not.toBeInTheDocument();
   });
@@ -36,6 +35,8 @@ describe("<CourseForm/>", () => {
     const code: HTMLInputElement = screen.getByRole("textbox", {
       name: "Code",
     });
+    screen.getByText("Relation to products");
+    screen.getByRole("button", { name: "Add relation" });
     expect(code.value).toBe(course.code);
     if (course.accesses && course.accesses.length > 0) {
       await screen.findByText("Course members");

@@ -18,7 +18,7 @@ const build = (): Course => {
     code: faker.company.name().substring(0, 3),
     is_graded: true,
     organizations: OrganizationFactory(2),
-    product_relations: CourseRelationsToProductFactory(2),
+    product_relations: CourseRelationsToProductFactory(0),
     state: CourseStateFactory(),
     accesses: AccessesFactory(Object.values(CourseRoles), 3),
   };

@@ -89,7 +89,7 @@ describe("<ProductForm/>", () => {
       screen.queryByRole("button", {
         name: "Main",
       }),
-    ).not.toBeInTheDocument();
+    ).toBeInTheDocument();
 
     expect(
       screen.queryByRole("button", { name: "Next" }),
