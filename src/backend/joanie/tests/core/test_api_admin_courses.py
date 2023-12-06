@@ -6,6 +6,7 @@ import random
 from django.test import TestCase
 
 from joanie.core import factories
+from joanie.tests import format_date
 
 
 class CourseAdminApiTest(TestCase):
@@ -155,14 +156,10 @@ class CourseAdminApiTest(TestCase):
                 "course_runs": [
                     {
                         "id": str(course_run.id),
-                        "start": course_run.start.isoformat().replace("+00:00", "Z"),
-                        "end": course_run.end.isoformat().replace("+00:00", "Z"),
-                        "enrollment_start": course_run.enrollment_start.isoformat().replace(
-                            "+00:00", "Z"
-                        ),
-                        "enrollment_end": course_run.enrollment_end.isoformat().replace(
-                            "+00:00", "Z"
-                        ),
+                        "start": format_date(course_run.start),
+                        "end": format_date(course_run.end),
+                        "enrollment_start": format_date(course_run.enrollment_start),
+                        "enrollment_end": format_date(course_run.enrollment_end),
                         "languages": course_run.languages,
                         "title": course_run.title,
                         "is_gradable": course_run.is_gradable,
@@ -193,11 +190,7 @@ class CourseAdminApiTest(TestCase):
                 "product_relations": [],
                 "state": {
                     "priority": course.state["priority"],
-                    "datetime": course.state["datetime"]
-                    .isoformat()
-                    .replace("+00:00", "Z")
-                    if course.state["datetime"]
-                    else None,
+                    "datetime": format_date(course.state["datetime"]),
                     "call_to_action": course.state["call_to_action"],
                     "text": course.state["text"],
                 },
