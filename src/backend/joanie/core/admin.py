@@ -120,20 +120,32 @@ class ContractDefinitionAdmin(admin.ModelAdmin):
 class ContractAdmin(admin.ModelAdmin):
     """Admin class for the Contract model"""
 
-    list_display = ("order", "owner", "student_signed_on")
+    list_display = (
+        "order",
+        "owner",
+        "organization",
+        "student_signed_on",
+        "signature_backend_reference",
+    )
     readonly_fields = (
         "definition",
         "definition_checksum",
         "student_signed_on",
         "order",
+        "organization",
         "organization_signatory",
         "organization_signed_on",
         "owner",
+        "signature_backend_reference",
     )
 
     def owner(self, obj):  # pylint: disable=no-self-use
         """Retrieve the owner of the contract from the related order."""
         return obj.order.owner
+
+    def organization(self, obj):  # pylint: disable=no-self-use
+        """Retrieve the organization of the contract from the related order."""
+        return obj.order.organization
 
 
 @admin.register(models.CertificateDefinition)

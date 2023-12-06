@@ -3,8 +3,13 @@ Test suite for organization models
 """
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
+from django.test import override_settings
+from django.utils import timezone
 
-from joanie.core import factories, models
+import factory
+
+from joanie.core import enums, factories, models
+from joanie.core.exceptions import NoContractToSignError
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -132,4 +137,114 @@ class OrganizationModelsTestCase(BaseAPITestCase):
                 "put": False,
                 "manage_accesses": False,
             },
+        )
+
+    def test_models_organization_signature_backend_references_to_sign(self):
+        """Should return a list of references to sign."""
+        now = timezone.now()
+        organization = factories.OrganizationFactory()
+        relations = factories.CourseProductRelationFactory.create_batch(
+            3,
+            organizations=[organization],
+            product__contract_definition=factories.ContractDefinitionFactory(),
+        )
+        contracts_to_sign = []
+        other_contracts = []
+        signed_contracts = []
+        for relation in relations:
+            contracts_to_sign.append(
+                factories.ContractFactory(
+                    order__state=enums.ORDER_STATE_VALIDATED,
+                    order__product=relation.product,
+                    order__course=relation.course,
+                    order__organization=organization,
+                    signature_backend_reference=factory.Sequence(
+                        lambda n: f"wfl_fake_dummy_id_{n!s}"
+                    ),
+                    submitted_for_signature_on=now,
+                    student_signed_on=now,
+                )
+            )
+            other_contracts.append(
+                factories.ContractFactory(
+                    order__state=enums.ORDER_STATE_VALIDATED,
+                    order__product=relation.product,
+                    order__course=relation.course,
+                    order__organization=organization,
+                    signature_backend_reference=None,
+                    submitted_for_signature_on=None,
+                    student_signed_on=None,
+                )
+            )
+            signed_contracts.append(
+                factories.ContractFactory(
+                    order__state=enums.ORDER_STATE_VALIDATED,
+                    order__product=relation.product,
+                    order__course=relation.course,
+                    order__organization=organization,
+                    signature_backend_reference=factory.Sequence(
+                        lambda n: f"wfl_fake_dummy_id_{n!s}"
+                    ),
+                    submitted_for_signature_on=None,
+                    student_signed_on=now,
+                    organization_signed_on=now,
+                )
+            )
+
+        self.assertEqual(
+            organization.signature_backend_references_to_sign(),
+            [
+                contract.signature_backend_reference
+                for contract in reversed(contracts_to_sign)
+            ],
+        )
+
+    def test_models_organization_signature_backend_references_to_sign_empty(self):
+        """Should return an empty list if no references to sign exists."""
+        organization = factories.OrganizationFactory()
+        self.assertEqual(organization.signature_backend_references_to_sign(), [])
+
+    @override_settings(
+        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend"
+    )
+    def test_models_organization_contracts_signature_link(self):
+        """Should a signature links."""
+        now = timezone.now()
+        organization = factories.OrganizationFactory()
+        relations = factories.CourseProductRelationFactory.create_batch(
+            3,
+            organizations=[organization],
+            product__contract_definition=factories.ContractDefinitionFactory(),
+        )
+        for relation in relations:
+            factories.ContractFactory(
+                order__state=enums.ORDER_STATE_VALIDATED,
+                order__product=relation.product,
+                order__course=relation.course,
+                order__organization=organization,
+                signature_backend_reference=factory.Sequence(
+                    lambda n: f"wfl_fake_dummy_id_{n!s}"
+                ),
+                submitted_for_signature_on=now,
+                student_signed_on=now,
+            )
+        user = factories.UserFactory()
+
+        invitation_url = organization.contracts_signature_link(user=user)
+        self.assertIn("https://dummysignaturebackend.fr/?requestToken=", invitation_url)
+
+    @override_settings(
+        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend"
+    )
+    def test_models_organization_contracts_signature_link_empty(self):
+        """Should fail if no references to sign exists.""" ""
+        organization = factories.OrganizationFactory()
+        user = factories.UserFactory()
+
+        with self.assertRaises(NoContractToSignError) as context:
+            organization.contracts_signature_link(user=user)
+
+        self.assertEqual(
+            str(context.exception),
+            "No contract to sign for this organization.",
         )

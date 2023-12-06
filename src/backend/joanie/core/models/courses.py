@@ -28,8 +28,10 @@ from joanie.core import enums, exceptions, utils
 from joanie.core.fields.multiselect import MultiSelectField
 from joanie.core.models.accounts import User
 from joanie.core.models.base import BaseModel
+from joanie.core.models.contracts import Contract
 from joanie.core.utils import webhooks
 from joanie.lms_handler import LMSHandler
+from joanie.signature.backends import get_signature_backend
 
 # pylint: disable=too-many-lines
 
@@ -213,6 +215,31 @@ class Organization(parler_models.TranslatableModel, BaseModel):
             "delete": role == enums.OWNER,
             "manage_accesses": is_owner_or_admin,
         }
+
+    def signature_backend_references_to_sign(self):
+        """
+        Return the list of references that should be signed by the organization.
+        """
+        return list(
+            Contract.objects.filter(
+                signature_backend_reference__isnull=False,
+                submitted_for_signature_on__isnull=False,
+                student_signed_on__isnull=False,
+                order__organization=self,
+            ).values_list("signature_backend_reference", flat=True)
+        )
+
+    def contracts_signature_link(self, user: User):
+        """
+        Retrieve a signature invitation link for all available contracts.
+        """
+        references = self.signature_backend_references_to_sign()
+        if not references:
+            raise exceptions.NoContractToSignError(
+                "No contract to sign for this organization."
+            )
+        backend_signature = get_signature_backend()
+        return backend_signature.get_signature_invitation_link(user.email, references)
 
 
 class OrganizationAccess(BaseModel):
