@@ -4,8 +4,12 @@ Test suite for Organization API endpoint.
 import random
 from unittest import mock
 
+from django.test import override_settings
+from django.utils import timezone
+
 from joanie.core import enums, factories, models
 from joanie.core.serializers import fields
+from joanie.payment.factories import InvoiceFactory
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -361,3 +365,58 @@ class OrganizationApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, 405)
         self.assertEqual(models.Organization.objects.count(), 1)
+
+    @override_settings(
+        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend"
+    )
+    def test_api_organization_contracts_signature_link_success(self):
+        """
+        Authenticated users with owner role should be able to sign contracts in bulk.
+        """
+        student_user = factories.UserFactory(email="johnnydo@example.fr")
+        factories.AddressFactory.create(owner=student_user)
+        order = factories.OrderFactory(
+            owner=student_user,
+            product__contract_definition=factories.ContractDefinitionFactory(),
+        )
+        access = factories.UserOrganizationAccessFactory(
+            organization=order.organization, role="owner"
+        )
+        InvoiceFactory(order=order)
+        order.validate()
+        order.submit_for_signature(student_user)
+        order.contract.submitted_for_signature_on = timezone.now()
+        order.contract.student_signed_on = timezone.now()
+        token = self.generate_token_from_user(access.user)
+
+        response = self.client.get(
+            f"/api/v1.0/organizations/{order.organization.id}/contracts-signature-link/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertIn(
+            "https://dummysignaturebackend.fr/?requestToken=",
+            content["invitation_link"],
+        )
+
+    def test_api_organization_contracts_signature_link_no_contracts(self):
+        """A 404 should be returned if no contract is available to sign."""
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(
+            user=user, organization=organization, role=enums.OWNER
+        )
+
+        response = self.client.get(
+            f"/api/v1.0/organizations/{organization.id}/contracts-signature-link/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        assert response.json() == {
+            "detail": "No contract to sign for this organization."
+        }

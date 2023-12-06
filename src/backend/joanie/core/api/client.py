@@ -26,6 +26,7 @@ from rest_framework.response import Response
 
 from joanie.core import enums, filters, models, permissions, serializers
 from joanie.core.api.base import NestedGenericViewSet
+from joanie.core.exceptions import NoContractToSignError
 from joanie.core.tasks import generate_zip_archive_task
 from joanie.core.utils import contract as contract_utility
 from joanie.core.utils import contract_definition, issuers
@@ -688,6 +689,28 @@ class OrganizationViewSet(
         return models.Organization.objects.filter(
             accesses__user__username=username
         ).annotate(user_role=Subquery(user_role_query))
+
+    @action(
+        detail=True,
+        methods=["GET"],
+        url_path="contracts-signature-link",
+    )
+    def contracts_signature_link(self, request, *args, **kwargs):
+        """
+        Return an invitation link to sign all the available contracts for the organization.
+        """
+        organization = self.get_object()
+        try:
+            return JsonResponse(
+                {
+                    "invitation_link": organization.contracts_signature_link(
+                        request.user
+                    )
+                },
+                status=200,
+            )
+        except NoContractToSignError as error:
+            return Response({"detail": f"{error}"}, status=400)
 
 
 class OrganizationAccessViewSet(
