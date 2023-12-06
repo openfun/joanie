@@ -233,6 +233,38 @@ class OrderModelsTestCase(TestCase):
             ),
         )
 
+    def test_models_order_enrollment_owner_product_unique_not_canceled(self):
+        """
+        There should be a db constraint forcing uniqueness of orders with the same enrollment,
+        product and owner fields that are not canceled.
+        """
+        enrollment = factories.EnrollmentFactory()
+        product = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CERTIFICATE, courses=[enrollment.course_run.course]
+        )
+        order = factories.OrderFactory(
+            product=product,
+            enrollment=enrollment,
+            course=None,
+        )
+
+        with self.assertRaises(ValidationError) as context:
+            factories.OrderFactory(
+                owner=order.owner,
+                product=product,
+                enrollment=enrollment,
+                course=None,
+            )
+
+        self.assertEqual(
+            str(context.exception),
+            (
+                "{'__all__': ['"
+                "An order for this product and enrollment already exists."
+                "']}"
+            ),
+        )
+
     @staticmethod
     def test_models_order_course_owner_product_unique_canceled():
         """

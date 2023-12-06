@@ -444,8 +444,14 @@ class Order(BaseModel):
             models.UniqueConstraint(
                 fields=["course", "owner", "product"],
                 condition=~models.Q(state=enums.ORDER_STATE_CANCELED),
-                name="unique_owner_product_not_canceled",
+                name="unique_owner_course_product_not_canceled",
                 violation_error_message="An order for this product and course already exists.",
+            ),
+            models.UniqueConstraint(
+                fields=["enrollment", "owner", "product"],
+                condition=~models.Q(state=enums.ORDER_STATE_CANCELED),
+                name="unique_owner_enrollment_product_not_canceled",
+                violation_error_message="An order for this product and enrollment already exists.",
             ),
             models.CheckConstraint(
                 check=(
