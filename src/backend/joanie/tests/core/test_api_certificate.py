@@ -8,6 +8,7 @@ from rest_framework.pagination import PageNumberPagination
 
 from joanie.core import enums, factories
 from joanie.core.serializers import fields
+from joanie.tests import format_date
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -78,9 +79,7 @@ class CertificateApiTest(BaseAPITestCase):
                             "name": other_certificate.certificate_definition.name,
                             "title": other_certificate.certificate_definition.title,
                         },
-                        "issued_on": other_certificate.issued_on.isoformat().replace(
-                            "+00:00", "Z"
-                        ),
+                        "issued_on": format_date(other_certificate.issued_on),
                         "order": {
                             "id": str(other_order.id),
                             "course": None,
@@ -92,44 +91,24 @@ class CertificateApiTest(BaseAPITestCase):
                                         "id": str(enrollment.course_run.course.id),
                                         "title": enrollment.course_run.course.title,
                                     },
-                                    "end": enrollment.course_run.end.isoformat().replace(
-                                        "+00:00", "Z"
-                                    )
-                                    if enrollment.course_run.end
-                                    else None,
-                                    "enrollment_end": (
-                                        enrollment.course_run.enrollment_end.isoformat().replace(
-                                            "+00:00", "Z"
-                                        )
-                                        if enrollment.course_run.enrollment_end
-                                        else None
+                                    "end": format_date(enrollment.course_run.end),
+                                    "enrollment_end": format_date(
+                                        enrollment.course_run.enrollment_end
                                     ),
-                                    "enrollment_start": (
-                                        enrollment.course_run.enrollment_start.isoformat().replace(
-                                            "+00:00", "Z"
-                                        )
-                                        if enrollment.course_run.enrollment_start
-                                        else None
+                                    "enrollment_start": format_date(
+                                        enrollment.course_run.enrollment_start
                                     ),
                                     "id": str(enrollment.course_run.id),
                                     "languages": enrollment.course_run.languages,
                                     "resource_link": enrollment.course_run.resource_link,
-                                    "start": enrollment.course_run.start.isoformat().replace(
-                                        "+00:00", "Z"
-                                    )
-                                    if enrollment.course_run.start
-                                    else None,
+                                    "start": format_date(enrollment.course_run.start),
                                     "state": {
                                         "call_to_action": enrollment.course_run.state.get(
                                             "call_to_action"
                                         ),
-                                        "datetime": enrollment.course_run.state.get(
-                                            "datetime"
-                                        )
-                                        .isoformat()
-                                        .replace("+00:00", "Z")
-                                        if enrollment.course_run.state.get("datetime")
-                                        else None,
+                                        "datetime": format_date(
+                                            enrollment.course_run.state.get("datetime")
+                                        ),
                                         "priority": enrollment.course_run.state.get(
                                             "priority"
                                         ),
@@ -137,9 +116,7 @@ class CertificateApiTest(BaseAPITestCase):
                                     },
                                     "title": enrollment.course_run.title,
                                 },
-                                "created_on": enrollment.created_on.isoformat().replace(
-                                    "+00:00", "Z"
-                                ),
+                                "created_on": format_date(enrollment.created_on),
                                 "id": str(enrollment.id),
                                 "is_active": enrollment.is_active,
                                 "state": enrollment.state,
@@ -162,9 +139,7 @@ class CertificateApiTest(BaseAPITestCase):
                             "name": certificate.certificate_definition.name,
                             "title": certificate.certificate_definition.title,
                         },
-                        "issued_on": certificate.issued_on.isoformat().replace(
-                            "+00:00", "Z"
-                        ),
+                        "issued_on": format_date(certificate.issued_on),
                         "order": {
                             "id": str(order.id),
                             "course": {
@@ -294,7 +269,7 @@ class CertificateApiTest(BaseAPITestCase):
                     "name": certificate.certificate_definition.name,
                     "title": certificate.certificate_definition.title,
                 },
-                "issued_on": certificate.issued_on.isoformat().replace("+00:00", "Z"),
+                "issued_on": format_date(certificate.issued_on),
                 "order": {
                     "id": str(certificate.order.id),
                     "course": {
