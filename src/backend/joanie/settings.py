@@ -539,7 +539,7 @@ class Development(Base):
     CSRF_TRUSTED_ORIGINS = ["http://localhost:3000", "http://localhost:8072"]
     DEBUG = True
     DEVELOPER_EMAIL = values.Value(
-        "developper@example.com",
+        "developer@example.com",
         environ_name="DEVELOPER_EMAIL",
         environ_prefix=None,
     )
@@ -597,7 +597,7 @@ class Test(Base):
     ]
     USE_SWAGGER = True
     DEVELOPER_EMAIL = values.Value(
-        "developper@example.com",
+        "developer@example.com",
         environ_name="DEVELOPER_EMAIL",
         environ_prefix=None,
     )

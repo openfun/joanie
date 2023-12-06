@@ -9,7 +9,7 @@ from django.utils import translation
 
 from rest_framework_simplejwt.tokens import AccessToken
 
-from joanie.core.utils.tokens import generate_token_from_user
+from joanie.core.utils.jwt_tokens import generate_jwt_token_from_user
 
 
 class BaseAPITestCase(TestCase):
@@ -60,4 +60,4 @@ class BaseAPITestCase(TestCase):
         Returns:
             token, the jwt token generated as it should
         """
-        return generate_token_from_user(user, expires_at)
+        return generate_jwt_token_from_user(user, expires_at)

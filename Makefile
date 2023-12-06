@@ -133,11 +133,11 @@ demo: ## flush db then create a demo for load testing purpose
 demo-dev: ## flush db then create a dataset for dev purpose
 	@${MAKE} resetdb
 	@$(MANAGE) create_dev_demo
-	@$(MANAGE) generate_tokens
+	@$(MANAGE) generate_jwt_tokens
 .PHONY: demo-dev
 
 generate-tokens: ## generate tokens for all users
-	@$(MANAGE) generate_tokens
+	@$(MANAGE) generate_jwt_tokens
 .PHONY: generate-tokens
 
 # Nota bene: Black should come after isort just in case they don't agree...

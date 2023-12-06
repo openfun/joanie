@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from rest_framework_simplejwt.tokens import AccessToken
 
 
-def generate_token_from_user(user, expires_at=None):
+def generate_jwt_token_from_user(user, expires_at=None):
     """
     Generate a jwt token used to authenticate a user from a user registered in
     the database

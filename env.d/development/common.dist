@@ -52,4 +52,4 @@ JOANIE_BACKOFFICE_BASE_URL="http://localhost:8072"
 # JOANIE_SIGNATURE_LEXPERSONA_TOKEN =
 
 # must be reachable for signature email notifications
-DEVELOPER_EMAIL="developper@example.com"
+DEVELOPER_EMAIL="developer@example.com"
