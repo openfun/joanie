@@ -1,5 +1,5 @@
 """
-Tokens utilities
+JWT tokens utilities
 """
 
 from datetime import datetime, timedelta
