@@ -16,6 +16,7 @@ from easy_thumbnails.files import ThumbnailerImageFieldFile, generate_all_aliase
 from faker import Faker
 
 from joanie.core import enums, models
+from joanie.core.models import OrderTargetCourseRelation, ProductTargetCourseRelation
 from joanie.core.serializers import AddressSerializer
 from joanie.core.utils import image_to_base64
 
@@ -575,6 +576,7 @@ class OrderFactory(factory.django.DjangoModelFactory):
 
     product = factory.SubFactory(ProductFactory)
     course = factory.LazyAttribute(lambda o: o.product.courses.order_by("?").first())
+    total = factory.LazyAttribute(lambda o: o.product.price)
     enrollment = None
 
     @factory.lazy_attribute
@@ -591,6 +593,56 @@ class OrderFactory(factory.django.DjangoModelFactory):
         if self.course:
             course_relations = course_relations.filter(course=self.course)
         return course_relations.first().organizations.order_by("?").first()
+
+    @factory.post_generation
+    # pylint: disable=unused-argument,no-member
+    def target_courses(self, create, extracted, **kwargs):
+        """
+        If the order has a state other than draft, it should have been submitted so
+        target courses should have been copied from the product target courses.
+        """
+        if extracted:
+            self.target_courses.set(extracted)
+
+        if self.state != enums.ORDER_STATE_DRAFT:
+            for relation in ProductTargetCourseRelation.objects.filter(
+                product=self.product
+            ):
+                order_relation = OrderTargetCourseRelation.objects.create(
+                    order=self,
+                    course=relation.course,
+                    position=relation.position,
+                    is_graded=relation.is_graded,
+                )
+                order_relation.course_runs.set(relation.course_runs.all())
+
+    @factory.post_generation
+    def main_invoice(self, create, extracted, **kwargs):
+        """
+        Generate invoice if needed
+        """
+        if create:
+            if extracted is not None:
+                # If a main_invoice is passed, link it to the order.
+                extracted.order = self
+                extracted.save()
+                return extracted
+
+            if self.state == enums.ORDER_STATE_VALIDATED:
+                # If the order is not fee and its state is validated, create
+                # a main invoice with related transaction.
+                from joanie.payment.factories import (  # pylint: disable=import-outside-toplevel, cyclic-import
+                    TransactionFactory,
+                )
+
+                transaction = TransactionFactory(
+                    invoice__order=self,
+                    invoice__recipient_address__owner=self.owner,
+                    total=self.total,
+                )
+                return transaction.invoice
+
+        return None
 
 
 class OrderTargetCourseRelationFactory(factory.django.DjangoModelFactory):
@@ -675,6 +727,7 @@ class ContractFactory(factory.django.DjangoModelFactory):
 
     order = factory.SubFactory(
         OrderFactory,
+        state=enums.ORDER_STATE_VALIDATED,
         product__type=enums.PRODUCT_TYPE_CREDENTIAL,
         product__contract_definition=factory.SubFactory(ContractDefinitionFactory),
     )

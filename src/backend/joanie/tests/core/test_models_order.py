@@ -1062,7 +1062,6 @@ class OrderModelsTestCase(TestCase):
             state=enums.ORDER_STATE_VALIDATED,
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
-        InvoiceFactory(order=order)
 
         raw_invitation_link = order.submit_for_signature()
 
@@ -1097,7 +1096,6 @@ class OrderModelsTestCase(TestCase):
             state=enums.ORDER_STATE_VALIDATED,
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
-        InvoiceFactory(order=order)
         context = contract_definition.generate_document_context(
             contract_definition=order.product.contract_definition,
             user=user,
@@ -1142,7 +1140,6 @@ class OrderModelsTestCase(TestCase):
             state=enums.ORDER_STATE_VALIDATED,
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
-        InvoiceFactory(order=order)
         contract = factories.ContractFactory(
             order=order,
             definition=order.product.contract_definition,
@@ -1181,7 +1178,6 @@ class OrderModelsTestCase(TestCase):
             state=enums.ORDER_STATE_VALIDATED,
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
-        InvoiceFactory(order=order)
         context = contract_definition.generate_document_context(
             contract_definition=order.product.contract_definition,
             user=user,

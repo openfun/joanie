@@ -204,11 +204,6 @@ class Command(BaseCommand):
             state=order_status,
         )
 
-        for target_course in product.target_courses.all():
-            factories.OrderTargetCourseRelationFactory(
-                order=order, course=target_course
-            )
-
         return order
 
     def create_product_purchased_with_certificate(

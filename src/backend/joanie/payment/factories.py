@@ -52,7 +52,7 @@ class TransactionFactory(factory.django.DjangoModelFactory):
     reference = factory.LazyAttributeSequence(
         lambda t, n: f"{'ref' if t.total < 0 else 'pay'}_{n:05d}"
     )
-    invoice = factory.SubFactory(InvoiceFactory)
+    invoice = factory.SubFactory(InvoiceFactory, total=factory.SelfAttribute("..total"))
 
 
 class BillingAddressDictFactory(factory.DictFactory):

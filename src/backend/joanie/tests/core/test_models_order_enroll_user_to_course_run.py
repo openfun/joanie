@@ -12,7 +12,7 @@ from joanie.payment.factories import BillingAddressDictFactory, InvoiceFactory
 
 # pylint: disable=too-many-public-methods
 class EnrollUserToCourseRunOrderModelsTestCase(TestCase):
-    """Test suite for `enroll_user_to_course_run` method on the the Order model."""
+    """Test suite for `enroll_user_to_course_run` method on the Order model."""
 
     def _create_validated_order(self, **kwargs):
         order = factories.OrderFactory(**kwargs)

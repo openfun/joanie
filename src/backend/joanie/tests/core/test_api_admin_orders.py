@@ -5,7 +5,6 @@ from django.conf import settings
 from django.test import TestCase
 
 from joanie.core import enums, factories
-from joanie.payment.factories import InvoiceFactory, TransactionFactory
 
 
 class OrdersAdminApiTestCase(TestCase):
@@ -112,10 +111,6 @@ class OrdersAdminApiTestCase(TestCase):
             state=enums.ORDER_STATE_VALIDATED,
         )
 
-        # Create invoice and transactions
-        invoice = InvoiceFactory(order=order, total=order.total)
-        TransactionFactory(invoice=invoice, total=invoice.total)
-
         # Create certificate
         factories.OrderCertificateFactory(
             order=order, certificate_definition=order.product.certificate_definition
@@ -190,16 +185,20 @@ class OrdersAdminApiTestCase(TestCase):
                     ),
                 },
                 "main_invoice": {
-                    "balance": float(invoice.balance),
-                    "created_on": invoice.created_on.isoformat().replace("+00:00", "Z"),
-                    "state": invoice.state,
-                    "recipient_address": (
-                        f"{invoice.recipient_address.full_name}\n"
-                        f"{invoice.recipient_address.full_address}"
+                    "balance": float(order.main_invoice.balance),
+                    "created_on": order.main_invoice.created_on.isoformat().replace(
+                        "+00:00", "Z"
                     ),
-                    "reference": invoice.reference,
-                    "type": invoice.type,
-                    "updated_on": invoice.updated_on.isoformat().replace("+00:00", "Z"),
+                    "state": order.main_invoice.state,
+                    "recipient_address": (
+                        f"{order.main_invoice.recipient_address.full_name}\n"
+                        f"{order.main_invoice.recipient_address.full_address}"
+                    ),
+                    "reference": order.main_invoice.reference,
+                    "type": order.main_invoice.type,
+                    "updated_on": order.main_invoice.updated_on.isoformat().replace(
+                        "+00:00", "Z"
+                    ),
                 },
             },
         )

@@ -240,7 +240,7 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
         self,
     ):
         """
-        Dummy backend instance to get signed file method should return the a pdf in bytes when the
+        Dummy backend instance to get signed file method should return the pdf in bytes when the
         reference id exist.
         """
         contract = factories.ContractFactory(
@@ -248,12 +248,11 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
             definition_checksum="1234",
             signed_on=django_timezone.now(),
             context="a small context",
-        )
-        InvoiceFactory(
-            order=contract.order,
-            recipient_address__address="1 Rue de L'Exemple",
-            recipient_address__postcode=75000,
-            recipient_address__city="Paris",
+            order__main_invoice=InvoiceFactory(
+                recipient_address__address="1 Rue de L'Exemple",
+                recipient_address__postcode=75000,
+                recipient_address__city="Paris",
+            ),
         )
         backend = DummySignatureBackend()
 

@@ -894,7 +894,7 @@ class OrderListApiTest(BaseAPITestCase):
                         ),
                         "enrollment": None,
                         "target_enrollments": [],
-                        "main_invoice_reference": None,
+                        "main_invoice_reference": order.main_invoice.reference,
                         "order_group_id": None,
                         "organization_id": str(order.organization.id),
                         "owner": order.owner.username,

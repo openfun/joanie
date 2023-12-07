@@ -4,7 +4,7 @@ from django.urls import reverse
 
 import lxml.html
 
-from joanie.core import factories
+from joanie.core import enums, factories
 from joanie.payment.factories import InvoiceFactory, TransactionFactory
 
 
@@ -21,10 +21,9 @@ class InvoiceAdminTestCase(TestCase):
         self.client.login(username=user.username, password="password")
 
         # - Create an order with a related invoice
-        order = factories.OrderFactory()
-        invoice = InvoiceFactory(order=order, total=order.total)
+        order = factories.OrderFactory(state=enums.ORDER_STATE_VALIDATED)
         credit_note = InvoiceFactory(
-            order=invoice.order, parent=invoice, total=-order.total
+            order=order, parent=order.main_invoice, total=-order.total
         )
 
         # - Now go to the invoice admin change view
@@ -51,13 +50,12 @@ class InvoiceAdminTestCase(TestCase):
         self.client.login(username=user.username, password="password")
 
         # - Create an order with a related invoice
-        order = factories.OrderFactory()
-        invoice = InvoiceFactory(order=order, total=order.total)
-        InvoiceFactory(order=invoice.order, parent=invoice, total=-order.total)
+        order = factories.OrderFactory(state=enums.ORDER_STATE_VALIDATED)
+        TransactionFactory(invoice__parent=order.main_invoice, total=-order.total)
 
         # - Now go to the invoice admin change view
         response = self.client.get(
-            reverse("admin:payment_invoice_change", args=(invoice.pk,)),
+            reverse("admin:payment_invoice_change", args=(order.main_invoice.pk,)),
         )
 
         self.assertEqual(response.status_code, 200)
@@ -85,23 +83,22 @@ class InvoiceAdminTestCase(TestCase):
         self.client.login(username=user.username, password="password")
 
         # - Create an order with a related invoice
-        order = factories.OrderFactory()
-        invoice = InvoiceFactory(order=order, total=order.total)
+        order = factories.OrderFactory(state=enums.ORDER_STATE_VALIDATED)
 
         # - And link other invoices to this invoice
         children = InvoiceFactory.create_batch(
-            2, order=invoice.order, parent=invoice, total=order.total
+            2, order=order, parent=order.main_invoice, total=order.total
         )
 
         # - Now go to the invoice admin change view
         response = self.client.get(
-            reverse("admin:payment_invoice_change", args=(invoice.pk,)),
+            reverse("admin:payment_invoice_change", args=(order.main_invoice.pk,)),
         )
 
         # - Invoice are ordered by creation date
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, invoice.reference)
+        self.assertContains(response, order.main_invoice.reference)
 
         # - Check there are links to go to invoice children admin change view
         html_parser = lxml.html.HTMLParser(encoding="utf-8")

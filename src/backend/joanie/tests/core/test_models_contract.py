@@ -10,7 +10,7 @@ from django.utils import timezone as django_timezone
 
 from pdfminer.high_level import extract_text as pdf_extract_text
 
-from joanie.core import factories, models
+from joanie.core import enums, factories, models
 from joanie.payment.factories import InvoiceFactory
 
 
@@ -408,8 +408,9 @@ class ContractModelTestCase(TestCase):
         order = factories.OrderFactory(
             owner=user,
             product__contract_definition=factories.ContractDefinitionFactory(),
+            state=enums.ORDER_STATE_VALIDATED,
+            main_invoice=InvoiceFactory(recipient_address=address),
         )
-        InvoiceFactory(order=order, recipient_address=address)
         contract = factories.ContractFactory(order=order)
 
         _, file_bytes = contract.definition.generate_document(order)

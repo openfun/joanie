@@ -8,8 +8,8 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.db.models import ProtectedError
 from django.test import TestCase
+from django.utils.translation import override
 
-from parler.utils.context import switch_language
 from pdfminer.high_level import extract_text as pdf_extract_text
 
 from joanie.core.factories import OrderFactory, ProductFactory
@@ -27,7 +27,7 @@ class InvoiceModelTestCase(TestCase):
         If invoice has a positive amount, its type should be `invoice` and its
         string representation should be prefixed by "Invoice".
         """
-        invoice = InvoiceFactory(order=OrderFactory(), total=100)
+        invoice = InvoiceFactory(total=100)
 
         self.assertEqual(invoice.type, "invoice")
         self.assertEqual(str(invoice), f"Invoice {invoice.reference}")
@@ -36,7 +36,7 @@ class InvoiceModelTestCase(TestCase):
         """
         If invoice has a negative amount, its type should be `credit_note`
         """
-        invoice = InvoiceFactory(order=OrderFactory(), total=100)
+        invoice = InvoiceFactory(total=100)
         credit_note = InvoiceFactory(order=invoice.order, parent=invoice, total=-100)
 
         self.assertEqual(credit_note.type, "credit_note")
@@ -50,8 +50,7 @@ class InvoiceModelTestCase(TestCase):
         a ValidationError should be raised.
         """
         # Create an order and its related invoice for 100.00 €
-        order = OrderFactory(product=ProductFactory(price=100))
-        invoice = InvoiceFactory(order=order, total=order.total)
+        invoice = InvoiceFactory(total=100.0)
         # Then link an invoice for 20.00 €
         InvoiceFactory(order=invoice.order, parent=invoice, total=D(20.00))
         # Finally, link a credit note for -10.00 €
@@ -62,7 +61,7 @@ class InvoiceModelTestCase(TestCase):
 
         # Credit a credit note greater than invoiced balance should be forbidden
         with self.assertRaises(ValidationError) as context:
-            InvoiceFactory(order=order, parent=invoice, total=-111)
+            InvoiceFactory(order=invoice.order, parent=invoice, total=-111)
 
         self.assertEqual(
             str(context.exception),
@@ -76,8 +75,7 @@ class InvoiceModelTestCase(TestCase):
         """
         When an invoice object is created, its reference should be normalized.
         """
-        order = OrderFactory()
-        invoice = InvoiceFactory(reference="1", order=order, total=order.total)
+        invoice = InvoiceFactory(reference="1")
 
         # Reference should have been normalized using current timestamp and
         # order uid (e.g: f04bca42-1639062573511)
@@ -87,8 +85,7 @@ class InvoiceModelTestCase(TestCase):
         """
         Order deletion should be blocked as long as related invoice exists.
         """
-        order = OrderFactory()
-        invoice = InvoiceFactory(order=order, total=order.total)
+        invoice = InvoiceFactory()
 
         with self.assertRaises(ProtectedError):
             invoice.order.delete()
@@ -98,16 +95,14 @@ class InvoiceModelTestCase(TestCase):
         Invoice.balance should return the current balance
         of the invoice.
         """
-        product = ProductFactory(price=500)
-        order = OrderFactory(product=product)
-        invoice = InvoiceFactory(order=order, total=order.total)
+        invoice = InvoiceFactory(total=500)
 
         # - At beginning, balance should be -500.00
         self.assertEqual(invoice.balance, D("-500.00"))
 
         # - Then we received a payment to pay the full order,
         #   balance should be -500.00 + 500.00 = 0.00
-        TransactionFactory(total=product.price, invoice=invoice)
+        TransactionFactory(total=invoice.total, invoice=invoice)
         invoice.refresh_from_db()
         self.assertEqual(invoice.balance, D("0.00"))
 
@@ -129,14 +124,12 @@ class InvoiceModelTestCase(TestCase):
         If invoice balance is greater or equal than zero, transactions_balance
         and invoiced_balance are not equal to zero, invoice state should be paid
         """
-        product = ProductFactory(price="100.00")
-        order = OrderFactory(product=product)
-        invoice = InvoiceFactory(order=order, total=order.total)
-        TransactionFactory.create_batch(2, total=product.price / 2, invoice=invoice)
+        invoice = InvoiceFactory(total=100)
+        TransactionFactory.create_batch(2, total=invoice.total / 2, invoice=invoice)
 
         with self.assertNumQueries(7):
-            self.assertEqual(invoice.invoiced_balance, order.total)
-            self.assertEqual(invoice.transactions_balance, order.total)
+            self.assertEqual(invoice.invoiced_balance, invoice.total)
+            self.assertEqual(invoice.transactions_balance, invoice.total)
             self.assertEqual(invoice.balance, D("0.00"))
             self.assertEqual(invoice.state, "paid")
 
@@ -146,14 +139,13 @@ class InvoiceModelTestCase(TestCase):
         and invoiced_balance are equal to zero,
         invoice state should be refunded
         """
-        product = ProductFactory(price="100.00")
-        order = OrderFactory(product=product)
-        invoice = InvoiceFactory(order=order, total=order.total)
-        TransactionFactory.create_batch(2, total=product.price / 2, invoice=invoice)
+        invoice = InvoiceFactory(total=100)
+        TransactionFactory.create_batch(2, total=invoice.total / 2, invoice=invoice)
 
         # - Fully refund the order
-        InvoiceFactory(order=invoice.order, parent=invoice, total=-order.total)
-        TransactionFactory(invoice=invoice, total=-product.price)
+        TransactionFactory(
+            invoice__order=invoice.order, invoice__parent=invoice, total=-invoice.total
+        )
 
         with self.assertNumQueries(12):
             self.assertEqual(invoice.invoiced_balance, D("0.00"))
@@ -166,10 +158,8 @@ class InvoiceModelTestCase(TestCase):
         If invoice balance is less than zero,
         invoice state should be unpaid.
         """
-        product = ProductFactory(price="100.00")
-        order = OrderFactory(product=product)
-        invoice = InvoiceFactory(order=order, total=order.total)
-        TransactionFactory(total=product.price / 2, invoice=invoice)
+        invoice = InvoiceFactory(total=100)
+        TransactionFactory(total=invoice.total / 2, invoice=invoice)
 
         with self.assertNumQueries(4):
             self.assertEqual(invoice.balance, D("-50.00"))
@@ -180,9 +170,8 @@ class InvoiceModelTestCase(TestCase):
         An invoice cannot have a parent which is
         a child of another invoice.
         """
-        order = OrderFactory()
-        parent = InvoiceFactory(order=order, total=order.total)
-        child = InvoiceFactory(order=parent.order, parent=parent, total=-order.total)
+        parent = InvoiceFactory()
+        child = InvoiceFactory(order=parent.order, parent=parent, total=-parent.total)
 
         with self.assertRaises(ValidationError) as context:
             InvoiceFactory(order=child.order, parent=child, total=20.00)
@@ -233,8 +222,7 @@ class InvoiceModelTestCase(TestCase):
         An invoice without a parent must have a positive total amount otherwise
         an integrity error should be raised when clean is bypassed.
         """
-        order = OrderFactory()
-        invoice = InvoiceFactory(order=order, total=200.00)
+        invoice = InvoiceFactory(total=200.00)
 
         with self.assertRaises(IntegrityError) as context:
             Invoice.objects.filter(pk=invoice.pk).update(total=-200.00)
@@ -252,8 +240,7 @@ class InvoiceModelTestCase(TestCase):
         When an invoice is created, localized contexts in each enabled
         languages should be created.
         """
-        order = OrderFactory()
-        invoice = InvoiceFactory(order=OrderFactory(), total=order.total)
+        invoice = InvoiceFactory()
         languages = settings.LANGUAGES
         self.assertEqual(len(list(invoice.localized_context)), len(languages))
 
@@ -269,8 +256,7 @@ class InvoiceModelTestCase(TestCase):
             title="Produit 1",
             description="Description du produit 1",
         )
-        order = OrderFactory(product=product)
-        invoice = InvoiceFactory(order=order, total=order.total)
+        invoice = InvoiceFactory(order__product=product, total=product.price)
 
         context = invoice.get_document_context("en-us")
         self.assertEqual(context["order"]["product"]["name"], "Product 1")
@@ -303,9 +289,7 @@ class InvoiceModelTestCase(TestCase):
             title="Produit 1",
             description="Description du produit 1",
         )
-
-        order = OrderFactory(product=product)
-        invoice = InvoiceFactory(order=order, total=order.total)
+        invoice = InvoiceFactory(order__product=product, total=product.price)
 
         # - The default language is used first
         document_text = pdf_extract_text(BytesIO(invoice.document)).replace("\n", "")
@@ -313,14 +297,14 @@ class InvoiceModelTestCase(TestCase):
 
         # - Then if we switch to an existing language, it should generate
         #   a document with the context in the active language
-        with switch_language(product, "fr-fr"):
+        with override("fr-fr", deactivate=True):
             document_text = pdf_extract_text(BytesIO(invoice.document)).replace(
                 "\n", ""
             )
             self.assertRegex(document_text, r"Produit 1.*Description du produit 1")
 
         # - Finally, unknown language should use the default language as fallback
-        with switch_language(product, "de-de"):
+        with override("de-de", deactivate=True):
             document_text = pdf_extract_text(BytesIO(invoice.document)).replace(
                 "\n", ""
             )
@@ -331,9 +315,7 @@ class InvoiceModelTestCase(TestCase):
         If invoice type is "invoice", a document of type invoice should be
         generated.
         """
-        product = ProductFactory()
-        order = OrderFactory(product=product)
-        invoice = InvoiceFactory(order=order, total=order.total)
+        invoice = InvoiceFactory()
 
         # - The default language is used first
         document_text = pdf_extract_text(BytesIO(invoice.document)).replace("\n", "")
@@ -341,7 +323,7 @@ class InvoiceModelTestCase(TestCase):
 
         # - Then if we switch to an existing language, it should generate
         #   a document with the context in the active language
-        with switch_language(product, "fr-fr"):
+        with override("fr-fr", deactivate=True):
             document_text = pdf_extract_text(BytesIO(invoice.document)).replace(
                 "\n", ""
             )
@@ -352,9 +334,7 @@ class InvoiceModelTestCase(TestCase):
         If invoice type is "credit_note",
         a document of type credit_note should be generated.
         """
-        product = ProductFactory()
-        order = OrderFactory(product=product)
-        invoice = InvoiceFactory(order=order, total=order.total)
+        invoice = InvoiceFactory()
         credit_note = InvoiceFactory(
             order=invoice.order,
             parent=invoice,
@@ -369,7 +349,7 @@ class InvoiceModelTestCase(TestCase):
 
         # - Then if we switch to an existing language, it should generate
         #   a document with the context in the active language
-        with switch_language(product, "fr-fr"):
+        with override("fr-fr", deactivate=True):
             document_text = pdf_extract_text(BytesIO(credit_note.document)).replace(
                 "\n", ""
             )
