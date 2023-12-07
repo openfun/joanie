@@ -1,3 +1,4 @@
+# pylint: disable=duplicate-code
 """Test suite for the Courses Contract API"""
 import random
 from unittest import mock
