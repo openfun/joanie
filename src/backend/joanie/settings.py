@@ -72,6 +72,8 @@ class Base(Configuration):
     # Security
     ALLOWED_HOSTS = values.ListValue([])
     SECRET_KEY = values.Value(None)
+    # Security - Server to server authorized API keys
+    JOANIE_AUTHORIZED_API_TOKENS = values.ListValue([], environ_prefix=None)
 
     # Application definition
     ROOT_URLCONF = "joanie.urls"
