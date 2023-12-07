@@ -36,7 +36,7 @@ class ContractModelTestCase(TestCase):
         factories.AddressFactory.create(owner=user)
         order = factories.OrderFactory(
             owner=user,
-            product=factories.ProductFactory(),
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
         data = {
             "order": order,
@@ -663,7 +663,10 @@ class ContractModelTestCase(TestCase):
             organization=organization,
             role=enums.OWNER,
         )
-        relation = factories.CourseProductRelationFactory(organizations=[organization])
+        relation = factories.CourseProductRelationFactory(
+            organizations=[organization],
+            product__contract_definition=factories.ContractDefinitionFactory(),
+        )
         contract = factories.ContractFactory(
             order__product=relation.product,
             order__course=relation.course,
@@ -681,7 +684,10 @@ class ContractModelTestCase(TestCase):
             organization=organization,
             role=enums.ADMIN,
         )
-        relation = factories.CourseProductRelationFactory(organizations=[organization])
+        relation = factories.CourseProductRelationFactory(
+            organizations=[organization],
+            product__contract_definition=factories.ContractDefinitionFactory(),
+        )
         contract = factories.ContractFactory(
             order__product=relation.product,
             order__course=relation.course,
@@ -699,7 +705,10 @@ class ContractModelTestCase(TestCase):
             organization=organization,
             role=enums.MEMBER,
         )
-        relation = factories.CourseProductRelationFactory(organizations=[organization])
+        relation = factories.CourseProductRelationFactory(
+            organizations=[organization],
+            product__contract_definition=factories.ContractDefinitionFactory(),
+        )
         contract = factories.ContractFactory(
             order__product=relation.product,
             order__course=relation.course,
