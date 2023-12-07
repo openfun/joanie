@@ -71,12 +71,9 @@ class OrderValidateApiTest(BaseAPITestCase):
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        order = factories.OrderFactory(owner=user)
-        order.submit(
-            request=RequestFactory().request(),
-            billing_address=BillingAddressDictFactory(),
+        order = factories.OrderFactory(
+            owner=user, state=enums.ORDER_STATE_SUBMITTED, main_invoice=InvoiceFactory()
         )
-        InvoiceFactory(order=order)
         response = self.client.put(
             f"/api/v1.0/orders/{order.id}/validate/",
             HTTP_AUTHORIZATION=f"Bearer {token}",

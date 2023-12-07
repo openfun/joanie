@@ -6,6 +6,7 @@ import uuid
 from django.core.cache import cache
 
 from joanie.core import enums, factories, models
+from joanie.payment.models import Invoice, Transaction
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -148,6 +149,8 @@ class OrderUpdateApiTest(BaseAPITestCase):
             owner=owner, product=product, state=enums.ORDER_STATE_VALIDATED
         )
         self._check_api_order_update_detail(order, owner, 405)
+        Transaction.objects.all().delete()
+        Invoice.objects.all().delete()
         models.Order.objects.all().delete()
         order = factories.OrderFactory(
             owner=owner, product=product, state=enums.ORDER_STATE_PENDING

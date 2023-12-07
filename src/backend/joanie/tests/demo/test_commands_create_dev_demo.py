@@ -21,7 +21,6 @@ class CreateDevDemoTestCase(TestCase):
 
         nb_users = models.User.objects.count()
         self.assertEqual(nb_users, 1)
-
         nb_product_certificate = NB_DEV_OBJECTS["product_certificate"]
         nb_product_certificate += 1  # product_certificate_enrollment
         nb_product_certificate += 1  # create_product_purchased (type CERTIFICATE)
@@ -47,7 +46,7 @@ class CreateDevDemoTestCase(TestCase):
 
         nb_organization = 1  # The school of glory
         nb_organization += (
-            nb_product  # ProductFactory create a extra seller organization
+            nb_product  # ProductFactory create an extra seller organization
         )
         self.assertEqual(models.Organization.objects.count(), nb_organization)
 

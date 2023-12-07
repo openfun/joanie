@@ -14,7 +14,6 @@ from joanie.core import enums, factories
 from joanie.core.serializers import fields
 from joanie.core.utils import contract as contract_utility
 from joanie.core.utils import contract_definition
-from joanie.payment.factories import InvoiceFactory
 from joanie.tests.base import BaseAPITestCase
 
 # pylint: disable=too-many-lines
@@ -429,8 +428,7 @@ class ContractApiTest(BaseAPITestCase):
             state=enums.ORDER_STATE_VALIDATED,
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
-        invoice = InvoiceFactory(order=order)
-        address = invoice.recipient_address
+        address = order.main_invoice.recipient_address
         contract = factories.ContractFactory(
             order=order,
             definition=order.product.contract_definition,
@@ -847,7 +845,6 @@ class ContractApiTest(BaseAPITestCase):
                 course=relation.course,
                 state=enums.ORDER_STATE_VALIDATED,
             )
-            InvoiceFactory(order=order)
             context = contract_definition.generate_document_context(
                 order.product.contract_definition, user, order
             )

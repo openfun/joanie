@@ -4,8 +4,7 @@ from django.test.utils import override_settings
 
 import responses
 
-from joanie.core import factories
-from joanie.payment.factories import InvoiceFactory
+from joanie.core import enums, factories
 from joanie.signature import exceptions
 from joanie.signature.backends import get_signature_backend
 
@@ -29,9 +28,7 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
     def test_submit_for_signature(self):
         """valid test submit for signature"""
         user = factories.UserFactory(email="johnnydo@example.fr")
-        factories.AddressFactory.create(owner=user)
-        order = factories.OrderFactory(owner=user)
-        InvoiceFactory(order=order)
+        order = factories.OrderFactory(owner=user, state=enums.ORDER_STATE_VALIDATED)
         file_bytes = b"Some fake content"
         workflow_id = "wfl_id_fake"
 
@@ -205,9 +202,7 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
         """
 
         user = factories.UserFactory(email="johnnydo@example.fr")
-        factories.AddressFactory.create(owner=user)
-        order = factories.OrderFactory(owner=user)
-        InvoiceFactory(order=order)
+        order = factories.OrderFactory(owner=user, state=enums.ORDER_STATE_VALIDATED)
         file_bytes = b"Some fake content"
 
         ## Create workflow
@@ -254,9 +249,7 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
         Upload Document Failed.
         """
         user = factories.UserFactory(email="johnnydo@example.fr")
-        factories.AddressFactory.create(owner=user)
-        order = factories.OrderFactory(owner=user)
-        InvoiceFactory(order=order)
+        order = factories.OrderFactory(owner=user, state=enums.ORDER_STATE_VALIDATED)
         file_bytes = b"Some fake content"
         workflow_id = "wfl_id_fake"
 
@@ -382,9 +375,7 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
         raise the exception Start Signature Procedure Failed.
         """
         user = factories.UserFactory(email="johnnydo@example.fr")
-        factories.AddressFactory.create(owner=user)
-        order = factories.OrderFactory(owner=user)
-        InvoiceFactory(order=order)
+        order = factories.OrderFactory(owner=user, state=enums.ORDER_STATE_VALIDATED)
         file_bytes = b"Some fake content"
         workflow_id = "wfl_id_fake"
         lex_persona_backend = get_signature_backend()

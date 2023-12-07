@@ -16,7 +16,7 @@ from joanie.core.factories import CourseRunFactory, EnrollmentFactory
 from joanie.core.models import CourseState
 from joanie.core.serializers import fields
 from joanie.lms_handler.backends.openedx import OpenEdXLMSBackend
-from joanie.payment.factories import BillingAddressDictFactory, InvoiceFactory
+from joanie.payment.factories import InvoiceFactory
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -643,15 +643,13 @@ class EnrollmentApiTest(BaseAPITestCase):
         target_courses = factories.CourseFactory.create_batch(2)
         target_course_runs = self.create_opened_course_run(2, course=target_courses[0])
         self.create_opened_course_run(2, course=target_courses[1])
-        product = factories.ProductFactory(target_courses=target_courses)
-        order = factories.OrderFactory(owner=user, product=product)
-        order.submit(
-            request=RequestFactory().request(),
-            billing_address=BillingAddressDictFactory(),
+        factories.OrderFactory(
+            owner=user,
+            product__target_courses=target_courses,
+            state=enums.ORDER_STATE_VALIDATED,
         )
-        # - Create an invoice related to the order to mark it as validated
-        InvoiceFactory(order=order, total=order.total)
-        order.validate()
+
+        # breakpoint()
 
         enrollment = factories.EnrollmentFactory(
             course_run=target_course_runs[0],
@@ -1686,12 +1684,11 @@ class EnrollmentApiTest(BaseAPITestCase):
 
         # Get alternative values to try to modify our enrollment
         other_user = factories.UserFactory(is_superuser=random.choice([True, False]))
-        other_order = factories.OrderFactory(
+        factories.OrderFactory(
             owner=other_user,
             product=enrollment.course_run.course.targeted_by_products.first(),
+            state=enums.ORDER_STATE_VALIDATED,
         )
-        # - Create an invoice related to the order to mark it as validated
-        InvoiceFactory(order=other_order, total=other_order.total)
 
         # Try modifying the enrollment on each field with our alternative data
         course_run = models.CourseRun.objects.exclude(id=enrollment.course_run_id).get()
@@ -1744,14 +1741,9 @@ class EnrollmentApiTest(BaseAPITestCase):
             resource_link="http://openedx.test/courses/course-v1:edx+000002+Demo_Course/course",
         )
         product = factories.ProductFactory(target_courses=[target_course])
-        order = factories.OrderFactory(product=product)
-        order.submit(
-            request=RequestFactory().request(),
-            billing_address=BillingAddressDictFactory(),
+        order = factories.OrderFactory(
+            product=product, state=enums.ORDER_STATE_VALIDATED
         )
-        # - Create an invoice related to the order to mark it as validated
-        InvoiceFactory(order=order, total=order.total)
-        order.validate()
         enrollment = factories.EnrollmentFactory(
             course_run=course_run1,
             user=order.owner,
@@ -1774,15 +1766,9 @@ class EnrollmentApiTest(BaseAPITestCase):
             resource_link="http://openedx.test/courses/course-v1:edx+000002+Demo_Course/course",
         )
         product = factories.ProductFactory(target_courses=[target_course])
-        order = factories.OrderFactory(product=product)
-        order.submit(
-            request=RequestFactory().request(),
-            billing_address=BillingAddressDictFactory(),
+        order = factories.OrderFactory(
+            product=product, state=enums.ORDER_STATE_VALIDATED
         )
-
-        # - Create an invoice related then validate the order
-        InvoiceFactory(order=order, total=order.total)
-        order.validate()
 
         enrollment = factories.EnrollmentFactory(
             course_run=course_run1,
@@ -1805,16 +1791,11 @@ class EnrollmentApiTest(BaseAPITestCase):
             course=target_course,
             resource_link="http://openedx.test/courses/course-v1:edx+000002+Demo_Course/course",
         )
-        product = factories.ProductFactory(target_courses=[target_course])
-        order = factories.OrderFactory(owner=user, product=product)
-        order.submit(
-            request=RequestFactory().request(),
-            billing_address=BillingAddressDictFactory(),
+        factories.OrderFactory(
+            owner=user,
+            product__target_courses=[target_course],
+            state=enums.ORDER_STATE_VALIDATED,
         )
-
-        # - Create an invoice related then validate the order
-        InvoiceFactory(order=order, total=order.total)
-        order.validate()
 
         enrollment = factories.EnrollmentFactory(
             course_run=course_run1, user=user, is_active=True, was_created_by_order=True
@@ -1986,13 +1967,12 @@ class EnrollmentApiTest(BaseAPITestCase):
         # Then user purchases a product containing the previously created course run and
         # tries to update to was_created_by_order field again.
         product = factories.ProductFactory(target_courses=[course_run.course])
-        order = factories.OrderFactory(owner=user, product=product)
-        order.submit(
-            request=RequestFactory().request(),
-            billing_address=BillingAddressDictFactory(),
+        order = factories.OrderFactory(
+            owner=user, product=product, state=enums.ORDER_STATE_SUBMITTED
         )
 
-        # - Create an invoice related to the order to mark it as validated
+        # - Create an invoice related to the order to mark it as validated and trigger the
+        #   auto enrollment logic on validate transition
         InvoiceFactory(order=order, total=order.total)
         order.validate()
 
@@ -2084,14 +2064,11 @@ class EnrollmentApiTest(BaseAPITestCase):
             is_listed=True,
         )
         self.create_opened_course_run(course=target_course)
-        product = factories.ProductFactory(target_courses=[target_course])
-        order = factories.OrderFactory(owner=user, product=product)
-        order.submit(
-            request=RequestFactory().request(),
-            billing_address=BillingAddressDictFactory(),
+        factories.OrderFactory(
+            owner=user,
+            product__target_courses=[target_course],
+            state=enums.ORDER_STATE_VALIDATED,
         )
-        InvoiceFactory(order=order, total=order.total)
-        order.validate()
 
         enrollment = factories.EnrollmentFactory(
             course_run=course_run, user=user, is_active=True, was_created_by_order=True
@@ -2162,15 +2139,11 @@ class EnrollmentApiTest(BaseAPITestCase):
         # Then user purchases a product containing the previously created course run and
         # tries to update to was_created_by_order field again.
         factories.CourseRunFactory(course=course_run.course)
-        product = factories.ProductFactory(target_courses=[course_run.course])
-        order = factories.OrderFactory(owner=user, product=product)
-        order.submit(
-            request=RequestFactory().request(),
-            billing_address=BillingAddressDictFactory(),
+        factories.OrderFactory(
+            owner=user,
+            product__target_courses=[course_run.course],
+            state=enums.ORDER_STATE_VALIDATED,
         )
-        # - Create an invoice related then validate the order
-        InvoiceFactory(order=order, total=order.total)
-        order.validate()
 
         response = self.client.put(
             f"/api/v1.0/enrollments/{enrollment.id}/",

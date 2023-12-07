@@ -2,7 +2,6 @@
 from django.db.models import ProtectedError
 from django.test import TestCase
 
-from joanie.core.factories import OrderFactory
 from joanie.payment.factories import InvoiceFactory, TransactionFactory
 
 
@@ -27,7 +26,9 @@ class TransactionModelTestCase(TestCase):
         If transaction amount is negative, it's string representation should
         contain credit.
         """
-        transaction = TransactionFactory(total=-10.00)
+        transaction = TransactionFactory(
+            total=-10.00, invoice__parent=InvoiceFactory(total=10.00)
+        )
         self.assertEqual(
             str(transaction),
             f"Credit transaction ({transaction.total})",
@@ -35,10 +36,9 @@ class TransactionModelTestCase(TestCase):
 
     def test_models_transaction_protected(self):
         """
-        Invoice deletion should be blocked as long as related invoice exists.
+        Invoice deletion should be blocked as long as related transaction exists.
         """
-        invoice = InvoiceFactory(order=OrderFactory(), total=10)
-        TransactionFactory(invoice=invoice)
+        transaction = TransactionFactory()
 
         with self.assertRaises(ProtectedError):
-            invoice.delete()
+            transaction.invoice.delete()

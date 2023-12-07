@@ -1,7 +1,7 @@
 """Test suite for `generate_document_context` utility"""
 from django.test import TestCase
 
-from joanie.core import factories
+from joanie.core import enums, factories
 from joanie.core.utils import contract_definition, image_to_base64
 from joanie.payment.factories import InvoiceFactory
 
@@ -36,8 +36,9 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                     title="CONTRACT DEFINITION 1", body="Articles de la convention"
                 )
             ),
+            state=enums.ORDER_STATE_VALIDATED,
+            main_invoice=InvoiceFactory(recipient_address=address),
         )
-        InvoiceFactory(order=order, recipient_address=address)
         definition = order.product.contract_definition
         expected_context = {
             "contract": {
