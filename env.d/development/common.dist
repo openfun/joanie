@@ -53,3 +53,6 @@ JOANIE_BACKOFFICE_BASE_URL="http://localhost:8072"
 
 # must be reachable for signature email notifications
 DEVELOPER_EMAIL="developer@example.com"
+
+# Security for remote endpoints API
+JOANIE_AUTHORIZED_API_TOKENS = "secretTokenForRemoteAPIConsumer"

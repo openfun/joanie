@@ -26,7 +26,7 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 
-from joanie import admin_urls, client_urls
+from joanie import admin_urls, client_urls, remote_endpoints_urls
 from joanie.core.views import (
     BackOfficeRedirectView,
     DebugCertificateTemplateView,
@@ -48,6 +48,7 @@ urlpatterns = (
     ]
     + admin_urls.urlpatterns
     + client_urls.urlpatterns
+    + remote_endpoints_urls.urlpatterns
 )
 
 if settings.DEBUG:

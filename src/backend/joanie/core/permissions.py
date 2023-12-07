@@ -1,4 +1,6 @@
 """Permission handlers for joanie's core app."""
+from django.conf import settings
+
 from rest_framework import permissions
 
 
@@ -30,3 +32,29 @@ class CanSignOrganizationContracts(IsAuthenticated):
         """Check permission for a given object."""
         abilities = obj.get_abilities(request.user)
         return abilities.get("sign_contracts", False)
+
+
+class HasAPIKey(permissions.BasePermission):
+    """Permission class to grant access to our remote endpoints API."""
+
+    def has_permission(self, request, view):
+        """
+        Check if a valid authorization token is present in the request headers.
+
+        This method verifies whether the token is included in the 'Authorization' header
+        and follows the 'Bearer' scheme. It then checks if the token exists in the list
+        of authorized tokens specified by `JOANIE_AUTHORIZED_API_TOKENS` variable in settings.
+        """
+        authorization_header = request.headers.get("Authorization")
+        if not authorization_header:
+            return False
+
+        try:
+            scheme_prefix, token = authorization_header.split(maxsplit=1)
+        except ValueError:
+            return False
+
+        if scheme_prefix != "Bearer":
+            return False
+
+        return token in settings.JOANIE_AUTHORIZED_API_TOKENS
