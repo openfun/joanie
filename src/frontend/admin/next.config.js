@@ -2,6 +2,11 @@ const removeImports = require("next-remove-imports")();
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: "export",
+  images: {
+    // Disable image optimization, as the default image optimizer does not support static export
+    unoptimized: true,
+  },
   reactStrictMode: true,
   modularizeImports: {
     "@mui/icons-material": {
