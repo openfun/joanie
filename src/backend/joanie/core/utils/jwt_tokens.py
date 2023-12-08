@@ -9,7 +9,9 @@ from rest_framework_simplejwt.tokens import AccessToken
 from joanie.core import models
 
 
-def generate_jwt_token_from_user(user: models.User, expires_at: datetime = None) -> AccessToken:
+def generate_jwt_token_from_user(
+    user: models.User, expires_at: datetime = None
+) -> AccessToken:
     """
     Generate a jwt token used to authenticate a user from a user registered in
     the database
