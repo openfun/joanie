@@ -73,3 +73,4 @@ src/backend/joanie/static/joanie/
 .idea/
 .vscode/
 *.iml
+/src/frontend/admin/out/
