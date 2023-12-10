@@ -14,6 +14,12 @@ venv
 docker-compose.*
 env.d
 
+# next
+**/.next
+**/node_modules
+**/.env
+src/frontend/admin/out
+
 # Docs
 docs
 *.md

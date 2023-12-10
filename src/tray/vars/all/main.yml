@@ -2,6 +2,7 @@
 
 # -- ingress
 joanie_host: "joanie.{{ namespace_name }}.{{ domain_name }}"
+joanie_admin_host: "admin.joanie.{{ namespace_name }}.{{ domain_name }}"
 richie_host: "richie.{{ namespace_name }}.{{ domain_name }}"
 joanie_ingress_class_name: "{{ default_ingress_class_name }}"
 
@@ -17,6 +18,16 @@ joanie_nginx_status_endpoint: "/__status__"
 joanie_nginx_admin_ip_whitelist: []
 joanie_nginx_bypass_htaccess_ip_whitelist: []
 joanie_nginx_static_cache_expires: "1M"
+
+# -- admin nginx
+joanie_admin_nginx_image_name: "fundocker/joanie-admin"
+joanie_admin_nginx_image_tag: "latest"
+joanie_admin_nginx_port: 8061
+joanie_admin_nginx_replicas: 1
+joanie_admin_nginx_healthcheck_port: 5000
+joanie_admin_nginx_healthcheck_endpoint: "/__healthcheck__"
+joanie_admin_nginx_status_endpoint: "/__status__"
+joanie_admin_nginx_static_cache_expires: "1M"
 
 # -- postgresql
 joanie_postgresql_version: "9.6"
@@ -63,6 +74,11 @@ joanie_app_resources: "{{ app_resources }}"
 joanie_app_job_db_migrate_resources: "{{ app_resources }}"
 
 joanie_nginx_resources:
+  requests:
+    cpu: 10m
+    memory: 5Mi
+
+joanie_admin_nginx_resources:
   requests:
     cpu: 10m
     memory: 5Mi

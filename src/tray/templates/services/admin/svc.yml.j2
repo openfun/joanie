@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: joanie
+    service: admin
+    version: "{{ joanie_admin_nginx_image_tag }}"
+    deployment_stamp: "{{ deployment_stamp }}"
+  name: "joanie-admin-nginx-{{ deployment_stamp }}"
+  namespace: "{{ namespace_name }}"
+spec:
+  ports:
+    - name: {{ joanie_admin_nginx_port }}-tcp
+      port: {{ joanie_admin_nginx_port }}
+      protocol: TCP
+      targetPort: {{ joanie_admin_nginx_port }}
+    - name: "{{ joanie_admin_nginx_healthcheck_port }}-tcp"
+      port: {{ joanie_admin_nginx_healthcheck_port }}
+      protocol: TCP
+      targetPort: {{ joanie_admin_nginx_healthcheck_port }}
+  selector:
+    app: joanie
+    deployment: "joanie-admin-nginx-{{ deployment_stamp }}"
+  type: ClusterIP
