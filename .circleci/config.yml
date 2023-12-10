@@ -93,6 +93,32 @@ jobs:
           name: Check built image availability
           command: docker images "joanie:${CIRCLE_SHA1}*"
 
+  build-docker-admin:
+    docker:
+      - image: cimg/base:2023.12
+    working_directory: ~/joanie
+    steps:
+      # Checkout repository sources
+      - checkout:
+          path: ~/joanie
+      # Generate a version.json file describing app release
+      - <<: *generate-version-file
+      # Activate docker-in-docker
+      - setup_remote_docker:
+          version: default
+      # Each image is tagged with the current git commit sha1 to avoid collisions in parallel builds.
+      - run:
+          name: Build production image
+          command: |
+            docker build . \
+                --build-arg NEXT_PUBLIC_API_ENDPOINT=${NEXT_PREPROD_PUBLIC_API_ENDPOINT} \
+                --build-arg NEXT_PUBLIC_DJANGO_ADMIN_BASE_URL=${NEXT_PREPROD_PUBLIC_DJANGO_ADMIN_BASE_URL} \
+                -f docker/images/admin/Dockerfile \
+                -t joanie-admin:${CIRCLE_SHA1}
+      - run:
+          name: Check built image availability
+          command: docker images "joanie-admin:${CIRCLE_SHA1}*"
+
   # ---- Backend jobs ----
   # Build backend development environment
   build-back:
@@ -267,6 +293,7 @@ jobs:
           root: ~/joanie
           paths:
             - src/frontend/admin/.next
+            - src/frontend/admin/out
             - src/frontend/admin/public
             - src/frontend/admin/i18n/frontend.json
       - save_cache:
@@ -580,6 +607,89 @@ jobs:
               docker push fundocker/joanie:latest
             fi
 
+  hub-admin:
+    docker:
+      - image: cimg/base:2023.12
+    working_directory: ~/joanie
+    steps:
+      # Checkout repository sources
+      - checkout:
+          path: ~/joanie
+      # Generate a version.json file describing app release
+      - <<: *generate-version-file
+      # Activate docker-in-docker
+      - setup_remote_docker:
+          version: default
+      - run:
+          name: Build production image
+          command: |
+            if [[ ! -z ${CIRCLE_TAG+x} ]]; then
+              docker build . \
+                --build-arg NEXT_PUBLIC_API_ENDPOINT=${NEXT_PRODUCTION_PUBLIC_API_ENDPOINT} \
+                --build-arg NEXT_PUBLIC_DJANGO_ADMIN_BASE_URL=${NEXT_PRODUCTION_PUBLIC_DJANGO_ADMIN_BASE_URL} \
+                -f docker/images/admin/Dockerfile \
+                -t joanie-admin:${CIRCLE_SHA1}
+            else
+              docker build . \
+                --build-arg NEXT_PUBLIC_API_ENDPOINT=${NEXT_PREPROD_PUBLIC_API_ENDPOINT} \
+                --build-arg NEXT_PUBLIC_DJANGO_ADMIN_BASE_URL=${NEXT_PREPROD_PUBLIC_DJANGO_ADMIN_BASE_URL} \
+                -f docker/images/admin/Dockerfile \
+                -t joanie-admin:${CIRCLE_SHA1}
+            fi
+      - run:
+          name: Check built images availability
+          command: docker images "joanie-admin:${CIRCLE_SHA1}*"
+      # Login to DockerHub to Publish new images
+      #
+      # Nota bene: you'll need to define the following secrets environment vars
+      # in CircleCI interface:
+      #
+      #   - DOCKER_HUB_USER
+      #   - DOCKER_HUB_PASSWORD
+      - run:
+          name: Login to DockerHub
+          command: echo "$DOCKER_HUB_PASSWORD" | docker login -u "$DOCKER_HUB_USER" --password-stdin
+      # Tag docker images with the same pattern used in Git (Semantic Versioning)
+      #
+      # Git tag: v1.0.1
+      # Docker tag: 1.0.1(-ci)
+      - run:
+          name: Tag images
+          command: |
+            docker images fundocker/joanie
+            DOCKER_TAG=$([[ -z "$CIRCLE_TAG" ]] && echo $CIRCLE_BRANCH || echo ${CIRCLE_TAG} | sed 's/^v//')
+            RELEASE_TYPE=$([[ -z "$CIRCLE_TAG" ]] && echo "branch" || echo "tag ")
+            # Display either:
+            # - DOCKER_TAG: main (Git branch)
+            # or
+            # - DOCKER_TAG: 1.1.2 (Git tag v1.1.2)
+            echo "DOCKER_TAG: ${DOCKER_TAG} (Git ${RELEASE_TYPE}${CIRCLE_TAG})"
+            docker tag joanie-admin:${CIRCLE_SHA1} fundocker/joanie-admin:${DOCKER_TAG}
+            if [[ -n "$CIRCLE_TAG" ]]; then
+                docker tag joanie-admin:${CIRCLE_SHA1} fundocker/joanie-admin:latest
+            fi
+            docker images | grep -E "^fundocker/joanie\s*(${DOCKER_TAG}.*|latest|main)"
+
+      # Publish images to DockerHub
+      #
+      # Nota bene: logged user (see "Login to DockerHub" step) must have write
+      # permission for the project's repository; this also implies that the
+      # DockerHub repository already exists.
+      - run:
+          name: Publish images
+          command: |
+            DOCKER_TAG=$([[ -z "$CIRCLE_TAG" ]] && echo $CIRCLE_BRANCH || echo ${CIRCLE_TAG} | sed 's/^v//')
+            RELEASE_TYPE=$([[ -z "$CIRCLE_TAG" ]] && echo "branch" || echo "tag ")
+            # Display either:
+            # - DOCKER_TAG: main (Git branch)
+            # or
+            # - DOCKER_TAG: 1.1.2 (Git tag v1.1.2)
+            echo "DOCKER_TAG: ${DOCKER_TAG} (Git ${RELEASE_TYPE}${CIRCLE_TAG})"
+            docker push fundocker/joanie-admin:${DOCKER_TAG}
+            if [[ -n "$CIRCLE_TAG" ]]; then
+              docker push fundocker/joanie-admin:latest
+            fi            
+
 workflows:
   version: 2
 
@@ -618,6 +728,11 @@ workflows:
           filters:
             tags:
               only: /.*/
+
+      - build-docker-admin:
+          filters:
+            tags:
+              only: /.*/      
 
       # Backend jobs
       #
@@ -719,3 +834,14 @@ workflows:
               only: main
             tags:
               only: /^v.*/
+
+      - hub-admin:
+          requires:
+            - build-docker-admin
+            - test-front-admin
+            - tray
+          filters:
+            branches:
+              only: main
+            tags:
+              only: /^v.*/      

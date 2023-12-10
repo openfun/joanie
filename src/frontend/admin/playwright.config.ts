@@ -46,7 +46,7 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: "yarn start --port=8073",
+    command: "yarn start -p 8073",
     url: "http://localhost:8073",
   },
 });
