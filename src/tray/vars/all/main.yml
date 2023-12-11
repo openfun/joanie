@@ -49,7 +49,7 @@ joanie_celery_command:
   - joanie.celery_app
   - worker
   - -l
-  - INFO"
+  - INFO
 
 # -- resources
 {% set app_resources = {
