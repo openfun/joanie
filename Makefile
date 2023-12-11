@@ -158,6 +158,11 @@ lint-pylint: ## lint back-end python sources with pylint only on changed files f
 	bin/pylint --diff-only=origin/main
 .PHONY: lint-pylint
 
+lint-pylint-all: ## lint back-end python sources with pylint
+	@echo 'lint:pylint-all started…'
+	bin/pylint joanie
+.PHONY: lint-pylint-all
+
 test: ## run project tests
 	@$(MAKE) test-back-parallel
 	@$(MAKE) admin-test
