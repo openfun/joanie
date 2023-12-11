@@ -29,7 +29,7 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
 
     @responses.activate
     def test_backend_lex_persona_handle_notification_workflowstarted_unsupported_event_type(
-        self
+        self,
     ):
         """
         When an incoming webhook event type is 'workflowStarted', and the event is verified,
@@ -90,7 +90,7 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
 
     @responses.activate
     def test_backend_lex_persona_handle_notification_workflowstopped_unsupported_event_type(
-        self
+        self,
     ):
         """
         When an incoming webhook event type is 'workflowStopped', and the event is verified,
@@ -230,7 +230,7 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
 
     @responses.activate
     def test_backend_lex_persona_handle_notification_verify_webhook_event_failed_to_verify(
-        self
+        self,
     ):
         """
         When an incoming event type is 'workflowFinished', but we can't verify that webhook event
@@ -350,7 +350,7 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
     )
     @responses.activate
     def test_backend_lex_persona_handle_notification_workflow_finished_event_but_signature_expired(
-        self
+        self,
     ):
         """
         When an incoming event type is 'workflowFinished' and the 'id' has been verified at the
@@ -419,7 +419,7 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
 
     @responses.activate
     def test_backend_lex_persona_handle_notification_recipient_refused_should_reset_contract(
-        self
+        self,
     ):
         """
         When an incoming event type is 'recipientRefused', and the event has been verified,

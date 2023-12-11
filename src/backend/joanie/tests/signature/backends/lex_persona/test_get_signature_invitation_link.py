@@ -93,7 +93,7 @@ class LexPersonaBackendGetSignatureInvitationLinkTestCase(TestCase):
 
     @responses.activate
     def test_backend_lex_persona_get_signature_invitation_link_get_jwt_token_fails(
-        self
+        self,
     ):
         """
         When retrieving the JWT token from the invitation link of a signature procedure
