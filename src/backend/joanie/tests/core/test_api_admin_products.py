@@ -172,10 +172,10 @@ class ProductAdminApiTest(TestCase):
                             "src": f"{relation.course.cover.url}.1x1_q85.webp",
                             "size": relation.course.cover.size,
                             "srcset": (
-                                f"{relation.course.cover.url}.1920x1080_q85_crop-smart_upscale.webp 1920w, "  # pylint: disable=line-too-long
-                                f"{relation.course.cover.url}.1280x720_q85_crop-smart_upscale.webp 1280w, "  # pylint: disable=line-too-long
-                                f"{relation.course.cover.url}.768x432_q85_crop-smart_upscale.webp 768w, "  # pylint: disable=line-too-long
-                                f"{relation.course.cover.url}.384x216_q85_crop-smart_upscale.webp 384w"  # pylint: disable=line-too-long
+                                f"{relation.course.cover.url}.1920x1080_q85_crop-scale_upscale.webp 1920w, "  # pylint: disable=line-too-long
+                                f"{relation.course.cover.url}.1280x720_q85_crop-scale_upscale.webp 1280w, "  # pylint: disable=line-too-long
+                                f"{relation.course.cover.url}.768x432_q85_crop-scale_upscale.webp 768w, "  # pylint: disable=line-too-long
+                                f"{relation.course.cover.url}.384x216_q85_crop-scale_upscale.webp 384w"  # pylint: disable=line-too-long
                             ),
                         },
                         "title": relation.course.title,
