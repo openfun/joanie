@@ -92,13 +92,13 @@ class OrganizationApiTest(BaseAPITestCase):
                             "filename": organization.logo.name,
                             "src": f"http://testserver{organization.logo.url}.1x1_q85.webp",
                             "srcset": (
-                                f"http://testserver{organization.logo.url}.1024x1024_q85_crop-smart_upscale.webp "  # pylint: disable=line-too-long
+                                f"http://testserver{organization.logo.url}.1024x1024_q85_crop-scale_upscale.webp "  # pylint: disable=line-too-long
                                 "1024w, "
-                                f"http://testserver{organization.logo.url}.512x512_q85_crop-smart_upscale.webp "  # pylint: disable=line-too-long
+                                f"http://testserver{organization.logo.url}.512x512_q85_crop-scale_upscale.webp "  # pylint: disable=line-too-long
                                 "512w, "
-                                f"http://testserver{organization.logo.url}.256x256_q85_crop-smart_upscale.webp "  # pylint: disable=line-too-long
+                                f"http://testserver{organization.logo.url}.256x256_q85_crop-scale_upscale.webp "  # pylint: disable=line-too-long
                                 "256w, "
-                                f"http://testserver{organization.logo.url}.128x128_q85_crop-smart_upscale.webp "  # pylint: disable=line-too-long
+                                f"http://testserver{organization.logo.url}.128x128_q85_crop-scale_upscale.webp "  # pylint: disable=line-too-long
                                 "128w"
                             ),
                             "width": 1,
