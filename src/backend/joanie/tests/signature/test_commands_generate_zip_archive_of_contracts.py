@@ -6,7 +6,7 @@ from zipfile import ZipFile
 
 from django.core.files.storage import storages
 from django.core.management import CommandError, call_command
-from django.test import TestCase, override_settings
+from django.test import TestCase
 from django.utils import timezone
 
 from pdfminer.high_level import extract_text as pdf_extract_text
@@ -264,9 +264,6 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
             "Abort generating ZIP archive.",
         )
 
-    @override_settings(
-        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend"
-    )
     def test_commands_generate_zip_archive_contracts_success_with_courseproductrelation_parameter(
         self,
     ):  # pylint: disable=too-many-locals
@@ -358,9 +355,6 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         # Clear ZIP archive in storages
         storage.delete(zip_archive)
 
-    @override_settings(
-        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend"
-    )
     def test_commands_generate_zip_archive_contracts_success_with_organization_parameter(
         self,
     ):  # pylint: disable=too-many-locals
@@ -454,9 +448,6 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         # Clear ZIP archive in storages
         storage.delete(zip_archive)
 
-    @override_settings(
-        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend"
-    )
     def test_commands_generate_zip_archive_with_parameter_zip_uuid_is_not_a_uuid_structure(
         self,
     ):

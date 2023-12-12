@@ -573,6 +573,8 @@ class Test(Base):
         "backend": "joanie.payment.backends.dummy.DummyPaymentBackend",
     }
 
+    JOANIE_SIGNATURE_BACKEND = "joanie.signature.backends.dummy.DummySignatureBackend"
+
     JOANIE_ENROLLMENT_GRADE_CACHE_TTL = 0
 
     LOGGING = values.DictValue(

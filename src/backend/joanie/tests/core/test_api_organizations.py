@@ -4,7 +4,6 @@ Test suite for Organization API endpoint.
 import random
 from unittest import mock
 
-from django.test import override_settings
 from django.utils import timezone
 
 from joanie.core import enums, factories, models
@@ -366,9 +365,6 @@ class OrganizationApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, 405)
         self.assertEqual(models.Organization.objects.count(), 1)
 
-    @override_settings(
-        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend"
-    )
     def test_api_organization_contracts_signature_link_success(self):
         """
         Authenticated users with owner role should be able to sign contracts in bulk.
@@ -401,9 +397,6 @@ class OrganizationApiTest(BaseAPITestCase):
             content["invitation_link"],
         )
 
-    @override_settings(
-        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend"
-    )
     def test_api_organization_contracts_signature_link_specified_ids(self):
         """
         When passing a list of contract ids,

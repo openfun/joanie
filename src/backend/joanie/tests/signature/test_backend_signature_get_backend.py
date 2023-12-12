@@ -24,9 +24,6 @@ class GetSignatureBackendTestSuite(TestCase):
         self.assertIsInstance(backend, BaseSignatureBackend)
         self.assertEqual(backend.required_settings, [])
 
-    @override_settings(
-        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend"
-    )
     def test_backend_get_signature_get_backend_dummy(self):
         """
         When JOANIE_SIGNATURE_BACKEND is well configured in settings, the dummy signature backend

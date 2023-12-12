@@ -5,7 +5,6 @@ from io import BytesIO
 from django.core import mail
 from django.core.exceptions import ValidationError
 from django.test import TestCase
-from django.test.utils import override_settings
 from django.utils import timezone as django_timezone
 
 from pdfminer.high_level import extract_text as pdf_extract_text
@@ -53,9 +52,6 @@ class BaseSignatureTestCase(TestCase):
         self.assertIn("dummysignaturebackend.fr/download?", email_body)
 
 
-@override_settings(
-    JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend"
-)
 class DummySignatureBackendTestCase(BaseSignatureTestCase):
     """Test case for the Dummy Signature Backend."""
 

@@ -7,7 +7,6 @@ from zipfile import ZipFile
 from django.core.exceptions import ValidationError
 from django.core.files.storage import storages
 from django.test import TestCase
-from django.test.utils import override_settings
 from django.utils import timezone
 
 from pdfminer.high_level import extract_text as pdf_extract_text
@@ -445,9 +444,6 @@ class UtilsContractTestCase(TestCase):
 
         self.assertEqual(output, [])
 
-    @override_settings(
-        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend"
-    )
     def test_utils_contract_get_pdf_bytes_of_contracts(self):
         """
         When we call this method with 2 existing signature backend references at the signature
@@ -476,9 +472,6 @@ class UtilsContractTestCase(TestCase):
 
         self.assertEqual(len(pdf_bytes_list), 2)
 
-    @override_settings(
-        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend"
-    )
     def test_utils_contract_get_pdf_bytes_of_contracts_with_one_wrong_reference(self):
         """
         When we call this method with 1 non-existent signature backend reference at the signature
