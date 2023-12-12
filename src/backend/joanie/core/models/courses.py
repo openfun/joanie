@@ -13,6 +13,7 @@ from django.contrib.sites.models import Site
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import models
+from django.db.models import Q
 from django.utils import timezone
 from django.utils.functional import lazy
 from django.utils.text import capfirst
@@ -216,24 +217,37 @@ class Organization(parler_models.TranslatableModel, BaseModel):
             "manage_accesses": is_owner_or_admin,
         }
 
-    def signature_backend_references_to_sign(self):
+    def signature_backend_references_to_sign(
+        self, contracts_ids: list[str] | None = None
+    ):
         """
         Return the list of references that should be signed by the organization.
         """
-        return list(
+        contracts_ids_filter = Q()
+        if contracts_ids:
+            contracts_ids_filter = Q(id__in=contracts_ids)
+        contracts_to_sign = list(
             Contract.objects.filter(
+                contracts_ids_filter,
                 signature_backend_reference__isnull=False,
                 submitted_for_signature_on__isnull=False,
                 student_signed_on__isnull=False,
                 order__organization=self,
             ).values_list("signature_backend_reference", flat=True)
         )
+        if contracts_ids and len(contracts_to_sign) != len(contracts_ids):
+            raise exceptions.NoContractToSignError(
+                "Some contracts are not available for this organization."
+            )
+        return contracts_to_sign
 
-    def contracts_signature_link(self, user: User):
+    def contracts_signature_link(
+        self, user: User, contracts_ids: list[str] | None = None
+    ):
         """
         Retrieve a signature invitation link for all available contracts.
         """
-        references = self.signature_backend_references_to_sign()
+        references = self.signature_backend_references_to_sign(contracts_ids)
         if not references:
             raise exceptions.NoContractToSignError(
                 "No contract to sign for this organization."

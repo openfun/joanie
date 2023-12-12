@@ -3495,6 +3495,18 @@
                 "description": "Return an invitation link to sign all the available contracts for the organization.",
                 "parameters": [
                     {
+                        "in": "query",
+                        "name": "contracts_ids[]",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "format": "uuid"
+                            }
+                        },
+                        "description": "List of contract ids to sign, if not provided all the available contracts will be signed."
+                    },
+                    {
                         "in": "path",
                         "name": "id",
                         "schema": {

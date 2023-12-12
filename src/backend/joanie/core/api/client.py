@@ -15,7 +15,7 @@ from django.http import FileResponse, HttpResponse, JsonResponse
 from django.urls import reverse
 
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import mixins, pagination, viewsets
 from rest_framework import permissions as drf_permissions
 from rest_framework.decorators import action
@@ -685,6 +685,18 @@ class OrganizationViewSet(
             accesses__user__username=username
         ).annotate(user_role=Subquery(user_role_query))
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="contracts_ids[]",
+                description="List of contract ids to sign, "
+                "if not provided all the available contracts will be signed.",
+                required=False,
+                type=OpenApiTypes.UUID,
+                many=True,
+            )
+        ],
+    )
     @action(
         detail=True,
         methods=["GET"],
@@ -695,11 +707,13 @@ class OrganizationViewSet(
         Return an invitation link to sign all the available contracts for the organization.
         """
         organization = self.get_object()
+        contracts_ids = request.query_params.getlist("contracts_ids[]")
         try:
             return JsonResponse(
                 {
                     "invitation_link": organization.contracts_signature_link(
-                        request.user
+                        request.user,
+                        contracts_ids,
                     )
                 },
                 status=200,
