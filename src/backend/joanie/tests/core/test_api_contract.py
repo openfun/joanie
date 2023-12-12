@@ -6,7 +6,6 @@ from unittest import mock
 from uuid import uuid4
 
 from django.core.files.storage import storages
-from django.test import override_settings
 from django.utils import timezone
 
 from pdfminer.high_level import extract_text as pdf_extract_text
@@ -852,9 +851,6 @@ class ContractApiTest(BaseAPITestCase):
 
         self.assertEqual(response.json(), ["No zip to generate"])
 
-    @override_settings(
-        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend"
-    )
     # pylint: disable=too-many-locals
     def test_api_contract_generate_zip_archive_authenticated_post_method_allowed(self):
         """

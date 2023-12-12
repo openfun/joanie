@@ -5,7 +5,6 @@ import uuid
 
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
-from django.test import override_settings
 from django.utils import timezone
 
 import factory
@@ -341,9 +340,6 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         organization = factories.OrganizationFactory()
         self.assertEqual(organization.signature_backend_references_to_sign(), [])
 
-    @override_settings(
-        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend"
-    )
     def test_models_organization_contracts_signature_link(self):
         """Should return a signature link."""
         now = timezone.now()
@@ -370,9 +366,6 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         invitation_url = organization.contracts_signature_link(user=user)
         self.assertIn("https://dummysignaturebackend.fr/?requestToken=", invitation_url)
 
-    @override_settings(
-        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend"
-    )
     def test_models_organization_contracts_signature_link_specified_ids(self):
         """Should return a signature link for specified contract ids."""
         now = timezone.now()
@@ -406,9 +399,6 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         )
         self.assertIn("https://dummysignaturebackend.fr/?requestToken=", invitation_url)
 
-    @override_settings(
-        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend"
-    )
     def test_models_organization_contracts_signature_link_empty(self):
         """Should fail if no references to sign exists.""" ""
         organization = factories.OrganizationFactory()

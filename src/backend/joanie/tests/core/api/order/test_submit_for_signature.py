@@ -70,9 +70,6 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         content = response.json()
         self.assertEqual(content["detail"], "Not found.")
 
-    @override_settings(
-        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend"
-    )
     def test_api_order_submit_for_signature_authenticated_but_order_is_not_validate(
         self,
     ):
@@ -138,9 +135,6 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         content = response.json()
         self.assertEqual(content[0], "No contract definition attached to the product.")
 
-    @override_settings(
-        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend"
-    )
     def test_api_order_submit_for_signature_authenticated(self):
         """
         Authenticated users should be able to create a contract from an order and get in return
@@ -177,7 +171,6 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         self.assertIn(expected_substring_invite_url, invitation_url)
 
     @override_settings(
-        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend",
         JOANIE_SIGNATURE_VALIDITY_PERIOD=60 * 60 * 24 * 15,
     )
     def test_api_order_submit_for_signature_contract_be_resubmitted_with_validity_period_passed(
@@ -230,7 +223,6 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         self.assertIn(expected_substring_invite_url, invitation_link)
 
     @override_settings(
-        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend",
         JOANIE_SIGNATURE_VALIDITY_PERIOD=60 * 60 * 24 * 15,
     )
     def test_api_order_submit_for_signature_contract_context_has_changed_and_still_valid_period(

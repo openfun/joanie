@@ -1043,9 +1043,6 @@ class OrderModelsTestCase(TestCase):
             "['Cannot submit an order that is not yet validated.']",
         )
 
-    @override_settings(
-        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend"
-    )
     def test_models_order_submit_for_signature_with_a_brand_new_contract(
         self,
     ):
@@ -1077,9 +1074,6 @@ class OrderModelsTestCase(TestCase):
             "https://dummysignaturebackend.fr/?requestToken=", raw_invitation_link
         )
 
-    @override_settings(
-        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend"
-    )
     def test_models_order_submit_for_signature_existing_contract_with_same_context_and_still_valid(
         self,
     ):
@@ -1121,9 +1115,6 @@ class OrderModelsTestCase(TestCase):
         )
         self.assertIn("https://dummysignaturebackend.fr/?requestToken=", invitation_url)
 
-    @override_settings(
-        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend"
-    )
     def test_models_order_submit_for_signature_with_contract_context_has_changed_and_still_valid(
         self,
     ):
@@ -1159,7 +1150,6 @@ class OrderModelsTestCase(TestCase):
         self.assertIsNotNone(contract.student_signed_on)
 
     @override_settings(
-        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend",
         JOANIE_SIGNATURE_VALIDITY_PERIOD=60 * 60 * 24 * 15,
     )
     def test_models_order_submit_for_signature_contract_same_context_but_passed_validity_period(
