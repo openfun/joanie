@@ -401,6 +401,44 @@ class OrganizationApiTest(BaseAPITestCase):
             content["invitation_link"],
         )
 
+    @override_settings(
+        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend"
+    )
+    def test_api_organization_contracts_signature_link_specified_ids(self):
+        """
+        When passing a list of contract ids,
+        only the contracts with these ids should be signed.
+        """
+        student_user = factories.UserFactory(email="johnnydo@example.fr")
+        factories.AddressFactory.create(owner=student_user)
+        order = factories.OrderFactory(
+            owner=student_user,
+            product__contract_definition=factories.ContractDefinitionFactory(),
+        )
+        access = factories.UserOrganizationAccessFactory(
+            organization=order.organization, role="owner"
+        )
+        InvoiceFactory(order=order)
+        order.validate()
+        order.submit_for_signature(student_user)
+        order.contract.submitted_for_signature_on = timezone.now()
+        order.contract.student_signed_on = timezone.now()
+
+        token = self.generate_token_from_user(access.user)
+
+        response = self.client.get(
+            f"/api/v1.0/organizations/{order.organization.id}/contracts-signature-link/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+            data={"contract_ids": [order.contract.id]},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertIn(
+            "https://dummysignaturebackend.fr/?requestToken=",
+            content["invitation_link"],
+        )
+
     def test_api_organization_contracts_signature_link_no_contracts(self):
         """A 404 should be returned if no contract is available to sign."""
         user = factories.UserFactory()
