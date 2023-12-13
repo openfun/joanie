@@ -21,6 +21,7 @@
     "@emotion/styled": "11.11.0",
     "@faker-js/faker": "8.3.1",
     "@fontsource/roboto": "5.0.8",
+    "@hookform/error-message": "2.0.1",
     "@hookform/resolvers": "3.3.2",
     "@mui/icons-material": "5.15.0",
     "@mui/lab": "5.0.0-alpha.156",
