@@ -19,7 +19,7 @@ export enum OrganizationRoles {
 }
 
 export type DTOOrganization = Optional<
-  Omit<Organization, "signature" | "logo">,
+  Omit<Organization, "signature" | "logo" | "accesses">,
   "id"
 > & {
   signature?: File;

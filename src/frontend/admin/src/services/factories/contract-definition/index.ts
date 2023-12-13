@@ -8,6 +8,7 @@ const build = (): ContractDefinition => {
     description: faker.lorem.lines(2),
     language: "fr-fr",
     name: "contract_definition",
+    body: "### Contract body",
   };
 };
 

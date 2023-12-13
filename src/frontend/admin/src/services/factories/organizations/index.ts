@@ -10,7 +10,7 @@ const build = (): Organization => {
   return {
     id: faker.string.uuid(),
     title: faker.company.name(),
-    code: faker.company.name().substring(0, 3),
+    code: faker.number.hex({ min: 0, max: 65535 }),
     representative: faker.internet.email(),
     signature: ThumbnailDetailFactory(),
     logo: ThumbnailDetailFactory(),
