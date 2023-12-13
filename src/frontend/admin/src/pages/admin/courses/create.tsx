@@ -19,7 +19,7 @@ export default function CoursesCreatePage() {
   const intl = useIntl();
   const router = useRouter();
   const fromId = useFromIdSearchParams();
-  const fromCourse = useCourse(fromId);
+  const fromCourse = useCourse(fromId, {}, { enabled: fromId !== undefined });
   const canShowForm = !fromId || !!fromCourse.item;
 
   return (

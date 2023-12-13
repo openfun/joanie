@@ -20,7 +20,7 @@ export default function CreateProductPage() {
   const intl = useIntl();
   const router = useRouter();
   const fromId = useFromIdSearchParams();
-  const fromProduct = useProduct(fromId);
+  const fromProduct = useProduct(fromId, {}, { enabled: fromId !== undefined });
   const canShowForm = !fromId || !!fromProduct.item;
 
   return (

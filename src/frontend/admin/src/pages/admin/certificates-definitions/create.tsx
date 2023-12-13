@@ -20,7 +20,9 @@ export default function CreateOrganizationPage() {
   const intl = useIntl();
   const router = useRouter();
   const fromId = useFromIdSearchParams();
-  const fromDefinition = useCertificateDefinition(fromId);
+  const fromDefinition = useCertificateDefinition(fromId, undefined, {
+    enabled: fromId !== undefined,
+  });
   const canShowForm = !fromId || !!fromDefinition.item;
 
   return (

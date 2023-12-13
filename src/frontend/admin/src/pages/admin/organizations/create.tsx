@@ -19,7 +19,11 @@ export default function CreateOrganizationPage() {
   const intl = useIntl();
   const router = useRouter();
   const fromId = useFromIdSearchParams();
-  const fromOrganization = useOrganization(fromId);
+  const fromOrganization = useOrganization(
+    fromId,
+    {},
+    { enabled: fromId !== undefined },
+  );
   const canShowForm = !fromId || !!fromOrganization.item;
 
   return (
