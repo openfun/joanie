@@ -6,12 +6,13 @@ import { SimpleCard } from "@/components/presentational/card/SimpleCard";
 import { useContractDefinition } from "@/hooks/useContractDefinitions/useContractDefinitions";
 import { contractDefinitionsBreadcrumbsTranslation } from "@/translations/pages/contracts-definitions/breadcrumbsTranslations";
 import { ContractDefinitionForm } from "@/components/templates/contract-definition/form/ContractDefinitionForm";
+import { UseAsTemplateButton } from "@/components/templates/form/buttons/UseAsTemplateButton";
 
 const messages = defineMessages({
   pageTitle: {
     id: "pages.admin.certificates.edit.pageTitle",
-    defaultMessage: "Edit certificate: {name}",
-    description: "Label for the edit certificate page title",
+    defaultMessage: "Edit contract definition: {name}",
+    description: "Label for the edit contract definition page title",
   },
 });
 
@@ -25,6 +26,12 @@ export default function EditCertificatePage() {
       title={intl.formatMessage(messages.pageTitle, {
         name: contractDefinitionQuery.item?.title ?? "",
       })}
+      actions={
+        <UseAsTemplateButton
+          href={`${PATH_ADMIN.contract_definition.create}?from=${contractDefinitionQuery.item?.id}`}
+          show={Boolean(contractDefinitionQuery?.item)}
+        />
+      }
       breadcrumbs={[
         {
           name: intl.formatMessage(
