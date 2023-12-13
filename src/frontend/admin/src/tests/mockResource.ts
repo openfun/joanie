@@ -8,10 +8,14 @@ type Props<T extends WithId, Payload> = {
   createCallback?: (payload: Payload) => T;
 };
 
-export const useMockResource = <T extends WithId, Payload>({
+export const mockResource = <T extends WithId, Payload>({
   data,
   ...props
 }: Props<T, Payload>) => {
+  const getResourceIndex = (id: string) => {
+    return data.findIndex((item) => item.id === id);
+  };
+
   const getResource = (id: string) => {
     const findItem = data.find((item) => item.id === id);
     return findItem ?? data[0];
@@ -67,6 +71,7 @@ export const useMockResource = <T extends WithId, Payload>({
   };
 
   return {
+    getResourceIndex,
     getResource,
     deleteResource,
     updateResource,
