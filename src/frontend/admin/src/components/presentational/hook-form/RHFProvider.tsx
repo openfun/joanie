@@ -56,6 +56,7 @@ export function RHFProvider<T extends FieldValues>({
             {actionButtons}
             {showSubmit && (
               <LoadingButton
+                data-testid={id ? `submit-button-${id}` : "submit-button"}
                 loading={isSubmitting}
                 variant="contained"
                 type="submit"

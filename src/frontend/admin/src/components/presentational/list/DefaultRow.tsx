@@ -20,9 +20,11 @@ export interface DefaultRowProps {
   enableDelete?: boolean;
   disableDeleteMessage?: string;
   disableEditMessage?: string;
+  testId?: string;
   onEdit?: () => void;
   loading?: boolean;
   onDelete?: () => void;
+  deleteTestId?: string;
   sx?: SxProps;
 }
 
@@ -37,6 +39,7 @@ export function DefaultRow({
   return (
     <>
       <Box
+        data-testid={props.testId}
         display="flex"
         justifyContent="space-between"
         alignItems="center"
@@ -80,7 +83,12 @@ export function DefaultRow({
               showButton={enableEdit}
               disableMessage={props.disableEditMessage}
             >
-              <IconButton size="small" disabled={!enableEdit} onClick={onEdit}>
+              <IconButton
+                size="small"
+                data-testid="edit-row-button"
+                disabled={!enableEdit}
+                onClick={onEdit}
+              >
                 <ModeEditOutlineTwoToneIcon color="action" fontSize="small" />
               </IconButton>
             </ButtonWithTooltip>
@@ -90,6 +98,7 @@ export function DefaultRow({
             >
               <IconButton
                 size="small"
+                data-testid={props.deleteTestId ?? "delete-row-button"}
                 disabled={!enableDelete}
                 onClick={onDelete}
               >

@@ -218,6 +218,7 @@ export function ProductFormTargetCoursesSection(props: Props) {
       <CustomModal
         fullWidth={true}
         maxWidth="lg"
+        data-testid="add-target-course-modal"
         title={intl.formatMessage(
           productFormMessages.addTargetCourseRelationModalTitle,
         )}
