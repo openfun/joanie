@@ -4,12 +4,13 @@ import {
   CourseFactory,
   CourseStateFactory,
 } from "@/services/factories/courses";
+import { Course } from "@/services/api/models/Course";
 
-const build = (): CourseRun => {
+export const buildCourseRun = (course?: Course): CourseRun => {
   return {
     id: faker.string.uuid(),
     title: faker.company.name(),
-    course: CourseFactory(),
+    course: course ?? CourseFactory(),
     resource_link: faker.internet.url(),
     start: new Date("2023-01-21").toISOString(),
     end: new Date("2024-04-23").toISOString(),
@@ -22,9 +23,13 @@ const build = (): CourseRun => {
   };
 };
 
-export function CourseRunFactory(): CourseRun;
-export function CourseRunFactory(count: number): CourseRun[];
-export function CourseRunFactory(count?: number): CourseRun | CourseRun[] {
-  if (count) return [...Array(count)].map(build);
-  return build();
+export function CourseRunFactory(count?: never, course?: Course): CourseRun;
+export function CourseRunFactory(count: number, course?: Course): CourseRun[];
+export function CourseRunFactory(
+  count?: number,
+  course?: Course,
+): CourseRun | CourseRun[] {
+  if (count && count > 0)
+    return [...Array(count)].map(() => buildCourseRun(course));
+  return buildCourseRun(course);
 }

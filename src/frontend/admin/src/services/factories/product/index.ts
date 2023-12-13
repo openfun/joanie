@@ -5,9 +5,8 @@ import { randomNumber } from "@/utils/numbers";
 import { ProductTargetCourseRelationFactory } from "@/services/api/models/ProductTargetCourseRelation";
 
 const build = (): Product => {
-  const id = faker.string.uuid();
   return {
-    id,
+    id: faker.string.uuid(),
     title: faker.company.name(),
     type: ProductType.CREDENTIAL,
     description: faker.lorem.lines(2),
@@ -15,7 +14,6 @@ const build = (): Product => {
     price: faker.number.int({ min: 1000000 }),
     price_currency: "EUR",
     certificate_definition: CertificateDefinitionFactory(),
-    courses: [],
     target_courses: ProductTargetCourseRelationFactory(randomNumber(2)),
   };
 };
@@ -25,4 +23,23 @@ export function ProductFactory(count: number): Product[];
 export function ProductFactory(count?: number): Product | Product[] {
   if (count) return [...Array(count)].map(build);
   return build();
+}
+
+const buildLight = (): Product => {
+  return {
+    id: faker.string.uuid(),
+    title: faker.company.name(),
+    type: ProductType.CREDENTIAL,
+    description: faker.lorem.lines(2),
+    call_to_action: "Buy",
+    price: faker.number.int({ min: 1000000 }),
+    price_currency: "EUR",
+  };
+};
+
+export function ProductFactoryLight(): Product;
+export function ProductFactoryLight(count: number): Product[];
+export function ProductFactoryLight(count?: number): Product | Product[] {
+  if (count) return [...Array(count)].map(buildLight);
+  return buildLight();
 }

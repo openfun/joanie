@@ -6,7 +6,7 @@ const build = () => {
     id: faker.string.uuid(),
     name: faker.string.sample(30),
     template: "template.pdf",
-    title: faker.company.name(),
+    title: faker.string.sample({ min: 30, max: 50 }),
     description: faker.lorem.lines(2),
   };
 };

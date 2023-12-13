@@ -13,6 +13,14 @@ export type ProductTargetCourseRelation = {
   position?: number;
 };
 
+export type DTOProductTargetCourseRelation = {
+  id?: string;
+  course: string;
+  graded?: boolean;
+  course_runs?: string[];
+  position?: number;
+};
+
 export type ProductTargetCourseRelationOptionalId = Omit<
   ProductTargetCourseRelation,
   "id"
@@ -33,20 +41,12 @@ export type ProductTargetCourseRelationFormValues = {
   enable_course_runs?: boolean;
 };
 
-export type DTOProductTargetCourseRelation = {
-  id?: string;
-  course: string;
-  graded?: boolean;
-  course_runs?: string[];
-  position?: number;
-};
-
 const buildProductTargetCourseRelation = (): ProductTargetCourseRelation => {
   return {
     id: faker.string.uuid(),
     course: CourseFactory(),
     graded: true,
-    course_runs: CourseRunFactory(randomNumber(10)),
+    course_runs: CourseRunFactory(randomNumber(2)),
   };
 };
 
