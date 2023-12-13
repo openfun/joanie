@@ -78,6 +78,7 @@ export function OrderGroupRow({
   if (isOrderGroupDummy(orderGroup)) {
     return (
       <DefaultRow
+        testId={`order-group-${orderGroup.dummyId}`}
         key={orderGroup.dummyId}
         enableDelete={false}
         enableEdit={false}
@@ -92,7 +93,9 @@ export function OrderGroupRow({
   if (isOrderGroup(orderGroup)) {
     return (
       <DefaultRow
+        testId={`order-group-${orderGroup.id}`}
         key={orderGroup.id}
+        deleteTestId={`delete-order-group-${orderGroup.id}`}
         enableDelete={canEdit}
         enableEdit={canEdit}
         disableEditMessage={disableMessage}
@@ -110,6 +113,7 @@ export function OrderGroupRow({
               ),
             }}
             size="small"
+            data-testid={`is-active-switch-order-group-${orderGroup.id}`}
             disabled={!canEdit}
             onChange={(event, checked) => {
               onUpdateIsActive?.(checked);

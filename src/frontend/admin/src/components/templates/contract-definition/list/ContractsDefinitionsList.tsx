@@ -68,6 +68,14 @@ export function ContractsDefinitionsList() {
           }
           push(PATH_ADMIN.contract_definition.edit(contractsDefinition.id));
         }}
+        onUseAsTemplateClick={(contractDefinition) => {
+          if (contractDefinition.id === undefined) {
+            return;
+          }
+          push(
+            `${PATH_ADMIN.contract_definition.create}?from=${contractDefinition?.id}`,
+          );
+        }}
         getEntityName={(contractsDefinition) => {
           return contractsDefinition.name;
         }}

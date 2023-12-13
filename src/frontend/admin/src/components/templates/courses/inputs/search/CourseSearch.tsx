@@ -32,6 +32,7 @@ export function CourseSearch(props: RHFAutocompleteSearchProps<Course>) {
     <>
       <RHFSearch
         {...props}
+        data-testid="course-runs-search"
         items={courses.items}
         label={props.label ?? intl.formatMessage(messages.searchLabel)}
         loading={courses.states.fetching}

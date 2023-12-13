@@ -5,10 +5,8 @@ import {
   ProductTargetCourseRelationOptionalId,
 } from "@/services/api/models/ProductTargetCourseRelation";
 import { productFormMessages } from "@/components/templates/products/form/translations";
-import {
-  DndDefaultRow,
-  DndDefaultRowProps,
-} from "@/components/presentational/dnd/DndDefaultRow";
+import { DndDefaultRowProps } from "@/components/presentational/dnd/DndDefaultRow";
+import { DefaultRow } from "@/components/presentational/list/DefaultRow";
 
 type Props = Omit<DndDefaultRowProps, "mainTitle"> & {
   item: ProductTargetCourseRelation | ProductTargetCourseRelationOptionalId;
@@ -16,8 +14,9 @@ type Props = Omit<DndDefaultRowProps, "mainTitle"> & {
 export function ProductFormTargetCourseRow({ item, ...props }: Props) {
   const intl = useIntl();
   return (
-    <DndDefaultRow
+    <DefaultRow
       {...props}
+      testId={`product-target-course-${item.course.id}`}
       enableEdit={item.id !== undefined}
       enableDelete={item.id !== undefined}
       mainTitle={item.course?.title}

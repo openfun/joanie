@@ -8,6 +8,8 @@ import { defineMessages, useIntl } from "react-intl";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
+import { ErrorMessage } from "@hookform/error-message";
+import FormHelperText from "@mui/material/FormHelperText";
 import { RHFProvider } from "@/components/presentational/hook-form/RHFProvider";
 import { RHFTextField } from "@/components/presentational/hook-form/RHFTextField";
 import { RHFSelect } from "@/components/presentational/hook-form/RHFSelect";
@@ -59,6 +61,7 @@ const messages = defineMessages({
 interface Props {
   afterSubmit?: (contractDefinition: ContractDefinition) => void;
   contractDefinition?: ContractDefinition;
+  fromContractDefinition?: ContractDefinition;
 }
 
 export function ContractDefinitionForm({
@@ -70,21 +73,24 @@ export function ContractDefinitionForm({
     {},
     { enabled: false },
   );
+  const defaultContractDefinition =
+    contractDefinition ?? props.fromContractDefinition;
+
   const RegisterSchema = Yup.object().shape({
     title: Yup.string().required(),
-    description: Yup.string(),
-    body: Yup.string(),
+    description: Yup.string().required(),
+    body: Yup.string().required(),
     language: Yup.string().required(),
     name: Yup.string().required(),
   });
 
   const getDefaultValues = () => {
     return {
-      title: contractDefinition?.title ?? "",
-      description: removeEOL(contractDefinition?.description),
-      body: removeEOL(contractDefinition?.body),
+      title: defaultContractDefinition?.title ?? "",
+      description: removeEOL(defaultContractDefinition?.description),
+      body: removeEOL(defaultContractDefinition?.body),
       name: "contract_definition",
-      language: contractDefinition?.language ?? "fr-fr",
+      language: defaultContractDefinition?.language ?? "fr-fr",
     };
   };
 
@@ -185,6 +191,15 @@ export function ContractDefinitionForm({
                   shouldDirty: true,
                 });
               }}
+            />
+            <ErrorMessage
+              errors={methods.formState.errors}
+              name="body"
+              render={(data) => (
+                <FormHelperText sx={{ marginLeft: "14px" }} error={true}>
+                  {data.message}
+                </FormHelperText>
+              )}
             />
           </Grid>
         </Grid>
