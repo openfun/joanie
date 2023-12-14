@@ -5,7 +5,7 @@ import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import InputAdornment from "@mui/material/InputAdornment";
 import TextField from "@mui/material/TextField";
-import { SearchOutlined } from "@mui/icons-material";
+import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import { useIntl } from "react-intl";
 import { useDebouncedCallback } from "use-debounce";
 import { DataGridProps } from "@mui/x-data-grid/models/props/DataGridProps";

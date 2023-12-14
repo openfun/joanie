@@ -5,9 +5,9 @@ import { FileThumbnail } from "@/components/presentational/files/thumbnail/FileT
 describe("<FileThumbnail />", () => {
   it("renders", async () => {
     const user = userEvent.setup();
-    const onDelete = jest.fn();
+    const onReplace = jest.fn();
     const file = new File([new ArrayBuffer(40)], "file.jpg");
-    render(<FileThumbnail file={file} onDelete={onDelete} />);
+    render(<FileThumbnail file={file} onReplace={onReplace} />);
 
     await screen.findByText("file.jpg");
     screen.getByText("40 Bytes");
@@ -17,6 +17,6 @@ describe("<FileThumbnail />", () => {
     });
 
     await user.click(deleteButton);
-    expect(onDelete).toHaveBeenCalled();
+    expect(onReplace).toHaveBeenCalled();
   });
 });
