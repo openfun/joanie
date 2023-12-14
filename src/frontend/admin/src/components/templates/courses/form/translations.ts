@@ -16,6 +16,16 @@ export const courseFormMessages = defineMessages({
     defaultMessage: "Organizations",
     description: "Label for the organizations input form",
   },
+  uploadCoverButtonLabel: {
+    id: "components.templates.course.form.translations.uploadCoverButtonLabel",
+    defaultMessage: "Add a cover",
+    description: "Label for the add cover button",
+  },
+  coverLabel: {
+    id: "components.templates.course.form.translations.coverLabel",
+    defaultMessage: "Cover",
+    description: "Label for the cover field",
+  },
   targetCourseRunTitle: {
     id: "components.templates.course.form.translations.targetCourseRunTitle",
     defaultMessage: "Course runs of this course",
