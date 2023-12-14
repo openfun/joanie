@@ -10,7 +10,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { RHFProvider } from "@/components/presentational/hook-form/RHFProvider";
 import { RHFTextField } from "@/components/presentational/hook-form/RHFTextField";
-import { RHFUpload } from "@/components/presentational/hook-form/RHFUpload";
+import { RHFUploadImage } from "@/components/presentational/hook-form/RHFUploadImage";
 import {
   DTOOrganization,
   Organization,
@@ -25,6 +25,7 @@ import { TranslatableContent } from "@/components/presentational/translatable-co
 import { SimpleCard } from "@/components/presentational/card/SimpleCard";
 import { AccessesList } from "@/components/templates/accesses/list/AccessesList";
 import { LoadingContent } from "@/components/presentational/loading/LoadingContent";
+import { ThumbnailDetailField } from "@/services/api/models/Image";
 
 interface FormValues {
   code: string;
@@ -98,6 +99,22 @@ export function OrganizationForm(props: Props) {
     }
   };
 
+  const getUploadedSignature = (): ThumbnailDetailField[] => {
+    if (props.fromOrganization || !org) {
+      return [];
+    }
+    return defaultOrganization?.signature
+      ? [defaultOrganization.signature]
+      : [];
+  };
+
+  const getUploadedLogo = (): ThumbnailDetailField[] => {
+    if (props.fromOrganization || !org) {
+      return [];
+    }
+    return defaultOrganization?.logo ? [defaultOrganization.logo] : [];
+  };
+
   useEffect(() => {
     methods.reset(getDefaultValues());
   }, [props.organization]);
@@ -143,7 +160,8 @@ export function OrganizationForm(props: Props) {
                   />
                 </Grid>
                 <Grid xs={12} md={6}>
-                  <RHFUpload
+                  <RHFUploadImage
+                    thumbnailFiles={getUploadedLogo()}
                     buttonLabel={intl.formatMessage(
                       organizationFormMessages.uploadLogoButtonLabel,
                     )}
@@ -155,7 +173,8 @@ export function OrganizationForm(props: Props) {
                   />
                 </Grid>
                 <Grid xs={12} md={6}>
-                  <RHFUpload
+                  <RHFUploadImage
+                    thumbnailFiles={getUploadedSignature()}
                     name="signature"
                     buttonLabel={intl.formatMessage(
                       organizationFormMessages.uploadSignatureButtonLabel,
