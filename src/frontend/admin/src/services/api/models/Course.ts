@@ -2,6 +2,7 @@ import { Organization } from "./Organization";
 import { CourseRelationToProduct } from "./Relations";
 import { Accesses } from "@/services/api/models/Accesses";
 import { CourseRun } from "@/services/api/models/CourseRun";
+import { ThumbnailDetailField } from "@/services/api/models/Image";
 
 export type Course = {
   id: string;
@@ -12,6 +13,7 @@ export type Course = {
   product_relations?: CourseRelationToProduct[];
   state?: CourseState;
   courses_runs?: CourseRun[];
+  cover?: ThumbnailDetailField;
   accesses?: Accesses<CourseRoles>[];
 };
 
@@ -27,28 +29,38 @@ export type CourseFormValues = Omit<
   | "accesses"
   | "id"
   | "state"
+  | "cover"
   | "courses_runs"
   | "is_graded"
   | "product_relations"
->;
+> & {
+  cover: File[] | undefined;
+};
 
 export interface DTOCourse {
   id?: string;
   code: string;
   title: string;
+  cover?: File;
   organization_ids: string[];
   // product_relations?: DTOCourseRelationToProduct[];
 }
 
 export const transformCourseToDTO = (course: CourseFormValues): DTOCourse => {
+  const { cover, ...restCourse } = course;
   const organizationIds = course.organizations.map((item) => {
     return item.id;
   });
-
-  return {
-    ...course,
+  const payload: DTOCourse = {
+    ...restCourse,
     organization_ids: organizationIds,
   };
+
+  if (course.cover?.[0] !== undefined) {
+    payload.cover = course.cover?.[0];
+  }
+
+  return payload;
 };
 
 export interface CourseState {

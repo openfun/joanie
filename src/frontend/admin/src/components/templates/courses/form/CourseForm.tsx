@@ -28,6 +28,8 @@ import { SimpleCard } from "@/components/presentational/card/SimpleCard";
 import { CourseFormTargetCourseRunsSection } from "@/components/templates/courses/form/sections/target-course-runs/CourseFormTargetCourseRunsSection";
 import { CourseFormAccessesSection } from "@/components/templates/courses/form/sections/accesses/CourseFormAccessesSection";
 import { CourseFormProductRelationsSection } from "@/components/templates/courses/form/sections/product-relation/CourseFormProductRelationsSection";
+import { RHFUploadImage } from "@/components/presentational/hook-form/RHFUploadImage";
+import { ThumbnailDetailField } from "@/services/api/models/Image";
 
 interface Props {
   afterSubmit?: (course: Course) => void;
@@ -45,6 +47,7 @@ export function CourseForm({ course, shortcutMode = false, ...props }: Props) {
     code: Yup.string().required(),
     title: Yup.string().required(),
     organizations: Yup.array<any, Organization>().min(1).required(),
+    cover: Yup.mixed(),
   });
 
   const getDefaultValues = () => {
@@ -57,7 +60,7 @@ export function CourseForm({ course, shortcutMode = false, ...props }: Props) {
 
   const methods = useForm({
     resolver: yupResolver(RegisterSchema),
-    defaultValues: getDefaultValues(),
+    defaultValues: getDefaultValues() as any,
   });
 
   const updateFormError = (errors: ServerSideErrorForm<CourseFormValues>) => {
@@ -82,6 +85,13 @@ export function CourseForm({ course, shortcutMode = false, ...props }: Props) {
         onError: (error) => updateFormError(error.data),
       });
     }
+  };
+
+  const getUploadedCover = (): ThumbnailDetailField[] => {
+    if (props.fromCourse || !course) {
+      return [];
+    }
+    return defaultCourse?.cover ? [defaultCourse.cover] : [];
   };
 
   useEffect(() => {
@@ -129,6 +139,17 @@ export function CourseForm({ course, shortcutMode = false, ...props }: Props) {
                     label={intl.formatMessage(
                       courseFormMessages.organizationsLabel,
                     )}
+                  />
+                </Grid>
+                <Grid xs={12}>
+                  <RHFUploadImage
+                    thumbnailFiles={getUploadedCover()}
+                    name="cover"
+                    buttonLabel={intl.formatMessage(
+                      courseFormMessages.uploadCoverButtonLabel,
+                    )}
+                    accept="image/*"
+                    label={intl.formatMessage(courseFormMessages.coverLabel)}
                   />
                 </Grid>
               </Grid>
