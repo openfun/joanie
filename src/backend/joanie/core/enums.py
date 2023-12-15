@@ -98,6 +98,20 @@ CONTRACT_DEFINITION = "contract_definition"
 
 CONTRACT_NAME_CHOICES = ((CONTRACT_DEFINITION, _("Contract Definition")),)  # default
 
+# For contract signature state choices
+CONTRACT_SIGNATURE_STATE_UNSIGNED = "unsigned"
+CONTRACT_SIGNATURE_STATE_HALF_SIGNED = "half_signed"
+CONTRACT_SIGNATURE_STATE_SIGNED = "signed"
+
+CONTRACT_SIGNATURE_STATE_FILTER_CHOICES = (
+    (CONTRACT_SIGNATURE_STATE_UNSIGNED, _("Unsigned")),
+    (
+        CONTRACT_SIGNATURE_STATE_HALF_SIGNED,
+        _("Partially signed"),
+    ),  # Only the student has signed, organization is pending
+    (CONTRACT_SIGNATURE_STATE_SIGNED, _("Signed")),
+)
+
 # For certification names choices
 CERTIFICATE = "certificate"
 DEGREE = "degree"

@@ -101,14 +101,24 @@ class CourseViewSetFilter(filters.FilterSet):
 class ContractViewSetFilter(filters.FilterSet):
     """ContractFilter allows to filter this resource with a signature state."""
 
-    is_signed = filters.BooleanFilter(method="get_is_signed")
+    signature_state = filters.ChoiceFilter(
+        method="filter_signature_state",
+        choices=enums.CONTRACT_SIGNATURE_STATE_FILTER_CHOICES,
+    )
 
     class Meta:
         model = models.Contract
-        fields: List[str] = ["is_signed"]
+        fields: List[str] = ["signature_state"]
 
-    def get_is_signed(self, queryset, _name, value):
+    def filter_signature_state(self, queryset, _name, value):
         """
-        Filter Contracts by signature status
+        Filter Contracts by signature state
         """
-        return queryset.filter(student_signed_on__isnull=not value)
+
+        is_unsigned = value == enums.CONTRACT_SIGNATURE_STATE_UNSIGNED
+        is_half_signed = value == enums.CONTRACT_SIGNATURE_STATE_HALF_SIGNED
+
+        return queryset.filter(
+            student_signed_on__isnull=is_unsigned,
+            organization_signed_on__isnull=is_unsigned | is_half_signed,
+        )

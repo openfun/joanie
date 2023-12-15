@@ -1,6 +1,7 @@
 # pylint: disable=duplicate-code
 """Test suite for the Courses Contract API"""
 import random
+from http import HTTPStatus
 from unittest import mock
 
 from django.utils import timezone
@@ -209,7 +210,7 @@ class CourseContractApiTest(BaseAPITestCase):
             ],
         }
 
-    def test_api_courses_contracts_list_filter_is_signed(self):
+    def test_api_courses_contracts_list_filter_signature_state(self):
         """
         Authenticated user with admin or owner access to the organization
         can query organization's course contracts and filter them by signature state.
@@ -234,6 +235,17 @@ class CourseContractApiTest(BaseAPITestCase):
             order__organization=organization,
         )
 
+        half_signed_contract = factories.ContractFactory.create_batch(
+            3,
+            order__product=relation.product,
+            order__course=relation.course,
+            order__organization=organization,
+            student_signed_on=timezone.now(),
+            submitted_for_signature_on=timezone.now(),
+            definition_checksum="test",
+            context={"title": "test"},
+        )
+
         signed_contract = factories.ContractFactory.create(
             order__product=relation.product,
             order__course=relation.course,
@@ -248,25 +260,25 @@ class CourseContractApiTest(BaseAPITestCase):
         factories.ContractFactory.create_batch(5)
         factories.ContractFactory(order__owner=user)
 
-        # - List without filter should return 6 contracts
-        with self.assertNumQueries(53):
+        # - List without filter should return 9 contracts
+        with self.assertNumQueries(56):
             response = self.client.get(
                 f"/api/v1.0/courses/{str(relation.course.id)}/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
-        self.assertEqual(content["count"], 6)
+        self.assertEqual(content["count"], 9)
 
-        # - Filter by is_signed=false should return 5 contracts
+        # - Filter by state=unsigned should return 5 contracts
         with self.assertNumQueries(8):
             response = self.client.get(
-                f"/api/v1.0/courses/{str(relation.course.id)}/contracts/?is_signed=false",
+                f"/api/v1.0/courses/{str(relation.course.id)}/contracts/?signature_state=unsigned",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         count = content["count"]
         result_ids = [result["id"] for result in content["results"]]
@@ -275,14 +287,33 @@ class CourseContractApiTest(BaseAPITestCase):
             result_ids, [str(contract.id) for contract in unsigned_contracts]
         )
 
-        # - Filter by is_signed=true should return 1 contract
-        with self.assertNumQueries(4):
+        # - Filter by state=half_signed should return 3 contracts
+        with self.assertNumQueries(6):
             response = self.client.get(
-                f"/api/v1.0/courses/{str(relation.course.id)}/contracts/?is_signed=true",
+                (
+                    f"/api/v1.0/courses/{str(relation.course.id)}"
+                    "/contracts/?signature_state=half_signed"
+                ),
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        count = content["count"]
+        result_ids = [result["id"] for result in content["results"]]
+        self.assertEqual(count, 3)
+        self.assertCountEqual(
+            result_ids, [str(contract.id) for contract in half_signed_contract]
+        )
+
+        # - Filter by state=signed should return 1 contract
+        with self.assertNumQueries(4):
+            response = self.client.get(
+                f"/api/v1.0/courses/{str(relation.course.id)}/contracts/?signature_state=signed",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         count = content["count"]
         result_ids = [result["id"] for result in content["results"]]

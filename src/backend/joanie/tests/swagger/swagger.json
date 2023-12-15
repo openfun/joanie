@@ -458,13 +458,6 @@
                 "description": "Contract Viewset to list & retrieve contracts owned by the authenticated user.\n\nGET /api/contracts/\n    Return list of all contracts owned by the logged-in user.\n\nGET /api/contracts/<contract_id>/\n    Return a contract if one matches the provided id,\n    and it is owned by the logged-in user.\n\nGET /api/contracts/<contract_id>/download/\n    Return a contract in PDF format when it is signed on.",
                 "parameters": [
                     {
-                        "in": "query",
-                        "name": "is_signed",
-                        "schema": {
-                            "type": "boolean"
-                        }
-                    },
-                    {
                         "name": "page",
                         "required": false,
                         "in": "query",
@@ -481,6 +474,19 @@
                         "schema": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "in": "query",
+                        "name": "signature_state",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "half_signed",
+                                "signed",
+                                "unsigned"
+                            ]
+                        },
+                        "description": "* `unsigned` - Unsigned\n* `half_signed` - Partially signed\n* `signed` - Signed"
                     }
                 ],
                 "tags": [
@@ -1236,13 +1242,6 @@
                         "required": true
                     },
                     {
-                        "in": "query",
-                        "name": "is_signed",
-                        "schema": {
-                            "type": "boolean"
-                        }
-                    },
-                    {
                         "name": "page",
                         "required": false,
                         "in": "query",
@@ -1259,6 +1258,19 @@
                         "schema": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "in": "query",
+                        "name": "signature_state",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "half_signed",
+                                "signed",
+                                "unsigned"
+                            ]
+                        },
+                        "description": "* `unsigned` - Unsigned\n* `half_signed` - Partially signed\n* `signed` - Signed"
                     }
                 ],
                 "tags": [
@@ -2992,13 +3004,6 @@
                 "description": "Nested Contract Viewset inside organization route.\nIt allows to list & retrieve organization's contracts if the user is\nan administrator or an owner of the organization.\n\nGET /api/courses/<organization_id|organization_code>/contracts/\n    Return list of all organization's contracts\n\nGET /api/courses/<organization_id|organization_code>/contracts/<contract_id>/\n    Return an organization's contract if one matches the provided id",
                 "parameters": [
                     {
-                        "in": "query",
-                        "name": "is_signed",
-                        "schema": {
-                            "type": "boolean"
-                        }
-                    },
-                    {
                         "in": "path",
                         "name": "organization_id",
                         "schema": {
@@ -3024,6 +3029,19 @@
                         "schema": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "in": "query",
+                        "name": "signature_state",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "half_signed",
+                                "signed",
+                                "unsigned"
+                            ]
+                        },
+                        "description": "* `unsigned` - Unsigned\n* `half_signed` - Partially signed\n* `signed` - Signed"
                     }
                 ],
                 "tags": [
