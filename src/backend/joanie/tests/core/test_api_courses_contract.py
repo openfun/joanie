@@ -46,7 +46,7 @@ class CourseContractApiTest(BaseAPITestCase):
             order__organization=organization,
         )
 
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(2):
             response = self.client.get(
                 f"/api/v1.0/courses/{str(relation.course.id)}/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -91,7 +91,7 @@ class CourseContractApiTest(BaseAPITestCase):
         # Having course access does not imply to be able to access to course's contract
         factories.UserCourseAccessFactory(course=relation.course, user=user)
 
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(2):
             response = self.client.get(
                 f"/api/v1.0/courses/{str(relation.course.id)}/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -148,7 +148,7 @@ class CourseContractApiTest(BaseAPITestCase):
         factories.ContractFactory.create_batch(5)
         factories.ContractFactory(order__owner=user)
 
-        with self.assertNumQueries(13):
+        with self.assertNumQueries(14):
             response = self.client.get(
                 f"/api/v1.0/courses/{str(courses[0].id)}/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -261,7 +261,7 @@ class CourseContractApiTest(BaseAPITestCase):
         factories.ContractFactory(order__owner=user)
 
         # - List without filter should return 9 contracts
-        with self.assertNumQueries(56):
+        with self.assertNumQueries(57):
             response = self.client.get(
                 f"/api/v1.0/courses/{str(relation.course.id)}/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -272,7 +272,7 @@ class CourseContractApiTest(BaseAPITestCase):
         self.assertEqual(content["count"], 9)
 
         # - Filter by state=unsigned should return 5 contracts
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(9):
             response = self.client.get(
                 f"/api/v1.0/courses/{str(relation.course.id)}/contracts/?signature_state=unsigned",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -288,7 +288,7 @@ class CourseContractApiTest(BaseAPITestCase):
         )
 
         # - Filter by state=half_signed should return 3 contracts
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(7):
             response = self.client.get(
                 (
                     f"/api/v1.0/courses/{str(relation.course.id)}"
@@ -307,7 +307,7 @@ class CourseContractApiTest(BaseAPITestCase):
         )
 
         # - Filter by state=signed should return 1 contract
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             response = self.client.get(
                 f"/api/v1.0/courses/{str(relation.course.id)}/contracts/?signature_state=signed",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -355,7 +355,7 @@ class CourseContractApiTest(BaseAPITestCase):
         # Having course access does not imply to be able to access to course's contract
         factories.UserCourseAccessFactory(course=relation.course, user=user)
 
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(2):
             response = self.client.get(
                 f"/api/v1.0/courses/{str(organization.id)}/contracts/{str(contract.id)}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -387,7 +387,7 @@ class CourseContractApiTest(BaseAPITestCase):
             order__organization=organization,
         )
 
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(2):
             response = self.client.get(
                 f"/api/v1.0/courses/{str(relation.course.id)}/contracts/{str(contract.id)}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -437,7 +437,7 @@ class CourseContractApiTest(BaseAPITestCase):
 
         contract = models.Contract.objects.filter(order__course=courses[0]).first()
 
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(4):
             response = self.client.get(
                 f"/api/v1.0/courses/{str(courses[0].id)}/contracts/{str(contract.id)}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -513,7 +513,7 @@ class CourseContractApiTest(BaseAPITestCase):
             order__organization=organization,
         )
 
-        with self.assertNumQueries(47):
+        with self.assertNumQueries(48):
             response = self.client.get(
                 f"/api/v1.0/courses/{relation.course.code}/contracts/{str(contract.id)}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",

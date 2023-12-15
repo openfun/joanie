@@ -105,10 +105,14 @@ class ContractViewSetFilter(filters.FilterSet):
         method="filter_signature_state",
         choices=enums.CONTRACT_SIGNATURE_STATE_FILTER_CHOICES,
     )
+    id = filters.AllValuesMultipleFilter()
+    course_id = filters.UUIDFilter(field_name="order__course__id")
+    product_id = filters.UUIDFilter(field_name="order__product__id")
+    organization_id = filters.UUIDFilter(field_name="order__organization__id")
 
     class Meta:
         model = models.Contract
-        fields: List[str] = ["signature_state"]
+        fields: List[str] = ["id", "signature_state"]
 
     def filter_signature_state(self, queryset, _name, value):
         """
