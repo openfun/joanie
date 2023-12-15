@@ -10,7 +10,8 @@ and this project adheres to
 
 ## Added
 
-- Allow to filter contracts by signature state
+- Allow to filter contracts by signature state, 
+  product, course and organization and id
 - Add bulk download of signed contracts to generate ZIP archive with command
 - Add read-only api admin endpoint to list/retrieve orders
 - Add a management command to synchronize course run or product 

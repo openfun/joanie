@@ -49,7 +49,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
             order__organization=organization,
         )
 
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(2):
             response = self.client.get(
                 f"/api/v1.0/organizations/{str(organization.id)}/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -91,7 +91,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
             order__organization=organization,
         )
 
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(2):
             response = self.client.get(
                 f"/api/v1.0/organizations/{str(organization.id)}/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -145,7 +145,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         factories.ContractFactory.create_batch(5)
         factories.ContractFactory(order__owner=user)
 
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(9):
             response = self.client.get(
                 f"/api/v1.0/organizations/{str(organizations[0].id)}/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -258,7 +258,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         factories.ContractFactory(order__owner=user)
 
         # - List without filter should return 6 contracts
-        with self.assertNumQueries(56):
+        with self.assertNumQueries(57):
             response = self.client.get(
                 f"/api/v1.0/organizations/{str(organization.id)}/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -269,7 +269,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         self.assertEqual(content["count"], 9)
 
         # - Filter by state=unsigned should return 5 contracts
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(9):
             response = self.client.get(
                 (
                     f"/api/v1.0/organizations/{str(organization.id)}"
@@ -288,7 +288,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         )
 
         # - Filter by state=half_signed should return 3 contracts
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(7):
             response = self.client.get(
                 (
                     f"/api/v1.0/organizations/{str(organization.id)}"
@@ -307,7 +307,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         )
 
         # - Filter by state=signed should return 1 contract
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             response = self.client.get(
                 f"/api/v1.0/organizations/{str(organization.id)}/contracts/?signature_state=signed",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -352,7 +352,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
             order__organization=organization,
         )
 
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(2):
             response = self.client.get(
                 f"/api/v1.0/organizations/{str(organization.id)}/contracts/{str(contract.id)}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -384,7 +384,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
             order__organization=organization,
         )
 
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(2):
             response = self.client.get(
                 f"/api/v1.0/organizations/{str(organization.id)}/contracts/{str(contract.id)}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -429,7 +429,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
             order__organization=organizations[0]
         ).first()
 
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(4):
             response = self.client.get(
                 (
                     f"/api/v1.0/organizations/{str(organizations[0].id)}"
@@ -510,7 +510,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
             order__organization=organization,
         )
 
-        with self.assertNumQueries(47):
+        with self.assertNumQueries(48):
             response = self.client.get(
                 f"/api/v1.0/organizations/{organization.code}/contracts/{str(contract.id)}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",

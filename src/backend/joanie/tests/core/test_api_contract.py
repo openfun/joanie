@@ -59,7 +59,7 @@ class ContractApiTest(BaseAPITestCase):
 
         factories.ContractFactory.create_batch(5)
 
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(2):
             response = self.client.get(
                 "/api/v1.0/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -91,7 +91,7 @@ class ContractApiTest(BaseAPITestCase):
         # - Create random contracts that should not be returned
         factories.ContractFactory.create_batch(5)
 
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(9):
             response = self.client.get(
                 "/api/v1.0/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -185,7 +185,7 @@ class ContractApiTest(BaseAPITestCase):
         factories.ContractFactory.create_batch(5)
 
         # - List without filter should return 9 contracts
-        with self.assertNumQueries(408):
+        with self.assertNumQueries(409):
             response = self.client.get(
                 "/api/v1.0/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -196,7 +196,7 @@ class ContractApiTest(BaseAPITestCase):
         self.assertEqual(content["count"], 9)
 
         # - Filter by state=unsigned should return 5 contracts
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(9):
             response = self.client.get(
                 "/api/v1.0/contracts/?signature_state=unsigned",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -212,7 +212,7 @@ class ContractApiTest(BaseAPITestCase):
         )
 
         # - Filter by state=half_signed should return 3 contracts
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(7):
             response = self.client.get(
                 "/api/v1.0/contracts/?signature_state=half_signed",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -228,7 +228,7 @@ class ContractApiTest(BaseAPITestCase):
         )
 
         # - Filter by state=signed should return 1 contract
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             response = self.client.get(
                 "/api/v1.0/contracts/?signature_state=signed",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -259,6 +259,279 @@ class ContractApiTest(BaseAPITestCase):
             {
                 "signature_state": [
                     "Select a valid choice. invalid_state is not one of the available choices."
+                ]
+            },
+        )
+
+    def test_api_contracts_list_filter_organization_id(self):
+        """
+        Authenticated user can query owned contracts and filter them by organization_id.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        [org1, org2] = factories.OrganizationFactory.create_batch(2)
+
+        cpr1 = factories.CourseProductRelationFactory(
+            product__contract_definition=factories.ContractDefinitionFactory(),
+            organizations=[org1],
+        )
+        org1_contract = factories.ContractFactory(
+            order__owner=user,
+            order__product=cpr1.product,
+            order__course=cpr1.course,
+        )
+
+        cpr2 = factories.CourseProductRelationFactory(
+            product__contract_definition=factories.ContractDefinitionFactory(),
+            organizations=[org2],
+        )
+        org2_contract = factories.ContractFactory(
+            order__owner=user,
+            order__product=cpr2.product,
+            order__course=cpr2.course,
+        )
+
+        # Create random contracts that should not be returned
+        factories.ContractFactory.create_batch(5)
+
+        # - List without filter should return 2 contracts
+        with self.assertNumQueries(94):
+            response = self.client.get(
+                "/api/v1.0/contracts/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 2)
+
+        # - Filter by org1 should return 1 contract
+        with self.assertNumQueries(5):
+            response = self.client.get(
+                f"/api/v1.0/contracts/?organization_id={str(org1.id)}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        count = content["count"]
+        result_ids = [result["id"] for result in content["results"]]
+        self.assertEqual(count, 1)
+        self.assertCountEqual(result_ids, [str(org1_contract.id)])
+
+        # - Filter by org2 should return 1 contract
+        with self.assertNumQueries(5):
+            response = self.client.get(
+                f"/api/v1.0/contracts/?organization_id={str(org2.id)}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        count = content["count"]
+        result_ids = [result["id"] for result in content["results"]]
+        self.assertEqual(count, 1)
+        self.assertCountEqual(result_ids, [str(org2_contract.id)])
+
+    def test_api_contracts_list_filter_course_id(self):
+        """
+        Authenticated user can query owned contracts and filter them by course_id.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        [c1, c2] = factories.CourseFactory.create_batch(2)
+
+        cpr1 = factories.CourseProductRelationFactory(
+            product__contract_definition=factories.ContractDefinitionFactory(),
+            course=c1,
+        )
+        c1_contract = factories.ContractFactory(
+            order__owner=user,
+            order__product=cpr1.product,
+            order__course=cpr1.course,
+        )
+
+        cpr2 = factories.CourseProductRelationFactory(
+            product__contract_definition=factories.ContractDefinitionFactory(),
+            course=c2,
+        )
+        c2_contract = factories.ContractFactory(
+            order__owner=user,
+            order__product=cpr2.product,
+            order__course=cpr2.course,
+        )
+
+        # Create random contracts that should not be returned
+        factories.ContractFactory.create_batch(5)
+
+        # - List without filter should return 2 contracts
+        with self.assertNumQueries(94):
+            response = self.client.get(
+                "/api/v1.0/contracts/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 2)
+
+        # - Filter by c1 should return 1 contract
+        with self.assertNumQueries(5):
+            response = self.client.get(
+                f"/api/v1.0/contracts/?course_id={str(c1.id)}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        count = content["count"]
+        result_ids = [result["id"] for result in content["results"]]
+        self.assertEqual(count, 1)
+        self.assertCountEqual(result_ids, [str(c1_contract.id)])
+
+        # - Filter by c2 should return 1 contract
+        with self.assertNumQueries(5):
+            response = self.client.get(
+                f"/api/v1.0/contracts/?course_id={str(c2.id)}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        count = content["count"]
+        result_ids = [result["id"] for result in content["results"]]
+        self.assertEqual(count, 1)
+        self.assertCountEqual(result_ids, [str(c2_contract.id)])
+
+    def test_api_contracts_list_filter_product_id(self):
+        """
+        Authenticated user can query owned contracts and filter them by product_id.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        [p1, p2] = factories.ProductFactory.create_batch(
+            2, contract_definition=factories.ContractDefinitionFactory()
+        )
+
+        cpr1 = factories.CourseProductRelationFactory(product=p1)
+        p1_contract = factories.ContractFactory(
+            order__owner=user,
+            order__product=cpr1.product,
+            order__course=cpr1.course,
+        )
+
+        cpr2 = factories.CourseProductRelationFactory(product=p2)
+        p2_contract = factories.ContractFactory(
+            order__owner=user,
+            order__product=cpr2.product,
+            order__course=cpr2.course,
+        )
+
+        # Create random contracts that should not be returned
+        factories.ContractFactory.create_batch(5)
+
+        # - List without filter should return 2 contracts
+        with self.assertNumQueries(94):
+            response = self.client.get(
+                "/api/v1.0/contracts/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        self.assertEqual(content["count"], 2)
+
+        # - Filter by c1 should return 1 contract
+        with self.assertNumQueries(5):
+            response = self.client.get(
+                f"/api/v1.0/contracts/?product_id={str(p1.id)}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        count = content["count"]
+        result_ids = [result["id"] for result in content["results"]]
+        self.assertEqual(count, 1)
+        self.assertCountEqual(result_ids, [str(p1_contract.id)])
+
+        # - Filter by c2 should return 1 contract
+        with self.assertNumQueries(5):
+            response = self.client.get(
+                f"/api/v1.0/contracts/?product_id={str(p2.id)}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.json()
+        count = content["count"]
+        result_ids = [result["id"] for result in content["results"]]
+        self.assertEqual(count, 1)
+        self.assertCountEqual(result_ids, [str(p2_contract.id)])
+
+    def test_api_contracts_list_filter_id(self):
+        """
+        Authenticated user can query owned contracts and filter them by id.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        contracts = factories.ContractFactory.create_batch(
+            5,
+            order__owner=user,
+        )
+
+        # Create random contracts that should not be returned
+        factories.ContractFactory.create_batch(5)
+
+        # - List without filter should return 5 contracts
+        with self.assertNumQueries(229):
+            response = self.client.get(
+                "/api/v1.0/contracts/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 5)
+
+        # - List by filter id should return only contracts with those ids
+        with self.assertNumQueries(8):
+            response = self.client.get(
+                f"/api/v1.0/contracts/?id={contracts[0].id}&id={contracts[3].id}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        result_ids = [result["id"] for result in content["results"]]
+        self.assertEqual(content["count"], 2)
+        self.assertEqual(result_ids, [str(contracts[3].id), str(contracts[0].id)])
+
+    def test_api_contracts_list_filter_id_invalid(self):
+        """
+        If the user provides an invalid uuid, or a non-existing contract id,
+        the API should return a 400 Bad Request.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        # - List by unknown id should return a 400 Bad Request
+        invalid_uuid = uuid4()
+        with self.assertNumQueries(1):
+            response = self.client.get(
+                f"/api/v1.0/contracts/?id={invalid_uuid}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(
+            response.json(),
+            {
+                "id": [
+                    f"Select a valid choice. {invalid_uuid} is not one of the available choices."
                 ]
             },
         )
@@ -298,7 +571,7 @@ class ContractApiTest(BaseAPITestCase):
             order__organization=organization,
         )
 
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(2):
             response = self.client.get(
                 f"/api/v1.0/contracts/{str(contract.id)}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -321,7 +594,7 @@ class ContractApiTest(BaseAPITestCase):
             order__owner=user, organization_signatory=organization_signatory
         )
 
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
             response = self.client.get(
                 f"/api/v1.0/contracts/{str(contract.id)}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",

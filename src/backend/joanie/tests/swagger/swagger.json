@@ -458,6 +458,36 @@
                 "description": "Contract Viewset to list & retrieve contracts owned by the authenticated user.\n\nGET /api/contracts/\n    Return list of all contracts owned by the logged-in user.\n\nGET /api/contracts/<contract_id>/\n    Return a contract if one matches the provided id,\n    and it is owned by the logged-in user.\n\nGET /api/contracts/<contract_id>/download/\n    Return a contract in PDF format when it is signed on.",
                 "parameters": [
                     {
+                        "in": "query",
+                        "name": "course_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "id",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "format": "uuid"
+                            }
+                        },
+                        "description": "primary key for the record as UUID",
+                        "explode": true,
+                        "style": "form"
+                    },
+                    {
+                        "in": "query",
+                        "name": "organization_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
                         "name": "page",
                         "required": false,
                         "in": "query",
@@ -473,6 +503,14 @@
                         "description": "Number of results to return per page.",
                         "schema": {
                             "type": "integer"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "product_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -1242,6 +1280,36 @@
                         "required": true
                     },
                     {
+                        "in": "query",
+                        "name": "course_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "id",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "format": "uuid"
+                            }
+                        },
+                        "description": "primary key for the record as UUID",
+                        "explode": true,
+                        "style": "form"
+                    },
+                    {
+                        "in": "query",
+                        "name": "organization_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
                         "name": "page",
                         "required": false,
                         "in": "query",
@@ -1257,6 +1325,14 @@
                         "description": "Number of results to return per page.",
                         "schema": {
                             "type": "integer"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "product_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -3004,6 +3080,28 @@
                 "description": "Nested Contract Viewset inside organization route.\nIt allows to list & retrieve organization's contracts if the user is\nan administrator or an owner of the organization.\n\nGET /api/courses/<organization_id|organization_code>/contracts/\n    Return list of all organization's contracts\n\nGET /api/courses/<organization_id|organization_code>/contracts/<contract_id>/\n    Return an organization's contract if one matches the provided id",
                 "parameters": [
                     {
+                        "in": "query",
+                        "name": "course_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "id",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "format": "uuid"
+                            }
+                        },
+                        "description": "primary key for the record as UUID",
+                        "explode": true,
+                        "style": "form"
+                    },
+                    {
                         "in": "path",
                         "name": "organization_id",
                         "schema": {
@@ -3011,6 +3109,14 @@
                             "pattern": "^[0-9a-z-]*$"
                         },
                         "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "organization_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
                     },
                     {
                         "name": "page",
@@ -3028,6 +3134,14 @@
                         "description": "Number of results to return per page.",
                         "schema": {
                             "type": "integer"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "product_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
