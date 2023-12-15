@@ -1,6 +1,7 @@
 """Test suite for the Contract API"""
 import json
 import random
+from http import HTTPStatus
 from io import BytesIO
 from unittest import mock
 from uuid import uuid4
@@ -151,7 +152,7 @@ class ContractApiTest(BaseAPITestCase):
             ],
         }
 
-    def test_api_contracts_list_filter_is_signed(self):
+    def test_api_contracts_list_signature_state(self):
         """
         Authenticated user can query owned contracts and filter them by signature state.
         """
@@ -160,6 +161,15 @@ class ContractApiTest(BaseAPITestCase):
 
         unsigned_contracts = factories.ContractFactory.create_batch(
             5, order__owner=user
+        )
+
+        half_signed_contracts = factories.ContractFactory.create_batch(
+            3,
+            order__owner=user,
+            definition_checksum="test",
+            context={"title": "test"},
+            student_signed_on=timezone.now(),
+            submitted_for_signature_on=timezone.now(),
         )
 
         signed_contract = factories.ContractFactory.create(
@@ -174,25 +184,25 @@ class ContractApiTest(BaseAPITestCase):
         # Create random contracts that should not be returned
         factories.ContractFactory.create_batch(5)
 
-        # - List without filter should return 6 contracts
-        with self.assertNumQueries(273):
+        # - List without filter should return 9 contracts
+        with self.assertNumQueries(408):
             response = self.client.get(
                 "/api/v1.0/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
-        self.assertEqual(content["count"], 6)
+        self.assertEqual(content["count"], 9)
 
-        # - Filter by is_signed=false should return 5 contracts
+        # - Filter by state=unsigned should return 5 contracts
         with self.assertNumQueries(8):
             response = self.client.get(
-                "/api/v1.0/contracts/?is_signed=false",
+                "/api/v1.0/contracts/?signature_state=unsigned",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         count = content["count"]
         result_ids = [result["id"] for result in content["results"]]
@@ -201,19 +211,57 @@ class ContractApiTest(BaseAPITestCase):
             result_ids, [str(contract.id) for contract in unsigned_contracts]
         )
 
-        # - Filter by is_signed=true should return 1 contract
-        with self.assertNumQueries(4):
+        # - Filter by state=half_signed should return 3 contracts
+        with self.assertNumQueries(6):
             response = self.client.get(
-                "/api/v1.0/contracts/?is_signed=true",
+                "/api/v1.0/contracts/?signature_state=half_signed",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        count = content["count"]
+        result_ids = [result["id"] for result in content["results"]]
+        self.assertEqual(count, 3)
+        self.assertCountEqual(
+            result_ids, [str(contract.id) for contract in half_signed_contracts]
+        )
+
+        # - Filter by state=signed should return 1 contract
+        with self.assertNumQueries(4):
+            response = self.client.get(
+                "/api/v1.0/contracts/?signature_state=signed",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         count = content["count"]
         result_ids = [result["id"] for result in content["results"]]
         self.assertEqual(count, 1)
         self.assertEqual(result_ids, [str(signed_contract.id)])
+
+    def test_api_contracts_list_filter_signature_state_invalid(self):
+        """
+        The signature state filter should only accept a valid choice.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        response = self.client.get(
+            "/api/v1.0/contracts/?signature_state=invalid_state",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(
+            response.json(),
+            {
+                "signature_state": [
+                    "Select a valid choice. invalid_state is not one of the available choices."
+                ]
+            },
+        )
 
     def test_api_contracts_retrieve_anonymous(self):
         """

@@ -732,6 +732,7 @@ class ContractFactory(factory.django.DjangoModelFactory):
         product__contract_definition=factory.SubFactory(ContractDefinitionFactory),
     )
     student_signed_on = None
+    organization_signed_on = None
 
     @factory.lazy_attribute
     def definition(self):
