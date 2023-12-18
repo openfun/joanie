@@ -1,11 +1,10 @@
 # pylint: disable=duplicate-code
 """Test suite for the Organizations Contract API"""
-import random
 from unittest import mock
 
 from django.utils import timezone
 
-from joanie.core import enums, factories, models
+from joanie.core import factories, models
 from joanie.core.serializers import fields
 from joanie.tests.base import BaseAPITestCase
 
@@ -66,48 +65,6 @@ class OrganizationContractApiTest(BaseAPITestCase):
             },
         )
 
-    def test_api_organizations_contracts_list_without_admin_or_owner_accesses(self):
-        """
-        Authenticated user without admin or owner access to the organization
-        cannot query organization's contracts.
-        """
-        organization = factories.OrganizationFactory()
-        user = factories.UserFactory()
-        token = self.generate_token_from_user(user)
-        factories.UserOrganizationAccessFactory(
-            user=user,
-            organization=organization,
-            role=enums.MEMBER,
-        )
-
-        relation = factories.CourseProductRelationFactory(
-            organizations=[organization],
-            product__contract_definition=factories.ContractDefinitionFactory(),
-        )
-        factories.ContractFactory.create_batch(
-            5,
-            order__product=relation.product,
-            order__course=relation.course,
-            order__organization=organization,
-        )
-
-        with self.assertNumQueries(2):
-            response = self.client.get(
-                f"/api/v1.0/organizations/{str(organization.id)}/contracts/",
-                HTTP_AUTHORIZATION=f"Bearer {token}",
-            )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertDictEqual(
-            response.json(),
-            {
-                "count": 0,
-                "next": None,
-                "previous": None,
-                "results": [],
-            },
-        )
-
     @mock.patch.object(
         fields.ThumbnailDetailField,
         "to_representation",
@@ -115,19 +72,17 @@ class OrganizationContractApiTest(BaseAPITestCase):
     )
     def test_api_organizations_contracts_list_with_accesses(self, _):
         """
-        Authenticated user with admin or owner access to the organization
+        Authenticated user with any access to the organization
         can query organization's contracts.
         """
         organizations = factories.OrganizationFactory.create_batch(2)
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
 
-        # - Create contracts for two organizations with admin or owner access
+        # - Create contracts for two organizations with access
         for organization in organizations:
             factories.UserOrganizationAccessFactory(
-                user=user,
-                organization=organization,
-                role=random.choice([enums.ADMIN, enums.OWNER]),
+                user=user, organization=organization
             )
 
             relation = factories.CourseProductRelationFactory(
@@ -209,7 +164,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
 
     def test_api_organizations_contracts_list_filter_signature_state(self):
         """
-        Authenticated user with admin or owner access to the organization
+        Authenticated user with any access to the organization
         can query organization's contracts and filter them by signature state.
         """
         organization = factories.OrganizationFactory()
@@ -218,7 +173,6 @@ class OrganizationContractApiTest(BaseAPITestCase):
         factories.UserOrganizationAccessFactory(
             user=user,
             organization=organization,
-            role=random.choice([enums.ADMIN, enums.OWNER]),
         )
 
         relation = factories.CourseProductRelationFactory(
@@ -360,38 +314,6 @@ class OrganizationContractApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, 404)
 
-    def test_api_organizations_contracts_retrieve_without_admin_or_owner_accesses(self):
-        """
-        Authenticated user without admin or owner access to the organization
-        cannot query an organization's contract.
-        """
-        organization = factories.OrganizationFactory()
-        user = factories.UserFactory()
-        token = self.generate_token_from_user(user)
-        factories.UserOrganizationAccessFactory(
-            user=user,
-            organization=organization,
-            role=enums.MEMBER,
-        )
-
-        relation = factories.CourseProductRelationFactory(
-            organizations=[organization],
-            product__contract_definition=factories.ContractDefinitionFactory(),
-        )
-        contract = factories.ContractFactory(
-            order__product=relation.product,
-            order__course=relation.course,
-            order__organization=organization,
-        )
-
-        with self.assertNumQueries(2):
-            response = self.client.get(
-                f"/api/v1.0/organizations/{str(organization.id)}/contracts/{str(contract.id)}/",
-                HTTP_AUTHORIZATION=f"Bearer {token}",
-            )
-
-        self.assertEqual(response.status_code, 404)
-
     @mock.patch.object(
         fields.ThumbnailDetailField,
         "to_representation",
@@ -399,19 +321,17 @@ class OrganizationContractApiTest(BaseAPITestCase):
     )
     def test_api_organizations_contracts_retrieve_with_accesses(self, _):
         """
-        Authenticated user with admin or owner access to the organization
+        Authenticated user with any access to the organization
         can query an organization's contract.
         """
         organizations = factories.OrganizationFactory.create_batch(2)
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
 
-        # - Create contracts for two organizations with admin or owner access
+        # - Create contracts for two organizations with access
         for organization in organizations:
             factories.UserOrganizationAccessFactory(
-                user=user,
-                organization=organization,
-                role=random.choice([enums.ADMIN, enums.OWNER]),
+                user=user, organization=organization
             )
 
             relation = factories.CourseProductRelationFactory(
@@ -487,7 +407,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         self,
     ):
         """
-        Authenticated user with admin or owner access to the organization
+        Authenticated user with any access to the organization
         can query an organization's contract. Furthermore, the api endpoint should work
         with the organization code instead of the organization id.
         """
@@ -497,7 +417,6 @@ class OrganizationContractApiTest(BaseAPITestCase):
         factories.UserOrganizationAccessFactory(
             user=user,
             organization=organization,
-            role=random.choice([enums.ADMIN, enums.OWNER]),
         )
 
         relation = factories.CourseProductRelationFactory(

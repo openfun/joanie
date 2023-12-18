@@ -1247,7 +1247,6 @@ class NestedOrganizationContractViewSet(NestedGenericViewSet, GenericContractVie
 
         query_filters = {
             "order__organization__accesses__user__username": username,
-            "order__organization__accesses__role__in": [enums.OWNER, enums.ADMIN],
         }
 
         return queryset.filter(**query_filters)
@@ -1302,7 +1301,6 @@ class NestedCourseContractViewSet(NestedGenericViewSet, GenericContractViewSet):
 
         query_filters = {
             "order__organization__accesses__user__username": username,
-            "order__organization__accesses__role__in": [enums.OWNER, enums.ADMIN],
         }
 
         return queryset.filter(**query_filters)
