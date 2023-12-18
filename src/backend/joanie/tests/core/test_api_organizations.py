@@ -2,11 +2,13 @@
 Test suite for Organization API endpoint.
 """
 import random
+from http import HTTPStatus
 from unittest import mock
 
 from django.utils import timezone
 
 from joanie.core import enums, factories, models
+from joanie.core.models import OrganizationAccess
 from joanie.core.serializers import fields
 from joanie.payment.factories import InvoiceFactory
 from joanie.tests.base import BaseAPITestCase
@@ -364,6 +366,46 @@ class OrganizationApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, 405)
         self.assertEqual(models.Organization.objects.count(), 1)
+
+    def test_api_organization_contracts_signature_link_without_owner(self):
+        """
+        Authenticated users which is not an organization owner should not be able
+        to sign contracts in bulk.
+        """
+        user = factories.UserFactory(
+            is_staff=random.choice([True, False]),
+            is_superuser=random.choice([True, False]),
+        )
+        order = factories.OrderFactory(
+            state=enums.ORDER_STATE_VALIDATED,
+            product__contract_definition=factories.ContractDefinitionFactory(),
+        )
+        organization_roles_not_owner = [
+            role[0]
+            for role in OrganizationAccess.ROLE_CHOICES
+            if role[0] != enums.OWNER
+        ]
+        factories.UserOrganizationAccessFactory(
+            user=user,
+            organization=order.organization,
+            role=random.choice(organization_roles_not_owner),
+        )
+
+        order.submit_for_signature(order.owner)
+        order.contract.submitted_for_signature_on = timezone.now()
+        order.contract.student_signed_on = timezone.now()
+        token = self.generate_token_from_user(user)
+
+        response = self.client.get(
+            f"/api/v1.0/organizations/{order.organization.id}/contracts-signature-link/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertEqual(
+            response.json(),
+            {"detail": "You do not have permission to perform this action."},
+        )
 
     def test_api_organization_contracts_signature_link_success(self):
         """

@@ -701,6 +701,7 @@ class OrganizationViewSet(
         detail=True,
         methods=["GET"],
         url_path="contracts-signature-link",
+        permission_classes=[permissions.CanSignOrganizationContracts],
     )
     def contracts_signature_link(self, request, *args, **kwargs):
         """
