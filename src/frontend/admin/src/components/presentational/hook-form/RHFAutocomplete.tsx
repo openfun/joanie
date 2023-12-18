@@ -20,6 +20,7 @@ export interface RHFAutocompleteProps<
   label?: string;
   helperText?: React.ReactNode;
   leftIcons?: React.ReactNode;
+  placeholder?: string;
 }
 
 export default function RHFAutocomplete<
@@ -32,6 +33,7 @@ export default function RHFAutocomplete<
   label,
   helperText,
   leftIcons,
+  placeholder,
   ...other
 }: Omit<
   RHFAutocompleteProps<T, Multiple, DisableClearable, FreeSolo>,
@@ -70,6 +72,7 @@ export default function RHFAutocomplete<
             <TextField
               label={label}
               error={!!error}
+              placeholder={placeholder}
               helperText={error ? error?.message : helperText}
               {...params}
               InputProps={{
