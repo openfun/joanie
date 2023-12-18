@@ -234,13 +234,14 @@ class Organization(parler_models.TranslatableModel, BaseModel):
                 submitted_for_signature_on__isnull=False,
                 student_signed_on__isnull=False,
                 order__organization=self,
-            ).values_list("signature_backend_reference", flat=True)
+            ).values_list("id", "signature_backend_reference")
         )
         if contracts_ids and len(contracts_to_sign) != len(contracts_ids):
             raise exceptions.NoContractToSignError(
                 "Some contracts are not available for this organization."
             )
-        return contracts_to_sign
+
+        return tuple(zip(*contracts_to_sign, strict=True)) or ((), ())
 
     def contracts_signature_link(
         self, user: User, contracts_ids: list[str] | None = None
@@ -248,13 +249,16 @@ class Organization(parler_models.TranslatableModel, BaseModel):
         """
         Retrieve a signature invitation link for all available contracts.
         """
-        references = self.signature_backend_references_to_sign(contracts_ids)
+        ids, references = self.signature_backend_references_to_sign(contracts_ids)
         if not references:
             raise exceptions.NoContractToSignError(
                 "No contract to sign for this organization."
             )
         backend_signature = get_signature_backend()
-        return backend_signature.get_signature_invitation_link(user.email, references)
+        return (
+            backend_signature.get_signature_invitation_link(user.email, references),
+            ids,
+        )
 
 
 class OrganizationAccess(BaseModel):

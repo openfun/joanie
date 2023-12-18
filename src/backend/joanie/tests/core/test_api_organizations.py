@@ -10,7 +10,6 @@ from django.utils import timezone
 from joanie.core import enums, factories, models
 from joanie.core.models import OrganizationAccess
 from joanie.core.serializers import fields
-from joanie.payment.factories import InvoiceFactory
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -411,18 +410,14 @@ class OrganizationApiTest(BaseAPITestCase):
         """
         Authenticated users with owner role should be able to sign contracts in bulk.
         """
-        student_user = factories.UserFactory(email="johnnydo@example.fr")
-        factories.AddressFactory.create(owner=student_user)
         order = factories.OrderFactory(
-            owner=student_user,
+            state=enums.ORDER_STATE_VALIDATED,
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
         access = factories.UserOrganizationAccessFactory(
             organization=order.organization, role="owner"
         )
-        InvoiceFactory(order=order)
-        order.validate()
-        order.submit_for_signature(student_user)
+        order.submit_for_signature(order.owner)
         order.contract.submitted_for_signature_on = timezone.now()
         order.contract.student_signed_on = timezone.now()
         token = self.generate_token_from_user(access.user)
@@ -438,24 +433,24 @@ class OrganizationApiTest(BaseAPITestCase):
             "https://dummysignaturebackend.fr/?requestToken=",
             content["invitation_link"],
         )
+        self.assertCountEqual(
+            content["contract_ids"],
+            [str(order.contract.id)],
+        )
 
     def test_api_organization_contracts_signature_link_specified_ids(self):
         """
         When passing a list of contract ids,
         only the contracts with these ids should be signed.
         """
-        student_user = factories.UserFactory(email="johnnydo@example.fr")
-        factories.AddressFactory.create(owner=student_user)
         order = factories.OrderFactory(
-            owner=student_user,
+            state=enums.ORDER_STATE_VALIDATED,
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
         access = factories.UserOrganizationAccessFactory(
             organization=order.organization, role="owner"
         )
-        InvoiceFactory(order=order)
-        order.validate()
-        order.submit_for_signature(student_user)
+        order.submit_for_signature(order.owner)
         order.contract.submitted_for_signature_on = timezone.now()
         order.contract.student_signed_on = timezone.now()
 
@@ -473,6 +468,7 @@ class OrganizationApiTest(BaseAPITestCase):
             "https://dummysignaturebackend.fr/?requestToken=",
             content["invitation_link"],
         )
+        self.assertCountEqual(content["contract_ids"], [str(order.contract.id)])
 
     def test_api_organization_contracts_signature_link_no_contracts(self):
         """A 404 should be returned if no contract is available to sign."""

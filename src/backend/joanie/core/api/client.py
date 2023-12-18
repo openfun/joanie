@@ -709,18 +709,22 @@ class OrganizationViewSet(
         """
         organization = self.get_object()
         contracts_ids = request.query_params.getlist("contracts_ids[]")
+
         try:
-            return JsonResponse(
-                {
-                    "invitation_link": organization.contracts_signature_link(
-                        request.user,
-                        contracts_ids,
-                    )
-                },
-                status=200,
+            (signature_link, ids) = organization.contracts_signature_link(
+                request.user,
+                contracts_ids,
             )
         except NoContractToSignError as error:
             return Response({"detail": f"{error}"}, status=400)
+
+        return JsonResponse(
+            {
+                "invitation_link": signature_link,
+                "contract_ids": ids,
+            },
+            status=200,
+        )
 
 
 class OrganizationAccessViewSet(
