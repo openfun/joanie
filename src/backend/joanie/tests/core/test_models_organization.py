@@ -200,10 +200,13 @@ class OrganizationModelsTestCase(BaseAPITestCase):
 
         self.assertEqual(
             organization.signature_backend_references_to_sign(),
-            [
-                contract.signature_backend_reference
-                for contract in reversed(contracts_to_sign)
-            ],
+            (
+                tuple(contract.id for contract in reversed(contracts_to_sign)),
+                tuple(
+                    contract.signature_backend_reference
+                    for contract in reversed(contracts_to_sign)
+                ),
+            ),
         )
 
     def test_models_organization_signature_backend_references_to_sign_specified_ids(
@@ -267,10 +270,13 @@ class OrganizationModelsTestCase(BaseAPITestCase):
             organization.signature_backend_references_to_sign(
                 contracts_ids=contracts_to_sign_ids
             ),
-            [
-                contract.signature_backend_reference
-                for contract in reversed(contracts_to_sign)
-            ],
+            (
+                tuple(contract.id for contract in reversed(contracts_to_sign)),
+                tuple(
+                    contract.signature_backend_reference
+                    for contract in reversed(contracts_to_sign)
+                ),
+            ),
         )
 
     def test_models_organization_signature_backend_references_to_sign_unknown_specified_ids(
@@ -344,7 +350,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
     def test_models_organization_signature_backend_references_to_sign_empty(self):
         """Should return an empty list if no references to sign exists."""
         organization = factories.OrganizationFactory()
-        self.assertEqual(organization.signature_backend_references_to_sign(), [])
+        self.assertEqual(organization.signature_backend_references_to_sign(), ((), ()))
 
     def test_models_organization_contracts_signature_link(self):
         """Should return a signature link."""
@@ -355,8 +361,9 @@ class OrganizationModelsTestCase(BaseAPITestCase):
             organizations=[organization],
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
+        contracts = []
         for relation in relations:
-            factories.ContractFactory(
+            contract = factories.ContractFactory(
                 order__state=enums.ORDER_STATE_VALIDATED,
                 order__product=relation.product,
                 order__course=relation.course,
@@ -367,10 +374,15 @@ class OrganizationModelsTestCase(BaseAPITestCase):
                 submitted_for_signature_on=now,
                 student_signed_on=now,
             )
+            contracts.append(contract)
         user = factories.UserFactory()
 
-        invitation_url = organization.contracts_signature_link(user=user)
+        (invitation_url, contract_ids) = organization.contracts_signature_link(
+            user=user
+        )
         self.assertIn("https://dummysignaturebackend.fr/?requestToken=", invitation_url)
+        contracts_to_sign_ids = [contract.id for contract in contracts]
+        self.assertCountEqual(contracts_to_sign_ids, contract_ids)
 
     def test_models_organization_contracts_signature_link_specified_ids(self):
         """Should return a signature link for specified contract ids."""
@@ -400,13 +412,14 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         contracts_to_sign = contracts[:2]
         contracts_to_sign_ids = [contract.id for contract in contracts_to_sign]
 
-        invitation_url = organization.contracts_signature_link(
+        (invitation_url, contract_ids) = organization.contracts_signature_link(
             user=user, contracts_ids=contracts_to_sign_ids
         )
         self.assertIn("https://dummysignaturebackend.fr/?requestToken=", invitation_url)
+        self.assertCountEqual(contract_ids, contracts_to_sign_ids)
 
     def test_models_organization_contracts_signature_link_empty(self):
-        """Should fail if no references to sign exists.""" ""
+        """Should fail if no references to sign exists."""
         organization = factories.OrganizationFactory()
         user = factories.UserFactory()
 
