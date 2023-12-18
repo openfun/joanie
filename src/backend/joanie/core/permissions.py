@@ -19,3 +19,14 @@ class AccessPermission(IsAuthenticated):
         """Check permission for a given object."""
         abilities = obj.get_abilities(request.user)
         return abilities.get(request.method.lower(), False)
+
+
+class CanSignOrganizationContracts(IsAuthenticated):
+    """
+    Check if the authenticated user is allowed to sign contracts of an organization.
+    """
+
+    def has_object_permission(self, request, view, obj):
+        """Check permission for a given object."""
+        abilities = obj.get_abilities(request.user)
+        return abilities.get("sign_contracts", False)
