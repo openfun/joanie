@@ -720,7 +720,7 @@ class ContractModelTestCase(TestCase):
         """No query is done if the role is preset e.g. with query annotation."""
         user = factories.UserFactory()
         contract = factories.ContractFactory()
-        contract.user_role = "owner"
+        contract.order.organization.user_role = "owner"
 
         with self.assertNumQueries(0):
             assert contract.get_abilities(user) == {"sign": True}

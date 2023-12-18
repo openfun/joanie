@@ -215,6 +215,7 @@ class Organization(parler_models.TranslatableModel, BaseModel):
             "put": is_owner_or_admin,
             "delete": role == enums.OWNER,
             "manage_accesses": is_owner_or_admin,
+            "sign_contracts": role == enums.OWNER,
         }
 
     def signature_backend_references_to_sign(

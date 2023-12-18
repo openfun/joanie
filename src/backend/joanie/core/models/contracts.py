@@ -5,7 +5,6 @@ import logging
 import textwrap
 from datetime import timedelta
 
-from django.apps import apps
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
@@ -267,21 +266,13 @@ class Contract(BaseModel):
         Compute and return abilities for the user taking into account their
         roles on other objects.
         """
-        role = None
+
+        can_sign = False
 
         if user.is_authenticated:
-            try:
-                role = self.user_role
-            except AttributeError:
-                OrganizationAccess = apps.get_model("core", "OrganizationAccess")  # pylint: disable=invalid-name
-                try:
-                    role = self.order.organization.accesses.filter(user=user).values(
-                        "role"
-                    )[0]["role"]
-                except (OrganizationAccess.DoesNotExist, IndexError):
-                    role = None
+            abilities = self.order.organization.get_abilities(user=user)
+            can_sign = abilities.get("sign_contracts", False)
 
-        is_owner = role == enums.OWNER
         return {
-            "sign": is_owner,
+            "sign": can_sign,
         }
