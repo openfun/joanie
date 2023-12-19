@@ -9,15 +9,15 @@ from joanie.core import factories
 class CourseProductRelationModelTestCase(TestCase):
     """Test suite for the CourseProductRelation model."""
 
-    def test_model_course_product_relation_get_read_detail_api_url(self):
+    def test_model_course_product_relation_uri(self):
         """
-        CourseProductRelation instance should have a method `get_read_detail_api_url`
+        CourseProductRelation instance should have a property `uri`
         that returns the API url to get instance detail.
         """
         relation = factories.CourseProductRelationFactory()
 
         self.assertEqual(
-            relation.get_read_detail_api_url(),
+            relation.uri,
             (
                 "https://example.com/api/v1.0/"
                 f"courses/{relation.course.code}/products/{relation.product.id}/"
