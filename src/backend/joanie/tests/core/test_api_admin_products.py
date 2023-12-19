@@ -161,6 +161,7 @@ class ProductAdminApiTest(TestCase):
             "course_relations": [
                 {
                     "id": str(relation.id),
+                    "uri": relation.uri,
                     "can_edit": relation.can_edit,
                     "course": {
                         "id": str(relation.course.id),

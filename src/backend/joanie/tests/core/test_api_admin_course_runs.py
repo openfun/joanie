@@ -3,16 +3,20 @@ Test suite for Course run Admin API.
 """
 import random
 from datetime import datetime, timedelta, timezone
+from http import HTTPStatus
 
 from django.test import TestCase
 
 from joanie.core import factories, models
+from joanie.tests import format_date
 
 
 class CourseRunAdminApiTest(TestCase):
     """
     Test suite for Course run Admin API.
     """
+
+    maxDiff = None
 
     def test_admin_api_course_runs_request_without_authentication(self):
         """
@@ -120,22 +124,34 @@ class CourseRunAdminApiTest(TestCase):
 
         response = self.client.get(f"/api/v1.0/admin/course-runs/{course_run.id}/")
 
-        self.assertEqual(response.status_code, 200)
-        content = response.json()
-        self.assertEqual(content["id"], str(course_run.id))
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+
         self.assertEqual(
-            content["start"], course_run.start.isoformat().replace("+00:00", "Z")
-        )
-        self.assertEqual(
-            content["end"], course_run.end.isoformat().replace("+00:00", "Z")
-        )
-        self.assertEqual(
-            content["enrollment_start"],
-            course_run.enrollment_start.isoformat().replace("+00:00", "Z"),
-        )
-        self.assertEqual(
-            content["enrollment_end"],
-            course_run.enrollment_end.isoformat().replace("+00:00", "Z"),
+            response.json(),
+            {
+                "id": str(course_run.id),
+                "start": format_date(course_run.start),
+                "end": format_date(course_run.end),
+                "enrollment_start": format_date(course_run.enrollment_start),
+                "enrollment_end": format_date(course_run.enrollment_end),
+                "course": {
+                    "code": course_run.course.code,
+                    "title": course_run.course.title,
+                    "id": str(course_run.course.id),
+                    "state": {
+                        "priority": course_run.course.state["priority"],
+                        "datetime": format_date(course_run.course.state["datetime"]),
+                        "call_to_action": course_run.course.state["call_to_action"],
+                        "text": course_run.course.state["text"],
+                    },
+                },
+                "resource_link": course_run.resource_link,
+                "title": course_run.title,
+                "is_gradable": course_run.is_gradable,
+                "is_listed": course_run.is_listed,
+                "languages": course_run.languages,
+                "uri": course_run.uri,
+            },
         )
 
     def test_admin_api_course_runs_create(self):

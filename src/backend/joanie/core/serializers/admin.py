@@ -62,8 +62,9 @@ class AdminCourseRunLightSerializer(serializers.ModelSerializer):
             "end",
             "enrollment_start",
             "enrollment_end",
+            "uri",
         ]
-        read_only_fields = ["id"]
+        read_only_fields = ["id", "uri"]
 
 
 class AdminUserSerializer(serializers.ModelSerializer):
@@ -342,8 +343,9 @@ class AdminCourseProductRelationsSerializer(serializers.ModelSerializer):
             "organizations",
             "order_groups",
             "product",
+            "uri",
         ]
-        read_only_fields = ["id", "can_edit", "order_groups"]
+        read_only_fields = ["id", "can_edit", "order_groups", "uri"]
 
     def create(self, validated_data):
         """
@@ -599,8 +601,9 @@ class AdminCourseRunSerializer(serializers.ModelSerializer):
             "end",
             "enrollment_start",
             "enrollment_end",
+            "uri",
         ]
-        read_only_fields = ["id"]
+        read_only_fields = ["id", "uri"]
 
     def validate(self, attrs):
         """

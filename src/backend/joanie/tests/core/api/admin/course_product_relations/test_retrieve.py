@@ -73,6 +73,7 @@ class CourseProductRelationRetrieveAdminApiTest(TestCase):
             response.json(),
             {
                 "id": str(relation.id),
+                "uri": relation.uri,
                 "can_edit": relation.can_edit,
                 "course": {
                     "code": relation.course.code,
@@ -183,6 +184,7 @@ class CourseProductRelationRetrieveAdminApiTest(TestCase):
                                 "title": relation.course.title,
                             },
                             "id": str(relation.id),
+                            "uri": relation.uri,
                             "order_groups": [],
                             "organizations": [
                                 {
