@@ -224,7 +224,7 @@ class Product(parler_models.TranslatableModel, BaseModel):
                 equivalent_course_runs.append(
                     {
                         **course_run_data,
-                        "resource_link": relation.get_read_detail_api_url(),
+                        "resource_link": relation.uri,
                         "course": relation.course.code,
                     }
                 )

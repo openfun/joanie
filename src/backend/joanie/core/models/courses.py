@@ -644,7 +644,8 @@ class CourseProductRelation(BaseModel):
             raise ValidationError(_("You cannot delete this course product relation."))
         return super().delete(using=using, keep_parents=keep_parents)
 
-    def get_read_detail_api_url(self):
+    @property
+    def uri(self):
         """
         Build the api url to get the detail of the provided course product relation.
         """
@@ -657,7 +658,7 @@ class CourseProductRelation(BaseModel):
             },
         )
 
-        return f"https://{site.domain:s}{resource_path:s}"
+        return f"https://{site.domain}{resource_path}"
 
     @property
     def can_edit(self):
@@ -723,13 +724,20 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
             f"[{self.state.get('text')}]"
         )
 
+    @property
+    def uri(self):
+        """Return the uri of Course Run."""
+        site = Site.objects.get_current()
+        resource_path = reverse("course-runs-detail", kwargs={"id": self.id})
+
+        return f"https://{site.domain:s}{resource_path:s}"
+
     def get_serialized(self, visibility=None):
         """
         Return data for the course run that will be sent to the remote web hooks.
         Course run visibility can be forced via the eponym argument.
         """
-        site = Site.objects.get_current()
-        resource_path = reverse("course-runs-detail", kwargs={"id": self.id})
+
         if (
             visibility is not None
             and visibility not in enums.CATALOG_VISIBILITY_CHOICES
@@ -751,7 +759,7 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
             if self.enrollment_end
             else None,
             "languages": self.languages,
-            "resource_link": f"https://{site.domain:s}{resource_path:s}",
+            "resource_link": self.uri,
             "start": self.start.isoformat() if self.start else None,
         }
 

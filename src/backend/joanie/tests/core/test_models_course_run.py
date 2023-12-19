@@ -44,6 +44,18 @@ class CourseRunModelsTestCase(TestCase):
             course_run.resource_link, "https://www.example.com/Capitalized-Path"
         )
 
+    def test_models_course_run_uri(self):
+        """
+        CourseRun instance should have a property `uri`
+        that returns the API url to get instance detail.
+        """
+        course_run = factories.CourseRunFactory()
+
+        self.assertEqual(
+            course_run.uri,
+            f"https://example.com/api/v1.0/course-runs/{course_run.id}/",
+        )
+
     def test_models_course_run_dates_not_required(self):
         """
         Course run dates are not required.
