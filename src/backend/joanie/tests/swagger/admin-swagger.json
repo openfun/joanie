@@ -3737,6 +3737,10 @@
                             }
                         ],
                         "readOnly": true
+                    },
+                    "uri": {
+                        "type": "string",
+                        "readOnly": true
                     }
                 },
                 "required": [
@@ -3745,7 +3749,8 @@
                     "id",
                     "order_groups",
                     "organizations",
-                    "product"
+                    "product",
+                    "uri"
                 ]
             },
             "AdminCourseRequest": {
@@ -3831,6 +3836,10 @@
                         "type": "string",
                         "format": "date-time",
                         "nullable": true
+                    },
+                    "uri": {
+                        "type": "string",
+                        "readOnly": true
                     }
                 },
                 "required": [
@@ -3838,7 +3847,8 @@
                     "id",
                     "languages",
                     "resource_link",
-                    "title"
+                    "title",
+                    "uri"
                 ]
             },
             "AdminCourseRunLight": {
@@ -3893,13 +3903,18 @@
                         "type": "string",
                         "format": "date-time",
                         "nullable": true
+                    },
+                    "uri": {
+                        "type": "string",
+                        "readOnly": true
                     }
                 },
                 "required": [
                     "id",
                     "languages",
                     "resource_link",
-                    "title"
+                    "title",
+                    "uri"
                 ]
             },
             "AdminCourseRunLightRequest": {
@@ -4697,6 +4712,10 @@
                             }
                         ],
                         "readOnly": true
+                    },
+                    "uri": {
+                        "type": "string",
+                        "readOnly": true
                     }
                 },
                 "required": [
@@ -4704,7 +4723,8 @@
                     "id",
                     "order_groups",
                     "organizations",
-                    "product"
+                    "product",
+                    "uri"
                 ]
             },
             "AdminProductRequest": {

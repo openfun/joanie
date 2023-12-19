@@ -165,6 +165,7 @@ class CourseAdminApiTest(TestCase):
                         "is_gradable": course_run.is_gradable,
                         "is_listed": course_run.is_listed,
                         "resource_link": course_run.resource_link,
+                        "uri": course_run.uri,
                     }
                     for course_run in reversed(course_runs)
                 ],
@@ -218,7 +219,7 @@ class CourseAdminApiTest(TestCase):
         organization = factories.OrganizationFactory()
         product = factories.ProductFactory()
         data = {
-            "code": "COURSE-001",
+            "code": "00001",
             "title": "Course 001",
             "organization_ids": [str(organization.id)],
             "product_relations": [
@@ -237,7 +238,7 @@ class CourseAdminApiTest(TestCase):
         content = response.json()
 
         self.assertIsNotNone(content["code"])
-        self.assertEqual(content["code"], "COURSE-001")
+        self.assertEqual(content["code"], "00001")
         self.assertListEqual(
             content["organizations"],
             [
@@ -292,7 +293,7 @@ class CourseAdminApiTest(TestCase):
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
-        course = factories.CourseFactory(code="COURSE-001", title="Course 001")
+        course = factories.CourseFactory(code="00001", title="Course 00001")
         organization = factories.OrganizationFactory(code="ORG-002")
         product = factories.ProductFactory()
 
@@ -300,7 +301,7 @@ class CourseAdminApiTest(TestCase):
             f"/api/v1.0/admin/courses/{course.id}/",
             content_type="application/json",
             data={
-                "title": "Updated Course 001",
+                "title": "Updated Course 00001",
                 "organization_ids": [str(organization.id)],
                 "product_relations": [
                     {
@@ -314,7 +315,7 @@ class CourseAdminApiTest(TestCase):
         self.assertEqual(response.status_code, 200)
         content = response.json()
         self.assertEqual(content["id"], str(course.id))
-        self.assertEqual(content["title"], "Updated Course 001")
+        self.assertEqual(content["title"], "Updated Course 00001")
         self.assertEqual(content["organizations"][0]["code"], "ORG-002")
         self.assertEqual(len(content["product_relations"]), 1)
 

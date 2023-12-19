@@ -96,11 +96,13 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
+        relation.refresh_from_db()
 
         self.assertEqual(
             response.json(),
             {
                 "id": str(relation.id),
+                "uri": relation.uri,
                 "can_edit": relation.can_edit,
                 "course": {
                     "code": course.code,
@@ -209,6 +211,7 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
                                 "title": course.title,
                             },
                             "id": str(relation.id),
+                            "uri": relation.uri,
                             "order_groups": [],
                             "organizations": [
                                 {
@@ -301,11 +304,12 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-
+        relation.refresh_from_db()
         self.assertEqual(
             response.json(),
             {
                 "id": str(relation.id),
+                "uri": relation.uri,
                 "can_edit": relation.can_edit,
                 "course": {
                     "code": course.code,
@@ -414,6 +418,7 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
                                 "title": course.title,
                             },
                             "id": str(relation.id),
+                            "uri": relation.uri,
                             "order_groups": [],
                             "organizations": [
                                 {
@@ -472,6 +477,7 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
 
         assert response.json() == {
             "id": str(relation.id),
+            "uri": relation.uri,
             "can_edit": relation.can_edit,
             "course": {
                 "code": relation.course.code,
@@ -582,6 +588,7 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
                             "title": relation.course.title,
                         },
                         "id": str(relation.id),
+                        "uri": relation.uri,
                         "order_groups": [],
                         "organizations": [
                             {
