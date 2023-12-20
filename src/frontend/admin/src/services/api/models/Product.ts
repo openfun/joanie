@@ -18,7 +18,7 @@ export type Product = {
   price_currency?: string;
   instructions?: string;
   certificate_definition?: CertificateDefinition;
-  courses?: ProductRelationToCourse[];
+  course_relations?: ProductRelationToCourse[];
 };
 
 export enum ProductType {

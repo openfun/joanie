@@ -10,6 +10,7 @@ import { ProductFormTypeSection } from "@/components/templates/products/form/sec
 import { ProductFormTargetCoursesSection } from "@/components/templates/products/form/sections/target-courses/ProductFormTargetCoursesSection";
 import { productFormMessages } from "@/components/templates/products/form/translations";
 import { Wizard, WizardStep } from "@/components/presentational/wizard/Wizard";
+import { ProductFormCourseProductRelations } from "@/components/templates/products/form/sections/course-product-relations/ProductFormCourseProductRelations";
 
 type Props = {
   product?: Product;
@@ -70,10 +71,19 @@ export function ProductForm({ product, fromProduct, afterSubmit }: Props) {
   }
 
   return (
-    <SimpleCard>
-      <Box padding={4}>
-        <Wizard steps={formSteps} />
-      </Box>
-    </SimpleCard>
+    <>
+      <SimpleCard>
+        <Box padding={4}>
+          <Wizard steps={formSteps} />
+        </Box>
+      </SimpleCard>
+      {product && (
+        <Box mt={6}>
+          <ProductFormCourseProductRelations
+            relations={product.course_relations}
+          />
+        </Box>
+      )}
+    </>
   );
 }

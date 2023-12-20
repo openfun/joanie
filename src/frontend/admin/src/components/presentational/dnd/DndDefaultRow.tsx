@@ -8,7 +8,7 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import ModeEditOutlineTwoToneIcon from "@mui/icons-material/ModeEditOutlineTwoTone";
 
 export interface DndDefaultRowProps {
-  mainTitle: string;
+  mainTitle: string | ReactNode;
   subTitle?: string | ReactNode;
   rightActions?: React.ReactNode;
   permanentRightActions?: React.ReactNode;

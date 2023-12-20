@@ -3,6 +3,7 @@ import { Product, ProductType } from "@/services/api/models/Product";
 import { CertificateDefinitionFactory } from "@/services/factories/certificate-definition";
 import { randomNumber } from "@/utils/numbers";
 import { ProductTargetCourseRelationFactory } from "@/services/api/models/ProductTargetCourseRelation";
+import { ProductRelationToCourseFactory } from "@/services/api/models/Relations";
 
 const build = (): Product => {
   return {
@@ -15,6 +16,7 @@ const build = (): Product => {
     price_currency: "EUR",
     certificate_definition: CertificateDefinitionFactory(),
     target_courses: ProductTargetCourseRelationFactory(randomNumber(2)),
+    course_relations: ProductRelationToCourseFactory(2),
   };
 };
 

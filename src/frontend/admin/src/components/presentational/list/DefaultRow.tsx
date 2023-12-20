@@ -12,7 +12,7 @@ import { SxProps } from "@mui/material/styles";
 import Tooltip from "@mui/material/Tooltip";
 
 export interface DefaultRowProps {
-  mainTitle: string;
+  mainTitle: string | ReactNode;
   subTitle?: string | ReactNode;
   rightActions?: React.ReactNode;
   permanentRightActions?: React.ReactNode;
