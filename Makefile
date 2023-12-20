@@ -82,7 +82,7 @@ bootstrap: \
 	env.d/development/common \
 	env.d/development/crowdin \
 	env.d/development/localtunnel \
-	frontend/admin/env \
+	src/frontend/admin/.env \
 	build \
 	admin-install \
 	admin-build \
@@ -228,7 +228,7 @@ resetdb: ## flush database and create a superuser "admin"
 .PHONY: resetdb
 
 # -- Frontend admin
-frontend/admin/env:
+src/frontend/admin/.env:
 	cp -n src/frontend/admin/.env.example src/frontend/admin/.env
 
 admin-install: ## Install node_modules
