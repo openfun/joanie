@@ -5,6 +5,7 @@ import Grid from "@mui/material/Unstable_Grid2";
 import { yupResolver } from "@hookform/resolvers/yup";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 import { RHFProvider } from "@/components/presentational/hook-form/RHFProvider";
 import {
   CourseRelationToProduct,
@@ -15,6 +16,24 @@ import { DndDefaultRow } from "@/components/presentational/dnd/DndDefaultRow";
 import { ProductSearch } from "@/components/templates/products/inputs/search/ProductSearch";
 import { OrganizationControlledSearch } from "@/components/templates/organizations/inputs/search/OrganizationControlledSearch";
 import { Product } from "@/services/api/models/Product";
+
+const messages = defineMessages({
+  productLabel: {
+    id: "components.templates.course.form.translations.productRelation.productLabel",
+    defaultMessage: "Product",
+    description: "Product label for the CourseProductRelation form",
+  },
+  chooseProduct: {
+    id: "components.templates.course.form.translations.productRelation.chooseProduct",
+    defaultMessage: "Choose your product",
+    description: "Label form the product search input",
+  },
+  organizationsTitle: {
+    id: "components.templates.course.form.translations.productRelation.organizationsTitle",
+    defaultMessage: "Managed by this organizations",
+    description: "Title for the organizations section",
+  },
+});
 
 export interface CourseProductRelationFormValues {
   product: Product | null;
@@ -40,6 +59,8 @@ export function CourseProductRelationForm({
   onSubmit,
   courseId,
 }: Props) {
+  const intl = useIntl();
+
   const methods = useForm<CourseProductRelationFormValues>({
     resolver: yupResolver(CourseProductRelationFormSchema),
     defaultValues: {
@@ -68,14 +89,19 @@ export function CourseProductRelationForm({
     >
       <Grid container spacing={2}>
         <Grid xs={12}>
-          <Typography variant="subtitle2">Product</Typography>
+          <Typography variant="subtitle2">
+            <FormattedMessage {...messages.productLabel} />
+          </Typography>
         </Grid>
         <Grid xs={12}>
-          <ProductSearch name="product" label="Choose your product" />
+          <ProductSearch
+            name="product"
+            label={intl.formatMessage(messages.chooseProduct)}
+          />
         </Grid>
         <Grid xs={12}>
           <Typography variant="subtitle2">
-            Managed by this organizations
+            <FormattedMessage {...messages.organizationsTitle} />
           </Typography>
         </Grid>
         <Grid xs={12}>
