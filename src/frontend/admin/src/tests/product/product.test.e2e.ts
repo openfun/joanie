@@ -216,4 +216,67 @@ test.describe("Product form", () => {
       targetCourseLocator.getByText("All selected course_runs."),
     ).toBeVisible();
   });
+  test("Check all course product relations", async ({ page }) => {
+    const product = store.products[0];
+    product.target_courses = [];
+    const relations = product.course_relations!;
+
+    await mockPlaywrightCrud<Course, DTOCourse>({
+      data: [relations[0].course],
+      routeUrl: "http://localhost:8071/api/v1.0/admin/courses/",
+      page,
+      optionsResult: COURSE_OPTIONS_REQUEST_RESULT,
+    });
+
+    await page.goto(PATH_ADMIN.products.list);
+    await expect(page.getByRole("heading", { name: "Products" })).toBeVisible();
+    await page.getByRole("link", { name: product.title }).click();
+    await page
+      .getByRole("heading", {
+        name: "List of courses to which this product is linked",
+      })
+      .click();
+    await expect(
+      page
+        .getByTestId("product-course-relation-alert")
+        .getByText(
+          "In this section, you have access to all courses to which this product is attached. Click on the course title to navigate to its detail.",
+        ),
+    ).toBeVisible();
+    await Promise.all(
+      relations.map(async (relation) => {
+        await expect(
+          page.getByRole("heading", { name: relation.course.title }),
+        ).toBeVisible();
+        await expect(
+          page.getByRole("link", { name: relation.course.title }),
+        ).toBeVisible();
+        await expect(
+          page.getByText(
+            relation.organizations.map((org) => org.title).join(","),
+          ),
+        ).toBeVisible();
+      }),
+    );
+
+    // Test click on course title and open another tab
+    await page.getByRole("link", { name: relations[0].course.title }).click();
+    // const page2Promise = page.waitForEvent("popup");
+    // const page2 = await page2Promise;
+    await page.route(
+      `http://localhost:8071/api/v1.0/admin/courses/${relations[0].course.id}/?`,
+      async (route, request) => {
+        const methods = request.method();
+        if (methods === "GET") {
+          await route.fulfill({ json: relations[0].course });
+        }
+      },
+    );
+
+    await expect(
+      page.getByRole("heading", {
+        name: `Edit course: ${relations[0].course.title}`,
+      }),
+    ).toBeVisible();
+  });
 });

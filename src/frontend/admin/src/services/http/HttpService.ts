@@ -55,7 +55,8 @@ export async function checkStatus(
   response: Response,
   options: CheckStatusOptions = { fallbackValue: null, ignoredErrorStatus: [] },
 ): Promise<any> {
-  if (response.status === HttpStatus.UNAUTHORIZED) {
+  const isTestSource = process.env.NEXT_PUBLIC_API_SOURCE === "test";
+  if (response.status === HttpStatus.UNAUTHORIZED && !isTestSource) {
     window.location.replace(PATH_ADMIN.auth.login());
   }
 

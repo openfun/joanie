@@ -2,7 +2,6 @@ import { useRouter } from "next/router";
 import { defineMessages, useIntl } from "react-intl";
 import { DashboardLayoutPage } from "@/layouts/dashboard/page/DashboardLayoutPage";
 import { PATH_ADMIN } from "@/utils/routes/path";
-import { SimpleCard } from "@/components/presentational/card/SimpleCard";
 import { useProduct } from "@/hooks/useProducts/useProducts";
 import { ProductForm } from "@/components/templates/products/form/ProductForm";
 import { productsPagesTranslation } from "@/translations/pages/products/breadcrumbsTranslations";
@@ -48,9 +47,7 @@ export default function EditProductPage() {
         },
       ]}
     >
-      <SimpleCard>
-        {product.item && <ProductForm product={product.item} />}
-      </SimpleCard>
+      {product.item && <ProductForm product={product.item} />}
     </DashboardLayoutPage>
   );
 }

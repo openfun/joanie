@@ -20,6 +20,8 @@ import { useCourseProductRelations } from "@/hooks/useCourseProductRelation/useC
 import { AlertModal } from "@/components/presentational/modal/AlertModal";
 import { useList } from "@/hooks/useList/useList";
 import { OrderGroupRow } from "@/components/templates/courses/form/sections/product-relation/OrderGroupRow";
+import { CustomLink } from "@/components/presentational/link/CustomLink";
+import { PATH_ADMIN } from "@/utils/routes/path";
 
 const messages = defineMessages({
   mainTitleOrderGroup: {
@@ -201,7 +203,11 @@ export function CourseProductRelationRow({
       <DefaultRow
         loading={courseProductRelationQuery.states.updating}
         key={relation.product.title}
-        mainTitle={relation.product.title}
+        mainTitle={
+          <CustomLink href={PATH_ADMIN.products.edit(relation.product.id)}>
+            {relation.product.title}
+          </CustomLink>
+        }
         enableEdit={canEdit}
         enableDelete={canEdit}
         disableDeleteMessage={disabledActionsMessage}
