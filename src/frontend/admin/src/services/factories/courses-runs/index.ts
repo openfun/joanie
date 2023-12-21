@@ -20,6 +20,7 @@ export const buildCourseRun = (course?: Course): CourseRun => {
     is_gradable: faker.datatype.boolean(),
     is_listed: faker.datatype.boolean(),
     state: CourseStateFactory(),
+    uri: faker.internet.url(),
   };
 };
 

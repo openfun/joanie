@@ -53,6 +53,7 @@ export const CourseRelationToProductFactory = (): CourseRelationToProduct => {
     id: faker.string.uuid(),
     can_edit: faker.datatype.boolean(),
     order_groups: OrderGroupFactory(2),
+    uri: faker.internet.url(),
   };
 };
 
