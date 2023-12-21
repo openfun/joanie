@@ -35,6 +35,20 @@ def authorize_request(request):
         raise exceptions.AuthenticationFailed("Invalid authentication.")
 
 
+def detect_lms_from_resource_link(resource_link):
+    """Detect the LMS from the resource link."""
+    if not resource_link:
+        raise exceptions.ValidationError({"resource_link": ["This field is required."]})
+
+    lms = LMSHandler.select_lms(resource_link)
+    if lms is None:
+        raise exceptions.ValidationError(
+            {"resource_link": ["No LMS configuration found for this resource link."]}
+        )
+
+    return lms
+
+
 # pylint: disable=too-many-return-statements,unused-argument, too-many-locals,too-many-branches
 @api_view(["POST"])
 def course_runs_sync(request):
@@ -56,18 +70,7 @@ def course_runs_sync(request):
 
     # Select LMS from resource link
     resource_link = request.data.get("resource_link")
-    if not resource_link:
-        return Response(
-            {"resource_link": ["This field is required."]},
-            status=HTTPStatus.BAD_REQUEST,
-        )
-
-    lms = LMSHandler.select_lms(resource_link)
-    if lms is None:
-        return Response(
-            {"resource_link": ["No LMS configuration found for this resource link."]},
-            status=HTTPStatus.BAD_REQUEST,
-        )
+    lms = detect_lms_from_resource_link(resource_link)
 
     try:
         target_course_run = models.CourseRun.objects.only("pk").get(
