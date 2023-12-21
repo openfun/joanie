@@ -261,8 +261,6 @@ test.describe("Product form", () => {
 
     // Test click on course title and open another tab
     await page.getByRole("link", { name: relations[0].course.title }).click();
-    // const page2Promise = page.waitForEvent("popup");
-    // const page2 = await page2Promise;
     await page.route(
       `http://localhost:8071/api/v1.0/admin/courses/${relations[0].course.id}/?`,
       async (route, request) => {
@@ -278,5 +276,37 @@ test.describe("Product form", () => {
         name: `Edit course: ${relations[0].course.title}`,
       }),
     ).toBeVisible();
+  });
+
+  test("Copy url inside the clipboard", async ({ page, context }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    const product = store.products[0];
+    product.target_courses = [];
+    const relations = product.course_relations!;
+
+    await mockPlaywrightCrud<Course, DTOCourse>({
+      data: [relations[0].course],
+      routeUrl: "http://localhost:8071/api/v1.0/admin/courses/",
+      page,
+      optionsResult: COURSE_OPTIONS_REQUEST_RESULT,
+    });
+
+    await page.goto(PATH_ADMIN.products.list);
+    await expect(page.getByRole("heading", { name: "Products" })).toBeVisible();
+    await page.getByRole("link", { name: product.title }).click();
+
+    await page
+      .getByTestId(`course-product-relation-actions-${relations[0].id}`)
+      .click();
+
+    await page.getByRole("menuitem", { name: "Copy url" }).click();
+    await expect(
+      page.getByRole("alert").getByText("Link added to your clipboard"),
+    ).toBeVisible();
+    const handle = await page.evaluateHandle(() =>
+      navigator.clipboard.readText(),
+    );
+    const clipboardContent = await handle.jsonValue();
+    expect(clipboardContent).toEqual(relations[0].uri);
   });
 });

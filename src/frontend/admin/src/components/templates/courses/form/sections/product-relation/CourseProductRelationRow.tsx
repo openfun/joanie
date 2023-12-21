@@ -5,6 +5,7 @@ import Button from "@mui/material/Button";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 
 import Box from "@mui/material/Box";
+import CopyAllIcon from "@mui/icons-material/CopyAll";
 import {
   DTOOrderGroup,
   OrderGroup,
@@ -22,6 +23,9 @@ import { useList } from "@/hooks/useList/useList";
 import { OrderGroupRow } from "@/components/templates/courses/form/sections/product-relation/OrderGroupRow";
 import { CustomLink } from "@/components/presentational/link/CustomLink";
 import { PATH_ADMIN } from "@/utils/routes/path";
+import { MenuPopover } from "@/components/presentational/menu-popover/MenuPopover";
+import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
+import { commonTranslations } from "@/translations/common/commonTranslations";
 
 const messages = defineMessages({
   mainTitleOrderGroup: {
@@ -91,6 +95,7 @@ export function CourseProductRelationRow({
   onClickDelete,
 }: Props) {
   const intl = useIntl();
+  const copyToClipboard = useCopyToClipboard();
   const canEdit = relation.can_edit;
   const disabledActionsMessage = canEdit
     ? intl.formatMessage(messages.relationDisabledActionsMessage)
@@ -211,6 +216,18 @@ export function CourseProductRelationRow({
         enableEdit={canEdit}
         enableDelete={canEdit}
         disableDeleteMessage={disabledActionsMessage}
+        permanentRightActions={
+          <MenuPopover
+            id={`course-product-relation-actions-${relation.id}`}
+            menuItems={[
+              {
+                title: intl.formatMessage(commonTranslations.copyUrl),
+                icon: <CopyAllIcon fontSize="small" />,
+                onClick: () => copyToClipboard(relation.uri!),
+              },
+            ]}
+          />
+        }
         disableEditMessage={disabledActionsMessage}
         onEdit={() => onClickEdit(relation)}
         onDelete={() => onClickDelete(relation)}

@@ -4,6 +4,7 @@ import { useIntl } from "react-intl";
 import { useRouter } from "next/router";
 import { GridColDef } from "@mui/x-data-grid";
 import { useSnackbar } from "notistack";
+import CopyAllIcon from "@mui/icons-material/CopyAll";
 import {
   DefaultTableProps,
   TableComponent,
@@ -16,6 +17,8 @@ import {
   useCoursesRuns,
 } from "@/hooks/useCourseRun/useCourseRun";
 import { usePaginatedTableResource } from "@/components/presentational/table/usePaginatedTableResource";
+import { commonTranslations } from "@/translations/common/commonTranslations";
+import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 
 type Props = DefaultTableProps<CourseRun> & {
   courseId?: string;
@@ -24,6 +27,7 @@ type Props = DefaultTableProps<CourseRun> & {
 export function CoursesRunsList({ courseId, ...props }: Props) {
   const intl = useIntl();
   const snackbar = useSnackbar();
+  const copyToClipboard = useCopyToClipboard();
   const { push } = useRouter();
 
   const paginatedResource = usePaginatedTableResource<
@@ -52,6 +56,21 @@ export function CoursesRunsList({ courseId, ...props }: Props) {
       {...props}
       columns={columns}
       columnBuffer={6}
+      getOptions={(courseRun) => {
+        const { uri } = courseRun;
+
+        if (uri === undefined) {
+          return [];
+        }
+
+        return [
+          {
+            title: intl.formatMessage(commonTranslations.copyUrl),
+            icon: <CopyAllIcon fontSize="small" />,
+            onClick: () => copyToClipboard(uri),
+          },
+        ];
+      }}
       onEditClick={(courseRun: CourseRun) => {
         if (courseRun.id) {
           push(PATH_ADMIN.courses_run.edit(courseRun?.id));

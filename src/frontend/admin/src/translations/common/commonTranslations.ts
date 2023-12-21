@@ -46,4 +46,14 @@ export const commonTranslations = defineMessages({
     defaultMessage: "Use as a template",
     description: "Use as template text",
   },
+  copyUrl: {
+    id: "translations.common.commonTranslations.copyUrl",
+    defaultMessage: "Copy url",
+    description: "Text for the common copy url label",
+  },
+  successCopy: {
+    id: "translations.common.commonTranslations.successCopy",
+    defaultMessage: "Link added to your clipboard",
+    description: "Text for the success click to copy notification",
+  },
 });
