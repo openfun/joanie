@@ -34,6 +34,7 @@ export type ProductRelationToCourse = {
   course: Course;
   graded?: boolean;
   organizations: Organization[];
+  uri?: string;
 };
 
 const buildProductRelationToCourse = (): ProductRelationToCourse => {
@@ -41,6 +42,7 @@ const buildProductRelationToCourse = (): ProductRelationToCourse => {
     id: faker.string.uuid(),
     course: CourseFactory(),
     organizations: OrganizationFactory(randomNumber(4)),
+    uri: faker.internet.url(),
   };
 };
 
