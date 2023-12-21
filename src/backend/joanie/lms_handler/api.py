@@ -7,11 +7,32 @@ from http import HTTPStatus
 
 from django.conf import settings
 
+from rest_framework import exceptions
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from joanie.core import models, utils
 from joanie.lms_handler import LMSHandler
+
+
+def authorize_request(request):
+    """Check if the provided signature is valid against any secret in our list."""
+    authorization_header = request.headers.get("Authorization")
+    if not authorization_header:
+        raise exceptions.PermissionDenied("Missing authentication.")
+
+    if not any(
+        authorization_header
+        == "SIG-HMAC-SHA256 {:s}".format(  # pylint: disable = consider-using-f-string
+            hmac.new(
+                secret.encode("utf-8"),
+                msg=request.body,
+                digestmod=hashlib.sha256,
+            ).hexdigest()
+        )
+        for secret in getattr(settings, "JOANIE_COURSE_RUN_SYNC_SECRETS", [])
+    ):
+        raise exceptions.AuthenticationFailed("Invalid authentication.")
 
 
 # pylint: disable=too-many-return-statements,unused-argument, too-many-locals,too-many-branches
@@ -31,30 +52,7 @@ def course_runs_sync(request):
     Type[rest_framework.response.Response]
         HttpResponse acknowledging the success or failure of the synchronization operation.
     """
-    msg = request.body.decode("utf-8")
-
-    # Check if the provided signature is valid against any secret in our list
-    #
-    # We need to do this to support 2 or more versions of our infrastructure at the same time.
-    # It then enables us to do updates and change the secret without incurring downtime.
-    authorization_header = request.headers.get("Authorization")
-    if not authorization_header:
-        return Response("Missing authentication.", status=HTTPStatus.FORBIDDEN)
-
-    signature_is_valid = any(
-        authorization_header
-        == "SIG-HMAC-SHA256 {:s}".format(  # pylint: disable = consider-using-f-string
-            hmac.new(
-                secret.encode("utf-8"),
-                msg=msg.encode("utf-8"),
-                digestmod=hashlib.sha256,
-            ).hexdigest()
-        )
-        for secret in getattr(settings, "JOANIE_COURSE_RUN_SYNC_SECRETS", [])
-    )
-
-    if not signature_is_valid:
-        return Response("Invalid authentication.", status=HTTPStatus.UNAUTHORIZED)
+    authorize_request(request)
 
     # Select LMS from resource link
     resource_link = request.data.get("resource_link")

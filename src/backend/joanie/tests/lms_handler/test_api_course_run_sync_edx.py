@@ -44,7 +44,7 @@ class SyncCourseRunApiTestCase(TestCase):
         )
 
         self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
-        self.assertEqual(json.loads(response.content), "Missing authentication.")
+        self.assertEqual(response.json(), {"detail": "Missing authentication."})
         self.assertEqual(CourseRun.objects.count(), 0)
         self.assertEqual(Course.objects.count(), 0)
 
@@ -67,7 +67,7 @@ class SyncCourseRunApiTestCase(TestCase):
         )
 
         self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
-        self.assertEqual(json.loads(response.content), "Invalid authentication.")
+        self.assertEqual(response.json(), {"detail": "Invalid authentication."})
         self.assertEqual(CourseRun.objects.count(), 0)
         self.assertEqual(Course.objects.count(), 0)
 
@@ -95,7 +95,7 @@ class SyncCourseRunApiTestCase(TestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(
-            json.loads(response.content), {"resource_link": ["This field is required."]}
+            response.json(), {"resource_link": ["This field is required."]}
         )
         self.assertEqual(CourseRun.objects.count(), 0)
         self.assertEqual(Course.objects.count(), 0)
@@ -126,7 +126,7 @@ class SyncCourseRunApiTestCase(TestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(
-            json.loads(response.content),
+            response.json(),
             {
                 "start": [
                     (
@@ -164,7 +164,7 @@ class SyncCourseRunApiTestCase(TestCase):
         )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertEqual(json.loads(response.content), {"success": True})
+        self.assertEqual(response.json(), {"success": True})
         self.assertEqual(CourseRun.objects.count(), 1)
 
         # Check the new course
@@ -202,7 +202,7 @@ class SyncCourseRunApiTestCase(TestCase):
         )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertEqual(json.loads(response.content), {"success": True})
+        self.assertEqual(response.json(), {"success": True})
         self.assertEqual(CourseRun.objects.count(), 1)
 
         # Check the new course
@@ -240,7 +240,7 @@ class SyncCourseRunApiTestCase(TestCase):
         )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertEqual(json.loads(response.content), {"success": True})
+        self.assertEqual(response.json(), {"success": True})
         self.assertEqual(CourseRun.objects.count(), 1)
 
         # Check the new course run
@@ -271,9 +271,7 @@ class SyncCourseRunApiTestCase(TestCase):
         )
 
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
-        self.assertEqual(
-            json.loads(response.content), {"languages": ["This field is required."]}
-        )
+        self.assertEqual(response.json(), {"languages": ["This field is required."]})
         self.assertEqual(CourseRun.objects.count(), 0)
 
     @override_settings(TIME_ZONE="UTC")
@@ -298,7 +296,7 @@ class SyncCourseRunApiTestCase(TestCase):
             ),
         )
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertEqual(json.loads(response.content), {"success": True})
+        self.assertEqual(response.json(), {"success": True})
         self.assertEqual(CourseRun.objects.count(), 1)
 
         # Check the new course run
@@ -336,7 +334,6 @@ class SyncCourseRunApiTestCase(TestCase):
         )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertEqual(json.loads(response.content), {"success": True})
         self.assertEqual(CourseRun.objects.count(), 1)
 
         # Check that the existing course run was updated
@@ -367,7 +364,7 @@ class SyncCourseRunApiTestCase(TestCase):
             ),
         )
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertEqual(json.loads(response.content), {"success": True})
+        self.assertEqual(response.json(), {"success": True})
         self.assertEqual(CourseRun.objects.count(), 1)
 
         # Check that the course run was updated
@@ -421,7 +418,7 @@ class SyncCourseRunApiTestCase(TestCase):
             ),
         )
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertEqual(json.loads(response.content), {"success": True})
+        self.assertEqual(response.json(), {"success": True})
         self.assertEqual(CourseRun.objects.count(), 1)
 
         # Check that the draft course run was updated except protected fields
