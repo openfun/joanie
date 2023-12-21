@@ -470,6 +470,36 @@ class OrganizationApiTest(BaseAPITestCase):
         )
         self.assertCountEqual(content["contract_ids"], [str(order.contract.id)])
 
+    def test_api_organization_contracts_signature_link_exclude_canceled_orders(self):
+        """
+        Authenticated users with owner role should be able to sign contracts in bulk but
+        not validated orders should be excluded.
+        """
+        order = factories.OrderFactory(
+            state=enums.ORDER_STATE_VALIDATED,
+            product__contract_definition=factories.ContractDefinitionFactory(),
+        )
+        access = factories.UserOrganizationAccessFactory(
+            organization=order.organization, role="owner"
+        )
+        order.submit_for_signature(order.owner)
+        order.contract.submitted_for_signature_on = timezone.now()
+        order.contract.student_signed_on = timezone.now()
+        # Simulate the usser has signed its contract then later canceled its order
+        order.cancel()
+
+        token = self.generate_token_from_user(access.user)
+
+        response = self.client.get(
+            f"/api/v1.0/organizations/{order.organization.id}/contracts-signature-link/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        assert response.json() == {
+            "detail": "No contract to sign for this organization."
+        }
+
     def test_api_organization_contracts_signature_link_no_contracts(self):
         """A 404 should be returned if no contract is available to sign."""
         user = factories.UserFactory()
