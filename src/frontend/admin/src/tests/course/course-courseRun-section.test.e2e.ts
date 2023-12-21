@@ -68,4 +68,29 @@ test.describe("Course product relation", () => {
       course.title,
     );
   });
+  test("Copy url inside the clipboard", async ({ page, context }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    const course = store.list[0];
+    const courseRun = course.courses_runs![0];
+    await page.goto(PATH_ADMIN.courses.list);
+    await store.mockCourseRunsFromCourse(page, course.courses_runs ?? []);
+    await page.getByRole("link", { name: course.title }).click();
+    await expect(
+      page.getByRole("heading", { name: `Edit course: ${course.title}` }),
+    ).toBeVisible();
+
+    await page
+      .getByRole("row", { name: `${courseRun.title} Click to copy` })
+      .getByRole("button")
+      .click();
+    await page.getByRole("menuitem", { name: "Copy url" }).click();
+    await expect(
+      page.getByRole("alert").getByText("Link added to your clipboard"),
+    ).toBeVisible();
+    const handle = await page.evaluateHandle(() =>
+      navigator.clipboard.readText(),
+    );
+    const clipboardContent = await handle.jsonValue();
+    expect(clipboardContent).toEqual(courseRun.uri);
+  });
 });

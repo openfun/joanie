@@ -175,6 +175,27 @@ test.describe("Course product relation", () => {
     ).toBeVisible();
   });
 
+  test("Copy url inside the clipboard", async ({ page, context }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    const course = store.list[0];
+    const relation = course.product_relations![0];
+    await page.goto(PATH_ADMIN.courses.list);
+    await store.mockCourseRunsFromCourse(page, []);
+    await page.getByRole("link", { name: course.title }).click();
+    await page
+      .getByTestId(`course-product-relation-actions-${relation.id}`)
+      .click();
+    await page.getByRole("menuitem", { name: "Copy url" }).click();
+    await expect(
+      page.getByRole("alert").getByText("Link added to your clipboard"),
+    ).toBeVisible();
+    const handle = await page.evaluateHandle(() =>
+      navigator.clipboard.readText(),
+    );
+    const clipboardContent = await handle.jsonValue();
+    expect(clipboardContent).toEqual(relation.uri);
+  });
+
   test("Add order group on course product relation", async ({ page }) => {
     await store.mockOrderGroup(page, store.productRelations, store.orderGroups);
     const course = store.list[0];
