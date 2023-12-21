@@ -1,19 +1,10 @@
 import * as React from "react";
 import { ReactElement, useMemo } from "react";
-import MoreVertOutlinedIcon from "@mui/icons-material/MoreVertOutlined";
-import IconButton from "@mui/material/IconButton";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import ListItemText from "@mui/material/ListItemText";
-import MenuItem from "@mui/material/MenuItem";
-import MenuList from "@mui/material/MenuList";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
 import { useIntl } from "react-intl";
-import {
-  MenuPopover,
-  useMenuPopover,
-} from "@/components/presentational/menu-popover/MenuPopover";
+import { MenuPopover } from "@/components/presentational/menu-popover/MenuPopover";
 import { AlertModal } from "@/components/presentational/modal/AlertModal";
 import { useModal } from "@/components/presentational/modal/useModal";
 import { tableTranslations } from "@/components/presentational/table/translations";
@@ -35,7 +26,6 @@ interface Props {
 
 export function TableDefaultActions(props: Props) {
   const intl = useIntl();
-  const menu = useMenuPopover();
   const deleteModal = useModal();
 
   const menuItems: TableDefaultMenuItem[] = useMemo(() => {
@@ -73,27 +63,7 @@ export function TableDefaultActions(props: Props) {
 
   return (
     <>
-      <IconButton onClick={menu.open}>
-        <MoreVertOutlinedIcon />
-      </IconButton>
-      <MenuPopover open={menu.anchor} onClose={menu.close} arrow="right-top">
-        <MenuList>
-          {menuItems.map((item) => {
-            return (
-              <MenuItem
-                onClick={() => {
-                  menu.close();
-                  item.onClick?.();
-                }}
-                key={item.title}
-              >
-                <ListItemIcon>{item.icon}</ListItemIcon>
-                <ListItemText>{item.title}</ListItemText>
-              </MenuItem>
-            );
-          })}
-        </MenuList>
-      </MenuPopover>
+      <MenuPopover menuItems={menuItems} arrow="right-top" />
       {props.onDelete && (
         <AlertModal
           title={intl.formatMessage(tableTranslations.deleteModalTitle)}

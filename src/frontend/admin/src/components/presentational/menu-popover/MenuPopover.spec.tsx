@@ -1,31 +1,21 @@
 import { render, screen } from "@testing-library/react";
 import Button from "@mui/material/Button";
-import ListItemText from "@mui/material/ListItemText";
-import MenuItem from "@mui/material/MenuItem";
-import MenuList from "@mui/material/MenuList";
 import userEvent from "@testing-library/user-event";
-import {
-  MenuPopover,
-  useMenuPopover,
-} from "@/components/presentational/menu-popover/MenuPopover";
+import TuneIcon from "@mui/icons-material/Tune";
+import { MenuPopover } from "@/components/presentational/menu-popover/MenuPopover";
+import { noop } from "@/utils";
 
 describe("<MenuPopover />", () => {
   function TestMenu() {
-    const menu = useMenuPopover();
     return (
-      <>
-        <Button onClick={menu.open}>Open</Button>
-        <MenuPopover open={menu.anchor} onClose={menu.close} arrow="right-top">
-          <MenuList>
-            <MenuItem>
-              <ListItemText>One</ListItemText>
-            </MenuItem>
-            <MenuItem>
-              <ListItemText>Two</ListItemText>
-            </MenuItem>
-          </MenuList>
-        </MenuPopover>
-      </>
+      <MenuPopover
+        button={<Button>Open</Button>}
+        menuItems={[
+          { title: "One", onClick: noop, icon: <TuneIcon /> },
+          { title: "Two" },
+        ]}
+        arrow="right-top"
+      />
     );
   }
   it("renders a MenuPopover component ", async () => {
