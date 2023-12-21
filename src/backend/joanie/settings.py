@@ -413,6 +413,9 @@ class Base(Configuration):
     # e.g:
     # DJANGO_COURSE_WEB_HOOKS=[{"url": "http://example.com", "secret": "secret", "verify": true}]
     COURSE_WEB_HOOKS = JSONValue([])
+    JOANIE_SYNC_SECRETS = values.ListValue(
+        ["shared secret"], environ_name="JOANIE_SYNC_SECRETS", environ_prefix=None
+    )
 
     # Easy thumbnails
     THUMBNAIL_EXTENSION = "webp"

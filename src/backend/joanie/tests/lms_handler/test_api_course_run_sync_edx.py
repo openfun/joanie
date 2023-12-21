@@ -13,7 +13,7 @@ from joanie.lms_handler.serializers import SyncCourseRunSerializer
 
 
 @override_settings(
-    JOANIE_COURSE_RUN_SYNC_SECRETS=["shared secret"],
+    JOANIE_SYNC_SECRETS=["shared secret"],
     JOANIE_LMS_BACKENDS=[
         {
             "BASE_URL": "http://localhost:8073",

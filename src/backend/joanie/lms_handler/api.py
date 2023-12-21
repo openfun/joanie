@@ -30,7 +30,7 @@ def authorize_request(request):
                 digestmod=hashlib.sha256,
             ).hexdigest()
         )
-        for secret in getattr(settings, "JOANIE_COURSE_RUN_SYNC_SECRETS", [])
+        for secret in getattr(settings, "JOANIE_SYNC_SECRETS", [])
     ):
         raise exceptions.AuthenticationFailed("Invalid authentication.")
 
