@@ -13,6 +13,7 @@ export type CourseRelationToProduct = {
   product: Product;
   organizations: Organization[];
   order_groups: OrderGroup[];
+  uri?: string;
 };
 
 export type CourseRelationToProductDummy = Omit<
