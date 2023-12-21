@@ -1032,7 +1032,9 @@ class GenericContractViewSet(
     serializer_class = serializers.ContractSerializer
     filterset_class = filters.ContractViewSetFilter
     ordering = ["-student_signed_on", "-created_on"]
-    queryset = models.Contract.objects.all().select_related(
+    queryset = models.Contract.objects.filter(
+        order__state=enums.ORDER_STATE_VALIDATED
+    ).select_related(
         "definition",
         "order__organization",
         "order__course",

@@ -5,7 +5,7 @@ from unittest import mock
 
 from django.utils import timezone
 
-from joanie.core import factories, models
+from joanie.core import enums, factories, models
 from joanie.core.serializers import fields
 from joanie.tests.base import BaseAPITestCase
 
@@ -96,6 +96,14 @@ class CourseContractApiTest(BaseAPITestCase):
                     order__course=course,
                     order__organization=organization,
                 )
+                # Canceled orders should be excluded
+                factories.ContractFactory.create_batch(
+                    2,
+                    order__product=relation.product,
+                    order__course=course,
+                    order__organization=organization,
+                    order__state=enums.ORDER_STATE_CANCELED,
+                )
 
         # Create random contracts that should not be returned
         factories.ContractFactory.create_batch(5)
@@ -108,7 +116,10 @@ class CourseContractApiTest(BaseAPITestCase):
             )
 
         self.assertEqual(response.status_code, 200)
-        contracts = models.Contract.objects.filter(order__course=courses[0])
+        contracts = models.Contract.objects.filter(
+            order__course=courses[0],
+            order__state=enums.ORDER_STATE_VALIDATED,
+        )
         expected_contracts = sorted(contracts, key=lambda x: x.created_on, reverse=True)
         assert response.json() == {
             "count": 10,
@@ -401,6 +412,45 @@ class CourseContractApiTest(BaseAPITestCase):
                 "product_title": contract.order.product.title,
             },
         }
+
+    def test_api_courses_contracts_retrieve_with_accesses_and_canceled_order(self):
+        """
+        Authenticated user with any access to the organization
+        can query an organization's course contract if the related order is validated.
+        """
+        organizations = factories.OrganizationFactory.create_batch(2)
+        courses = factories.CourseFactory.create_batch(2)
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        # - Create contracts for two organizations with accesses, and several courses
+        for organization in organizations:
+            factories.UserOrganizationAccessFactory(
+                user=user, organization=organization
+            )
+
+            for course in courses:
+                relation = factories.CourseProductRelationFactory(
+                    organizations=[organization],
+                    course=course,
+                    product__contract_definition=factories.ContractDefinitionFactory(),
+                )
+                factories.ContractFactory.create_batch(
+                    5,
+                    order__product=relation.product,
+                    order__course=course,
+                    order__organization=organization,
+                    order__state=enums.ORDER_STATE_CANCELED,
+                )
+
+        contract = models.Contract.objects.filter(order__course=courses[0]).first()
+
+        with self.assertNumQueries(2):
+            response = self.client.get(
+                f"/api/v1.0/courses/{str(courses[0].id)}/contracts/{str(contract.id)}/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertContains(response, "Not found.", status_code=HTTPStatus.NOT_FOUND)
 
     def test_api_courses_contracts_retrieve_with_accesses_and_course_code(self):
         """

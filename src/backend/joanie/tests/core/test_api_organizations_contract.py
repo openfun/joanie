@@ -1,10 +1,11 @@
 # pylint: disable=duplicate-code
 """Test suite for the Organizations Contract API"""
+from http import HTTPStatus
 from unittest import mock
 
 from django.utils import timezone
 
-from joanie.core import factories, models
+from joanie.core import enums, factories, models
 from joanie.core.serializers import fields
 from joanie.tests.base import BaseAPITestCase
 
@@ -95,6 +96,14 @@ class OrganizationContractApiTest(BaseAPITestCase):
                 order__course=relation.course,
                 order__organization=organization,
             )
+            # Canceled orders should be excluded
+            factories.ContractFactory.create_batch(
+                2,
+                order__product=relation.product,
+                order__course=relation.course,
+                order__organization=organization,
+                order__state=enums.ORDER_STATE_CANCELED,
+            )
 
         # - Create random contracts that should not be returned
         factories.ContractFactory.create_batch(5)
@@ -107,7 +116,10 @@ class OrganizationContractApiTest(BaseAPITestCase):
             )
 
         self.assertEqual(response.status_code, 200)
-        contracts = models.Contract.objects.filter(order__organization=organizations[0])
+        contracts = models.Contract.objects.filter(
+            order__organization=organizations[0],
+            order__state=enums.ORDER_STATE_VALIDATED,
+        )
         expected_contracts = sorted(contracts, key=lambda x: x.created_on, reverse=True)
         assert response.json() == {
             "count": 5,
@@ -402,6 +414,52 @@ class OrganizationContractApiTest(BaseAPITestCase):
                 "product_title": contract.order.product.title,
             },
         }
+
+    def test_api_organizations_contracts_retrieve_with_accesses_and_canceled_order(
+        self,
+    ):
+        """
+        Authenticated user with any access to the organization
+        can query an organization's contract if the related order is validated.
+        """
+
+        organizations = factories.OrganizationFactory.create_batch(2)
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        # - Create contracts for two organizations with access
+        for organization in organizations:
+            factories.UserOrganizationAccessFactory(
+                user=user, organization=organization
+            )
+
+            relation = factories.CourseProductRelationFactory(
+                organizations=[organization],
+                product__contract_definition=factories.ContractDefinitionFactory(),
+            )
+            factories.ContractFactory.create_batch(
+                5,
+                order__product=relation.product,
+                order__course=relation.course,
+                order__organization=organization,
+                order__state=enums.ORDER_STATE_CANCELED,
+            )
+
+        contract = models.Contract.objects.filter(
+            order__organization=organizations[0],
+            order__state=enums.ORDER_STATE_CANCELED,
+        ).first()
+
+        with self.assertNumQueries(2):
+            response = self.client.get(
+                (
+                    f"/api/v1.0/organizations/{str(organizations[0].id)}"
+                    f"/contracts/{str(contract.id)}/"
+                ),
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertContains(response, "Not found.", status_code=HTTPStatus.NOT_FOUND)
 
     def test_api_organizations_contracts_retrieve_with_accesses_and_organization_code(
         self,

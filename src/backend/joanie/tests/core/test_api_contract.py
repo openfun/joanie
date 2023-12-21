@@ -56,6 +56,14 @@ class ContractApiTest(BaseAPITestCase):
             order__course=relation.course,
             order__organization=organization,
         )
+        # Canceled orders should be excluded
+        factories.ContractFactory.create_batch(
+            2,
+            order__product=relation.product,
+            order__course=relation.course,
+            order__organization=organization,
+            order__state=enums.ORDER_STATE_CANCELED,
+        )
 
         factories.ContractFactory.create_batch(5)
 
@@ -82,11 +90,14 @@ class ContractApiTest(BaseAPITestCase):
         return_value="_this_field_is_mocked",
     )
     def test_api_contracts_list_with_owner(self, _):
-        """Authenticated user can query all owned contracts."""
+        """Authenticated user can query all owned contracts relying on validated orders."""
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
 
         contracts = factories.ContractFactory.create_batch(5, order__owner=user)
+        factories.ContractFactory(
+            order__owner=user, order__state=enums.ORDER_STATE_CANCELED
+        )
 
         # - Create random contracts that should not be returned
         factories.ContractFactory.create_batch(5)
@@ -659,6 +670,29 @@ class ContractApiTest(BaseAPITestCase):
             },
         }
 
+    def test_api_contracts_retrieve_with_owner_and_canceled_order(self):
+        """
+        Authenticated user can query an owned contract through its id
+        if the related order is validated.
+        """
+
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        organization_signatory = factories.UserFactory()
+        contract = factories.ContractFactory(
+            order__owner=user,
+            organization_signatory=organization_signatory,
+            order__state=enums.ORDER_STATE_CANCELED,
+        )
+
+        with self.assertNumQueries(2):
+            response = self.client.get(
+                f"/api/v1.0/contracts/{str(contract.id)}/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertContains(response, "Not found.", status_code=HTTPStatus.NOT_FOUND)
+
     def test_api_contracts_create_anonymous(self):
         """Anonymous user cannot create a contract."""
         with self.assertNumQueries(0):
@@ -846,11 +880,7 @@ class ContractApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertContains(
-            response,
-            "Cannot get contract when an order is not yet validated.",
-            status_code=400,
-        )
+        self.assertContains(response, "Not found.", status_code=HTTPStatus.NOT_FOUND)
 
     def test_api_contract_download_authenticated_cannot_create(self):
         """
