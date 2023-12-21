@@ -234,6 +234,7 @@ class Organization(parler_models.TranslatableModel, BaseModel):
                 submitted_for_signature_on__isnull=False,
                 student_signed_on__isnull=False,
                 order__organization=self,
+                order__state=enums.ORDER_STATE_VALIDATED,
             ).values_list("id", "signature_backend_reference")
         )
         if contracts_ids and len(contracts_to_sign) != len(contracts_ids):
