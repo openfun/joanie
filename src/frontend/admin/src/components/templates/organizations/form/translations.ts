@@ -11,6 +11,11 @@ export const organizationFormMessages = defineMessages({
     defaultMessage: "Representative",
     description: "Label for the representative input",
   },
+  countryLabel: {
+    id: "components.templates.organizations.form.translations.countryLabel",
+    defaultMessage: "Country",
+    description: "Label for the country input",
+  },
   logoLabel: {
     id: "components.templates.organizations.form.translations.logoLabel",
     defaultMessage: "Logo",

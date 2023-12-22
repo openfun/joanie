@@ -43,6 +43,8 @@ test.describe("Organization Form", () => {
     await page.getByLabel("Title").fill("Organization test");
     await page.getByLabel("Title").fill("Organization title");
     await page.getByLabel("Code").click();
+    await page.getByLabel("Country").click();
+    await page.getByRole("option", { name: "United Kingdom" }).click();
     await page.getByLabel("Code").fill("Organization code");
     await page.getByLabel("Representative").click();
     await page.getByLabel("Representative").fill("john.doe@yopmail.com");

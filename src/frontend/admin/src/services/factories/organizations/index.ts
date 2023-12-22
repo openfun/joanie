@@ -15,6 +15,7 @@ const build = (): Organization => {
     signature: ThumbnailDetailFactory(),
     logo: ThumbnailDetailFactory(),
     accesses: AccessesFactory(Object.values(OrganizationRoles), 4),
+    country: "FR",
   };
 };
 

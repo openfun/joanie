@@ -84,9 +84,11 @@ export const useOrganizations = (
   const intl = useIntl();
   const custom = useResourcesCustom({ ...props, filters, queryOptions });
   const accesses = useAllOrganizationAccesses();
+  const countries = useAllOrganizationCountries();
   return {
     ...custom,
     accesses,
+    countries,
     methods: {
       ...custom.methods,
       addAccessUser: async (orgId: string, user: string, role: string) => {
@@ -146,6 +148,19 @@ export const useAllOrganizationAccesses = (): SelectOption[] | undefined => {
     queryKey: ["allOrganizationAccesses"],
     queryFn: async () => {
       return OrganizationRepository.getAvailableAccesses();
+    },
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
+
+  return accesses?.data ?? undefined;
+};
+
+export const useAllOrganizationCountries = (): SelectOption[] | undefined => {
+  const accesses = useQuery({
+    queryKey: ["allOrganizationCountries"],
+    queryFn: async () => {
+      return OrganizationRepository.getAvailableCountries();
     },
     staleTime: Infinity,
     gcTime: Infinity,

@@ -23,6 +23,12 @@ export const ORGANIZATION_OPTIONS_REQUEST_RESULT = {
           },
         },
       },
+      country: {
+        choices: [
+          { value: "FR", display_name: "France" },
+          { value: "GB", display_name: "United Kingdom" },
+        ],
+      },
     },
   },
 };
