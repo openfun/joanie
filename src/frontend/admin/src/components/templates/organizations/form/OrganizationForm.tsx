@@ -26,6 +26,7 @@ import { SimpleCard } from "@/components/presentational/card/SimpleCard";
 import { AccessesList } from "@/components/templates/accesses/list/AccessesList";
 import { LoadingContent } from "@/components/presentational/loading/LoadingContent";
 import { ThumbnailDetailField } from "@/services/api/models/Image";
+import { RHFSelect } from "@/components/presentational/hook-form/RHFSelect";
 
 interface FormValues {
   code: string;
@@ -43,7 +44,7 @@ interface Props {
 
 export function OrganizationForm(props: Props) {
   const intl = useIntl();
-  const org = useOrganizations({}, { enabled: false });
+  const organizationQuery = useOrganizations({}, { enabled: false });
   const defaultOrganization = props.organization ?? props.fromOrganization;
 
   const getDefaultValues = () => {
@@ -51,6 +52,7 @@ export function OrganizationForm(props: Props) {
       code: defaultOrganization?.code ?? "",
       title: defaultOrganization?.title ?? "",
       representative: defaultOrganization?.representative ?? "",
+      country: defaultOrganization?.country ?? "FR",
     };
   };
 
@@ -60,6 +62,7 @@ export function OrganizationForm(props: Props) {
     representative: Yup.string(),
     signature: Yup.mixed(),
     logo: Yup.mixed(),
+    country: Yup.string(),
   });
 
   const methods = useForm({
@@ -87,12 +90,12 @@ export function OrganizationForm(props: Props) {
 
     if (props.organization) {
       payload.id = props.organization.id;
-      org.methods.update(payload, {
+      organizationQuery.methods.update(payload, {
         onSuccess: (data) => props.afterSubmit?.(data),
         onError: (error) => updateFormError(error.data),
       });
     } else {
-      org.methods.create(payload, {
+      organizationQuery.methods.create(payload, {
         onSuccess: (data) => props.afterSubmit?.(data),
         onError: (error) => updateFormError(error.data),
       });
@@ -100,7 +103,7 @@ export function OrganizationForm(props: Props) {
   };
 
   const getUploadedSignature = (): ThumbnailDetailField[] => {
-    if (props.fromOrganization || !org) {
+    if (props.fromOrganization || !organizationQuery) {
       return [];
     }
     return defaultOrganization?.signature
@@ -109,7 +112,7 @@ export function OrganizationForm(props: Props) {
   };
 
   const getUploadedLogo = (): ThumbnailDetailField[] => {
-    if (props.fromOrganization || !org) {
+    if (props.fromOrganization || !organizationQuery) {
       return [];
     }
     return defaultOrganization?.logo ? [defaultOrganization.logo] : [];
@@ -125,14 +128,14 @@ export function OrganizationForm(props: Props) {
       <SimpleCard>
         <TranslatableContent
           onSelectLang={() => {
-            if (props.organization) org.methods.invalidate();
+            if (props.organization) organizationQuery.methods.invalidate();
           }}
         >
           <Box padding={4}>
             <RHFProvider
               showSubmit={true}
               methods={methods}
-              isSubmitting={org.states.updating}
+              isSubmitting={organizationQuery.states.updating}
               id="organization-form"
               onSubmit={handleSubmit(onSubmit)}
             >
@@ -156,6 +159,16 @@ export function OrganizationForm(props: Props) {
                     name="representative"
                     label={intl.formatMessage(
                       organizationFormMessages.representativeLabel,
+                    )}
+                  />
+                </Grid>
+                <Grid xs={12}>
+                  <RHFSelect
+                    disabled={!organizationQuery.countries}
+                    name="country"
+                    options={organizationQuery.countries ?? []}
+                    label={intl.formatMessage(
+                      organizationFormMessages.countryLabel,
                     )}
                   />
                 </Grid>
@@ -190,8 +203,8 @@ export function OrganizationForm(props: Props) {
           </Box>
         </TranslatableContent>
       </SimpleCard>
-      <LoadingContent loading={org.accesses === undefined}>
-        {props.organization && org.accesses && (
+      <LoadingContent loading={organizationQuery.accesses === undefined}>
+        {props.organization && organizationQuery.accesses && (
           <SimpleCard>
             <Box padding={4}>
               <Typography>
@@ -203,14 +216,14 @@ export function OrganizationForm(props: Props) {
             <AccessesList
               defaultRole={OrganizationRoles.MEMBER}
               onRemove={async (accessId) => {
-                await org.methods.removeAccessUser(
+                await organizationQuery.methods.removeAccessUser(
                   // @ts-ignore
                   props.organization?.id,
                   accessId,
                 );
               }}
               onUpdateAccess={(accessId, payload) => {
-                return org.methods.updateAccessUser(
+                return organizationQuery.methods.updateAccessUser(
                   // @ts-ignore
                   props.organization.id,
                   accessId,
@@ -219,7 +232,7 @@ export function OrganizationForm(props: Props) {
               }}
               onAdd={(user, role) => {
                 if (props.organization?.id && user.id) {
-                  org.methods.addAccessUser(
+                  organizationQuery.methods.addAccessUser(
                     props.organization?.id,
                     user.id,
                     role,
@@ -227,7 +240,7 @@ export function OrganizationForm(props: Props) {
                 }
               }}
               accesses={props.organization?.accesses ?? []}
-              availableAccesses={org.accesses}
+              availableAccesses={organizationQuery.accesses}
             />
           </SimpleCard>
         )}

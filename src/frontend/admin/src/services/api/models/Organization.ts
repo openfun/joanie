@@ -10,6 +10,7 @@ export type Organization = {
   signature?: ThumbnailDetailField;
   logo?: ThumbnailDetailField;
   accesses?: Accesses<OrganizationRoles>[];
+  country?: string;
 };
 
 export enum OrganizationRoles {

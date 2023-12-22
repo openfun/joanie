@@ -47,6 +47,7 @@ interface Repository
   ) => Promise<void>;
   removeUserAccess: (orgId: string, accessId: string) => Promise<void>;
   getAvailableAccesses: () => Promise<SelectOption[]>;
+  getAvailableCountries: () => Promise<SelectOption[]>;
 }
 
 export const OrganizationRepository: Repository = class OrganizationRepository {
@@ -122,6 +123,20 @@ export const OrganizationRepository: Repository = class OrganizationRepository {
       const checkedResponse = await checkStatus(response);
       const result: { value: string; display_name: string }[] =
         checkedResponse.actions.POST.accesses.child.children.role.choices;
+      return result.map(({ value, display_name: label }) => ({
+        value,
+        label,
+      }));
+    });
+  }
+
+  static getAvailableCountries(): Promise<SelectOption[]> {
+    return fetchApi(organizationRoute.options, {
+      method: "OPTIONS",
+    }).then(async (response) => {
+      const checkedResponse = await checkStatus(response);
+      const result: { value: string; display_name: string }[] =
+        checkedResponse.actions.POST.country.choices;
       return result.map(({ value, display_name: label }) => ({
         value,
         label,
