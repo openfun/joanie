@@ -2765,6 +2765,26 @@
                 }
             }
         },
+        "/api/v1.0/organizations-sync/": {
+            "post": {
+                "operationId": "organizations_sync_create",
+                "description": "View for the web hook to create or update organizations based on their resource link.",
+                "tags": [
+                    "organizations-sync"
+                ],
+                "security": [
+                    {
+                        "DelegatedJWTAuthentication": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
         "/api/v1.0/organizations/{organization_id}/accesses/": {
             "get": {
                 "operationId": "organizations_accesses_list",

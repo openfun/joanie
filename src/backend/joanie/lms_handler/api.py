@@ -1,11 +1,13 @@
 """
 API endpoints
 """
+import base64
 import hashlib
 import hmac
 from http import HTTPStatus
 
 from django.conf import settings
+from django.core.files.base import ContentFile
 
 from rest_framework import exceptions
 from rest_framework.decorators import api_view
@@ -102,5 +104,37 @@ def course_runs_sync(request):
 
         # Instantiate a new course run
         models.CourseRun.objects.create(**serializer.validated_data, course=course)
+
+    return Response({"success": True})
+
+
+@api_view(["POST"])
+def organizations_sync(request):
+    """View for the web hook to create or update organizations based on their resource link."""
+    authorize_request(request)
+
+    code = request.data.get("code")
+    if not code:
+        raise exceptions.ValidationError({"code": ["This field is required."]})
+    code = utils.normalize_code(code)
+
+    logo = None
+    if (logo_base64 := request.data.get("logo_base64")) and (
+        logo_name := request.data.get("logo_name")
+    ):
+        logo = ContentFile(base64.b64decode(logo_base64), logo_name)
+
+    organization, created = models.Organization.objects.get_or_create(
+        code=code,
+        defaults={
+            "title": request.data.get("title"),
+            "logo": logo,
+        },
+    )
+
+    if not created:
+        organization.title = request.data.get("title")
+        organization.logo = logo
+        organization.save()
 
     return Response({"success": True})
