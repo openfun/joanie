@@ -31,7 +31,6 @@ class CertificateDefinition(parler_models.TranslatableModel, BaseModel):
         title=models.CharField(_("title"), max_length=255),
         description=models.TextField(_("description"), max_length=500, blank=True),
     )
-    # howard template used to generate pdf certificate
     template = models.CharField(
         _("template to generate pdf"),
         choices=enums.CERTIFICATE_NAME_CHOICES,

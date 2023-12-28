@@ -36,8 +36,6 @@ dependencies = [
     "django-countries==7.5.1",
     "django-filter==23.5",
     "django-fsm==2.8.1",
-    "django-marion-howard==0.6.0",
-    "django-marion==0.6.0",
     "django-money==3.4.1",
     "django-object-actions==4.2.0",
     "django-parler==2.3",

@@ -213,8 +213,6 @@ class Base(Configuration):
         "django_filters",
         "rest_framework",
         "parler",
-        "marion",
-        "howard",
         "easy_thumbnails",
         # Joanie
         "joanie.core",
@@ -339,9 +337,6 @@ class Base(Configuration):
     EMAIL_PORT = values.PositiveIntegerValue(None)
     EMAIL_USE_TLS = values.BooleanValue(False)
     EMAIL_FROM = values.Value("from@fun-mooc.fr")
-
-    # Marion
-    MARION_DOCUMENT_ISSUER_CHOICES_CLASS = "howard.defaults.DocumentIssuerChoices"
 
     # Django Money
     DEFAULT_CURRENCY = "EUR"
