@@ -1,0 +1,241 @@
+/* load extra fonts */
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;700");
+
+:root {
+  font-size: 12pt; /* 16px */
+}
+
+body {
+  background: #fff;
+  font-family: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", Oxygen,
+    Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+  font-size: 18px;
+  line-height: 1.5em; /* 24px */
+  color: #333;
+  padding: 0;
+  margin: 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+ul,
+ol,
+dl,
+dd,
+dt,
+blockquote,
+pre,
+figure,
+figcaption,
+table,
+td,
+th,
+tr {
+  line-height: 1.5rem;
+  list-style: none;
+  margin: 0 0 1.5rem 0;
+  padding: 0;
+}
+
+h1 {
+  font-size: 2.25rem;
+  line-height: 3rem;
+}
+h2 {
+  font-size: 2rem;
+  line-height: 3rem;
+}
+h3 {
+  font-size: 1.75rem;
+}
+h4 {
+  font-size: 1.5rem;
+}
+h5 {
+  font-size: 1.15rem;
+}
+h6 {
+  font-size: 1rem;
+}
+
+.light {
+  color: rgba(33, 33, 33, 0.35);
+}
+
+/* ----------------------------------------------------------------- == debug
+   Create a debug grid to ensure that vertical rhythm is maintained.
+*/
+body.debug {
+  --grid-x-color: rgba(255, 33, 33, 0.1);
+  --grid-y-color: rgba(33, 33, 255, 0.1);
+  background-image: linear-gradient(
+      to left,
+      var(--grid-x-color) 1px,
+      transparent 1px
+    ),
+    linear-gradient(to bottom, var(--grid-y-color) 1px, transparent 1px);
+  background-repeat: repeat;
+  background-size: 1rem 1.5rem;
+}
+
+/* ----------------------------------------------------------------- == print */
+@media print {
+  @page {
+    size: A4 portrait;
+    height: 297mm;
+    margin: 0;
+    padding: 0;
+    width: 210mm;
+  }
+}
+
+/* --------------------------------------------------------------- == invoice */
+.invoice {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 3rem;
+}
+
+.invoice-list .invoice-list__item strong {
+  font-weight: normal;
+}
+
+/* -------------------------------------------------------- == invoice-header */
+.invoice-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding-bottom: 3rem;
+}
+
+.header-logo > img {
+  height: 6rem;
+}
+
+.header-title {
+  font-size: 3rem;
+  font-weight: 900;
+  text-align: right;
+  text-transform: uppercase;
+}
+
+/* --------------------------------------------------------- == .invoice-body */
+.invoice-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding-bottom: 3rem;
+}
+
+.invoice-stakeholders {
+  border-bottom: thin solid rgba(33, 33, 33, 0.25);
+  border-top: thin solid rgba(33, 33, 33, 0.25);
+  box-sizing: border-box;
+  display: flex;
+  margin: 0;
+  padding: 1.5rem 0;
+}
+
+.invoice-stakeholders .invoice-stakeholders__item:not(:last-child) {
+  margin-right: 9rem;
+}
+
+.invoice-stakeholders .invoice-stakeholders__item-label {
+  margin: 0;
+  font-weight: 700;
+}
+
+.invoice-stakeholders .invoice-stakeholders__item-address {
+  margin: 0;
+  font-style: normal;
+}
+
+.invoice-metadata {
+  margin-top: 3rem;
+}
+
+.invoice-metadata__title {
+  margin-bottom: 0;
+}
+
+.invoice-metadata .invoice-list__item strong {
+  display: inline-block;
+  font-weight: normal;
+  width: 125px;
+}
+
+.product-table {
+  border-spacing: 0;
+  text-align: left;
+  width: 100%;
+}
+
+.product-table__cell {
+  padding: 0 0.5rem;
+  vertical-align: top;
+}
+
+.product-table__cell:first-child {
+  padding-left: 0;
+}
+
+.product-table__cell:last-child {
+  padding-right: 0;
+}
+
+.product-table__cell.product-table__cell--head {
+  border-bottom: thin solid rgba(33, 33, 33, 0.25);
+  box-sizing: border-box;
+  font-weight: bold;
+}
+
+.product-table__cell.product-table__cell--center {
+  text-align: center;
+}
+
+.product-table__cell.product-table__cell--right {
+  text-align: right;
+}
+
+/* -------------------------------------------------------- == invoice-details */
+
+.invoice_detail_container {
+  display: flex;
+  align-items: flex-end;
+  flex-direction: row-reverse;
+  justify-content:space-evenly;
+  padding-top: 3mm;
+}
+
+.invoice_detail_table {
+  /* Push the table to the right */
+  margin-left: auto;
+}
+
+.invoice_category_item {
+  border-bottom: 1px solid #dfdfdf;
+}
+
+.invoice_item_value {
+  border-bottom: 1px solid #dfdfdf;
+  text-align: right;
+  padding: 3mm;
+}
+
+/* -------------------------------------------------------- == invoice-footer */
+.invoice-footer {
+  font-size: 1rem;
+  text-align: center;
+}
+
+.company-info {
+  font-size: 0.75rem;
+  line-height: 1rem;
+}

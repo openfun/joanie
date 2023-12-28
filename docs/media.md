@@ -1,8 +1,7 @@
 # Media files in Joanie
 
 Media files are kept private in Joanie and are not served on the web. They
-are only used to render pdf documents with code using WeasyPrint via
-[Marion](https://github.com/openfun/marion).
+are only used to render pdf documents with code using WeasyPrint.
 
 At [France Université Numérique](https://www.france-universite-numerique.fr),
 we host our media files in [Swift](https://docs.openstack.org/swift) at
