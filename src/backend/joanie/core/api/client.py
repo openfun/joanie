@@ -29,6 +29,7 @@ from joanie.core.exceptions import NoContractToSignError
 from joanie.core.tasks import generate_zip_archive_task
 from joanie.core.utils import contract as contract_utility
 from joanie.core.utils import contract_definition, issuers
+from joanie.payment import enums as payment_enums
 from joanie.payment.models import Invoice
 
 # pylint: disable=too-many-ancestors, too-many-lines
@@ -474,8 +475,13 @@ class OrderViewSet(
                 status=HTTPStatus.NOT_FOUND,
             )
 
+        context = invoice.get_document_context()
+        invoice_pdf_bytes = issuers.generate_document(
+            name=payment_enums.INVOICE_TYPE_INVOICE, context=context
+        )
+
         response = HttpResponse(
-            invoice.document, content_type="application/pdf", status=HTTPStatus.OK
+            invoice_pdf_bytes, content_type="application/pdf", status=HTTPStatus.OK
         )
         response[
             "Content-Disposition"

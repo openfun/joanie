@@ -73,6 +73,7 @@ and this project adheres to
 
 ### Changed
 
+- Internalize invoice template
 - Use HTTPStatus instead of raw HTTP code value
 - If a product has a contract, delay auto enroll logic on leaner signature
 - Prevent to enroll to not listed course runs related to an order awaiting

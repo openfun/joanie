@@ -1,6 +1,7 @@
 """
 Declare and configure models for the payment part
 """
+import logging
 from decimal import Decimal as D
 
 from django.conf import settings
@@ -15,7 +16,6 @@ from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
 from babel.numbers import get_currency_symbol
-from howard.issuers import InvoiceDocument
 from parler.utils import get_language_settings
 from parler.utils.context import switch_language
 
@@ -25,6 +25,7 @@ from joanie.payment import enums as payment_enums
 from joanie.payment import get_payment_backend
 
 User = get_user_model()
+logger = logging.getLogger(__name__)
 
 
 class Invoice(BaseModel):
@@ -110,14 +111,6 @@ class Invoice(BaseModel):
             return payment_enums.INVOICE_STATE_PAID
 
         return payment_enums.INVOICE_STATE_UNPAID
-
-    @property
-    def document(self):
-        """
-        Get the document related to the invoice instance;
-        """
-        document = InvoiceDocument(context_query=self.get_document_context())
-        return document.create(persist=False)
 
     @property
     def type(self):
@@ -213,7 +206,7 @@ class Invoice(BaseModel):
 
         base_context = {
             "metadata": {
-                "issued_on": str(self.updated_on),
+                "issued_on": self.updated_on,
                 "reference": self.reference,
                 "type": self.type,
             },

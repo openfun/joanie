@@ -1,0 +1,149 @@
+{% load i18n %}
+{% load static %}
+{% load extra_tags %}
+
+<html>
+  {% if debug %}
+  <head>
+    <style>
+      {{ css }}
+    </style>
+  </head>
+  {% endif %}
+  <body class="{%if debug %}debug {% endif %}invoice">
+    <header class="invoice-header">
+      <div class="header-logo">
+        <img src="{% base64_static "joanie/images/logo_fun.png" %}" />
+        <img src="{{ organization.logo }}" />
+      </div>
+      <h1 class="header-title light">
+        {% if metadata.type == "invoice" %}
+          {% trans "Invoice" %}
+        {% else %}
+          {% trans "Credit note" %}
+        {% endif %}
+      </h1>
+    </header>
+    <article class="invoice-body">
+      <ul class="invoice-stakeholders">
+        <li class="invoice-stakeholders__item">
+          <h5 class="invoice-stakeholders__item-label">
+            {% if metadata.type == "invoice" %}
+              {% trans "Sold by" %}
+            {% else %}
+              {% trans "Refunded by" %}
+            {% endif %}
+          </h5>
+          <address class="invoice-stakeholders__item-address">
+            {{ order.seller.address|linebreaksbr }}
+          </address>
+        </li>
+        <li class="invoice-stakeholders__item">
+          <h5 class="invoice-stakeholders__item-label">
+            {% if metadata.type == "invoice" %}
+              {% trans "Billed to" %}
+            {% else %}
+              {% trans "Refunded to" %}
+            {% endif %}
+          </h5>
+          <address class="invoice-stakeholders__item-address">
+            {{ order.customer.name }}
+            <br />
+            {{ order.customer.address|linebreaksbr }}
+          </address>
+        </li>
+      </ul>
+      <section class="invoice-metadata">
+        <h5 class="invoice-metadata__title">
+          {% if metadata.type == "invoice" %}
+            {% trans "Invoice information" %}
+          {% else %}
+            {% trans "Credit note information" %}
+          {% endif %}
+        </h5>
+        <ul class="invoice-list">
+          <li class="invoice-list__item">
+            <strong>{% trans "Reference" %}</strong>&nbsp;{{ metadata.reference }}
+          </li>
+          <li class="invoice-list__item">
+            <strong>{% trans "Issue date" %}</strong>&nbsp;{{ metadata.issued_on|date:"d/m/Y"}}
+          </li>
+        </ul>
+      </section>
+      {% with currency=order.amount.currency %}
+      <table class="product-table">
+        <thead class="product-table__head">
+          <tr class="product-table__row">
+            <th class="product-table__cell product-table__cell--head">
+              {% trans "Product" %}
+            </th>
+            <th
+              class="
+                product-table__cell
+                product-table__cell--head
+                product-table__cell--right
+              "
+            >
+              {% trans "Price" %}
+            </th>
+            <th
+              class="
+                product-table__cell
+                product-table__cell--head
+                product-table__cell--right
+              "
+            >
+              {% trans "VAT" %}&nbsp;({{ order.amount.vat }}%)
+            </th>
+            <th
+              class="
+                product-table__cell
+                product-table__cell--head
+                product-table__cell--right
+              "
+            >
+              {% trans "Total" %}
+            </th>
+          </tr>
+        </thead>
+        <tbody class="product-table__body">
+          <tr class="product-table__row">
+            <td class="product-table__cell">
+              {{ order.product.name }}<br />
+              <span class="light">{{ order.product.description }}</span>
+            </td>
+            <td class="product-table__cell product-table__cell--right">
+              {{ order.amount.subtotal|floatformat:2 }}&nbsp;{{ currency }}
+            </td>
+            <td class="product-table__cell product-table__cell--right">
+              {{ order.amount.vat_amount|floatformat:2 }}&nbsp;{{ currency }}
+            </td>
+            <td class="product-table__cell product-table__cell--right">
+              {{ order.amount.total|floatformat:2 }}&nbsp;{{ currency }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="invoice_detail_container">
+        <table class="invoice_detail_table">
+          <tr>
+            <td class="invoice_category_item"><strong>{% trans "Subtotal" %}</strong></td>
+            <td class="invoice_item_value">{{ order.amount.subtotal|floatformat:2 }}&nbsp;{{ currency }}</td>
+          </tr>
+          <tr>
+            <td class="invoice_category_item"><strong>{% trans "Sales Tax VAT" %} {{ order.amount.vat }}%</strong></td>
+            <td class="invoice_item_value">{{ order.amount.vat_amount|floatformat:2 }}&nbsp;{{ currency }}</td>
+          </tr>
+          <tr>
+            <td class="invoice_category_item"><strong>{% trans "Total" %}</strong></td>
+            <td class="invoice_item_value">{{ order.amount.total|floatformat:2 }}&nbsp;{{ currency }}</td>
+          </tr>
+        </table>
+      </div>
+      {% endwith %}
+    </article>
+    <footer class="invoice-footer">
+      <p class="company-info">{{ order.company|linebreaksbr }}</p>
+    </footer>
+  </body>
+</html>

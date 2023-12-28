@@ -1,16 +1,12 @@
 """Test suite for the Invoice model."""
 import re
 from decimal import Decimal as D
-from io import BytesIO
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.db.models import ProtectedError
 from django.test import TestCase
-from django.utils.translation import override
-
-from pdfminer.high_level import extract_text as pdf_extract_text
 
 from joanie.core.factories import OrderFactory, ProductFactory
 from joanie.payment.factories import InvoiceFactory, TransactionFactory
@@ -257,14 +253,13 @@ class InvoiceModelTestCase(TestCase):
             description="Description du produit 1",
         )
         invoice = InvoiceFactory(order__product=product, total=product.price)
-
-        context = invoice.get_document_context("en-us")
+        context = invoice.get_document_context(language_code="en-us")
         self.assertEqual(context["order"]["product"]["name"], "Product 1")
         self.assertEqual(
             context["order"]["product"]["description"], "Product 1 description"
         )
 
-        context = invoice.get_document_context("fr-fr")
+        context = invoice.get_document_context(language_code="fr-fr")
         self.assertEqual(context["order"]["product"]["name"], "Produit 1")
         self.assertEqual(
             context["order"]["product"]["description"], "Description du produit 1"
@@ -272,85 +267,8 @@ class InvoiceModelTestCase(TestCase):
 
         # When translation for the given language does not exist,
         # we should get the fallback language translation.
-        context = invoice.get_document_context("de-de")
+        context = invoice.get_document_context(language_code="de-de")
         self.assertEqual(context["order"]["product"]["name"], "Product 1")
         self.assertEqual(
             context["order"]["product"]["description"], "Product 1 description"
         )
-
-    def test_models_invoice_document(self):
-        """
-        Invoice document property which should generate a document
-        into the active language
-        """
-        product = ProductFactory(title="Product 1", description="Product 1 description")
-        product.translations.create(
-            language_code="fr-fr",
-            title="Produit 1",
-            description="Description du produit 1",
-        )
-        invoice = InvoiceFactory(order__product=product, total=product.price)
-
-        # - The default language is used first
-        document_text = pdf_extract_text(BytesIO(invoice.document)).replace("\n", "")
-        self.assertRegex(document_text, r"Product 1.*Product 1 description")
-
-        # - Then if we switch to an existing language, it should generate
-        #   a document with the context in the active language
-        with override("fr-fr", deactivate=True):
-            document_text = pdf_extract_text(BytesIO(invoice.document)).replace(
-                "\n", ""
-            )
-            self.assertRegex(document_text, r"Produit 1.*Description du produit 1")
-
-        # - Finally, unknown language should use the default language as fallback
-        with override("de-de", deactivate=True):
-            document_text = pdf_extract_text(BytesIO(invoice.document)).replace(
-                "\n", ""
-            )
-            self.assertRegex(document_text, r"Product 1.*Product 1 description")
-
-    def test_models_invoice_document_type_invoice(self):
-        """
-        If invoice type is "invoice", a document of type invoice should be
-        generated.
-        """
-        invoice = InvoiceFactory()
-
-        # - The default language is used first
-        document_text = pdf_extract_text(BytesIO(invoice.document)).replace("\n", "")
-        self.assertRegex(document_text, r"INVOICE")
-
-        # - Then if we switch to an existing language, it should generate
-        #   a document with the context in the active language
-        with override("fr-fr", deactivate=True):
-            document_text = pdf_extract_text(BytesIO(invoice.document)).replace(
-                "\n", ""
-            )
-            self.assertRegex(document_text, r"FACTURE")
-
-    def test_models_invoice_document_type_credit_note(self):
-        """
-        If invoice type is "credit_note",
-        a document of type credit_note should be generated.
-        """
-        invoice = InvoiceFactory()
-        credit_note = InvoiceFactory(
-            order=invoice.order,
-            parent=invoice,
-            total=-invoice.total,
-        )
-
-        # - The default language is used first
-        document_text = pdf_extract_text(BytesIO(credit_note.document)).replace(
-            "\n", ""
-        )
-        self.assertRegex(document_text, r"CREDIT NOTE")
-
-        # - Then if we switch to an existing language, it should generate
-        #   a document with the context in the active language
-        with override("fr-fr", deactivate=True):
-            document_text = pdf_extract_text(BytesIO(credit_note.document)).replace(
-                "\n", ""
-            )
-            self.assertRegex(document_text, r"AVOIR")
