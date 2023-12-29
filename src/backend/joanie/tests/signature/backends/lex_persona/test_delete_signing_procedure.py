@@ -1,4 +1,6 @@
 """Test suite for the Lex Persona Signature Backend delete_signing_procedure"""
+from http import HTTPStatus
+
 from django.test import TestCase
 from django.test.utils import override_settings
 
@@ -37,7 +39,7 @@ class LexPersonaBackendTestCase(TestCase):
             responses.DELETE,
             api_url,
             json=expected_response_data,
-            status=200,
+            status=HTTPStatus.OK,
         )
         result = backend.delete_signing_procedure(reference_id="wfl_id_fake")
 
@@ -63,7 +65,7 @@ class LexPersonaBackendTestCase(TestCase):
         responses.add(
             responses.DELETE,
             api_url,
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             json={
                 "status": 404,
                 "error": "Not Found",

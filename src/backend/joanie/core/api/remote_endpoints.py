@@ -1,6 +1,8 @@
 """
 Remote endpoints API for other servers.
 """
+from http import HTTPStatus
+
 from django.http import JsonResponse
 
 from rest_framework.decorators import (
@@ -30,9 +32,9 @@ def enrollments_and_orders_on_course_run(request: Request):
     if resource_link is None:
         return Response(
             {"detail": "Query parameter `resource_link` is required."},
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
         )
 
     response = get_course_run_metrics(resource_link=resource_link)
 
-    return JsonResponse(response, status=200)
+    return JsonResponse(response, status=HTTPStatus.OK)

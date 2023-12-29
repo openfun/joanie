@@ -1,6 +1,7 @@
 """
 Test suite for CourseProductRelation retrieve Admin API.
 """
+from http import HTTPStatus
 from unittest import mock
 
 from django.conf import settings
@@ -26,7 +27,7 @@ class CourseProductRelationRetrieveAdminApiTest(TestCase):
             f"/api/v1.0/admin/course-product-relations/{relation.id}/",
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         self.assertDictEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
@@ -42,7 +43,7 @@ class CourseProductRelationRetrieveAdminApiTest(TestCase):
             f"/api/v1.0/admin/course-product-relations/{relation.id}/",
         )
 
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
         self.assertDictEqual(
             response.json(),
             {"detail": "You do not have permission to perform this action."},
@@ -67,7 +68,7 @@ class CourseProductRelationRetrieveAdminApiTest(TestCase):
             f"/api/v1.0/admin/course-product-relations/{relation.id}/",
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
 
         self.assertEqual(
             response.json(),

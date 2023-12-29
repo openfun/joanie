@@ -1,4 +1,6 @@
 """Invoice admin test suite"""
+from http import HTTPStatus
+
 from django.test import TestCase
 from django.urls import reverse
 
@@ -31,7 +33,7 @@ class InvoiceAdminTestCase(TestCase):
             reverse("admin:payment_invoice_change", args=(credit_note.pk,)),
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
 
         html_parser = lxml.html.HTMLParser(encoding="utf-8")
         html = lxml.html.fromstring(response.content, parser=html_parser)
@@ -58,7 +60,7 @@ class InvoiceAdminTestCase(TestCase):
             reverse("admin:payment_invoice_change", args=(order.main_invoice.pk,)),
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
 
         html_parser = lxml.html.HTMLParser(encoding="utf-8")
         html = lxml.html.fromstring(response.content, parser=html_parser)
@@ -97,7 +99,7 @@ class InvoiceAdminTestCase(TestCase):
 
         # - Invoice are ordered by creation date
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertContains(response, order.main_invoice.reference)
 
         # - Check there are links to go to invoice children admin change view
@@ -145,7 +147,7 @@ class InvoiceAdminTestCase(TestCase):
 
         # - Invoice are ordered by creation date
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
 
         # - Check there are links to go to invoice children admin change view
         html_parser = lxml.html.HTMLParser(encoding="utf-8")

@@ -5,6 +5,7 @@ Test suite for order models
 import json
 import random
 from datetime import timedelta
+from http import HTTPStatus
 from unittest import mock
 
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -794,7 +795,7 @@ class OrderModelsTestCase(TestCase):
         responses.add(
             responses.POST,
             url,
-            status=200,
+            status=HTTPStatus.OK,
             json={"is_active": enrollment.is_active},
         )
 
@@ -867,7 +868,7 @@ class OrderModelsTestCase(TestCase):
         responses.add(
             responses.POST,
             url,
-            status=200,
+            status=HTTPStatus.OK,
             json={"is_active": enrollment.is_active},
         )
 

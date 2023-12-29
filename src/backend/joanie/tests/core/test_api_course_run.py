@@ -1,4 +1,5 @@
 """Test suite for the CourseRun API"""
+from http import HTTPStatus
 from unittest import mock
 
 from joanie.core import factories, models
@@ -21,7 +22,7 @@ class CourseRunApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             "The requested resource was not found on this server.",
-            status_code=404,
+            status_code=HTTPStatus.NOT_FOUND,
         )
 
     def test_api_course_run_read_list_authenticated(self):
@@ -40,7 +41,7 @@ class CourseRunApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             "The requested resource was not found on this server.",
-            status_code=404,
+            status_code=HTTPStatus.NOT_FOUND,
         )
 
     @mock.patch.object(
@@ -66,7 +67,7 @@ class CourseRunApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(
@@ -117,7 +118,7 @@ class CourseRunApiTest(BaseAPITestCase):
         with self.assertNumQueries(1):
             response = self.client.get(f"/api/v1.0/course-runs/{course_run.id}/")
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {
@@ -173,7 +174,7 @@ class CourseRunApiTest(BaseAPITestCase):
                 f"/api/v1.0/courses/{courses[0].id}/course-runs/{course_run.id}/"
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {
@@ -219,7 +220,7 @@ class CourseRunApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             "Not found.",
-            status_code=404,
+            status_code=HTTPStatus.NOT_FOUND,
         )
 
     def test_api_course_run_read_detail_not_listed_authenticated(self):
@@ -238,7 +239,7 @@ class CourseRunApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             "Not found.",
-            status_code=404,
+            status_code=HTTPStatus.NOT_FOUND,
         )
 
     def test_api_course_run_create_anonymous(self):
@@ -254,7 +255,7 @@ class CourseRunApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             'Method \\"POST\\" not allowed.',
-            status_code=405,
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
         self.assertEqual(models.CourseRun.objects.count(), 0)
 
@@ -276,7 +277,7 @@ class CourseRunApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             'Method \\"POST\\" not allowed.',
-            status_code=405,
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
         self.assertEqual(models.CourseRun.objects.count(), 0)
 
@@ -299,7 +300,11 @@ class CourseRunApiTest(BaseAPITestCase):
 
         response = self.client.put(f"/api/v1.0/course-runs/{course_run.id}/", data=data)
 
-        self.assertContains(response, 'Method \\"PUT\\" not allowed.', status_code=405)
+        self.assertContains(
+            response,
+            'Method \\"PUT\\" not allowed.',
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
+        )
         course_run.refresh_from_db()
         self.assertEqual(
             course_run.resource_link,
@@ -331,7 +336,11 @@ class CourseRunApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertContains(response, 'Method \\"PUT\\" not allowed.', status_code=405)
+        self.assertContains(
+            response,
+            'Method \\"PUT\\" not allowed.',
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
+        )
         course_run.refresh_from_db()
         self.assertEqual(
             course_run.resource_link,
@@ -353,7 +362,9 @@ class CourseRunApiTest(BaseAPITestCase):
         )
 
         self.assertContains(
-            response, 'Method \\"PATCH\\" not allowed.', status_code=405
+            response,
+            'Method \\"PATCH\\" not allowed.',
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
         course_run.refresh_from_db()
         self.assertEqual(
@@ -380,7 +391,9 @@ class CourseRunApiTest(BaseAPITestCase):
         )
 
         self.assertContains(
-            response, 'Method \\"PATCH\\" not allowed.', status_code=405
+            response,
+            'Method \\"PATCH\\" not allowed.',
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
         course_run.refresh_from_db()
         self.assertEqual(
@@ -395,7 +408,9 @@ class CourseRunApiTest(BaseAPITestCase):
         response = self.client.delete(f"/api/v1.0/course-runs/{course_run.id}/")
 
         self.assertContains(
-            response, 'Method \\"DELETE\\" not allowed.', status_code=405
+            response,
+            'Method \\"DELETE\\" not allowed.',
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
         self.assertEqual(models.CourseRun.objects.count(), 1)
 
@@ -411,6 +426,8 @@ class CourseRunApiTest(BaseAPITestCase):
         )
 
         self.assertContains(
-            response, 'Method \\"DELETE\\" not allowed.', status_code=405
+            response,
+            'Method \\"DELETE\\" not allowed.',
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
         self.assertEqual(models.CourseRun.objects.count(), 1)

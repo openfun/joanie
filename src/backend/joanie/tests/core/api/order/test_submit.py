@@ -56,7 +56,7 @@ class OrderSubmitApiTest(BaseAPITestCase):
             f"/api/v1.0/orders/{order.id}/submit/",
             content_type="application/json",
         )
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         order.refresh_from_db()
         self.assertEqual(order.state, enums.ORDER_STATE_DRAFT)
 
@@ -72,7 +72,7 @@ class OrderSubmitApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
     def test_api_order_submit_authenticated_not_owned(self):
         """
@@ -90,7 +90,7 @@ class OrderSubmitApiTest(BaseAPITestCase):
         )
 
         order.refresh_from_db()
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
         self.assertEqual(order.state, enums.ORDER_STATE_DRAFT)
 
     def test_api_order_submit_authenticated_no_billing_address(self):
@@ -108,7 +108,7 @@ class OrderSubmitApiTest(BaseAPITestCase):
         )
 
         order.refresh_from_db()
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
             response.json(), {"billing_address": ["This field is required."]}
         )

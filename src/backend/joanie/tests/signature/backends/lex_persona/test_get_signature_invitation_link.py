@@ -1,4 +1,6 @@
 """Test suite for the Lex Persona Signature Backend get_signature_invitation_link"""
+from http import HTTPStatus
+
 from django.test import TestCase
 from django.test.utils import override_settings
 
@@ -33,7 +35,7 @@ class LexPersonaBackendGetSignatureInvitationLinkTestCase(TestCase):
             responses.POST,
             "https://lex_persona.test01.com/api/workflows/wfl_id_fake/invite",
             json={"inviteUrl": "https://example.com/invite?token=jwt_token"},
-            status=200,
+            status=HTTPStatus.OK,
             match=[
                 responses.matchers.header_matcher(
                     {
@@ -69,7 +71,7 @@ class LexPersonaBackendGetSignatureInvitationLinkTestCase(TestCase):
             responses.POST,
             "https://lex_persona.test01.com/api/requests/",
             json=expected_response_data,
-            status=200,
+            status=HTTPStatus.OK,
             match=[
                 responses.matchers.header_matcher(
                     {
@@ -111,7 +113,7 @@ class LexPersonaBackendGetSignatureInvitationLinkTestCase(TestCase):
             responses.POST,
             api_url,
             json={"error": "Failed to create invitation link"},
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
         )
         with self.assertRaises(exceptions.InvitationSignatureFailed) as context:
             backend.get_signature_invitation_link(
@@ -135,7 +137,7 @@ class LexPersonaBackendGetSignatureInvitationLinkTestCase(TestCase):
         responses.add(
             responses.POST,
             api_url,
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             json={
                 "status": 404,
                 "error": "Not Found",
@@ -150,7 +152,7 @@ class LexPersonaBackendGetSignatureInvitationLinkTestCase(TestCase):
             responses.POST,
             "https://lex_persona.test01.com/api/workflows/wfl_id_fake_not_exist/invite",
             json={"inviteUrl": "https://example.com/invite?token=jwt_token"},
-            status=200,
+            status=HTTPStatus.OK,
         )
 
         with self.assertRaises(exceptions.InvitationSignatureFailed) as context:
@@ -200,7 +202,7 @@ class LexPersonaBackendGetSignatureInvitationLinkTestCase(TestCase):
             responses.POST,
             api_url,
             json=expected_response_data,
-            status=200,
+            status=HTTPStatus.OK,
         )
 
         # Managed invitation link
@@ -208,7 +210,7 @@ class LexPersonaBackendGetSignatureInvitationLinkTestCase(TestCase):
             responses.POST,
             "https://lex_persona.test01.com/api/workflows/wfl_id_fake/invite",
             json={"inviteUrl": "https://example.com/invite"},
-            status=200,
+            status=HTTPStatus.OK,
         )
 
         backend = get_signature_backend()

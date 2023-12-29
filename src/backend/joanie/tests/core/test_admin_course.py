@@ -1,6 +1,7 @@
 """
 Test suite for courses admin pages
 """
+from http import HTTPStatus
 
 from django.conf import settings
 from django.urls import reverse
@@ -35,7 +36,7 @@ class CourseAdminTestCase(BaseAPITestCase):
                 reverse("admin:core_course_change", args=(course.pk,)),
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertContains(response, course.title)
 
         html = lxml.html.fromstring(response.content)

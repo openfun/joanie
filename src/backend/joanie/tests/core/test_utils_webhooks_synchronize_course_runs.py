@@ -4,6 +4,7 @@ Test suite for the "synchronize_course_runs" utility
 import json
 import random
 import re
+from http import HTTPStatus
 from logging import Logger
 from unittest import mock
 
@@ -61,7 +62,7 @@ class SynchronizeCourseRunsUtilsTestCase(TestCase):
             rsp = rsps.post(
                 re.compile("http://richie.education/webhook{1}"),
                 body="{}",
-                status=200,
+                status=HTTPStatus.OK,
                 content_type="application/json",
             )
 
@@ -145,7 +146,13 @@ class SynchronizeCourseRunsUtilsTestCase(TestCase):
             rsp = rsps.post(
                 re.compile("http://richie.education/webhook"),
                 body="{}",
-                status=random.choice([404, 502, 301]),
+                status=random.choice(
+                    [
+                        HTTPStatus.NOT_FOUND,
+                        HTTPStatus.BAD_GATEWAY,
+                        HTTPStatus.MOVED_PERMANENTLY,
+                    ]
+                ),
                 content_type="application/json",
             )
 
@@ -216,10 +223,10 @@ class SynchronizeCourseRunsUtilsTestCase(TestCase):
             # Make webhook fail 3 times before succeeding using "responses"
             url = "http://richie.education/webhook"
             all_rsps = [
-                rsps.post(url, status=500),
-                rsps.post(url, status=500),
-                rsps.post(url, status=500),
-                rsps.post(url, status=200),
+                rsps.post(url, status=HTTPStatus.INTERNAL_SERVER_ERROR),
+                rsps.post(url, status=HTTPStatus.INTERNAL_SERVER_ERROR),
+                rsps.post(url, status=HTTPStatus.INTERNAL_SERVER_ERROR),
+                rsps.post(url, status=HTTPStatus.OK),
             ]
 
             webhooks.synchronize_course_runs([self._get_serialized_course_run(1)])
@@ -255,7 +262,7 @@ class SynchronizeCourseRunsUtilsTestCase(TestCase):
             rsp = rsps.post(
                 re.compile("http://richie.education/webhook"),
                 body="{}",
-                status=500,
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
                 content_type="application/json",
             )
 

@@ -2,6 +2,7 @@
 Test suite for CourseProductRelation create Admin API.
 """
 import uuid
+from http import HTTPStatus
 from unittest import mock
 
 from django.conf import settings
@@ -35,7 +36,7 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         self.assertDictEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
@@ -59,7 +60,7 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
         self.assertDictEqual(
             response.json(),
             {"detail": "You do not have permission to perform this action."},
@@ -90,7 +91,7 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
             },
             content_type="application/json",
         )
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
 
         relation = models.CourseProductRelation.objects.get(id=response.json()["id"])
 
@@ -248,7 +249,7 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
             response.json(),
             {"course_id": "This field is required."},
@@ -272,7 +273,7 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
             response.json(),
             {"product_id": "This field is required."},
@@ -302,7 +303,7 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
             },
             content_type="application/json",
         )
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
 
         relation = models.CourseProductRelation.objects.get(id=response.json()["id"])
 
@@ -439,7 +440,7 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
             "/api/v1.0/admin/course-product-relations/",
         )
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
             response.json(),
             {
@@ -470,7 +471,7 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
             },
             content_type="application/json",
         )
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
 
         assert response.json() == {
             "organization_ids": [

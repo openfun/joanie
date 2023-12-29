@@ -1,5 +1,6 @@
 """Test suite for remote API endpoints on course run."""
 from datetime import timedelta
+from http import HTTPStatus
 
 from django.test.utils import override_settings
 from django.utils import timezone as django_timezone
@@ -21,7 +22,7 @@ class RemoteEndpointsCourseRunApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             "You do not have permission to perform this action.",
-            status_code=403,
+            status_code=HTTPStatus.FORBIDDEN,
         )
 
     @override_settings(JOANIE_AUTHORIZED_API_TOKENS=["valid_known_secret_token_sample"])
@@ -37,7 +38,7 @@ class RemoteEndpointsCourseRunApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             "You do not have permission to perform this action.",
-            status_code=403,
+            status_code=HTTPStatus.FORBIDDEN,
         )
 
     @override_settings(JOANIE_AUTHORIZED_API_TOKENS=["valid_known_secret_token_sample"])
@@ -65,7 +66,7 @@ class RemoteEndpointsCourseRunApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             "You do not have permission to perform this action.",
-            status_code=403,
+            status_code=HTTPStatus.FORBIDDEN,
         )
 
     @override_settings(JOANIE_AUTHORIZED_API_TOKENS=["valid_known_secret_token_sample"])
@@ -93,7 +94,7 @@ class RemoteEndpointsCourseRunApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             "You do not have permission to perform this action.",
-            status_code=403,
+            status_code=HTTPStatus.FORBIDDEN,
         )
 
     @override_settings(JOANIE_AUTHORIZED_API_TOKENS=["valid_known_secret_token_sample"])
@@ -109,7 +110,11 @@ class RemoteEndpointsCourseRunApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION="Bearer valid_known_secret_token_sample",
         )
 
-        self.assertContains(response, 'Method \\"POST\\" not allowed.', status_code=405)
+        self.assertContains(
+            response,
+            'Method \\"POST\\" not allowed.',
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
+        )
 
     @override_settings(JOANIE_AUTHORIZED_API_TOKENS=["valid_known_secret_token_sample"])
     def test_remote_endpoints_course_run_anonymous_valid_token_but_with_patch_method_should_fail(
@@ -125,7 +130,9 @@ class RemoteEndpointsCourseRunApiTest(BaseAPITestCase):
         )
 
         self.assertContains(
-            response, 'Method \\"PATCH\\" not allowed.', status_code=405
+            response,
+            'Method \\"PATCH\\" not allowed.',
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
 
     @override_settings(JOANIE_AUTHORIZED_API_TOKENS=["valid_known_secret_token_sample"])
@@ -141,7 +148,11 @@ class RemoteEndpointsCourseRunApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION="Bearer valid_known_secret_token_sample",
         )
 
-        self.assertContains(response, 'Method \\"PUT\\" not allowed.', status_code=405)
+        self.assertContains(
+            response,
+            'Method \\"PUT\\" not allowed.',
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
+        )
 
     @override_settings(JOANIE_AUTHORIZED_API_TOKENS=["valid_known_secret_token_sample"])
     def test_remote_endpoints_course_run_anonymous_valid_token_but_with_delete_method_should_fail(
@@ -157,7 +168,9 @@ class RemoteEndpointsCourseRunApiTest(BaseAPITestCase):
         )
 
         self.assertContains(
-            response, 'Method \\"DELETE\\" not allowed.', status_code=405
+            response,
+            'Method \\"DELETE\\" not allowed.',
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
 
     @override_settings(JOANIE_AUTHORIZED_API_TOKENS=["valid_known_secret_token_sample"])
@@ -174,7 +187,9 @@ class RemoteEndpointsCourseRunApiTest(BaseAPITestCase):
         )
 
         self.assertContains(
-            response, "Query parameter `resource_link` is required.", status_code=400
+            response,
+            "Query parameter `resource_link` is required.",
+            status_code=HTTPStatus.BAD_REQUEST,
         )
 
     @override_settings(JOANIE_AUTHORIZED_API_TOKENS=["valid_known_secret_token_sample"])
@@ -196,7 +211,7 @@ class RemoteEndpointsCourseRunApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             "You do not have permission to perform this action.",
-            status_code=403,
+            status_code=HTTPStatus.FORBIDDEN,
         )
 
     @override_settings(JOANIE_AUTHORIZED_API_TOKENS=["valid_known_secret_token_sample"])
@@ -218,7 +233,7 @@ class RemoteEndpointsCourseRunApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             "You do not have permission to perform this action.",
-            status_code=403,
+            status_code=HTTPStatus.FORBIDDEN,
         )
 
     @override_settings(JOANIE_AUTHORIZED_API_TOKENS=["valid_known_secret_token_sample"])
@@ -240,7 +255,7 @@ class RemoteEndpointsCourseRunApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             "You do not have permission to perform this action.",
-            status_code=403,
+            status_code=HTTPStatus.FORBIDDEN,
         )
 
     @override_settings(JOANIE_AUTHORIZED_API_TOKENS=["valid_known_secret_token_sample"])
@@ -262,7 +277,7 @@ class RemoteEndpointsCourseRunApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             "You do not have permission to perform this action.",
-            status_code=403,
+            status_code=HTTPStatus.FORBIDDEN,
         )
 
     @override_settings(JOANIE_AUTHORIZED_API_TOKENS=["valid_known_secret_token_sample"])
@@ -290,7 +305,7 @@ class RemoteEndpointsCourseRunApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             "Make sure to give an existing resource link from an ended course run.",
-            status_code=400,
+            status_code=HTTPStatus.BAD_REQUEST,
         )
 
     @override_settings(JOANIE_AUTHORIZED_API_TOKENS=["valid_known_secret_token_sample"])
@@ -319,7 +334,7 @@ class RemoteEndpointsCourseRunApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             "Make sure to give an existing resource link from an ended course run.",
-            status_code=400,
+            status_code=HTTPStatus.BAD_REQUEST,
         )
 
     @override_settings(JOANIE_AUTHORIZED_API_TOKENS=["valid_known_secret_token_sample"])
@@ -348,7 +363,7 @@ class RemoteEndpointsCourseRunApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             "Make sure to give an existing resource link from an ended course run.",
-            status_code=400,
+            status_code=HTTPStatus.BAD_REQUEST,
         )
 
     @override_settings(JOANIE_AUTHORIZED_API_TOKENS=["valid_known_secret_token_sample"])
@@ -377,7 +392,7 @@ class RemoteEndpointsCourseRunApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             "Make sure to give an existing resource link from an ended course run.",
-            status_code=400,
+            status_code=HTTPStatus.BAD_REQUEST,
         )
 
     @override_settings(JOANIE_AUTHORIZED_API_TOKENS=["valid_known_secret_token_sample"])
@@ -406,7 +421,7 @@ class RemoteEndpointsCourseRunApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             "Make sure to give an existing resource link from an ended course run.",
-            status_code=400,
+            status_code=HTTPStatus.BAD_REQUEST,
         )
 
     @override_settings(JOANIE_AUTHORIZED_API_TOKENS=["valid_known_secret_token_sample"])
@@ -435,7 +450,7 @@ class RemoteEndpointsCourseRunApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             "Make sure to give an existing resource link from an ended course run.",
-            status_code=400,
+            status_code=HTTPStatus.BAD_REQUEST,
         )
 
     @override_settings(JOANIE_AUTHORIZED_API_TOKENS=["valid_known_secret_token_sample"])
@@ -464,7 +479,7 @@ class RemoteEndpointsCourseRunApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             "Make sure to give an existing resource link from an ended course run.",
-            status_code=400,
+            status_code=HTTPStatus.BAD_REQUEST,
         )
 
     @override_settings(JOANIE_AUTHORIZED_API_TOKENS=["valid_known_secret_token_sample"])
@@ -494,7 +509,7 @@ class RemoteEndpointsCourseRunApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION="Bearer valid_known_secret_token_sample",
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {
@@ -531,7 +546,7 @@ class RemoteEndpointsCourseRunApiTest(BaseAPITestCase):
             url, HTTP_AUTHORIZATION="Bearer valid_known_secret_token_sample"
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {
@@ -583,7 +598,7 @@ class RemoteEndpointsCourseRunApiTest(BaseAPITestCase):
             url, HTTP_AUTHORIZATION="Bearer valid_known_secret_token_sample"
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {
@@ -636,7 +651,7 @@ class RemoteEndpointsCourseRunApiTest(BaseAPITestCase):
             url, HTTP_AUTHORIZATION="Bearer valid_known_secret_token_sample"
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {

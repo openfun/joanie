@@ -1,4 +1,6 @@
 """Lex Persona backend test for submit_for_signature."""
+from http import HTTPStatus
+
 from django.conf import settings
 from django.test import TestCase
 from django.test.utils import override_settings
@@ -99,7 +101,7 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
         responses.add(
             responses.POST,
             create_workflow_api_url,
-            status=200,
+            status=HTTPStatus.OK,
             json=create_workflow_response_data,
             match=[
                 responses.matchers.header_matcher(
@@ -211,7 +213,7 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
         responses.add(
             responses.POST,
             upload_file_api_url,
-            status=200,
+            status=HTTPStatus.OK,
             json=upload_file_response_data,
             match=[
                 responses.matchers.header_matcher(
@@ -239,7 +241,7 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
         responses.add(
             responses.PATCH,
             start_procedure_api_url,
-            status=200,
+            status=HTTPStatus.OK,
             json=start_procedure_response_data,
             match=[
                 responses.matchers.header_matcher(
@@ -283,7 +285,7 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
         responses.add(
             responses.POST,
             create_workflow_api_url,
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             json={
                 "status": 400,
                 "error": "Bad Request",
@@ -384,7 +386,7 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
         responses.add(
             responses.POST,
             create_workflow_api_url,
-            status=200,
+            status=HTTPStatus.OK,
             json=create_workflow_response_data,
         )
 
@@ -397,7 +399,7 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
         responses.add(
             responses.POST,
             upload_file_api_url,
-            status=403,
+            status=HTTPStatus.FORBIDDEN,
             json={
                 "status": 403,
                 "error": "Forbidden",
@@ -511,7 +513,7 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
         responses.add(
             responses.POST,
             create_workflow_api_url,
-            status=200,
+            status=HTTPStatus.OK,
             json=create_workflow_response_data,
         )
 
@@ -559,7 +561,7 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
         responses.add(
             responses.POST,
             upload_file_api_url,
-            status=200,
+            status=HTTPStatus.OK,
             json=upload_file_response_data,
         )
 
@@ -572,7 +574,7 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
             responses.PATCH,
             start_procedure_api_url,
             json={"workflowStatus": "started"},
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
         )
         with self.assertRaises(exceptions.StartSignatureProcedureFailed) as context:
             lex_persona_backend.submit_for_signature(

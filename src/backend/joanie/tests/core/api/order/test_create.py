@@ -2,6 +2,7 @@
 # pylint: disable=too-many-lines
 import random
 import uuid
+from http import HTTPStatus
 from unittest import mock
 
 from django.conf import settings
@@ -34,7 +35,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         response = self.client.post(
             "/api/v1.0/orders/", data=data, content_type="application/json"
         )
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
         self.assertDictEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
@@ -68,7 +69,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
         # order has been created
         self.assertEqual(models.Order.objects.count(), 1)
         order = models.Order.objects.get()
@@ -151,7 +152,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 f"/api/v1.0/orders/{order.id}/submit/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
 
         # user has been created
         self.assertEqual(models.User.objects.count(), 1)
@@ -194,7 +195,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
         # order has been created
         self.assertEqual(models.Order.objects.count(), 1)
         order = models.Order.objects.get(
@@ -295,7 +296,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
             response.json(),
             {"enrollment_id": f"Enrollment with id {data['enrollment_id']} not found."},
@@ -337,7 +338,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.assertFalse(models.Order.objects.exists())
         self.assertDictEqual(
             response.json(),
@@ -375,14 +376,14 @@ class OrderCreateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
         order_id = response.json()["id"]
         self.assertTrue(models.Order.objects.filter(id=order_id).exists())
         response = self.client.patch(
             f"/api/v1.0/orders/{order_id}/submit/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(
             models.Order.objects.get(id=order_id).state, enums.ORDER_STATE_DRAFT
         )
@@ -416,7 +417,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
         # order has been created
 
         self.assertEqual(
@@ -491,7 +492,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
         self.assertEqual(models.Order.objects.count(), 10)  # 9 + 1
         # The chosen organization should be one of the organizations with the lowest order count
         organization_id = models.Order.objects.get(id=order_id).organization.id
@@ -535,7 +536,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         order.submit(request=RequestFactory().request())
         # - Order has been successfully created and read_only_fields
         #   has been ignored.
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
         self.assertEqual(models.Order.objects.count(), 1)
 
         self.assertCountEqual(
@@ -645,7 +646,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.assertFalse(models.Order.objects.exists())
         self.assertDictEqual(
             response.json(),
@@ -667,7 +668,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
         self.assertTrue(models.Order.objects.filter(course=course).exists())
 
     def test_api_order_create_authenticated_invalid_organization(self):
@@ -693,7 +694,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.assertFalse(models.Order.objects.exists())
         self.assertDictEqual(
             response.json(),
@@ -713,7 +714,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
         self.assertTrue(models.Order.objects.filter(organization=organization).exists())
 
     def test_api_order_create_authenticated_missing_product_then_course(self):
@@ -727,7 +728,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
 
         self.assertFalse(models.Order.objects.exists())
         self.assertDictEqual(
@@ -745,7 +746,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             data={"product_id": str(product.id)},
         )
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
 
         self.assertFalse(models.Order.objects.exists())
         self.assertDictEqual(
@@ -780,7 +781,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
             response.json(),
             {"__all__": ["An order for this product and course already exists."]},
@@ -796,7 +797,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
 
     def test_api_order_create_authenticated_billing_address_not_required(self):
         """
@@ -823,7 +824,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         )
 
         self.assertEqual(models.Order.objects.count(), 1)
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
         self.assertEqual(response.json()["state"], enums.ORDER_STATE_DRAFT)
         order = models.Order.objects.get()
         self.assertEqual(order.state, enums.ORDER_STATE_DRAFT)
@@ -870,7 +871,7 @@ class OrderCreateApiTest(BaseAPITestCase):
 
         self.assertEqual(models.Order.objects.count(), 1)
         order = models.Order.objects.get(product=product, course=course, owner=user)
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
 
         self.assertDictEqual(
             response.json(),
@@ -1009,7 +1010,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
         self.assertEqual(models.Order.objects.count(), 1)
         order = models.Order.objects.get(product=product, course=course, owner=user)
         expected_json = {
@@ -1092,7 +1093,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         )
 
         self.assertEqual(models.Order.objects.exclude(state="draft").count(), 0)
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
 
         self.assertDictEqual(response.json(), {"detail": "Unreachable endpoint"})
 
@@ -1135,7 +1136,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
             response.json(),
             {
@@ -1187,7 +1188,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         self.assertEqual(
             models.Order.objects.filter(product=product, course=course).count(), 101
         )
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
 
     def test_api_order_create_authenticated_free_product_no_billing_address(self):
         """
@@ -1211,14 +1212,14 @@ class OrderCreateApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
         self.assertEqual(response.json()["state"], enums.ORDER_STATE_DRAFT)
         order = models.Order.objects.get(id=response.json()["id"])
         response = self.client.patch(
             f"/api/v1.0/orders/{order.id}/submit/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
         order.refresh_from_db()
         self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
 
@@ -1248,7 +1249,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
         self.assertEqual(response.json()["state"], enums.ORDER_STATE_DRAFT)
         order_id = response.json()["id"]
         billing_address = BillingAddressDictFactory()
@@ -1259,7 +1260,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
         order = models.Order.objects.get(id=order_id)
         self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
 
@@ -1298,7 +1299,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
             response.json(),
             {
@@ -1339,7 +1340,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
             response.json(),
             {
@@ -1389,7 +1390,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
             response.json(),
             {
@@ -1409,7 +1410,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
         self.assertEqual(
             models.Order.objects.filter(course=course, product=product).count(), 2
         )
@@ -1442,7 +1443,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
         self.assertEqual(
             models.Order.objects.filter(course=course, product=product).count(), 1
         )

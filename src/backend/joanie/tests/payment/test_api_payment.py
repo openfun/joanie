@@ -1,4 +1,5 @@
 """Test suite for the payment api"""
+from http import HTTPStatus
 from unittest import mock
 
 from django.test.utils import override_settings
@@ -32,7 +33,7 @@ class PaymentApiTestCase(BaseAPITestCase):
             data={"id": "pay_0000"},
         )
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(response.data, "Payment does not exist")
         mock_notification.assert_called_once()
 
@@ -49,6 +50,6 @@ class PaymentApiTestCase(BaseAPITestCase):
             data={"id": "pay_0000"},
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertIsNone(response.data)
         mock_notification.assert_called_once()

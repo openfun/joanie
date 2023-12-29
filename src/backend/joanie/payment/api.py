@@ -2,6 +2,7 @@
 API endpoints
 """
 import logging
+from http import HTTPStatus
 
 from django.db import transaction
 
@@ -28,7 +29,7 @@ def webhook(request):
     except exceptions.ParseNotificationFailed as error:
         return Response(str(error), status=error.status_code)
 
-    return Response(status=200)
+    return Response(status=HTTPStatus.OK)
 
 
 # pylint: disable=too-many-ancestors

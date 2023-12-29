@@ -2,6 +2,7 @@
 import json
 import random
 import uuid
+from http import HTTPStatus
 
 from django.core.cache import cache
 
@@ -111,7 +112,7 @@ class OrderUpdateApiTest(BaseAPITestCase):
         *target_courses, _other_course = factories.CourseFactory.create_batch(3)
         product = factories.ProductFactory(target_courses=target_courses)
         order = factories.OrderFactory(product=product)
-        self._check_api_order_update_detail(order, None, 401)
+        self._check_api_order_update_detail(order, None, HTTPStatus.UNAUTHORIZED)
 
     def test_api_order_update_detail_authenticated_superuser(self):
         """An authenticated superuser should not be allowed to update any order."""
@@ -119,7 +120,7 @@ class OrderUpdateApiTest(BaseAPITestCase):
         *target_courses, _other_course = factories.CourseFactory.create_batch(3)
         product = factories.ProductFactory(target_courses=target_courses)
         order = factories.OrderFactory(product=product)
-        self._check_api_order_update_detail(order, user, 405)
+        self._check_api_order_update_detail(order, user, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_order_update_detail_authenticated_unowned(self):
         """
@@ -130,7 +131,7 @@ class OrderUpdateApiTest(BaseAPITestCase):
         *target_courses, _other_course = factories.CourseFactory.create_batch(3)
         product = factories.ProductFactory(target_courses=target_courses)
         order = factories.OrderFactory(product=product)
-        self._check_api_order_update_detail(order, user, 405)
+        self._check_api_order_update_detail(order, user, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_order_update_detail_authenticated_owned(self):
         """
@@ -143,26 +144,26 @@ class OrderUpdateApiTest(BaseAPITestCase):
         order = factories.OrderFactory(
             owner=owner, product=product, state=enums.ORDER_STATE_SUBMITTED
         )
-        self._check_api_order_update_detail(order, owner, 405)
+        self._check_api_order_update_detail(order, owner, HTTPStatus.METHOD_NOT_ALLOWED)
         models.Order.objects.all().delete()
         order = factories.OrderFactory(
             owner=owner, product=product, state=enums.ORDER_STATE_VALIDATED
         )
-        self._check_api_order_update_detail(order, owner, 405)
+        self._check_api_order_update_detail(order, owner, HTTPStatus.METHOD_NOT_ALLOWED)
         Transaction.objects.all().delete()
         Invoice.objects.all().delete()
         models.Order.objects.all().delete()
         order = factories.OrderFactory(
             owner=owner, product=product, state=enums.ORDER_STATE_PENDING
         )
-        self._check_api_order_update_detail(order, owner, 405)
+        self._check_api_order_update_detail(order, owner, HTTPStatus.METHOD_NOT_ALLOWED)
         models.Order.objects.all().delete()
         order = factories.OrderFactory(
             owner=owner, product=product, state=enums.ORDER_STATE_CANCELED
         )
-        self._check_api_order_update_detail(order, owner, 405)
+        self._check_api_order_update_detail(order, owner, HTTPStatus.METHOD_NOT_ALLOWED)
         models.Order.objects.all().delete()
         order = factories.OrderFactory(
             owner=owner, product=product, state=enums.ORDER_STATE_DRAFT
         )
-        self._check_api_order_update_detail(order, owner, 405)
+        self._check_api_order_update_detail(order, owner, HTTPStatus.METHOD_NOT_ALLOWED)

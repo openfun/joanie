@@ -1,6 +1,7 @@
 """
 Test suite for CourseProductRelation delete Admin API.
 """
+from http import HTTPStatus
 from unittest import mock
 
 from django.test import TestCase
@@ -25,7 +26,7 @@ class CourseProductRelationDeleteAdminApiTest(TestCase):
             f"/api/v1.0/admin/course-product-relations/{relation.id}/",
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         self.assertDictEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
@@ -43,7 +44,7 @@ class CourseProductRelationDeleteAdminApiTest(TestCase):
             f"/api/v1.0/admin/course-product-relations/{relation.id}/",
         )
 
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
         self.assertDictEqual(
             response.json(),
             {"detail": "You do not have permission to perform this action."},
@@ -67,7 +68,7 @@ class CourseProductRelationDeleteAdminApiTest(TestCase):
             f"/api/v1.0/admin/course-product-relations/{relation.id}/",
         )
 
-        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
         with self.assertRaises(models.CourseProductRelation.DoesNotExist):
             relation.refresh_from_db()
 
@@ -95,7 +96,7 @@ class CourseProductRelationDeleteAdminApiTest(TestCase):
             f"/api/v1.0/admin/course-product-relations/{relation.id}/",
         )
 
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
         self.assertDictEqual(
             response.json(),
             {"detail": "['You cannot delete this course product relation.']"},
@@ -123,7 +124,7 @@ class CourseProductRelationDeleteAdminApiTest(TestCase):
             f"/api/v1.0/admin/course-product-relations/{relation.id}/",
         )
 
-        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
         with self.assertRaises(models.CourseProductRelation.DoesNotExist):
             relation.refresh_from_db()
         with self.assertRaises(models.OrderGroup.DoesNotExist):

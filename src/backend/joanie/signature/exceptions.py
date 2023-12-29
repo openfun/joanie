@@ -1,4 +1,6 @@
 """Signature exceptions"""
+from http import HTTPStatus
+
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework.exceptions import APIException
@@ -11,7 +13,7 @@ class CreateSignatureProcedureFailed(APIException):
     required data in the payload's creation
     """
 
-    status_code = 400
+    status_code = HTTPStatus.BAD_REQUEST
     default_detail = _("Cannot create a signature procedure.")
     default_code = "create_signature_procedure_failed"
 
@@ -19,7 +21,7 @@ class CreateSignatureProcedureFailed(APIException):
 class UploadFileFailed(APIException):
     """Exception triggered when uploading a file at the signature provider failed."""
 
-    status_code = 400
+    status_code = HTTPStatus.BAD_REQUEST
     default_detail = _(
         "Cannot upload the file to the signature provider with the signature reference."
     )
@@ -33,7 +35,7 @@ class StartSignatureProcedureFailed(APIException):
     that is already finished.
     """
 
-    status_code = 400
+    status_code = HTTPStatus.BAD_REQUEST
     default_detail = _(
         "Cannot start the signature procedure with the signature reference."
     )
@@ -47,7 +49,7 @@ class InvitationSignatureFailed(APIException):
     the signature backend reference does not exist.
     """
 
-    status_code = 400
+    status_code = HTTPStatus.BAD_REQUEST
     default_detail = _(
         "Cannot get invitation link to sign the file from the signature provider."
     )
@@ -61,6 +63,6 @@ class DeleteSignatureProcedureFailed(APIException):
     does not exists at the signature provider.
     """
 
-    status_code = 400
+    status_code = HTTPStatus.BAD_REQUEST
     default_detail = _("Cannot delete the signature procedure.")
     default_code = "delete_signature_procedure_failed"

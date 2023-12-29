@@ -25,7 +25,7 @@ class OrganizationApiTest(BaseAPITestCase):
         factories.OrganizationFactory()
         response = self.client.get("/api/v1.0/organizations/")
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
@@ -52,7 +52,7 @@ class OrganizationApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         results = response.json()["results"]
         self.assertEqual(len(results), 2)
         self.assertCountEqual(
@@ -80,7 +80,7 @@ class OrganizationApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {
@@ -124,7 +124,7 @@ class OrganizationApiTest(BaseAPITestCase):
 
         response = self.client.get(f"/api/v1.0/organizations/{organization.id}/")
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
@@ -144,7 +144,7 @@ class OrganizationApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
         self.assertEqual(response.json(), {"detail": "Not found."})
 
     @mock.patch.object(
@@ -168,7 +168,7 @@ class OrganizationApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertTrue(content.pop("abilities")["get"])
         self.assertEqual(
@@ -192,7 +192,7 @@ class OrganizationApiTest(BaseAPITestCase):
 
         response = self.client.post("/api/v1.0/organizations/", data=data)
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         self.assertFalse(models.Organization.objects.exists())
 
     def test_api_organization_create_authenticated(self):
@@ -216,7 +216,7 @@ class OrganizationApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
         self.assertFalse(models.Organization.objects.exists())
 
     def test_api_organization_update_anonymous(self):
@@ -234,7 +234,7 @@ class OrganizationApiTest(BaseAPITestCase):
             f"/api/v1.0/organizations/{organization.id}/", data=data
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
@@ -266,7 +266,7 @@ class OrganizationApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
         self.assertEqual(response.json(), {"detail": 'Method "PUT" not allowed.'})
 
         organization.refresh_from_db()
@@ -302,7 +302,7 @@ class OrganizationApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
         self.assertEqual(response.json(), {"detail": 'Method "PUT" not allowed.'})
 
         organization.refresh_from_db()
@@ -317,7 +317,7 @@ class OrganizationApiTest(BaseAPITestCase):
 
         response = self.client.delete(f"/api/v1.0/organizations/{organization.id}/")
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(models.Organization.objects.count(), 1)
 
     def test_api_organization_delete_authenticated_no_access(self):
@@ -337,7 +337,7 @@ class OrganizationApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
         self.assertEqual(models.Organization.objects.count(), 1)
 
     def test_api_organization_delete_authenticated_with_access(self):
@@ -363,7 +363,7 @@ class OrganizationApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
         self.assertEqual(models.Organization.objects.count(), 1)
 
     def test_api_organization_contracts_signature_link_without_owner(self):
@@ -427,7 +427,7 @@ class OrganizationApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertIn(
             "https://dummysignaturebackend.fr/?requestToken=",
@@ -462,7 +462,7 @@ class OrganizationApiTest(BaseAPITestCase):
             data={"contract_ids": [order.contract.id]},
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertIn(
             "https://dummysignaturebackend.fr/?requestToken=",
@@ -515,7 +515,7 @@ class OrganizationApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         assert response.json() == {
             "detail": "No contract to sign for this organization."
         }

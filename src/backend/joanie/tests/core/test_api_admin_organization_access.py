@@ -2,6 +2,7 @@
 Test suite for OrganizationAccess Admin API.
 """
 import uuid
+from http import HTTPStatus
 
 from django.test import TestCase
 
@@ -22,7 +23,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             f"/api/v1.0/admin/organizations/{organization.id}/accesses/"
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         content = response.json()
         self.assertEqual(
             content["detail"], "Authentication credentials were not provided."
@@ -42,7 +43,7 @@ class OrganizationAccessAdminApiTest(TestCase):
         self.assertContains(
             response,
             "You do not have permission to perform this action.",
-            status_code=403,
+            status_code=HTTPStatus.FORBIDDEN,
         )
 
     def test_admin_api_organization_accesses_request_list(self):
@@ -59,7 +60,7 @@ class OrganizationAccessAdminApiTest(TestCase):
         self.assertContains(
             response,
             'Method \\"GET\\" not allowed.',
-            status_code=405,
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
 
     def test_admin_api_organization_accesses_request_get(self):
@@ -79,7 +80,7 @@ class OrganizationAccessAdminApiTest(TestCase):
         self.assertContains(
             response,
             'Method \\"GET\\" not allowed.',
-            status_code=405,
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
 
     def test_admin_api_organization_accesses_request_create(self):
@@ -100,7 +101,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
         self.assertEqual(organization.accesses.count(), 1)
         organization_access = organization.accesses.first()
         content = response.json()
@@ -135,7 +136,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(response.json(), {"user_id": ["Resource does not exist."]})
 
     def test_admin_api_organization_accesses_request_create_with_unknown_course_id(
@@ -158,7 +159,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertContains(response, "Not found.", status_code=404)
+        self.assertContains(response, "Not found.", status_code=HTTPStatus.NOT_FOUND)
 
     def test_admin_api_organization_accesses_request_create_with_invalid_role(self):
         """
@@ -178,7 +179,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(
             response.json(), {"role": ['"invalid_role" is not a valid choice.']}
         )
@@ -204,7 +205,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(
             content,
@@ -239,7 +240,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertContains(response, "Not found.", status_code=404)
+        self.assertContains(response, "Not found.", status_code=HTTPStatus.NOT_FOUND)
 
     def test_admin_api_organization_accesses_request_update_with_partial_payload(self):
         """
@@ -261,7 +262,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         content = response.json()
         self.assertEqual(content, {"user_id": ["This field is required."]})
 
@@ -283,7 +284,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(response.json(), {"user_id": ["Resource does not exist."]})
 
     def test_admin_api_organization_accesses_request_partial_update(self):
@@ -306,7 +307,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(
             content,
@@ -337,5 +338,5 @@ class OrganizationAccessAdminApiTest(TestCase):
             f"/api/v1.0/admin/organizations/{organization.id}/accesses/{organization_access.id}/"
         )
 
-        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
         self.assertEqual(organization.accesses.count(), 0)

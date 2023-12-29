@@ -1,4 +1,6 @@
 """Test suite for the Lex Persona Signature Backend get_signed_file"""
+from http import HTTPStatus
+
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.test.utils import override_settings
@@ -31,7 +33,7 @@ class LexPersonaBackendGetSignedFileTestCase(TestCase):
         reference_id = "wlf_dummy_id"
         url = f"https://lex_persona.test01.com/api/workflows/{reference_id}/downloadDocuments"
         pdf_content = b"Simulated PDF content in bytes from signature provider"
-        responses.add(responses.GET, url, body=pdf_content, status=200)
+        responses.add(responses.GET, url, body=pdf_content, status=HTTPStatus.OK)
         signature_backend = get_signature_backend()
 
         pdf_data = signature_backend.get_signed_file(reference_id)
@@ -56,7 +58,12 @@ class LexPersonaBackendGetSignedFileTestCase(TestCase):
             "requestId": "796f8fe0-1934599",
             "code": "WorkflowNotFound",
         }
-        responses.add(responses.GET, url, json=expected_failing_response, status=404)
+        responses.add(
+            responses.GET,
+            url,
+            json=expected_failing_response,
+            status=HTTPStatus.BAD_REQUEST,
+        )
         signature_backend = get_signature_backend()
 
         with self.assertRaises(ValidationError) as context:

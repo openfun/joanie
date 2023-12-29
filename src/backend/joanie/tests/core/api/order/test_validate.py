@@ -1,4 +1,6 @@
 """Tests for the Order validate API."""
+from http import HTTPStatus
+
 from django.core.cache import cache
 from django.test.client import RequestFactory
 
@@ -28,7 +30,7 @@ class OrderValidateApiTest(BaseAPITestCase):
         response = self.client.put(
             f"/api/v1.0/orders/{order.id}/validate/",
         )
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         order.refresh_from_db()
         self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
 
@@ -44,7 +46,7 @@ class OrderValidateApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
     def test_api_order_validate_authenticated_not_owned(self):
         """
@@ -62,7 +64,7 @@ class OrderValidateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         order.refresh_from_db()
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
         self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
 
     def test_api_order_validate_owned(self):
@@ -79,5 +81,5 @@ class OrderValidateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         order.refresh_from_db()
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)

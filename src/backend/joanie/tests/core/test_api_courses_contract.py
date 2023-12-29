@@ -24,7 +24,7 @@ class CourseContractApiTest(BaseAPITestCase):
         with self.assertNumQueries(0):
             response = self.client.get(f"/api/v1.0/courses/{str(course.id)}/contracts/")
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
     def test_api_courses_contracts_list_without_access(self):
         """
@@ -51,7 +51,7 @@ class CourseContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertDictEqual(
             response.json(),
             {
@@ -115,7 +115,7 @@ class CourseContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         contracts = models.Contract.objects.filter(
             order__course=courses[0],
             order__state=enums.ORDER_STATE_VALIDATED,
@@ -292,7 +292,7 @@ class CourseContractApiTest(BaseAPITestCase):
                 f"/api/v1.0/courses/{str(course.id)}/contracts/{str(contract.id)}/"
             )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
     def test_api_courses_contracts_retrieve_without_access(self):
         """
@@ -321,7 +321,7 @@ class CourseContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
     @mock.patch.object(
         fields.ThumbnailDetailField,
@@ -368,7 +368,7 @@ class CourseContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
 
         assert response.json() == {
             "id": str(contract.id),
@@ -479,7 +479,7 @@ class CourseContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertContains(response, str(contract.id), status_code=200)
+        self.assertContains(response, str(contract.id), status_code=HTTPStatus.OK)
 
     def test_api_courses_contracts_create_anonymous(self):
         """Anonymous user cannot create an organization's contract."""
@@ -490,7 +490,7 @@ class CourseContractApiTest(BaseAPITestCase):
                 f"/api/v1.0/courses/{str(course.id)}/contracts/"
             )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
     def test_api_courses_contracts_create_authenticated(self):
         """Authenticated user cannot create an organization's contract."""
@@ -504,7 +504,11 @@ class CourseContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertContains(response, 'Method \\"POST\\" not allowed.', status_code=405)
+        self.assertContains(
+            response,
+            'Method \\"POST\\" not allowed.',
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
+        )
 
     def test_api_courses_contracts_update_anonymous(self):
         """Anonymous user cannot update an organization's contract."""
@@ -516,7 +520,7 @@ class CourseContractApiTest(BaseAPITestCase):
                 f"/api/v1.0/courses/{str(course.id)}/contracts/{str(contract.id)}/"
             )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
     def test_api_courses_contracts_update_authenticated(self):
         """Authenticated user cannot update an organization's contract."""
@@ -531,7 +535,11 @@ class CourseContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertContains(response, 'Method \\"PUT\\" not allowed.', status_code=405)
+        self.assertContains(
+            response,
+            'Method \\"PUT\\" not allowed.',
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
+        )
 
     def test_api_courses_contracts_patch_anonymous(self):
         """Anonymous user cannot patch an organization's contract."""
@@ -543,7 +551,7 @@ class CourseContractApiTest(BaseAPITestCase):
                 f"/api/v1.0/courses/{str(course.id)}/contracts/{str(contract.id)}/"
             )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
     def test_api_courses_contracts_patch_authenticated(self):
         """Authenticated user cannot patch an organization's contract."""
@@ -559,7 +567,9 @@ class CourseContractApiTest(BaseAPITestCase):
             )
 
         self.assertContains(
-            response, 'Method \\"PATCH\\" not allowed.', status_code=405
+            response,
+            'Method \\"PATCH\\" not allowed.',
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
 
     def test_api_courses_contracts_delete_anonymous(self):
@@ -572,7 +582,7 @@ class CourseContractApiTest(BaseAPITestCase):
                 f"/api/v1.0/courses/{str(course.id)}/contracts/{str(contract.id)}/"
             )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
     def test_api_courses_contracts_delete_authenticated(self):
         """Authenticated user cannot delete an organization's contract."""
@@ -588,5 +598,7 @@ class CourseContractApiTest(BaseAPITestCase):
             )
 
         self.assertContains(
-            response, 'Method \\"DELETE\\" not allowed.', status_code=405
+            response,
+            'Method \\"DELETE\\" not allowed.',
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )

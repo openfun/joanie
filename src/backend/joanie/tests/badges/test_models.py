@@ -14,7 +14,7 @@ class BadgeModelTestCase(TestCase):
         factories.BadgeFactory(name="foo")
         factories.BadgeFactory(name="bar")
 
-        assert models.Badge.objects.count() == 2
+        assert models.Badge.objects.count() == 2  # noqa: PLR2004
         assert models.Badge.objects.first().name == "foo"
 
         badge = factories.BadgeFactory(provider="OBF", name="lol")
@@ -32,8 +32,8 @@ class IssuedBadgeModelTestCase(TestCase):
         factories.IssuedBadgeFactory(user=user)
         factories.IssuedBadgeFactory(user=user)
 
-        assert models.IssuedBadge.objects.count() == 2
-        assert user.issued_badges.count() == 2
+        assert models.IssuedBadge.objects.count() == 2  # noqa: PLR2004
+        assert user.issued_badges.count() == 2  # noqa: PLR2004
         assert models.Badge.objects.first().issued.count() == 1
 
         user = UserFactory(first_name="John", last_name="Doe")

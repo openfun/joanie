@@ -1,4 +1,5 @@
 """Tests for the Order invoice API."""
+from http import HTTPStatus
 from io import BytesIO
 
 from django.core.cache import cache
@@ -30,7 +31,7 @@ class OrderInvoiceApiTest(BaseAPITestCase):
             ),
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
         self.assertDictEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
@@ -49,7 +50,7 @@ class OrderInvoiceApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
 
         self.assertDictEqual(
             response.json(), {"reference": "This parameter is required."}
@@ -70,7 +71,7 @@ class OrderInvoiceApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
         self.assertEqual(
             response.json(),
@@ -97,7 +98,7 @@ class OrderInvoiceApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
         self.assertEqual(
             response.json(),
@@ -123,7 +124,7 @@ class OrderInvoiceApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.headers["Content-Type"], "application/pdf")
         self.assertEqual(
             response.headers["Content-Disposition"],
