@@ -2,6 +2,7 @@
 Test suite for Product Admin API.
 """
 import random
+from http import HTTPStatus
 
 from django.test import TestCase
 
@@ -19,7 +20,7 @@ class ProductAdminApiTest(TestCase):
         """
         response = self.client.get("/api/v1.0/admin/products/")
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         content = response.json()
         self.assertEqual(
             content["detail"], "Authentication credentials were not provided."
@@ -34,7 +35,7 @@ class ProductAdminApiTest(TestCase):
 
         response = self.client.get("/api/v1.0/admin/products/")
 
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
         content = response.json()
         self.assertEqual(
             content["detail"], "You do not have permission to perform this action."
@@ -51,7 +52,7 @@ class ProductAdminApiTest(TestCase):
 
         response = self.client.get("/api/v1.0/admin/products/")
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], product_count)
 
@@ -86,7 +87,7 @@ class ProductAdminApiTest(TestCase):
 
         response = self.client.get(f"/api/v1.0/admin/products/{product.id}/")
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["id"], str(product.id))
         expected_result = {
@@ -219,7 +220,7 @@ class ProductAdminApiTest(TestCase):
 
         response = self.client.post("/api/v1.0/admin/products/", data=data)
 
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
         content = response.json()
         self.assertIsNotNone(content["id"])
         self.assertEqual(content["title"], "Product 001")
@@ -242,7 +243,7 @@ class ProductAdminApiTest(TestCase):
 
         response = self.client.post("/api/v1.0/admin/products/", data=data)
 
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
         content = response.json()
         self.assertIsNotNone(content["id"])
         self.assertEqual(content["title"], "Product 001")
@@ -265,7 +266,7 @@ class ProductAdminApiTest(TestCase):
 
         response = self.client.post("/api/v1.0/admin/products/", data=data)
 
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
         content = response.json()
         self.assertIsNotNone(content["id"])
         self.assertEqual(content["title"], "Product 001")
@@ -294,7 +295,7 @@ class ProductAdminApiTest(TestCase):
             data=payload,
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["id"], str(product.id))
         self.assertEqual(content["price"], 100)
@@ -314,7 +315,7 @@ class ProductAdminApiTest(TestCase):
             data={"price": 100.57, "price_currency": "EUR"},
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["id"], str(product.id))
         self.assertEqual(content["price"], 100.57)
@@ -329,7 +330,7 @@ class ProductAdminApiTest(TestCase):
 
         response = self.client.delete(f"/api/v1.0/admin/products/{product.id}/")
 
-        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
 
     def test_admin_api_product_add_target_course_without_authentication(self):
         """
@@ -343,7 +344,7 @@ class ProductAdminApiTest(TestCase):
             content_type="application/json",
             data={"course": str(course.id)},
         )
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         self.assertFalse(models.ProductTargetCourseRelation.objects.exists())
 
     def test_admin_api_product_add_target_course(self):
@@ -360,7 +361,7 @@ class ProductAdminApiTest(TestCase):
             content_type="application/json",
             data={"course": str(course.id)},
         )
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
         relation = models.ProductTargetCourseRelation.objects.get()
         expected_result = {
             "id": str(relation.id),
@@ -399,7 +400,7 @@ class ProductAdminApiTest(TestCase):
             content_type="application/json",
             data={"course": str(course.id), "course_runs": ""},
         )
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
         relation = models.ProductTargetCourseRelation.objects.get()
         expected_result = {
             "id": str(relation.id),
@@ -433,7 +434,7 @@ class ProductAdminApiTest(TestCase):
         response = self.client.delete(
             f"/api/v1.0/admin/products/{product.id}/target-courses/{course.id}/",
         )
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(models.ProductTargetCourseRelation.objects.count(), 1)
 
     def test_admin_api_product_delete_target_course(self):
@@ -449,7 +450,7 @@ class ProductAdminApiTest(TestCase):
         response = self.client.delete(
             f"/api/v1.0/admin/products/{product.id}/target-courses/{course.id}/",
         )
-        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
         self.assertEqual(models.ProductTargetCourseRelation.objects.count(), 0)
         product.refresh_from_db()
         self.assertEqual(product.target_courses.count(), 0)
@@ -474,7 +475,7 @@ class ProductAdminApiTest(TestCase):
             data={"is_graded": True},
             content_type="application/json",
         )
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
         relation.refresh_from_db()
         self.assertTrue(relation.is_graded)
 
@@ -498,7 +499,7 @@ class ProductAdminApiTest(TestCase):
             data={"is_graded": True, "course_runs": ""},
             content_type="application/json",
         )
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
         relation.refresh_from_db()
         self.assertEqual(relation.course_runs.count(), 0)
 
@@ -526,7 +527,7 @@ class ProductAdminApiTest(TestCase):
             },
             content_type="application/json",
         )
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
         relations = models.ProductTargetCourseRelation.objects.filter(product=product)
         self.assertEqual(relations.get(course=courses[1]).position, 0)
         self.assertEqual(relations.get(course=courses[3]).position, 1)
@@ -550,7 +551,7 @@ class ProductAdminApiTest(TestCase):
             data={"instructions": ""},
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["instructions"], "")
         product.refresh_from_db()
@@ -570,7 +571,7 @@ class ProductAdminApiTest(TestCase):
             data={"instructions": "Test whitespace   "},
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["instructions"], "Test whitespace   ")
 
@@ -580,6 +581,6 @@ class ProductAdminApiTest(TestCase):
             data={"instructions": "Test newline\n\n"},
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["instructions"], "Test newline\n\n")

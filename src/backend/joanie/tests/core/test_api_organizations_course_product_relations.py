@@ -1,6 +1,7 @@
 """
 Test suite for Organization's CourseProductRelation API endpoint.
 """
+from http import HTTPStatus
 
 from joanie.core import factories, models
 from joanie.tests.base import BaseAPITestCase
@@ -32,7 +33,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
                 f"/api/v1.0/organizations/{organizations[0].id}/course-product-relations/",
             )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
     def test_api_organizations_course_product_relations_read_list_with_accesses(self):
         """
@@ -67,7 +68,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 5)
         self.assertEqual(
@@ -100,7 +101,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 0)
 
@@ -126,7 +127,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
                 f"{relations[0].id}/"
             )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
     def test_api_organizations_course_product_relations_read_details_with_accesses(
         self,
@@ -169,7 +170,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(str(relations[0].id), content["id"])
 
@@ -202,7 +203,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
                 ),
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
     def test_api_organizations_course_product_relations_create_authenticated(self):
         """
@@ -224,7 +225,11 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
             },
         )
 
-        self.assertContains(response, 'Method \\"POST\\" not allowed.', status_code=405)
+        self.assertContains(
+            response,
+            'Method \\"POST\\" not allowed.',
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
+        )
         self.assertEqual(models.CourseProductRelation.objects.count(), 0)
 
     def test_api_organizations_course_product_relations_create_anonymous(self):
@@ -244,7 +249,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
             },
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(models.CourseProductRelation.objects.count(), 0)
 
     def test_api_organizations_course_product_relations_update_authenticated(self):
@@ -270,7 +275,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
             },
         )
 
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
         relation.refresh_from_db()
         self.assertEqual(relation.course.id, course.id)
 
@@ -295,7 +300,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
             },
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         relation.refresh_from_db()
         self.assertEqual(relation.course.id, course.id)
 
@@ -321,7 +326,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
             },
         )
 
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
         relation.refresh_from_db()
         self.assertEqual(relation.course.id, course.id)
 
@@ -345,7 +350,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
             },
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         relation.refresh_from_db()
         self.assertEqual(relation.course.id, course.id)
 
@@ -368,7 +373,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
         self.assertTrue(
             models.CourseProductRelation.objects.filter(id=relation.id).exists()
         )
@@ -390,7 +395,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
             f"/api/v1.0/organizations/{organization.id}/course-product-relations/{relation.id}/",
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         self.assertTrue(
             models.CourseProductRelation.objects.filter(id=relation.id).exists()
         )

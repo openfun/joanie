@@ -2,6 +2,7 @@
 import json
 import random
 from datetime import timedelta
+from http import HTTPStatus
 
 from django.core.cache import cache
 from django.test.utils import override_settings
@@ -35,7 +36,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION="Bearer fake",
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
         content = response.json()
         self.assertEqual(content["detail"], "Given token not valid for any token type")
@@ -65,7 +66,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
         content = response.json()
         self.assertEqual(content["detail"], "Not found.")
@@ -100,7 +101,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
 
         content = response.json()
         self.assertEqual(
@@ -130,7 +131,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
 
         content = response.json()
         self.assertEqual(content[0], "No contract definition attached to the product.")
@@ -157,7 +158,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertIsNotNone(order.contract)
         self.assertIsNotNone(order.contract.context)
         self.assertIsNotNone(order.contract.definition_checksum)
@@ -211,7 +212,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         )
 
         contract.refresh_from_db()
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertNotEqual(contract.context, "content")
         self.assertIn("fake_dummy_file_hash", contract.definition_checksum)
         self.assertNotEqual(contract.signature_backend_reference, "wfl_fake_dummy_id")
@@ -262,7 +263,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         )
 
         contract.refresh_from_db()
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertNotEqual(contract.signature_backend_reference, "wfl_dummy_test_id_1")
         self.assertNotEqual(contract.definition_checksum, "fake_test_file_hash")
         self.assertNotEqual(contract.context, "a new content")

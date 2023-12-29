@@ -2,6 +2,7 @@
 Test suite for Certificate definition Admin API.
 """
 import random
+from http import HTTPStatus
 
 from django.test import TestCase
 
@@ -19,7 +20,7 @@ class CertificateDefinitionAdminApiTest(TestCase):
         """
         response = self.client.get("/api/v1.0/admin/certificate-definitions/")
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         content = response.json()
         self.assertEqual(
             content["detail"], "Authentication credentials were not provided."
@@ -34,7 +35,7 @@ class CertificateDefinitionAdminApiTest(TestCase):
 
         response = self.client.get("/api/v1.0/admin/certificate-definitions/")
 
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
         content = response.json()
         self.assertEqual(
             content["detail"], "You do not have permission to perform this action."
@@ -53,7 +54,7 @@ class CertificateDefinitionAdminApiTest(TestCase):
 
         response = self.client.get("/api/v1.0/admin/certificate-definitions/")
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], certification_definitions_count)
 
@@ -70,21 +71,21 @@ class CertificateDefinitionAdminApiTest(TestCase):
         )
 
         response = self.client.get("/api/v1.0/admin/certificate-definitions/?query=")
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], certification_definitions_count)
 
         response = self.client.get(
             f"/api/v1.0/admin/certificate-definitions/?query={items[0].title}"
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
 
         response = self.client.get(
             f"/api/v1.0/admin/certificate-definitions/?query={items[0].name}"
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
 
@@ -120,7 +121,7 @@ class CertificateDefinitionAdminApiTest(TestCase):
         response = self.client.get(
             "/api/v1.0/admin/certificate-definitions/?query=Certificate 1"
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["title"], "Certificate 1")
@@ -129,7 +130,7 @@ class CertificateDefinitionAdminApiTest(TestCase):
             "/api/v1.0/admin/certificate-definitions/?query=Certificat 1",
             HTTP_ACCEPT_LANGUAGE="fr-fr",
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["title"], "Certificat 1")
@@ -138,7 +139,7 @@ class CertificateDefinitionAdminApiTest(TestCase):
             "/api/v1.0/admin/certificate-definitions/?query=Certificate 1",
             HTTP_ACCEPT_LANGUAGE="fr-fr",
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["title"], "Certificat 1")
@@ -155,7 +156,7 @@ class CertificateDefinitionAdminApiTest(TestCase):
             f"/api/v1.0/admin/certificate-definitions/{certification_definition.id}/"
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["id"], str(certification_definition.id))
 
@@ -177,7 +178,7 @@ class CertificateDefinitionAdminApiTest(TestCase):
             data=data,
         )
 
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
         content = response.json()
         self.assertIsNotNone(content["id"])
         self.assertEqual(content["name"], "Certificate Definition 001")
@@ -205,7 +206,7 @@ class CertificateDefinitionAdminApiTest(TestCase):
             data=payload,
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["id"], str(certification_definition.id))
         self.assertEqual(content["name"], "Updated Certificate Definition 001")
@@ -228,7 +229,7 @@ class CertificateDefinitionAdminApiTest(TestCase):
             data={"template": enums.DEGREE},
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["id"], str(certification_definition.id))
         self.assertEqual(content["template"], "degree")
@@ -245,4 +246,4 @@ class CertificateDefinitionAdminApiTest(TestCase):
             f"/api/v1.0/admin/certificate-definitions/{certificate_definition.id}/"
         )
 
-        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)

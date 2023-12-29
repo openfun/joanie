@@ -1,4 +1,5 @@
 """Tests for the Order read detail API."""
+from http import HTTPStatus
 from unittest import mock
 
 from django.conf import settings
@@ -24,7 +25,7 @@ class OrderReadApiTest(BaseAPITestCase):
         order = factories.OrderFactory(product=product)
 
         response = self.client.get(f"/api/v1.0/orders/{order.id}/")
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
         self.assertDictEqual(
             response.json(),
@@ -52,7 +53,7 @@ class OrderReadApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertDictEqual(
             response.json(),
             {
@@ -136,6 +137,6 @@ class OrderReadApiTest(BaseAPITestCase):
             f"/api/v1.0/orders/{order.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
         self.assertDictEqual(response.json(), {"detail": "Not found."})

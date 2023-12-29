@@ -1,6 +1,7 @@
 """Test suite for the Lex Persona Signature Backend handle_notification"""
 import json
 from datetime import timedelta
+from http import HTTPStatus
 
 from django.core.exceptions import ValidationError
 from django.http import HttpRequest
@@ -69,7 +70,9 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
             "created": 1693404075146,
             "updated": 1693404075146,
         }
-        responses.add(responses.GET, api_url, json=expected_response_data, status=200)
+        responses.add(
+            responses.GET, api_url, json=expected_response_data, status=HTTPStatus.OK
+        )
 
         backend = get_signature_backend()
 
@@ -129,7 +132,9 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
             "created": 1693404075146,
             "updated": 1693404075146,
         }
-        responses.add(responses.GET, api_url, json=expected_response_data, status=200)
+        responses.add(
+            responses.GET, api_url, json=expected_response_data, status=HTTPStatus.OK
+        )
         backend = get_signature_backend()
 
         with self.assertRaises(ValidationError) as context:
@@ -265,7 +270,12 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
             "code": "WebhookEventNotFound",
         }
 
-        responses.add(responses.GET, api_url, json=expected_response_data, status=400)
+        responses.add(
+            responses.GET,
+            api_url,
+            json=expected_response_data,
+            status=HTTPStatus.BAD_REQUEST,
+        )
         backend = get_signature_backend()
 
         with self.assertRaises(ValidationError) as context:
@@ -336,7 +346,9 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
             "created": 1693404075146,
             "updated": 1693404075146,
         }
-        responses.add(responses.GET, api_url, json=expected_response_data, status=200)
+        responses.add(
+            responses.GET, api_url, json=expected_response_data, status=HTTPStatus.OK
+        )
 
         backend = get_signature_backend()
 
@@ -404,7 +416,9 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
             "created": 1693404075146,
             "updated": 1693404075146,
         }
-        responses.add(responses.GET, api_url, json=expected_response_data, status=200)
+        responses.add(
+            responses.GET, api_url, json=expected_response_data, status=HTTPStatus.OK
+        )
 
         backend = get_signature_backend()
 
@@ -474,7 +488,9 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
             "created": 1693404075146,
             "updated": 1693404075146,
         }
-        responses.add(responses.GET, api_url, json=expected_response_data, status=200)
+        responses.add(
+            responses.GET, api_url, json=expected_response_data, status=HTTPStatus.OK
+        )
 
         backend = get_signature_backend()
 

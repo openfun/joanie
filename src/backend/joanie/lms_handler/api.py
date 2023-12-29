@@ -3,6 +3,7 @@ API endpoints
 """
 import hashlib
 import hmac
+from http import HTTPStatus
 
 from django.conf import settings
 
@@ -38,7 +39,7 @@ def course_runs_sync(request):
     # It then enables us to do updates and change the secret without incurring downtime.
     authorization_header = request.headers.get("Authorization")
     if not authorization_header:
-        return Response("Missing authentication.", status=403)
+        return Response("Missing authentication.", status=HTTPStatus.FORBIDDEN)
 
     signature_is_valid = any(
         authorization_header
@@ -53,18 +54,21 @@ def course_runs_sync(request):
     )
 
     if not signature_is_valid:
-        return Response("Invalid authentication.", status=401)
+        return Response("Invalid authentication.", status=HTTPStatus.UNAUTHORIZED)
 
     # Select LMS from resource link
     resource_link = request.data.get("resource_link")
     if not resource_link:
-        return Response({"resource_link": ["This field is required."]}, status=400)
+        return Response(
+            {"resource_link": ["This field is required."]},
+            status=HTTPStatus.BAD_REQUEST,
+        )
 
     lms = LMSHandler.select_lms(resource_link)
     if lms is None:
         return Response(
             {"resource_link": ["No LMS configuration found for this resource link."]},
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
         )
 
     try:
@@ -79,7 +83,7 @@ def course_runs_sync(request):
     )
 
     if serializer.is_valid() is not True:
-        return Response(serializer.errors, status=400)
+        return Response(serializer.errors, status=HTTPStatus.BAD_REQUEST)
 
     if target_course_run:
         # Remove protected fields before update

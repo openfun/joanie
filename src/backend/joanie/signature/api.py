@@ -2,6 +2,7 @@
 API endpoint for Signature
 """
 import logging
+from http import HTTPStatus
 
 from django.db import transaction
 
@@ -23,4 +24,4 @@ def webhook_signature(request: Request):
     signature_backend = get_signature_backend()
     signature_backend.handle_notification(request)
 
-    return Response(status=200)
+    return Response(status=HTTPStatus.OK)

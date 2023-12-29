@@ -1,5 +1,6 @@
 """Tests for the Certificate API"""
 import uuid
+from http import HTTPStatus
 from io import BytesIO
 from unittest import mock
 
@@ -22,7 +23,7 @@ class CertificateApiTest(BaseAPITestCase):
         factories.OrderCertificateFactory.create_batch(2)
         response = self.client.get("/api/v1.0/certificates/")
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
         self.assertDictEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
@@ -63,7 +64,7 @@ class CertificateApiTest(BaseAPITestCase):
                 "/api/v1.0/certificates/", HTTP_AUTHORIZATION=f"Bearer {token}"
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         order = certificate.order
         self.assertDictEqual(
             response.json(),
@@ -182,7 +183,7 @@ class CertificateApiTest(BaseAPITestCase):
             "/api/v1.0/certificates/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 3)
         self.assertEqual(
@@ -199,7 +200,7 @@ class CertificateApiTest(BaseAPITestCase):
             "/api/v1.0/certificates/?page=2", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
 
         self.assertEqual(content["count"], 3)
@@ -220,7 +221,7 @@ class CertificateApiTest(BaseAPITestCase):
 
         response = self.client.get(f"/api/v1.0/certificates/{certificate.id}/")
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
         self.assertDictEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
@@ -249,7 +250,7 @@ class CertificateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
         self.assertDictEqual(response.json(), {"detail": "Not found."})
 
         # - Try to retrieve an owned certificate should return the certificate id
@@ -258,7 +259,7 @@ class CertificateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
 
         self.assertDictEqual(
             response.json(),
@@ -299,7 +300,7 @@ class CertificateApiTest(BaseAPITestCase):
 
         response = self.client.get(f"/api/v1.0/certificates/{certificate.id}/download/")
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
         self.assertDictEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
@@ -332,7 +333,7 @@ class CertificateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
         self.assertDictEqual(
             response.json(),
@@ -345,7 +346,7 @@ class CertificateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.headers["Content-Type"], "application/pdf")
         self.assertEqual(
             response.headers["Content-Disposition"],
@@ -375,7 +376,7 @@ class CertificateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
         self.assertDictEqual(
             response.json(),
@@ -388,7 +389,7 @@ class CertificateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.headers["Content-Type"], "application/pdf")
         self.assertEqual(
             response.headers["Content-Disposition"],
@@ -428,7 +429,7 @@ class CertificateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.status_code, HTTPStatus.UNPROCESSABLE_ENTITY)
         self.assertEqual(
             response.json(),
             {"detail": f"Unable to generate certificate {str(certificate.id)}."},
@@ -445,7 +446,7 @@ class CertificateApiTest(BaseAPITestCase):
             {"id": uuid.uuid4()},
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
 
         self.assertDictEqual(response.json(), {"detail": 'Method "POST" not allowed.'})
 
@@ -461,7 +462,7 @@ class CertificateApiTest(BaseAPITestCase):
             {"id": uuid.uuid4()},
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
 
         self.assertDictEqual(response.json(), {"detail": 'Method "PUT" not allowed.'})
 
@@ -477,7 +478,7 @@ class CertificateApiTest(BaseAPITestCase):
             {"id": uuid.uuid4()},
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
 
         self.assertDictEqual(
             response.json(), {"detail": 'Method "DELETE" not allowed.'}

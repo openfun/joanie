@@ -1,6 +1,7 @@
 """
 Test suite for Contract Definition API.
 """
+from http import HTTPStatus
 from io import BytesIO
 
 from pdfminer.high_level import extract_text as pdf_extract_text
@@ -24,7 +25,7 @@ class ContractDefinitionApiTest(BaseAPITestCase):
             f"/api/v1.0/contract_definitions/{str(contract_definition.id)}/preview_template/",
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
         content = response.json()
         self.assertEqual(
@@ -48,7 +49,11 @@ class ContractDefinitionApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertContains(response, 'Method \\"POST\\" not allowed', status_code=405)
+        self.assertContains(
+            response,
+            'Method \\"POST\\" not allowed',
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
+        )
 
     def test_api_contract_definition_preview_template_method_put_should_fail(
         self,
@@ -67,7 +72,11 @@ class ContractDefinitionApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertContains(response, 'Method \\"PUT\\" not allowed', status_code=405)
+        self.assertContains(
+            response,
+            'Method \\"PUT\\" not allowed',
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
+        )
 
     def test_api_contract_definition_preview_template_method_patch_should_fail(
         self,
@@ -86,7 +95,11 @@ class ContractDefinitionApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertContains(response, 'Method \\"PATCH\\" not allowed', status_code=405)
+        self.assertContains(
+            response,
+            'Method \\"PATCH\\" not allowed',
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
+        )
 
     def test_api_contract_definition_preview_template_method_delete_should_fail(
         self,
@@ -106,7 +119,9 @@ class ContractDefinitionApiTest(BaseAPITestCase):
         )
 
         self.assertContains(
-            response, 'Method \\"DELETE\\" not allowed', status_code=405
+            response,
+            'Method \\"DELETE\\" not allowed',
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
 
     def test_api_contract_definition_preview_template_success(
@@ -128,7 +143,7 @@ class ContractDefinitionApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.headers["Content-Type"], "application/pdf")
         self.assertEqual(
             response.headers["Content-Disposition"],

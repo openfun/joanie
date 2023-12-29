@@ -2,6 +2,7 @@
 Test suite for User Admin API.
 """
 import random
+from http import HTTPStatus
 
 from django.test import TestCase
 
@@ -19,7 +20,7 @@ class UserAdminApiTest(TestCase):
         """
         response = self.client.get("/api/v1.0/admin/users/")
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         content = response.json()
         self.assertEqual(
             content["detail"], "Authentication credentials were not provided."
@@ -34,7 +35,7 @@ class UserAdminApiTest(TestCase):
 
         response = self.client.get("/api/v1.0/admin/users/")
 
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
         content = response.json()
         self.assertEqual(
             content["detail"], "You do not have permission to perform this action."
@@ -51,7 +52,7 @@ class UserAdminApiTest(TestCase):
 
         response = self.client.get("/api/v1.0/admin/users/")
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 0)
 
@@ -84,14 +85,14 @@ class UserAdminApiTest(TestCase):
 
         # An empty search should return no results
         response = self.client.get("/api/v1.0/admin/users/?query=")
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
 
         self.assertEqual(content["count"], 0)
 
         # Search by username
         response = self.client.get("/api/v1.0/admin/users/?query=fnz")
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(
@@ -105,13 +106,13 @@ class UserAdminApiTest(TestCase):
 
         # Search by email
         response = self.client.get("/api/v1.0/admin/users/?query=@example.fr")
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 3)
 
         # Search by firstname
         response = self.client.get("/api/v1.0/admin/users/?query=joanie")
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(
@@ -125,7 +126,7 @@ class UserAdminApiTest(TestCase):
 
         # Search by lastname
         response = self.client.get("/api/v1.0/admin/users/?query=Cunningham")
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 2)
         self.assertCountEqual(
@@ -146,7 +147,7 @@ class UserAdminApiTest(TestCase):
         self.assertContains(
             response,
             "The requested resource was not found on this server.",
-            status_code=404,
+            status_code=HTTPStatus.NOT_FOUND,
         )
 
     def test_admin_api_user_create(self):
@@ -161,7 +162,7 @@ class UserAdminApiTest(TestCase):
         self.assertContains(
             response,
             'Method \\"POST\\" not allowed.',
-            status_code=405,
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
 
     def test_admin_api_user_update(self):
@@ -177,7 +178,7 @@ class UserAdminApiTest(TestCase):
         self.assertContains(
             response,
             "The requested resource was not found on this server.",
-            status_code=404,
+            status_code=HTTPStatus.NOT_FOUND,
         )
 
     def test_admin_api_user_partially_update(self):
@@ -193,7 +194,7 @@ class UserAdminApiTest(TestCase):
         self.assertContains(
             response,
             "The requested resource was not found on this server.",
-            status_code=404,
+            status_code=HTTPStatus.NOT_FOUND,
         )
 
     def test_admin_api_user_delete(self):
@@ -209,7 +210,7 @@ class UserAdminApiTest(TestCase):
         self.assertContains(
             response,
             "The requested resource was not found on this server.",
-            status_code=404,
+            status_code=HTTPStatus.NOT_FOUND,
         )
 
     def test_admin_api_user_me_anonymous(self):
@@ -219,7 +220,7 @@ class UserAdminApiTest(TestCase):
         factories.UserFactory(is_staff=True, is_superuser=True)
         response = self.client.get("/api/v1.0/admin/users/me/")
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
     def test_admin_api_user_me_no_access(self):
         """
@@ -230,7 +231,7 @@ class UserAdminApiTest(TestCase):
 
         response = self.client.get("/api/v1.0/admin/users/me/")
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {
@@ -260,7 +261,7 @@ class UserAdminApiTest(TestCase):
         factories.UserCourseAccessFactory(user=admin)
         response = self.client.get("/api/v1.0/admin/users/me/")
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {
@@ -290,7 +291,7 @@ class UserAdminApiTest(TestCase):
         factories.UserOrganizationAccessFactory(user=admin)
         response = self.client.get("/api/v1.0/admin/users/me/")
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {

@@ -22,7 +22,7 @@ def to_sentence(elements):
         ["French", "English", "german"] > "French, english and german"
 
     """
-    if len(elements) > 2:
+    if len(elements) > 2:  # noqa: PLR2004
         return (
             _("{:s} and {:s}").format(
                 ", ".join(map(str, elements[:-1])), str(elements[-1])

@@ -1,7 +1,7 @@
 """
 Test suite for OrderGroup Admin API.
 """
-
+from http import HTTPStatus
 from operator import itemgetter
 
 from django.test import TestCase
@@ -24,7 +24,7 @@ class OrderGroupAdminApiTest(TestCase):
 
         relation = factories.CourseProductRelationFactory()
         response = self.client.get(f"{self.base_url}/{relation.id}/order-groups/")
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         content = response.json()
         self.assertEqual(
             content["detail"], "Authentication credentials were not provided."
@@ -45,7 +45,7 @@ class OrderGroupAdminApiTest(TestCase):
 
         with self.assertNumQueries(10):
             response = self.client.get(f"{self.base_url}/{relation.id}/order-groups/")
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         expected_return = [
             {
@@ -75,7 +75,7 @@ class OrderGroupAdminApiTest(TestCase):
 
         response = self.client.get(f"{self.base_url}/{relation.id}/order-groups/")
 
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
         content = response.json()
         self.assertEqual(
             content["detail"], "You do not have permission to perform this action."
@@ -93,7 +93,7 @@ class OrderGroupAdminApiTest(TestCase):
         response = self.client.get(
             f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/"
         )
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         content = response.json()
         self.assertEqual(
             content["detail"], "Authentication credentials were not provided."
@@ -114,7 +114,7 @@ class OrderGroupAdminApiTest(TestCase):
                 f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/"
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         expected_return = {
             "id": str(order_group.id),
@@ -140,7 +140,7 @@ class OrderGroupAdminApiTest(TestCase):
             content_type="application/json",
             data=data,
         )
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         content = response.json()
         self.assertEqual(
             content["detail"], "Authentication credentials were not provided."
@@ -165,7 +165,7 @@ class OrderGroupAdminApiTest(TestCase):
                 data=data,
             )
 
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
         content = response.json()
         self.assertEqual(content["nb_seats"], data["nb_seats"])
         self.assertEqual(content["is_active"], data["is_active"])
@@ -183,7 +183,7 @@ class OrderGroupAdminApiTest(TestCase):
         response = self.client.put(
             f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/"
         )
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         content = response.json()
         self.assertEqual(
             content["detail"], "Authentication credentials were not provided."
@@ -208,7 +208,7 @@ class OrderGroupAdminApiTest(TestCase):
                 content_type="application/json",
                 data=data,
             )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["nb_seats"], data["nb_seats"])
         self.assertEqual(content["is_active"], data["is_active"])
@@ -226,7 +226,7 @@ class OrderGroupAdminApiTest(TestCase):
         response = self.client.patch(
             f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/"
         )
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         content = response.json()
         self.assertEqual(
             content["detail"], "Authentication credentials were not provided."
@@ -252,7 +252,7 @@ class OrderGroupAdminApiTest(TestCase):
                 content_type="application/json",
                 data=data,
             )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["nb_seats"], order_group.nb_seats)
         self.assertEqual(content["is_active"], data["is_active"])
@@ -275,7 +275,7 @@ class OrderGroupAdminApiTest(TestCase):
         response = self.client.delete(
             f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/"
         )
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         content = response.json()
         with self.assertNumQueries(0):
             self.assertEqual(
@@ -295,7 +295,7 @@ class OrderGroupAdminApiTest(TestCase):
             response = self.client.delete(
                 f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/",
             )
-        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
         self.assertFalse(models.OrderGroup.objects.filter(id=order_group.id).exists())
 
     def test_admin_api_order_group_delete_cannot_edit(self):
@@ -311,5 +311,5 @@ class OrderGroupAdminApiTest(TestCase):
             response = self.client.delete(
                 f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/",
             )
-        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
         self.assertFalse(models.OrderGroup.objects.filter(id=order_group.id).exists())

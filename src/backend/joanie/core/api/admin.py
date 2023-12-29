@@ -1,12 +1,14 @@
 """
 Admin API Endpoints
 """
+from http import HTTPStatus
+
 from django.core.exceptions import ValidationError
 
 import django_filters.rest_framework
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
-from rest_framework import mixins, permissions, status, viewsets
+from rest_framework import mixins, permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -231,14 +233,14 @@ class TargetCoursesViewSet(
         if not data.get("course_runs", None):
             data["course_runs"] = []
         if not serializer.is_valid():
-            return Response(serializer.errors, status=400)
+            return Response(serializer.errors, status=HTTPStatus.BAD_REQUEST)
         course_runs = serializer.validated_data.pop("course_runs", [])
         relation = models.ProductTargetCourseRelation(**serializer.validated_data)
         relation.save()
         for course_run in course_runs:
             relation.course_runs.add(course_run)
         response = self.get_serializer(relation)
-        return Response(response.data, status=201)
+        return Response(response.data, status=HTTPStatus.CREATED)
 
     def partial_update(self, request, *args, **kwargs):
         """
@@ -253,7 +255,7 @@ class TargetCoursesViewSet(
         relation = self.queryset.get(product=data["product"], course=kwargs["pk"])
         serializer = self.get_serializer(relation, data=data, partial=True)
         if not serializer.is_valid():
-            return Response(serializer.errors, status=400)
+            return Response(serializer.errors, status=HTTPStatus.BAD_REQUEST)
         course_runs = serializer.validated_data.pop("course_runs", None)
         models.ProductTargetCourseRelation.objects.filter(pk=relation.id).update(
             **serializer.validated_data
@@ -264,7 +266,7 @@ class TargetCoursesViewSet(
             for course_run in course_runs:
                 relation.course_runs.add(course_run)
         response = self.get_serializer(relation)
-        return Response(response.data, status=201)
+        return Response(response.data, status=HTTPStatus.CREATED)
 
     def destroy(self, request, *args, **kwargs):
         """
@@ -273,7 +275,7 @@ class TargetCoursesViewSet(
         product_id = kwargs.get("product_id")
         course_id = kwargs["pk"]
         self.queryset.get(product=product_id, course=course_id).delete()
-        return Response(status=204)
+        return Response(status=HTTPStatus.NO_CONTENT)
 
     @action(detail=False, methods=["POST"])
     def reorder(self, request, *args, **kwargs):  # pylint: disable=no-self-use, unused-argument
@@ -293,13 +295,13 @@ class TargetCoursesViewSet(
                         f"those on product id {product_id}"
                     )
                 },
-                status=400,
+                status=HTTPStatus.BAD_REQUEST,
             )
         for index, target_course_id in enumerate(target_course_ids):
             models.ProductTargetCourseRelation.objects.filter(
                 product=product_id, course=target_course_id
             ).update(position=index)
-        return Response(status=201)
+        return Response(status=HTTPStatus.CREATED)
 
 
 class ContractDefinitionViewSet(viewsets.ModelViewSet):
@@ -373,7 +375,7 @@ class CourseProductRelationViewSet(viewsets.ModelViewSet):
         except ValidationError as error:
             return Response(
                 {"detail": str(error)},
-                status=status.HTTP_403_FORBIDDEN,
+                status=HTTPStatus.FORBIDDEN,
             )
 
 
@@ -407,9 +409,7 @@ class NestedCourseProductRelationOrderGroupViewSet(
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data, status=status.HTTP_201_CREATED, headers=headers
-        )
+        return Response(serializer.data, status=HTTPStatus.CREATED, headers=headers)
 
 
 class OrderViewSet(

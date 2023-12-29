@@ -1,6 +1,7 @@
 """
 Test suite for the Credit Card API
 """
+from http import HTTPStatus
 from unittest import mock
 
 from django.test.utils import override_settings
@@ -21,7 +22,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
     def test_api_credit_card_get_credit_cards_without_authorization(self):
         """Retrieve credit cards without authorization header is forbidden."""
         response = self.client.get("/api/v1.0/credit-cards/")
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(
             response.data, {"detail": "Authentication credentials were not provided."}
         )
@@ -31,7 +32,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         response = self.client.get(
             "/api/v1.0/credit-cards/", HTTP_AUTHORIZATION="Bearer invalid_token"
         )
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(response.data["code"], "token_not_valid")
 
     def test_api_credit_card_get_credit_cards_with_expired_token(self):
@@ -43,7 +44,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         response = self.client.get(
             "/api/v1.0/credit-cards/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(response.data["code"], "token_not_valid")
 
     def test_api_credit_card_get_credit_cards_for_new_user(self):
@@ -57,7 +58,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         response = self.client.get(
             "/api/v1.0/credit-cards/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(
             response.json(), {"count": 0, "next": None, "previous": None, "results": []}
         )
@@ -72,7 +73,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         response = self.client.get(
             "/api/v1.0/credit-cards/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         results = content.pop("results")
         cards.sort(key=lambda card: card.created_on, reverse=True)
@@ -100,7 +101,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
             "/api/v1.0/credit-cards/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 3)
         self.assertEqual(
@@ -117,7 +118,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
             "/api/v1.0/credit-cards/?page=2", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
 
         self.assertEqual(content["count"], 3)
@@ -139,7 +140,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         response = self.client.get(
             f"/api/v1.0/credit-cards/{card.id}/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
 
         # - All fields except token has been serialized
         self.assertEqual(
@@ -164,7 +165,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         response = self.client.get(
             f"/api/v1.0/credit-cards/{card.id}/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
     def test_api_credit_card_get_not_owned_credit_card(self):
         """
@@ -178,7 +179,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         response = self.client.get(
             f"/api/v1.0/credit-cards/{card.id}/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
     def test_api_credit_card_create_credit_card_is_not_allowed(self):
         """Create a credit card is not allowed."""
@@ -187,7 +188,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
             "/api/v1.0/credit-cards/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
 
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_credit_card_update_without_authorization(self):
         """Update a credit card without authorization header is forbidden."""
@@ -198,7 +199,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
             data={"title": "Card title updated"},
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
     def test_api_credit_card_update_with_expired_token(self):
         """Update a credit card with an expired token is forbidden."""
@@ -215,7 +216,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
             data={"title": "Card title updated"},
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
     def test_api_credit_card_update_with_bad_payload(self):
         """
@@ -231,7 +232,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
             data=[],
         )
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(
             response.data,
             {
@@ -253,7 +254,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
             data={"title": "Credit card title updated!"},
         )
 
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
     def test_api_credit_card_demote_credit_card_is_forbidden(self):
         """Demote a main credit card is forbidden"""
@@ -267,7 +268,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
             data={"is_main": False},
         )
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(
             response.data, {"__all__": ["Demote a main credit card is forbidden"]}
         )
@@ -286,7 +287,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
             data={"is_main": True},
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
 
         # - Before update state
         self.assertTrue(main_card.is_main)
@@ -321,7 +322,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
             },
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
 
         # - Only title has been updated
         card.refresh_from_db()
@@ -336,7 +337,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         card = CreditCardFactory()
         response = self.client.delete(f"/api/v1.0/credit-cards/{card.id}/")
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
     def test_api_credit_card_delete_with_invalid_authorization(self):
         """Delete credit card with invalid authorization header is forbidden."""
@@ -346,7 +347,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION="Bearer invalid-token",
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
     def test_api_credit_card_delete_with_expired_token(self):
         """Delete credit card with an expired token is forbidden."""
@@ -360,7 +361,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
     def test_api_credit_card_delete_with_bad_user(self):
         """Delete credit card not owned by the authenticated user is forbidden."""
@@ -371,7 +372,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
     @override_settings(
         JOANIE_PAYMENT_BACKEND={
@@ -389,4 +390,4 @@ class CreditCardAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)

@@ -1,4 +1,6 @@
 """Tests for the Order cancel API."""
+from http import HTTPStatus
+
 from django.core.cache import cache
 from django.test.client import RequestFactory
 
@@ -26,7 +28,7 @@ class OrderCancelApiTest(BaseAPITestCase):
             f"/api/v1.0/orders/{order.id}/cancel/",
             content_type="application/json",
         )
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         order.refresh_from_db()
         self.assertNotEqual(order.state, enums.ORDER_STATE_CANCELED)
 
@@ -42,7 +44,7 @@ class OrderCancelApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
     def test_api_order_cancel_authenticated_not_owned(self):
         """
@@ -60,7 +62,7 @@ class OrderCancelApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         order.refresh_from_db()
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
         self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
 
     def test_api_order_cancel_authenticated_owned(self):
@@ -84,7 +86,7 @@ class OrderCancelApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         order_draft.refresh_from_db()
-        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
         self.assertEqual(order_draft.state, enums.ORDER_STATE_CANCELED)
 
         # Canceling pending order
@@ -93,7 +95,7 @@ class OrderCancelApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         order_pending.refresh_from_db()
-        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
         self.assertEqual(order_pending.state, enums.ORDER_STATE_CANCELED)
 
         # Canceling submitted order
@@ -102,7 +104,7 @@ class OrderCancelApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         order_submitted.refresh_from_db()
-        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
         self.assertEqual(order_submitted.state, enums.ORDER_STATE_CANCELED)
 
     def test_api_order_cancel_authenticated_validated(self):
@@ -119,5 +121,5 @@ class OrderCancelApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         order_validated.refresh_from_db()
-        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.status_code, HTTPStatus.UNPROCESSABLE_ENTITY)
         self.assertEqual(order_validated.state, enums.ORDER_STATE_VALIDATED)

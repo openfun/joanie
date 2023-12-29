@@ -1,4 +1,5 @@
 """BackOfficeRedirectView test suite."""
+from http import HTTPStatus
 
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -21,7 +22,7 @@ class BackofficeRedirectViewTestCase(TestCase):
 
         response = self.client.get(url)
 
-        self.assertEqual(response.status_code, 301)
+        self.assertEqual(response.status_code, HTTPStatus.MOVED_PERMANENTLY)
         self.assertEqual(
             response["Location"],
             "https://bo.joanie.test/admin/core/organizations/",

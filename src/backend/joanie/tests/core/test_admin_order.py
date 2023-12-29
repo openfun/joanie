@@ -1,7 +1,7 @@
 """
 Test suite for orders admin pages
 """
-
+from http import HTTPStatus
 from unittest import mock
 
 from django.urls import reverse
@@ -24,12 +24,12 @@ class OrderAdminTestCase(BaseAPITestCase):
         self.client.login(username=user.username, password="password")
         order_changelist_page = reverse("admin:core_order_changelist")
         response = self.client.get(order_changelist_page)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertContains(response, "Cancel selected orders")
 
         # - Trigger "cancel" action
         self.client.post(
             order_changelist_page, {"action": "cancel", "_selected_action": order.pk}
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         mock_cancel.assert_called_once_with()

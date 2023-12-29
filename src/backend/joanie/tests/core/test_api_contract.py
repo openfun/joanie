@@ -30,7 +30,7 @@ class ContractApiTest(BaseAPITestCase):
         with self.assertNumQueries(0):
             response = self.client.get("/api/v1.0/contracts/")
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
     def test_api_contracts_list_with_accesses(self):
         """
@@ -73,7 +73,7 @@ class ContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertDictEqual(
             response.json(),
             {
@@ -108,7 +108,7 @@ class ContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         expected_contracts = sorted(contracts, key=lambda x: x.created_on, reverse=True)
         assert response.json() == {
             "count": 5,
@@ -313,7 +313,7 @@ class ContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 2)
 
@@ -324,7 +324,7 @@ class ContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         count = content["count"]
         result_ids = [result["id"] for result in content["results"]]
@@ -338,7 +338,7 @@ class ContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         count = content["count"]
         result_ids = [result["id"] for result in content["results"]]
@@ -384,7 +384,7 @@ class ContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 2)
 
@@ -395,7 +395,7 @@ class ContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         count = content["count"]
         result_ids = [result["id"] for result in content["results"]]
@@ -409,7 +409,7 @@ class ContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         count = content["count"]
         result_ids = [result["id"] for result in content["results"]]
@@ -451,7 +451,7 @@ class ContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 2)
 
@@ -462,7 +462,7 @@ class ContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         count = content["count"]
         result_ids = [result["id"] for result in content["results"]]
@@ -476,7 +476,7 @@ class ContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         count = content["count"]
         result_ids = [result["id"] for result in content["results"]]
@@ -556,7 +556,7 @@ class ContractApiTest(BaseAPITestCase):
         with self.assertNumQueries(0):
             response = self.client.get(f"/api/v1.0/contracts/{str(contract.id)}/")
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
     def test_api_contracts_retrieve_with_accesses(self):
         """
@@ -588,7 +588,7 @@ class ContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
     @mock.patch.object(
         fields.ThumbnailDetailField,
@@ -611,7 +611,7 @@ class ContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
 
         assert response.json() == {
             "id": str(contract.id),
@@ -698,7 +698,7 @@ class ContractApiTest(BaseAPITestCase):
         with self.assertNumQueries(0):
             response = self.client.post("/api/v1.0/contracts/")
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
     def test_api_contracts_create_authenticated(self):
         """Authenticated user cannot create a contract."""
@@ -711,7 +711,11 @@ class ContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertContains(response, 'Method \\"POST\\" not allowed.', status_code=405)
+        self.assertContains(
+            response,
+            'Method \\"POST\\" not allowed.',
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
+        )
 
     def test_api_contracts_update_anonymous(self):
         """Anonymous user cannot update a contract."""
@@ -720,7 +724,7 @@ class ContractApiTest(BaseAPITestCase):
         with self.assertNumQueries(0):
             response = self.client.put(f"/api/v1.0/contracts/{str(contract.id)}/")
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
     def test_api_contracts_update_authenticated(self):
         """Authenticated user cannot update a contract."""
@@ -734,7 +738,11 @@ class ContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertContains(response, 'Method \\"PUT\\" not allowed.', status_code=405)
+        self.assertContains(
+            response,
+            'Method \\"PUT\\" not allowed.',
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
+        )
 
     def test_api_contracts_patch_anonymous(self):
         """Anonymous user cannot patch a contract."""
@@ -743,7 +751,7 @@ class ContractApiTest(BaseAPITestCase):
         with self.assertNumQueries(0):
             response = self.client.patch(f"/api/v1.0/contracts/{str(contract.id)}/")
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
     def test_api_contracts_patch_authenticated(self):
         """Authenticated user cannot patch a contract."""
@@ -758,7 +766,9 @@ class ContractApiTest(BaseAPITestCase):
             )
 
         self.assertContains(
-            response, 'Method \\"PATCH\\" not allowed.', status_code=405
+            response,
+            'Method \\"PATCH\\" not allowed.',
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
 
     def test_api_contracts_delete_anonymous(self):
@@ -768,7 +778,7 @@ class ContractApiTest(BaseAPITestCase):
         with self.assertNumQueries(0):
             response = self.client.delete(f"/api/v1.0/contracts/{str(contract.id)}/")
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
     def test_api_contracts_delete_authenticated(self):
         """Authenticated user cannot delete a contract."""
@@ -783,7 +793,9 @@ class ContractApiTest(BaseAPITestCase):
             )
 
         self.assertContains(
-            response, 'Method \\"DELETE\\" not allowed.', status_code=405
+            response,
+            'Method \\"DELETE\\" not allowed.',
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
 
     def test_api_contract_download_anonymous(self):
@@ -796,7 +808,7 @@ class ContractApiTest(BaseAPITestCase):
             f"/api/v1.0/contracts/{str(contract.id)}/download/",
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
         content = response.json()
         self.assertDictEqual(
@@ -835,7 +847,7 @@ class ContractApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.headers["Content-Type"], "application/pdf")
         self.assertEqual(
             response.headers["Content-Disposition"],
@@ -902,7 +914,11 @@ class ContractApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertContains(response, 'Method \\"POST\\" not allowed.', status_code=405)
+        self.assertContains(
+            response,
+            'Method \\"POST\\" not allowed.',
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
+        )
 
     def test_api_contract_download_authenticated_cannot_update(self):
         """
@@ -924,7 +940,11 @@ class ContractApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertContains(response, 'Method \\"PUT\\" not allowed.', status_code=405)
+        self.assertContains(
+            response,
+            'Method \\"PUT\\" not allowed.',
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
+        )
 
     def test_api_contract_download_authenticated_cannot_delete(self):
         """
@@ -947,7 +967,9 @@ class ContractApiTest(BaseAPITestCase):
         )
 
         self.assertContains(
-            response, 'Method \\"DELETE\\" not allowed.', status_code=405
+            response,
+            'Method \\"DELETE\\" not allowed.',
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
 
     def test_api_contract_download_authenticated_should_fail_if_owner_is_not_the_actual_user(
@@ -983,7 +1005,7 @@ class ContractApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertContains(response, "Not found.", status_code=404)
+        self.assertContains(response, "Not found.", status_code=HTTPStatus.NOT_FOUND)
 
     def test_api_contract_download_authenticated_should_fail_if_contract_is_not_signed(
         self,
@@ -1019,7 +1041,7 @@ class ContractApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             "Cannot download a contract when it is not yet fully signed.",
-            status_code=400,
+            status_code=HTTPStatus.BAD_REQUEST,
         )
 
     def test_api_contract_generate_zip_archive_anonymous(self):
@@ -1030,7 +1052,7 @@ class ContractApiTest(BaseAPITestCase):
             "/api/v1.0/contracts/zip-archive/",
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
         content = response.json()
         self.assertEqual(
@@ -1052,7 +1074,11 @@ class ContractApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertContains(response, 'Method \\"GET\\" not allowed.', status_code=405)
+        self.assertContains(
+            response,
+            'Method \\"GET\\" not allowed.',
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
+        )
 
     def test_api_contract_generate_zip_archive_authenticated_put_method_not_allowed(
         self,
@@ -1069,7 +1095,11 @@ class ContractApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertContains(response, 'Method \\"PUT\\" not allowed.', status_code=405)
+        self.assertContains(
+            response,
+            'Method \\"PUT\\" not allowed.',
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
+        )
 
     def test_api_contract_generate_zip_archive_authenticated_patch_method_not_allowed(
         self,
@@ -1087,7 +1117,9 @@ class ContractApiTest(BaseAPITestCase):
         )
 
         self.assertContains(
-            response, 'Method \\"PATCH\\" not allowed.', status_code=405
+            response,
+            'Method \\"PATCH\\" not allowed.',
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
 
     def test_api_contract_generate_zip_archive_authenticated_delete_method_not_allowed(
@@ -1106,7 +1138,9 @@ class ContractApiTest(BaseAPITestCase):
         )
 
         self.assertContains(
-            response, 'Method \\"DELETE\\" not allowed.', status_code=405
+            response,
+            'Method \\"DELETE\\" not allowed.',
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
 
     def test_api_contract_generate_zip_archive_authenticated_post_without_parsing_parameters(
@@ -1127,7 +1161,7 @@ class ContractApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
 
         self.assertEqual(
             response.json(),
@@ -1164,7 +1198,7 @@ class ContractApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
 
         self.assertEqual(
             response.json(),
@@ -1198,7 +1232,7 @@ class ContractApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
 
         self.assertEqual(response.json(), ["No zip to generate"])
 
@@ -1251,7 +1285,7 @@ class ContractApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 202)
+        self.assertEqual(response.status_code, HTTPStatus.ACCEPTED)
 
         content = response.content.decode("utf-8")
         content_json = json.loads(content)
@@ -1272,7 +1306,7 @@ class ContractApiTest(BaseAPITestCase):
         """
         response = self.client.get(f"/api/v1.0/contracts/zip-archive/{uuid4()}/")
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
         content = response.json()
         self.assertEqual(
@@ -1294,7 +1328,11 @@ class ContractApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertContains(response, 'Method \\"PUT\\" not allowed.', status_code=405)
+        self.assertContains(
+            response,
+            'Method \\"PUT\\" not allowed.',
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
+        )
 
     def test_api_contract_get_zip_archive_authenticated_patch_method_not_allowed(
         self,
@@ -1312,7 +1350,9 @@ class ContractApiTest(BaseAPITestCase):
         )
 
         self.assertContains(
-            response, 'Method \\"PATCH\\" not allowed.', status_code=405
+            response,
+            'Method \\"PATCH\\" not allowed.',
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
 
     def test_api_contract_get_zip_archive_authenticated_delete_method_not_allowed(
@@ -1331,7 +1371,9 @@ class ContractApiTest(BaseAPITestCase):
         )
 
         self.assertContains(
-            response, 'Method \\"DELETE\\" not allowed.', status_code=405
+            response,
+            'Method \\"DELETE\\" not allowed.',
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
 
     def test_api_contract_get_zip_archive_authenticated_get_method_but_zip_archive_not_ready(
@@ -1352,7 +1394,7 @@ class ContractApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
     def test_api_contract_get_zip_archive_authenticated_invalid_zip_id(
         self,
@@ -1370,7 +1412,7 @@ class ContractApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
     def test_api_contract_get_zip_archive_authenticated_get_method_zip_archive_is_ready(
         self,
@@ -1396,7 +1438,7 @@ class ContractApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.headers["Content-Type"], "application/zip")
         self.assertEqual(
             response.headers["Content-Disposition"],
@@ -1426,7 +1468,7 @@ class ContractApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
         # Prepare ZIP archive in storage
         zip_archive_name = contract_utility.generate_zip_archive(
@@ -1438,7 +1480,7 @@ class ContractApiTest(BaseAPITestCase):
             f"/api/v1.0/contracts/zip-archive/{zip_uuid}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.headers["Content-Type"], "application/zip")
         self.assertEqual(
             response.headers["Content-Disposition"],

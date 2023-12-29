@@ -2,6 +2,7 @@
 import json
 import random
 from datetime import timedelta
+from http import HTTPStatus
 
 from django.test import TestCase
 from django.test.utils import override_settings
@@ -66,7 +67,7 @@ class OpenEdXLMSBackendTestCase(TestCase):
         responses.add(
             responses.GET,
             url,
-            status=200,
+            status=HTTPStatus.OK,
             json=expected_json_response,
         )
 
@@ -97,7 +98,10 @@ class OpenEdXLMSBackendTestCase(TestCase):
         )
 
         responses.add(
-            responses.GET, url, status=500, json={"error": "Something went wrong..."}
+            responses.GET,
+            url,
+            status=HTTPStatus.INTERNAL_SERVER_ERROR,
+            json={"error": "Something went wrong..."},
         )
 
         backend = LMSHandler.select_lms(resource_link)
@@ -137,7 +141,7 @@ class OpenEdXLMSBackendTestCase(TestCase):
         responses.add(
             responses.POST,
             url,
-            status=200,
+            status=HTTPStatus.OK,
             json={"is_active": is_active},
         )
 
@@ -172,7 +176,7 @@ class OpenEdXLMSBackendTestCase(TestCase):
         responses.add(
             responses.POST,
             url,
-            status=200,
+            status=HTTPStatus.OK,
             json={"is_active": True},
         )
 
@@ -236,7 +240,7 @@ class OpenEdXLMSBackendTestCase(TestCase):
         responses.add(
             responses.POST,
             url,
-            status=200,
+            status=HTTPStatus.OK,
             json={"is_active": is_active},
         )
 
@@ -328,7 +332,7 @@ class OpenEdXLMSBackendTestCase(TestCase):
         responses.add(
             responses.POST,
             url,
-            status=200,
+            status=HTTPStatus.OK,
             json=expected_json_response,
         )
 
@@ -377,7 +381,7 @@ class OpenEdXLMSBackendTestCase(TestCase):
         responses.add(
             responses.POST,
             url,
-            status=500,
+            status=HTTPStatus.INTERNAL_SERVER_ERROR,
             json={"is_active": is_active},
         )
 
@@ -422,7 +426,7 @@ class OpenEdXLMSBackendTestCase(TestCase):
             "percent": 1.0 if grade_state else 0.0,
         }
 
-        responses.add(responses.GET, url, status=200, json=expected_response)
+        responses.add(responses.GET, url, status=HTTPStatus.OK, json=expected_response)
 
         backend = LMSHandler.select_lms(resource_link)
         self.assertIsInstance(backend, OpenEdXLMSBackend)
@@ -448,7 +452,7 @@ class OpenEdXLMSBackendTestCase(TestCase):
         resource_link = f"http://openedx.test/courses/{course_id}/course"
         url = f"http://openedx.test/fun/api/grades/{course_id}/{username}"
 
-        responses.add(responses.GET, url, status=500)
+        responses.add(responses.GET, url, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
         backend = LMSHandler.select_lms(resource_link)
         self.assertIsInstance(backend, OpenEdXLMSBackend)

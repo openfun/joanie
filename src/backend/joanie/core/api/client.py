@@ -2,7 +2,6 @@
 Client API endpoints
 """
 # pylint: disable=too-many-lines
-
 import io
 import uuid
 from http import HTTPStatus
@@ -347,12 +346,12 @@ class OrderViewSet(
             except models.Enrollment.DoesNotExist:
                 return Response(
                     {"enrollment_id": f"Enrollment with id {enrollment_id} not found."},
-                    status=400,
+                    status=HTTPStatus.BAD_REQUEST,
                 )
 
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
-            return Response(serializer.errors, status=400)
+            return Response(serializer.errors, status=HTTPStatus.BAD_REQUEST)
 
         course_code = serializer.initial_data.get("course_code")
 
@@ -367,7 +366,7 @@ class OrderViewSet(
             except models.Course.DoesNotExist:
                 return Response(
                     {"course": ["Course with code {course_code} does not exist."]},
-                    status=400,
+                    status=HTTPStatus.BAD_REQUEST,
                 )
             serializer.validated_data["course"] = course
         else:
@@ -378,7 +377,7 @@ class OrderViewSet(
                             "Either the course or the enrollment field is required."
                         ]
                     },
-                    status=400,
+                    status=HTTPStatus.BAD_REQUEST,
                 )
             course = enrollment.course_run.course
 
@@ -391,11 +390,11 @@ class OrderViewSet(
                     f"Cannot create order related to the product {product.id} "
                     f"and course {course.code}"
                 ),
-                status=400,
+                status=HTTPStatus.BAD_REQUEST,
             )
 
         # Else return the fresh new order
-        return Response(serializer.data, status=201)
+        return Response(serializer.data, status=HTTPStatus.CREATED)
 
     @action(detail=True, methods=["PATCH"])
     def submit(self, request, pk=None):  # pylint: disable=no-self-use, invalid-name, unused-argument
@@ -414,7 +413,7 @@ class OrderViewSet(
 
         return Response(
             {"payment_info": order.submit(billing_address, credit_card_id, request)},
-            status=201,
+            status=HTTPStatus.CREATED,
         )
 
     @action(detail=True, methods=["POST"])
@@ -425,11 +424,14 @@ class OrderViewSet(
         order = self.get_object()
 
         if order.state == enums.ORDER_STATE_VALIDATED:
-            return Response("Cannot abort a validated order.", status=422)
+            return Response(
+                "Cannot abort a validated order.",
+                status=HTTPStatus.UNPROCESSABLE_ENTITY,
+            )
 
         order.pending(payment_id)
 
-        return Response(status=204)
+        return Response(status=HTTPStatus.NO_CONTENT)
 
     @action(detail=True, methods=["POST"])
     def cancel(self, request, pk=None):  # pylint: disable=no-self-use, invalid-name, unused-argument
@@ -437,10 +439,13 @@ class OrderViewSet(
         order = self.get_object()
 
         if order.state == enums.ORDER_STATE_VALIDATED:
-            return Response("Cannot cancel a validated order.", status=422)
+            return Response(
+                "Cannot cancel a validated order.",
+                status=HTTPStatus.UNPROCESSABLE_ENTITY,
+            )
 
         order.cancel()
-        return Response(status=204)
+        return Response(status=HTTPStatus.NO_CONTENT)
 
     @action(detail=True, methods=["GET"])
     def invoice(self, request, pk=None):  # pylint: disable=no-self-use, invalid-name
@@ -451,7 +456,10 @@ class OrderViewSet(
         reference = request.query_params.get("reference")
 
         if reference is None:
-            return Response({"reference": "This parameter is required."}, status=400)
+            return Response(
+                {"reference": "This parameter is required."},
+                status=HTTPStatus.BAD_REQUEST,
+            )
 
         username = request.auth["username"] if request.auth else request.user.username
         try:
@@ -463,11 +471,11 @@ class OrderViewSet(
         except Invoice.DoesNotExist:
             return Response(
                 (f"No invoice found for order {pk} with reference {reference}."),
-                status=404,
+                status=HTTPStatus.NOT_FOUND,
             )
 
         response = HttpResponse(
-            invoice.document, content_type="application/pdf", status=200
+            invoice.document, content_type="application/pdf", status=HTTPStatus.OK
         )
         response[
             "Content-Disposition"
@@ -482,7 +490,7 @@ class OrderViewSet(
         """
         order = self.get_object()
         order.validate()
-        return Response(status=200)
+        return Response(status=HTTPStatus.OK)
 
     @extend_schema(request=None)
     @action(detail=True, methods=["POST"])
@@ -495,7 +503,7 @@ class OrderViewSet(
 
         invitation_link = order.submit_for_signature(request.user)
 
-        return JsonResponse({"invitation_link": invitation_link}, status=200)
+        return JsonResponse({"invitation_link": invitation_link}, status=HTTPStatus.OK)
 
 
 class AddressViewSet(
@@ -634,17 +642,21 @@ class CertificateViewSet(
             )
         except models.Certificate.DoesNotExist:
             return Response(
-                {"detail": f"No certificate found with id {pk}."}, status=404
+                {"detail": f"No certificate found with id {pk}."},
+                status=HTTPStatus.NOT_FOUND,
             )
 
         (document, _) = certificate.generate_document()
 
         if not document:
             return Response(
-                {"detail": f"Unable to generate certificate {pk}."}, status=422
+                {"detail": f"Unable to generate certificate {pk}."},
+                status=HTTPStatus.UNPROCESSABLE_ENTITY,
             )
 
-        response = HttpResponse(document, content_type="application/pdf", status=200)
+        response = HttpResponse(
+            document, content_type="application/pdf", status=HTTPStatus.OK
+        )
 
         response["Content-Disposition"] = f"attachment; filename={pk}.pdf;"
 
@@ -716,14 +728,14 @@ class OrganizationViewSet(
                 contracts_ids,
             )
         except NoContractToSignError as error:
-            return Response({"detail": f"{error}"}, status=400)
+            return Response({"detail": f"{error}"}, status=HTTPStatus.BAD_REQUEST)
 
         return JsonResponse(
             {
                 "invitation_link": signature_link,
                 "contract_ids": ids,
             },
-            status=200,
+            status=HTTPStatus.OK,
         )
 
 
@@ -1146,7 +1158,7 @@ class ContractViewSet(GenericContractViewSet):
         zip_archive_exists = storage.exists(zip_archive_name)
 
         if not zip_archive_exists:
-            return Response(status=404)
+            return Response(status=HTTPStatus.NOT_FOUND)
 
         return FileResponse(
             storage.open(f"{storage.location}/{zip_archive_name}", mode="rb"),
@@ -1202,7 +1214,7 @@ class ContractViewSet(GenericContractViewSet):
 
         url_base = reverse("contracts-zip-archive", kwargs={"zip_id": str(zip_id)})
 
-        return JsonResponse({"url": url_base}, status=202)
+        return JsonResponse({"url": url_base}, status=HTTPStatus.ACCEPTED)
 
 
 class NestedOrganizationContractViewSet(NestedGenericViewSet, GenericContractViewSet):

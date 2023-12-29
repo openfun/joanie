@@ -108,7 +108,7 @@ exclude = [
     "__pycache__",
     "*/migrations/*",
 ]
-ignore= ["DJ001", "PLR2004"]
+ignore= ["DJ001"]
 line-length = 88
 
 

@@ -1,4 +1,6 @@
 """API for the joanie project."""
+from http import HTTPStatus
+
 from django.core.exceptions import ValidationError as DjangoValidationError
 
 from django_fsm import TransitionNotAllowed
@@ -25,6 +27,6 @@ def exception_handler(exc, context):
         exc = DRFValidationError(detail=detail)
     elif isinstance(exc, TransitionNotAllowed):
         detail = str(exc)
-        exc = DRFValidationError(detail=detail, code=422)
+        exc = DRFValidationError(detail=detail, code=HTTPStatus.UNPROCESSABLE_ENTITY)
 
     return drf_exception_handler(exc, context)

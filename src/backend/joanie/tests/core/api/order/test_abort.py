@@ -1,4 +1,5 @@
 """Tests for the Order abort API."""
+from http import HTTPStatus
 from unittest import mock
 
 from django.core.cache import cache
@@ -24,7 +25,7 @@ class OrderAbortApiTest(BaseAPITestCase):
 
         response = self.client.post(f"/api/v1.0/orders/{order.id}/abort/")
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         self.assertDictEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
@@ -42,7 +43,7 @@ class OrderAbortApiTest(BaseAPITestCase):
             f"/api/v1.0/orders/{order.id}/abort/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
 
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
     def test_api_order_abort_authenticated_forbidden_validated(self):
         """
@@ -60,7 +61,7 @@ class OrderAbortApiTest(BaseAPITestCase):
             f"/api/v1.0/orders/{order.id}/abort/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
 
-        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.status_code, HTTPStatus.UNPROCESSABLE_ENTITY)
         order.refresh_from_db()
         self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
 
@@ -97,7 +98,7 @@ class OrderAbortApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         order = models.Order.objects.get(id=response.json()["id"])
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
         response = self.client.patch(
             f"/api/v1.0/orders/{order.id}/submit/",
             data=data,
@@ -108,7 +109,7 @@ class OrderAbortApiTest(BaseAPITestCase):
         payment_id = content["payment_info"]["payment_id"]
         order.refresh_from_db()
         # - A draft order should have been created...
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
         self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
 
         # - ... with a payment
@@ -122,7 +123,7 @@ class OrderAbortApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
 
         # - Order should have been canceled ...
         order.refresh_from_db()
@@ -137,6 +138,6 @@ class OrderAbortApiTest(BaseAPITestCase):
             f"/api/v1.0/orders/{order.id}/cancel/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
         order.refresh_from_db()
         self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)

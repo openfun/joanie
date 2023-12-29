@@ -1,8 +1,8 @@
 """
 Test suite for Organization's courses API endpoint.
 """
-
 import random
+from http import HTTPStatus
 
 from joanie.core import factories, models
 from joanie.tests.base import BaseAPITestCase
@@ -23,7 +23,7 @@ class OrganizationCourseApiTest(BaseAPITestCase):
         response = self.client.get(
             f"/api/v1.0/organizations/{organization.id}/courses/"
         )
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         content = response.json()
         self.assertEqual(
             content, {"detail": "Authentication credentials were not provided."}
@@ -68,7 +68,7 @@ class OrganizationCourseApiTest(BaseAPITestCase):
             )
 
         # It should return all courses from the first org
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 3)
         self.assertEqual(
@@ -105,7 +105,7 @@ class OrganizationCourseApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 0)
 
@@ -114,7 +114,7 @@ class OrganizationCourseApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 0)
 
@@ -124,7 +124,7 @@ class OrganizationCourseApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 0)
 
@@ -133,7 +133,7 @@ class OrganizationCourseApiTest(BaseAPITestCase):
                 f"/api/v1.0/organizations/{organizations[1].id}/courses/{courses[0].id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
     def test_api_organizations_courses_read_details_authenticated(self):
         """
@@ -159,7 +159,7 @@ class OrganizationCourseApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["id"], str(courses[0].id))
 
@@ -185,7 +185,7 @@ class OrganizationCourseApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
     def test_api_organizations_courses_read_details_anonymous(self):
         """
@@ -206,7 +206,7 @@ class OrganizationCourseApiTest(BaseAPITestCase):
                 f"/api/v1.0/organizations/{organizations[0].id}/courses/{courses[0].id}/",
             )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         content = response.json()
         self.assertEqual(
             content, {"detail": "Authentication credentials were not provided."}
@@ -246,7 +246,7 @@ class OrganizationCourseApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         # It should return only the course with a listed CourseRun
         self.assertEqual(content["count"], 1)
@@ -274,7 +274,7 @@ class OrganizationCourseApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
         self.assertFalse(models.Course.objects.exists())
 
     def test_api_organizations_courses_create_anonymous(self):
@@ -293,7 +293,7 @@ class OrganizationCourseApiTest(BaseAPITestCase):
             data=data,
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
@@ -317,7 +317,7 @@ class OrganizationCourseApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
         self.assertFalse(models.Course.objects.filter(code="notacode").exists())
 
         course.refresh_from_db()
@@ -339,7 +339,7 @@ class OrganizationCourseApiTest(BaseAPITestCase):
             f"/api/v1.0/organizations/{organization.id}/courses/{course.id}/", data=data
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
@@ -366,7 +366,7 @@ class OrganizationCourseApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
         self.assertFalse(models.Course.objects.filter(code="notacode").exists())
 
         course.refresh_from_db()
@@ -387,7 +387,7 @@ class OrganizationCourseApiTest(BaseAPITestCase):
             f"/api/v1.0/organizations/{organization.id}/courses/{course.id}/", data=data
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
@@ -410,7 +410,7 @@ class OrganizationCourseApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
         self.assertTrue(models.Course.objects.filter(id=course.id).exists())
 
     def test_api_organizations_courses_delete_anonymous(self):
@@ -424,7 +424,7 @@ class OrganizationCourseApiTest(BaseAPITestCase):
             f"/api/v1.0/organizations/{organization.id}/courses/{course.id}/"
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )

@@ -1,6 +1,8 @@
 """
 Test suite for wish API
 """
+from http import HTTPStatus
+
 import arrow
 
 from joanie.core import factories, models
@@ -16,7 +18,7 @@ class CourseWishAPITestCase(BaseAPITestCase):
         course = factories.CourseFactory()
         response = self.client.get(f"/api/v1.0/courses/{course.id}/wish/")
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
@@ -29,7 +31,7 @@ class CourseWishAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION="Bearer nawak",
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(response.json()["code"], "token_not_valid")
 
     def test_api_course_wish_get_expired_token(self):
@@ -45,7 +47,7 @@ class CourseWishAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(response.json()["code"], "token_not_valid")
 
     def test_api_course_wish_get_new_user(self):
@@ -64,7 +66,7 @@ class CourseWishAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.json(), {"status": False})
         self.assertTrue(models.User.objects.filter(username=username).exists())
 
@@ -83,7 +85,7 @@ class CourseWishAPITestCase(BaseAPITestCase):
         self.assertContains(
             response,
             "Not found.",
-            status_code=404,
+            status_code=HTTPStatus.NOT_FOUND,
         )
 
     def test_api_course_wish_get_existing(self):
@@ -99,7 +101,7 @@ class CourseWishAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.json(), {"status": True})
 
     def test_api_course_wish_get_absent(self):
@@ -113,7 +115,7 @@ class CourseWishAPITestCase(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.json(), {"status": False})
 
     def test_api_course_wish_create_anonymous(self):
@@ -124,7 +126,7 @@ class CourseWishAPITestCase(BaseAPITestCase):
             f"/api/v1.0/courses/{course.id}/wish/",
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
@@ -139,7 +141,7 @@ class CourseWishAPITestCase(BaseAPITestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(response.json()["code"], "token_not_valid")
 
     def test_api_course_wish_create_with_expired_token(self):
@@ -157,7 +159,7 @@ class CourseWishAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(response.json()["code"], "token_not_valid")
 
     def test_api_course_wish_create_success(self):
@@ -172,7 +174,7 @@ class CourseWishAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.json(), {"status": True})
 
     def test_api_course_wish_create_success_with_course_code(self):
@@ -187,7 +189,7 @@ class CourseWishAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.json(), {"status": True})
 
     def test_api_course_wish_create_existing(self):
@@ -203,7 +205,7 @@ class CourseWishAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.json(), {"status": True})
 
     def test_api_course_wish_update_success(self):
@@ -219,7 +221,7 @@ class CourseWishAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
         self.assertEqual(response.json(), {"detail": 'Method "PUT" not allowed.'})
 
     def test_api_course_wish_delete_anonymous(self):
@@ -231,7 +233,7 @@ class CourseWishAPITestCase(BaseAPITestCase):
             f"/api/v1.0/courses/{wish.course.id}/wish/",
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
@@ -247,7 +249,7 @@ class CourseWishAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION="Bearer nawak",
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(response.json()["code"], "token_not_valid")
         self.assertTrue(models.CourseWish.objects.exists())
 
@@ -265,7 +267,7 @@ class CourseWishAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(response.json()["code"], "token_not_valid")
         self.assertTrue(models.CourseWish.objects.exists())
 
@@ -280,7 +282,7 @@ class CourseWishAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertFalse(models.CourseWish.objects.exists())
 
     def test_api_course_wish_delete_absent(self):
@@ -294,5 +296,5 @@ class CourseWishAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertFalse(models.CourseWish.objects.exists())

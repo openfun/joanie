@@ -1,5 +1,6 @@
 """Tests for the Order delete API."""
 import random
+from http import HTTPStatus
 
 from django.core.cache import cache
 
@@ -23,7 +24,7 @@ class OrderDeleteApiTest(BaseAPITestCase):
 
         response = self.client.delete(f"/api/v1.0/orders/{order.id}/")
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
         self.assertDictEqual(
             response.json(),
@@ -49,7 +50,7 @@ class OrderDeleteApiTest(BaseAPITestCase):
             f"/api/v1.0/orders/{order.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
         self.assertEqual(models.Order.objects.count(), 1)
 
     def test_api_order_delete_owner(self):
@@ -62,5 +63,5 @@ class OrderDeleteApiTest(BaseAPITestCase):
             f"/api/v1.0/orders/{order.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
         self.assertEqual(models.Order.objects.count(), 1)

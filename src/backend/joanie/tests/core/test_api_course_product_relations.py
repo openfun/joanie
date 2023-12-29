@@ -2,6 +2,7 @@
 """Test suite for the Course Product Relation API."""
 import random
 import uuid
+from http import HTTPStatus
 from unittest import mock
 
 from django.conf import settings
@@ -21,7 +22,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         """
         response = self.client.get("/api/v1.0/course-product-relations/")
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         content = response.json()
         self.assertEqual(
             content, {"detail": "Authentication credentials were not provided."}
@@ -39,7 +40,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         response = self.client.get(
             "/api/v1.0/course-product-relations/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(
             content,
@@ -94,7 +95,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(len(content["results"]), 1)
         self.assertEqual(
@@ -228,7 +229,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         course = factories.CourseFactory()
         response = self.client.get(f"/api/v1.0/courses/{course.id}/products/")
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         content = response.json()
         self.assertEqual(
             content, {"detail": "Authentication credentials were not provided."}
@@ -261,7 +262,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(len(content["results"]), 1)
 
@@ -281,7 +282,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             f"/api/v1.0/courses/{course.id}/products/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(
             content,
@@ -306,7 +307,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         )
 
         response = self.client.get(f"/api/v1.0/course-product-relations/{relation.id}/")
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
     def test_api_course_product_relation_read_detail_anonymous_with_course_id(self):
         """
@@ -316,7 +317,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         response = self.client.get(
             f"/api/v1.0/courses/{uuid.uuid4()}/products/{uuid.uuid4()}/"
         )
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
     def test_api_course_product_relation_read_detail_with_product_id_anonymous(self):
         """
@@ -341,7 +342,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                 f"/api/v1.0/courses/{course.code}/products/{product.id}/"
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
 
         content = response.json()
         self.assertEqual(content["id"], str(relation.id))
@@ -354,7 +355,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                 f"/api/v1.0/courses/{course.code}/products/{product.id}/"
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
 
         # Then cache should be language sensitive
         with self.assertNumQueries(15):
@@ -385,7 +386,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             "Not found.",
-            status_code=404,
+            status_code=HTTPStatus.NOT_FOUND,
         )
 
         # Authenticated user with course access should not be able
@@ -405,7 +406,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             "Not found.",
-            status_code=404,
+            status_code=HTTPStatus.NOT_FOUND,
         )
 
         response = self.client.get(
@@ -416,7 +417,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             "Not found.",
-            status_code=404,
+            status_code=HTTPStatus.NOT_FOUND,
         )
 
     def test_api_course_product_relation_read_detail_without_accesses(self):
@@ -437,7 +438,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
     @mock.patch.object(
         fields.ThumbnailDetailField,
@@ -472,7 +473,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
 
         content = response.json()
         self.assertEqual(
@@ -619,7 +620,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
 
         content = response.json()
         self.assertEqual(
@@ -658,7 +659,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             f"/api/v1.0/course-product-relations/{relation.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
 
         content = response.json()
         self.assertEqual(
@@ -682,7 +683,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
 
         self.assertEqual(
             response.json()["order_groups"],
@@ -704,7 +705,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             f"/api/v1.0/course-product-relations/{relation.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
 
         self.assertEqual(
             response.json()["order_groups"],
@@ -735,7 +736,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             },
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         content = response.json()
         self.assertEqual(
             content, {"detail": "Authentication credentials were not provided."}
@@ -763,7 +764,11 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             },
         )
 
-        self.assertContains(response, 'Method \\"POST\\" not allowed.', status_code=405)
+        self.assertContains(
+            response,
+            'Method \\"POST\\" not allowed.',
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
+        )
         self.assertEqual(models.CourseProductRelation.objects.count(), 0)
 
     def test_api_course_product_relation_create_with_accesses(self):
@@ -791,7 +796,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             'Method \\"POST\\" not allowed.',
-            status_code=405,
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
 
     def test_api_course_product_relation_update_anonymous(self):
@@ -814,7 +819,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             "Authentication credentials were not provided.",
-            status_code=401,
+            status_code=HTTPStatus.UNAUTHORIZED,
         )
 
     def test_api_course_product_relation_update_authenticated(self):
@@ -841,7 +846,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             'Method \\"PUT\\" not allowed.',
-            status_code=405,
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
 
     def test_api_course_product_relation_update_with_accesses(self):
@@ -869,7 +874,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             'Method \\"PUT\\" not allowed.',
-            status_code=405,
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
 
     def test_api_course_product_relation_partially_update_anonymous(self):
@@ -891,7 +896,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             "Authentication credentials were not provided.",
-            status_code=401,
+            status_code=HTTPStatus.UNAUTHORIZED,
         )
 
     def test_api_course_product_relation_partially_update_authenticated(self):
@@ -917,7 +922,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             'Method \\"PATCH\\" not allowed.',
-            status_code=405,
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
 
     def test_api_course_product_relation_partially_update_with_accesses(self):
@@ -944,7 +949,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             'Method \\"PATCH\\" not allowed.',
-            status_code=405,
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
 
     def test_api_course_product_relation_delete_anonymous(self):
@@ -963,7 +968,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             "Authentication credentials were not provided.",
-            status_code=401,
+            status_code=HTTPStatus.UNAUTHORIZED,
         )
         self.assertEqual(models.CourseProductRelation.objects.count(), 1)
 
@@ -987,7 +992,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             'Method \\"DELETE\\" not allowed.',
-            status_code=405,
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
         self.assertEqual(models.CourseProductRelation.objects.count(), 1)
 
@@ -1012,6 +1017,6 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             'Method \\"DELETE\\" not allowed.',
-            status_code=405,
+            status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
         self.assertEqual(models.CourseProductRelation.objects.count(), 1)

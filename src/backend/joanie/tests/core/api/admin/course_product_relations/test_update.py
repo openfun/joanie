@@ -2,6 +2,7 @@
 Test suite for CourseProductRelation update Admin API.
 """
 import uuid
+from http import HTTPStatus
 from unittest import mock
 
 from django.conf import settings
@@ -36,7 +37,7 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         self.assertDictEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
@@ -61,7 +62,7 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
         self.assertDictEqual(
             response.json(),
             {"detail": "You do not have permission to perform this action."},
@@ -95,7 +96,7 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         relation.refresh_from_db()
 
         self.assertEqual(
@@ -252,7 +253,7 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         self.assertDictEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
@@ -273,7 +274,7 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
         self.assertDictEqual(
             response.json(),
             {"detail": "You do not have permission to perform this action."},
@@ -303,7 +304,7 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         relation.refresh_from_db()
         self.assertEqual(
             response.json(),
@@ -473,7 +474,7 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
 
         assert response.json() == {
             "id": str(relation.id),
@@ -635,7 +636,7 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
 
         assert response.json() == {
             "organization_ids": [

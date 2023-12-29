@@ -480,7 +480,7 @@ class Order(BaseModel):
         An order can be validated if the product is free or if it
         has invoices.
         """
-        return self.total == 0.0 or self.invoices.count() > 0
+        return self.total == 0.0 or self.invoices.count() > 0  # noqa: PLR2004
 
     def can_be_state_submitted(self):
         """
@@ -529,7 +529,7 @@ class Order(BaseModel):
         """
         Transition order to submitted state and to validate if order is free
         """
-        if self.total != 0.0 and billing_address is None:
+        if self.total != 0.0 and billing_address is None:  # noqa: PLR2004
             raise ValidationError({"billing_address": ["This field is required."]})
 
         if self.state == enums.ORDER_STATE_DRAFT:
@@ -544,7 +544,7 @@ class Order(BaseModel):
                 )
                 order_relation.course_runs.set(relation.course_runs.all())
 
-        if self.total == 0.0:
+        if self.total == 0.0:  # noqa: PLR2004
             self.validate()
             return None
 
