@@ -136,6 +136,7 @@ and this project adheres to
 - Fix unenrollment issue on closed course runs
 - Fix auto enrollment with closed and specific course runs
 - Fix demo-dev command synchronization error.
+- Add missing django dockerflow middleware
 
 ## [1.2.0] - 2023-08-28
 
