@@ -668,7 +668,7 @@ jobs:
             if [[ -n "$CIRCLE_TAG" ]]; then
                 docker tag joanie-admin:${CIRCLE_SHA1} fundocker/joanie-admin:latest
             fi
-            docker images | grep -E "^fundocker/joanie\s*(${DOCKER_TAG}.*|latest|main)"
+            docker images | grep -E "^fundocker/joanie-admin\s*(${DOCKER_TAG}.*|latest|main)"
 
       # Publish images to DockerHub
       #
