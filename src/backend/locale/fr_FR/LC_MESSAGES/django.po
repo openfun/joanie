@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: joanie\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-03-30 09:04+0000\n"
-"PO-Revision-Date: 2023-03-30 13:19\n"
+"POT-Creation-Date: 2023-12-21 14:17+0000\n"
+"PO-Revision-Date: 2024-01-02 16:25\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -21,172 +21,228 @@ msgstr ""
 msgid "Joanie's badges application"
 msgstr "L'application badges de Joanie"
 
-#: joanie/badges/models.py:34
+#: joanie/badges/models.py:32
 msgid "Name"
 msgstr "Nom"
 
-#: joanie/badges/models.py:36
+#: joanie/badges/models.py:34
 msgid "Should be filled with the badge name from configured provider"
 msgstr "Doit être rempli avec le nom du badge du fournisseur configuré"
 
-#: joanie/badges/models.py:42
+#: joanie/badges/models.py:40
 msgid "Description"
 msgstr "Description"
 
-#: joanie/badges/models.py:44
+#: joanie/badges/models.py:42
 msgid "Should be filled with the badge description from configured provider"
 msgstr "Doit être rempli avec la description du badge du fournisseur configuré"
 
-#: joanie/badges/models.py:51
+#: joanie/badges/models.py:49
 msgid "Provider"
 msgstr "Fournisseur"
 
-#: joanie/badges/models.py:53
+#: joanie/badges/models.py:51
 msgid "Should be filled with configured provider name/code for this badge"
 msgstr "Doit être rempli avec le nom/code du fournisseur configuré pour ce badge"
 
-#: joanie/badges/models.py:62
+#: joanie/badges/models.py:60
 msgid "IRI"
 msgstr "IRI"
 
-#: joanie/badges/models.py:64
+#: joanie/badges/models.py:62
 msgid "Generated badge IRI, usually the URL pointing to the badge created for a provider"
 msgstr "IRI du badge généré, généralement l'URL pointant vers le badge créé pour un fournisseur"
 
-#: joanie/badges/models.py:76 joanie/badges/models.py:113
+#: joanie/badges/models.py:74 joanie/badges/models.py:116
 msgid "Badge"
 msgstr "Badge"
 
-#: joanie/badges/models.py:77
+#: joanie/badges/models.py:75
 msgid "Badges"
 msgstr "Badges"
 
-#: joanie/badges/models.py:89
+#: joanie/badges/models.py:92
 msgid "Issued badge IRI"
 msgstr "IRI du badge émis"
 
-#: joanie/badges/models.py:90
+#: joanie/badges/models.py:93
 msgid "Issued badge IRI, usually the URL pointing to issued badge"
 msgstr "IRI du badge émis, généralement l'URL pointant vers le badge émis"
 
-#: joanie/badges/models.py:95
+#: joanie/badges/models.py:98
 msgid "Resource link"
 msgstr "Lien de la ressource"
 
-#: joanie/badges/models.py:97
+#: joanie/badges/models.py:100
 msgid "Link to the resource the badge has been issued for (e.g. a course session)"
 msgstr "Lien vers la ressource pour laquelle le badge a été émis (par ex. une session de cours)"
 
-#: joanie/badges/models.py:105 joanie/core/models/accounts.py:36
+#: joanie/badges/models.py:108 joanie/core/admin.py:98
+#: joanie/core/models/accounts.py:37
 msgid "User"
 msgstr "Utilisateur"
 
-#: joanie/badges/models.py:120
+#: joanie/badges/models.py:123
 msgid "Issued badge assertion"
 msgstr "Assertion du badge émis"
 
-#: joanie/badges/models.py:121
+#: joanie/badges/models.py:124
 msgid "A JSON object allowing to verify an issued badge"
 msgstr "Un objet JSON permettant de vérifier un badge émis"
 
-#: joanie/badges/models.py:132
+#: joanie/badges/models.py:135
 msgid "Issued badge"
 msgstr "Badge émis"
 
-#: joanie/badges/models.py:133
+#: joanie/badges/models.py:136
 msgid "Issued badges"
 msgstr "Badges émis"
 
-#: joanie/core/admin.py:31
+#: joanie/core/admin.py:33
 msgid "No certificates have been generated."
 msgstr "Aucun certificat n'a été généré."
 
-#: joanie/core/admin.py:37
+#: joanie/core/admin.py:39
 msgid "{:d} certificate has been generated."
 msgid_plural "{:d} certificates have been generated."
 msgstr[0] "{:d} certificat a été généré."
 msgstr[1] "{:d} certificats ont été générés."
 
-#: joanie/core/admin.py:113 joanie/core/admin.py:159 joanie/core/admin.py:251
+#: joanie/core/admin.py:63 joanie/core/models/course_wishes.py:24
+#: joanie/core/models/courses.py:401
+msgid "Course"
+msgstr "Cours"
+
+#: joanie/core/admin.py:70 joanie/core/models/products.py:104
+msgid "Product"
+msgstr "Produit"
+
+#: joanie/core/admin.py:77 joanie/core/models/courses.py:171
+msgid "Organization"
+msgstr "Organisation"
+
+#: joanie/core/admin.py:84 joanie/core/admin.py:91
+#: joanie/core/models/course_wishes.py:17 joanie/payment/admin.py:25
+msgid "Owner"
+msgstr "Propriétaire"
+
+#: joanie/core/admin.py:105 joanie/core/models/courses.py:718
+msgid "Course run"
+msgstr "Session de cours"
+
+#: joanie/core/admin.py:259 joanie/core/admin.py:299 joanie/core/admin.py:409
 msgid "Main information"
 msgstr "Information principale"
 
-#: joanie/core/admin.py:122 joanie/core/models/courses.py:155
+#: joanie/core/admin.py:269 joanie/core/models/courses.py:172
 msgid "Organizations"
 msgstr "Organisations"
 
-#: joanie/core/admin.py:124
+#: joanie/core/admin.py:271
 msgid "Select organizations that author this course."
 msgstr "Sélectionnez les organisations qui ont créées ce cours."
 
-#: joanie/core/admin.py:179
+#: joanie/core/admin.py:335
 msgid "Mark course run as gradable"
 msgstr "Marquez la session de cours comme étant disponible à la notation"
 
-#: joanie/core/admin.py:203
+#: joanie/core/admin.py:360
 msgid "Personal info"
 msgstr "Information personnelle"
 
-#: joanie/core/admin.py:205
+#: joanie/core/admin.py:362
 msgid "Permissions"
 msgstr "Permissions"
 
-#: joanie/core/admin.py:216
+#: joanie/core/admin.py:373
 msgid "Important dates"
 msgstr "Dates importantes"
 
-#: joanie/core/admin.py:392
+#: joanie/core/admin.py:554
 msgid "Cancel selected orders"
 msgstr "Annuler les commandes sélectionnées"
 
-#: joanie/core/api/client.py:58
-msgid "You must specify a course code to get product details."
-msgstr "Vous devez spécifier un code de cours pour obtenir les détails du produit."
+#: joanie/core/admin.py:606
+msgid "To get results, choose a user on the right"
+msgstr "Pour obtenir des résultats, choisissez un utilisateur sur la droite"
+
+#: joanie/core/admin.py:636 joanie/payment/admin.py:203
+msgid "To get results, choose an owner on the right"
+msgstr "Pour obtenir des résultats, choisissez un propriétaire sur la droite"
 
 #: joanie/core/apps.py:11
 msgid "Joanie's core application"
 msgstr "L'application principale de Joanie"
 
-#: joanie/core/enums.py:24
+#: joanie/core/authentication.py:44
+msgid "Token contained no recognizable user identification"
+msgstr "Le token ne contient aucun identifiant utilisateur reconnaissable"
+
+#: joanie/core/enums.py:31
 msgid "Credential"
 msgstr "Diplôme"
 
-#: joanie/core/enums.py:26 joanie/core/models/products.py:661
+#: joanie/core/enums.py:33 joanie/core/models/courses.py:920
 msgid "Enrollment"
 msgstr "Inscription"
 
-#: joanie/core/enums.py:29 joanie/core/models/certifications.py:82
+#: joanie/core/enums.py:36 joanie/core/enums.py:120
+#: joanie/core/models/certifications.py:108
+#: joanie/core/templates/issuers/degree.html:25
 msgid "Certificate"
 msgstr "Certificat"
 
-#: joanie/core/enums.py:52
+#: joanie/core/enums.py:66
+msgid "Draft"
+msgstr "Brouillon"
+
+#: joanie/core/enums.py:67
+msgid "Submitted"
+msgstr "Soumise"
+
+#: joanie/core/enums.py:68
 msgid "Pending"
 msgstr "En attente"
 
-#: joanie/core/enums.py:53
+#: joanie/core/enums.py:69
 msgctxt "As in: the order is cancelled."
 msgid "Canceled"
 msgstr "Annulée"
 
-#: joanie/core/enums.py:54
-msgctxt "As in: the order is failed."
-msgid "Failed"
-msgstr "Échouée"
-
-#: joanie/core/enums.py:57
+#: joanie/core/enums.py:72
 msgctxt "As in: the order is validated."
 msgid "Validated"
 msgstr "Validée"
 
-#: joanie/core/enums.py:68
+#: joanie/core/enums.py:88
 msgctxt "As in: the enrollment was successfully set on the LMS."
 msgid "Set"
 msgstr "Défini"
 
-#: joanie/core/enums.py:72
+#: joanie/core/enums.py:92
 msgctxt "As in: the enrollment failed on the LMS."
 msgid "Failed"
 msgstr "En échec"
+
+#: joanie/core/enums.py:99
+msgid "Contract Definition"
+msgstr "Définition de contrat"
+
+#: joanie/core/enums.py:107
+msgid "Unsigned"
+msgstr "Non signé"
+
+#: joanie/core/enums.py:110
+msgid "Partially signed"
+msgstr "Partiellement signé"
+
+#: joanie/core/enums.py:112
+msgid "Signed"
+msgstr "Signé"
+
+#: joanie/core/enums.py:121
+msgid "Degree"
+msgstr "Diplôme"
 
 #: joanie/core/fields/multiselect.py:27
 msgid "{:s} and {:s}"
@@ -224,474 +280,732 @@ msgid_plural "%d certificates have been generated."
 msgstr[0] "%d certificat a été généré."
 msgstr[1] "%d certificats ont été générés."
 
-#: joanie/core/models/accounts.py:24
+#: joanie/core/management/commands/synchronize_course_runs.py:176
+#, python-format
+msgid "%d course run to synchronize."
+msgid_plural "%d course runs to synchronize."
+msgstr[0] "%d session de cours à synchroniser."
+msgstr[1] "%d sessions de cours à synchroniser."
+
+#: joanie/core/management/commands/synchronize_course_runs.py:190
+#, python-format
+msgid "%d product to synchronize."
+msgid_plural "%d products to synchronize."
+msgstr[0] "%d produit à synchroniser."
+msgstr[1] "%d produits à synchroniser."
+
+#: joanie/core/models/accounts.py:25 joanie/core/models/contracts.py:34
 msgid "language"
 msgstr "langue"
 
-#: joanie/core/models/accounts.py:25
+#: joanie/core/models/accounts.py:26
 msgid "Language of the user"
 msgstr "Langue de l'utilisateur"
 
-#: joanie/core/models/accounts.py:31
+#: joanie/core/models/accounts.py:32
 msgid "password"
 msgstr "mot de passe"
 
-#: joanie/core/models/accounts.py:37
+#: joanie/core/models/accounts.py:38
 msgid "Users"
 msgstr "Utilisateurs"
 
-#: joanie/core/models/accounts.py:69 joanie/core/models/certifications.py:29
-#: joanie/core/models/courses.py:141 joanie/core/models/courses.py:171
-#: joanie/core/models/courses.py:282 joanie/core/models/products.py:62
-#: joanie/payment/models.py:378
+#: joanie/core/models/accounts.py:90 joanie/core/models/certifications.py:31
+#: joanie/core/models/contracts.py:28 joanie/core/models/courses.py:157
+#: joanie/core/models/courses.py:382 joanie/core/models/courses.py:689
+#: joanie/core/models/products.py:65 joanie/payment/models.py:364
 msgid "title"
 msgstr "titre"
 
-#: joanie/core/models/accounts.py:70
+#: joanie/core/models/accounts.py:91
 msgid "address"
 msgstr "adresse"
 
-#: joanie/core/models/accounts.py:71
+#: joanie/core/models/accounts.py:92
 msgid "postcode"
 msgstr "code postal"
 
-#: joanie/core/models/accounts.py:72
+#: joanie/core/models/accounts.py:93
 msgid "city"
 msgstr "ville"
 
-#: joanie/core/models/accounts.py:73
+#: joanie/core/models/accounts.py:94 joanie/core/models/courses.py:167
 msgid "country"
 msgstr "pays"
 
-#: joanie/core/models/accounts.py:74
+#: joanie/core/models/accounts.py:95
 msgid "first name"
 msgstr "prénom"
 
-#: joanie/core/models/accounts.py:75
+#: joanie/core/models/accounts.py:96
 msgid "last name"
 msgstr "nom de famille"
 
-#: joanie/core/models/accounts.py:78 joanie/core/models/products.py:319
-#: joanie/payment/models.py:387
+#: joanie/core/models/accounts.py:99 joanie/core/models/courses.py:269
+#: joanie/core/models/courses.py:493 joanie/core/models/products.py:429
+#: joanie/payment/models.py:373
 msgid "owner"
 msgstr "propriétaire"
 
-#: joanie/core/models/accounts.py:82 joanie/payment/models.py:391
+#: joanie/core/models/accounts.py:103 joanie/payment/models.py:377
 msgid "main"
 msgstr "principal"
 
-#: joanie/core/models/accounts.py:86
+#: joanie/core/models/accounts.py:104
+msgid "reusable"
+msgstr "réutilisable"
+
+#: joanie/core/models/accounts.py:108
 msgid "Address"
 msgstr "Adresse"
 
-#: joanie/core/models/accounts.py:87
+#: joanie/core/models/accounts.py:109
 msgid "Addresses"
 msgstr "Adresses"
 
-#: joanie/core/models/accounts.py:115
+#: joanie/core/models/accounts.py:120
+msgid "Main address must be reusable."
+msgstr "L'adresse principale doit être réutilisable."
+
+#: joanie/core/models/accounts.py:143
 msgid "Demote a main address is forbidden"
 msgstr "Rétrograder une adresse principale est interdit"
 
-#: joanie/core/models/base.py:18
+#: joanie/core/models/base.py:19
 msgid "id"
 msgstr "id"
 
-#: joanie/core/models/base.py:19
+#: joanie/core/models/base.py:20
 msgid "primary key for the record as UUID"
 msgstr "clé primaire de l'entrée sous la forme d'un UUID"
 
-#: joanie/core/models/base.py:25
+#: joanie/core/models/base.py:26
 msgid "created on"
 msgstr "créé le"
 
-#: joanie/core/models/base.py:26
+#: joanie/core/models/base.py:27
 msgid "date and time at which a record was created"
 msgstr "date et heure à laquelle une entrée a été créée"
 
-#: joanie/core/models/base.py:31
+#: joanie/core/models/base.py:32
 msgid "updated on"
 msgstr "modifié le"
 
-#: joanie/core/models/base.py:32
+#: joanie/core/models/base.py:33
 msgid "date and time at which a record was last updated"
 msgstr "date et heure à laquelle l'entrée a été modifiée"
 
-#: joanie/core/models/certifications.py:27
+#: joanie/core/models/certifications.py:29
 msgid "name"
 msgstr "nom"
 
-#: joanie/core/models/certifications.py:30 joanie/core/models/products.py:63
+#: joanie/core/models/certifications.py:32 joanie/core/models/contracts.py:29
+#: joanie/core/models/products.py:66
 msgid "description"
 msgstr "description"
 
-#: joanie/core/models/certifications.py:34
+#: joanie/core/models/certifications.py:36
 msgid "template to generate pdf"
 msgstr "modèle pour générer le PDF"
 
-#: joanie/core/models/certifications.py:42
-#: joanie/core/models/certifications.py:60
+#: joanie/core/models/certifications.py:45
+#: joanie/core/models/certifications.py:69
 msgid "Certificate definition"
 msgstr "Définition de certificat"
 
-#: joanie/core/models/certifications.py:43
+#: joanie/core/models/certifications.py:46
 msgid "Certificate definitions"
 msgstr "Définitions de certificat"
 
-#: joanie/core/models/certifications.py:55
+#: joanie/core/models/certifications.py:64
 msgid "Date of issuance"
 msgstr "Date de délivrance"
 
-#: joanie/core/models/certifications.py:70 joanie/core/models/products.py:603
-#: joanie/payment/models.py:54
+#: joanie/core/models/certifications.py:81 joanie/core/models/contracts.py:91
+#: joanie/core/models/products.py:1044 joanie/payment/models.py:51
 msgid "order"
 msgstr "commande"
 
-#: joanie/core/models/certifications.py:75 joanie/payment/models.py:75
-msgid "context"
-msgstr "contexte"
+#: joanie/core/models/certifications.py:90 joanie/core/models/products.py:394
+msgid "enrollment"
+msgstr "inscription"
 
-#: joanie/core/models/certifications.py:76
-msgid "Localized data that needs to be frozen on certificate creation"
-msgstr "Données traduites qui doivent être gelées lors de la création d'un certificat"
-
-#: joanie/core/models/certifications.py:83
-msgid "Certificates"
-msgstr "Certificats"
-
-#: joanie/core/models/courses.py:43 joanie/core/models/courses.py:44
-msgid "enroll now"
-msgstr "s'inscrire maintenant"
-
-#: joanie/core/models/courses.py:45
-msgid "study now"
-msgstr "étudier maintenant"
-
-#: joanie/core/models/courses.py:54 joanie/core/models/courses.py:56
-msgid "closing on"
-msgstr "termine le"
-
-#: joanie/core/models/courses.py:55 joanie/core/models/courses.py:57
-msgid "starting on"
-msgstr "débute le"
-
-#: joanie/core/models/courses.py:58
-msgid "enrollment closed"
-msgstr "inscription fermée"
-
-#: joanie/core/models/courses.py:59
-msgid "on-going"
-msgstr "en cours"
-
-#: joanie/core/models/courses.py:60
-msgid "archived"
-msgstr "archivé"
-
-#: joanie/core/models/courses.py:61
-msgid "to be scheduled"
-msgstr "à planifier"
-
-#: joanie/core/models/courses.py:100
-msgid "forever open"
-msgstr "ouvert indéfiniment"
-
-#: joanie/core/models/courses.py:139 joanie/core/models/courses.py:169
-msgid "code"
-msgstr "code"
-
-#: joanie/core/models/courses.py:144
-msgid "representative"
-msgstr "représentant"
-
-#: joanie/core/models/courses.py:145
-msgid "representative fullname (to sign certificate for example)"
-msgstr "nom complet du représentant (pour signer un certificat par exemple)"
-
-#: joanie/core/models/courses.py:149
-msgid "signature"
-msgstr "signature"
-
-#: joanie/core/models/courses.py:150
-msgid "logo"
-msgstr "logo"
-
-#: joanie/core/models/courses.py:154
-msgid "Organization"
-msgstr "Organisation"
-
-#: joanie/core/models/courses.py:176 joanie/core/models/courses.py:253
-msgid "organizations"
-msgstr "organisations"
-
-#: joanie/core/models/courses.py:183
-msgid "products"
-msgstr "produits"
-
-#: joanie/core/models/courses.py:190
-msgid "Course"
-msgstr "Cours"
-
-#: joanie/core/models/courses.py:191
-msgid "Courses"
-msgstr "Cours"
-
-#: joanie/core/models/courses.py:240 joanie/core/models/courses.py:276
-#: joanie/core/models/products.py:224 joanie/core/models/products.py:288
-#: joanie/core/models/products.py:591
-msgid "course"
-msgstr "cours"
-
-#: joanie/core/models/courses.py:246 joanie/core/models/products.py:230
-#: joanie/core/models/products.py:293
-msgid "product"
-msgstr "produit"
-
-#: joanie/core/models/courses.py:259
-msgid "Course relation to a product"
-msgstr "Relation d'un cours à un produit"
-
-#: joanie/core/models/courses.py:260
-msgid "Courses relations to products"
-msgstr "Relations de cours à des produits"
-
-#: joanie/core/models/courses.py:280
-msgid "resource link"
-msgstr "lien de la ressource"
-
-#: joanie/core/models/courses.py:285
-msgid "course start"
-msgstr "début du cours"
-
-#: joanie/core/models/courses.py:286
-msgid "course end"
-msgstr "fin du cours"
-
-#: joanie/core/models/courses.py:288
-msgid "enrollment date"
-msgstr "date d'inscription"
-
-#: joanie/core/models/courses.py:289
-msgid "enrollment end"
-msgstr "date de fermeture des inscriptions"
-
-#: joanie/core/models/courses.py:297
-msgid "The list of languages in which the course content is available."
-msgstr "La liste des langues dans lesquelles le contenu du cours est disponible."
-
-#: joanie/core/models/courses.py:299
-msgid "is gradable"
-msgstr "est évaluable"
-
-#: joanie/core/models/courses.py:301
-msgid "is listed"
-msgstr "est répertorié"
-
-#: joanie/core/models/courses.py:304
-msgid "If checked the course run will be included in the list of course runs available for enrollment on the related course page."
-msgstr "Si coché, la session de cours sera incluse dans la liste des sessions de cours disponibles à l'inscription sur la page de cours correspondante."
-
-#: joanie/core/models/courses.py:311
-msgid "Course run"
-msgstr "Session de cours"
-
-#: joanie/core/models/courses.py:312
-msgid "Course runs"
-msgstr "Sessions de cours"
-
-#: joanie/core/models/courses.py:435
-msgid "This course run relies on a product relation. So you cannot modify its course."
-msgstr "Cette session de cours est liée à une relation produit. Vous ne pouvez donc pas modifier son cours."
-
-#: joanie/core/models/products.py:59
-msgid "type"
-msgstr "type"
-
-#: joanie/core/models/products.py:64
-msgid "call to action"
-msgstr "appel à action"
-
-#: joanie/core/models/products.py:71
-msgid "target courses"
-msgstr "cours ciblés"
-
-#: joanie/core/models/products.py:75
-msgid "price"
-msgstr "prix"
-
-#: joanie/core/models/products.py:77
-msgid "tax included"
-msgstr "taxe incluse"
-
-#: joanie/core/models/products.py:88
-msgid "certificate definition"
-msgstr "définition de certificat"
-
-#: joanie/core/models/products.py:96
-msgid "Product"
-msgstr "Produit"
-
-#: joanie/core/models/products.py:97
-msgid "Products"
-msgstr "Produits"
-
-#: joanie/core/models/products.py:209
-msgid "Certificate definition is only allowed for product kinds: "
-msgstr "La définition de certificat n'est autorisée que pour les produits de types : "
-
-#: joanie/core/models/products.py:239 joanie/core/models/products.py:597
-msgid "course runs"
-msgstr "sessions de cours"
-
-#: joanie/core/models/products.py:242
-msgid "position in product"
-msgstr "position dans le produit"
-
-#: joanie/core/models/products.py:244 joanie/core/models/products.py:609
-msgid "take into account for certification"
-msgstr "prendre en compte pour la certification"
-
-#: joanie/core/models/products.py:245 joanie/core/models/products.py:610
-msgid "Take into account the course grade for certification."
-msgstr "Prendre en compte la note du cours pour la certification."
-
-#: joanie/core/models/products.py:253
-msgid "Target course relation to a product with a position"
-msgstr "Relation d'un cours cible à un produit avec une position"
-
-#: joanie/core/models/products.py:254
-msgid "Target courses relations to products with a position"
-msgstr "Relation de cours cibles à des produits avec une position"
-
-#: joanie/core/models/products.py:283
+#: joanie/core/models/certifications.py:96 joanie/core/models/products.py:372
 msgid "organization"
 msgstr "organisation"
 
-#: joanie/core/models/products.py:302
-msgid "courses"
+#: joanie/core/models/certifications.py:101 joanie/core/models/contracts.py:101
+#: joanie/payment/models.py:71
+msgid "context"
+msgstr "contexte"
+
+#: joanie/core/models/certifications.py:102
+msgid "Localized data that needs to be frozen on certificate creation"
+msgstr "Données traduites qui doivent être gelées lors de la création d'un certificat"
+
+#: joanie/core/models/certifications.py:109
+msgid "Certificates"
+msgstr "Certificats"
+
+#: joanie/core/models/contracts.py:30
+msgid "body"
+msgstr "contenu"
+
+#: joanie/core/models/contracts.py:35
+msgid "Language of the contract definition"
+msgstr "Langue de la définition de contrat"
+
+#: joanie/core/models/contracts.py:39
+msgid "template name"
+msgstr "nom du modèle"
+
+#: joanie/core/models/contracts.py:47 joanie/core/models/contracts.py:84
+#: joanie/core/models/products.py:96
+msgid "Contract definition"
+msgstr "Définition de contrat"
+
+#: joanie/core/models/contracts.py:48
+msgid "Contract definitions"
+msgstr "Définitions de contrat"
+
+#: joanie/core/models/contracts.py:103
+msgid "Localized data snapshot on contract signature"
+msgstr "Instantané des données internationalisées à la signature du contrat"
+
+#: joanie/core/models/contracts.py:112
+msgid "Reference in the external signature backend"
+msgstr "Référence sur la plateforme de signature externe"
+
+#: joanie/core/models/contracts.py:117
+msgid "Date and time we send the contract to signature provider"
+msgstr "Date et heure d'envoi du contrat sur la plateforme de signature"
+
+#: joanie/core/models/contracts.py:125
+msgid "Date and time of issuance"
+msgstr "Date et heure de signature du contrat par l'organisation"
+
+#: joanie/core/models/contracts.py:131
+msgid "organization signatory"
+msgstr "signataire de l'organisation"
+
+#: joanie/core/models/contracts.py:139
+msgid "Date and time the organization signed the contract"
+msgstr "Date et heure de signature du contrat par l'organisation"
+
+#: joanie/core/models/contracts.py:147
+msgid "Contract"
+msgstr "Contrat"
+
+#: joanie/core/models/contracts.py:148
+msgid "Contracts"
+msgstr "Contrats"
+
+#: joanie/core/models/course_wishes.py:31
+msgid "Course Wish"
+msgstr "Vœu de cours"
+
+#: joanie/core/models/course_wishes.py:32
+msgid "Course Wishes"
+msgstr "Vœux de cours"
+
+#: joanie/core/models/courses.py:59 joanie/core/models/courses.py:60
+msgid "enroll now"
+msgstr "s'inscrire maintenant"
+
+#: joanie/core/models/courses.py:61
+msgid "study now"
+msgstr "étudier maintenant"
+
+#: joanie/core/models/courses.py:70 joanie/core/models/courses.py:72
+msgid "closing on"
+msgstr "termine le"
+
+#: joanie/core/models/courses.py:71 joanie/core/models/courses.py:73
+msgid "starting on"
+msgstr "débute le"
+
+#: joanie/core/models/courses.py:74
+msgid "enrollment closed"
+msgstr "inscription fermée"
+
+#: joanie/core/models/courses.py:75
+msgid "on-going"
+msgstr "en cours"
+
+#: joanie/core/models/courses.py:76
+msgid "archived"
+msgstr "archivé"
+
+#: joanie/core/models/courses.py:77
+msgid "to be scheduled"
+msgstr "à planifier"
+
+#: joanie/core/models/courses.py:116
+msgid "forever open"
+msgstr "ouvert indéfiniment"
+
+#: joanie/core/models/courses.py:155 joanie/core/models/courses.py:379
+msgid "code"
+msgstr "code"
+
+#: joanie/core/models/courses.py:160
+msgid "representative"
+msgstr "représentant"
+
+#: joanie/core/models/courses.py:161
+msgid "representative fullname (to sign certificate for example)"
+msgstr "nom complet du représentant (pour signer un certificat par exemple)"
+
+#: joanie/core/models/courses.py:165
+msgid "signature"
+msgstr "signature"
+
+#: joanie/core/models/courses.py:166
+msgid "logo"
+msgstr "logo"
+
+#: joanie/core/models/courses.py:270 joanie/core/models/courses.py:494
+msgid "administrator"
+msgstr "administrateur"
+
+#: joanie/core/models/courses.py:271
+msgid "member"
+msgstr "membre"
+
+#: joanie/core/models/courses.py:286
+msgid "Organization access"
+msgstr "Droit d'accès à l'organisation"
+
+#: joanie/core/models/courses.py:287
+msgid "Organization accesses"
+msgstr "Droits d'accès aux organisations"
+
+#: joanie/core/models/courses.py:380
+msgid "cover"
+msgstr "couverture"
+
+#: joanie/core/models/courses.py:387 joanie/core/models/courses.py:624
+msgid "organizations"
+msgstr "organisations"
+
+#: joanie/core/models/courses.py:394
+msgid "products"
+msgstr "produits"
+
+#: joanie/core/models/courses.py:402
+msgid "Courses"
+msgstr "Cours"
+
+#: joanie/core/models/courses.py:495
+msgid "instructor"
+msgstr "formateur"
+
+#: joanie/core/models/courses.py:496
+msgid "manager"
+msgstr "gestionnaire"
+
+#: joanie/core/models/courses.py:513
+msgid "Course access"
+msgstr "Droit d'accès au cours"
+
+#: joanie/core/models/courses.py:514
+msgid "Course accesses"
+msgstr "Droits d'accès aux cours"
+
+#: joanie/core/models/courses.py:611 joanie/core/models/courses.py:683
+#: joanie/core/models/products.py:272 joanie/core/models/products.py:387
+#: joanie/core/models/products.py:1032
+msgid "course"
 msgstr "cours"
 
-#: joanie/core/models/products.py:306 joanie/payment/models.py:61
-#: joanie/payment/models.py:347
-msgid "total"
-msgstr "total"
+#: joanie/core/models/courses.py:617 joanie/core/models/products.py:278
+#: joanie/core/models/products.py:379
+msgid "product"
+msgstr "produit"
 
-#: joanie/core/models/products.py:340
-msgid "Order"
-msgstr "Commande"
+#: joanie/core/models/courses.py:630
+msgid "Course relation to a product"
+msgstr "Relation d'un cours à un produit"
 
-#: joanie/core/models/products.py:341
-msgid "Orders"
-msgstr "Commandes"
+#: joanie/core/models/courses.py:631
+msgid "Courses relations to products"
+msgstr "Relations de cours à des produits"
 
-#: joanie/core/models/products.py:429
-#, python-brace-format
-msgid "The course \"{self.course.title}\" and the product \"{self.product.title}\" "
-msgstr "Le cours \"{self.course.title}\" et le produit \"{self.product.title}\" "
+#: joanie/core/models/courses.py:645
+msgid "You cannot delete this course product relation."
+msgstr "Vous ne pouvez pas supprimer cette relation cours / produit."
 
-#: joanie/core/models/products.py:607
-msgid "position in order"
-msgstr "position dans la commande"
+#: joanie/core/models/courses.py:687
+msgid "resource link"
+msgstr "lien de la ressource"
 
-#: joanie/core/models/products.py:618
-msgid "Course relation to an order with a position"
-msgstr "Relation d'un cours à une commande avec une position"
+#: joanie/core/models/courses.py:692
+msgid "course start"
+msgstr "début du cours"
 
-#: joanie/core/models/products.py:619
-msgid "Courses relations to orders with a position"
-msgstr "Relations de cours à des commandes avec une position"
+#: joanie/core/models/courses.py:693
+msgid "course end"
+msgstr "fin du cours"
 
-#: joanie/core/models/products.py:633
+#: joanie/core/models/courses.py:695
+msgid "enrollment date"
+msgstr "date d'inscription"
+
+#: joanie/core/models/courses.py:696
+msgid "enrollment end"
+msgstr "date de fermeture des inscriptions"
+
+#: joanie/core/models/courses.py:704
+msgid "The list of languages in which the course content is available."
+msgstr "La liste des langues dans lesquelles le contenu du cours est disponible."
+
+#: joanie/core/models/courses.py:706
+msgid "is gradable"
+msgstr "est évaluable"
+
+#: joanie/core/models/courses.py:708
+msgid "is listed"
+msgstr "est répertorié"
+
+#: joanie/core/models/courses.py:711
+msgid "If checked the course run will be included in the list of course runs available for enrollment on the related course page."
+msgstr "Si coché, la session de cours sera incluse dans la liste des sessions de cours disponibles à l'inscription sur la page de cours correspondante."
+
+#: joanie/core/models/courses.py:719
+msgid "Course runs"
+msgstr "Sessions de cours"
+
+#: joanie/core/models/courses.py:852
+msgid "This course run relies on a product relation. So you cannot modify its course."
+msgstr "Cette session de cours est liée à une relation produit. Vous ne pouvez donc pas modifier son cours."
+
+#: joanie/core/models/courses.py:892
 msgid "course run"
 msgstr "session de cours"
 
-#: joanie/core/models/products.py:639
+#: joanie/core/models/courses.py:898
 msgid "user"
 msgstr "utilisateur"
 
-#: joanie/core/models/products.py:644
+#: joanie/core/models/courses.py:903
 msgid "Ticked if the user is enrolled to the course run."
 msgstr "Coché si l'utilisateur est inscrit à la session de cours."
 
-#: joanie/core/models/products.py:648
+#: joanie/core/models/courses.py:907
 msgid "state"
 msgstr "état"
 
-#: joanie/core/models/products.py:652
+#: joanie/core/models/courses.py:911
 msgid "Ticked if the enrollment has been initially created in the scope of an order."
 msgstr "Coché si l'inscription a été initialement créée dans le cadre d'une commande."
 
-#: joanie/core/models/products.py:654
+#: joanie/core/models/courses.py:913
 msgid "was created by order"
 msgstr "a été créé pour une commande"
 
-#: joanie/core/models/products.py:662
+#: joanie/core/models/courses.py:921
 msgid "Enrollments"
 msgstr "Inscriptions"
 
-#: joanie/core/models/products.py:666
+#: joanie/core/models/courses.py:925
 msgid "active"
 msgstr "active"
 
-#: joanie/core/models/products.py:666
+#: joanie/core/models/courses.py:925
 msgid "inactive"
 msgstr "inactive"
 
-#: joanie/core/models/products.py:734
+#: joanie/core/models/courses.py:995
 msgid "You are not allowed to enroll to a course run not opened for enrollment."
 msgstr "Vous n'êtes pas autorisé à vous inscrire à une session de cours qui n'est pas ouverte à l'inscription."
 
-#: joanie/core/models/products.py:750
+#: joanie/core/models/courses.py:1011
 msgid "You are already enrolled to an opened course run "
 msgstr "Vous êtes déjà inscrit à une session de cours ouverte "
 
-#: joanie/core/models/products.py:761
+#: joanie/core/models/courses.py:1022
 msgid "You cannot enroll to a non-listed course run out of the scope of an order."
 msgstr "Vous ne pouvez pas vous inscrire à un cours non listé en dehors d'une commande."
 
-#: joanie/core/models/products.py:778
+#: joanie/core/models/courses.py:1047
 msgid "Course run \"{self.course_run.id!s}\" requires a valid order to enroll."
 msgstr "La session de cours \"{self.course_run.resource_link:s}\" nécessite une commande valide pour s'inscrire."
 
-#: joanie/core/models/products.py:783
+#: joanie/core/models/courses.py:1052
 msgid "You are not allowed to enroll to a course run not listed."
 msgstr "Vous n'êtes pas autorisé à vous inscrire à une session de cours non répertoriée."
 
-#: joanie/core/templates/mail/html/order_validated.html:163
+#: joanie/core/models/products.py:62
+msgid "type"
+msgstr "type"
+
+#: joanie/core/models/products.py:67
+msgid "instructions"
+msgstr "instructions"
+
+#: joanie/core/models/products.py:68
+msgid "call to action"
+msgstr "appel à action"
+
+#: joanie/core/models/products.py:75
+msgid "target courses"
+msgstr "cours ciblés"
+
+#: joanie/core/models/products.py:79 joanie/core/models/products.py:418
+msgid "price"
+msgstr "prix"
+
+#: joanie/core/models/products.py:80 joanie/core/models/products.py:420
+msgid "tax included"
+msgstr "taxe incluse"
+
+#: joanie/core/models/products.py:89
+msgid "certificate definition"
+msgstr "définition de certificat"
+
+#: joanie/core/models/products.py:105
+msgid "Products"
+msgstr "Produits"
+
+#: joanie/core/models/products.py:252
+msgid "Certificate definition is only allowed for product kinds: "
+msgstr "La définition de certificat n'est autorisée que pour les produits de types : "
+
+#: joanie/core/models/products.py:287 joanie/core/models/products.py:1038
+msgid "course runs"
+msgstr "sessions de cours"
+
+#: joanie/core/models/products.py:290
+msgid "position in product"
+msgstr "position dans le produit"
+
+#: joanie/core/models/products.py:292 joanie/core/models/products.py:1050
+msgid "take into account for certification"
+msgstr "prendre en compte pour la certification"
+
+#: joanie/core/models/products.py:293 joanie/core/models/products.py:1051
+msgid "Take into account the course grade for certification."
+msgstr "Prendre en compte la note du cours pour la certification."
+
+#: joanie/core/models/products.py:301
+msgid "Target course relation to a product with a position"
+msgstr "Relation d'un cours cible à un produit avec une position"
+
+#: joanie/core/models/products.py:302
+msgid "Target courses relations to products with a position"
+msgstr "Relation de cours cibles à des produits avec une position"
+
+#: joanie/core/models/products.py:333
+msgid "Number of seats"
+msgstr "Nombre de sièges"
+
+#: joanie/core/models/products.py:335
+msgid "The maximum number of orders that can be validated for a given order group"
+msgstr "Le nombre maximum de commandes pouvant être validées pour un groupe de commandes donné"
+
+#: joanie/core/models/products.py:340
+msgid "course product relation"
+msgstr "relation cours produit"
+
+#: joanie/core/models/products.py:344
+msgid "is active"
+msgstr "est actif"
+
+#: joanie/core/models/products.py:403
+msgid "order group"
+msgstr "groupe de commandes"
+
+#: joanie/core/models/products.py:414
+msgid "courses"
+msgstr "cours"
+
+#: joanie/core/models/products.py:471
+msgid "Order"
+msgstr "Commande"
+
+#: joanie/core/models/products.py:472
+msgid "Orders"
+msgstr "Commandes"
+
+#: joanie/core/models/products.py:641
+#, python-brace-format
+msgid "{required_field} field should be set for {self.product.type} products."
+msgstr "Le champ {required_field} doit être défini pour les produits {self.product.type}."
+
+#: joanie/core/models/products.py:647
+#, python-brace-format
+msgid "{empty_field} field should be left empty for {self.product.type} products."
+msgstr "Le champ {empty_field} devrait être laissé vide pour les produits {self.product.type}."
+
+#: joanie/core/models/products.py:654
+msgid "The enrollment should belong to the owner of this order."
+msgstr "L'inscription devrait appartenir au propriétaire de cette commande."
+
+#: joanie/core/models/products.py:659
+msgid "Orders can't be placed on enrollments originating from an order."
+msgstr "Des commandes ne peuvent pas être passées sur des inscriptions créées à partir d'une commande."
+
+#: joanie/core/models/products.py:678
+#, python-brace-format
+msgid "This order cannot be linked to the product \"{product_title}\", "
+msgstr "Cette commande ne peut pas être liée au produit \"{product_title}\", "
+
+#: joanie/core/models/products.py:684
+#, python-brace-format
+msgid "This order cannot be linked to the product \"{product_title}\" and "
+msgstr "Cette commande ne peut pas être liée au produit \"{product_title}\" et "
+
+#: joanie/core/models/products.py:1048
+msgid "position in order"
+msgstr "position dans la commande"
+
+#: joanie/core/models/products.py:1059
+msgid "Course relation to an order with a position"
+msgstr "Relation d'un cours à une commande avec une position"
+
+#: joanie/core/models/products.py:1060
+msgid "Courses relations to orders with a position"
+msgstr "Relations de cours à des commandes avec une position"
+
+#: joanie/core/serializers/client.py:138 joanie/core/serializers/client.py:229
+msgid "You are only allowed to set role to {', '.join(can_set_role_to)}"
+msgstr "Vous n'êtes autorisé qu'à définir le rôle à {', '.join(can_set_role_to)}"
+
+#: joanie/core/serializers/client.py:141 joanie/core/serializers/client.py:232
+msgid "You are not allowed to set this role for this course."
+msgstr "Vous n'êtes pas autorisé à définir ce rôle pour ce cours."
+
+#: joanie/core/serializers/client.py:152
+msgid "You must set a course ID in context to create a new course access."
+msgstr "Vous devez définir un ID de cours dans le contexte pour créer un nouveau droit d'accès au cours."
+
+#: joanie/core/serializers/client.py:162
+msgid "You are not allowed to manage accesses for this course."
+msgstr "Vous n'êtes pas autorisé à gérer les droits d'accès à ce cours."
+
+#: joanie/core/serializers/client.py:243
+msgid "You must set a organization ID in context to create a new organization access."
+msgstr "Vous devez définir un ID d'organisation dans le contexte pour créer un nouveau droit d'accès à l'organisation."
+
+#: joanie/core/serializers/client.py:254
+msgid "You are not allowed to manage accesses for this organization."
+msgstr "Vous n'êtes pas autorisé à gérer les droits d'accès à cette organisation."
+
+#: joanie/core/templates/issuers/certificate.html:20
+msgid "Attestation of achievement"
+msgstr "Attestation d'accomplissement"
+
+#: joanie/core/templates/issuers/certificate.html:26
+#, python-format
+msgid "<strong class=\"details__student-name\">%(student)s</strong> <br/>has successfully completed the MOOC<sup>*</sup> <br/><strong class=\"details__course-name\">%(course)s</strong> <br/>proposed by <strong>%(organization)s</strong> <br />and published on the platform <strong>%(site)s</strong>"
+msgstr "<strong class=\"details__student-name\">%(student)s</strong> <br/>a terminé avec succès le MOOC<sup>*</sup> <br/><strong class=\"details__course-name\">%(course)s</strong> <br/>proposé par <strong>%(organization)s</strong> <br />et publié sur la plate-forme <strong>%(site)s</strong>"
+
+#: joanie/core/templates/issuers/certificate.html:35
+#, python-format
+msgid "On the %(creation_date)s."
+msgstr "Le %(creation_date)s."
+
+#: joanie/core/templates/issuers/certificate.html:47
+msgid "MOOC: Massive Open Online Course"
+msgstr "MOOC: Cours en ligne ouvert et massif"
+
+#: joanie/core/templates/issuers/certificate.html:50
+#, python-format
+msgid "The current document is not a degree or diploma and does not award credits (ECTS). <br />It does not certify that the learner was registered with %(organization)s. <br />The learner's identity has not been verified."
+msgstr "Le document actuel n'est pas un diplôme et n'attribue pas de crédits (ECTS). <br />Il ne certifie pas que l'apprenant a été enregistré auprès de %(organization)s. <br />L'identité de l'apprenant n'a pas été vérifiée."
+
+#: joanie/core/templates/issuers/contract_definition.html:30
+msgid "This document certifies that the student wants to enroll to the course"
+msgstr "Ce document certifie que l'étudiant souhaite s'inscrire au cours"
+
+#: joanie/core/templates/issuers/contract_definition.html:33
+msgid "Your order is delivered by the organization"
+msgstr "Votre commande est prise en charge par l'organisation"
+
+#: joanie/core/templates/issuers/contract_definition.html:44
+msgid "Student name"
+msgstr "Nom de l'apprenant"
+
+#: joanie/core/templates/issuers/contract_definition.html:46
+msgid "Student address"
+msgstr "Adresse de l'apprenant"
+
+#: joanie/core/templates/issuers/contract_definition.html:53
+msgid "Conditions of the contract"
+msgstr "Conditions du Contrat"
+
+#: joanie/core/templates/issuers/contract_definition.html:63
+msgid "Student's signature"
+msgstr "Signature de l'apprenant"
+
+#: joanie/core/templates/issuers/contract_definition.html:69
+msgid "Representative's signature"
+msgstr "Signature du représentant"
+
+#: joanie/core/templates/issuers/degree.html:31
+#, python-format
+msgid "I, %(representative)s,<br/> legal representative of the course provider %(organization)s<br/> certifies that:"
+msgstr "Moi, %(representative)s,<br/> représentant légal de l'établissement de formation %(organization)s<br/> certifie que :"
+
+#: joanie/core/templates/issuers/degree.html:40
+#, python-format
+msgid "%(student)s <br>successfully completed the course %(course)s."
+msgstr "%(student)s <br>a terminé le cours %(course)s avec succès."
+
+#: joanie/core/templates/issuers/degree.html:46
+#, python-format
+msgid "Issued on %(creation_date)s"
+msgstr "Émis le %(creation_date)s"
+
+#: joanie/core/templates/issuers/degree.html:55
+msgid "Stamp and signature of the course provider manager"
+msgstr "Signature du responsable de l'établissement de formation"
+
+#: joanie/core/templates/issuers/degree.html:65
+msgid "Delivery stamp: "
+msgstr "Cachet de livraison : "
+
+#: joanie/core/templates/issuers/degree.html:68
+msgid "Certificate ID: "
+msgstr "ID du certificat : "
+
+#: joanie/core/templates/mail/html/order_validated.html:159
 #: joanie/core/templates/mail/text/order_validated.txt:3
 msgid "Company logo"
 msgstr "Logo de l'organisation"
 
-#: joanie/core/templates/mail/html/order_validated.html:192
+#: joanie/core/templates/mail/html/order_validated.html:188
 #: joanie/core/templates/mail/text/order_validated.txt:5
 #, python-format
 msgid "Hello %(name)s"
 msgstr "Bonjour %(name)s"
 
-#: joanie/core/templates/mail/html/order_validated.html:192
+#: joanie/core/templates/mail/html/order_validated.html:188
 #: joanie/core/templates/mail/text/order_validated.txt:5
 msgid "Hello"
 msgstr "Bonjour"
 
-#: joanie/core/templates/mail/html/order_validated.html:193
+#: joanie/core/templates/mail/html/order_validated.html:189
 #: joanie/core/templates/mail/text/order_validated.txt:6
 msgid "Thank you very much for your purchase!"
 msgstr "Merci beaucoup pour votre achat !"
 
-#: joanie/core/templates/mail/html/order_validated.html:220
+#: joanie/core/templates/mail/html/order_validated.html:216
 #: joanie/core/templates/mail/text/order_validated.txt:9
 msgid "Your order has been confirmed."
 msgstr "Votre commande a été confirmée."
 
-#: joanie/core/templates/mail/html/order_validated.html:226
+#: joanie/core/templates/mail/html/order_validated.html:222
 #, python-format
 msgid "You have bought <strong>%(title)s</strong> <br />for a price of <strong>%(price)s</strong>."
 msgstr "Vous avez acheté <strong>%(title)s</strong> <br />pour un prix de <strong>%(price)s</strong>."
 
-#: joanie/core/templates/mail/html/order_validated.html:252
+#: joanie/core/templates/mail/html/order_validated.html:248
 #: joanie/core/templates/mail/text/order_validated.txt:14
 msgid "We wish you plenty of success in your training. 🎉"
 msgstr "Nous vous souhaitons beaucoup de succès dans votre formation. 🎉"
 
-#: joanie/core/templates/mail/html/order_validated.html:282
+#: joanie/core/templates/mail/html/order_validated.html:278
 #, python-format
 msgid "This mail has been sent to %(email)s by <a href=\"%(href)s\">%(name)s</a>"
 msgstr "Ce courriel a été envoyé à %(email)s par <a href=\"%(href)s\">%(name)s</a>"
@@ -706,17 +1020,49 @@ msgstr "Vous avez acheté %(title)s pour un prix de %(price)s."
 msgid "This mail has been sent to %(email)s by %(name)s [%(href)s]"
 msgstr "Ce courriel a été envoyé à %(email)s par %(name)s [%(href)s]"
 
+#: joanie/core/utils/contract_definition.py:28
+msgid "<STUDENT_ADDRESS_STREET_NAME>"
+msgstr "<ADRESSE_DE_LAPPRENANT>"
+
+#: joanie/core/utils/contract_definition.py:29
+msgid "<STUDENT_ADDRESS_CITY>"
+msgstr "<VILLE_DE_LAPPRENANT>"
+
+#: joanie/core/utils/contract_definition.py:30
+msgid "<STUDENT_ADDRESS_COUNTRY>"
+msgstr "<PAYS_DE_LAPPRENANT>"
+
+#: joanie/core/utils/contract_definition.py:31
+msgid "<STUDENT_LAST_NAME>"
+msgstr "<NOM_DE_LAPPRENANT>"
+
+#: joanie/core/utils/contract_definition.py:32
+msgid "<STUDENT_FIRST_NAME>"
+msgstr "<PRENOM_DE_LAPPRENANT>"
+
+#: joanie/core/utils/contract_definition.py:33
+msgid "<STUDENT_ADDRESS_POSTCODE>"
+msgstr "<CODE_POSTAL_DE_LAPPRENANT>"
+
+#: joanie/core/utils/contract_definition.py:52
+msgid "<COURSE_NAME>"
+msgstr "<NOM_DU_COURS>"
+
+#: joanie/core/utils/contract_definition.py:72
+msgid "<ORGANIZATION_NAME>"
+msgstr "<NOM_DE_LORGANISATION>"
+
+#: joanie/payment/admin.py:18 joanie/payment/enums.py:13
+msgid "Invoice"
+msgstr "Facture"
+
 #: joanie/payment/apps.py:10
 msgid "Joanie payment application"
 msgstr "Application de paiement de Joanie"
 
-#: joanie/payment/backends/base.py:77 joanie/payment/backends/base.py:93
+#: joanie/payment/backends/base.py:76 joanie/payment/backends/base.py:92
 msgid "Purchase order confirmed!"
 msgstr "Commande confirmée !"
-
-#: joanie/payment/enums.py:13
-msgid "Invoice"
-msgstr "Facture"
 
 #: joanie/payment/enums.py:15
 msgid "Credit note"
@@ -754,75 +1100,95 @@ msgstr "Impossible de rembourser ce paiement."
 msgid "Cannot parse notification."
 msgstr "Impossible d'analyser la notification."
 
-#: joanie/payment/models.py:69
-msgid "invoice recipient"
-msgstr "destinataire de la facture"
+#: joanie/payment/models.py:58 joanie/payment/models.py:331
+msgid "total"
+msgstr "total"
 
-#: joanie/payment/models.py:72
+#: joanie/payment/models.py:66
 msgid "invoice address"
 msgstr "adresse de facturation"
 
-#: joanie/payment/models.py:76
+#: joanie/payment/models.py:72
 msgid "Localized data that needs to be frozen on invoice creation"
 msgstr "Données traduites qui doivent être gelées lors de la création de la facture"
 
-#: joanie/payment/models.py:82 joanie/payment/models.py:339
+#: joanie/payment/models.py:78 joanie/payment/models.py:323
 msgid "invoice"
 msgstr "facture"
 
-#: joanie/payment/models.py:83
+#: joanie/payment/models.py:79
 msgid "invoices"
 msgstr "factures"
 
-#: joanie/payment/models.py:277
+#: joanie/payment/models.py:269
 msgid "invoice cannot have as parent another invoice which is a child."
 msgstr "Une facture ne peut pas avoir comme parent une autre facture qui est un enfant."
 
-#: joanie/payment/models.py:286
-msgid "Credit note must have a parent invoice."
-msgstr "L'avoir doit avoir une facture parente."
-
-#: joanie/payment/models.py:294
+#: joanie/payment/models.py:279
 msgid "Credit note amount cannot be greater than its related invoice invoiced balance."
 msgstr "Le montant de l'avoir ne peut pas être supérieur au solde de la facture correspondante."
 
-#: joanie/payment/models.py:328
+#: joanie/payment/models.py:312
 msgid "Reference to identify transaction from external platform"
 msgstr "Référence pour identifier la transaction depuis une plateforme externe"
 
-#: joanie/payment/models.py:355
+#: joanie/payment/models.py:338
 msgid "Transaction"
 msgstr "Transaction"
 
-#: joanie/payment/models.py:356
+#: joanie/payment/models.py:339
 msgid "Transactions"
 msgstr "Transactions"
 
-#: joanie/payment/models.py:379
+#: joanie/payment/models.py:365
 msgid "brand"
 msgstr "marque"
 
-#: joanie/payment/models.py:381
+#: joanie/payment/models.py:367
 msgid "expiration month"
 msgstr "mois d'expiration"
 
-#: joanie/payment/models.py:383
+#: joanie/payment/models.py:369
 msgid "expiration year"
 msgstr "année d'expiration"
 
-#: joanie/payment/models.py:384
+#: joanie/payment/models.py:370
 msgid "last 4 numbers"
 msgstr "4 derniers chiffres"
 
-#: joanie/payment/models.py:421
+#: joanie/payment/models.py:407
 msgid "Demote a main credit card is forbidden"
 msgstr "Rétrograder une carte bancaire principale est interdit"
 
-#: joanie/settings.py:116
+#: joanie/settings.py:144
 msgid "English"
 msgstr "Anglais"
 
-#: joanie/settings.py:117
+#: joanie/settings.py:145
 msgid "French"
 msgstr "Français"
+
+#: joanie/signature/apps.py:14
+msgid "Joanie signature application"
+msgstr "Application de signature de Joanie"
+
+#: joanie/signature/exceptions.py:15
+msgid "Cannot create a signature procedure."
+msgstr "Impossible de créer une procédure de signature."
+
+#: joanie/signature/exceptions.py:24
+msgid "Cannot upload the file to the signature provider with the signature reference."
+msgstr "Impossible de téléverser le fichier au prestataire de signature avec la référence de signature."
+
+#: joanie/signature/exceptions.py:38
+msgid "Cannot start the signature procedure with the signature reference."
+msgstr "Impossible de démarrer la procédure de signature avec la référence de signature."
+
+#: joanie/signature/exceptions.py:52
+msgid "Cannot get invitation link to sign the file from the signature provider."
+msgstr "Impossible d'obtenir le lien d'invitation à signer le fichier depuis le prestataire de signature."
+
+#: joanie/signature/exceptions.py:65
+msgid "Cannot delete the signature procedure."
+msgstr "Impossible de supprimer la procédure de signature."
 
