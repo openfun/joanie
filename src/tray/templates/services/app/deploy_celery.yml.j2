@@ -1,4 +1,6 @@
 {% set service_variant = "celery" %}
 {% set joanie_replicas = joanie_celery_replicas %}
+{% set joanie_livenessprobe = joanie_celery_livenessprobe %}
+{% set joanie_readynessprobe = joanie_celery_readynessprobe %}
 
 {% include "./_deploy_base.yml.j2" with context %}

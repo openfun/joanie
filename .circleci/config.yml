@@ -732,7 +732,7 @@ workflows:
       - build-docker-admin:
           filters:
             tags:
-              only: /.*/      
+              only: /.*/
 
       # Backend jobs
       #
@@ -844,4 +844,4 @@ workflows:
             branches:
               only: main
             tags:
-              only: /^v.*/      
+              only: /^v.*/

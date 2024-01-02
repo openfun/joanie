@@ -30,4 +30,4 @@ spec:
   tls:
   - hosts:
     - "{{ joanie_admin_host | blue_green_host(prefix) }}"
-    secretName: "joanie-app-tls-{{ prefix }}-{{ acme_env }}"
+    secretName: "joanie-admin-tls-{{ prefix }}-{{ acme_env }}"
