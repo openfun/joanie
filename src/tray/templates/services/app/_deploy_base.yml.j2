@@ -50,24 +50,13 @@ spec:
         - name: joanie
           image: "{{ joanie_image_name }}:{{ joanie_image_tag }}"
           imagePullPolicy: Always
-          livenessProbe:
-            httpGet:
-              path: /__heartbeat__
-              port: {{ joanie_django_port }}
-              httpHeaders:
-                - name: Host
-                  value: "{{ joanie_host }}"
-            initialDelaySeconds: 60
-            periodSeconds: 30
-          readinessProbe:
-            httpGet:
-              path: /__lbheartbeat__
-              port: {{ joanie_django_port }}
-              httpHeaders:
-                - name: Host
-                  value: "{{ joanie_host }}"
-            initialDelaySeconds: 10
-            periodSeconds: 5
+{% if service_variant=="app" %}
+          ports:
+          - name: django-port
+            containerPort: {{ joanie_django_port }}
+{% endif %}
+          livenessProbe: {{ joanie_livenessprobe }}
+          readinessProbe: {{ joanie_readynessprobe }}
           env:
             - name: DB_HOST
               value: "joanie-{{ joanie_database_host }}-{{ deployment_stamp }}"
@@ -76,15 +65,17 @@ spec:
             - name: DB_PORT
               value: "{{ joanie_database_port }}"
             - name: DJANGO_ALLOWED_HOSTS
-              value: "{{ joanie_host | blue_green_hosts }}"
+              value: "{{ joanie_host | blue_green_hosts }},{{ joanie_admin_host | blue_green_hosts }}"
             - name: DJANGO_CSRF_TRUSTED_ORIGINS
-              value: "{{ joanie_host | blue_green_hosts | split(',') | map('regex_replace', '^(.*)$', 'https://\\1') | join(',') }}"
+              value: "{{ joanie_host | blue_green_hosts | split(',') | map('regex_replace', '^(.*)$', 'https://\\1') | join(',') }},{{ joanie_admin_host | blue_green_hosts | split(',') | map('regex_replace', '^(.*)$', 'https://\\1') | join(',') }}"
             - name: DJANGO_CONFIGURATION
               value: "{{ joanie_django_configuration }}"
             - name: DJANGO_CORS_ALLOWED_ORIGINS
-              value: "{{ richie_host | blue_green_hosts | split(',') | map('regex_replace', '^(.*)$', 'https://\\1') | join(',') }}"
+              value: "{{ richie_host | blue_green_hosts | split(',') | map('regex_replace', '^(.*)$', 'https://\\1') | join(',') }},{{ joanie_admin_host | blue_green_hosts | split(',') | map('regex_replace', '^(.*)$', 'https://\\1') | join(',') }}"
             - name: DJANGO_SETTINGS_MODULE
               value: joanie.settings
+            - name: JOANIE_BACKOFFICE_BASE_URL
+              value: {{joanie_admin_host}}
           envFrom:
             - secretRef:
                 name: "{{ joanie_secret_name }}"
