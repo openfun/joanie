@@ -9,9 +9,17 @@
       "matchManagers": [
         "setup-cfg"
       ],
+      "matchPackageNames": []
+    },
+    {
+      "groupName": "allowed django versions",
+      "matchManagers": [
+        "setup-cfg"
+      ],
       "matchPackageNames": [
         "Django"
-      ]
+      ],
+      "allowedVersions": "<5"
     },
     {
       "enabled": false,
