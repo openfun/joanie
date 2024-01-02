@@ -187,6 +187,7 @@ class Base(Configuration):
         "django.middleware.csrf.CsrfViewMiddleware",
         "django.contrib.auth.middleware.AuthenticationMiddleware",
         "django.contrib.messages.middleware.MessageMiddleware",
+        "joanie.core.middleware.JoanieDockerflowMiddleware",
     ]
 
     AUTHENTICATION_BACKENDS = [
@@ -590,6 +591,10 @@ class Test(Base):
             },
             "loggers": {
                 "joanie": {
+                    "handlers": ["console"],
+                    "level": "DEBUG",
+                },
+                "request.summary": {
                     "handlers": ["console"],
                     "level": "DEBUG",
                 },
