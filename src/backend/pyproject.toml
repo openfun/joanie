@@ -42,7 +42,7 @@ dependencies = [
     "django-object-actions==4.2.0",
     "django-parler==2.3",
     "django-storages==1.14.2",
-    "Django<6",
+    "Django<5",
     "djangorestframework-simplejwt==5.3.1",
     "djangorestframework==3.14.0",
     "drf_spectacular==0.27.0",
