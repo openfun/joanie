@@ -1,6 +1,7 @@
 import "@/styles/globals.scss";
 import type { AppProps } from "next/app";
 import "@uiw/react-md-editor/markdown-editor.css";
+
 // eslint-disable-next-line import/no-extraneous-dependencies
 import "@uiw/react-markdown-preview/markdown.css";
 import { CacheProvider } from "@emotion/react";
@@ -18,8 +19,6 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useTheme } from "@mui/material/styles";
 import createEmotionCache from "@/utils/createEmotionCache";
 import { DashboardLayout } from "@/layouts/dashboard/DashboardLayout";
-
-import { LocalesEnum } from "@/types/i18n/LocalesEnum";
 import { TranslationsProvider } from "@/contexts/i18n/TranslationsProvider/TranslationsProvider";
 import { REACT_QUERY_SETTINGS } from "@/utils/settings";
 import { JoanieThemeProvider } from "@/theme/JoanieThemeProvider";
@@ -90,7 +89,7 @@ export default function App({ Component, pageProps }: MyAppProps) {
     <AuthProvider>
       <QueryClientProvider client={queryClient}>
         <ReactQueryDevtools initialIsOpen={false} />
-        <TranslationsProvider locale={LocalesEnum.ENGLISH}>
+        <TranslationsProvider>
           <CacheProvider value={clientSideEmotionCache}>
             <JoanieThemeProvider>
               <SnackbarProvider

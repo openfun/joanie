@@ -7,10 +7,8 @@ import MenuItem from "@mui/material/MenuItem";
 import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import NotificationsIcon from "@mui/icons-material/Notifications";
 import { defineMessages, useIntl } from "react-intl";
 import { useTheme } from "@mui/material/styles";
-import { DashboardNavItem } from "@/layouts/dashboard/nav/item/DashboardNavItem";
 import { DashboardNavItemsList } from "@/layouts/dashboard/nav/item/list/DasboardNavItemsList";
 import { useAuthContext } from "@/contexts/auth/AuthContext";
 import { PATH_ADMIN } from "@/utils/routes/path";
@@ -108,10 +106,6 @@ export function DashboardLayoutNavAccount() {
             </MenuItem>
           </Menu>
         </Box>
-        <DashboardNavItem
-          icon={<NotificationsIcon />}
-          title={intl.formatMessage(messages.notificationNav)}
-        />
       </DashboardNavItemsList>
     </Box>
   );

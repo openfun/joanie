@@ -21,7 +21,7 @@ export function DashboardNavContent(props: Props) {
   };
 
   return (
-    <Box sx={{ px: 2 }}>
+    <Box sx={{ px: 2, height: "100%" }}>
       <DashboardLayoutNavAccount />
       {navConfig.map((config) => {
         const subheader = intl.formatMessage(config.subheader);

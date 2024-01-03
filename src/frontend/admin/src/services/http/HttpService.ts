@@ -3,8 +3,9 @@ import Cookies from "js-cookie";
 import { LocalesEnum } from "@/types/i18n/LocalesEnum";
 import { HttpStatus } from "@/types/utils";
 import { HttpError } from "@/services/http/HttpError";
-import { TRANSLATE_CONTENT_LANGUAGE, USER_LANGUAGE } from "@/utils/constants";
+import { TRANSLATE_CONTENT_LANGUAGE } from "@/utils/constants";
 import { PATH_ADMIN } from "@/utils/routes/path";
+import { getDjangoLang, getLocaleFromDjangoLang } from "@/utils/lang";
 
 export const fetchApi = (routes: RequestInfo, options: RequestInit = {}) => {
   const headers =
@@ -23,12 +24,12 @@ export const fetchApi = (routes: RequestInfo, options: RequestInit = {}) => {
 
 export const getAcceptLanguage = (): string => {
   const translateContent = localStorage.getItem(TRANSLATE_CONTENT_LANGUAGE);
-  const interfaceLang = localStorage.getItem(USER_LANGUAGE);
+  const interfaceLang = getDjangoLang();
 
   if (translateContent) {
     return translateContent;
   } else if (interfaceLang) {
-    return interfaceLang;
+    return getLocaleFromDjangoLang(interfaceLang);
   }
 
   return LocalesEnum.FRENCH;
