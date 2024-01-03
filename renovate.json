@@ -28,7 +28,9 @@
         "npm"
       ],
       "matchPackageNames": [
-        "node"
+        "node",
+        "undici",
+        "date-fns"
       ]
     }
   ]
