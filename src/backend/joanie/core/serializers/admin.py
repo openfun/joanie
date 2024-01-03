@@ -219,6 +219,7 @@ class AdminProductSerializer(serializers.ModelSerializer):
             "type",
             "instructions",
             "certificate_definition",
+            "contract_definition",
             "target_courses",
         ]
         read_only_fields = ["id"]
@@ -248,19 +249,10 @@ class AdminProductLightSerializer(serializers.ModelSerializer):
             "price_currency",
             "type",
             "certificate_definition",
+            "contract_definition",
             "target_courses",
         ]
-        read_only_fields = [
-            "id",
-            "title",
-            "description",
-            "call_to_action",
-            "price",
-            "price_currency",
-            "type",
-            "certificate_definition",
-            "target_courses",
-        ]
+        read_only_fields = fields
 
     def get_price_currency(self, *args, **kwargs) -> str:
         """Return the code of currency used by the instance"""
@@ -767,7 +759,8 @@ class AdminProductTargetCourseRelationNestedSerializer(serializers.ModelSerializ
 class AdminProductDetailSerializer(serializers.ModelSerializer):
     """Serializer for Product details"""
 
-    certificate_definition = AdminCertificateDefinitionSerializer()
+    certificate_definition = AdminCertificateDefinitionSerializer(read_only=True)
+    contract_definition = AdminContractDefinitionSerializer(read_only=True)
     target_courses = serializers.SerializerMethodField(read_only=True)
     price = serializers.DecimalField(
         coerce_to_string=False, decimal_places=2, max_digits=9, min_value=0
@@ -786,6 +779,7 @@ class AdminProductDetailSerializer(serializers.ModelSerializer):
             "price",
             "price_currency",
             "certificate_definition",
+            "contract_definition",
             "target_courses",
             "course_relations",
             "instructions",

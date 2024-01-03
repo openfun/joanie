@@ -109,6 +109,7 @@ class CourseProductRelationRetrieveAdminApiTest(TestCase):
                         "title": relation.product.certificate_definition.title,
                         "template": relation.product.certificate_definition.template,
                     },
+                    "contract_definition": None,
                     "target_courses": [
                         {
                             "code": target_course.code,
