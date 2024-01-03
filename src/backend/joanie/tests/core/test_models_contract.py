@@ -1,6 +1,5 @@
 """Tests for the Contract Model"""
 from datetime import datetime, timedelta
-from io import BytesIO
 from zoneinfo import ZoneInfo
 
 from django.contrib.auth.models import AnonymousUser
@@ -9,10 +8,7 @@ from django.test import TestCase
 from django.test.utils import override_settings
 from django.utils import timezone as django_timezone
 
-from pdfminer.high_level import extract_text as pdf_extract_text
-
 from joanie.core import enums, factories, models
-from joanie.payment.factories import InvoiceFactory
 
 # pylint: disable=too-many-public-methods
 
@@ -487,39 +483,6 @@ class ContractModelTestCase(TestCase):
                 " 'Make sure to complete all fields before signing contract.']}"
             ),
         )
-
-    def test_models_contract_definition_generate_document(self):
-        """
-        Contract Definition 'generate document' method should generate a document.
-        """
-        user = factories.UserFactory(
-            email="student@example.fr", first_name="John", last_name="Doe"
-        )
-        address = factories.AddressFactory(
-            owner=user,
-            address="1 Rue de L'Exemple",
-            postcode="75000",
-            city="Paris",
-            is_reusable=False,
-            title="Office",
-            country="FR",
-        )
-        order = factories.OrderFactory(
-            owner=user,
-            product__contract_definition=factories.ContractDefinitionFactory(),
-            state=enums.ORDER_STATE_VALIDATED,
-            main_invoice=InvoiceFactory(recipient_address=address),
-        )
-        contract = factories.ContractFactory(order=order)
-
-        _, file_bytes = contract.definition.generate_document(order)
-        document_text = pdf_extract_text(BytesIO(file_bytes)).replace("\n", "")
-
-        self.assertRegex(document_text, r"John Doe")
-        self.assertRegex(document_text, r"1 Rue de L'Exemple 75000, Paris")
-        self.assertRegex(document_text, r"Student's signature")
-        self.assertRegex(document_text, r"Representative's signature")
-        self.assertRegex(document_text, r"Your order is delivered by the organization")
 
     def test_models_contract_tag_submission_for_signature(self):
         """

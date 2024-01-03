@@ -17,6 +17,8 @@ def generate_document(name: str, context: dict) -> bytes:
         - The path will help us in finding the correct .html and
         .css file for the document in the app directory.
         Make sure that those files exist in the 'templates' folder.
+        - If the context is equal to 'None' or is an empty '{}', it
+        will render the document without the context data.
     """
     html_template_path = Path(f"issuers/{name}.html")
     css_template_name = Path(f"issuers/{name}.css")

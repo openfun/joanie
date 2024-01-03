@@ -8,6 +8,8 @@ from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 
 from joanie.core import models
+from joanie.core.utils import contract_definition as contract_definition_utility
+from joanie.core.utils import issuers
 
 from .base import BaseSignatureBackend
 
@@ -120,6 +122,13 @@ class DummySignatureBackend(BaseSignatureBackend):
             )
 
         contract = models.Contract.objects.get(signature_backend_reference=reference_id)
-        _, file_bytes = contract.definition.generate_document(contract.order)
+        file_bytes = issuers.generate_document(
+            name=contract.definition.name,
+            context=contract_definition_utility.generate_document_context(
+                contract_definition=contract.definition,
+                user=contract.order.owner,
+                order=contract.order,
+            ),
+        )
 
         return file_bytes
