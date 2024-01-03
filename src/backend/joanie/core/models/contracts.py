@@ -15,7 +15,6 @@ import markdown
 
 from joanie.core import enums
 from joanie.core.models.base import BaseModel
-from joanie.core.utils import contract_definition, issuers
 
 logger = logging.getLogger(__name__)
 
@@ -60,18 +59,6 @@ class ContractDefinition(BaseModel):
         if not self.body:
             return ""
         return markdown.markdown(textwrap.dedent(self.body))
-
-    def generate_document(self, order):
-        """
-        Generate the contract definition.
-        """
-        context = contract_definition.generate_document_context(
-            contract_definition=self, user=order.owner, order=order
-        )
-        file_bytes = issuers.generate_document(
-            name=order.product.contract_definition.name, context=context
-        )
-        return context, file_bytes
 
 
 class Contract(BaseModel):

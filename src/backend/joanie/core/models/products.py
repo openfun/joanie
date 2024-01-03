@@ -31,7 +31,8 @@ from joanie.core.models.courses import (
     Enrollment,
     Organization,
 )
-from joanie.core.utils import webhooks
+from joanie.core.utils import contract_definition as contract_definition_utility
+from joanie.core.utils import issuers, webhooks
 from joanie.payment import get_payment_backend
 from joanie.payment.models import CreditCard
 from joanie.signature.backends import get_signature_backend
@@ -944,7 +945,14 @@ class Order(BaseModel):
             raise PermissionDenied("Contract is already signed, cannot resubmit.")
 
         backend_signature = get_signature_backend()
-        context, file_bytes = contract_definition.generate_document(self)
+        context = contract_definition_utility.generate_document_context(
+            contract_definition=contract_definition,
+            user=user,
+            order=contract.order,
+        )
+        file_bytes = issuers.generate_document(
+            name=contract_definition.name, context=context
+        )
 
         was_already_submitted = (
             contract.submitted_for_signature_on and contract.signature_backend_reference
