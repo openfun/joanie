@@ -15,6 +15,7 @@
     "i18n:compile": "formatjs compile-folder --format crowdin ./i18n/locales ./src/translations"
   },
   "dependencies": {
+    "@boiseitguru/cookie-cutter": "0.2.3",
     "@emotion/cache": "11.11.0",
     "@emotion/react": "11.11.3",
     "@emotion/server": "11.11.0",
