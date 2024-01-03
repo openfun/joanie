@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: joanie\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-12-21 14:17+0000\n"
-"PO-Revision-Date: 2024-01-02 16:25\n"
+"POT-Creation-Date: 2024-01-03 10:06+0000\n"
+"PO-Revision-Date: 2024-01-03 10:37\n"
 "Last-Translator: \n"
 "Language-Team: French, Canada\n"
 "Language: fr_CA\n"
@@ -1080,23 +1080,23 @@ msgstr ""
 msgid "Refunded"
 msgstr ""
 
-#: joanie/payment/exceptions.py:11
+#: joanie/payment/exceptions.py:13
 msgid "Cannot abort this payment."
 msgstr ""
 
-#: joanie/payment/exceptions.py:19
+#: joanie/payment/exceptions.py:21
 msgid "Cannot create a payment."
 msgstr ""
 
-#: joanie/payment/exceptions.py:27
+#: joanie/payment/exceptions.py:29
 msgid "Cannot register this payment."
 msgstr ""
 
-#: joanie/payment/exceptions.py:35
+#: joanie/payment/exceptions.py:37
 msgid "Cannot refund this payment."
 msgstr ""
 
-#: joanie/payment/exceptions.py:43
+#: joanie/payment/exceptions.py:45
 msgid "Cannot parse notification."
 msgstr ""
 
@@ -1172,23 +1172,23 @@ msgstr ""
 msgid "Joanie signature application"
 msgstr ""
 
-#: joanie/signature/exceptions.py:15
+#: joanie/signature/exceptions.py:17
 msgid "Cannot create a signature procedure."
 msgstr ""
 
-#: joanie/signature/exceptions.py:24
+#: joanie/signature/exceptions.py:26
 msgid "Cannot upload the file to the signature provider with the signature reference."
 msgstr ""
 
-#: joanie/signature/exceptions.py:38
+#: joanie/signature/exceptions.py:40
 msgid "Cannot start the signature procedure with the signature reference."
 msgstr ""
 
-#: joanie/signature/exceptions.py:52
+#: joanie/signature/exceptions.py:54
 msgid "Cannot get invitation link to sign the file from the signature provider."
 msgstr ""
 
-#: joanie/signature/exceptions.py:65
+#: joanie/signature/exceptions.py:67
 msgid "Cannot delete the signature procedure."
 msgstr ""
 

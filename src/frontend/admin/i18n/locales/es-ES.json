@@ -1,1 +1,1094 @@
-{}
+{
+  "components.modal.alterModal.cancel": {
+    "description": "Cancel CTA label for alert modal",
+    "message": "Cancel"
+  },
+  "components.modal.alterModal.validate": {
+    "description": "Validate CTA label for alert modal",
+    "message": "Validate"
+  },
+  "components.presentational.button.popover.ButtonPopover.none": {
+    "description": "None value label for the BasicSelect",
+    "message": "None"
+  },
+  "components.presentational.dnd.DndList.emptyList": {
+    "description": "Text when the drag n drop list is empty",
+    "message": "No line to display, click add to add one"
+  },
+  "components.presentational.hookForm.provider.submit": {
+    "description": "Submit label for submit button",
+    "message": "Submit"
+  },
+  "components.presentational.table.translations.deleteModalMessage": {
+    "description": "Main message for entity modal ",
+    "message": "Are you sure you want to delete this entity {entityName} ?"
+  },
+  "components.presentational.table.translations.deleteModalTitle": {
+    "description": "Label for delete entity modal title",
+    "message": "Delete an entity"
+  },
+  "components.presentational.table.translations.noRows": {
+    "description": "Label for empty table",
+    "message": "No entities to display"
+  },
+  "components.presentational.table.translations.oneRowSelected": {
+    "description": "Label for empty table",
+    "message": "{count, plural, =0 {} one {# row selected} other {# rows selected}}"
+  },
+  "components.presentational.wizard.back": {
+    "description": "Text of the back button, which allows you to return to the previous step",
+    "message": "Back"
+  },
+  "components.presentational.wizard.invalidStep": {
+    "description": "Text used in a popover when hovering over buttons when the step is invalid",
+    "message": "Invalid step, please validate this step"
+  },
+  "components.presentational.wizard.next": {
+    "description": "Text of the next button, which allows you to go to the next step.",
+    "message": "Next"
+  },
+  "components.template.accesses.list.AccessesList.fullnameHeader": {
+    "description": "Fullname column header label",
+    "message": "Fullname"
+  },
+  "components.template.accesses.list.AccessesList.roleHeader": {
+    "description": "Role column header label",
+    "message": "User role"
+  },
+  "components.template.accesses.list.AccessesList.usernameHeader": {
+    "description": "Username column header label",
+    "message": "Username"
+  },
+  "components.template.accesses.list.AddUserAccess.roleLabel": {
+    "description": "Role label for the access select",
+    "message": "Role"
+  },
+  "components.template.accesses.list.AddUserAccess.userLabel": {
+    "description": "User label for the user input",
+    "message": "User"
+  },
+  "components.templates.certificateDefinitions.form.descriptionLabel": {
+    "description": "Label for the name input",
+    "message": "Description"
+  },
+  "components.templates.certificateDefinitions.form.nameLabel": {
+    "description": "Label for the name input",
+    "message": "Name"
+  },
+  "components.templates.certificateDefinitions.form.templateLabel": {
+    "description": "Label for the template input",
+    "message": "Template"
+  },
+  "components.templates.certificateDefinitions.form.titleLabel": {
+    "description": "Label for the title input",
+    "message": "Title"
+  },
+  "components.templates.certificatesDefinitions.list.nameHeader": {
+    "description": "Label for the Name header inside the table  ",
+    "message": "Name"
+  },
+  "components.templates.certificatesDefinitions.list.titleHeader": {
+    "description": "Label for the title header inside the table  ",
+    "message": "Title"
+  },
+  "components.templates.certificatesDefinitions.modals.CreateOrEditCertificationModal.add": {
+    "description": "Title for add definition modal",
+    "message": "Add a course"
+  },
+  "components.templates.certificatesDefinitions.modals.CreateOrEditCertificationModal.edit": {
+    "description": "Title for add definition modal",
+    "message": "Edit the \"{name}\" course"
+  },
+  "components.templates.contractDefinitions.form.bodyLabel": {
+    "description": "Label for the body input",
+    "message": "Body"
+  },
+  "components.templates.contractDefinitions.form.descriptionLabel": {
+    "description": "Label for the name input",
+    "message": "Description"
+  },
+  "components.templates.contractDefinitions.form.informationText": {
+    "description": "Title for the information alert",
+    "message": "This is a contract template that will be used to issue contracts."
+  },
+  "components.templates.contractDefinitions.form.languageLabel": {
+    "description": "Label for the language input",
+    "message": "Language"
+  },
+  "components.templates.contractDefinitions.form.mainInformationTitle": {
+    "description": "Title for the main information section",
+    "message": "Main information's"
+  },
+  "components.templates.contractDefinitions.form.titleLabel": {
+    "description": "Label for the title input",
+    "message": "Title"
+  },
+  "components.templates.contractsDefinitions.list.languageHeader": {
+    "description": "Label for the language header inside the table  ",
+    "message": "Language"
+  },
+  "components.templates.contractsDefinitions.list.titleHeader": {
+    "description": "Label for the title header inside the table  ",
+    "message": "Title"
+  },
+  "components.templates.course.form.productRelation.translations.productTitle": {
+    "description": "Label for the main information subheader form",
+    "message": "Product"
+  },
+  "components.templates.course.form.translations.addCourseRunButton": {
+    "description": "Label for the add course run button",
+    "message": "Add a course run"
+  },
+  "components.templates.course.form.translations.addCourseRunModalTitle": {
+    "description": "Label for the add course run modal",
+    "message": "Add a course run"
+  },
+  "components.templates.course.form.translations.addRelationButtonLabel": {
+    "description": "Label for the product relation subheader form",
+    "message": "Add relation"
+  },
+  "components.templates.course.form.translations.codeLabel": {
+    "description": "Label for the Code input form",
+    "message": "Code"
+  },
+  "components.templates.course.form.translations.coverLabel": {
+    "description": "Label for the cover field",
+    "message": "Cover"
+  },
+  "components.templates.course.form.translations.generalSubtitle": {
+    "description": "Label for the main information subheader form",
+    "message": "Main information"
+  },
+  "components.templates.course.form.translations.membersSectionTitle": {
+    "description": "Title for the member section",
+    "message": "Course members"
+  },
+  "components.templates.course.form.translations.organizationsLabel": {
+    "description": "Label for the organizations input form",
+    "message": "Organizations"
+  },
+  "components.templates.course.form.translations.productRelationSubtitle": {
+    "description": "Label for the product relation subheader form",
+    "message": "Relation to products"
+  },
+  "components.templates.course.form.translations.targetCourseRunTitle": {
+    "description": "Title for the course run section inside the course form",
+    "message": "Course runs of this course"
+  },
+  "components.templates.course.form.translations.uploadCoverButtonLabel": {
+    "description": "Label for the add cover button",
+    "message": "Add a cover"
+  },
+  "components.templates.courseRuns.form.translations.courseEndLabel": {
+    "description": "Label for the course start input",
+    "message": "Course end"
+  },
+  "components.templates.courseRuns.form.translations.courseLabel": {
+    "description": "Label for the course search input",
+    "message": "Course"
+  },
+  "components.templates.courseRuns.form.translations.courseRunDatesSubtitle": {
+    "description": "Label for the course run dates subheader form",
+    "message": "Course run dates"
+  },
+  "components.templates.courseRuns.form.translations.courseStartLabel": {
+    "description": "Label for the course start input",
+    "message": "Course start"
+  },
+  "components.templates.courseRuns.form.translations.enrollmentDatesSubtitle": {
+    "description": "Label for the enrollment dates subheader form",
+    "message": "Enrollment dates"
+  },
+  "components.templates.courseRuns.form.translations.enrollmentEndLabel": {
+    "description": "Label for the enrollment start input",
+    "message": "Enrollment end"
+  },
+  "components.templates.courseRuns.form.translations.enrollmentStartLabel": {
+    "description": "Label for the enrollment start input",
+    "message": "Enrollment start"
+  },
+  "components.templates.courseRuns.form.translations.generalSubtitle": {
+    "description": "Label for the general subheader form",
+    "message": "General"
+  },
+  "components.templates.courseRuns.form.translations.isGradableHelpText": {
+    "description": "Help text for the is_gradable input",
+    "message": "If checked, the course run can be taken into account for the grading."
+  },
+  "components.templates.courseRuns.form.translations.isGradableLabel": {
+    "description": "Label for the is_gradable input",
+    "message": "Is gradable?"
+  },
+  "components.templates.courseRuns.form.translations.isListedHelpText": {
+    "description": "Help text for the is_listed input",
+    "message": "If checked the course run will be included in the list of course runs available for enrollment on the related course page."
+  },
+  "components.templates.courseRuns.form.translations.isListedLabel": {
+    "description": "Label for the is_listed input",
+    "message": "Is listed?"
+  },
+  "components.templates.courseRuns.form.translations.resourceLinkLabel": {
+    "description": "Label for the resource link input",
+    "message": "Resource link"
+  },
+  "components.templates.courseRuns.list.clickToCopy": {
+    "description": "Label for the click to copy tooltip",
+    "message": "Click to copy this link"
+  },
+  "components.templates.courseRuns.list.courseEnd": {
+    "description": "Label for the course end attribute header inside the table  ",
+    "message": "Course end"
+  },
+  "components.templates.courseRuns.list.courseStart": {
+    "description": "Label for the course start attribute header inside the table  ",
+    "message": "Course start"
+  },
+  "components.templates.courseRuns.list.isGradable": {
+    "description": "Label for the isGradable attribute header inside the table  ",
+    "message": "Is gradable"
+  },
+  "components.templates.courseRuns.list.resourceLink": {
+    "description": "Label for the resourceLink header inside the table  ",
+    "message": "Resource link"
+  },
+  "components.templates.courseRuns.list.state": {
+    "description": "Label for the State attribute header inside the table  ",
+    "message": "State"
+  },
+  "components.templates.courseRuns.list.successCopy": {
+    "description": "Text for the success click to copy notification",
+    "message": "Link added to your clipboard"
+  },
+  "components.templates.courseRuns.list.title": {
+    "description": "Label for the title attribute header inside the table  ",
+    "message": "Title"
+  },
+  "components.templates.courses.form.productRelation.CourseFormProductRelationsSection.deleteRelationModalContent": {
+    "description": "Content for the delete relation modal",
+    "message": "Are you sure you want to delete this relation?"
+  },
+  "components.templates.courses.form.productRelation.CourseFormProductRelationsSection.deleteRelationModalTitle": {
+    "description": "Title for the delete relation modal",
+    "message": "Delete product relationship"
+  },
+  "components.templates.courses.form.productRelation.CourseFormProductRelationsSection.emptyList": {
+    "description": "Message for empty list",
+    "message": "No product relationships have been created for this course"
+  },
+  "components.templates.courses.form.productRelation.CourseFormProductRelationsSection.sectionHelp": {
+    "description": "Help text to explain what this section is about",
+    "message": "In this section, you can choose the products that will be displayed on this course."
+  },
+  "components.templates.courses.form.productRelation.row.addOrderGroupButton": {
+    "description": "Add order group button label",
+    "message": "Add order group"
+  },
+  "components.templates.courses.form.productRelation.row.addOrderGroupModalFormTitle": {
+    "description": "Title for the edit order group modal",
+    "message": "Edit an order group"
+  },
+  "components.templates.courses.form.productRelation.row.deleteOrderGroupModal": {
+    "description": "Title for the delete order group modal",
+    "message": "Delete an order group"
+  },
+  "components.templates.courses.form.productRelation.row.deleteOrderGroupModalContent": {
+    "description": "Content for the delete order group modal",
+    "message": "Are you sure you want to delete this order group?"
+  },
+  "components.templates.courses.form.productRelation.row.mainTitleOrderGroup": {
+    "description": "Title for the order group row",
+    "message": "Order group {number}"
+  },
+  "components.templates.courses.form.productRelation.row.orderGroupDisabledActionsMessage": {
+    "description": "Information message for order group disabled actions",
+    "message": "Seats have already been reserved, so you cannot perform this action."
+  },
+  "components.templates.courses.form.productRelation.row.orderGroupIsActiveSwitchAriaLabel": {
+    "description": "Aria-label for the order group is active switch",
+    "message": "Order group is active switch"
+  },
+  "components.templates.courses.form.productRelation.row.relationDisabledActionsMessage": {
+    "description": "Information message for relation disabled actions",
+    "message": "One or more orders have already occurred for this relationship, so you cannot perform this action"
+  },
+  "components.templates.courses.form.productRelation.row.subTitleOrderGroup": {
+    "description": "Sub title for the order group row",
+    "message": "{reservedSeats}/{totalSeats} seats"
+  },
+  "components.templates.courses.form.productRelationModal.addButton": {
+    "description": "Label for the validate button in add mode",
+    "message": "Add"
+  },
+  "components.templates.courses.form.productRelationModal.addModalTitle": {
+    "description": "Title for productRelationModal in add mode ",
+    "message": "Add the relation"
+  },
+  "components.templates.courses.form.productRelationModal.editButton": {
+    "description": "Label for the validate button in edit mode",
+    "message": "Validate"
+  },
+  "components.templates.courses.form.productRelationModal.editModalTitle": {
+    "description": "Title for productRelationModal in edit mode ",
+    "message": "Edit the relation"
+  },
+  "components.templates.courses.inputs.search.CourseSearch.searchLabel": {
+    "description": "Label for the CourseSearch component",
+    "message": "Course search"
+  },
+  "components.templates.courses.inputs.search.courseSearch.filtersPopoverTitle": {
+    "description": "Title for the filters popover",
+    "message": "Course run filters"
+  },
+  "components.templates.courses.inputs.search.courseSearch.label": {
+    "description": "Label for the controlled search course input",
+    "message": "Search course run"
+  },
+  "components.templates.courses.inputs.search.courseSearch.startDateFilterLabel": {
+    "description": "Label for the start date filter",
+    "message": "Course run start date"
+  },
+  "components.templates.courses.inputs.search.courseSearch.statusFilterLabel": {
+    "description": "Label for the start date filter",
+    "message": "Course run status"
+  },
+  "components.templates.courses.list.codeHeader": {
+    "description": "Label for the code header inside the table  ",
+    "message": "Code"
+  },
+  "components.templates.courses.list.state": {
+    "description": "Label for the state header inside the table  ",
+    "message": "State"
+  },
+  "components.templates.courses.list.title": {
+    "description": "Label for the title header inside the table  ",
+    "message": "Title"
+  },
+  "components.templates.organizations.form.translations.codeLabel": {
+    "description": "Label for the code input",
+    "message": "Code"
+  },
+  "components.templates.organizations.form.translations.logoLabel": {
+    "description": "Label for the upload logo input",
+    "message": "Logo"
+  },
+  "components.templates.organizations.form.translations.membersSectionTitle": {
+    "description": "Title for the member section",
+    "message": "Organization members"
+  },
+  "components.templates.organizations.form.translations.representativeLabel": {
+    "description": "Label for the representative input",
+    "message": "Representative"
+  },
+  "components.templates.organizations.form.translations.signatureLabel": {
+    "description": "Label for the upload signature input",
+    "message": "Signature"
+  },
+  "components.templates.organizations.form.translations.uploadLogoButtonLabel": {
+    "description": "Label for the upload logo button",
+    "message": "Choose a logo"
+  },
+  "components.templates.organizations.form.translations.uploadSignatureButtonLabel": {
+    "description": "Label for the upload signature button",
+    "message": "Add a signature"
+  },
+  "components.templates.organizations.list.codeHeader": {
+    "description": "Label for the code header inside the table  ",
+    "message": "Code"
+  },
+  "components.templates.organizations.list.title": {
+    "description": "Label for the title header inside the table  ",
+    "message": "Title"
+  },
+  "components.templates.organizations.modals.CreateOrEditOrganizationModal.add": {
+    "description": "Title for add organization modal",
+    "message": "Add an organization"
+  },
+  "components.templates.organizations.modals.CreateOrEditOrganizationModal.edit": {
+    "description": "Title for add organization modal",
+    "message": "Edit the \"{name}\" organization"
+  },
+  "components.templates.products.form.sections.OderGroups.OrderGroupForm.isActiveLabel": {
+    "description": "The input label for the activate switch",
+    "message": "Activate this order group"
+  },
+  "components.templates.products.form.sections.OderGroups.OrderGroupForm.numberOfSeatInputLabel": {
+    "description": "The input label for the number of seats",
+    "message": "Number of seats"
+  },
+  "components.templates.products.form.translations.addRelatedCourseButtonLabel": {
+    "description": "Label for the add related courses button",
+    "message": "Add related course"
+  },
+  "components.templates.products.form.translations.addTargetCourseButtonLabel": {
+    "description": "Label for the add target courses button",
+    "message": "Add target course"
+  },
+  "components.templates.products.form.translations.addTargetCourseCourseRunModalTitle": {
+    "description": "Title for the course runs selection section",
+    "message": "List of available course runs"
+  },
+  "components.templates.products.form.translations.addTargetCourseRelationModalTitle": {
+    "description": "Title for the add target courses modal",
+    "message": "Add target courses"
+  },
+  "components.templates.products.form.translations.callToAction": {
+    "description": "Label for the call to action input",
+    "message": "Call to action"
+  },
+  "components.templates.products.form.translations.definition": {
+    "description": "Label for the definition input",
+    "message": "Certificate definition"
+  },
+  "components.templates.products.form.translations.definitionHelper": {
+    "description": "Helper text for the definition input",
+    "message": "Used for the generation of the certificate of completion of the course"
+  },
+  "components.templates.products.form.translations.financialInformationTitle": {
+    "description": "Title for the financial information section",
+    "message": "Financial information's"
+  },
+  "components.templates.products.form.translations.instructionsTitle": {
+    "description": "Title for the instruction section",
+    "message": "Product instructions"
+  },
+  "components.templates.products.form.translations.instructionsTitleHelp": {
+    "description": "Help for the for the instruction section",
+    "message": "(click to edit)"
+  },
+  "components.templates.products.form.translations.mainInformationTitle": {
+    "description": "Title for the main information section",
+    "message": "Main information's"
+  },
+  "components.templates.products.form.translations.mainSectionWizardTitle": {
+    "description": "Title for the wizard main information section",
+    "message": "Main"
+  },
+  "components.templates.products.form.translations.noRelatedCourses": {
+    "description": "Label for the empty related course message",
+    "message": "No related course has been added yet. Click the button to add"
+  },
+  "components.templates.products.form.translations.noTargetCourses": {
+    "description": "Label for the empty target course message",
+    "message": "No target course has been added yet. Click the button to add"
+  },
+  "components.templates.products.form.translations.price": {
+    "description": "Label for the price input",
+    "message": "Price"
+  },
+  "components.templates.products.form.translations.priceCurrency": {
+    "description": "Label for the price currency input",
+    "message": "Price currency"
+  },
+  "components.templates.products.form.translations.productRelatedCoursesFormInfo": {
+    "description": "Text for the alert info",
+    "message": "In this form, you can choose a course for which the product will be accessible, then select all the organizations that have the right to sell this course."
+  },
+  "components.templates.products.form.translations.productTargetCourseFormInfo": {
+    "description": "Text for the alert info",
+    "message": "In this form, you can choose a course to integrate into the product as well as the associated course paths. If you do not select any race runs, they will all be selected by default."
+  },
+  "components.templates.products.form.translations.productTypeLabel": {
+    "description": "Label for the product type input",
+    "message": "Type"
+  },
+  "components.templates.products.form.translations.relatedCourseSectionWizardTitle": {
+    "description": "Title for the wizard related courses section",
+    "message": "Related courses"
+  },
+  "components.templates.products.form.translations.relatedCoursesHelper": {
+    "description": "Helper text for the related courses section",
+    "message": "This section allows you to choose the courses to which this product will be attached. Users will therefore be able to access this product through these courses."
+  },
+  "components.templates.products.form.translations.related_courses": {
+    "description": "Label for the related courses input",
+    "message": "Related courses"
+  },
+  "components.templates.products.form.translations.targetCourseRowSubTitle": {
+    "description": "Label for the use all course run checkbox",
+    "message": "{numPhotos, plural, =0 {All selected course_runs.} other {# course runs selected.} }"
+  },
+  "components.templates.products.form.translations.targetCourseSectionWizardTitle": {
+    "description": "Title for the wizard target courses section",
+    "message": "Target courses"
+  },
+  "components.templates.products.form.translations.targetCoursesHelperSection": {
+    "description": "Helper text for the target courses section",
+    "message": "In this part, you can choose the courses contained in the product, as well as all the associated course sessions"
+  },
+  "components.templates.products.form.translations.targetCoursesTitle": {
+    "description": "Title for the target courses section",
+    "message": "Product target courses"
+  },
+  "components.templates.products.form.translations.useSpecificCourseRunsCheckboxLabel": {
+    "description": "Label for the use specific course run checkbox",
+    "message": "Choose specific course-runs"
+  },
+  "components.templates.products.list.priceHeader": {
+    "description": "Label for the price header inside the table  ",
+    "message": "price"
+  },
+  "components.templates.products.list.title": {
+    "description": "Label for the title header inside the table  ",
+    "message": "Title"
+  },
+  "components.templates.products.list.typeHeader": {
+    "description": "Label for the type header inside the table  ",
+    "message": "type"
+  },
+  "components.templates.products;form.sections.ProductFormTypeSection.certificateDescription": {
+    "description": "Description for the certificate product type",
+    "message": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec auctor cursus tincidunt. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Morbi sit amet neque dolor. Mauris a ultrices nulla. Curabitur sit amet lectus eget arcu ultricies tristique eu et dui. Integer ut nibh tempor, pellentesque libero at, finibus risus."
+  },
+  "components.templates.products;form.sections.ProductFormTypeSection.certificateTitle": {
+    "description": "Description for the certificate product type",
+    "message": "Certificate"
+  },
+  "components.templates.products;form.sections.ProductFormTypeSection.certifyingBadgeLabel": {
+    "description": "Label for the Certifying badge",
+    "message": "Certifying"
+  },
+  "components.templates.products;form.sections.ProductFormTypeSection.microCredentialDescription": {
+    "description": "Description for the credential product type",
+    "message": "Our online microcredentials allow you to pursue further study in a specialised field. Created or accredited by world-leading universities, they are professional qualifications designed to help you master in-demand career skills and prepare for work in rapidly growing."
+  },
+  "components.templates.products;form.sections.ProductFormTypeSection.microCredentialTitle": {
+    "description": "Title for the credential product type",
+    "message": "Microcredential"
+  },
+  "hooks.useCertificateDefinitions.errorCreate": {
+    "description": "Error message shown to the user when certificate definition creation request fails.",
+    "message": "An error occurred while creating the certificate definition. Please retry later."
+  },
+  "hooks.useCertificateDefinitions.errorDelete": {
+    "description": "Error message shown to the user when certificate definition deletion request fails.",
+    "message": "An error occurred while deleting the certificate definition. Please retry later."
+  },
+  "hooks.useCertificateDefinitions.errorNotFound": {
+    "description": "Error message shown to the user when no certificate definitions matches.",
+    "message": "Cannot find the certificate definition"
+  },
+  "hooks.useCertificateDefinitions.errorSelect": {
+    "description": "Error message shown to the user when certificate definitions fetch request fails.",
+    "message": "An error occurred while fetching certificate definitions. Please retry later."
+  },
+  "hooks.useCertificateDefinitions.errorUpdate": {
+    "description": "Error message shown to the user when certificate definition update request fails.",
+    "message": "An error occurred while updating the certificate definition. Please retry later."
+  },
+  "hooks.useContractDefinitions.errorCreate": {
+    "description": "Error message shown to the user when contract definition creation request fails.",
+    "message": "An error occurred while creating the contract definition. Please retry later."
+  },
+  "hooks.useContractDefinitions.errorDelete": {
+    "description": "Error message shown to the user when contract definition deletion request fails.",
+    "message": "An error occurred while deleting the contract definition. Please retry later."
+  },
+  "hooks.useContractDefinitions.errorNotFound": {
+    "description": "Error message shown to the user when no contract definitions matches.",
+    "message": "Cannot find the contract definition"
+  },
+  "hooks.useContractDefinitions.errorSelect": {
+    "description": "Error message shown to the user when contract definitions fetch request fails.",
+    "message": "An error occurred while fetching contract definitions. Please retry later."
+  },
+  "hooks.useContractDefinitions.errorUpdate": {
+    "description": "Error message shown to the user when contract definition update request fails.",
+    "message": "An error occurred while updating the contract definition. Please retry later."
+  },
+  "hooks.useCourse.errorCreate": {
+    "description": "Error message shown to the user when course creation request fails.",
+    "message": "An error occurred while creating the course. Please retry later."
+  },
+  "hooks.useCourse.errorDelete": {
+    "description": "Error message shown to the user when course deletion request fails.",
+    "message": "An error occurred while deleting the course. Please retry later."
+  },
+  "hooks.useCourse.errorNotFound": {
+    "description": "Error message shown to the user when no courses matches.",
+    "message": "Cannot find the course"
+  },
+  "hooks.useCourse.errorSelect": {
+    "description": "Error message shown to the user when courses fetch request fails.",
+    "message": "An error occurred while fetching courses. Please retry later."
+  },
+  "hooks.useCourse.errorUpdate": {
+    "description": "Error message shown to the user when course update request fails.",
+    "message": "An error occurred while updating the course. Please retry later."
+  },
+  "hooks.useCourseProductRelation.errorCreate": {
+    "description": "Error message shown to the user when course product relation creation request fails.",
+    "message": "An error occurred while creating the course product relation. Please retry later."
+  },
+  "hooks.useCourseProductRelation.errorCreateOrderGroup": {
+    "description": "Error message shown to the user when order group creation request fails.",
+    "message": "An error occurred while creating the order group. Please retry later."
+  },
+  "hooks.useCourseProductRelation.errorDelete": {
+    "description": "Error message shown to the user when course product relation deletion request fails.",
+    "message": "An error occurred while deleting the course product relation. Please retry later."
+  },
+  "hooks.useCourseProductRelation.errorDeleteOrderGroup": {
+    "description": "Error message shown to the user when order group deletion request fails.",
+    "message": "An error occurred while deleting the order group. Please retry later."
+  },
+  "hooks.useCourseProductRelation.errorGet": {
+    "description": "Error message shown to the user when course product relations fetch request fails.",
+    "message": "An error occurred while fetching course product relations. Please retry later."
+  },
+  "hooks.useCourseProductRelation.errorNotFound": {
+    "description": "Error message shown to the user when no course product relations matches.",
+    "message": "Cannot find the course product relation"
+  },
+  "hooks.useCourseProductRelation.errorUpdate": {
+    "description": "Error message shown to the user when course product relation update request fails.",
+    "message": "An error occurred while updating the course product relation. Please retry later."
+  },
+  "hooks.useCourseProductRelation.errorUpdateOrderGroup": {
+    "description": "Error message shown to the user when order group update request fails.",
+    "message": "An error occurred while updating the order group. Please retry later."
+  },
+  "hooks.useCourseRun.errorCreate": {
+    "description": "Error message shown to the user when course-run creation request fails.",
+    "message": "An error occurred while creating the course-run. Please retry later."
+  },
+  "hooks.useCourseRun.errorDelete": {
+    "description": "Error message shown to the user when course-run deletion request fails.",
+    "message": "An error occurred while deleting the course-run. Please retry later."
+  },
+  "hooks.useCourseRun.errorNotFound": {
+    "description": "Error message shown to the user when no course-runs matches.",
+    "message": "Cannot find the course-run"
+  },
+  "hooks.useCourseRun.errorSelect": {
+    "description": "Error message shown to the user when course-runs fetch request fails.",
+    "message": "An error occurred while fetching course-runs. Please retry later."
+  },
+  "hooks.useCourseRun.errorUpdate": {
+    "description": "Error message shown to the user when course run update request fails.",
+    "message": "An error occurred while updating the course run. Please retry later."
+  },
+  "hooks.useOrganizations.errorCreate": {
+    "description": "Error message shown to the user when organization creation request fails.",
+    "message": "An error occurred while creating the organization. Please retry later."
+  },
+  "hooks.useOrganizations.errorDelete": {
+    "description": "Error message shown to the user when organization deletion request fails.",
+    "message": "An error occurred while deleting the organization. Please retry later."
+  },
+  "hooks.useOrganizations.errorNotFound": {
+    "description": "Error message shown to the user when no organization matches.",
+    "message": "Cannot find the organization"
+  },
+  "hooks.useOrganizations.errorSelect": {
+    "description": "Error message shown to the user when organizations fetch request fails.",
+    "message": "An error occurred while fetching organizations. Please retry later."
+  },
+  "hooks.useOrganizations.errorUpdate": {
+    "description": "Error message shown to the user when organization update request fails.",
+    "message": "An error occurred while updating the organization. Please retry later."
+  },
+  "hooks.useProducts.errorCreate": {
+    "description": "Error message shown to the user when product creation request fails.",
+    "message": "An error occurred while creating the product. Please retry later."
+  },
+  "hooks.useProducts.errorCreateTargetCourses": {
+    "description": "Error message shown to the user when product target course relation creation request fails.",
+    "message": "An error occurred while creating the product target course relation. Please retry later."
+  },
+  "hooks.useProducts.errorDelete": {
+    "description": "Error message shown to the user when product deletion request fails.",
+    "message": "An error occurred while deleting the product. Please retry later."
+  },
+  "hooks.useProducts.errorDeleteTargetCourses": {
+    "description": "Error message shown to the user when product target course relation delete request fails.",
+    "message": "An error occurred while deleting the product target course relation. Please retry later."
+  },
+  "hooks.useProducts.errorNotFound": {
+    "description": "Error message shown to the user when no products matches.",
+    "message": "Cannot find the product"
+  },
+  "hooks.useProducts.errorSelect": {
+    "description": "Error message shown to the user when products fetch request fails.",
+    "message": "An error occurred while fetching products. Please retry later."
+  },
+  "hooks.useProducts.errorUpdate": {
+    "description": "Error message shown to the user when product update request fails.",
+    "message": "An error occurred while updating the product. Please retry later."
+  },
+  "hooks.useProducts.errorUpdateTargetCourses": {
+    "description": "Error message shown to the user when product target course relation update request fails.",
+    "message": "An error occurred while updating the product target course relation. Please retry later."
+  },
+  "hooks.useResources.errorCreate": {
+    "description": "Error message shown to the user when resource creation request fails.",
+    "message": "An error occurred while creating a resource. Please retry later."
+  },
+  "hooks.useResources.errorDelete": {
+    "description": "Error message shown to the user when resource deletion request fails.",
+    "message": "An error occurred while deleting a resource. Please retry later."
+  },
+  "hooks.useResources.errorGet": {
+    "description": "Error message shown to the user when resource fetch request fails.",
+    "message": "An error occurred while fetching resources. Please retry later."
+  },
+  "hooks.useResources.errorNotFound": {
+    "description": "Error message shown to the user when no resources matches.",
+    "message": "Cannot find the resource."
+  },
+  "hooks.useResources.errorUpdate": {
+    "description": "Error message shown to the user when resource update request fails.",
+    "message": "An error occurred while updating a resource. Please retry later."
+  },
+  "hooks.useResources.postSuccess": {
+    "description": "Success message shown to the user when resource was created / updated / deleted",
+    "message": "Operation completed successfully."
+  },
+  "hooks.useUser.errorCreate": {
+    "description": "Error message shown to the user when user creation request fails.",
+    "message": "An error occurred while creating the user. Please retry later."
+  },
+  "hooks.useUser.errorDelete": {
+    "description": "Error message shown to the user when user deletion request fails.",
+    "message": "An error occurred while deleting the user. Please retry later."
+  },
+  "hooks.useUser.errorNotFound": {
+    "description": "Error message shown to the user when no users matches.",
+    "message": "Cannot find the user"
+  },
+  "hooks.useUser.errorSelect": {
+    "description": "Error message shown to the user when users fetch request fails.",
+    "message": "An error occurred while fetching users. Please retry later."
+  },
+  "hooks.useUser.errorUpdate": {
+    "description": "Error message shown to the user when user update request fails.",
+    "message": "An error occurred while updating the user. Please retry later."
+  },
+  "layouts.dashboard.nav.account.administrator": {
+    "description": "administrator label",
+    "message": "Administrator"
+  },
+  "layouts.dashboard.nav.account.logout": {
+    "description": "Logout label",
+    "message": "Logout"
+  },
+  "layouts.dashboard.nav.account.notificationNav": {
+    "description": "Notifications navigation label",
+    "message": "Notifications"
+  },
+  "layouts.dashboard.nav.account.settingsSubHeader": {
+    "description": "Account subheader nav label",
+    "message": "Account and settings"
+  },
+  "layouts.dashboard.nav.config.certificatesNavTitle": {
+    "description": "Title for the Certificates nav item",
+    "message": "Certificates"
+  },
+  "layouts.dashboard.nav.config.contractDefinitionNavTitle": {
+    "description": "Title for the Contract definition nav item",
+    "message": "Contracts definitions"
+  },
+  "layouts.dashboard.nav.config.courseNavTitle": {
+    "description": "Title for the Courses nav item",
+    "message": "Courses"
+  },
+  "layouts.dashboard.nav.config.courseRunsNavTitle": {
+    "description": "Title for the Courses runs nav item",
+    "message": "Courses runs"
+  },
+  "layouts.dashboard.nav.config.managementSubHeader": {
+    "description": "Subheader for the nav management section",
+    "message": "Management"
+  },
+  "layouts.dashboard.nav.config.organizationNavTitle": {
+    "description": "Title for the Organization nav item",
+    "message": "Organizations"
+  },
+  "layouts.dashboard.nav.config.productNavTitle": {
+    "description": "Title for the Product nav item",
+    "message": "Products"
+  },
+  "layouts.dashboard.nav.header.DashboardNavHeader": {
+    "description": "aria-label for the go back home link",
+    "message": "Back to the homepage"
+  },
+  "pages.admin.certificateDefinitions.list.pageTitle": {
+    "description": "Label for the certificates definitions list page title",
+    "message": "Certificates definitions"
+  },
+  "pages.admin.certificates.breadcrumbsTranslations.createBreadcrumb": {
+    "description": "Breadcrumb label for the certificates create page",
+    "message": "Create"
+  },
+  "pages.admin.certificates.breadcrumbsTranslations.editBreadcrumb": {
+    "description": "Breadcrumb label for the certificates edit page",
+    "message": "Edit"
+  },
+  "pages.admin.certificates.breadcrumbsTranslations.listBreadcrumb": {
+    "description": "Breadcrumb label for the certificates list page",
+    "message": "List"
+  },
+  "pages.admin.certificates.breadcrumbsTranslations.rootBreadcrumb": {
+    "description": "Breadcrumb label for the certificates definitions root page",
+    "message": "Certificates definitions"
+  },
+  "pages.admin.certificates.edit.pageTitle": {
+    "description": "Label for the edit contract definition page title",
+    "message": "Edit contract definition: {name}"
+  },
+  "pages.admin.contractDefinition.breadcrumbsTranslations.createBreadcrumb": {
+    "description": "Breadcrumb label for the contract definitions create page",
+    "message": "Create"
+  },
+  "pages.admin.contractDefinition.breadcrumbsTranslations.editBreadcrumb": {
+    "description": "Breadcrumb label for the contracts edit page",
+    "message": "Edit"
+  },
+  "pages.admin.contractDefinition.breadcrumbsTranslations.listBreadcrumb": {
+    "description": "Breadcrumb label for the contracts list page",
+    "message": "List"
+  },
+  "pages.admin.contractDefinition.breadcrumbsTranslations.rootBreadcrumb": {
+    "description": "Breadcrumb label for the contracts definitions root page",
+    "message": "Contracts definitions"
+  },
+  "pages.admin.contractDefinition.create.pageTitle": {
+    "description": "Label for the create contract organisation page title",
+    "message": "Add contract definition"
+  },
+  "pages.admin.contractDefinitions.list.pageTitle": {
+    "description": "Label for the contracts definitions list page title",
+    "message": "Contracts definitions"
+  },
+  "pages.admin.courses.breadcrumbsTranslations.createBreadcrumb": {
+    "description": "Breadcrumb label for the courses create page",
+    "message": "Create"
+  },
+  "pages.admin.courses.breadcrumbsTranslations.editBreadcrumb": {
+    "description": "Breadcrumb label for the courses edit page",
+    "message": "Edit"
+  },
+  "pages.admin.courses.breadcrumbsTranslations.listBreadcrumb": {
+    "description": "Breadcrumb label for the courses list page",
+    "message": "List"
+  },
+  "pages.admin.courses.breadcrumbsTranslations.rootBreadcrumb": {
+    "description": "Breadcrumb label for the courses root page",
+    "message": "Courses"
+  },
+  "pages.admin.courses.create.pageTitle": {
+    "description": "Label for the courses create page title",
+    "message": "Add a course"
+  },
+  "pages.admin.courses.edit.pageTitle": {
+    "description": "Label for the edit course run page title",
+    "message": "Edit course: {courseName}"
+  },
+  "pages.admin.courses.list.pageTitle": {
+    "description": "Label for the courses list page title",
+    "message": "Courses"
+  },
+  "pages.admin.coursesRuns.breadcrumbsTranslations.createBreadcrumb": {
+    "description": "Breadcrumb label for the coursesRuns create page",
+    "message": "Create"
+  },
+  "pages.admin.coursesRuns.breadcrumbsTranslations.editBreadcrumb": {
+    "description": "Breadcrumb label for the coursesRuns edit page",
+    "message": "Edit"
+  },
+  "pages.admin.coursesRuns.breadcrumbsTranslations.listBreadcrumb": {
+    "description": "Breadcrumb label for the coursesRuns list page",
+    "message": "List"
+  },
+  "pages.admin.coursesRuns.breadcrumbsTranslations.rootBreadcrumb": {
+    "description": "Breadcrumb label for the coursesRuns root page",
+    "message": "Courses runs"
+  },
+  "pages.admin.coursesRuns.create.pageTitle": {
+    "description": "Label for the courses runs list page title",
+    "message": "Add a course run"
+  },
+  "pages.admin.coursesRuns.edit.pageTitle": {
+    "description": "Label for the edit course run page title",
+    "message": "Edit course run: {courseRunName}"
+  },
+  "pages.admin.coursesRuns.list.pageTitle": {
+    "description": "Label for the courses runs list page title",
+    "message": "Course runs"
+  },
+  "pages.admin.home.cardHomePagesTranslation.certificateDefinitionBadge": {
+    "description": "Label for the badge inside certificate definition card",
+    "message": "Certificate definition"
+  },
+  "pages.admin.home.cardHomePagesTranslation.certificateDefinitionDescription": {
+    "description": "Description for the create certificate definition card inside the home page",
+    "message": "A certificate definition is based on a template. There are currently two certificate templates available (certificate and degree)."
+  },
+  "pages.admin.home.cardHomePagesTranslation.certificateDefinitionTitle": {
+    "description": "Title for the create certificate definition card inside the home page",
+    "message": "Create a certificate definition"
+  },
+  "pages.admin.home.cardHomePagesTranslation.contractDefinitionBadge": {
+    "description": "Label for the badge inside certificate definition card",
+    "message": "Contract definition"
+  },
+  "pages.admin.home.cardHomePagesTranslation.contractDefinitionDescription": {
+    "description": "Description for the create contract definition card inside the home page",
+    "message": "A contract definition is based on a template"
+  },
+  "pages.admin.home.cardHomePagesTranslation.contractDefinitionTitle": {
+    "description": "Title for the contract certificate definition card inside the home page",
+    "message": "Create a contract definition"
+  },
+  "pages.admin.home.cardHomePagesTranslation.courseBadge": {
+    "description": "Label for the badge inside course card",
+    "message": "Course"
+  },
+  "pages.admin.home.cardHomePagesTranslation.courseDescription": {
+    "description": "Description for the create course card inside the home page",
+    "message": "Create a course page on which you can link course runs and products."
+  },
+  "pages.admin.home.cardHomePagesTranslation.courseRunBadge": {
+    "description": "Label for the badge inside course run card",
+    "message": "Course run"
+  },
+  "pages.admin.home.cardHomePagesTranslation.courseRunTitle": {
+    "description": "Title for the create course run card inside the home page",
+    "message": "Create a course run"
+  },
+  "pages.admin.home.cardHomePagesTranslation.courseTitle": {
+    "description": "Title for the create course card inside the home page",
+    "message": "Create a course"
+  },
+  "pages.admin.home.cardHomePagesTranslation.organizationBadge": {
+    "description": "Label for the badge inside organization card",
+    "message": "Organization"
+  },
+  "pages.admin.home.cardHomePagesTranslation.organizationDescription": {
+    "description": "Description for the create organization card inside the home page",
+    "message": "Create an university which will can be declared as author of a course or seller of a product."
+  },
+  "pages.admin.home.cardHomePagesTranslation.organizationTitle": {
+    "description": "Title for the create course run card inside the home page",
+    "message": "Create an organization"
+  },
+  "pages.admin.home.cardHomePagesTranslation.productBadge": {
+    "description": "Label for the badge inside product card",
+    "message": "Product"
+  },
+  "pages.admin.home.cardHomePagesTranslation.productDescription": {
+    "description": "Description for the create product card inside the home page",
+    "message": "There are two product types. First a training composed of one or more target courses then a certificate."
+  },
+  "pages.admin.home.cardHomePagesTranslation.productTitle": {
+    "description": "Title for the create product card inside the home page",
+    "message": "Create a product"
+  },
+  "pages.admin.home.pageTitle": {
+    "description": "Label for the home page title",
+    "message": "Joanie administration"
+  },
+  "pages.admin.home.rootBreadcrumb": {
+    "description": "Label for the root breadcrumn ",
+    "message": "Home page"
+  },
+  "pages.admin.organizations.breadcrumbsTranslations.createBreadcrumb": {
+    "description": "Breadcrumb label for the organization create page",
+    "message": "Create"
+  },
+  "pages.admin.organizations.breadcrumbsTranslations.editBreadcrumb": {
+    "description": "Breadcrumb label for the organization edit page",
+    "message": "Edit"
+  },
+  "pages.admin.organizations.breadcrumbsTranslations.listBreadcrumb": {
+    "description": "Breadcrumb label for the organization list page",
+    "message": "List"
+  },
+  "pages.admin.organizations.breadcrumbsTranslations.rootBreadcrumb": {
+    "description": "Breadcrumb label for the organization root page",
+    "message": "Organizations"
+  },
+  "pages.admin.organizations.create.pageTitle": {
+    "description": "Label for the create organization page title",
+    "message": "Add organization"
+  },
+  "pages.admin.organizations.edit.pageTitle": {
+    "description": "Label for the edit organization page title",
+    "message": "Edit organization: {organizationName}"
+  },
+  "pages.admin.organizations.list.pageTitle": {
+    "description": "Label for the organization list page title",
+    "message": "Organizations"
+  },
+  "pages.admin.products.breadcrumbsTranslations.createBreadcrumb": {
+    "description": "Breadcrumb label for the products create page",
+    "message": "Create"
+  },
+  "pages.admin.products.breadcrumbsTranslations.editBreadcrumb": {
+    "description": "Breadcrumb label for the products edit page",
+    "message": "Edit"
+  },
+  "pages.admin.products.breadcrumbsTranslations.listBreadcrumb": {
+    "description": "Breadcrumb label for the products list page",
+    "message": "List"
+  },
+  "pages.admin.products.breadcrumbsTranslations.rootBreadcrumb": {
+    "description": "Breadcrumb label for the products root page",
+    "message": "Products"
+  },
+  "pages.admin.products.create.pageTitle": {
+    "description": "Label for the create product page title",
+    "message": "Add product"
+  },
+  "pages.admin.products.edit.pageTitle": {
+    "description": "Label for the edit product page title",
+    "message": "Edit product: {productName}"
+  },
+  "pages.admin.products.list.pageTitle": {
+    "description": "Label for the product list page title",
+    "message": "Products"
+  },
+  "translations.common.commonTranslations.add": {
+    "description": "Common add label",
+    "message": "Add"
+  },
+  "translations.common.commonTranslations.delete": {
+    "description": "Common delete label",
+    "message": "Delete"
+  },
+  "translations.common.commonTranslations.description": {
+    "description": "Common description label",
+    "message": "Description"
+  },
+  "translations.common.commonTranslations.edit": {
+    "description": "Common edit label",
+    "message": "Edit"
+  },
+  "translations.common.commonTranslations.language": {
+    "description": "Common language label",
+    "message": "Language"
+  },
+  "translations.common.commonTranslations.submit": {
+    "description": "Common submit label",
+    "message": "Submit"
+  },
+  "translations.common.commonTranslations.title": {
+    "description": "Common title label",
+    "message": "Title"
+  },
+  "translations.common.commonTranslations.upload": {
+    "description": "Common upload label",
+    "message": "Upload"
+  },
+  "translations.common.commonTranslations.useAsTemplate": {
+    "description": "Use as template text",
+    "message": "Use as a template"
+  },
+  "translations.common.languageTranslations.english": {
+    "description": "Common english label",
+    "message": "English"
+  },
+  "translations.common.languageTranslations.french": {
+    "description": "Common french label",
+    "message": "French"
+  }
+}

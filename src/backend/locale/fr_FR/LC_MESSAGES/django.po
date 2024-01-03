@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: joanie\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-12-21 14:17+0000\n"
-"PO-Revision-Date: 2024-01-02 16:25\n"
+"POT-Creation-Date: 2024-01-03 10:06+0000\n"
+"PO-Revision-Date: 2024-01-03 10:37\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -1080,23 +1080,23 @@ msgstr "Payée"
 msgid "Refunded"
 msgstr "Remboursée"
 
-#: joanie/payment/exceptions.py:11
+#: joanie/payment/exceptions.py:13
 msgid "Cannot abort this payment."
 msgstr "Impossible d'annuler ce paiement."
 
-#: joanie/payment/exceptions.py:19
+#: joanie/payment/exceptions.py:21
 msgid "Cannot create a payment."
 msgstr "Impossible de créer un paiement."
 
-#: joanie/payment/exceptions.py:27
+#: joanie/payment/exceptions.py:29
 msgid "Cannot register this payment."
 msgstr "Impossible d'enregistrer ce paiement."
 
-#: joanie/payment/exceptions.py:35
+#: joanie/payment/exceptions.py:37
 msgid "Cannot refund this payment."
 msgstr "Impossible de rembourser ce paiement."
 
-#: joanie/payment/exceptions.py:43
+#: joanie/payment/exceptions.py:45
 msgid "Cannot parse notification."
 msgstr "Impossible d'analyser la notification."
 
@@ -1172,23 +1172,23 @@ msgstr "Français"
 msgid "Joanie signature application"
 msgstr "Application de signature de Joanie"
 
-#: joanie/signature/exceptions.py:15
+#: joanie/signature/exceptions.py:17
 msgid "Cannot create a signature procedure."
 msgstr "Impossible de créer une procédure de signature."
 
-#: joanie/signature/exceptions.py:24
+#: joanie/signature/exceptions.py:26
 msgid "Cannot upload the file to the signature provider with the signature reference."
 msgstr "Impossible de téléverser le fichier au prestataire de signature avec la référence de signature."
 
-#: joanie/signature/exceptions.py:38
+#: joanie/signature/exceptions.py:40
 msgid "Cannot start the signature procedure with the signature reference."
 msgstr "Impossible de démarrer la procédure de signature avec la référence de signature."
 
-#: joanie/signature/exceptions.py:52
+#: joanie/signature/exceptions.py:54
 msgid "Cannot get invitation link to sign the file from the signature provider."
 msgstr "Impossible d'obtenir le lien d'invitation à signer le fichier depuis le prestataire de signature."
 
-#: joanie/signature/exceptions.py:65
+#: joanie/signature/exceptions.py:67
 msgid "Cannot delete the signature procedure."
 msgstr "Impossible de supprimer la procédure de signature."
 
