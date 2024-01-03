@@ -1,13 +1,8 @@
 """Test suite for Certificate Model"""
-from io import BytesIO
-
 from django.conf import settings
 from django.test import TestCase
 
-from parler.utils.context import switch_language
-from pdfminer.high_level import extract_text as pdf_extract_text
-
-from joanie.core import enums, factories
+from joanie.core import factories
 
 
 class CertificateModelTestCase(TestCase):
@@ -60,108 +55,13 @@ class CertificateModelTestCase(TestCase):
         self.assertEqual(context["course"]["name"], "Graded product")
         self.assertEqual(context["organization"]["name"], "Organization 1")
 
-    def test_models_certificate_degree_document(self):
+    def test_models_certificate_get_document_context_with_incomplete_information_raises_error(
+        self,
+    ):
         """
-        Certificate document property should generate a degree document
-        in the active language.
+        If the certificate context is incomplete (missing logo or signature for example),
+        it should raise a Value Error while getting the document's context.
         """
-        organization = factories.OrganizationFactory(
-            title="University X", representative="Joanie Cunningham"
-        )
-        course = factories.CourseFactory()
-        certificate_definition = factories.CertificateDefinitionFactory(
-            template=enums.DEGREE
-        )
-        product = factories.ProductFactory(
-            courses=[],
-            title="Graded product",
-            certificate_definition=certificate_definition,
-        )
-        factories.CourseProductRelationFactory(
-            course=course, product=product, organizations=[organization]
-        )
-
-        # - Add French translations
-        organization.translations.create(language_code="fr-fr", title="Université X")
-        product.translations.create(language_code="fr-fr", title="Produit certifiant")
-
-        order = factories.OrderFactory(product=product)
-        certificate = factories.OrderCertificateFactory(order=order)
-
-        (document, _) = certificate.generate_document()
-        document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
-        self.assertRegex(document_text, "Certificate")
-        self.assertRegex(document_text, rf"Certificate ID: {str(certificate.id)}")
-        self.assertRegex(
-            document_text, r"Joanie Cunningham.*University X.*Graded product"
-        )
-
-        with switch_language(product, "fr-fr"):
-            (document, _) = certificate.generate_document()
-            document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
-            self.assertRegex(document_text, r"Joanie Cunningham.*Université X")
-
-        with switch_language(product, "de-de"):
-            # - Finally, unknown language should use the default language as fallback
-            (document, _) = certificate.generate_document()
-            document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
-            self.assertRegex(document_text, r"Joanie Cunningham.*University X")
-
-    def test_models_certificate_certificate_document(self):
-        """
-        Certificate document property should generate a certificate document
-        in the active language.
-        """
-        organization = factories.OrganizationFactory(title="University X")
-        user = factories.UserFactory(first_name="Joanie Cunningham")
-        course = factories.CourseFactory(title="Course with attestation")
-        enrollment = factories.EnrollmentFactory(user=user, course_run__course=course)
-        certificate_definition = factories.CertificateDefinitionFactory(
-            template=enums.CERTIFICATE
-        )
-
-        # - Add French translations
-        organization.translations.create(language_code="fr-fr", title="Université X")
-        course.translations.create(
-            language_code="fr-fr", title="Cours avec attestation"
-        )
-
-        certificate = factories.EnrollmentCertificateFactory(
-            certificate_definition=certificate_definition,
-            enrollment=enrollment,
-            organization=organization,
-        )
-
-        (document, _) = certificate.generate_document()
-        document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
-        self.assertRegex(document_text, "ATTESTATION OF ACHIEVEMENT")
-        self.assertRegex(
-            document_text, r"Joanie Cunningham.*Course with attestation.*University X"
-        )
-
-        with switch_language(course, "fr-fr"):
-            (document, _) = certificate.generate_document()
-            document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
-            self.assertRegex(
-                document_text,
-                r"Joanie Cunningham.*Cours avec attestation.*Université X",
-            )
-
-        with switch_language(course, "de-de"):
-            # - Finally, unknown language should use the default language as fallback
-            (document, _) = certificate.generate_document()
-            document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
-            self.assertRegex(
-                document_text,
-                r"Joanie Cunningham.*Course with attestation.*University X",
-            )
-
-    def test_models_certificate_document_with_incomplete_information(self):
-        """
-        If the certificate context is incomplete, the certificate document should not
-        be created.
-        """
-
         organization = factories.OrganizationFactory(
             title="University X",
             representative="Joanie Cunningham",
@@ -189,8 +89,3 @@ class CertificateModelTestCase(TestCase):
             str(context.exception),
             "The 'signature' attribute has no file associated with it.",
         )
-
-        # - But try to create the document should return None
-        (document, context) = certificate.generate_document()
-        self.assertIsNone(document)
-        self.assertIsNone(context)

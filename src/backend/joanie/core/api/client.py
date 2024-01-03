@@ -652,13 +652,17 @@ class CertificateViewSet(
                 status=HTTPStatus.NOT_FOUND,
             )
 
-        (document, _) = certificate.generate_document()
-
-        if not document:
+        try:
+            context = certificate.get_document_context()
+        except ValueError:
             return Response(
                 {"detail": f"Unable to generate certificate {pk}."},
                 status=HTTPStatus.UNPROCESSABLE_ENTITY,
             )
+
+        document = issuers.generate_document(
+            name=certificate.certificate_definition.template, context=context
+        )
 
         response = HttpResponse(
             document, content_type="application/pdf", status=HTTPStatus.OK
