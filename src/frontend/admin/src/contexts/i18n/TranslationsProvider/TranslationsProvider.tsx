@@ -1,10 +1,12 @@
 import * as React from "react";
-import { PropsWithChildren, useEffect, useMemo, useState } from "react";
+import { PropsWithChildren, useMemo, useState } from "react";
 import { IntlProvider } from "react-intl";
 import { LocalizationProvider } from "@mui/x-date-pickers";
+
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import fr from "date-fns/locale/fr";
 import enUS from "date-fns/locale/en-US";
+import { useQueryClient } from "@tanstack/react-query";
 import French from "@/translations/fr-FR.json";
 import { LocalesEnum } from "@/types/i18n/LocalesEnum";
 import {
@@ -12,23 +14,16 @@ import {
   LocaleContextInterface,
 } from "@/contexts/i18n/TranslationsProvider/TranslationContext";
 import { useAllLanguages } from "@/hooks/useAllLanguages/useAllLanguages";
+import { getLocaleFromDjangoLang, setDjangoLangFromLocale } from "@/utils/lang";
 
-interface Props {
-  locale: LocalesEnum;
-}
-
-export function TranslationsProvider({
-  locale = LocalesEnum.ENGLISH,
-  ...props
-}: PropsWithChildren<Props>) {
+export function TranslationsProvider({ children }: PropsWithChildren<{}>) {
+  const queryClient = useQueryClient();
+  const defaultLocal = getLocaleFromDjangoLang();
   const allLanguages = useAllLanguages();
-
-  const [currentLocale, setCurrentLocale] = useState<LocalesEnum>(locale);
+  const [currentLocale, setCurrentLocale] = useState<LocalesEnum>(defaultLocal);
   const [adapterLocale] = useState<Locale>(
-    locale !== LocalesEnum.FRENCH ? fr : enUS,
+    defaultLocal !== LocalesEnum.FRENCH ? fr : enUS,
   );
-
-  useEffect(() => {}, [allLanguages]);
 
   const translations = useMemo(() => {
     switch (currentLocale) {
@@ -42,8 +37,10 @@ export function TranslationsProvider({
   const localeContext: LocaleContextInterface = useMemo(
     () => ({
       currentLocale,
-      setCurrentLocale: (newLocale: LocalesEnum) => {
+      setCurrentLocale: async (newLocale: LocalesEnum) => {
         setCurrentLocale(newLocale);
+        setDjangoLangFromLocale(newLocale);
+        await queryClient.invalidateQueries();
       },
     }),
     [currentLocale],
@@ -56,11 +53,11 @@ export function TranslationsProvider({
         adapterLocale={adapterLocale}
       >
         <IntlProvider
-          locale={locale}
+          locale={currentLocale}
           messages={translations}
           defaultLocale={LocalesEnum.ENGLISH}
         >
-          {allLanguages && <div>{props.children}</div>}
+          {allLanguages && <div>{children}</div>}
         </IntlProvider>
       </LocalizationProvider>
     </LocaleContext.Provider>

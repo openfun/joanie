@@ -8,9 +8,10 @@ import { useTheme } from "@mui/material/styles";
 import { TRANSLATE_CONTENT_LANGUAGE } from "@/utils/constants";
 import { LocalesEnum } from "@/types/i18n/LocalesEnum";
 import { getAcceptLanguage } from "@/services/http/HttpService";
+import { getLocaleFromDjangoLang } from "@/utils/lang";
 
 interface Props {
-  onSelectLang: (lang: string) => void;
+  onSelectLang: (lang?: string) => void;
 }
 
 export function TranslatableContent({ ...props }: PropsWithChildren<Props>) {
@@ -30,8 +31,10 @@ export function TranslatableContent({ ...props }: PropsWithChildren<Props>) {
     props.onSelectLang(newValue);
   };
   useEffect(() => {
+    localStorage.setItem(TRANSLATE_CONTENT_LANGUAGE, getLocaleFromDjangoLang());
     return () => {
       localStorage.removeItem(TRANSLATE_CONTENT_LANGUAGE);
+      props.onSelectLang(getLocaleFromDjangoLang());
     };
   }, []);
 
