@@ -163,7 +163,7 @@ export function CourseRunForm({ courseRun, addToCourse, ...props }: Props) {
               <RHFSelectLanguage
                 multiple={true}
                 name="languages"
-                label="Language"
+                label={intl.formatMessage(courseRunFormMessages.language)}
               />
             </Grid>
             <Grid xs={12}>
@@ -174,10 +174,16 @@ export function CourseRunForm({ courseRun, addToCourse, ...props }: Props) {
               </Typography>
             </Grid>
             <Grid xs={12} md={6}>
-              <RHFDateTimePicker name="start" label="Start" />
+              <RHFDateTimePicker
+                name="start"
+                label={intl.formatMessage(courseRunFormMessages.startLabel)}
+              />
             </Grid>
             <Grid xs={12} md={6}>
-              <RHFDateTimePicker name="end" label="End" />
+              <RHFDateTimePicker
+                name="end"
+                label={intl.formatMessage(courseRunFormMessages.endLabel)}
+              />
             </Grid>
             <Grid xs={12}>
               <Typography variant="subtitle2">
