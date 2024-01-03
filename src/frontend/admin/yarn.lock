@@ -494,17 +494,17 @@
   dependencies:
     regenerator-runtime "^0.14.0"
 
+"@babel/runtime@^7.21.0", "@babel/runtime@^7.23.6":
+  version "7.23.7"
+  resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.23.7.tgz#dd7c88deeb218a0f8bd34d5db1aa242e0f203193"
+  integrity sha512-w06OXVOFso7LcbzMiDGt+3X7Rh7Ho8MmgPoWU3rarH+8upf+wSU/grlGbWzQyr3DkdN6ZeuMFjpdwW0Q+HxobA==
+  dependencies:
+    regenerator-runtime "^0.14.0"
+
 "@babel/runtime@^7.23.4":
   version "7.23.5"
   resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.23.5.tgz#11edb98f8aeec529b82b211028177679144242db"
   integrity sha512-NdUTHcPe4C99WxPub+K9l9tK5/lV4UXIoaHSYgzco9BCyjKAAwzdBI+wWtYqHt7LJdbo74ZjRPJgzVweq1sz0w==
-  dependencies:
-    regenerator-runtime "^0.14.0"
-
-"@babel/runtime@^7.23.6":
-  version "7.23.7"
-  resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.23.7.tgz#dd7c88deeb218a0f8bd34d5db1aa242e0f203193"
-  integrity sha512-w06OXVOFso7LcbzMiDGt+3X7Rh7Ho8MmgPoWU3rarH+8upf+wSU/grlGbWzQyr3DkdN6ZeuMFjpdwW0Q+HxobA==
   dependencies:
     regenerator-runtime "^0.14.0"
 
@@ -3136,10 +3136,12 @@ data-urls@^3.0.2:
     whatwg-mimetype "^3.0.0"
     whatwg-url "^11.0.0"
 
-date-fns@3.0.6:
-  version "3.0.6"
-  resolved "https://registry.yarnpkg.com/date-fns/-/date-fns-3.0.6.tgz#fe3aeb7592d359f075ffc41cb16139828810ca83"
-  integrity sha512-W+G99rycpKMMF2/YD064b2lE7jJGUe+EjOES7Q8BIGY8sbNdbgcs9XFTZwvzc9Jx1f3k7LB7gZaZa7f8Agzljg==
+date-fns@2.30.0:
+  version "2.30.0"
+  resolved "https://registry.yarnpkg.com/date-fns/-/date-fns-2.30.0.tgz#f367e644839ff57894ec6ac480de40cae4b0f4d0"
+  integrity sha512-fnULvOpxnC5/Vg3NCiWelDsLiUc9bRwAPs/+LfTLNvetFCtCTN+yQz15C/fs4AwX1R9K5GLtLfn8QW+dWisaAw==
+  dependencies:
+    "@babel/runtime" "^7.21.0"
 
 debug@4, debug@^4.0.0, debug@^4.1.0, debug@^4.1.1, debug@^4.3.1, debug@^4.3.2, debug@^4.3.4:
   version "4.3.4"
@@ -8376,10 +8378,10 @@ undici-types@~5.26.4:
   resolved "https://registry.yarnpkg.com/undici-types/-/undici-types-5.26.5.tgz#bcd539893d00b56e964fd2657a4866b221a65617"
   integrity sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==
 
-undici@6.2.1:
-  version "6.2.1"
-  resolved "https://registry.yarnpkg.com/undici/-/undici-6.2.1.tgz#554293044619e065d986c37a4c92185c3bc02121"
-  integrity sha512-7Wa9thEM6/LMnnKtxJHlc8SrTlDmxqJecgz1iy8KlsN0/iskQXOQCuPkrZLXbElPaSw5slFFyKIKXyJ3UtbApw==
+undici@5.28.2:
+  version "5.28.2"
+  resolved "https://registry.yarnpkg.com/undici/-/undici-5.28.2.tgz#fea200eac65fc7ecaff80a023d1a0543423b4c91"
+  integrity sha512-wh1pHJHnUeQV5Xa8/kyQhO7WFa8M34l026L5P/+2TYiakvGy5Rdc8jWZVyG7ieht/0WgJLEd3kcU5gKx+6GC8w==
   dependencies:
     "@fastify/busboy" "^2.0.0"
 

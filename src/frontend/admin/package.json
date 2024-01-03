@@ -34,7 +34,7 @@
     "@uiw/react-md-editor": "4.0.2",
     "babel-plugin-transform-remove-imports": "1.7.1",
     "classnames": "2.5.1",
-    "date-fns": "3.0.6",
+    "date-fns": "2.30.0",
     "js-cookie": "3.0.5",
     "msw": "2.0.11",
     "next": "14.0.4",
@@ -93,7 +93,7 @@
     "next-router-mock": "0.9.11",
     "node-fetch": "3.3.2",
     "prettier": "3.1.1",
-    "undici": "6.2.1",
+    "undici": "5.28.2",
     "whatwg-fetch": "3.6.20"
   },
   "resolutions": {
