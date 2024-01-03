@@ -46,6 +46,21 @@ export const courseRunFormMessages = defineMessages({
     defaultMessage: "Enrollment end",
     description: "Label for the enrollment start input",
   },
+  startLabel: {
+    id: "components.templates.courseRuns.form.translations.startLabel",
+    defaultMessage: "Start",
+    description: "Label for the course run start input",
+  },
+  endLabel: {
+    id: "components.templates.courseRuns.form.translations.endLabel",
+    defaultMessage: "End",
+    description: "Label for the course run end input",
+  },
+  language: {
+    id: "components.templates.courseRuns.form.translations.language",
+    defaultMessage: "Language",
+    description: "Label for the course run Language input",
+  },
   isGradableLabel: {
     id: "components.templates.courseRuns.form.translations.isGradableLabel",
     defaultMessage: "Is gradable?",
