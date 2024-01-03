@@ -28,9 +28,9 @@ class UtilsIssuersInvoiceGenerateDocumentTestCase(TestCase):
         )
         invoice = InvoiceFactory(order__product=product, total=product.price)
 
-        context = invoice.get_document_context()
         file_bytes = issuers.generate_document(
-            name=payment_enums.INVOICE_TYPE_INVOICE, context=context
+            name=payment_enums.INVOICE_TYPE_INVOICE,
+            context=invoice.get_document_context(),
         )
 
         # - The default language is used first
@@ -40,18 +40,18 @@ class UtilsIssuersInvoiceGenerateDocumentTestCase(TestCase):
         # - Then if we switch to an existing language, it should generate
         #   a document with the context in the active language
         with override("fr-fr", deactivate=True):
-            context = invoice.get_document_context()
             file_bytes = issuers.generate_document(
-                name=payment_enums.INVOICE_TYPE_INVOICE, context=context
+                name=payment_enums.INVOICE_TYPE_INVOICE,
+                context=invoice.get_document_context(),
             )
             document_text = pdf_extract_text(BytesIO(file_bytes)).replace("\n", "")
             self.assertRegex(document_text, r"Produit 1.*Description du produit 1")
 
         # # - Finally, unknown language should use the default language as fallback
         with override("de-de", deactivate=True):
-            context = invoice.get_document_context()
             file_bytes = issuers.generate_document(
-                name=payment_enums.INVOICE_TYPE_INVOICE, context=context
+                name=payment_enums.INVOICE_TYPE_INVOICE,
+                context=invoice.get_document_context(),
             )
             document_text = pdf_extract_text(BytesIO(file_bytes)).replace("\n", "")
             self.assertRegex(document_text, r"Product 1.*Product 1 description")
@@ -62,9 +62,9 @@ class UtilsIssuersInvoiceGenerateDocumentTestCase(TestCase):
         """
         invoice = InvoiceFactory()
 
-        context = invoice.get_document_context()
         file_bytes = issuers.generate_document(
-            name=payment_enums.INVOICE_TYPE_INVOICE, context=context
+            name=payment_enums.INVOICE_TYPE_INVOICE,
+            context=invoice.get_document_context(),
         )
 
         # - The default language is used first
@@ -74,9 +74,9 @@ class UtilsIssuersInvoiceGenerateDocumentTestCase(TestCase):
         # - Then if we switch to an existing language, it should generate
         #   a document with the context in the active language
         with override("fr-fr", deactivate=True):
-            context = invoice.get_document_context()
             file_bytes = issuers.generate_document(
-                name=payment_enums.INVOICE_TYPE_INVOICE, context=context
+                name=payment_enums.INVOICE_TYPE_INVOICE,
+                context=invoice.get_document_context(),
             )
             document_text = pdf_extract_text(BytesIO(file_bytes)).replace("\n", "")
             self.assertRegex(document_text, r"FACTURE")
@@ -93,9 +93,9 @@ class UtilsIssuersInvoiceGenerateDocumentTestCase(TestCase):
         )
 
         # - The default language is used first
-        context = credit_note.get_document_context()
         file_bytes = issuers.generate_document(
-            name=payment_enums.INVOICE_TYPE_INVOICE, context=context
+            name=payment_enums.INVOICE_TYPE_INVOICE,
+            context=credit_note.get_document_context(),
         )
 
         document_text = pdf_extract_text(BytesIO(file_bytes)).replace("\n", "")
@@ -104,9 +104,9 @@ class UtilsIssuersInvoiceGenerateDocumentTestCase(TestCase):
         # - Then if we switch to an existing language, it should generate
         #   a document with the context in the active language
         with override("fr-fr", deactivate=True):
-            context = credit_note.get_document_context()
             file_bytes = issuers.generate_document(
-                name=payment_enums.INVOICE_TYPE_INVOICE, context=context
+                name=payment_enums.INVOICE_TYPE_INVOICE,
+                context=credit_note.get_document_context(),
             )
             document_text = pdf_extract_text(BytesIO(file_bytes)).replace("\n", "")
             self.assertRegex(document_text, r"AVOIR")
@@ -124,9 +124,9 @@ class UtilsIssuersInvoiceGenerateDocumentTestCase(TestCase):
         invoice = InvoiceFactory(order__product=product, total=product.price)
 
         # - The default language is used first
-        context = invoice.get_document_context()
         file_bytes = issuers.generate_document(
-            name=payment_enums.INVOICE_TYPE_INVOICE, context=context
+            name=payment_enums.INVOICE_TYPE_INVOICE,
+            context=invoice.get_document_context(),
         )
 
         document_text = pdf_extract_text(BytesIO(file_bytes)).replace("\n", "")
@@ -134,18 +134,18 @@ class UtilsIssuersInvoiceGenerateDocumentTestCase(TestCase):
         # - Then if we switch to an existing language, it should generate
         #   a document with the context in the active language
         with override("fr-fr", deactivate=True):
-            context = invoice.get_document_context()
             file_bytes = issuers.generate_document(
-                name=payment_enums.INVOICE_TYPE_INVOICE, context=context
+                name=payment_enums.INVOICE_TYPE_INVOICE,
+                context=invoice.get_document_context(),
             )
             document_text = pdf_extract_text(BytesIO(file_bytes)).replace("\n", "")
             self.assertRegex(document_text, r"Produit 1.*Description du produit 1")
 
         # - Finally, unknown language should use the default language as fallback
         with override("de-de", deactivate=True):
-            context = invoice.get_document_context()
             file_bytes = issuers.generate_document(
-                name=payment_enums.INVOICE_TYPE_INVOICE, context=context
+                name=payment_enums.INVOICE_TYPE_INVOICE,
+                context=invoice.get_document_context(),
             )
             document_text = pdf_extract_text(BytesIO(file_bytes)).replace("\n", "")
             self.assertRegex(document_text, r"Product 1.*Product 1 description")

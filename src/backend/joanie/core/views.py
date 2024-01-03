@@ -9,6 +9,7 @@ from django.views.generic.base import RedirectView, TemplateView
 from joanie.core import factories
 from joanie.core.enums import CERTIFICATE, DEGREE
 from joanie.core.models import Certificate
+from joanie.core.utils import issuers
 
 
 class DebugMailSuccessPayment(TemplateView):
@@ -52,7 +53,7 @@ class DebugCertificateDefinitionTemplateView(TemplateView):
 
     type = None
 
-    # pylint: disable=invalid-name
+    # pylint: disable=invalid-name, unused-argument
     def retrieve_certificate_from_pk(self, pk, site):
         """
         Retrieve a certificate from its pk and its certificate definition template
@@ -63,10 +64,14 @@ class DebugCertificateDefinitionTemplateView(TemplateView):
             certificate_definition__template=self.type,
         )
 
-        (document, _) = certificate.generate_document(site)
+        document = issuers.generate_document(
+            name=certificate.definition.template,
+            context=certificate.get_document_context(),
+        )
 
         return document
 
+    # pylint: disable=unused-argument
     def generate_certificate(self, site):
         """
         Generate an enrollment certificate document with hardcoded organization,
@@ -96,7 +101,10 @@ class DebugCertificateDefinitionTemplateView(TemplateView):
             organization=organization,
             enrollment=enrollment,
         )
-        (document, _) = certificate.generate_document(site)
+
+        document = issuers.generate_document(
+            name=definition.template, context=certificate.get_document_context()
+        )
 
         return document
 

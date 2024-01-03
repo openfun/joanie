@@ -131,26 +131,6 @@ class Certificate(BaseModel):
         """Returns the certificate owner depending from the related order or enrollment."""
         return self.order.owner if self.order else self.enrollment.user
 
-    def generate_document(self):
-        """
-        Generate the certificate document through the certificate definition template
-        and the document context.
-        """
-
-        try:
-            context = self.get_document_context()
-        except ValueError as exception:
-            logger.error(
-                "Cannot get document context to generate certificate.",
-                exc_info=exception,
-            )
-            return None, None
-
-        file_bytes = generate_document(
-            name=self.certificate_definition.template, context=context
-        )
-        return file_bytes, context
-
     def _set_localized_context(self):
         """
         Update or create the certificate context for all languages.
@@ -183,7 +163,6 @@ class Certificate(BaseModel):
         Build the certificate document context for the given language.
         If no language_code is provided, we use the active language.
         """
-
         language_settings = get_language_settings(language_code or get_language())
         site = Site.objects.get_current()
 
@@ -201,7 +180,7 @@ class Certificate(BaseModel):
             },
             "site": {
                 "name": site.name,
-                "hostname": "https://" + site.domain,
+                "hostname": f"https://{site.domain}",
             },
         }
 
