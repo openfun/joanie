@@ -62,7 +62,8 @@ class ProductAdminApiTest(TestCase):
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
-        product = factories.ProductFactory()
+        contract_definition = factories.ContractDefinitionFactory()
+        product = factories.ProductFactory(contract_definition=contract_definition)
         relation = models.CourseProductRelation.objects.get(product=product)
         courses = factories.CourseFactory.create_batch(3)
         relations = []
@@ -104,6 +105,14 @@ class ProductAdminApiTest(TestCase):
                 "name": product.certificate_definition.name,
                 "template": product.certificate_definition.template,
                 "title": product.certificate_definition.title,
+            },
+            "contract_definition": {
+                "id": str(contract_definition.id),
+                "title": contract_definition.title,
+                "description": contract_definition.description,
+                "name": contract_definition.name,
+                "language": contract_definition.language,
+                "body": contract_definition.body,
             },
             "target_courses": [
                 {

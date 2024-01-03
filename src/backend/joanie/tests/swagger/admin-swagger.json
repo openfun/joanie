@@ -4586,6 +4586,12 @@
                         "description": "primary key for the record as UUID",
                         "nullable": true
                     },
+                    "contract_definition": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "nullable": true
+                    },
                     "target_courses": {
                         "type": "array",
                         "items": {
@@ -4655,6 +4661,13 @@
                         "readOnly": true,
                         "nullable": true
                     },
+                    "contract_definition": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "readOnly": true,
+                        "nullable": true
+                    },
                     "target_courses": {
                         "type": "array",
                         "items": {
@@ -4668,6 +4681,7 @@
                 "required": [
                     "call_to_action",
                     "certificate_definition",
+                    "contract_definition",
                     "description",
                     "id",
                     "price",
@@ -4756,6 +4770,12 @@
                         "type": "string"
                     },
                     "certificate_definition": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "nullable": true
+                    },
+                    "contract_definition": {
                         "type": "string",
                         "format": "uuid",
                         "description": "primary key for the record as UUID",
@@ -5795,6 +5815,12 @@
                         "type": "string"
                     },
                     "certificate_definition": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "nullable": true
+                    },
+                    "contract_definition": {
                         "type": "string",
                         "format": "uuid",
                         "description": "primary key for the record as UUID",

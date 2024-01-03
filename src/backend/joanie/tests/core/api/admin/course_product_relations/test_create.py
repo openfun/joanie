@@ -134,6 +134,7 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
                         "title": product.certificate_definition.title,
                         "template": product.certificate_definition.template,
                     },
+                    "contract_definition": None,
                     "target_courses": [
                         {
                             "code": target_course.code,
@@ -346,6 +347,7 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
                         "title": product.certificate_definition.title,
                         "template": product.certificate_definition.template,
                     },
+                    "contract_definition": None,
                     "target_courses": [
                         {
                             "code": target_course.code,
