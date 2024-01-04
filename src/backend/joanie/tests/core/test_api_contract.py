@@ -1444,9 +1444,35 @@ class ContractApiTest(BaseAPITestCase):
             response.headers["Content-Disposition"],
             f'attachment; filename="{zip_archive_name}"',
         )
-        # Clear the storage
-        storage = storages["contracts"]
-        storage.delete(zip_archive_name)
+
+    def test_api_contract_get_zip_archive_authenticated_zip_archive_is_ready_wrong_user(
+        self,
+    ):
+        """
+        Authenticated user should be able to GET method on the viewset get ZIP archive when
+        the ZIP archive exists in storages. But the user is not the zip owner so the request
+        should return a 404.
+        """
+        user = factories.UserFactory()
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(organization=organization, user=user)
+        token = self.get_user_token(user.username)
+
+        # Prepare ZIP archive in storage for an other user
+        zip_uuid = uuid4()
+        other_user = factories.UserFactory()
+        contract_utility.generate_zip_archive(
+            pdf_bytes_list=[b"content_1", b"content_2"],
+            user_uuid=other_user.id,
+            zip_uuid=zip_uuid,
+        )
+
+        response = self.client.get(
+            f"/api/v1.0/contracts/zip-archive/{zip_uuid}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
     def test_api_contract_get_zip_archive_authenticated_simulate_waiting_for_zip_archive_ready(
         self,
@@ -1486,3 +1512,139 @@ class ContractApiTest(BaseAPITestCase):
             response.headers["Content-Disposition"],
             f'attachment; filename="{zip_archive_name}"',
         )
+
+    def test_api_contract_zip_archive_exists_anonymous(self):
+        """
+        Anonymous user should not be able to test if a ZIP archive exists.
+        """
+        response = self.client.options(f"/api/v1.0/contracts/zip-archive/{uuid4()}/")
+
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+
+        content = response.json()
+        self.assertEqual(
+            content["detail"], "Authentication credentials were not provided."
+        )
+
+    def test_api_contract_zip_archive_exists_authenticated_zip_archive_not_existing(
+        self,
+    ):
+        """
+        Authenticated user should be able to check if a zip archive exists. If it does
+        not exists, a 404 response is returned.
+        """
+        user = factories.UserFactory()
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(organization=organization, user=user)
+        token = self.get_user_token(user.username)
+
+        response = self.client.options(
+            f"/api/v1.0/contracts/zip-archive/{uuid4()}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
+    def test_api_contract_zip_archive_exists_authenticated_invalid_zip_id(
+        self,
+    ):
+        """
+        Testing a zip archive using an invalid zip_id should return a 404.
+        """
+        user = factories.UserFactory()
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(organization=organization, user=user)
+        token = self.get_user_token(user.username)
+
+        response = self.client.options(
+            "/api/v1.0/contracts/zip-archive/foo",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
+    def test_api_contract_zip_archive_exists_authenticated_zip_archive_is_ready(
+        self,
+    ):
+        """
+        Authenticated user should be able to test if a ZIP archive is available.
+        When existing, should return a 204.
+        """
+        user = factories.UserFactory()
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(organization=organization, user=user)
+        token = self.get_user_token(user.username)
+        # Prepare ZIP archive in storage
+        zip_uuid = uuid4()
+        contract_utility.generate_zip_archive(
+            pdf_bytes_list=[b"content_1", b"content_2"],
+            user_uuid=user.id,
+            zip_uuid=zip_uuid,
+        )
+
+        response = self.client.options(
+            f"/api/v1.0/contracts/zip-archive/{zip_uuid}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+
+    def test_api_contract_zip_archive_exists_authenticated_zip_archive_is_ready_wrong_user(
+        self,
+    ):
+        """
+        Testing if a zip archive exists, but the user is not the zip owner, it should return a 404.
+        """
+        user = factories.UserFactory()
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(organization=organization, user=user)
+        token = self.get_user_token(user.username)
+
+        # Prepare ZIP archive in storage for an other user
+        zip_uuid = uuid4()
+        other_user = factories.UserFactory()
+        contract_utility.generate_zip_archive(
+            pdf_bytes_list=[b"content_1", b"content_2"],
+            user_uuid=other_user.id,
+            zip_uuid=zip_uuid,
+        )
+
+        response = self.client.options(
+            f"/api/v1.0/contracts/zip-archive/{zip_uuid}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
+    def test_api_contract_zip_archive_exists_authenticated_simulate_waiting_for_zip_archive_ready(
+        self,
+    ):
+        """
+        Authenticated user should be able to test if a zip he owns is available.
+        While the zip is not generated a 404 should be return. Once the zip available,
+        a 204 is return.
+        """
+        user = factories.UserFactory()
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(organization=organization, user=user)
+        zip_uuid = uuid4()
+        token = self.get_user_token(user.username)
+
+        response = self.client.options(
+            f"/api/v1.0/contracts/zip-archive/{zip_uuid}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
+        # Prepare ZIP archive in storage
+        contract_utility.generate_zip_archive(
+            pdf_bytes_list=[b"content_1", b"content_2"],
+            user_uuid=user.id,
+            zip_uuid=zip_uuid,
+        )
+        response = self.client.options(
+            f"/api/v1.0/contracts/zip-archive/{zip_uuid}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)

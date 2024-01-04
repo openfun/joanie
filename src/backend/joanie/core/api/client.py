@@ -1143,7 +1143,7 @@ class ContractViewSet(GenericContractViewSet):
         )
 
     @action(
-        methods=["GET"],
+        methods=["GET", "OPTIONS"],
         detail=False,
         url_name="zip-archive",
         url_path=rf"zip-archive/(?P<zip_id>{UUID_REGEX})",
@@ -1166,12 +1166,15 @@ class ContractViewSet(GenericContractViewSet):
         if not zip_archive_exists:
             return Response(status=HTTPStatus.NOT_FOUND)
 
-        return FileResponse(
-            storage.open(f"{storage.location}/{zip_archive_name}", mode="rb"),
-            as_attachment=True,
-            filename=zip_archive_name,
-            content_type="application/zip",
-        )
+        if request.method == "GET":
+            return FileResponse(
+                storage.open(f"{storage.location}/{zip_archive_name}", mode="rb"),
+                as_attachment=True,
+                filename=zip_archive_name,
+                content_type="application/zip",
+            )
+
+        return Response(status=HTTPStatus.NO_CONTENT)
 
     @action(
         methods=["POST"],
