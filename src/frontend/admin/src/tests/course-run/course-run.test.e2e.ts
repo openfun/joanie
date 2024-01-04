@@ -186,31 +186,47 @@ test.describe("Course run form", () => {
       .filter({ hasText: /^Start$/ })
       .getByLabel("Choose date")
       .click();
-    await page.getByRole("gridcell", { name: "11" }).first().click();
-    await page.getByRole("button", { name: "OK" }).click();
+    const datePicker = page.getByTestId("date-picker");
+    await expect(datePicker).toBeVisible();
+    await datePicker.getByRole("gridcell", { name: "11" }).first().click();
+    await datePicker.getByRole("button", { name: "OK" }).click();
+    await expect(datePicker).toBeHidden();
+
     await page.getByLabel("End", { exact: true }).click();
     await page
       .locator("div")
       .filter({ hasText: /^End$/ })
       .getByLabel("Choose date")
       .click();
-    await page.getByRole("gridcell", { name: "27" }).nth(1).click();
-    await page.getByRole("button", { name: "OK" }).click();
+    await expect(datePicker).toBeVisible();
+    await datePicker.getByRole("gridcell", { name: "27" }).first().click();
+    await datePicker.getByRole("button", { name: "OK" }).click();
+    await expect(datePicker).toBeHidden();
+
     await page.getByLabel("Enrollment start").click();
     await page
       .locator("div")
       .filter({ hasText: /^Enrollment start$/ })
       .getByLabel("Choose date")
       .click();
-    await page.getByRole("gridcell", { name: "1", exact: true }).nth(1).click();
-    await page.getByRole("button", { name: "OK" }).click();
+    await expect(datePicker).toBeVisible();
+    await datePicker
+      .getByRole("gridcell", { name: "1", exact: true })
+      .first()
+      .click();
+    await datePicker.getByRole("button", { name: "OK" }).click();
+    await expect(datePicker).toBeHidden();
+
     await page
       .locator("div")
       .filter({ hasText: /^Enrollment end$/ })
       .getByLabel("Choose date")
       .click();
-    await page.getByRole("gridcell", { name: "10" }).nth(1).click();
-    await page.getByRole("button", { name: "OK" }).click();
+    await expect(datePicker).toBeVisible();
+    await datePicker.getByRole("gridcell", { name: "10" }).first().click();
+    await datePicker.getByRole("button", { name: "OK" }).click();
+    await expect(datePicker).toBeHidden();
+
     await page.getByTestId("submit-button-course-run-form").click();
     await page.getByText("Operation completed successfully.").click();
     await expect(

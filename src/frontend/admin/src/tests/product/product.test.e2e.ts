@@ -43,7 +43,7 @@ test.describe("Product list", () => {
       data: store.products,
       routeUrl: "http://localhost:8071/api/v1.0/admin/products/",
       page,
-      searchTimeout: 150,
+      searchTimeout: 200,
       searchResult: productToSearch,
     });
     // Go to the page
@@ -190,9 +190,14 @@ test.describe("Product form", () => {
       .check();
     await page.getByTestId("submit-button-product-target-course-form").click();
 
-    const targetCourseLocator = page.getByTestId(
-      `product-target-course-${course.id}`,
+    const dummyTargetCourseLocator = page.getByTestId(
+      `dummy-product-target-course-${course.id}`,
     );
+
+    const targetCourseLocator = page.getByTestId(
+      `item-product-target-course-${course.id}`,
+    );
+    await expect(dummyTargetCourseLocator).toBeHidden();
     await expect(targetCourseLocator).toBeVisible();
     await expect(
       targetCourseLocator.getByRole("heading", { name: course.title }),

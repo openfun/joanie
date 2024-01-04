@@ -7,7 +7,7 @@ type Props = DateTimePickerProps<any> & {
   label: string;
 };
 
-export function RHFDateTimePicker({ label, name }: Props) {
+export function RHFDateTimePicker({ label, name, ...props }: Props) {
   const { control, getValues, setValue } = useFormContext();
   const value = getValues(name);
   return (
@@ -19,6 +19,19 @@ export function RHFDateTimePicker({ label, name }: Props) {
           <DateTimePicker
             {...field}
             value={value ? new Date(value) : null}
+            slotProps={{
+              ...props.slotProps,
+              desktopPaper: {
+                // @ts-ignore
+                "data-testid": "date-picker",
+                ...props.slotProps?.desktopPaper,
+              },
+              mobilePaper: {
+                // @ts-ignore
+                "data-testid": "date-picker",
+                ...props.slotProps?.mobilePaper,
+              },
+            }}
             onChange={(newValue: Date | null) => {
               if (newValue === null) {
                 setValue(name, undefined);
