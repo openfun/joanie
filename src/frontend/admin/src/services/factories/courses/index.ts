@@ -16,7 +16,7 @@ const build = (): Course => {
   const result: Course = {
     id: faker.string.uuid(),
     title: faker.company.name(),
-    code: faker.number.hex({ min: 0, max: 65535 }), // 'af17'
+    code: faker.color.rgb(),
     is_graded: true,
     organizations: OrganizationFactory(2),
     product_relations: CourseRelationsToProductFactory(1),
