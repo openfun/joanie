@@ -1,10 +1,12 @@
 """Test suite for the admin orders API endpoints."""
+from decimal import Decimal as D
 from http import HTTPStatus
 
 from django.conf import settings
 from django.test import TestCase
 
 from joanie.core import enums, factories
+from joanie.payment.factories import InvoiceFactory
 from joanie.tests import format_date
 
 
@@ -124,7 +126,13 @@ class OrdersAdminApiTestCase(TestCase):
             organization_signed_on=order.created_on,
         )
 
-        with self.assertNumQueries(16):
+        # Create a credit note
+        credit_note = InvoiceFactory(
+            parent=order.main_invoice,
+            total=D("1.00"),
+        )
+
+        with self.assertNumQueries(28):
             response = self.client.get(f"/api/v1.0/admin/orders/{order.id}/")
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -186,11 +194,37 @@ class OrdersAdminApiTestCase(TestCase):
                     "balance": float(order.main_invoice.balance),
                     "created_on": format_date(order.main_invoice.created_on),
                     "state": order.main_invoice.state,
+                    "children": [
+                        {
+                            "balance": float(credit_note.balance),
+                            "created_on": format_date(credit_note.created_on),
+                            "invoiced_balance": float(credit_note.invoiced_balance),
+                            "recipient_address": (
+                                f"{credit_note.recipient_address.full_name}\n"
+                                f"{credit_note.recipient_address.full_address}"
+                            ),
+                            "reference": credit_note.reference,
+                            "state": credit_note.state,
+                            "transactions_balance": float(
+                                credit_note.transactions_balance
+                            ),
+                            "total": float(credit_note.total),
+                            "total_currency": settings.DEFAULT_CURRENCY,
+                            "type": credit_note.type,
+                            "updated_on": format_date(credit_note.updated_on),
+                        }
+                    ],
+                    "invoiced_balance": float(order.main_invoice.invoiced_balance),
                     "recipient_address": (
                         f"{order.main_invoice.recipient_address.full_name}\n"
                         f"{order.main_invoice.recipient_address.full_address}"
                     ),
                     "reference": order.main_invoice.reference,
+                    "transactions_balance": float(
+                        order.main_invoice.transactions_balance
+                    ),
+                    "total": float(order.main_invoice.total),
+                    "total_currency": settings.DEFAULT_CURRENCY,
                     "type": order.main_invoice.type,
                     "updated_on": format_date(order.main_invoice.updated_on),
                 },
