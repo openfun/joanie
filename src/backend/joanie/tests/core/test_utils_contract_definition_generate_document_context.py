@@ -65,7 +65,6 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             "organization": {
                 "logo": image_to_base64(order.organization.logo),
                 "name": order.organization.title,
-                "signature": image_to_base64(order.organization.signature),
             },
         }
 
@@ -114,7 +113,6 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             "organization": {
                 "logo": organization_fallback_logo,
                 "name": "<ORGANIZATION_NAME>",
-                "signature": organization_fallback_logo,
             },
         }
 
@@ -167,7 +165,6 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             "organization": {
                 "logo": organization_fallback_logo,
                 "name": "<ORGANIZATION_NAME>",
-                "signature": organization_fallback_logo,
             },
         }
 

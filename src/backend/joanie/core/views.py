@@ -8,8 +8,9 @@ from django.contrib.sites.models import Site
 from django.views.generic.base import RedirectView, TemplateView
 
 from joanie.core import factories
-from joanie.core.enums import CERTIFICATE, DEGREE
-from joanie.core.models import Certificate
+from joanie.core.enums import CERTIFICATE, CONTRACT_DEFINITION, DEGREE
+from joanie.core.models import Certificate, Contract
+from joanie.core.utils import contract_definition as contract_definition_utility
 from joanie.core.utils import issuers
 
 logger = getLogger(__name__)
@@ -81,12 +82,11 @@ class DebugPdfTemplateView(TemplateView):
         the document in PDF bytes in return.
         """
         object_to_render = self.model.objects.get(pk=pk)
-        if isinstance(object_to_render, ContractDefinition):
-            contract = object_to_render.contracts.all()[0]
+        if isinstance(object_to_render, Contract):
             context = contract_definition_utility.generate_document_context(
-                contract_definition=object_to_render,
-                user=contract.order.owner,
-                order=contract.order,
+                contract_definition=object_to_render.definition,
+                user=object_to_render.order.owner,
+                order=object_to_render.order,
             )
         else:
             context = object_to_render.get_document_context()
@@ -216,35 +216,27 @@ class DebugDegreeTemplateView(DebugPdfTemplateView):
 
 class DebugContractTemplateView(DebugPdfTemplateView):
     """
-    Debug view to check the layout of "contract_definition" template.
+    Debug view to check the layout of "contract_definition" template of a Contract.
     """
 
-    model = ContractDefinition
+    model = Contract
     issuer_document = CONTRACT_DEFINITION
 
     def get_document_context(self, pk=None):
         """
-        Build a realistic context to have data similar to real data.
-        If a primary key (pk) is provided, retrieve the corresponding Contract Definition document
+        Build a realistic context to have data similar to a real document generated.
+        If a primary key (pk) is provided, retrieve the corresponding Contract and its definition's
+        context. If the Contract does not exist, we will use a basic fallback for the document
+        context. Otherwise, if no primary key is provided, we return the basic fallback document
         context.
-        If the Contract Definition is not found, fall back to a basic document context.
-        If no pk is provided, return a basic document context.
         """
-
         if not pk:
             return self.get_basic_document_context()
 
-        try:
-            contract_definition = ContractDefinition.objects.get(
-                pk=pk, name=self.issuer_document
-            )
-        except ContractDefinition.DoesNotExist as e:
-            logger.error("Contract Definition with pk %s not found: %s", pk, e)
-            return self.get_basic_document_context()
+        contract = Contract.objects.get(pk=pk, definition__name=self.issuer_document)
 
-        contract = contract_definition.contracts.all()[0]
         return contract_definition_utility.generate_document_context(
-            contract_definition=contract_definition,
+            contract_definition=contract.definition,
             user=contract.order.owner,
             order=contract.order,
         )
