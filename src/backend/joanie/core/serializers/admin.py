@@ -853,19 +853,28 @@ class AdminCertificateSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
-class AdminInvoiceSerializer(serializers.ModelSerializer):
-    """Read only serializer for Invoice model."""
+@extend_schema_serializer(component_name="AdminInvoiceSerializer")
+class BaseAdminInvoiceSerializer(serializers.ModelSerializer):
+    """Base read only serializer for Invoice model."""
 
     recipient_address = serializers.SerializerMethodField(read_only=True)
+    total = serializers.DecimalField(
+        coerce_to_string=False, decimal_places=2, max_digits=9
+    )
+    total_currency = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = payment_models.Invoice
         fields = [
             "balance",
             "created_on",
-            "state",
+            "invoiced_balance",
             "recipient_address",
             "reference",
+            "state",
+            "transactions_balance",
+            "total",
+            "total_currency",
             "type",
             "updated_on",
         ]
@@ -874,6 +883,20 @@ class AdminInvoiceSerializer(serializers.ModelSerializer):
     def get_recipient_address(self, invoice):
         """Return the serialized recipient address."""
         return f"{invoice.recipient_address.full_name}\n{invoice.recipient_address.full_address}"
+
+    def get_total_currency(self, *args, **kwargs) -> str:
+        """Return the code of currency used by the instance"""
+        return settings.DEFAULT_CURRENCY
+
+
+class AdminInvoiceSerializer(BaseAdminInvoiceSerializer):
+    """Read only serializer for Invoice model."""
+
+    children = BaseAdminInvoiceSerializer(many=True, read_only=True)
+
+    class Meta(BaseAdminInvoiceSerializer.Meta):
+        fields = BaseAdminInvoiceSerializer.Meta.fields + ["children"]
+        read_only_fields = fields
 
 
 class AdminOrderSerializer(serializers.ModelSerializer):

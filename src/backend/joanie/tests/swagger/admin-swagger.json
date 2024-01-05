@@ -4051,9 +4051,8 @@
                         "readOnly": true,
                         "description": "date and time at which a record was created"
                     },
-                    "state": {
+                    "invoiced_balance": {
                         "type": "string",
-                        "description": "Process the state of the invoice",
                         "readOnly": true
                     },
                     "recipient_address": {
@@ -4062,6 +4061,28 @@
                     },
                     "reference": {
                         "type": "string",
+                        "readOnly": true
+                    },
+                    "state": {
+                        "type": "string",
+                        "description": "Process the state of the invoice",
+                        "readOnly": true
+                    },
+                    "transactions_balance": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "total": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000000,
+                        "minimum": -10000000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true
+                    },
+                    "total_currency": {
+                        "type": "string",
+                        "description": "Return the code of currency used by the instance",
                         "readOnly": true
                     },
                     "type": {
@@ -4073,14 +4094,26 @@
                         "format": "date-time",
                         "readOnly": true,
                         "description": "date and time at which a record was last updated"
+                    },
+                    "children": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AdminInvoice"
+                        },
+                        "readOnly": true
                     }
                 },
                 "required": [
                     "balance",
+                    "children",
                     "created_on",
+                    "invoiced_balance",
                     "recipient_address",
                     "reference",
                     "state",
+                    "total",
+                    "total_currency",
+                    "transactions_balance",
                     "type",
                     "updated_on"
                 ]
