@@ -59,11 +59,6 @@ def generate_document_context(contract_definition, user, order=None):
                 if order
                 else organization_fallback_logo
             ),
-            "signature": (
-                image_to_base64(order.organization.signature)
-                if order
-                else organization_fallback_logo
-            ),
             "name": (
                 order.organization.safe_translation_getter(
                     "title", language_code=contract_definition.language

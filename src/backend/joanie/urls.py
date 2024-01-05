@@ -30,6 +30,7 @@ from joanie import admin_urls, client_urls, remote_endpoints_urls
 from joanie.core.views import (
     BackOfficeRedirectView,
     DebugCertificateTemplateView,
+    DebugContractTemplateView,
     DebugDegreeTemplateView,
     DebugMailSuccessPaymentViewHtml,
     DebugMailSuccessPaymentViewTxt,
@@ -74,6 +75,11 @@ if settings.DEBUG:
                 "__debug__/pdf-templates/degree",
                 DebugDegreeTemplateView.as_view(),
                 name="debug.certificate_definition.degree",
+            ),
+            path(
+                "__debug__/pdf-templates/contract",
+                DebugContractTemplateView.as_view(),
+                name="debug.contract.definition",
             ),
         ]
         + staticfiles_urlpatterns()
