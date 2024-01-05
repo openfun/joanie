@@ -83,7 +83,7 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
         Dummy backend instance get signature invitation link method in order to get the invitation
         to sign link in return.
         Once we call the method for the invitation link, it should trigger an email with a dummy
-        link to download the file.
+        link to download the file and call the handle_notification method.
         """
         backend = DummySignatureBackend()
         expected_substring = "https://dummysignaturebackend.fr/?requestToken="
@@ -109,6 +109,84 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
         self.assertIsNotNone(contract.submitted_for_signature_on)
         # Check that an email has been sent
         self._check_signature_completed_email_sent("student_do@example.fr")
+
+    def test_backend_dummy_signature_get_signature_invitation_link_for_organization(
+        self,
+    ):
+        """
+        Dummy backend instance get_signature_invitation_link method should return an
+        invitation link to sign the contract.
+
+        If the contract has been signed by the student, calling this method should send
+        an email to the organization signatory and call the handle notification method
+        to mimic the fact that the organization has signed the contract.
+        """
+        backend = DummySignatureBackend()
+        expected_substring = "https://dummysignaturebackend.fr/?requestToken="
+        reference, file_hash = backend.submit_for_signature(
+            "title definition 1", b"file_bytes", {}
+        )
+        contract = factories.ContractFactory(
+            signature_backend_reference=reference,
+            definition_checksum=file_hash,
+            submitted_for_signature_on=django_timezone.now(),
+            student_signed_on=django_timezone.now(),
+            context="a small context content",
+        )
+
+        response = backend.get_signature_invitation_link(
+            recipient_email="student_do@example.fr",
+            reference_ids=[reference],
+        )
+
+        self.assertIn(expected_substring, response)
+
+        contract.refresh_from_db()
+        self.assertIsNotNone(contract.student_signed_on)
+        self.assertIsNotNone(contract.organization_signed_on)
+        self.assertIsNone(contract.submitted_for_signature_on)
+        # Check that an email has been sent
+        self._check_signature_completed_email_sent("student_do@example.fr")
+
+    def test_backend_dummy_signature_get_signature_invitation_link_with_several_contracts(
+        self,
+    ):
+        """
+        Dummy backend instance get_signature_invitation_link method should return an
+        invitation link to sign several contracts.
+
+        For each contract implied, calling this method should send
+        an email to the organization signatory and call the handle notification method
+        to mimic the fact that the organization has signed the contract.
+        """
+        backend = DummySignatureBackend()
+        expected_substring = "https://dummysignaturebackend.fr/?requestToken="
+        signature_data = [
+            backend.submit_for_signature("title definition 1", b"file_bytes", {}),
+            backend.submit_for_signature("title definition 2", b"file_bytes", {}),
+        ]
+
+        contracts = []
+        for reference, file_hash in signature_data:
+            contract = factories.ContractFactory(
+                signature_backend_reference=reference,
+                definition_checksum=file_hash,
+                submitted_for_signature_on=django_timezone.now(),
+                context="a small context content",
+            )
+            contracts.append(contract)
+
+        response = backend.get_signature_invitation_link(
+            recipient_email="student_do@example.fr",
+            reference_ids=[reference for reference, _ in signature_data],
+        )
+
+        self.assertIn(expected_substring, response)
+
+        for contract in contracts:
+            contract.refresh_from_db()
+            self.assertIsNotNone(contract.student_signed_on)
+            self.assertIsNotNone(contract.submitted_for_signature_on)
 
     def test_backend_dummy_signature_delete_signature_procedure(self):
         """

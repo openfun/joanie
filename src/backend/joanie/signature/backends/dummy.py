@@ -39,10 +39,17 @@ class DummySignatureBackend(BaseSignatureBackend):
         Dummy method that prepares an invitation link, and it triggers an email notifying that the
         file is available to download to the signer by email.
         """
-        self.handle_notification(
-            {"event_type": "signed", "reference": reference_ids[0]}
-        )
-        self._send_email(recipient_email=recipient_email, reference_id=reference_ids[0])
+
+        contracts = models.Contract.objects.filter(
+            signature_backend_reference__in=reference_ids
+        ).only("organization_signed_on", "signature_backend_reference")
+
+        for contract in contracts:
+            event_type = "finished" if contract.student_signed_on else "signed"
+            reference = contract.signature_backend_reference
+            self.handle_notification({"event_type": event_type, "reference": reference})
+
+            self._send_email(recipient_email=recipient_email, reference_id=reference)
 
         return f"https://dummysignaturebackend.fr/?requestToken={reference_ids[0]}#requestId=req"
 
