@@ -12,12 +12,14 @@ from joanie.core.enums import CERTIFICATE, CONTRACT_DEFINITION, DEGREE
 from joanie.core.models import Certificate, Contract
 from joanie.core.utils import contract_definition as contract_definition_utility
 from joanie.core.utils import issuers
+from joanie.payment.enums import INVOICE_TYPE_INVOICE
+from joanie.payment.models import Invoice
 
 logger = getLogger(__name__)
 
 
 LOGO_FALLBACK = (
-    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR"
+    "data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR"
     "42mO8cPX6fwAIdgN9pHTGJwAAAABJRU5ErkJggg=="
 )
 SIGNATURE_FALLBACK = (
@@ -281,26 +283,22 @@ class DebugInvoiceTemplateView(DebugPdfTemplateView):
 
     def get_document_context(self, pk=None):
         """
-        Build a realistic context to have data similar to real data.
-        Returns the context of an invoice (credit note by default).
-        If you parse a 'pk' in the URL, you will be able to preview your object
-        (invoice type or credit note type) if it exists locally in your database.
-        Else, we provide a sample of context for your Invoice.
+        Build a realistic context to have data similar to a real document generated.
+        If a primary key (pk) is provided, retrieve the corresponding Invoice.
+        If the Invoice does not exist, we will use a basic fallback for the document
+        context (a credit note by default). Otherwise, if no primary key is provided, we return
+        the basic fallback document context.
         """
 
         if not pk:
             return self.get_basic_document_context()
 
-        try:
-            invoice = Invoice.objects.get(pk=pk)
-        except Invoice.DoesNotExist as e:
-            logger.error("Invoice with pk %s not found: %s", pk, e)
-            return self.get_basic_document_context()
+        invoice = Invoice.objects.get(pk=pk)
 
         return invoice.get_document_context()
 
     def get_basic_document_context(self, **kwargs):
-        """Returns a basic document context to preview the tempalte of an `invoice`"""
+        """Returns a basic document context to preview the template of an `invoice`"""
 
         return {
             "metadata": {
