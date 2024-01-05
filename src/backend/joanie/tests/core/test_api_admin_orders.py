@@ -5,6 +5,7 @@ from django.conf import settings
 from django.test import TestCase
 
 from joanie.core import enums, factories
+from joanie.tests import format_date
 
 
 class OrdersAdminApiTestCase(TestCase):
@@ -70,7 +71,7 @@ class OrdersAdminApiTestCase(TestCase):
             "results": [
                 {
                     "course_code": order.course.code if order.course else None,
-                    "created_on": order.created_on.isoformat().replace("+00:00", "Z"),
+                    "created_on": format_date(order.created_on),
                     "enrollment_id": str(order.enrollment.id)
                     if order.enrollment
                     else None,
@@ -131,7 +132,7 @@ class OrdersAdminApiTestCase(TestCase):
             response.json(),
             {
                 "id": str(order.id),
-                "created_on": order.created_on.isoformat().replace("+00:00", "Z"),
+                "created_on": format_date(order.created_on),
                 "state": order.state,
                 "owner": {
                     "id": str(order.owner.id),
@@ -146,11 +147,7 @@ class OrdersAdminApiTestCase(TestCase):
                     "title": order.course.title,
                     "state": {
                         "priority": order.course.state["priority"],
-                        "datetime": order.course.state["datetime"]
-                        .isoformat()
-                        .replace("+00:00", "Z")
-                        if order.course.state["datetime"]
-                        else None,
+                        "datetime": format_date(order.course.state["datetime"]),
                         "call_to_action": order.course.state["call_to_action"],
                         "text": order.course.state["text"],
                     },
@@ -166,9 +163,7 @@ class OrdersAdminApiTestCase(TestCase):
                     "is_active": order_group.is_active,
                     "nb_available_seats": order_group.nb_seats
                     - order_group.get_nb_binding_orders(),
-                    "created_on": order_group.created_on.isoformat().replace(
-                        "+00:00", "Z"
-                    ),
+                    "created_on": format_date(order_group.created_on),
                     "can_edit": order_group.can_edit,
                 },
                 "total": float(order.total),
@@ -176,23 +171,20 @@ class OrdersAdminApiTestCase(TestCase):
                 "contract": {
                     "id": str(order.contract.id),
                     "definition_title": order.contract.definition.title,
-                    "student_signed_on": order.contract.student_signed_on.isoformat().replace(
-                        "+00:00", "Z"
+                    "student_signed_on": format_date(order.contract.student_signed_on),
+                    "organization_signed_on": format_date(
+                        order.contract.student_signed_on
                     ),
                     "submitted_for_signature_on": None,
                 },
                 "certificate": {
                     "id": str(order.certificate.id),
                     "definition_title": order.certificate.certificate_definition.title,
-                    "issued_on": order.certificate.issued_on.isoformat().replace(
-                        "+00:00", "Z"
-                    ),
+                    "issued_on": format_date(order.certificate.issued_on),
                 },
                 "main_invoice": {
                     "balance": float(order.main_invoice.balance),
-                    "created_on": order.main_invoice.created_on.isoformat().replace(
-                        "+00:00", "Z"
-                    ),
+                    "created_on": format_date(order.main_invoice.created_on),
                     "state": order.main_invoice.state,
                     "recipient_address": (
                         f"{order.main_invoice.recipient_address.full_name}\n"
@@ -200,9 +192,7 @@ class OrdersAdminApiTestCase(TestCase):
                     ),
                     "reference": order.main_invoice.reference,
                     "type": order.main_invoice.type,
-                    "updated_on": order.main_invoice.updated_on.isoformat().replace(
-                        "+00:00", "Z"
-                    ),
+                    "updated_on": format_date(order.main_invoice.updated_on),
                 },
             },
         )

@@ -3403,6 +3403,13 @@
                         "nullable": true,
                         "title": "Date and time of issuance"
                     },
+                    "organization_signed_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true,
+                        "title": "Date and time the organization signed the contract"
+                    },
                     "submitted_for_signature_on": {
                         "type": "string",
                         "format": "date-time",
@@ -3414,6 +3421,7 @@
                 "required": [
                     "definition_title",
                     "id",
+                    "organization_signed_on",
                     "student_signed_on",
                     "submitted_for_signature_on"
                 ]
