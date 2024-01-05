@@ -32,6 +32,7 @@ from joanie.core.views import (
     DebugCertificateTemplateView,
     DebugContractTemplateView,
     DebugDegreeTemplateView,
+    DebugInvoiceTemplateView,
     DebugMailSuccessPaymentViewHtml,
     DebugMailSuccessPaymentViewTxt,
 )
@@ -80,6 +81,11 @@ if settings.DEBUG:
                 "__debug__/pdf-templates/contract",
                 DebugContractTemplateView.as_view(),
                 name="debug.contract.definition",
+            ),
+            path(
+                "__debug__/pdf-templates/invoice",
+                DebugInvoiceTemplateView.as_view(),
+                name="debug.invoice_template.invoice",
             ),
         ]
         + staticfiles_urlpatterns()

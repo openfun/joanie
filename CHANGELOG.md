@@ -73,6 +73,7 @@ and this project adheres to
 
 ### Changed
 
+- Debug view for Certificate, Degree, Contract Definition and Invoice
 - Internalize invoice template
 - Use HTTPStatus instead of raw HTTP code value
 - If a product has a contract, delay auto enroll logic on leaner signature
