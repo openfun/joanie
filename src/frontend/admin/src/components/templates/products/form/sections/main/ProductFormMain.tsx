@@ -27,6 +27,8 @@ import { RHFProvider } from "@/components/presentational/hook-form/RHFProvider";
 import { RHFValuesChange } from "@/components/presentational/hook-form/RFHValuesChange";
 import { ProductFormInstructions } from "@/components/templates/products/form/sections/main/instructions/ProductFormInstructions";
 import { removeEOL } from "@/utils/string";
+import { ContractDefinition } from "@/services/api/models/ContractDefinition";
+import { ContractDefinitionSearch } from "@/components/templates/contract-definition/inputs/ContractDefinitionSearch";
 
 type Props = WizardStepProps & {
   product?: Product;
@@ -47,6 +49,7 @@ const Schema = Yup.object().shape({
   certificate_definition: Yup.mixed<CertificateDefinition>()
     .nullable()
     .optional(),
+  contract_definition: Yup.mixed<ContractDefinition>().nullable().optional(),
 });
 
 export type ProductFormMainValues = Omit<ProductFormValues, "target_courses">;
@@ -71,6 +74,7 @@ export function ProductFormMain({
       call_to_action: defaultProduct?.call_to_action ?? "",
       certificate_definition: defaultProduct?.certificate_definition ?? null,
       instructions: removeEOL(defaultProduct?.instructions),
+      contract_definition: defaultProduct?.contract_definition ?? null,
     };
   };
 
@@ -177,6 +181,20 @@ export function ProductFormMain({
               />
             </Grid>
           )}
+          <Grid xs={12}>
+            <ContractDefinitionSearch
+              placeholder={intl.formatMessage(
+                productFormMessages.contractDefinitionPlaceholder,
+              )}
+              enableAdd={true}
+              helperText={intl.formatMessage(
+                productFormMessages.contractDefinitionHelper,
+              )}
+              enableEdit={true}
+              name="contract_definition"
+              label={intl.formatMessage(productFormMessages.contractDefinition)}
+            />
+          </Grid>
         </Grid>
         <ProductFormFinancial />
         <ProductFormInstructions />
