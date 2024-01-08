@@ -13,10 +13,12 @@ import {
   DTOProductTargetCourseRelation,
   ProductTargetCourseRelation,
 } from "@/services/api/models/ProductTargetCourseRelation";
+import { ContractDefinition } from "@/services/api/models/ContractDefinition";
 
 type ProductStore = {
   products: Product[];
   certificateDefinitions: CertificateDefinition[];
+  contractsDefinitions: ContractDefinition[];
   courses: Course[];
   targetCourses: ProductTargetCourseRelation[];
   organizations: Organization[];
@@ -29,6 +31,11 @@ export const getProductScenarioStore = (): ProductStore => {
   const certificateDefinitions = products.map((product) => {
     return product.certificate_definition!;
   });
+
+  const contractsDefinitions = products.map((product) => {
+    return product.contract_definition!;
+  });
+
   const courses: Course[] = [];
   const organizations: Organization[] = [];
   const courseRuns: CourseRun[] = [];
@@ -48,12 +55,19 @@ export const getProductScenarioStore = (): ProductStore => {
   });
 
   const postUpdate = (payload: DTOProduct, item?: Product) => {
-    const { certificate_definition: newCertificateDefinition, ...restPayload } =
-      payload;
+    const {
+      certificate_definition: newCertificateDefinition,
+      contract_definition: newContractDefinition,
+      ...restPayload
+    } = payload;
 
     const certificateDef = certificateDefinitions.find(
       (certificateDefinition) =>
         certificateDefinition.id === newCertificateDefinition,
+    );
+
+    const contractDef = contractsDefinitions.find(
+      (contractDefinition) => contractDefinition.id === newContractDefinition,
     );
 
     let newProduct: Product;
@@ -62,12 +76,14 @@ export const getProductScenarioStore = (): ProductStore => {
         ...item,
         ...restPayload,
         certificate_definition: certificateDef ?? item.certificate_definition,
+        contract_definition: contractDef ?? item.contract_definition,
       };
     } else {
       newProduct = {
         id: faker.string.uuid(),
         ...restPayload,
         ...(certificateDef && { certificate_definition: certificateDef }),
+        ...(contractDef && { contract_definition: contractDef }),
       };
     }
     products.push(newProduct);
@@ -77,6 +93,7 @@ export const getProductScenarioStore = (): ProductStore => {
   return {
     products,
     certificateDefinitions,
+    contractsDefinitions,
     courses,
     organizations,
     courseRuns,

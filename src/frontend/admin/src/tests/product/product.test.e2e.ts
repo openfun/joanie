@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { faker } from "@faker-js/faker";
 import { mockPlaywrightCrud } from "../useResourceHandler";
 import {
   getProductScenarioStore,
@@ -15,6 +16,10 @@ import { Course, DTOCourse } from "@/services/api/models/Course";
 import { mockCourseRunsFromCourse } from "@/tests/mocks/course-runs/course-runs-mocks";
 import { CourseRun } from "@/services/api/models/CourseRun";
 import { COURSE_OPTIONS_REQUEST_RESULT } from "@/tests/mocks/courses/course-mocks";
+import {
+  ContractDefinition,
+  DTOContractDefinition,
+} from "@/services/api/models/ContractDefinition";
 
 test.describe("Product list", () => {
   const store = getProductScenarioStore();
@@ -84,6 +89,13 @@ test.describe("Product form", () => {
       page,
     });
 
+    await mockPlaywrightCrud<ContractDefinition, DTOContractDefinition>({
+      data: store.contractsDefinitions,
+      routeUrl: "http://localhost:8071/api/v1.0/admin/contract-definitions/",
+      page,
+      searchResult: store.contractsDefinitions[1],
+    });
+
     await mockPlaywrightCrud<CertificateDefinition, DTOCertificateDefinition>({
       data: store.certificateDefinitions,
       routeUrl: "http://localhost:8071/api/v1.0/admin/certificate-definitions/",
@@ -118,6 +130,16 @@ test.describe("Product form", () => {
       .getByRole("option", { name: store.certificateDefinitions[1].title })
       .click();
 
+    await page.getByPlaceholder("Search a contract definition").click();
+    await page
+      .getByRole("option", { name: store.contractsDefinitions[0].title })
+      .click();
+    await expect(
+      page.getByText(
+        "This is a contract template that will be used when purchasing the product",
+      ),
+    ).toBeVisible();
+
     const cta = page.getByLabel("Call to action *");
     await cta.click();
     await cta.fill("Test product");
@@ -137,6 +159,56 @@ test.describe("Product form", () => {
 
     await page.getByRole("link", { name: "List" }).click();
     await expect(page.getByText("Test product")).toBeVisible();
+  });
+
+  test("Create a new contract definition with the search input", async ({
+    page,
+  }) => {
+    await mockPlaywrightCrud<ContractDefinition, DTOContractDefinition>({
+      data: store.contractsDefinitions,
+      routeUrl: "http://localhost:8071/api/v1.0/admin/contract-definitions/",
+      page,
+      createCallback: (payload) => {
+        const contract: ContractDefinition = {
+          ...payload,
+          id: faker.string.uuid(),
+        };
+        store.contractsDefinitions.push(contract);
+        return contract;
+      },
+      searchResult: store.contractsDefinitions[1],
+    });
+    // Go to the page
+    await page.goto(PATH_ADMIN.products.list);
+    await page.getByRole("button", { name: "Add" }).click();
+    await page.getByText("Microcredential", { exact: true }).click();
+    await page.getByTestId("search-add-button").nth(1).click();
+    await expect(
+      page.getByRole("heading", { name: "close Add a contract" }),
+    ).toBeVisible();
+    await page.getByLabel("Title", { exact: true }).click();
+    await page.getByLabel("Title", { exact: true }).fill("Test contract");
+    await page.getByLabel("Description", { exact: true }).click();
+    await page
+      .getByLabel("Description", { exact: true })
+      .fill("Test contract desc");
+    await page
+      .getByLabel("Add a contract definition")
+      .getByTestId("md-editor")
+      .getByRole("textbox")
+      .click();
+    await page
+      .getByLabel("Add a contract definition")
+      .getByTestId("md-editor")
+      .getByRole("textbox")
+      .fill("> Body");
+    await page.getByTestId("submit-button-contract-definition-form").click();
+    await expect(
+      page.getByRole("heading", { name: "Add a contract" }),
+    ).toBeHidden();
+    await expect(
+      page.getByPlaceholder("Search a contract definition"),
+    ).toHaveValue("Test contract");
   });
 
   test("Create and edit target course", async ({ page }) => {
