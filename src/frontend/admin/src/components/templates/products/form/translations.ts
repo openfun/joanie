@@ -49,6 +49,22 @@ export const productFormMessages = defineMessages({
       "Used for the generation of the certificate of completion of the course",
     description: "Helper text for the definition input",
   },
+  contractDefinition: {
+    id: "components.templates.products.form.translations.contractDefinition",
+    defaultMessage: "Contract definition",
+    description: "Label for the contract definition input",
+  },
+  contractDefinitionHelper: {
+    id: "components.templates.products.form.translations.contractDefinitionHelper",
+    defaultMessage:
+      "This is a contract template that will be used when purchasing the product",
+    description: "Helper text for the contract definition input",
+  },
+  contractDefinitionPlaceholder: {
+    id: "components.templates.products.form.translations.contractDefinitionPlaceholder",
+    defaultMessage: "Search a contract definition",
+    description: "placeholder text for the contract definition input",
+  },
   instructionsTitle: {
     id: "components.templates.products.form.translations.instructionsTitle",
     defaultMessage: "Product instructions",
