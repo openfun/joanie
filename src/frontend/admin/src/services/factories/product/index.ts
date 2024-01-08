@@ -4,6 +4,7 @@ import { CertificateDefinitionFactory } from "@/services/factories/certificate-d
 import { randomNumber } from "@/utils/numbers";
 import { ProductTargetCourseRelationFactory } from "@/services/api/models/ProductTargetCourseRelation";
 import { ProductRelationToCourseFactory } from "@/services/api/models/Relations";
+import { ContractDefinitionFactory } from "@/services/factories/contract-definition";
 
 const build = (): Product => {
   return {
@@ -17,6 +18,7 @@ const build = (): Product => {
     certificate_definition: CertificateDefinitionFactory(),
     target_courses: ProductTargetCourseRelationFactory(randomNumber(2)),
     course_relations: ProductRelationToCourseFactory(2),
+    contract_definition: ContractDefinitionFactory(),
   };
 };
 

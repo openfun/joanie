@@ -6,6 +6,7 @@ import {
 import { ProductRelationToCourse } from "./Relations";
 import { Nullable, Optional, ToFormValues } from "@/types/utils";
 import { ProductFormMainValues } from "@/components/templates/products/form/sections/main/ProductFormMain";
+import { ContractDefinition } from "@/services/api/models/ContractDefinition";
 
 export type Product = {
   id: string;
@@ -19,6 +20,7 @@ export type Product = {
   instructions?: string;
   certificate_definition?: CertificateDefinition;
   course_relations?: ProductRelationToCourse[];
+  contract_definition?: ContractDefinition;
 };
 
 export enum ProductType {
@@ -37,6 +39,7 @@ export type ProductFormValues = ToFormValues<{
   instructions?: string;
   price_currency?: string;
   certificate_definition?: Nullable<CertificateDefinition>;
+  contract_definition?: Nullable<ContractDefinition>;
 }>;
 
 export type DTOProduct = {
@@ -49,6 +52,7 @@ export type DTOProduct = {
   price?: number;
   price_currency?: string;
   certificate_definition?: string;
+  contract_definition?: string;
 };
 
 export const transformProductToDTO = (
@@ -57,6 +61,7 @@ export const transformProductToDTO = (
   return {
     ...product,
     certificate_definition: product.certificate_definition?.id,
+    contract_definition: product.contract_definition?.id,
   };
 };
 
