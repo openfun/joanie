@@ -84,7 +84,10 @@ export default function RHFAutocomplete<
           {...other}
           onChange={(event, newValue, reason, details) => {
             other.onChange?.(event, newValue, reason, details);
-            setValue(name, newValue, { shouldValidate: true });
+            setValue(name, newValue, {
+              shouldValidate: true,
+              shouldDirty: true,
+            });
           }}
         />
       )}
