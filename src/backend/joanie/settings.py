@@ -237,7 +237,22 @@ class Base(Configuration):
             "COURSE_REGEX": values.Value(
                 r".*", environ_name="EDX_COURSE_REGEX", environ_prefix=None
             ),
-        }
+        },
+        {
+            "API_TOKEN": values.Value(
+                environ_name="MOODLE_API_TOKEN", environ_prefix=None
+            ),
+            "BACKEND": values.Value(environ_name="MOODLE_BACKEND", environ_prefix=None),
+            "BASE_URL": values.Value(
+                environ_name="MOODLE_BASE_URL", environ_prefix=None
+            ),
+            "SELECTOR_REGEX": values.Value(
+                r"^disabled$", environ_name="MOODLE_SELECTOR_REGEX", environ_prefix=None
+            ),
+            "COURSE_REGEX": values.Value(
+                r"^disabled$", environ_name="MOODLE_COURSE_REGEX", environ_prefix=None
+            ),
+        },
     ]
     JOANIE_BADGE_PROVIDERS = {
         "obf": {
