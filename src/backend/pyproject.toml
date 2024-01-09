@@ -49,6 +49,7 @@ dependencies = [
     "factory_boy==3.3.0",
     "gunicorn==21.2.0",
     "markdown==3.5.1",
+    "moodlepy==0.24.0",
     "nested-multipart-parser==1.5.0",
     "obc==2.1.0",
     "payplug==1.4.0",
