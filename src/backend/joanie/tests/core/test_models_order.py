@@ -19,6 +19,7 @@ from django_fsm import TransitionNotAllowed
 from joanie.core import enums, exceptions, factories
 from joanie.core.models import CourseState, Enrollment
 from joanie.core.utils import contract_definition
+from joanie.lms_handler import LMSHandler
 from joanie.lms_handler.backends.dummy import DummyLMSBackend
 from joanie.payment.factories import BillingAddressDictFactory, InvoiceFactory
 
@@ -829,6 +830,125 @@ class OrderModelsTestCase(TestCase):
             },
         )
 
+    @responses.activate
+    @override_settings(
+        JOANIE_LMS_BACKENDS=[
+            {
+                "API_TOKEN": "a_secure_api_token",
+                "BACKEND": "joanie.lms_handler.backends.moodle.MoodleLMSBackend",
+                "BASE_URL": "http://moodle.test/webservice/rest/server.php",
+                "COURSE_REGEX": r"^.*/course/view.php\?id=.*$",
+                "SELECTOR_REGEX": r"^.*/course/view.php\?id=.*$",
+            }
+        ]
+    )
+    def test_models_order_validate_preexisting_enrollments_targeted_moodle(self):
+        """
+        When an order is validated, if the user was previously enrolled for free in any of the
+        course runs targeted by the purchased product, we should change their enrollment mode on
+        these course runs to "verified".
+        """
+        course = factories.CourseFactory()
+        resource_link = "http://moodle.test/course/view.php?id=2"
+        course_run = factories.CourseRunFactory(
+            course=course,
+            resource_link=resource_link,
+            state=CourseState.ONGOING_OPEN,
+            is_listed=True,
+        )
+        factories.CourseRunFactory(
+            course=course, state=CourseState.ONGOING_OPEN, is_listed=True
+        )
+        product = factories.ProductFactory(target_courses=[course], price="0.00")
+
+        # Create a pre-existing free enrollment
+        enrollment = factories.EnrollmentFactory(course_run=course_run)
+        order = factories.OrderFactory(product=product)
+
+        backend = LMSHandler.select_lms(resource_link)
+
+        responses.add(
+            responses.POST,
+            backend.build_url("core_user_get_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "criteria[0][key]": "username",
+                        "criteria[0][value]": enrollment.user.username,
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            json={
+                "users": [
+                    {
+                        "id": 5,
+                        "username": "student",
+                        "firstname": "Student",
+                        "lastname": "User",
+                        "fullname": "Student User",
+                        "email": "student@example.com",
+                        "department": "",
+                        "firstaccess": 1704716076,
+                        "lastaccess": 1704716076,
+                        "auth": "manual",
+                        "suspended": False,
+                        "confirmed": True,
+                        "lang": "en",
+                        "theme": "",
+                        "timezone": "99",
+                        "mailformat": 1,
+                        "description": "",
+                        "descriptionformat": 1,
+                        "profileimageurlsmall": (
+                            "https://moodle.test/theme/image.php/boost/core/1704714971/u/f2"
+                        ),
+                        "profileimageurl": (
+                            "https://moodle.test/theme/image.php/boost/core/1704714971/u/f1"
+                        ),
+                    }
+                ],
+                "warnings": [],
+            },
+        )
+
+        responses.add(
+            responses.POST,
+            backend.build_url("local_wsgetroles_get_roles"),
+            status=HTTPStatus.OK,
+            json=[
+                {
+                    "id": 5,
+                    "name": "",
+                    "shortname": "student",
+                    "description": "",
+                    "sortorder": 5,
+                    "archetype": "student",
+                },
+            ],
+        )
+
+        responses.add(
+            responses.POST,
+            backend.build_url("enrol_manual_enrol_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "enrolments[0][courseid]": "2",
+                        "enrolments[0][userid]": "5",
+                        "enrolments[0][roleid]": "5",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+        )
+
+        order.submit()
+
+        self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
+
+        self.assertEqual(len(responses.calls), 3)
+
     def test_models_order_cancel_success(self):
         """Test that the cancel transition is successful from any state"""
 
@@ -902,6 +1022,130 @@ class OrderModelsTestCase(TestCase):
                 "course_details": {"course_id": "course-v1:edx+000001+Demo_Course"},
             },
         )
+
+    @responses.activate
+    @override_settings(
+        JOANIE_LMS_BACKENDS=[
+            {
+                "API_TOKEN": "a_secure_api_token",
+                "BACKEND": "joanie.lms_handler.backends.moodle.MoodleLMSBackend",
+                "BASE_URL": "http://moodle.test/webservice/rest/server.php",
+                "COURSE_REGEX": r"^.*/course/view.php\?id=.*$",
+                "SELECTOR_REGEX": r"^.*/course/view.php\?id=.*$",
+            }
+        ]
+    )
+    def test_models_order_cancel_certificate_product_moodle(self):
+        """
+        Test that the source enrollment is set back to "honor" in the LMS when a related order
+        is canceled.
+        """
+        course = factories.CourseFactory()
+        product = factories.ProductFactory(courses=[course], type="certificate")
+
+        resource_link = "http://moodle.test/course/view.php?id=2"
+
+        enrollment = factories.EnrollmentFactory(
+            course_run__course=course,
+            course_run__state=CourseState.FUTURE_OPEN,
+            course_run__is_listed=True,
+            course_run__resource_link=resource_link,
+        )
+        order = factories.OrderFactory(
+            course=None,
+            product=product,
+            enrollment=enrollment,
+            state="validated",
+        )
+
+        backend = LMSHandler.select_lms(resource_link)
+
+        responses.add(
+            responses.POST,
+            backend.build_url("core_user_get_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "criteria[0][key]": "username",
+                        "criteria[0][value]": enrollment.user.username,
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            json={
+                "users": [
+                    {
+                        "id": 5,
+                        "username": "student",
+                        "firstname": "Student",
+                        "lastname": "User",
+                        "fullname": "Student User",
+                        "email": "student@example.com",
+                        "department": "",
+                        "firstaccess": 1704716076,
+                        "lastaccess": 1704716076,
+                        "auth": "manual",
+                        "suspended": False,
+                        "confirmed": True,
+                        "lang": "en",
+                        "theme": "",
+                        "timezone": "99",
+                        "mailformat": 1,
+                        "description": "",
+                        "descriptionformat": 1,
+                        "profileimageurlsmall": (
+                            "https://moodle.test/theme/image.php/boost/core/1704714971/u/f2"
+                        ),
+                        "profileimageurl": (
+                            "https://moodle.test/theme/image.php/boost/core/1704714971/u/f1"
+                        ),
+                    }
+                ],
+                "warnings": [],
+            },
+        )
+
+        responses.add(
+            responses.POST,
+            backend.build_url("local_wsgetroles_get_roles"),
+            status=HTTPStatus.OK,
+            json=[
+                {
+                    "id": 5,
+                    "name": "",
+                    "shortname": "student",
+                    "description": "",
+                    "sortorder": 5,
+                    "archetype": "student",
+                },
+            ],
+        )
+
+        responses.add(
+            responses.POST,
+            backend.build_url(
+                "enrol_manual_enrol_users"
+                if enrollment.is_active
+                else "enrol_manual_unenrol_users"
+            ),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "enrolments[0][courseid]": "2",
+                        "enrolments[0][userid]": "5",
+                        "enrolments[0][roleid]": "5",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+        )
+
+        order.cancel()
+
+        enrollment.refresh_from_db()
+        self.assertEqual(enrollment.state, "set")
+
+        self.assertEqual(len(responses.calls), 3)
 
     def test_models_order_cancel_certificate_product_enrollment_state_failed(self):
         """

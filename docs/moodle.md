@@ -67,12 +67,12 @@ we need to set up a Moodle webservice, and a Moodle webservice client.
 
 6. For each function below, search for it in the dropdown select, and click it.
 
-   - core_course_get_courses
+   - core_completion_get_course_completion_status
    - core_enrol_get_enrolled_users
-   - core_webservice_get_site_info
+   - core_user_create_users
+   - core_user_get_users
    - enrol_manual_enrol_users
    - enrol_manual_unenrol_users
-   - gradereport_user_get_grade_items
 
 7. Click on the **Add functions** button.
 
@@ -87,16 +87,19 @@ we need to set up a Moodle webservice, and a Moodle webservice client.
 
     ![Moodle admin : external services add authorized user](assets/moodle_add_external_webservice_authorized_users_2.png)
 
-## Setup Moodle webservice client
+10. Install https://moodle.org/plugins/local_wsgetroles
 
-A python library exists to interact with Moodle webservices: [moodlepy](https://github.com/hexatester/moodlepy).
+11. Add local_wsgetroles_get_roles to Joanie webservice functions
 
-### Install moodlepy
+## Setup Moodle settings in Joanie
 
-```bash
-pip install moodlepy
-```
+### Set Moodle backend environment variables
 
-### Set moodle as an LMS backend in Joanie
+- MOODLE_API_TOKEN: the token of the Joanie user in Moodle
+- MOODLE_BACKEND: use to override the Moodle backend module in Joanie
+- MOODLE_BASE_URL: the URL of the Moodle webservice (e.g. `"http://moodle.test/webservice/rest/server.php"`)
+- MOODLE_SELECTOR_REGEX: a regex to match the Moodle backend (e.g. `r"^.*/course/view.php\?id=.*$"`)
+- MOODLE_COURSE_REGEX: a regex to match the Moodle course id (e.g. `r"^.*/course/view.php\?id=(.*)$"`)
 
-_**TODO**_
+
+

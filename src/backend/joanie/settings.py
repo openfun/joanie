@@ -254,6 +254,9 @@ class Base(Configuration):
             ),
         },
     ]
+    MOODLE_AUTH_METHOD = values.Value(
+        "oauth2", environ_name="MOODLE_AUTH_METHOD", environ_prefix=None
+    )
     JOANIE_BADGE_PROVIDERS = {
         "obf": {
             "client_id": values.Value(

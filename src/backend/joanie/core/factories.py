@@ -223,7 +223,7 @@ class UserCourseAccessFactory(factory.django.DjangoModelFactory):
 
 class CourseRunFactory(factory.django.DjangoModelFactory):
     """
-    A factory to easily generate a credible course run for our tests.
+    A factory to easily generate a credible openEdx course run for our tests.
     """
 
     class Params:
@@ -429,6 +429,17 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
         return datetime.utcfromtimestamp(
             random.randrange(int(min_date.timestamp()), int(max_date.timestamp()))
         ).replace(tzinfo=timezone.utc)
+
+
+class CourseRunMoodleFactory(CourseRunFactory):
+    """
+    A factory to easily generate a credible Moodle course run for our tests.
+    """
+
+    @factory.lazy_attribute_sequence
+    def resource_link(self, sequence):
+        """Generate a resource link that looks like a Moodle course url."""
+        return f"http://moodle.test/course/view.php?id={sequence:d}"
 
 
 class EnrollmentFactory(factory.django.DjangoModelFactory):
