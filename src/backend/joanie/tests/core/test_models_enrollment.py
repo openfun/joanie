@@ -12,18 +12,26 @@ from django.utils import timezone
 from joanie.core import factories
 from joanie.core.exceptions import EnrollmentError, GradeError
 from joanie.core.models import CourseState, Enrollment
+from joanie.lms_handler.backends.moodle import MoodleLMSBackend
 from joanie.lms_handler.backends.openedx import OpenEdXLMSBackend
 
 
 @override_settings(
     JOANIE_LMS_BACKENDS=[
         {
+            "API_TOKEN": "a_secure_api_token",
+            "BACKEND": "joanie.lms_handler.backends.moodle.MoodleLMSBackend",
+            "BASE_URL": "http://moodle.test/webservice/rest/server.php",
+            "COURSE_REGEX": r"^.*/course/view.php\?id=.*$",
+            "SELECTOR_REGEX": r"^.*/course/view.php\?id=.*$",
+        },
+        {
             "API_TOKEN": "FakeEdXAPIKey",
             "BACKEND": "joanie.lms_handler.backends.openedx.OpenEdXLMSBackend",
             "BASE_URL": "http://edx:8073",
             "COURSE_REGEX": r"^.*/courses/(?P<course_id>.*)/course/?$",
             "SELECTOR_REGEX": r"^.*/courses/(?P<course_id>.*)/course/?$",
-        }
+        },
     ]
 )
 class EnrollmentModelsTestCase(TestCase):
@@ -454,6 +462,38 @@ class EnrollmentModelsTestCase(TestCase):
 
         course = factories.CourseFactory()
         course_run = factories.CourseRunFactory.create_batch(
+            2,
+            state=CourseState.ONGOING_OPEN,
+            is_listed=True,
+            course=course,
+        )[0]
+        product = factories.ProductFactory(target_courses=[course], price="0.00")
+
+        user = factories.UserFactory()
+        # User can enroll to the course run for free
+        enrollment = factories.EnrollmentFactory(
+            course_run=course_run, user=user, was_created_by_order=False
+        )
+        self.assertFalse(enrollment.was_created_by_order)
+
+        # Then if user purchases the product, the flag should not have been updated
+        order = factories.OrderFactory(owner=user, product=product)
+        order.submit()
+        order_enrollment = order.get_target_enrollments().first()
+        self.assertEqual(enrollment, order_enrollment)
+        self.assertFalse(order_enrollment.was_created_by_order)
+
+    @mock.patch.object(MoodleLMSBackend, "set_enrollment", return_value=True)
+    def test_models_enrollment_was_created_by_order_flag_moodle(self, _mock_set):
+        """
+        For a course run which is listed (available for free enrollment) and also
+        linked to a product, the `was_created_by_order` flag can be set to store
+        the creation context of an enrollment. Sets to True if the enrollment has been
+        created along an order and False otherwise.
+        """
+
+        course = factories.CourseFactory()
+        course_run = factories.CourseRunMoodleFactory.create_batch(
             2,
             state=CourseState.ONGOING_OPEN,
             is_listed=True,

@@ -4,12 +4,28 @@ Backend to connect Joanie to Moodle LMS
 import logging
 from urllib.parse import parse_qs, urlparse
 
+from django.conf import settings
+
 from moodle import Moodle
-from moodle.exception import EmptyResponseException
+from moodle.exception import EmptyResponseException, NetworkMoodleException
+
+from joanie.core.exceptions import EnrollmentError
 
 from .base import BaseLMSBackend
 
 logger = logging.getLogger(__name__)
+
+
+class MoodleStudentRoleException(Exception):
+    """Raised when the student role is not found in Moodle."""
+
+
+class MoodleUserException(Exception):
+    """Raised when a user is not found in Moodle."""
+
+
+class MoodleUserCreateException(Exception):
+    """Raised when a user creation fails in Moodle."""
 
 
 class MoodleLMSBackend(BaseLMSBackend):
@@ -64,8 +80,97 @@ class MoodleLMSBackend(BaseLMSBackend):
             logger.error("Moodle error while retrieving enrollments: %s", e)
             return None
 
+    def get_roles(self):
+        """Retrieve roles."""
+        try:
+            return self.moodle("local_wsgetroles_get_roles")
+        except EmptyResponseException as e:
+            logger.error(e)
+            return []
+
+    def student_role_id(self):
+        """Retrieve student role id."""
+        roles = self.get_roles()
+        for role in roles:
+            if role.get("shortname") == "student":
+                return role.get("id")
+        raise MoodleStudentRoleException("Student role not found in Moodle")
+
+    # pylint: disable=invalid-name
+    def get_user_id(self, username):
+        """Retrieve user id."""
+        criteria = {"key": "username", "value": username}
+        try:
+            res = self.moodle("core_user_get_users", criteria=[criteria])
+        except EmptyResponseException as e:
+            logger.error("Moodle error while retrieving user %s: %s", username, e)
+            raise MoodleUserException() from e
+        try:
+            # username is unique in Moodle
+            user_id = res.get("users", [])[0].get("id")
+        except IndexError as e:
+            logger.error("User %s not found in Moodle", username)
+            raise MoodleUserException() from e
+        return user_id
+
+    def create_user(self, user):
+        """Create a user."""
+        user_data = {
+            "username": user.username,
+            "firstname": user.first_name,
+            "lastname": user.last_name or ".",
+            "email": user.email,
+            "auth": settings.MOODLE_AUTH_METHOD,
+        }
+        try:
+            return self.moodle("core_user_create_users", users=[user_data])
+        except EmptyResponseException as e:
+            logger.error("Moodle error while creating user %s: %s", user.username, e)
+            raise MoodleUserCreateException() from e
+
     def set_enrollment(self, enrollment):
         """Activate/deactivate an enrollment."""
+        try:
+            role_id = self.student_role_id()
+        except MoodleStudentRoleException as e:
+            logger.error("Moodle error while retrieving student role: %s", e)
+            raise EnrollmentError() from e
+
+        try:
+            user_id = self.get_user_id(enrollment.user.username)
+        except MoodleUserException as e:
+            if not enrollment.is_active:
+                raise EnrollmentError() from e
+            user_created_response = self.create_user(enrollment.user)
+            user_id = user_created_response.get("id")
+
+        course_id = self.extract_course_id(enrollment.course_run.resource_link)
+        moodle_enrollment = {
+            "courseid": course_id,
+            "userid": user_id,
+            "roleid": role_id,
+        }
+        try:
+            if enrollment.is_active:
+                self.moodle.enrol.manual.enrol_users([moodle_enrollment])
+            else:
+                self.moodle.enrol.manual.unenrol_users([moodle_enrollment])
+        except NetworkMoodleException as e:
+            logger.error(
+                "Moodle error while %s user %s (userid: %s, roleid %s, courseid %s): %s: %s",
+                "enrolling" if enrollment.is_active else "unenrolling",
+                enrollment.user.username,
+                user_id,
+                role_id,
+                course_id,
+                e,
+                e.exception if hasattr(e, "exception") else "",
+            )
+            raise EnrollmentError() from e
+        except EmptyResponseException:
+            # No response is returned from Moodle API when enrolling or unenrolling a user
+            pass
+        return True
 
     def get_grades(self, username, resource_link):
         """Get user's grades for a course run given its url."""

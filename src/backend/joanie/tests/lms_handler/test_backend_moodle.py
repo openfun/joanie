@@ -1,4 +1,5 @@
 """Test suite for the Moodle LMS Backend."""
+import random
 from http import HTTPStatus
 from logging import ERROR
 
@@ -11,9 +12,12 @@ from requests import RequestException
 from joanie.core import factories, models
 from joanie.core.exceptions import EnrollmentError
 from joanie.lms_handler import LMSHandler
-from joanie.lms_handler.backends.moodle import MoodleLMSBackend
+from joanie.lms_handler.backends.moodle import (
+    MoodleLMSBackend,
+    MoodleUserCreateException,
+)
 
-# pylint: disable=unexpected-keyword-arg,no-value-for-parameter
+# pylint: disable=unexpected-keyword-arg,no-value-for-parameter,too-many-lines,too-many-public-methods
 
 MOODLE_RESPONSE_ENROLLMENTS = [
     {
@@ -349,5 +353,598 @@ class MoodleLMSBackendTestCase(TestCase):
                 "ERROR:joanie.lms_handler.backends.moodle:"
                 "No enrollment found for user unknown "
                 "in course run http://moodle.test/course/view.php?id=2",
+            ],
+        )
+
+    @override_settings(MOODLE_AUTH_METHOD="moodle_auth_method")
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_create_user(self):
+        """
+        Creating a user should return a dict containing the user's id and username.
+        """
+        user = factories.UserFactory(
+            first_name="John Doe",
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_user_create_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "users[0][username]": user.username,
+                        "users[0][firstname]": user.first_name,
+                        "users[0][lastname]": user.last_name or ".",
+                        "users[0][email]": user.email,
+                        "users[0][auth]": "moodle_auth_method",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            json={"id": 5, "username": user.username},
+        )
+
+        result = self.backend.create_user(user)
+
+        self.assertEqual(result, {"id": 5, "username": user.username})
+
+    @override_settings(MOODLE_AUTH_METHOD="moodle_auth_method")
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_create_user_error(self):
+        """
+        Creating a user should return a dict containing the user's id and username.
+        """
+        user = factories.UserFactory(
+            first_name="John Doe",
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_user_create_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "users[0][username]": user.username,
+                        "users[0][firstname]": user.first_name,
+                        "users[0][lastname]": user.last_name or ".",
+                        "users[0][email]": user.email,
+                        "users[0][auth]": "moodle_auth_method",
+                    }
+                )
+            ],
+            status=HTTPStatus.INTERNAL_SERVER_ERROR,
+        )
+
+        with self.assertLogs(
+            "joanie.lms_handler.backends.moodle", level=ERROR
+        ) as error_logs, self.assertRaises(MoodleUserCreateException):
+            self.backend.create_user(user)
+
+        self.assertEqual(
+            error_logs.output,
+            [
+                "ERROR:joanie.lms_handler.backends.moodle:"
+                f"Moodle error while creating user {user.username}: "
+                f"Empty response from server!"
+            ],
+        )
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_set_enrollment_enroll(self):
+        """
+        Updating a user's enrollment to a course run should return a boolean
+        corresponding to the success of the operation.
+        """
+        course_run = factories.CourseRunMoodleFactory(
+            is_listed=True,
+            state=models.CourseState.ONGOING_OPEN,
+        )
+        course_id = course_run.resource_link.split("=")[-1]
+        user = factories.UserFactory(
+            username="student",
+        )
+        enrollment = models.Enrollment(course_run=course_run, user=user, is_active=True)
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_user_get_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "criteria[0][key]": "username",
+                        "criteria[0][value]": "student",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            json=MOODLE_RESPONSE_USERS,
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("local_wsgetroles_get_roles"),
+            status=HTTPStatus.OK,
+            json=MOODLE_RESPONSE_ROLES,
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("enrol_manual_enrol_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "enrolments[0][courseid]": course_id,
+                        "enrolments[0][userid]": "5",
+                        "enrolments[0][roleid]": "5",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+        )
+
+        result = self.backend.set_enrollment(enrollment)
+
+        self.assertTrue(result)
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_set_enrollment_unenroll(self):
+        """
+        Updating a user's enrollment to a course run should return a boolean
+        corresponding to the success of the operation.
+        """
+        course_run = factories.CourseRunMoodleFactory(
+            is_listed=True,
+            state=models.CourseState.ONGOING_OPEN,
+        )
+        course_id = course_run.resource_link.split("=")[-1]
+        user = factories.UserFactory(
+            username="student",
+        )
+        enrollment = models.Enrollment(
+            course_run=course_run, user=user, is_active=False
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_user_get_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "criteria[0][key]": "username",
+                        "criteria[0][value]": "student",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            json=MOODLE_RESPONSE_USERS,
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("local_wsgetroles_get_roles"),
+            status=HTTPStatus.OK,
+            json=MOODLE_RESPONSE_ROLES,
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("enrol_manual_unenrol_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "enrolments[0][courseid]": course_id,
+                        "enrolments[0][userid]": "5",
+                        "enrolments[0][roleid]": "5",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+        )
+
+        result = self.backend.set_enrollment(enrollment)
+
+        self.assertTrue(result)
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_set_enrollment_user_error(self):
+        """
+        When un-enrolling, if user is not found, it should raise an EnrollmentError.
+        """
+        course_run = factories.CourseRunMoodleFactory(
+            is_listed=True,
+            state=models.CourseState.ONGOING_OPEN,
+        )
+        user = factories.UserFactory(
+            username="student",
+        )
+        enrollment = models.Enrollment(
+            course_run=course_run, user=user, is_active=False
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("local_wsgetroles_get_roles"),
+            status=HTTPStatus.OK,
+            json=MOODLE_RESPONSE_ROLES,
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_user_get_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "criteria[0][key]": "username",
+                        "criteria[0][value]": "student",
+                    }
+                )
+            ],
+            status=HTTPStatus.INTERNAL_SERVER_ERROR,
+        )
+
+        with self.assertLogs(
+            "joanie.lms_handler.backends.moodle", level=ERROR
+        ) as error_logs, self.assertRaises(EnrollmentError):
+            self.backend.set_enrollment(enrollment)
+
+        self.assertEqual(
+            error_logs.output,
+            [
+                "ERROR:joanie.lms_handler.backends.moodle:"
+                "Moodle error while retrieving user student: Empty response from server!"
+            ],
+        )
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_set_enrollment_user_not_found(self):
+        """
+        When enrolling, if user is not found, it should be created.
+        """
+        course_run = factories.CourseRunMoodleFactory(
+            is_listed=True,
+            state=models.CourseState.ONGOING_OPEN,
+        )
+        course_id = course_run.resource_link.split("=")[-1]
+        user = factories.UserFactory(
+            username="student",
+            first_name="John Doe",
+        )
+        enrollment = models.Enrollment(course_run=course_run, user=user, is_active=True)
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_user_get_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "criteria[0][key]": "username",
+                        "criteria[0][value]": "student",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            json={
+                "users": [],
+                "warnings": [],
+            },
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_user_create_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "users[0][username]": user.username,
+                        "users[0][firstname]": user.first_name,
+                        "users[0][lastname]": user.last_name or ".",
+                        "users[0][email]": user.email,
+                        "users[0][auth]": "oauth2",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            json={"id": 5, "username": user.username},
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("local_wsgetroles_get_roles"),
+            status=HTTPStatus.OK,
+            json=MOODLE_RESPONSE_ROLES,
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("enrol_manual_enrol_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "enrolments[0][courseid]": course_id,
+                        "enrolments[0][userid]": "5",
+                        "enrolments[0][roleid]": "5",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+        )
+
+        result = self.backend.set_enrollment(enrollment)
+
+        self.assertTrue(result)
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_set_enrollment_unenroll_user_not_found(self):
+        """
+        When unenrolling, if user is not found, it should raise an EnrollmentError.
+        """
+        course_run = factories.CourseRunMoodleFactory(
+            is_listed=True,
+            state=models.CourseState.ONGOING_OPEN,
+        )
+        user = factories.UserFactory(
+            username="student",
+        )
+        enrollment = models.Enrollment(
+            course_run=course_run, user=user, is_active=False
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("local_wsgetroles_get_roles"),
+            status=HTTPStatus.OK,
+            json=MOODLE_RESPONSE_ROLES,
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_user_get_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "criteria[0][key]": "username",
+                        "criteria[0][value]": "student",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            json={
+                "users": [],
+                "warnings": [],
+            },
+        )
+
+        with self.assertLogs(
+            "joanie.lms_handler.backends.moodle", level=ERROR
+        ) as error_logs, self.assertRaises(EnrollmentError):
+            self.backend.set_enrollment(enrollment)
+
+        self.assertEqual(
+            error_logs.output,
+            [
+                "ERROR:joanie.lms_handler.backends.moodle:User student not found in Moodle"
+            ],
+        )
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_set_enrollment_student_role_error(self):
+        """
+        When enrolling, if getting roles fails, it should raise an EnrollmentError.
+        """
+        course_run = factories.CourseRunMoodleFactory(
+            is_listed=True,
+            state=models.CourseState.ONGOING_OPEN,
+        )
+        user = factories.UserFactory(
+            username="student",
+        )
+        is_active = random.choice([True, False])
+        enrollment = models.Enrollment(
+            course_run=course_run, user=user, is_active=is_active
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("local_wsgetroles_get_roles"),
+            status=HTTPStatus.INTERNAL_SERVER_ERROR,
+        )
+
+        with self.assertLogs(
+            "joanie.lms_handler.backends.moodle", level=ERROR
+        ) as error_logs, self.assertRaises(EnrollmentError):
+            self.backend.set_enrollment(enrollment)
+
+        self.assertEqual(
+            error_logs.output,
+            [
+                "ERROR:joanie.lms_handler.backends.moodle:Empty response from server!",
+                "ERROR:joanie.lms_handler.backends.moodle:"
+                "Moodle error while retrieving student role: "
+                "Student role not found in Moodle",
+            ],
+        )
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_set_enrollment_student_role_not_found(self):
+        """
+        When enrolling, if student role is not found, it should raise an EnrollmentError.
+        """
+        course_run = factories.CourseRunMoodleFactory(
+            is_listed=True,
+            state=models.CourseState.ONGOING_OPEN,
+        )
+        user = factories.UserFactory(
+            username="student",
+        )
+        is_active = random.choice([True, False])
+        enrollment = models.Enrollment(
+            course_run=course_run, user=user, is_active=is_active
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("local_wsgetroles_get_roles"),
+            status=HTTPStatus.OK,
+            json=[
+                {
+                    "id": 1,
+                    "name": "",
+                    "shortname": "manager",
+                    "description": "",
+                    "sortorder": 1,
+                    "archetype": "manager",
+                },
+            ],
+        )
+
+        with self.assertLogs(
+            "joanie.lms_handler.backends.moodle", level=ERROR
+        ) as error_logs, self.assertRaises(EnrollmentError):
+            self.backend.set_enrollment(enrollment)
+
+        self.assertEqual(
+            error_logs.output,
+            [
+                "ERROR:joanie.lms_handler.backends.moodle:"
+                "Moodle error while retrieving student role: "
+                "Student role not found in Moodle"
+            ],
+        )
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_set_enrollment_enroll_fail(self):
+        """
+        When enrolling, if Moodle returns an error, it should raise an EnrollmentError.
+        """
+        course_run = factories.CourseRunMoodleFactory(
+            is_listed=True,
+            state=models.CourseState.ONGOING_OPEN,
+        )
+        course_id = course_run.resource_link.split("=")[-1]
+        user = factories.UserFactory(
+            username="student",
+        )
+        enrollment = models.Enrollment(course_run=course_run, user=user, is_active=True)
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_user_get_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "criteria[0][key]": "username",
+                        "criteria[0][value]": "student",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            json=MOODLE_RESPONSE_USERS,
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("local_wsgetroles_get_roles"),
+            status=HTTPStatus.OK,
+            json=MOODLE_RESPONSE_ROLES,
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("enrol_manual_enrol_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "enrolments[0][courseid]": course_id,
+                        "enrolments[0][userid]": "5",
+                        "enrolments[0][roleid]": "5",
+                    }
+                )
+            ],
+            status=HTTPStatus.INTERNAL_SERVER_ERROR,
+            body=RequestException("Something went wrong..."),
+        )
+
+        with self.assertLogs(
+            "joanie.lms_handler.backends.moodle", level=ERROR
+        ) as error_logs, self.assertRaises(EnrollmentError):
+            self.backend.set_enrollment(enrollment)
+
+        self.assertEqual(
+            error_logs.output,
+            [
+                "ERROR:joanie.lms_handler.backends.moodle:"
+                "Moodle error while enrolling user student "
+                f"(userid: 5, roleid 5, courseid {course_id}): "
+                "A Network error occurred: Something went wrong..."
+            ],
+        )
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_set_enrollment_unenroll_fail(self):
+        """
+        When un-enrolling, if Moodle returns an error, it should raise an EnrollmentError.
+        """
+        course_run = factories.CourseRunMoodleFactory(
+            is_listed=True,
+            state=models.CourseState.ONGOING_OPEN,
+        )
+        course_id = course_run.resource_link.split("=")[-1]
+        user = factories.UserFactory(
+            username="student",
+        )
+        enrollment = models.Enrollment(
+            course_run=course_run, user=user, is_active=False
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_user_get_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "criteria[0][key]": "username",
+                        "criteria[0][value]": "student",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            json=MOODLE_RESPONSE_USERS,
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("local_wsgetroles_get_roles"),
+            status=HTTPStatus.OK,
+            json=MOODLE_RESPONSE_ROLES,
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("enrol_manual_unenrol_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "enrolments[0][courseid]": course_id,
+                        "enrolments[0][userid]": "5",
+                        "enrolments[0][roleid]": "5",
+                    }
+                )
+            ],
+            status=HTTPStatus.INTERNAL_SERVER_ERROR,
+            body=RequestException("Something went wrong..."),
+        )
+
+        with self.assertLogs(
+            "joanie.lms_handler.backends.moodle", level=ERROR
+        ) as error_logs, self.assertRaises(EnrollmentError):
+            self.backend.set_enrollment(enrollment)
+
+        self.assertEqual(
+            error_logs.output,
+            [
+                "ERROR:joanie.lms_handler.backends.moodle:"
+                "Moodle error while unenrolling user student "
+                f"(userid: 5, roleid 5, courseid {course_id}): "
+                "A Network error occurred: Something went wrong..."
             ],
         )
