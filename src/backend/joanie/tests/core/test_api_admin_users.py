@@ -101,6 +101,7 @@ class UserAdminApiTest(TestCase):
                 "id": str(fonzie.id),
                 "username": fonzie.username,
                 "full_name": fonzie.get_full_name(),
+                "email": fonzie.email,
             },
         )
 
@@ -121,6 +122,7 @@ class UserAdminApiTest(TestCase):
                 "id": str(joanie.id),
                 "username": joanie.username,
                 "full_name": joanie.get_full_name(),
+                "email": joanie.email,
             },
         )
 
@@ -238,6 +240,7 @@ class UserAdminApiTest(TestCase):
                 "id": str(admin.id),
                 "username": admin.username,
                 "full_name": admin.get_full_name(),
+                "email": admin.email,
                 "is_superuser": admin.is_superuser,
                 "is_staff": admin.is_staff,
                 "abilities": {
@@ -268,6 +271,7 @@ class UserAdminApiTest(TestCase):
                 "id": str(admin.id),
                 "username": admin.username,
                 "full_name": admin.get_full_name(),
+                "email": admin.email,
                 "is_superuser": admin.is_superuser,
                 "is_staff": admin.is_staff,
                 "abilities": {
@@ -298,6 +302,7 @@ class UserAdminApiTest(TestCase):
                 "id": str(admin.id),
                 "username": admin.username,
                 "full_name": admin.get_full_name(),
+                "email": admin.email,
                 "is_superuser": admin.is_superuser,
                 "is_staff": admin.is_staff,
                 "abilities": {

@@ -247,6 +247,7 @@ class OrganizationAdminApiTest(TestCase):
                             "id": str(access.user.id),
                             "username": access.user.username,
                             "full_name": access.user.get_full_name(),
+                            "email": access.user.email,
                         },
                         "role": access.role,
                     }

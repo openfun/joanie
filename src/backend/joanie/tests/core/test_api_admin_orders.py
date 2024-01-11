@@ -146,6 +146,7 @@ class OrdersAdminApiTestCase(TestCase):
                     "id": str(order.owner.id),
                     "username": order.owner.username,
                     "full_name": order.owner.get_full_name(),
+                    "email": order.owner.email,
                 },
                 "product_title": order.product.title,
                 "enrollment": None,

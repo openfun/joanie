@@ -4917,7 +4917,7 @@
             },
             "AdminUser": {
                 "type": "object",
-                "description": "Serializer for User model.",
+                "description": "Read only serializer for User model.",
                 "properties": {
                     "id": {
                         "type": "string",
@@ -4932,9 +4932,16 @@
                     },
                     "full_name": {
                         "type": "string"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "readOnly": true,
+                        "title": "Email address"
                     }
                 },
                 "required": [
+                    "email",
                     "full_name",
                     "id",
                     "username"
@@ -4942,7 +4949,7 @@
             },
             "AdminUserRequest": {
                 "type": "object",
-                "description": "Serializer for User model.",
+                "description": "Read only serializer for User model.",
                 "properties": {
                     "full_name": {
                         "type": "string",

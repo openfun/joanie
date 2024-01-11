@@ -204,6 +204,7 @@ class CourseAdminApiTest(TestCase):
                             "id": str(access.user.id),
                             "full_name": access.user.get_full_name(),
                             "username": access.user.username,
+                            "email": access.user.email,
                         },
                     }
                     for access in course.accesses.all()
