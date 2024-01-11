@@ -114,6 +114,7 @@ class OrganizationAccessAdminApiTest(TestCase):
                     "id": str(user.id),
                     "username": user.username,
                     "full_name": user.get_full_name(),
+                    "email": user.email,
                 },
             },
         )
@@ -216,6 +217,7 @@ class OrganizationAccessAdminApiTest(TestCase):
                     "id": str(user.id),
                     "username": user.username,
                     "full_name": user.get_full_name(),
+                    "email": user.email,
                 },
             },
         )
@@ -318,6 +320,7 @@ class OrganizationAccessAdminApiTest(TestCase):
                     "id": str(user.id),
                     "username": user.username,
                     "full_name": user.get_full_name(),
+                    "email": user.email,
                 },
             },
         )

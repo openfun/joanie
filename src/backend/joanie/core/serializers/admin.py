@@ -68,14 +68,14 @@ class AdminCourseRunLightSerializer(serializers.ModelSerializer):
 
 
 class AdminUserSerializer(serializers.ModelSerializer):
-    """Serializer for User model."""
+    """Read only serializer for User model."""
 
     full_name = serializers.CharField(source="get_full_name")
 
     class Meta:
         model = models.User
-        fields = ["id", "username", "full_name"]
-        read_only_fields = ["id", "username", "full_name"]
+        fields = ["id", "username", "full_name", "email"]
+        read_only_fields = fields
 
 
 class AdminUserCompleteSerializer(serializers.ModelSerializer):
@@ -93,15 +93,9 @@ class AdminUserCompleteSerializer(serializers.ModelSerializer):
             "is_superuser",
             "is_staff",
             "abilities",
+            "email",
         ]
-        read_only_fields = [
-            "id",
-            "username",
-            "full_name",
-            "is_superuser",
-            "is_staff",
-            "abilities",
-        ]
+        read_only_fields = fields
 
     def get_abilities(self, user):
         """Return abilities of the logged-in user on itself."""
