@@ -70,12 +70,9 @@ ENV PYTHONUNBUFFERED=1
 RUN apt-get update && \
     apt-get install -y \
       gettext \
-      libcairo2 \
-      libffi-dev \
-      libgdk-pixbuf2.0-0 \
       libpango-1.0-0 \
-      libpangocairo-1.0-0 \
-      shared-mime-info && \
+      libpangoft2-1.0-0 \
+      pango1.0-tools && \
   rm -rf /var/lib/apt/lists/*
 
 # Copy entrypoint
