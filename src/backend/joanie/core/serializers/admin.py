@@ -1,3 +1,4 @@
+# pylint: disable=too-many-lines
 """Admin serializers for Joanie Core app."""
 from django.conf import settings
 
@@ -63,8 +64,9 @@ class AdminCourseRunLightSerializer(serializers.ModelSerializer):
             "enrollment_start",
             "enrollment_end",
             "uri",
+            "state",
         ]
-        read_only_fields = ["id", "uri"]
+        read_only_fields = ["id", "uri", "state"]
 
 
 class AdminUserSerializer(serializers.ModelSerializer):
@@ -230,6 +232,13 @@ class AdminProductSerializer(serializers.ModelSerializer):
 class AdminProductLightSerializer(serializers.ModelSerializer):
     """Concise Serializer for Product model."""
 
+    price = serializers.DecimalField(
+        coerce_to_string=False,
+        decimal_places=2,
+        max_digits=9,
+        min_value=0,
+        read_only=True,
+    )
     price_currency = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
@@ -807,7 +816,15 @@ class AdminOrderEnrollmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Enrollment
-        fields = ["id", "course_run"]
+        fields = [
+            "course_run",
+            "created_on",
+            "id",
+            "is_active",
+            "state",
+            "updated_on",
+            "was_created_by_order",
+        ]
         read_only_fields = fields
 
 
@@ -860,6 +877,7 @@ class BaseAdminInvoiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = payment_models.Invoice
         fields = [
+            "id",
             "balance",
             "created_on",
             "invoiced_balance",
@@ -896,9 +914,7 @@ class AdminInvoiceSerializer(BaseAdminInvoiceSerializer):
 class AdminOrderSerializer(serializers.ModelSerializer):
     """Read only Serializer for Order model."""
 
-    product_title = serializers.SlugRelatedField(
-        read_only=True, slug_field="title", source="product"
-    )
+    product = AdminProductLightSerializer(read_only=True)
     course = AdminCourseLightSerializer(read_only=True)
     enrollment = AdminOrderEnrollmentSerializer(read_only=True)
     owner = AdminUserSerializer(read_only=True)
@@ -919,7 +935,7 @@ class AdminOrderSerializer(serializers.ModelSerializer):
             "created_on",
             "state",
             "owner",
-            "product_title",
+            "product",
             "course",
             "enrollment",
             "organization",
@@ -954,9 +970,7 @@ class AdminOrderLightSerializer(serializers.ModelSerializer):
     organization_title = serializers.SlugRelatedField(
         read_only=True, slug_field="title", source="organization"
     )
-    owner_username = serializers.SlugRelatedField(
-        read_only=True, slug_field="username", source="owner"
-    )
+    owner_name = serializers.SerializerMethodField(read_only=True)
     total = serializers.DecimalField(
         coerce_to_string=False, decimal_places=2, max_digits=9, min_value=0
     )
@@ -970,7 +984,7 @@ class AdminOrderLightSerializer(serializers.ModelSerializer):
             "enrollment_id",
             "id",
             "organization_title",
-            "owner_username",
+            "owner_name",
             "product_title",
             "state",
             "total",
@@ -981,3 +995,10 @@ class AdminOrderLightSerializer(serializers.ModelSerializer):
     def get_total_currency(self, *args, **kwargs) -> str:
         """Return the code of currency used by the instance"""
         return settings.DEFAULT_CURRENCY
+
+    def get_owner_name(self, instance) -> str:
+        """
+        Return the full name of the order's owner if available,
+        otherwise fallback to the username
+        """
+        return instance.owner.get_full_name() or instance.owner.username

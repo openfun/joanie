@@ -296,6 +296,7 @@ class Base(Configuration):
         ),
         "ENUM_NAME_OVERRIDES": {
             "EnrollmentStateEnum": "joanie.core.enums.ENROLLMENT_STATE_CHOICES",
+            "OrderStateEnum": "joanie.core.enums.ORDER_STATE_CHOICES",
             "OrganizationAccessRoleChoiceEnum": (
                 "joanie.core.models.OrganizationAccess.ROLE_CHOICES"
             ),
