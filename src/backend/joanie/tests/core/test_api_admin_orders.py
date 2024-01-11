@@ -79,7 +79,7 @@ class OrdersAdminApiTestCase(TestCase):
                     else None,
                     "id": str(order.id),
                     "organization_title": order.organization.title,
-                    "owner_username": order.owner.username,
+                    "owner_name": order.owner.username,
                     "product_title": order.product.title,
                     "state": order.state,
                     "total": float(order.total),
@@ -91,8 +91,8 @@ class OrdersAdminApiTestCase(TestCase):
 
         self.assertEqual(content, expected_content)
 
-    def test_api_admin_orders_retrieve(self):
-        """An admin user should be able to retrieve a single order through its id."""
+    def test_api_admin_orders_course_retrieve(self):
+        """An admin user should be able to retrieve a single course order through its id."""
 
         # Create an admin user
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
@@ -132,7 +132,7 @@ class OrdersAdminApiTestCase(TestCase):
             total=D("1.00"),
         )
 
-        with self.assertNumQueries(28):
+        with self.assertNumQueries(29):
             response = self.client.get(f"/api/v1.0/admin/orders/{order.id}/")
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -148,7 +148,20 @@ class OrdersAdminApiTestCase(TestCase):
                     "full_name": order.owner.get_full_name(),
                     "email": order.owner.email,
                 },
-                "product_title": order.product.title,
+                "product": {
+                    "call_to_action": "let's go!",
+                    "certificate_definition": str(
+                        relation.product.certificate_definition.id
+                    ),
+                    "contract_definition": str(relation.product.contract_definition.id),
+                    "description": relation.product.description,
+                    "id": str(relation.product.id),
+                    "price": float(relation.product.price),
+                    "price_currency": "EUR",
+                    "target_courses": [],
+                    "title": relation.product.title,
+                    "type": "credential",
+                },
                 "enrollment": None,
                 "course": {
                     "id": str(order.course.id),
@@ -192,11 +205,13 @@ class OrdersAdminApiTestCase(TestCase):
                     "issued_on": format_date(order.certificate.issued_on),
                 },
                 "main_invoice": {
+                    "id": str(order.main_invoice.id),
                     "balance": float(order.main_invoice.balance),
                     "created_on": format_date(order.main_invoice.created_on),
                     "state": order.main_invoice.state,
                     "children": [
                         {
+                            "id": str(credit_note.id),
                             "balance": float(credit_note.balance),
                             "created_on": format_date(credit_note.created_on),
                             "invoiced_balance": float(credit_note.invoiced_balance),
@@ -215,6 +230,139 @@ class OrdersAdminApiTestCase(TestCase):
                             "updated_on": format_date(credit_note.updated_on),
                         }
                     ],
+                    "invoiced_balance": float(order.main_invoice.invoiced_balance),
+                    "recipient_address": (
+                        f"{order.main_invoice.recipient_address.full_name}\n"
+                        f"{order.main_invoice.recipient_address.full_address}"
+                    ),
+                    "reference": order.main_invoice.reference,
+                    "transactions_balance": float(
+                        order.main_invoice.transactions_balance
+                    ),
+                    "total": float(order.main_invoice.total),
+                    "total_currency": settings.DEFAULT_CURRENCY,
+                    "type": order.main_invoice.type,
+                    "updated_on": format_date(order.main_invoice.updated_on),
+                },
+            },
+        )
+
+    def test_api_admin_orders_enrollment_retrieve(self):
+        """An admin user should be able to retrieve a single enrollment order through its id."""
+
+        # Create an admin user
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        # Create a "completed" order linked to a certificate product with a certificate
+        # definition
+        course = factories.CourseFactory()
+        relation = factories.CourseProductRelationFactory(
+            product__type=enums.PRODUCT_TYPE_CERTIFICATE,
+            product__certificate_definition=factories.CertificateDefinitionFactory(),
+            course=course,
+        )
+
+        enrollment = factories.EnrollmentFactory(course_run__course=course)
+        order = factories.OrderFactory(
+            enrollment=enrollment,
+            course=None,
+            product=relation.product,
+            organization=relation.organizations.first(),
+            state=enums.ORDER_STATE_VALIDATED,
+        )
+
+        # Create certificate
+        factories.OrderCertificateFactory(
+            order=order, certificate_definition=order.product.certificate_definition
+        )
+
+        with self.assertNumQueries(14):
+            response = self.client.get(f"/api/v1.0/admin/orders/{order.id}/")
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(
+            response.json(),
+            {
+                "id": str(order.id),
+                "created_on": format_date(order.created_on),
+                "state": order.state,
+                "owner": {
+                    "id": str(order.owner.id),
+                    "username": order.owner.username,
+                    "full_name": order.owner.get_full_name(),
+                    "email": order.owner.email,
+                },
+                "product": {
+                    "call_to_action": "let's go!",
+                    "certificate_definition": str(
+                        relation.product.certificate_definition.id
+                    ),
+                    "contract_definition": None,
+                    "description": relation.product.description,
+                    "id": str(relation.product.id),
+                    "price": float(relation.product.price),
+                    "price_currency": "EUR",
+                    "target_courses": [],
+                    "title": relation.product.title,
+                    "type": "certificate",
+                },
+                "enrollment": {
+                    "id": str(enrollment.id),
+                    "created_on": format_date(enrollment.created_on),
+                    "updated_on": format_date(enrollment.updated_on),
+                    "state": enrollment.state,
+                    "is_active": enrollment.is_active,
+                    "was_created_by_order": enrollment.was_created_by_order,
+                    "course_run": {
+                        "id": str(enrollment.course_run.id),
+                        "start": format_date(enrollment.course_run.start),
+                        "end": format_date(enrollment.course_run.end),
+                        "enrollment_start": format_date(
+                            enrollment.course_run.enrollment_start
+                        ),
+                        "enrollment_end": format_date(
+                            enrollment.course_run.enrollment_end
+                        ),
+                        "languages": enrollment.course_run.languages,
+                        "title": enrollment.course_run.title,
+                        "is_gradable": enrollment.course_run.is_gradable,
+                        "is_listed": enrollment.course_run.is_listed,
+                        "resource_link": enrollment.course_run.resource_link,
+                        "state": {
+                            "call_to_action": enrollment.course_run.state.get(
+                                "call_to_action"
+                            ),
+                            "datetime": format_date(
+                                enrollment.course_run.state.get("datetime")
+                            ),
+                            "priority": enrollment.course_run.state.get("priority"),
+                            "text": enrollment.course_run.state.get("text"),
+                        },
+                        "uri": enrollment.course_run.uri,
+                    },
+                },
+                "course": None,
+                "organization": {
+                    "id": str(order.organization.id),
+                    "code": order.organization.code,
+                    "title": order.organization.title,
+                },
+                "order_group": None,
+                "total": float(order.total),
+                "total_currency": settings.DEFAULT_CURRENCY,
+                "contract": None,
+                "certificate": {
+                    "id": str(order.certificate.id),
+                    "definition_title": order.certificate.certificate_definition.title,
+                    "issued_on": format_date(order.certificate.issued_on),
+                },
+                "main_invoice": {
+                    "id": str(order.main_invoice.id),
+                    "balance": float(order.main_invoice.balance),
+                    "created_on": format_date(order.main_invoice.created_on),
+                    "state": order.main_invoice.state,
+                    "children": [],
                     "invoiced_balance": float(order.main_invoice.invoiced_balance),
                     "recipient_address": (
                         f"{order.main_invoice.recipient_address.full_name}\n"

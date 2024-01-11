@@ -3915,12 +3915,18 @@
                     "uri": {
                         "type": "string",
                         "readOnly": true
+                    },
+                    "state": {
+                        "type": "string",
+                        "description": "Return the state of the course run at the current time.",
+                        "readOnly": true
                     }
                 },
                 "required": [
                     "id",
                     "languages",
                     "resource_link",
+                    "state",
                     "title",
                     "uri"
                 ]
@@ -4041,6 +4047,12 @@
                 "type": "object",
                 "description": "Read only serializer for Invoice model.",
                 "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "description": "primary key for the record as UUID"
+                    },
                     "balance": {
                         "type": "string",
                         "readOnly": true
@@ -4107,6 +4119,7 @@
                     "balance",
                     "children",
                     "created_on",
+                    "id",
                     "invoiced_balance",
                     "recipient_address",
                     "reference",
@@ -4137,7 +4150,7 @@
                     "state": {
                         "allOf": [
                             {
-                                "$ref": "#/components/schemas/StateEnum"
+                                "$ref": "#/components/schemas/OrderStateEnum"
                             }
                         ],
                         "readOnly": true
@@ -4150,8 +4163,12 @@
                         ],
                         "readOnly": true
                     },
-                    "product_title": {
-                        "type": "string",
+                    "product": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AdminProductLight"
+                            }
+                        ],
                         "readOnly": true
                     },
                     "course": {
@@ -4219,7 +4236,7 @@
                     "order_group",
                     "organization",
                     "owner",
-                    "product_title",
+                    "product",
                     "state",
                     "total",
                     "total_currency"
@@ -4229,12 +4246,6 @@
                 "type": "object",
                 "description": "Serializer for Enrollment Order model",
                 "properties": {
-                    "id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "readOnly": true,
-                        "description": "primary key for the record as UUID"
-                    },
                     "course_run": {
                         "allOf": [
                             {
@@ -4242,11 +4253,52 @@
                             }
                         ],
                         "readOnly": true
+                    },
+                    "created_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "date and time at which a record was created"
+                    },
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "description": "primary key for the record as UUID"
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "readOnly": true,
+                        "description": "Ticked if the user is enrolled to the course run."
+                    },
+                    "state": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/EnrollmentStateEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "updated_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "date and time at which a record was last updated"
+                    },
+                    "was_created_by_order": {
+                        "type": "boolean",
+                        "readOnly": true,
+                        "description": "Ticked if the enrollment has been initially created in the scope of an order."
                     }
                 },
                 "required": [
                     "course_run",
-                    "id"
+                    "created_on",
+                    "id",
+                    "is_active",
+                    "state",
+                    "updated_on",
+                    "was_created_by_order"
                 ]
             },
             "AdminOrderGroup": {
@@ -4397,9 +4449,9 @@
                         "type": "string",
                         "readOnly": true
                     },
-                    "owner_username": {
+                    "owner_name": {
                         "type": "string",
-                        "description": "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.",
+                        "description": "Return the full name of the order's owner if available,\notherwise fallback to the username",
                         "readOnly": true
                     },
                     "product_title": {
@@ -4409,7 +4461,7 @@
                     "state": {
                         "allOf": [
                             {
-                                "$ref": "#/components/schemas/StateEnum"
+                                "$ref": "#/components/schemas/OrderStateEnum"
                             }
                         ],
                         "readOnly": true
@@ -4433,7 +4485,7 @@
                     "enrollment_id",
                     "id",
                     "organization_title",
-                    "owner_username",
+                    "owner_name",
                     "product_title",
                     "state",
                     "total",
@@ -4676,11 +4728,12 @@
                         "readOnly": true
                     },
                     "price": {
-                        "type": "string",
-                        "format": "decimal",
-                        "pattern": "^-?\\d{0,7}(?:\\.\\d{0,2})?$",
-                        "readOnly": true,
-                        "description": "tax included"
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000000,
+                        "minimum": 0,
+                        "exclusiveMaximum": true,
+                        "readOnly": true
                     },
                     "price_currency": {
                         "type": "string",
@@ -5230,6 +5283,14 @@
                 "type": "string",
                 "description": "* `owner` - owner\n* `administrator` - administrator\n* `instructor` - instructor\n* `manager` - manager"
             },
+            "EnrollmentStateEnum": {
+                "enum": [
+                    "set",
+                    "failed"
+                ],
+                "type": "string",
+                "description": "* `set` - Set\n* `failed` - Failed"
+            },
             "LanguageEnum": {
                 "enum": [
                     "en-us",
@@ -5353,6 +5414,17 @@
                 "enum": [
                     null
                 ]
+            },
+            "OrderStateEnum": {
+                "enum": [
+                    "draft",
+                    "submitted",
+                    "pending",
+                    "canceled",
+                    "validated"
+                ],
+                "type": "string",
+                "description": "* `draft` - Draft\n* `submitted` - Submitted\n* `pending` - Pending\n* `canceled` - Canceled\n* `validated` - Validated"
             },
             "OrganizationAccessRoleChoiceEnum": {
                 "enum": [
@@ -5910,17 +5982,6 @@
                         }
                     }
                 }
-            },
-            "StateEnum": {
-                "enum": [
-                    "draft",
-                    "submitted",
-                    "pending",
-                    "canceled",
-                    "validated"
-                ],
-                "type": "string",
-                "description": "* `draft` - Draft\n* `submitted` - Submitted\n* `pending` - Pending\n* `canceled` - Canceled\n* `validated` - Validated"
             },
             "TemplateEnum": {
                 "enum": [

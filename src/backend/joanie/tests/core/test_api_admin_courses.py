@@ -166,6 +166,12 @@ class CourseAdminApiTest(TestCase):
                         "is_gradable": course_run.is_gradable,
                         "is_listed": course_run.is_listed,
                         "resource_link": course_run.resource_link,
+                        "state": {
+                            "call_to_action": course_run.state.get("call_to_action"),
+                            "datetime": format_date(course_run.state.get("datetime")),
+                            "priority": course_run.state.get("priority"),
+                            "text": course_run.state.get("text"),
+                        },
                         "uri": course_run.uri,
                     }
                     for course_run in reversed(course_runs)
