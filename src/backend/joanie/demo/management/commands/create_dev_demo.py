@@ -394,7 +394,7 @@ class Command(BaseCommand):
         self.create_product_certificate_enrollment(student_user, organization)
         self.stdout.write(
             self.style.SUCCESS(
-                "Successfully create a enrollment for a course with a PRODUCT_CERTIFICATE"
+                "Successfully create an enrollment for a course with a PRODUCT_CERTIFICATE"
             )
         )
 
@@ -403,7 +403,7 @@ class Command(BaseCommand):
             student_user, organization, enums.PRODUCT_TYPE_CERTIFICATE
         )
         self.stdout.write(
-            self.style.SUCCESS("Successfully create a order for a PRODUCT_CERTIFICATE")
+            self.style.SUCCESS("Successfully create an order for a PRODUCT_CERTIFICATE")
         )
 
         # Order for a PRODUCT_CERTIFICATE with a generated certificate
@@ -412,7 +412,7 @@ class Command(BaseCommand):
         )
         self.stdout.write(
             self.style.SUCCESS(
-                "Successfully create a order for a PRODUCT_CERTIFICATE \
+                "Successfully create an order for a PRODUCT_CERTIFICATE \
                 with a generated certificate"
             )
         )
@@ -425,7 +425,7 @@ class Command(BaseCommand):
         )
         self.stdout.write(
             self.style.SUCCESS(
-                "Successfully create a order for a PRODUCT_CREDENTIAL with a generated certificate"
+                "Successfully create an order for a PRODUCT_CREDENTIAL with a generated certificate"
             )
         )
 
@@ -444,11 +444,34 @@ class Command(BaseCommand):
         )
         self.stdout.write(
             self.style.SUCCESS(
-                "Successfully create a order for a PRODUCT_CREDENTIAL with an unsigned contract"
+                "Successfully create an order for a PRODUCT_CREDENTIAL with an unsigned contract"
             )
         )
 
-        # Order for a PRODUCT_CREDENTIAL with a signed contract
+        # Order for a PRODUCT_CREDENTIAL with a learner signed contract
+        order = self.create_product_purchased(
+            student_user,
+            organization,
+            enums.PRODUCT_TYPE_CREDENTIAL,
+            enums.ORDER_STATE_VALIDATED,
+            factories.ContractDefinitionFactory(),
+        )
+
+        factories.ContractFactory(
+            order=order,
+            definition=order.product.contract_definition,
+            submitted_for_signature_on=django_timezone.now(),
+            student_signed_on=django_timezone.now(),
+        )
+
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Successfully create an order for a PRODUCT_CREDENTIAL \
+                with a contract signed by a learner, organization.uuid: {organization.id}",
+            )
+        )
+
+        # Order for a PRODUCT_CREDENTIAL with a fully signed contract
         order = self.create_product_purchased(
             student_user,
             organization,
@@ -467,7 +490,8 @@ class Command(BaseCommand):
 
         self.stdout.write(
             self.style.SUCCESS(
-                "Successfully create a order for a PRODUCT_CREDENTIAL with a signed contract"
+                f"Successfully create an order for a PRODUCT_CREDENTIAL \
+                with a fully signed contract, organization.uuid: {organization.id}",
             )
         )
 
@@ -475,7 +499,7 @@ class Command(BaseCommand):
         self.create_enrollment_certificate(student_user, organization)
         self.stdout.write(
             self.style.SUCCESS(
-                "Successfully create a enrollment with a generated certificate"
+                "Successfully create an enrollment with a generated certificate"
             )
         )
 
