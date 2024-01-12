@@ -73,6 +73,7 @@ and this project adheres to
 - Add markdown editor inside the BO
 - Add admin endpoint to manage course product relations
 - Add organization contract signature
+- Add moodle LMS backend
 
 ### Changed
 
