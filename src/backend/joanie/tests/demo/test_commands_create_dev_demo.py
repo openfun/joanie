@@ -36,7 +36,10 @@ class CreateDevDemoTestCase(TestCase):
             1  # create_product_credential_purchased with unsigned contract
         )
         nb_product_credential += (
-            1  # create_product_credential_purchased with signed contract
+            1  # create_product_credential_purchased with learner signed
+        )
+        nb_product_credential += (
+            1  # create_product_credential_purchased with fully signed contract
         )
         nb_product_credential += 5  # one order of each state
 
@@ -45,9 +48,6 @@ class CreateDevDemoTestCase(TestCase):
         self.assertEqual(models.Product.objects.count(), nb_product)
 
         nb_organization = 1  # The school of glory
-        nb_organization += (
-            nb_product  # ProductFactory create an extra seller organization
-        )
         self.assertEqual(models.Organization.objects.count(), nb_organization)
 
         nb_courses = NB_DEV_OBJECTS["course"]
