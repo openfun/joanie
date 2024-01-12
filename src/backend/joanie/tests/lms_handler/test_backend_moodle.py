@@ -10,7 +10,7 @@ import responses
 from requests import RequestException
 
 from joanie.core import factories, models
-from joanie.core.exceptions import EnrollmentError
+from joanie.core.exceptions import EnrollmentError, GradeError
 from joanie.lms_handler import LMSHandler
 from joanie.lms_handler.backends.moodle import (
     MoodleLMSBackend,
@@ -945,6 +945,212 @@ class MoodleLMSBackendTestCase(TestCase):
                 "ERROR:joanie.lms_handler.backends.moodle:"
                 "Moodle error while unenrolling user student "
                 f"(userid: 5, roleid 5, courseid {course_id}): "
+                "A Network error occurred: Something went wrong..."
+            ],
+        )
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_get_grades(self):
+        """
+        When get user's grades for a course run, it should return grade details without
+        any data transformation
+        """
+        resource_link = "http://moodle.test/course/view.php?id=2"
+        json_response = {
+            "completionstatus": {
+                "completed": True,
+                "aggregation": 1,
+                "completions": [
+                    {
+                        "type": 4,
+                        "title": "Activity completion",
+                        "status": "Yes",
+                        "complete": True,
+                        "timecompleted": 1705067787,
+                        "details": {
+                            "type": "Activity completion",
+                            "criteria": (
+                                '<a href="https://moodle.test/mod/quiz/view.php?id=3">Quizz 1</a>'
+                            ),
+                            "requirement": "Marking yourself complete",
+                            "status": "",
+                        },
+                    },
+                    {
+                        "type": 4,
+                        "title": "Activity completion",
+                        "status": "Yes",
+                        "complete": True,
+                        "timecompleted": 1705067739,
+                        "details": {
+                            "type": "Activity completion",
+                            "criteria": (
+                                '<a href="https://moodle.test/mod/quiz/view.php?id=4">Quizz 2</a>'
+                            ),
+                            "requirement": "Marking yourself complete",
+                            "status": "",
+                        },
+                    },
+                ],
+            },
+            "warnings": [],
+        }
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_user_get_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "criteria[0][key]": "username",
+                        "criteria[0][value]": "student",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            json=MOODLE_RESPONSE_USERS,
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_completion_get_course_completion_status"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "courseid": "2",
+                        "userid": "5",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            json=json_response,
+        )
+
+        grades = self.backend.get_grades("student", resource_link)
+
+        self.assertEqual(grades, {"passed": True})
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_get_grades_user_error(self):
+        """
+        When get user's grades for a course run, it should return grade details without
+        any data transformation
+        """
+        resource_link = "http://moodle.test/course/view.php?id=2"
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_user_get_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "criteria[0][key]": "username",
+                        "criteria[0][value]": "student",
+                    }
+                )
+            ],
+            status=HTTPStatus.INTERNAL_SERVER_ERROR,
+        )
+
+        with self.assertLogs(
+            "joanie.lms_handler.backends.moodle", level=ERROR
+        ) as error_logs, self.assertRaises(GradeError):
+            self.backend.get_grades("student", resource_link)
+
+        self.assertEqual(
+            error_logs.output,
+            [
+                "ERROR:joanie.lms_handler.backends.moodle:"
+                "Moodle error while retrieving user student: Empty response from server!"
+            ],
+        )
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_get_grades_user_not_found(self):
+        """
+        When get user's grades for a course run, it should return grade details without
+        any data transformation
+        """
+        resource_link = "http://moodle.test/course/view.php?id=2"
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_user_get_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "criteria[0][key]": "username",
+                        "criteria[0][value]": "student",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            json={
+                "users": [],
+                "warnings": [],
+            },
+        )
+
+        with self.assertLogs(
+            "joanie.lms_handler.backends.moodle", level=ERROR
+        ) as error_logs, self.assertRaises(GradeError):
+            self.backend.get_grades("student", resource_link)
+
+        self.assertEqual(
+            error_logs.output,
+            [
+                "ERROR:joanie.lms_handler.backends.moodle:User student not found in Moodle"
+            ],
+        )
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_get_grades_fail(self):
+        """
+        When get user's grades for a course run, it should return grade details without
+        any data transformation
+        """
+        resource_link = "http://moodle.test/course/view.php?id=2"
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_user_get_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "criteria[0][key]": "username",
+                        "criteria[0][value]": "student",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            json=MOODLE_RESPONSE_USERS,
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_completion_get_course_completion_status"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "courseid": "2",
+                        "userid": "5",
+                    }
+                )
+            ],
+            status=HTTPStatus.INTERNAL_SERVER_ERROR,
+            body=RequestException("Something went wrong..."),
+        )
+
+        with self.assertLogs(
+            "joanie.lms_handler.backends.moodle", level=ERROR
+        ) as error_logs, self.assertRaises(GradeError):
+            self.backend.get_grades("student", resource_link)
+
+        self.assertEqual(
+            error_logs.output,
+            [
+                "ERROR:joanie.lms_handler.backends.moodle:"
+                "Moodle error while retrieving completion status for user student: "
                 "A Network error occurred: Something went wrong..."
             ],
         )

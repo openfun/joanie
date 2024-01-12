@@ -9,7 +9,7 @@ from django.conf import settings
 from moodle import Moodle
 from moodle.exception import EmptyResponseException, NetworkMoodleException
 
-from joanie.core.exceptions import EnrollmentError
+from joanie.core.exceptions import EnrollmentError, GradeError
 
 from .base import BaseLMSBackend
 
@@ -174,3 +174,24 @@ class MoodleLMSBackend(BaseLMSBackend):
 
     def get_grades(self, username, resource_link):
         """Get user's grades for a course run given its url."""
+        try:
+            user_id = self.get_user_id(username)
+        except MoodleUserException as e:
+            raise GradeError() from e
+        course_id = self.extract_course_id(resource_link)
+
+        try:
+            completion = self.moodle.core.completion.get_course_completion_status(
+                course_id, user_id
+            )
+            return {"passed": completion.completionstatus.completed}
+
+        except (EmptyResponseException, NetworkMoodleException) as e:
+            logger.error(
+                "Moodle error while retrieving completion status for user %s: %s: %s",
+                username,
+                e,
+                e.exception if hasattr(e, "exception") else "",
+            )
+
+        raise GradeError()
