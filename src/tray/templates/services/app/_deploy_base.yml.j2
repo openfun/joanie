@@ -73,7 +73,7 @@ spec:
             - name: DJANGO_CORS_ALLOWED_ORIGINS
               value: "{{ richie_host | blue_green_hosts | split(',') | map('regex_replace', '^(.*)$', 'https://\\1') | join(',') }},{{ joanie_admin_host | blue_green_hosts | split(',') | map('regex_replace', '^(.*)$', 'https://\\1') | join(',') }}"
             - name: DJANGO_SETTINGS_MODULE
-              value: joanie.settings
+              value: joanie.configs.settings
             - name: JOANIE_BACKOFFICE_BASE_URL
               value: {{joanie_admin_host}}
           envFrom:
@@ -82,9 +82,17 @@ spec:
             - configMapRef:
                 name: "joanie-app-dotenv-{{ deployment_stamp }}"
           resources: {{ joanie_app_resources }}
+          volumeMounts:
+            - name: joanie-configmap
+              mountPath: /app/joanie/configs
 {% if service_variant=="celery" %}
           command: {{ joanie_celery_command }}
 {% endif %}
       securityContext:
         runAsUser: {{ container_uid }}
         runAsGroup: {{ container_gid }}
+      volumes:
+        - name: joanie-configmap
+          configMap:
+            defaultMode: 420
+            name: joanie-app-{{ deployment_stamp }}
