@@ -76,6 +76,7 @@ and this project adheres to
 
 ### Changed
 
+- Prevent to create an order with course run that has ended
 - Debug view for Certificate, Degree, Contract Definition and Invoice
 - Internalize invoice template
 - Use HTTPStatus instead of raw HTTP code value
