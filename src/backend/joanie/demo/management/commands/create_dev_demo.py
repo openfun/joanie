@@ -159,9 +159,9 @@ class Command(BaseCommand):
             for i in range(batch_size)
         ]
 
-    def create_product_certificate_enrollment(self, user, organization):
+    def create_product_certificate_enrollment(self, user, course_user, organization):
         """Create a product certificate and it's enrollment."""
-        product = self.create_product_certificate(user, organization)
+        product = self.create_product_certificate(course_user, organization)
         course = product.courses.first()
         return factories.EnrollmentFactory(
             user=user,
@@ -173,6 +173,7 @@ class Command(BaseCommand):
     def create_product_purchased(
         self,
         user,
+        course_user,
         organization,
         product_type=enums.PRODUCT_TYPE_CERTIFICATE,
         order_status=enums.ORDER_STATE_VALIDATED,
@@ -180,10 +181,10 @@ class Command(BaseCommand):
     ):  # pylint: disable=too-many-arguments
         """Create a product, it's enrollment and it's order."""
         if product_type == enums.PRODUCT_TYPE_CERTIFICATE:
-            product = self.create_product_certificate(user, organization)
+            product = self.create_product_certificate(course_user, organization)
         elif product_type == enums.PRODUCT_TYPE_CREDENTIAL:
             product = self.create_product_credential(
-                user, organization, contract_definition
+                course_user, organization, contract_definition
             )
         else:
             raise ValueError(f"Given product_type ({product_type}) is not allowed.")
@@ -208,7 +209,7 @@ class Command(BaseCommand):
         return order
 
     def create_product_purchased_with_certificate(
-        self, user, organization, product_type, contract_definition=None
+        self, user, course_user, organization, options
     ):
         """
         Create a product, it's enrollment and it's order.
@@ -216,16 +217,19 @@ class Command(BaseCommand):
         """
         order = self.create_product_purchased(
             user,
+            course_user,
             organization,
-            product_type,
+            options["product_type"],
             enums.ORDER_STATE_VALIDATED,
-            contract_definition,
+            options["contract_definition"]
+            if "contract_definition" in options
+            else None,
         )
         return factories.OrderCertificateFactory(order=order)
 
-    def create_enrollment_certificate(self, user, organization):
+    def create_enrollment_certificate(self, user, course_user, organization):
         """create an enrollment and it's linked certificate."""
-        course = self.create_course(user, organization, 1, True)
+        course = self.create_course(course_user, organization, 1, True)
         factories.EnrollmentCertificateFactory(
             enrollment__user=user,
             enrollment__course_run=course.course_runs.first(),
@@ -391,7 +395,9 @@ class Command(BaseCommand):
         )
 
         # Enrollments and orders
-        self.create_product_certificate_enrollment(student_user, organization)
+        self.create_product_certificate_enrollment(
+            student_user, organization_owner, organization
+        )
         self.stdout.write(
             self.style.SUCCESS(
                 "Successfully create an enrollment for a course with a PRODUCT_CERTIFICATE"
@@ -400,7 +406,10 @@ class Command(BaseCommand):
 
         # Order for a PRODUCT_CERTIFICATE
         self.create_product_purchased(
-            student_user, organization, enums.PRODUCT_TYPE_CERTIFICATE
+            student_user,
+            organization_owner,
+            organization,
+            enums.PRODUCT_TYPE_CERTIFICATE,
         )
         self.stdout.write(
             self.style.SUCCESS("Successfully create an order for a PRODUCT_CERTIFICATE")
@@ -408,7 +417,12 @@ class Command(BaseCommand):
 
         # Order for a PRODUCT_CERTIFICATE with a generated certificate
         self.create_product_purchased_with_certificate(
-            student_user, organization, enums.PRODUCT_TYPE_CERTIFICATE
+            student_user,
+            organization_owner,
+            organization,
+            options={
+                "product_type": enums.PRODUCT_TYPE_CERTIFICATE,
+            },
         )
         self.stdout.write(
             self.style.SUCCESS(
@@ -420,8 +434,11 @@ class Command(BaseCommand):
         # Order for a PRODUCT_CREDENTIAL with a generated certificate
         self.create_product_purchased_with_certificate(
             student_user,
+            organization_owner,
             organization,
-            enums.PRODUCT_TYPE_CREDENTIAL,
+            options={
+                "product_type": enums.PRODUCT_TYPE_CREDENTIAL,
+            },
         )
         self.stdout.write(
             self.style.SUCCESS(
@@ -432,6 +449,7 @@ class Command(BaseCommand):
         # Order for a PRODUCT_CREDENTIAL with a unsigned contract
         order = self.create_product_purchased(
             student_user,
+            organization_owner,
             organization,
             enums.PRODUCT_TYPE_CREDENTIAL,
             enums.ORDER_STATE_VALIDATED,
@@ -451,6 +469,7 @@ class Command(BaseCommand):
         # Order for a PRODUCT_CREDENTIAL with a learner signed contract
         order = self.create_product_purchased(
             student_user,
+            organization_owner,
             organization,
             enums.PRODUCT_TYPE_CREDENTIAL,
             enums.ORDER_STATE_VALIDATED,
@@ -474,6 +493,7 @@ class Command(BaseCommand):
         # Order for a PRODUCT_CREDENTIAL with a fully signed contract
         order = self.create_product_purchased(
             student_user,
+            organization_owner,
             organization,
             enums.PRODUCT_TYPE_CREDENTIAL,
             enums.ORDER_STATE_VALIDATED,
@@ -496,7 +516,9 @@ class Command(BaseCommand):
         )
 
         # Enrollment with a certificate
-        self.create_enrollment_certificate(student_user, organization)
+        self.create_enrollment_certificate(
+            student_user, organization_owner, organization
+        )
         self.stdout.write(
             self.style.SUCCESS(
                 "Successfully create an enrollment with a generated certificate"
@@ -513,6 +535,7 @@ class Command(BaseCommand):
         ]:
             self.create_product_purchased(
                 student_user,
+                organization_owner,
                 organization,
                 enums.PRODUCT_TYPE_CREDENTIAL,
                 order_status,
