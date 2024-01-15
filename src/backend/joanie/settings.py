@@ -412,6 +412,7 @@ class Base(Configuration):
             "128w": {"size": (128, 128), "crop": "scale", "upscale": True},
         },
     }
+    THUMBNAIL_STORAGE_S3_LOCATION = values.Value("thumbnails")
 
     # Signature Backend
     JOANIE_SIGNATURE_BACKEND = values.Value(
@@ -690,6 +691,10 @@ class Production(Base):
             },
         },
     }
+
+    THUMBNAIL_DEFAULT_STORAGE = values.Value(
+        "joanie.core.storages.JoanieEasyThumbnailS3Storage"
+    )
 
     # Privacy
     SECURE_REFERRER_POLICY = "same-origin"

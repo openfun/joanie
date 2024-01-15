@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Dedicated storage for easy_thumbnail using boto3
 - Allow to override settings in tray
 - Add API endpoints for other services to fetch  data on course run
 - Allow to filter contracts by signature state,
