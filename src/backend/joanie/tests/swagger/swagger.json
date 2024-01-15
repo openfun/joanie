@@ -1538,6 +1538,85 @@
                 }
             }
         },
+        "/api/v1.0/courses/{course_id}/orders/": {
+            "get": {
+                "operationId": "courses_orders_list",
+                "description": "Nested Order Viewset inside Course's routes. It allows to list all users who made\n'validated' orders on a given course. You should add some query parameters to filter\nthe list by organization, by product or by course product relation id.\n\nGET /api/courses/<course_id>/orders/\n    Returns every users who made an order on a given course.\n\nGET /api/courses/<course_id>/orders/?organization_id=<organization_id>>\n    Returns every users who made an order on a course from a specific organization.\n\nGET /api/courses/<course_id>/orders/?product_id=<product_id>\n    Returns every users who made an order on the product's course.\n\nGET /api/courses/<course_id>/orders/?organization_id=<organization_id>&product_id=<product_id>\n    Returns every users that is attached to a product's course and an organization.\n\nGET /api/courses/<course_id>/orders/?course_product_relation_id=<relation_id>\n    Returns every users who made order on the course product relation object.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "course_id",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[0-9a-z-]*$"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "course_product_relation_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "organization_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "A page number within the paginated result set.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page_size",
+                        "required": false,
+                        "in": "query",
+                        "description": "Number of results to return per page.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "product_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "tags": [
+                    "courses"
+                ],
+                "security": [
+                    {
+                        "DelegatedJWTAuthentication": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedNestedOrderCourseList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1.0/courses/{course_id}/products/": {
             "get": {
                 "operationId": "courses_products_list",
@@ -5015,6 +5094,74 @@
                     "product_title"
                 ]
             },
+            "NestedOrderCourse": {
+                "type": "object",
+                "description": "Serializer for orders made on courses.",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "created_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "date and time at which a record was created"
+                    },
+                    "organization": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/Organization"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "owner": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UserLight"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "course_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "readOnly": true
+                    },
+                    "enrollment_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "readOnly": true
+                    },
+                    "product_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "readOnly": true
+                    },
+                    "state": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/OrderStateEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "course_id",
+                    "created_on",
+                    "enrollment_id",
+                    "id",
+                    "organization",
+                    "owner",
+                    "product_id",
+                    "state"
+                ]
+            },
             "Order": {
                 "type": "object",
                 "description": "Order model serializer",
@@ -5577,6 +5724,33 @@
                     }
                 }
             },
+            "PaginatedNestedOrderCourseList": {
+                "type": "object",
+                "properties": {
+                    "count": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "next": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=4"
+                    },
+                    "previous": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=2"
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/NestedOrderCourse"
+                        }
+                    }
+                }
+            },
             "PaginatedOrderList": {
                 "type": "object",
                 "properties": {
@@ -5955,6 +6129,38 @@
                     "id",
                     "is_staff",
                     "is_superuser",
+                    "username"
+                ]
+            },
+            "UserLight": {
+                "type": "object",
+                "description": "Light serializer for User model.",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "description": "primary key for the record as UUID"
+                    },
+                    "username": {
+                        "type": "string",
+                        "readOnly": true,
+                        "description": "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only."
+                    },
+                    "full_name": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "readOnly": true,
+                        "title": "Email address"
+                    }
+                },
+                "required": [
+                    "email",
+                    "full_name",
+                    "id",
                     "username"
                 ]
             },

@@ -75,6 +75,11 @@ course_related_router.register(
     api_client.CourseProductRelationViewSet,
     basename="course_product_relations",
 )
+course_related_router.register(
+    "orders",
+    api_client.NestedOrderCourseViewSet,
+    basename="orders_course",
+)
 
 # - Routes nested under an organization
 organization_related_router = DefaultRouter()

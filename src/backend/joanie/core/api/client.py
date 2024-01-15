@@ -1381,3 +1381,46 @@ class ContractDefinitionViewset(viewsets.GenericViewSet):
             as_attachment=True,
             filename="contract_definition_preview_template.pdf",
         )
+
+
+class NestedOrderCourseViewSet(NestedGenericViewSet, mixins.ListModelMixin):
+    """
+    Nested Order Viewset inside Course's routes. It allows to list all users who made
+    'validated' orders on a given course. You should add some query parameters to filter
+    the list by organization, by product or by course product relation id.
+
+    GET /api/courses/<course_id>/orders/
+        Returns every users who made an order on a given course.
+
+    GET /api/courses/<course_id>/orders/?organization_id=<organization_id>>
+        Returns every users who made an order on a course from a specific organization.
+
+    GET /api/courses/<course_id>/orders/?product_id=<product_id>
+        Returns every users who made an order on the product's course.
+
+    GET /api/courses/<course_id>/orders/?organization_id=<organization_id>&product_id=<product_id>
+        Returns every users that is attached to a product's course and an organization.
+
+    GET /api/courses/<course_id>/orders/?course_product_relation_id=<relation_id>
+        Returns every users who made order on the course product relation object.
+    """
+
+    lookup_fields = ["course_id", "pk"]
+    lookup_url_kwargs = ["course_id", "pk"]
+    pagination_class = Pagination
+    permission_classes = [permissions.AccessPermission]
+    serializer_class = serializers.NestedOrderCourseSerializer
+    filterset_class = filters.NestedOrderCourseViewSetFilter
+    ordering = ["-created_on"]
+    queryset = (
+        models.Order.objects.filter(state=enums.ORDER_STATE_VALIDATED)
+        .select_related(
+            "contract",
+            "course",
+            "enrollment",
+            "organization",
+            "owner",
+            "product",
+        )
+        .distinct()
+    )
