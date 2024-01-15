@@ -28,6 +28,7 @@ from joanie.core.models.courses import (
     Course,
     CourseProductRelation,
     CourseRun,
+    CourseState,
     Enrollment,
     Organization,
 )
@@ -658,6 +659,15 @@ class Order(BaseModel):
                 error_dict["enrollment"].append(
                     _(
                         "Orders can't be placed on enrollments originating from an order."
+                    )
+                )
+            if (
+                self.enrollment.course_run.course.state["priority"]
+                >= CourseState.ARCHIVED_CLOSED
+            ):
+                error_dict["course"].append(
+                    _(
+                        "The order cannot be generated on course run that is in archived state."
                     )
                 )
 
