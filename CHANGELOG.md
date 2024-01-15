@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Allow to set CSRF_COOKIE_DOMAIN through env vars
 - Dedicated storage for easy_thumbnail using boto3
 - Allow to override settings in tray
 - Add API endpoints for other services to fetch  data on course run

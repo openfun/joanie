@@ -646,6 +646,7 @@ class Production(Base):
     # Security
     ALLOWED_HOSTS = values.ListValue(None)
     CSRF_TRUSTED_ORIGINS = values.ListValue([])
+    CSRF_COOKIE_DOMAIN = values.Value(None)
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
 
