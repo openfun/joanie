@@ -158,3 +158,38 @@ class ContractViewSetFilter(filters.FilterSet):
                 "pk", flat=True
             ),
         )
+
+
+class NestedOrderCourseViewSetFilter(filters.FilterSet):
+    """
+    OrderCourseFilter that allows to filter this resource with a product's 'id', an
+    organization's 'id' or a course product relation's 'id'.
+    """
+
+    course_product_relation_id = filters.UUIDFilter(
+        method="filter_course_product_relation_id",
+    )
+    organization_id = filters.UUIDFilter(field_name="organization__id")
+    product_id = filters.UUIDFilter(field_name="product__id")
+
+    class Meta:
+        model = models.Order
+        fields: List[str] = ["course_product_relation_id"]
+
+    def filter_course_product_relation_id(self, queryset, _name, value):
+        """
+        Get the course product relation linked to an order by its 'id'.
+        """
+        try:
+            relation = models.CourseProductRelation.objects.get(
+                id=value, course_id=self.request.resolver_match.kwargs.get("course_id")
+            )
+        except models.CourseProductRelation.DoesNotExist:
+            return queryset.none()
+
+        return queryset.filter(
+            product_id=relation.product_id,
+            organization__in=relation.organizations.only("pk").values_list(
+                "pk", flat=True
+            ),
+        )

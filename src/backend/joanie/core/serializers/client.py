@@ -950,3 +950,47 @@ class GenerateSignedContractsZipSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         pass
+
+
+class UserLightSerializer(serializers.ModelSerializer):
+    """Light serializer for User model."""
+
+    full_name = serializers.CharField(source="get_full_name")
+
+    class Meta:
+        model = models.User
+        fields = ["id", "username", "full_name", "email"]
+        read_only_fields = fields
+
+
+class NestedOrderCourseSerializer(serializers.ModelSerializer):
+    """
+    Serializer for orders made on courses.
+    """
+
+    id = serializers.CharField(read_only=True)
+    organization = OrganizationSerializer(read_only=True, exclude_abilities=True)
+    owner = UserLightSerializer(read_only=True)
+    course_id = serializers.SlugRelatedField(
+        read_only=True, slug_field="id", source="course"
+    )
+    enrollment_id = serializers.SlugRelatedField(
+        read_only=True, slug_field="id", source="enrollment"
+    )
+    product_id = serializers.SlugRelatedField(
+        read_only=True, slug_field="id", source="product"
+    )
+
+    class Meta:
+        model = models.Order
+        fields = [
+            "id",
+            "created_on",
+            "organization",
+            "owner",
+            "course_id",
+            "enrollment_id",
+            "product_id",
+            "state",
+        ]
+        read_only_fields = fields

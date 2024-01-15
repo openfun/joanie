@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Filtering orders by organization, product, and course product relation
 - Allow to set CSRF_COOKIE_DOMAIN through env vars
 - Dedicated storage for easy_thumbnail using boto3
 - Allow to override settings in tray
