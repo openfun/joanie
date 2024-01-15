@@ -484,7 +484,14 @@ class ProductFactory(factory.django.DjangoModelFactory):
             return
 
         for course in extracted:
-            CourseProductRelationFactory(product=self, course=course)
+            course__organizations = course.organizations.all()
+            CourseProductRelationFactory(
+                product=self,
+                course=course,
+                organizations=course__organizations
+                if len(course__organizations)
+                else None,
+            )
 
     @factory.post_generation
     # pylint: disable=unused-argument,no-member
