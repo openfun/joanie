@@ -79,7 +79,11 @@ class LexPersonaBackend(BaseSignatureBackend):
             {
                 "email": access.user.email,
                 "firstName": access.user.first_name,
-                "lastName": access.user.last_name,
+                # Currently, we only have the `full_name` from OpenEdx that we set in the user's
+                # `first_name` in Joanie. We don't have yet the `last_name` and `first_name` that
+                # are separated in our database. In order to prepare the awaited payload for the
+                # signature provider, we set a dot : ".", for the `lastName` key.
+                "lastName": ".",
                 "country": country.upper(),
                 "preferred_locale": access.user.language.lower(),
                 "consentPageId": consent_page_id,

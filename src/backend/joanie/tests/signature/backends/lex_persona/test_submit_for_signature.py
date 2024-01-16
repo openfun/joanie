@@ -80,7 +80,7 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
                             "country": "FR",
                             "email": "johnnydoe@example.fr",
                             "firstName": "Johnny",
-                            "lastName": "Doe",
+                            "lastName": ".",
                             "preferredLocale": "fr",
                         }
                     ],
@@ -141,7 +141,7 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
                                     {
                                         "email": access.user.email,
                                         "firstName": access.user.first_name,
-                                        "lastName": access.user.last_name,
+                                        "lastName": ".",
                                         "country": order.organization.country.code.upper(),
                                         "preferred_locale": access.user.language.lower(),
                                         "consentPageId": "cop_id_fake",
