@@ -5,7 +5,8 @@ const build = (): User => {
   return {
     id: faker.string.uuid(),
     username: faker.internet.userName(),
-    fullname: faker.person.fullName(),
+    full_name: faker.person.fullName(),
+    email: faker.internet.email(),
   };
 };
 
