@@ -41,6 +41,11 @@ export const PATH_ADMIN = {
     create: path("/contracts-definitions/create"),
     edit: (id: string) => path(`/contracts-definitions/${id}/edit`),
   },
+  orders: {
+    root: path("/orders"),
+    list: path("/orders/list"),
+    view: (id: string) => path(`/orders/${id}/view`),
+  },
   auth: {
     login: (redirectUrl?: string) => {
       // eslint-disable-next-line compat/compat
