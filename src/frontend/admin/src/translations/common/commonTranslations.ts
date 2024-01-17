@@ -26,6 +26,11 @@ export const commonTranslations = defineMessages({
     defaultMessage: "Edit",
     description: "Common edit label",
   },
+  view: {
+    id: "translations.common.commonTranslations.view",
+    defaultMessage: "View",
+    description: "Common view label",
+  },
   delete: {
     id: "translations.common.commonTranslations.delete",
     defaultMessage: "Delete",
@@ -55,5 +60,15 @@ export const commonTranslations = defineMessages({
     id: "translations.common.commonTranslations.successCopy",
     defaultMessage: "Link added to your clipboard",
     description: "Text for the success click to copy notification",
+  },
+  clickToView: {
+    id: "translations.common.commonTranslations.clickToView",
+    defaultMessage: "Click to view",
+    description: "Text for a click to view tooltip",
+  },
+  clickToCopy: {
+    id: "translations.common.commonTranslations.clickToCopy",
+    defaultMessage: "Click to copy",
+    description: "Text for a click to copy text",
   },
 });

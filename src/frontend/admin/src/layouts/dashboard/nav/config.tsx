@@ -6,6 +6,7 @@ import EventAvailableRoundedIcon from "@mui/icons-material/EventAvailableRounded
 import TaskRoundedIcon from "@mui/icons-material/TaskRounded";
 import ProductionQuantityLimitsRoundedIcon from "@mui/icons-material/ProductionQuantityLimitsRounded";
 import GavelIcon from "@mui/icons-material/Gavel";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import { PATH_ADMIN } from "@/utils/routes/path";
 
 const navTranslations = defineMessages({
@@ -43,6 +44,11 @@ const navTranslations = defineMessages({
     id: "layouts.dashboard.nav.config.productNavTitle",
     defaultMessage: "Products",
     description: "Title for the Product nav item",
+  },
+  ordersNavTitle: {
+    id: "layouts.dashboard.nav.config.ordersNavTitle",
+    defaultMessage: "Orders",
+    description: "Title for the Order nav item",
   },
 });
 
@@ -95,6 +101,12 @@ export const navConfig: NavConfig[] = [
         path: PATH_ADMIN.products.list,
         prefix: PATH_ADMIN.products.root,
         icon: <ProductionQuantityLimitsRoundedIcon />,
+      },
+      {
+        title: navTranslations.ordersNavTitle,
+        path: PATH_ADMIN.orders.list,
+        prefix: PATH_ADMIN.orders.root,
+        icon: <ShoppingCartIcon />,
       },
     ],
   },
