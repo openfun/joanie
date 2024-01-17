@@ -1,8 +1,7 @@
-import { OrderFactory } from "@/services/factories/orders";
+import { OrderListItemFactory } from "@/services/factories/orders";
 
-export const getOrdersScenarioStore = (itemsNumber: number = 30) => {
-  const list = OrderFactory(itemsNumber);
-
+export const getOrderListItemsScenarioStore = (itemsNumber: number = 10) => {
+  const list = OrderListItemFactory(itemsNumber);
   return {
     list,
   };
