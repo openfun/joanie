@@ -196,6 +196,9 @@ export function TableComponent<T extends GridValidRowModel>({
             ".MuiDataGrid-columnSeparator": {
               display: "none",
             },
+            ".MuiDataGrid-cell": {
+              minHeight: "35px !important",
+            },
             ".MuiDataGrid-columnHeader:focus, .MuiDataGrid-cell": {
               outline: "none !important",
             },
