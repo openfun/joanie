@@ -52,7 +52,7 @@ describe("<UserSearch />", () => {
     });
     const userSearch = await screen.findByRole("combobox");
     await userEvent.click(userSearch);
-    await userEvent.type(userSearch, returnedUser.fullname);
+    await userEvent.type(userSearch, returnedUser.full_name);
     screen.getByText(returnedUser.username);
   });
 });
