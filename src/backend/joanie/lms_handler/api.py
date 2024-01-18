@@ -92,6 +92,9 @@ def course_runs_sync(request):
         # Remove protected fields before update
         cleaned_data = lms.clean_course_run_data(serializer.validated_data)
         models.CourseRun.objects.filter(pk=target_course_run.pk).update(**cleaned_data)
+        course_run = models.CourseRun.objects.get(pk=target_course_run.pk)
+        course_run.created_on = request.data.get("created_on")
+        course_run.save()
     else:
         # Look for the course targeted by the resource link
         course_number = utils.normalize_code(lms.extract_course_number(request.data))
@@ -99,11 +102,19 @@ def course_runs_sync(request):
             course = models.Course.objects.get(code=course_number)
         except models.Course.DoesNotExist:
             course = models.Course.objects.create(
-                code=course_number, title=request.data.get("title", course_number)
+                created_on=request.data.get("created_on"),
+                code=course_number,
+                title=request.data.get("title", course_number),
             )
+            course.created_on = request.data.get("created_on")
+            course.save()
 
         # Instantiate a new course run
-        models.CourseRun.objects.create(**serializer.validated_data, course=course)
+        course_run = models.CourseRun.objects.create(
+            **serializer.validated_data, course=course
+        )
+        course_run.created_on = request.data.get("created_on")
+        course_run.save()
 
     return Response({"success": True})
 

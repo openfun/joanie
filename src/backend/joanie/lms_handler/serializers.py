@@ -29,6 +29,7 @@ class SyncCourseRunSerializer(serializers.ModelSerializer):
         model = CourseRun
         fields = [
             "resource_link",
+            "created_on",
             "start",
             "end",
             "enrollment_start",

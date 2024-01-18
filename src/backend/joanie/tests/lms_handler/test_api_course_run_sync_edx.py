@@ -3,12 +3,14 @@ Tests for CourseRun web hook.
 """
 import json
 from http import HTTPStatus
+from unittest import mock
 
 from django.conf import settings
 from django.test import TestCase, override_settings
 
 from joanie.core.factories import CourseFactory, CourseRunFactory
 from joanie.core.models import Course, CourseRun
+from joanie.lms_handler import api
 from joanie.lms_handler.serializers import SyncCourseRunSerializer
 
 
@@ -28,10 +30,13 @@ from joanie.lms_handler.serializers import SyncCourseRunSerializer
 class SyncCourseRunApiTestCase(TestCase):
     """Test calls to sync a course run via API endpoint."""
 
+    maxDiff = None
+
     def test_api_course_run_sync_missing_signature(self):
         """The course run synchronization API endpoint requires a signature."""
         data = {
             "resource_link": "http://example.edx:8073/courses/course-v1:edX+DemoX+01/course/",
+            "created_on": "2020-11-09T09:31:59.417936Z",
             "start": "2020-12-09T09:31:59.417817Z",
             "end": "2021-03-14T09:31:59.417895Z",
             "enrollment_start": "2020-11-09T09:31:59.417936Z",
@@ -52,6 +57,7 @@ class SyncCourseRunApiTestCase(TestCase):
         """The course run synchronization API endpoint requires a valid signature."""
         data = {
             "resource_link": "http://example.edx:8073/courses/course-v1:edX+DemoX+01/course/",
+            "created_on": "2020-11-09T09:31:59.417936Z",
             "start": "2020-12-09T09:31:59.417817Z",
             "end": "2021-03-14T09:31:59.417895Z",
             "enrollment_start": "2020-11-09T09:31:59.417936Z",
@@ -77,6 +83,7 @@ class SyncCourseRunApiTestCase(TestCase):
         """
         # Data with missing resource link => invalid
         data = {
+            "created_on": "2020-11-09T09:31:59.417936Z",
             "start": "2020-12-09T09:31:59.417817Z",
             "end": "2021-03-14T09:31:59.417895Z",
             "enrollment_start": "2020-11-09T09:31:59.417936Z",
@@ -84,14 +91,14 @@ class SyncCourseRunApiTestCase(TestCase):
             "languages": ["en", "fr"],
         }
 
-        response = self.client.post(
-            "/api/v1.0/course-runs-sync",
-            data,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=(
-                "SIG-HMAC-SHA256 acee4804ff21eabe366ff6e04495591dfe32dffa7f1cd2d48c0f44beb9d5aa0d"
-            ),
-        )
+        with mock.patch.object(api, "authorize_request") as mock_authorize_request:
+            mock_authorize_request.return_value = None
+            response = self.client.post(
+                "/api/v1.0/course-runs-sync",
+                data,
+                content_type="application/json",
+                HTTP_AUTHORIZATION="SIG-HMAC-SHA256 mocked signature",
+            )
 
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(
@@ -108,6 +115,7 @@ class SyncCourseRunApiTestCase(TestCase):
         # Data with invalid start date value
         data = {
             "resource_link": "http://example.edx:8073/courses/course-v1:edX+DemoX+01/course/",
+            "created_on": "2020-11-09T09:31:59.417936Z",
             "start": 1,
             "end": "2021-03-14T09:31:59.417895Z",
             "enrollment_start": "2020-11-09T09:31:59.417936Z",
@@ -115,14 +123,14 @@ class SyncCourseRunApiTestCase(TestCase):
             "languages": ["en", "fr"],
         }
 
-        response = self.client.post(
-            "/api/v1.0/course-runs-sync",
-            data,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=(
-                "SIG-HMAC-SHA256 38af01f97c1b6d078662de52a4785df7c09a16b426659af56f722f68c2035f95"
-            ),
-        )
+        with mock.patch.object(api, "authorize_request") as mock_authorize_request:
+            mock_authorize_request.return_value = None
+            response = self.client.post(
+                "/api/v1.0/course-runs-sync",
+                data,
+                content_type="application/json",
+                HTTP_AUTHORIZATION="SIG-HMAC-SHA256 mocked signature",
+            )
 
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(
@@ -146,6 +154,7 @@ class SyncCourseRunApiTestCase(TestCase):
         """
         data = {
             "resource_link": "http://example.edx:8073/courses/course-v1:edX+DemoX+01/course/",
+            "created_on": "2020-11-09T09:31:59.417936Z",
             "start": "2020-12-09T09:31:59.417817Z",
             "end": "2021-03-14T09:31:59.417895Z",
             "enrollment_start": "2020-11-09T09:31:59.417936Z",
@@ -154,14 +163,14 @@ class SyncCourseRunApiTestCase(TestCase):
             "title": "my course run",
         }
 
-        response = self.client.post(
-            "/api/v1.0/course-runs-sync",
-            data,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=(
-                "SIG-HMAC-SHA256 e20dd1e2b7f1553298f3bd717dd4c3e8361e215e355dcbdc54a3d88c28585f94"
-            ),
-        )
+        with mock.patch.object(api, "authorize_request") as mock_authorize_request:
+            mock_authorize_request.return_value = None
+            response = self.client.post(
+                "/api/v1.0/course-runs-sync",
+                data,
+                content_type="application/json",
+                HTTP_AUTHORIZATION="SIG-HMAC-SHA256 mocked signature",
+            )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.json(), {"success": True})
@@ -185,6 +194,7 @@ class SyncCourseRunApiTestCase(TestCase):
         """
         data = {
             "resource_link": "http://example.edx:8073/courses/course-v1:edX+DemoX+01/course/",
+            "created_on": "2020-11-09T09:31:59.417936Z",
             "start": "2020-12-09T09:31:59.417817Z",
             "end": "2021-03-14T09:31:59.417895Z",
             "enrollment_start": "2020-11-09T09:31:59.417936Z",
@@ -192,14 +202,14 @@ class SyncCourseRunApiTestCase(TestCase):
             "languages": ["en", "fr"],
         }
 
-        response = self.client.post(
-            "/api/v1.0/course-runs-sync",
-            data,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=(
-                "SIG-HMAC-SHA256 338f7c262254e8220fea54467526f8f1f4562ee3adf1e3a71abaf23a20b739e4"
-            ),
-        )
+        with mock.patch.object(api, "authorize_request") as mock_authorize_request:
+            mock_authorize_request.return_value = None
+            response = self.client.post(
+                "/api/v1.0/course-runs-sync",
+                data,
+                content_type="application/json",
+                HTTP_AUTHORIZATION="SIG-HMAC-SHA256 mocked signature",
+            )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.json(), {"success": True})
@@ -222,22 +232,26 @@ class SyncCourseRunApiTestCase(TestCase):
         CourseFactory(code="DemoX")
         data = {
             "resource_link": "http://example.edx:8073/courses/course-v1:edX+DemoX+01/course/",
+            "created_on": "2020-11-09T09:31:59.417936Z",
             "start": "2020-12-09T09:31:59.417817Z",
             "end": "2021-03-14T09:31:59.417895Z",
             "enrollment_start": "2020-11-09T09:31:59.417936Z",
             "enrollment_end": "2020-12-24T09:31:59.417972Z",
             "languages": ["en", "fr"],
             "title": "my course run",
+            # "translations": {
+            #     "en": {"title": "my course run"},
+            #     "fr": {"title": "ma session de cours"},
+            # },
         }
-
-        response = self.client.post(
-            "/api/v1.0/course-runs-sync",
-            data,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=(
-                "SIG-HMAC-SHA256 e20dd1e2b7f1553298f3bd717dd4c3e8361e215e355dcbdc54a3d88c28585f94"
-            ),
-        )
+        with mock.patch.object(api, "authorize_request") as mock_authorize_request:
+            mock_authorize_request.return_value = None
+            response = self.client.post(
+                "/api/v1.0/course-runs-sync",
+                data,
+                content_type="application/json",
+                HTTP_AUTHORIZATION="SIG-HMAC-SHA256 mocked signature",
+            )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.json(), {"success": True})
@@ -247,7 +261,7 @@ class SyncCourseRunApiTestCase(TestCase):
         course_run = CourseRun.objects.get()
         serializer = SyncCourseRunSerializer(instance=course_run)
         data.pop("title")
-        self.assertEqual(serializer.data, data)
+        assert serializer.data == data
 
     @override_settings(TIME_ZONE="UTC")
     def test_api_course_run_sync_create_partial_required(self):
@@ -258,17 +272,18 @@ class SyncCourseRunApiTestCase(TestCase):
         CourseFactory(code="DemoX")
         data = {
             "resource_link": "http://example.edx:8073/courses/course-v1:edX+DemoX+01/course/",
+            "created_on": "2020-11-09T09:31:59.417936Z",
             "end": "2021-03-14T09:31:59.417895Z",
         }
 
-        response = self.client.post(
-            "/api/v1.0/course-runs-sync",
-            data,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=(
-                "SIG-HMAC-SHA256 1de9b46133a91eec3515d0df40f586b642cff16b79aa9d5fe4f7679a33767967"
-            ),
-        )
+        with mock.patch.object(api, "authorize_request") as mock_authorize_request:
+            mock_authorize_request.return_value = None
+            response = self.client.post(
+                "/api/v1.0/course-runs-sync",
+                data,
+                content_type="application/json",
+                HTTP_AUTHORIZATION="SIG-HMAC-SHA256 mocked signature",
+            )
 
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(response.json(), {"languages": ["This field is required."]})
@@ -283,18 +298,19 @@ class SyncCourseRunApiTestCase(TestCase):
         CourseFactory(code="DemoX")
         data = {
             "resource_link": "http://example.edx:8073/courses/course-v1:edX+DemoX+01/course/",
+            "created_on": "2020-11-09T09:31:59.417936Z",
             "enrollment_end": "2020-12-24T09:31:59.417972Z",
             "languages": ["en", "fr"],
         }
 
-        response = self.client.post(
-            "/api/v1.0/course-runs-sync",
-            data,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=(
-                "SIG-HMAC-SHA256 313cefea7a14f26ed7dc249719bc5a86bce36b0c63a9d27b2e30e3a616e108d6"
-            ),
-        )
+        with mock.patch.object(api, "authorize_request") as mock_authorize_request:
+            mock_authorize_request.return_value = None
+            response = self.client.post(
+                "/api/v1.0/course-runs-sync",
+                data,
+                content_type="application/json",
+                HTTP_AUTHORIZATION="SIG-HMAC-SHA256 mocked signature",
+            )
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.json(), {"success": True})
         self.assertEqual(CourseRun.objects.count(), 1)
@@ -316,6 +332,7 @@ class SyncCourseRunApiTestCase(TestCase):
 
         data = {
             "resource_link": link,
+            "created_on": "2020-11-09T09:31:59.417936Z",
             "start": "2020-12-09T09:31:59.417817Z",
             "end": "2021-03-14T09:31:59.417895Z",
             "enrollment_start": "2020-11-09T09:31:59.417936Z",
@@ -324,14 +341,14 @@ class SyncCourseRunApiTestCase(TestCase):
             "title": "my course run",
         }
 
-        response = self.client.post(
-            "/api/v1.0/course-runs-sync",
-            data,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=(
-                "SIG-HMAC-SHA256 e20dd1e2b7f1553298f3bd717dd4c3e8361e215e355dcbdc54a3d88c28585f94"
-            ),
-        )
+        with mock.patch.object(api, "authorize_request") as mock_authorize_request:
+            mock_authorize_request.return_value = None
+            response = self.client.post(
+                "/api/v1.0/course-runs-sync",
+                data,
+                content_type="application/json",
+                HTTP_AUTHORIZATION="SIG-HMAC-SHA256 mocked signature",
+            )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(CourseRun.objects.count(), 1)
@@ -340,7 +357,7 @@ class SyncCourseRunApiTestCase(TestCase):
         course_run = CourseRun.objects.get()
         serializer = SyncCourseRunSerializer(instance=course_run)
         data.pop("title")
-        self.assertEqual(serializer.data, data)
+        assert serializer.data == data
 
     @override_settings(TIME_ZONE="UTC")
     def test_api_course_run_sync_existing_partial(self):
@@ -353,16 +370,20 @@ class SyncCourseRunApiTestCase(TestCase):
         course_run = CourseRunFactory(course=course, resource_link=link)
 
         origin_data = SyncCourseRunSerializer(instance=course_run).data
-        data = {"resource_link": link, "end": "2021-03-14T09:31:59.417895Z"}
+        data = {
+            "resource_link": link,
+            "created_on": "2020-11-09T09:31:59.417936Z",
+            "end": "2021-03-14T09:31:59.417895Z",
+        }
 
-        response = self.client.post(
-            "/api/v1.0/course-runs-sync",
-            data,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=(
-                "SIG-HMAC-SHA256 1de9b46133a91eec3515d0df40f586b642cff16b79aa9d5fe4f7679a33767967"
-            ),
-        )
+        with mock.patch.object(api, "authorize_request") as mock_authorize_request:
+            mock_authorize_request.return_value = None
+            response = self.client.post(
+                "/api/v1.0/course-runs-sync",
+                data,
+                content_type="application/json",
+                HTTP_AUTHORIZATION="SIG-HMAC-SHA256 mocked signature",
+            )
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.json(), {"success": True})
         self.assertEqual(CourseRun.objects.count(), 1)
@@ -371,11 +392,12 @@ class SyncCourseRunApiTestCase(TestCase):
         course_run = CourseRun.objects.get(course=course)
         serializer = SyncCourseRunSerializer(instance=course_run)
 
+        self.assertEqual(serializer.data["created_on"], data["created_on"])
         self.assertEqual(serializer.data["end"], data["end"])
         for field in serializer.fields:
-            if field == "end":
+            if field in ("created_on", "end"):
                 continue
-            self.assertEqual(serializer.data[field], origin_data[field])
+            self.assertEqual(serializer.data[field], origin_data[field], field)
 
     @override_settings(
         TIME_ZONE="UTC",
@@ -402,6 +424,7 @@ class SyncCourseRunApiTestCase(TestCase):
         origin_data = SyncCourseRunSerializer(instance=course_run).data
         data = {
             "resource_link": link,
+            "created_on": "2020-11-09T09:31:59.417936Z",
             "start": "2020-12-09T09:31:59.417817Z",
             "end": "2021-03-14T09:31:59.417895Z",
             "enrollment_start": "2020-11-09T09:31:59.417936Z",
@@ -409,14 +432,14 @@ class SyncCourseRunApiTestCase(TestCase):
             "languages": ["en", "fr"],
         }
 
-        response = self.client.post(
-            "/api/v1.0/course-runs-sync",
-            data,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=(
-                "SIG-HMAC-SHA256 338f7c262254e8220fea54467526f8f1f4562ee3adf1e3a71abaf23a20b739e4"
-            ),
-        )
+        with mock.patch.object(api, "authorize_request") as mock_authorize_request:
+            mock_authorize_request.return_value = None
+            response = self.client.post(
+                "/api/v1.0/course-runs-sync",
+                data,
+                content_type="application/json",
+                HTTP_AUTHORIZATION="SIG-HMAC-SHA256 mocked signature",
+            )
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.json(), {"success": True})
         self.assertEqual(CourseRun.objects.count(), 1)
@@ -430,6 +453,6 @@ class SyncCourseRunApiTestCase(TestCase):
         )
         for field in serializer.fields:
             if field in no_update_fields:
-                self.assertEqual(serializer.data[field], origin_data[field])
+                self.assertEqual(serializer.data[field], origin_data[field], field)
             else:
-                self.assertEqual(serializer.data[field], data[field])
+                self.assertEqual(serializer.data[field], data[field], field)
