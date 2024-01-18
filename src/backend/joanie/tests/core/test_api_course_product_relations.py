@@ -86,7 +86,9 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         product.save()
         course = courses[0]
         relation = factories.CourseProductRelationFactory(
-            course=course, product=product
+            course=course,
+            product=product,
+            organizations=factories.OrganizationFactory.create_batch(2),
         )
         factories.ProductFactory.create_batch(2)
 
@@ -252,8 +254,12 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         courses = factories.CourseFactory.create_batch(2)
         for course in courses:
             factories.UserCourseAccessFactory(user=user, course=course)
-        factories.ProductFactory(
-            type=enums.PRODUCT_TYPE_CREDENTIAL, courses=[courses[0]]
+        factories.CourseProductRelationFactory(
+            product=factories.ProductFactory(
+                type=enums.PRODUCT_TYPE_CREDENTIAL, courses=[]
+            ),
+            course=courses[0],
+            organizations=factories.OrganizationFactory.create_batch(2),
         )
         factories.ProductFactory.create_batch(2)
 
@@ -330,10 +336,12 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             target_courses=factories.CourseFactory.create_batch(2),
         )
         relation = factories.CourseProductRelationFactory(
-            course=course, product=product
+            course=course,
+            product=product,
+            organizations=factories.OrganizationFactory.create_batch(2),
         )
 
-        with self.assertNumQueries(53):
+        with self.assertNumQueries(75):
             self.client.get(f"/api/v1.0/courses/{course.code}/products/{product.id}/")
 
         # A second call to the url should benefit from caching on the product serializer
@@ -358,7 +366,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
         # Then cache should be language sensitive
-        with self.assertNumQueries(15):
+        with self.assertNumQueries(16):
             self.client.get(
                 f"/api/v1.0/courses/{course.code}/products/{product.id}/",
                 HTTP_ACCEPT_LANGUAGE="fr-fr",

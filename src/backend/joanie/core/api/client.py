@@ -104,6 +104,7 @@ class CourseProductRelationViewSet(
             "product__certificate_definition",
         )
         .prefetch_related("organizations")
+        .distinct()
     )
 
     @property
