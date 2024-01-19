@@ -30,7 +30,7 @@ export default function OrderViewPage() {
         },
         {
           name: intl.formatMessage(ordersBreadcrumbsTranslation.listBreadcrumb),
-          href: PATH_ADMIN.organizations.list,
+          href: PATH_ADMIN.orders.list,
         },
         {
           name: intl.formatMessage(ordersBreadcrumbsTranslation.viewBreadcrumb),
