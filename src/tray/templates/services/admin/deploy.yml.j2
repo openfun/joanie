@@ -46,6 +46,7 @@ spec:
 {% endif %}
       containers:
         - image: "{{ joanie_admin_nginx_image_name }}:{{ joanie_admin_nginx_image_tag }}"
+          imagePullPolicy: Always
           name: admin
           ports:
             - containerPort: 80
