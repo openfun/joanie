@@ -23,7 +23,7 @@ export default function OrderListPage() {
         },
         {
           name: intl.formatMessage(ordersBreadcrumbsTranslation.listBreadcrumb),
-          href: PATH_ADMIN.organizations.list,
+          href: PATH_ADMIN.orders.list,
         },
       ]}
       stretch={false}
