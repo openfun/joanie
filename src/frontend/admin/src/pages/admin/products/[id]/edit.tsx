@@ -6,6 +6,7 @@ import { useProduct } from "@/hooks/useProducts/useProducts";
 import { ProductForm } from "@/components/templates/products/form/ProductForm";
 import { productsPagesTranslation } from "@/translations/pages/products/breadcrumbsTranslations";
 import { UseAsTemplateButton } from "@/components/templates/form/buttons/UseAsTemplateButton";
+import { LoadingContent } from "@/components/presentational/loading/LoadingContent";
 
 const messages = defineMessages({
   pageTitle: {
@@ -47,7 +48,9 @@ export default function EditProductPage() {
         },
       ]}
     >
-      {product.item && <ProductForm product={product.item} />}
+      <LoadingContent loading={product.states.isLoading}>
+        {product.item && <ProductForm product={product.item} />}
+      </LoadingContent>
     </DashboardLayoutPage>
   );
 }

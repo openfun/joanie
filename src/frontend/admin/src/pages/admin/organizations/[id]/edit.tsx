@@ -6,6 +6,7 @@ import { PATH_ADMIN } from "@/utils/routes/path";
 import { OrganizationForm } from "@/components/templates/organizations/form/OrganizationForm";
 import { useOrganization } from "@/hooks/useOrganizations/useOrganizations";
 import { UseAsTemplateButton } from "@/components/templates/form/buttons/UseAsTemplateButton";
+import { LoadingContent } from "@/components/presentational/loading/LoadingContent";
 
 const messages = defineMessages({
   pageTitle: {
@@ -47,7 +48,9 @@ export default function EditOrganizationPage() {
         },
       ]}
     >
-      {org.item && <OrganizationForm organization={org.item} />}
+      <LoadingContent loading={org.states.isLoading}>
+        {org.item && <OrganizationForm organization={org.item} />}
+      </LoadingContent>
     </DashboardLayoutPage>
   );
 }
