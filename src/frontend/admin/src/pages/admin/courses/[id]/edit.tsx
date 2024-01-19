@@ -6,6 +6,7 @@ import { coursesPagesTranslation } from "@/translations/pages/courses/breadcrumb
 import { CourseForm } from "@/components/templates/courses/form/CourseForm";
 import { useCourse } from "@/hooks/useCourses/useCourses";
 import { UseAsTemplateButton } from "@/components/templates/form/buttons/UseAsTemplateButton";
+import { LoadingContent } from "@/components/presentational/loading/LoadingContent";
 
 const messages = defineMessages({
   pageTitle: {
@@ -45,7 +46,9 @@ export default function EditCoursePage() {
       ]}
       stretch={false}
     >
-      {course.item && <CourseForm course={course.item} />}
+      <LoadingContent loading={course.states.isLoading}>
+        {course.item && <CourseForm course={course.item} />}
+      </LoadingContent>
     </DashboardLayoutPage>
   );
 }

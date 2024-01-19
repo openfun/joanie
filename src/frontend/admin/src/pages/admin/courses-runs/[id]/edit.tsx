@@ -7,6 +7,7 @@ import { coursesRunsPagesTranslation } from "@/translations/pages/courses-runs/b
 import { CourseRunForm } from "@/components/templates/courses-runs/form/CourseRunForm";
 import { useCourseRun } from "@/hooks/useCourseRun/useCourseRun";
 import { UseAsTemplateButton } from "@/components/templates/form/buttons/UseAsTemplateButton";
+import { LoadingContent } from "@/components/presentational/loading/LoadingContent";
 
 const messages = defineMessages({
   pageTitle: {
@@ -48,7 +49,9 @@ export default function EditCourseRunPage() {
       stretch={false}
     >
       <SimpleCard>
-        {courseRun.item && <CourseRunForm courseRun={courseRun.item} />}
+        <LoadingContent loading={courseRun.states.isLoading}>
+          {courseRun.item && <CourseRunForm courseRun={courseRun.item} />}
+        </LoadingContent>
       </SimpleCard>
     </DashboardLayoutPage>
   );

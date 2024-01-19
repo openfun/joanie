@@ -7,6 +7,7 @@ import { useContractDefinition } from "@/hooks/useContractDefinitions/useContrac
 import { contractDefinitionsBreadcrumbsTranslation } from "@/translations/pages/contracts-definitions/breadcrumbsTranslations";
 import { ContractDefinitionForm } from "@/components/templates/contract-definition/form/ContractDefinitionForm";
 import { UseAsTemplateButton } from "@/components/templates/form/buttons/UseAsTemplateButton";
+import { LoadingContent } from "@/components/presentational/loading/LoadingContent";
 
 const messages = defineMessages({
   pageTitle: {
@@ -54,11 +55,13 @@ export default function EditCertificatePage() {
       stretch={false}
     >
       <SimpleCard>
-        {contractDefinitionQuery.item && (
-          <ContractDefinitionForm
-            contractDefinition={contractDefinitionQuery.item}
-          />
-        )}
+        <LoadingContent loading={contractDefinitionQuery.states.isLoading}>
+          {contractDefinitionQuery.item && (
+            <ContractDefinitionForm
+              contractDefinition={contractDefinitionQuery.item}
+            />
+          )}
+        </LoadingContent>
       </SimpleCard>
     </DashboardLayoutPage>
   );

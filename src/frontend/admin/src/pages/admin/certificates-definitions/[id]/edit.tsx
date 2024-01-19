@@ -7,6 +7,7 @@ import { certificateDefinitionsBreadcrumbsTranslation } from "@/translations/pag
 import { CertificateDefinitionForm } from "@/components/templates/certificates-definitions/form/CertificateDefinitionForm";
 import { useCertificateDefinition } from "@/hooks/useCertificateDefinitions/useCertificateDefinitions";
 import { UseAsTemplateButton } from "@/components/templates/form/buttons/UseAsTemplateButton";
+import { LoadingContent } from "@/components/presentational/loading/LoadingContent";
 
 const messages = defineMessages({
   pageTitle: {
@@ -54,9 +55,11 @@ export default function EditCertificatePage() {
       stretch={false}
     >
       <SimpleCard>
-        {definition.item && (
-          <CertificateDefinitionForm definition={definition.item} />
-        )}
+        <LoadingContent loading={definition.states.isLoading}>
+          {definition.item && (
+            <CertificateDefinitionForm definition={definition.item} />
+          )}
+        </LoadingContent>
       </SimpleCard>
     </DashboardLayoutPage>
   );
