@@ -564,6 +564,27 @@ class Development(Base):
         environ_name="DEVELOPER_EMAIL",
         environ_prefix=None,
     )
+    LOGGING = values.DictValue(
+        {
+            "version": 1,
+            "disable_existing_loggers": False,
+            "handlers": {
+                "console": {
+                    "class": "logging.StreamHandler",
+                },
+            },
+            "loggers": {
+                "joanie": {
+                    "handlers": ["console"],
+                    "level": "DEBUG",
+                },
+                "request.summary": {
+                    "handlers": ["console"],
+                    "level": "DEBUG",
+                },
+            },
+        }
+    )
 
     SESSION_COOKIE_NAME = "joanie_sessionid"
 

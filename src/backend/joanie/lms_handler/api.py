@@ -4,6 +4,7 @@ API endpoints
 import base64
 import hashlib
 import hmac
+import logging
 from http import HTTPStatus
 
 from django.conf import settings
@@ -16,6 +17,8 @@ from rest_framework.response import Response
 
 from joanie.core import models, utils
 from joanie.lms_handler import LMSHandler
+
+logger = logging.getLogger(__name__)
 
 
 def authorize_request(request):
@@ -194,5 +197,54 @@ def users_sync(request):
             user.date_joined = user_data.get("date_joined")
             user.last_login = user_data.get("last_login")
             user.save()
+
+    return Response({"success": True})
+
+
+@api_view(["POST"])
+def enrollments_sync(request):
+    """View for the web hook to create or update enrollments based on their resource link."""
+    authorize_request(request)
+    enrollments_to_create = []
+    enrollments_to_update = []
+    for enrollment_data in request.data.get("enrollments"):
+        try:
+            course_run = models.CourseRun.objects.only("pk").get(
+                resource_link=enrollment_data.get("resource_link")
+            )
+        except models.CourseRun.DoesNotExist:
+            logger.error(
+                "No CourseRun found for course run %s",
+                enrollment_data.get("resource_link"),
+            )
+            continue
+
+        try:
+            user_name = enrollment_data.get("username")
+            user = models.User.objects.only("pk").get(username=user_name)
+        except models.User.DoesNotExist:
+            logger.error("No User found for username %s", user_name)
+            continue
+
+        try:
+            enrollment = models.Enrollment.objects.get(course_run=course_run, user=user)
+            enrollment.is_active = enrollment_data.get("is_active")
+            enrollment.created_on = enrollment_data.get("created_on")
+            enrollments_to_update.append(enrollment)
+        except models.Enrollment.DoesNotExist:
+            enrollments_to_create.append(
+                models.Enrollment(
+                    course_run=course_run,
+                    user=user,
+                    is_active=enrollment_data.get("is_active"),
+                    created_on=enrollment_data.get("created_on"),
+                )
+            )
+    enrollments_created = models.Enrollment.objects.bulk_create(enrollments_to_create)
+    logger.info("Created %s enrollments", len(enrollments_created))
+    enrollments_updated = models.Enrollment.objects.bulk_update(
+        enrollments_to_update, ["is_active", "created_on"]
+    )
+    logger.info("Updated %s enrollments", enrollments_updated)
 
     return Response({"success": True})
