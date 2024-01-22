@@ -159,7 +159,7 @@ class SyncCourseRunApiTestCase(TestCase):
             "end": "2021-03-14T09:31:59.417895Z",
             "enrollment_start": "2020-11-09T09:31:59.417936Z",
             "enrollment_end": "2020-12-24T09:31:59.417972Z",
-            "languages": ["en", "fr"],
+            "languages": ["en"],
             "title": "my course run",
         }
 
@@ -185,6 +185,8 @@ class SyncCourseRunApiTestCase(TestCase):
         serializer = SyncCourseRunSerializer(instance=course_run)
         data.pop("title")
         self.assertEqual(serializer.data, data)
+        course_run.set_current_language("en")
+        self.assertEqual(course_run.title, "my course run")
 
     def test_api_course_run_sync_create_unknown_course_no_title(self):
         """
@@ -199,7 +201,7 @@ class SyncCourseRunApiTestCase(TestCase):
             "end": "2021-03-14T09:31:59.417895Z",
             "enrollment_start": "2020-11-09T09:31:59.417936Z",
             "enrollment_end": "2020-12-24T09:31:59.417972Z",
-            "languages": ["en", "fr"],
+            "languages": ["en"],
         }
 
         with mock.patch.object(api, "authorize_request") as mock_authorize_request:
@@ -237,12 +239,8 @@ class SyncCourseRunApiTestCase(TestCase):
             "end": "2021-03-14T09:31:59.417895Z",
             "enrollment_start": "2020-11-09T09:31:59.417936Z",
             "enrollment_end": "2020-12-24T09:31:59.417972Z",
-            "languages": ["en", "fr"],
+            "languages": ["en"],
             "title": "my course run",
-            # "translations": {
-            #     "en": {"title": "my course run"},
-            #     "fr": {"title": "ma session de cours"},
-            # },
         }
         with mock.patch.object(api, "authorize_request") as mock_authorize_request:
             mock_authorize_request.return_value = None
@@ -300,7 +298,7 @@ class SyncCourseRunApiTestCase(TestCase):
             "resource_link": "http://example.edx:8073/courses/course-v1:edX+DemoX+01/course/",
             "created_on": "2020-11-09T09:31:59.417936Z",
             "enrollment_end": "2020-12-24T09:31:59.417972Z",
-            "languages": ["en", "fr"],
+            "languages": ["en"],
         }
 
         with mock.patch.object(api, "authorize_request") as mock_authorize_request:
@@ -337,7 +335,7 @@ class SyncCourseRunApiTestCase(TestCase):
             "end": "2021-03-14T09:31:59.417895Z",
             "enrollment_start": "2020-11-09T09:31:59.417936Z",
             "enrollment_end": "2020-12-24T09:31:59.417972Z",
-            "languages": ["en", "fr"],
+            "languages": ["en"],
             "title": "my course run",
         }
 
@@ -357,7 +355,10 @@ class SyncCourseRunApiTestCase(TestCase):
         course_run = CourseRun.objects.get()
         serializer = SyncCourseRunSerializer(instance=course_run)
         data.pop("title")
-        assert serializer.data == data
+        for field in serializer.fields:
+            self.assertEqual(serializer.data[field], data[field], field)
+        course_run.set_current_language("en")
+        self.assertEqual(course_run.title, "my course run")
 
     @override_settings(TIME_ZONE="UTC")
     def test_api_course_run_sync_existing_partial(self):
@@ -429,7 +430,7 @@ class SyncCourseRunApiTestCase(TestCase):
             "end": "2021-03-14T09:31:59.417895Z",
             "enrollment_start": "2020-11-09T09:31:59.417936Z",
             "enrollment_end": "2020-12-24T09:31:59.417972Z",
-            "languages": ["en", "fr"],
+            "languages": ["en"],
         }
 
         with mock.patch.object(api, "authorize_request") as mock_authorize_request:
@@ -451,8 +452,9 @@ class SyncCourseRunApiTestCase(TestCase):
         no_update_fields = settings.JOANIE_LMS_BACKENDS[0].get(
             "COURSE_RUN_SYNC_NO_UPDATE_FIELDS"
         )
+        serializer_data = json.loads(json.dumps(serializer.data))
         for field in serializer.fields:
             if field in no_update_fields:
-                self.assertEqual(serializer.data[field], origin_data[field], field)
+                self.assertEqual(serializer_data[field], origin_data[field], field)
             else:
-                self.assertEqual(serializer.data[field], data[field], field)
+                self.assertEqual(serializer_data[field], data[field], field)

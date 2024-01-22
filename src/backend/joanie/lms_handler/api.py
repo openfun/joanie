@@ -9,6 +9,7 @@ from http import HTTPStatus
 from django.conf import settings
 from django.core.files.base import ContentFile
 
+from parler.utils import get_language_settings
 from rest_framework import exceptions
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -93,8 +94,6 @@ def course_runs_sync(request):
         cleaned_data = lms.clean_course_run_data(serializer.validated_data)
         models.CourseRun.objects.filter(pk=target_course_run.pk).update(**cleaned_data)
         course_run = models.CourseRun.objects.get(pk=target_course_run.pk)
-        course_run.created_on = request.data.get("created_on")
-        course_run.save()
     else:
         # Look for the course targeted by the resource link
         course_number = utils.normalize_code(lms.extract_course_number(request.data))
@@ -110,11 +109,16 @@ def course_runs_sync(request):
             course.save()
 
         # Instantiate a new course run
-        course_run = models.CourseRun.objects.create(
-            **serializer.validated_data, course=course
-        )
-        course_run.created_on = request.data.get("created_on")
-        course_run.save()
+        course_run = serializer.save(course=course)
+
+    if title := request.data.get("title"):
+        language_code = get_language_settings(
+            str(serializer.validated_data["languages"])
+        ).get("code")
+        course_run.set_current_language(language_code)
+        course_run.title = title
+    course_run.created_on = request.data.get("created_on")
+    course_run.save()
 
     return Response({"success": True})
 
