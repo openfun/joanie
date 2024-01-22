@@ -153,3 +153,46 @@ def organizations_sync(request):
         organization.save()
 
     return Response({"success": True})
+
+
+@api_view(["POST"])
+def users_sync(request):
+    """View for the web hook to create or update users based on their resource link."""
+    authorize_request(request)
+
+    for user_data in request.data.get("users"):
+        username = user_data.get("username")
+        if username == "admin":
+            continue
+
+        if not username:
+            raise exceptions.ValidationError({"username": ["This field is required."]})
+
+        user, created = models.User.objects.get_or_create(
+            username=username,
+            defaults={
+                "email": user_data.get("email"),
+                "first_name": user_data.get("first_name"),
+                "last_name": user_data.get("last_name"),
+                "is_active": user_data.get("is_active"),
+                "is_staff": user_data.get("is_staff"),
+                "is_superuser": user_data.get("is_superuser"),
+                "password": user_data.get("password"),
+                "date_joined": user_data.get("date_joined"),
+                "last_login": user_data.get("last_login"),
+            },
+        )
+
+        if not created:
+            user.email = user_data.get("email")
+            user.first_name = user_data.get("first_name")
+            user.last_name = user_data.get("last_name")
+            user.is_active = user_data.get("is_active")
+            user.is_staff = user_data.get("is_staff")
+            user.is_superuser = user_data.get("is_superuser")
+            user.password = user_data.get("password")
+            user.date_joined = user_data.get("date_joined")
+            user.last_login = user_data.get("last_login")
+            user.save()
+
+    return Response({"success": True})
