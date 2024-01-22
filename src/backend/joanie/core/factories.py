@@ -245,10 +245,9 @@ class CourseRunFactory(factory.django.DjangoModelFactory):
         """
         Compute a random set of languages from the complete list of Django supported languages.
         """
-        return {
-            language[0]
-            for language in random.sample(enums.ALL_LANGUAGES, random.randint(1, 5))
-        }
+        sample = random.sample(enums.ALL_LANGUAGES, random.randint(1, 5))
+        sorted_sample = sorted(sample, key=lambda x: x[0])
+        return {language[0] for language in sorted_sample}
 
     @factory.lazy_attribute_sequence
     def resource_link(self, sequence):
