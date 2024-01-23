@@ -15,7 +15,7 @@ and this project adheres to
 - Allow to override settings in tray
 - Add API endpoints for other services to fetch  data on course run
 - Allow to filter contracts by signature state,
-  product, course and organization and id
+  product, course and organization, id and course product relation id
 - Add bulk download of signed contracts to generate ZIP archive with command
 - Add read-only api admin endpoint to list/retrieve orders
 - Add a management command to synchronize course run or product

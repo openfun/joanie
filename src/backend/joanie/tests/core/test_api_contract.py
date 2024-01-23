@@ -163,7 +163,7 @@ class ContractApiTest(BaseAPITestCase):
             ],
         }
 
-    def test_api_contracts_list_signature_state(self):
+    def test_api_contracts_list_filter_signature_state(self):
         """
         Authenticated user can query owned contracts and filter them by signature state.
         """
@@ -482,6 +482,113 @@ class ContractApiTest(BaseAPITestCase):
         result_ids = [result["id"] for result in content["results"]]
         self.assertEqual(count, 1)
         self.assertCountEqual(result_ids, [str(p2_contract.id)])
+
+    def test_api_contracts_list_filter_by_course_product_relation_id(self):
+        """
+        Authenticated user can query owned contracts and filter them
+        by course product relation.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        relation_1 = factories.CourseProductRelationFactory(
+            product__contract_definition=factories.ContractDefinitionFactory(),
+        )
+
+        contract_1 = factories.ContractFactory.create(
+            order__product=relation_1.product,
+            order__course=relation_1.course,
+            order__organization=relation_1.organizations.first(),
+            order__owner=user,
+        )
+
+        relation_2 = factories.CourseProductRelationFactory(
+            product__contract_definition=factories.ContractDefinitionFactory(),
+        )
+
+        contract_2 = factories.ContractFactory.create(
+            order__product=relation_2.product,
+            order__course=relation_2.course,
+            order__organization=relation_2.organizations.first(),
+            order__owner=user,
+        )
+
+        # Create random contracts that should not be returned
+        other_relation = factories.CourseProductRelationFactory(
+            product__contract_definition=factories.ContractDefinitionFactory(),
+        )
+
+        factories.ContractFactory.create(
+            order__product=other_relation.product,
+            order__course=other_relation.course,
+            order__organization=other_relation.organizations.first(),
+        )
+
+        factories.ContractFactory.create_batch(8)
+
+        # - List without filter should return 8 contracts
+        with self.assertNumQueries(94):
+            response = self.client.get(
+                "/api/v1.0/contracts/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+
+        self.assertEqual(content["count"], 2)
+
+        # - Filter by the first relation should return 5 contracts
+        with self.assertNumQueries(6):
+            response = self.client.get(
+                f"/api/v1.0/contracts/?course_product_relation_id={relation_1.id}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        count = content["count"]
+        result_ids = [result["id"] for result in content["results"]]
+        self.assertEqual(count, 1)
+        self.assertCountEqual(result_ids, [str(contract_1.id)])
+
+        # - Filter by the second relation should return 3 contracts
+        with self.assertNumQueries(6):
+            response = self.client.get(
+                f"/api/v1.0/contracts/?course_product_relation_id={relation_2.id}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        count = content["count"]
+        result_ids = [result["id"] for result in content["results"]]
+        self.assertEqual(count, 1)
+        self.assertCountEqual(result_ids, [str(contract_2.id)])
+
+        # - Filter by the unknown relation should return no contracts
+        with self.assertNumQueries(2):
+            response = self.client.get(
+                f"/api/v1.0/contracts/?course_product_relation_id={uuid4()}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        count = content["count"]
+        self.assertEqual(count, 0)
+
+        # - Filter by relation with unowned order should return no contracts
+        with self.assertNumQueries(3):
+            response = self.client.get(
+                f"/api/v1.0/contracts/?course_product_relation_id={other_relation.id}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        count = content["count"]
+        self.assertEqual(count, 0)
 
     def test_api_contracts_list_filter_id(self):
         """
