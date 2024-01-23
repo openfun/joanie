@@ -109,10 +109,13 @@ class ContractViewSetFilter(filters.FilterSet):
     course_id = filters.UUIDFilter(field_name="order__course__id")
     product_id = filters.UUIDFilter(field_name="order__product__id")
     organization_id = filters.UUIDFilter(field_name="order__organization__id")
+    course_product_relation_id = filters.UUIDFilter(
+        method="filter_course_product_relation_id"
+    )
 
     class Meta:
         model = models.Contract
-        fields: List[str] = ["id", "signature_state"]
+        fields: List[str] = ["id", "signature_state", "course_product_relation_id"]
 
     def filter_signature_state(self, queryset, _name, value):
         """
@@ -125,4 +128,33 @@ class ContractViewSetFilter(filters.FilterSet):
         return queryset.filter(
             student_signed_on__isnull=is_unsigned,
             organization_signed_on__isnull=is_unsigned | is_half_signed,
+        )
+
+    def filter_course_product_relation_id(self, queryset, _name, value):
+        """
+        Try to retrieve a course product relation from the given id and filter
+        contracts accordingly.
+        """
+
+        url_kwargs = self.request.parser_context.get("kwargs", {})
+
+        # This filter can be used into nested routes (courses or organizations) so we need to
+        # check if the relation is related to the current resource.
+        queryset_filters = {"id": value}
+        if course_id := url_kwargs.get("course_id"):
+            queryset_filters["course_id"] = course_id
+        if organization_id := url_kwargs.get("organization_id"):
+            queryset_filters["organizations__in"] = [organization_id]
+
+        try:
+            relation = models.CourseProductRelation.objects.get(**queryset_filters)
+        except models.CourseProductRelation.DoesNotExist:
+            return queryset.none()
+
+        return queryset.filter(
+            order__course_id=relation.course_id,
+            order__product_id=relation.product_id,
+            order__organization__in=relation.organizations.only("pk").values_list(
+                "pk", flat=True
+            ),
         )
