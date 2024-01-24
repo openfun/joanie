@@ -5,6 +5,7 @@ Core application factories
 import hashlib
 import json
 import random
+import uuid
 from datetime import datetime, timedelta, timezone
 
 from django.conf import settings
@@ -748,6 +749,7 @@ class ContractFactory(factory.django.DjangoModelFactory):
     )
     student_signed_on = None
     organization_signed_on = None
+    submitted_for_signature_on = None
 
     @factory.lazy_attribute
     def definition(self):
@@ -797,4 +799,14 @@ class ContractFactory(factory.django.DjangoModelFactory):
             return hashlib.sha256(
                 json.dumps(self.context, sort_keys=True).encode("utf-8")
             ).hexdigest()
+        return None
+
+    @factory.lazy_attribute
+    def signature_backend_reference(self):
+        """
+        Define signature_backend_reference as dummy signature backend
+        """
+        if self.student_signed_on or self.submitted_for_signature_on:
+            return f"wfl_fake_dummy_demo_dev_{uuid.uuid4()}"
+
         return None

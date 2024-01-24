@@ -219,7 +219,9 @@ class ContractModelTestCase(TestCase):
         factories.AddressFactory.create(owner=user)
         order = factories.OrderFactory(
             owner=user,
-            product=factories.ProductFactory(),
+            product=factories.ProductFactory(
+                contract_definition=factories.ContractDefinitionFactory()
+            ),
         )
 
         with self.assertRaises(ValidationError) as context:
