@@ -15,7 +15,7 @@ from django.urls import reverse
 
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
-from rest_framework import mixins, pagination, viewsets
+from rest_framework import mixins, viewsets
 from rest_framework import permissions as drf_permissions
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
@@ -39,21 +39,12 @@ UUID_REGEX = (
 )
 
 
-class Pagination(pagination.PageNumberPagination):
-    """Pagination to display no more than 100 objects per page sorted by creation date."""
-
-    ordering = "-created_on"
-    max_page_size = 100
-    page_size_query_param = "page_size"
-
-
 class CourseRunViewSet(
     mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet
 ):
     """API ViewSet for all interactions with course runs."""
 
     lookup_field = "id"
-    pagination_class = Pagination
     permissions_classes = [drf_permissions.AllowAny]
     queryset = models.CourseRun.objects.filter(is_listed=True).select_related("course")
     serializer_class = serializers.CourseRunSerializer
@@ -201,7 +192,6 @@ class EnrollmentViewSet(
     """API ViewSet for all interactions with enrollments."""
 
     lookup_field = "id"
-    pagination_class = Pagination
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = serializers.EnrollmentSerializer
     filterset_class = filters.EnrollmentViewSetFilter
@@ -275,7 +265,6 @@ class OrderViewSet(
     """
 
     lookup_field = "pk"
-    pagination_class = Pagination
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = serializers.OrderSerializer
     filterset_class = filters.OrderViewSetFilter
@@ -604,7 +593,6 @@ class CertificateViewSet(
     """
 
     lookup_field = "pk"
-    pagination_class = Pagination
     serializer_class = serializers.CertificateSerializer
     permission_classes = [permissions.IsAuthenticated]
     queryset = models.Certificate.objects.all().select_related(
@@ -688,7 +676,6 @@ class OrganizationViewSet(
     """
 
     lookup_field = "pk"
-    pagination_class = Pagination
     permission_classes = [permissions.AccessPermission]
     serializer_class = serializers.OrganizationSerializer
 
@@ -783,7 +770,6 @@ class OrganizationAccessViewSet(
     """
 
     lookup_field = "pk"
-    pagination_class = Pagination
     permission_classes = [permissions.AccessPermission]
     queryset = models.OrganizationAccess.objects.all().select_related("user")
     serializer_class = serializers.OrganizationAccessSerializer
@@ -858,7 +844,6 @@ class CourseAccessViewSet(
     """
 
     lookup_field = "pk"
-    pagination_class = Pagination
     permission_classes = [permissions.AccessPermission]
     queryset = models.CourseAccess.objects.all().select_related("user")
     serializer_class = serializers.CourseAccessSerializer
@@ -925,7 +910,6 @@ class CourseViewSet(
     lookup_field = "pk"
     lookup_value_regex = "[0-9a-z-]*"
     filterset_class = filters.CourseViewSetFilter
-    pagination_class = Pagination
     permission_classes = [permissions.AccessPermission]
     serializer_class = serializers.CourseSerializer
     ordering = ["-created_on"]
@@ -1050,7 +1034,6 @@ class GenericContractViewSet(
     """
 
     lookup_field = "pk"
-    pagination_class = Pagination
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = serializers.ContractSerializer
     filterset_class = filters.ContractViewSetFilter
@@ -1407,7 +1390,6 @@ class NestedOrderCourseViewSet(NestedGenericViewSet, mixins.ListModelMixin):
 
     lookup_fields = ["course_id", "pk"]
     lookup_url_kwargs = ["course_id", "pk"]
-    pagination_class = Pagination
     permission_classes = [permissions.AccessPermission]
     serializer_class = serializers.NestedOrderCourseSerializer
     filterset_class = filters.NestedOrderCourseViewSetFilter
