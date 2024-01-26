@@ -95,24 +95,36 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
         When passing a list of contract ids,
         only the contracts with these ids should be signed.
         """
-        order = factories.OrderFactory(
+
+        organization = factories.OrganizationFactory()
+        relation = factories.CourseProductRelationFactory(
+            organizations=[organization],
+            product__contract_definition=factories.ContractDefinitionFactory(),
+        )
+        orders = factories.OrderFactory.create_batch(
+            2,
+            product=relation.product,
+            course=relation.course,
+            organization=organization,
             state=enums.ORDER_STATE_VALIDATED,
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
         access = factories.UserOrganizationAccessFactory(
-            organization=order.organization, role="owner"
+            organization=organization, role="owner"
         )
-        order.submit_for_signature(order.owner)
-        order.contract.submitted_for_signature_on = timezone.now()
-        order.contract.student_signed_on = timezone.now()
-        order.contract.save()
+
+        for order in orders:
+            order.submit_for_signature(order.owner)
+            order.contract.submitted_for_signature_on = timezone.now()
+            order.contract.student_signed_on = timezone.now()
+            order.contract.save()
 
         token = self.generate_token_from_user(access.user)
 
         response = self.client.get(
-            f"/api/v1.0/organizations/{order.organization.id}/contracts-signature-link/",
+            f"/api/v1.0/organizations/{orders[0].organization.id}/contracts-signature-link/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
-            data={"contract_ids": [order.contract.id]},
+            data={"contract_ids": [orders[0].contract.id]},
         )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -121,7 +133,8 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
             "https://dummysignaturebackend.fr/?requestToken=",
             content["invitation_link"],
         )
-        self.assertCountEqual(content["contract_ids"], [str(order.contract.id)])
+
+        self.assertCountEqual(content["contract_ids"], [str(orders[0].contract.id)])
 
     def test_api_organization_contracts_signature_link_exclude_canceled_orders(self):
         """
@@ -173,4 +186,163 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
             response,
             '"detail":"No contract to sign for this organization."',
             status_code=HTTPStatus.BAD_REQUEST,
+        )
+
+    def test_api_organization_contracts_signature_link_specified_course_product_relation_ids(
+        self,
+    ):
+        """
+        When passing a list of course product relation ids,
+        only the contracts relying on those relations should be signed.
+        """
+        [organization, other_organization] = factories.OrganizationFactory.create_batch(
+            2
+        )
+        relation = factories.CourseProductRelationFactory(
+            organizations=[organization, other_organization],
+            product__contract_definition=factories.ContractDefinitionFactory(),
+        )
+        relation_2 = factories.CourseProductRelationFactory(
+            organizations=[organization],
+            product__contract_definition=factories.ContractDefinitionFactory(),
+        )
+        access = factories.UserOrganizationAccessFactory(
+            organization=organization, role="owner"
+        )
+
+        orders = factories.OrderFactory.create_batch(
+            3,
+            product=relation.product,
+            course=relation.course,
+            organization=organization,
+            state=enums.ORDER_STATE_VALIDATED,
+        )
+
+        contracts = []
+        for order in orders:
+            contracts.append(
+                factories.ContractFactory.create(
+                    order=order,
+                    student_signed_on=timezone.now(),
+                    submitted_for_signature_on=timezone.now(),
+                    signature_backend_reference=f"wlf_{timezone.now()}",
+                )
+            )
+
+        # Create a contract linked to the same course product relation
+        # but for another organization
+        factories.ContractFactory.create(
+            order=factories.OrderFactory.create(
+                product=relation.product,
+                course=relation.course,
+                organization=other_organization,
+                state=enums.ORDER_STATE_VALIDATED,
+            ),
+            student_signed_on=timezone.now(),
+            submitted_for_signature_on=timezone.now(),
+            signature_backend_reference=f"wlf_{timezone.now()}",
+        )
+
+        # Create other orders and contracts for the same organization
+        # but for another course product relation
+        other_orders = factories.OrderFactory.create_batch(
+            3,
+            product=relation_2.product,
+            course=relation_2.course,
+            organization=organization,
+            state=enums.ORDER_STATE_VALIDATED,
+        )
+
+        for order in other_orders:
+            factories.ContractFactory.create(
+                order=order,
+                student_signed_on=timezone.now(),
+                submitted_for_signature_on=timezone.now(),
+                signature_backend_reference=f"wlf_{timezone.now()}",
+            )
+
+        token = self.generate_token_from_user(access.user)
+
+        response = self.client.get(
+            f"/api/v1.0/organizations/{organization.id}/contracts-signature-link/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+            data={"course_product_relation_ids": [relation.id]},
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertIn(
+            "https://dummysignaturebackend.fr/?requestToken=",
+            content["invitation_link"],
+        )
+
+        self.assertCountEqual(
+            content["contract_ids"], [str(contract.id) for contract in contracts]
+        )
+
+    def test_api_organization_contracts_signature_link_cumulative_filters(self):
+        """
+        When filter by both a list of course product relation ids and a list of contract ids,
+        those filter should be combined.
+        """
+        organization = factories.OrganizationFactory.create()
+        [relation, relation_2] = factories.CourseProductRelationFactory.create_batch(
+            2,
+            organizations=[organization],
+            product__contract_definition=factories.ContractDefinitionFactory(),
+        )
+        access = factories.UserOrganizationAccessFactory(
+            organization=organization, role="owner"
+        )
+
+        # Create two contracts for the same organization and course product relation
+        orders = factories.OrderFactory.create_batch(
+            2,
+            product=relation.product,
+            course=relation.course,
+            organization=organization,
+            state=enums.ORDER_STATE_VALIDATED,
+        )
+        contract = None
+        for order in orders:
+            contract = factories.ContractFactory.create(
+                order=order,
+                student_signed_on=timezone.now(),
+                submitted_for_signature_on=timezone.now(),
+                signature_backend_reference=f"wlf_{timezone.now()}",
+            )
+
+        token = self.generate_token_from_user(access.user)
+
+        response = self.client.get(
+            f"/api/v1.0/organizations/{organization.id}/contracts-signature-link/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+            data={
+                "contract_ids": [contract.id],
+                "course_product_relation_ids": [relation.id],
+            },
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertIn(
+            "https://dummysignaturebackend.fr/?requestToken=",
+            content["invitation_link"],
+        )
+
+        self.assertCountEqual(content["contract_ids"], [str(contract.id)])
+
+        response = self.client.get(
+            f"/api/v1.0/organizations/{organization.id}/contracts-signature-link/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+            data={
+                "contract_ids": [contract.id],
+                "course_product_relation_ids": [relation_2.id],
+            },
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(
+            response.json(),
+            {"detail": "Some contracts are not available for this organization."},
         )

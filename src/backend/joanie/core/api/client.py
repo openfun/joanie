@@ -711,13 +711,21 @@ class OrganizationViewSet(
     @extend_schema(
         parameters=[
             OpenApiParameter(
-                name="contracts_ids[]",
+                name="contract_ids",
                 description="List of contract ids to sign, "
                 "if not provided all the available contracts will be signed.",
                 required=False,
                 type=OpenApiTypes.UUID,
                 many=True,
-            )
+            ),
+            OpenApiParameter(
+                name="course_product_relation_ids",
+                description="List of course product relation ids to sign related contracts, "
+                "if not provided all the available contracts will be signed.",
+                required=False,
+                type=OpenApiTypes.UUID,
+                many=True,
+            ),
         ],
     )
     @action(
@@ -731,12 +739,16 @@ class OrganizationViewSet(
         Return an invitation link to sign all the available contracts for the organization.
         """
         organization = self.get_object()
-        contracts_ids = request.query_params.getlist("contracts_ids[]")
+        contract_ids = request.query_params.getlist("contract_ids")
+        course_product_relation_ids = request.query_params.getlist(
+            "course_product_relation_ids"
+        )
 
         try:
             (signature_link, ids) = organization.contracts_signature_link(
                 request.user,
-                contracts_ids,
+                contract_ids=contract_ids,
+                course_product_relation_ids=course_product_relation_ids,
             )
         except NoContractToSignError as error:
             return Response({"detail": f"{error}"}, status=HTTPStatus.BAD_REQUEST)

@@ -3731,7 +3731,7 @@
                 "parameters": [
                     {
                         "in": "query",
-                        "name": "contracts_ids[]",
+                        "name": "contract_ids",
                         "schema": {
                             "type": "array",
                             "items": {
@@ -3740,6 +3740,18 @@
                             }
                         },
                         "description": "List of contract ids to sign, if not provided all the available contracts will be signed."
+                    },
+                    {
+                        "in": "query",
+                        "name": "course_product_relation_ids",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "format": "uuid"
+                            }
+                        },
+                        "description": "List of course product relation ids to sign related contracts, if not provided all the available contracts will be signed."
                     },
                     {
                         "in": "path",
