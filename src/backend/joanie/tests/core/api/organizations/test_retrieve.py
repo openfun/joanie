@@ -519,3 +519,4 @@ class OrganizationApiTest(BaseAPITestCase):
         assert response.json() == {
             "detail": "No contract to sign for this organization."
         }
+ 
