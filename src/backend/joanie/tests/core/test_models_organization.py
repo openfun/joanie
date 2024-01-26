@@ -14,6 +14,7 @@ from joanie.core.exceptions import NoContractToSignError
 from joanie.tests.base import BaseAPITestCase
 
 
+# pylint: disable=too-many-public-methods
 class OrganizationModelsTestCase(BaseAPITestCase):
     """Test suite for the Organization model."""
 
@@ -429,4 +430,103 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         self.assertEqual(
             str(context.exception),
             "No contract to sign for this organization.",
+        )
+
+    def test_models_organization_fields_contact_phone_number_only_formatted(self):
+        """The `contact_phone` field should be formatted without spaces on save."""
+        organization1 = factories.OrganizationFactory(
+            contact_phone="00 11 1 23 45 67 89"
+        )
+        organization1.save()
+
+        self.assertEqual(organization1.contact_phone, "0011123456789")
+
+        organization2 = factories.OrganizationFactory(contact_phone="01 23 45 67 89")
+        organization2.save()
+
+        self.assertEqual(organization2.contact_phone, "0123456789")
+
+    def test_models_organization_fields_contact_phone_number_special_characters_normalized(
+        self,
+    ):
+        """
+        The `contact_phone` field should be normalized without non-digits and spaces on save.
+        The field should only include digits and '+' characters.
+        """
+        organization = factories.OrganizationFactory(contact_phone="+1 (123) 123-4567")
+        organization.save()
+
+        self.assertEqual(organization.contact_phone, "+11231234567")
+
+        organization2 = factories.OrganizationFactory(
+            contact_phone="+(33) 1 23 45 67 89"
+        )
+        organization2.save()
+
+        self.assertEqual(organization2.contact_phone, "+33123456789")
+
+    def test_models_organization_fields_contact_phone_number_empty(self):
+        """The `contact_phone` field should remain empty if initially empty."""
+        organization = factories.OrganizationFactory(contact_phone="")
+        organization.save()
+
+        self.assertEqual(organization.contact_phone, "")
+
+    def test_models_organization_fields_contact_phone_number_no_digits(self):
+        """The `contact_phone` field should be empty if no digits are provided."""
+        organization = factories.OrganizationFactory(contact_phone="abc wrong number")
+        organization.save()
+
+        self.assertEqual(organization.contact_phone, "")
+
+    def test_models_organization_signatory_representative_fields_must_be_set_no_profession(
+        self,
+    ):
+        """
+        If the field `signatory_representative` is set and `signatory_representative_profession`
+        is missing, it should raise an error. Both fields must be set if one is set.
+        """
+
+        with self.assertRaises(ValidationError) as context:
+            factories.OrganizationFactory(
+                signatory_representative="John Doe",
+                signatory_representative_profession=None,
+            )
+
+        self.assertEqual(
+            str(context.exception),
+            "{'__all__': ['Both signatory representative fields must be set.']}",
+        )
+
+    def test_models_organization_signatory_representative_fields_must_be_set_no_representative(
+        self,
+    ):
+        """
+        If the field `signatory_representative_profession` is set and `signatory_representative`
+        is missing, it should raise an error. Both fields must be set if one is set.
+        """
+
+        with self.assertRaises(ValidationError) as context:
+            factories.OrganizationFactory(
+                signatory_representative=None,
+                signatory_representative_profession="Board of Directors",
+            )
+
+        self.assertEqual(
+            str(context.exception),
+            "{'__all__': ['Both signatory representative fields must be set.']}",
+        )
+
+    def test_models_organization_signatory_representative_fields_are_both_set(self):
+        """
+        We should be able to create an Organization when both fields
+        `signatory_representative_profession` and `signatory_representative` are set.
+        """
+        organization = factories.OrganizationFactory(
+            signatory_representative="John Doe",
+            signatory_representative_profession="Board of Directors",
+        )
+        self.assertEqual(organization.signatory_representative, "John Doe")
+        self.assertEqual(
+            organization.signatory_representative_profession, "Board of Directors"
         )

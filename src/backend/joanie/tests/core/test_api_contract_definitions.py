@@ -134,7 +134,7 @@ class ContractDefinitionApiTest(BaseAPITestCase):
         user = factories.UserFactory(
             email="student_do@example.fr", first_name="John Doe", last_name=""
         )
-        factories.AddressFactory(owner=user)
+        factories.UserAddressFactory(owner=user)
         contract_definition = factories.ContractDefinitionFactory()
         token = self.get_user_token(user.username)
 

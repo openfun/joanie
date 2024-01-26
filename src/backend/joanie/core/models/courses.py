@@ -164,13 +164,85 @@ class Organization(parler_models.TranslatableModel, BaseModel):
     )
     signature = models.ImageField(_("signature"), blank=True)
     logo = ThumbnailerImageField(_("logo"), blank=True)
-    country = CountryField(_("country"), default=settings.JOANIE_DEFAULT_COUNTRY_CODE)
+    country = CountryField(
+        _("country"),
+        help_text=_(
+            "Country field will be deprecated soon in order to be replaced by address relation."
+        ),
+        default=settings.JOANIE_DEFAULT_COUNTRY_CODE,
+    )
+    enterprise_code = models.CharField(
+        verbose_name=_("Enterprise code"),  # e.g : SIRET in France
+        max_length=50,
+        blank=True,
+        null=True,
+    )
+    activity_category_code = models.CharField(
+        verbose_name=_("Activity category code"),  # e.g : APE in France
+        max_length=50,
+        blank=True,
+    )
+    representative_profession = models.CharField(
+        verbose_name=_("Profession of the organization's representative"),
+        help_text=_("representative profession"),
+        max_length=100,
+        blank=True,
+        null=True,
+    )
+    signatory_representative = models.CharField(
+        verbose_name=_("Signatory representative"),
+        help_text=_(
+            "This field is optional. If it is set, you must set the field"
+            "'signatory_representative_profession' as well"
+        ),
+        max_length=100,
+        blank=True,
+        null=True,
+    )
+    signatory_representative_profession = models.CharField(
+        verbose_name=_("Profession of the signatory representative"),
+        help_text=_("signatory representative profession"),
+        max_length=100,
+        blank=True,
+        null=True,
+    )
+    contact_phone = models.CharField(
+        verbose_name=_("Contact phone number"),
+        max_length=40,
+        blank=True,
+    )
+    contact_email = models.CharField(
+        verbose_name=_("Contact email"), max_length=100, blank=True
+    )
+    dpo_email = models.CharField(
+        verbose_name=_("Data protection officer email"),
+        max_length=100,
+        blank=True,
+    )
 
     class Meta:
         db_table = "joanie_organization"
         verbose_name = _("Organization")
         verbose_name_plural = _("Organizations")
         ordering = ["-created_on"]
+        constraints = [
+            models.CheckConstraint(
+                check=(
+                    models.Q(
+                        signatory_representative__isnull=False,
+                        signatory_representative_profession__isnull=False,
+                    )
+                    | models.Q(
+                        signatory_representative__isnull=True,
+                        signatory_representative_profession__isnull=True,
+                    )
+                ),
+                name="both_signatory_representative_fields_must_be_set",
+                violation_error_message=_(
+                    "Both signatory representative fields must be set."
+                ),
+            )
+        ]
 
     def __str__(self):
         return (
@@ -179,8 +251,13 @@ class Organization(parler_models.TranslatableModel, BaseModel):
 
     def clean(self):
         """
-        We normalize the code with slugify for better uniqueness
+        We normalize the code with slugify for better uniqueness. We also format the
+        `contact_phone` value for consistency in database.
         """
+        if phone_number := self.contact_phone:
+            self.contact_phone = "".join(
+                char for char in phone_number if char.isdigit() or char == "+"
+            )
         # Normalize the code by slugifying and capitalizing it
         self.code = utils.normalize_code(self.code)
         return super().clean()

@@ -18,7 +18,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         user = factories.UserFactory(
             email="student@exmaple.fr", first_name="John Doe", last_name=""
         )
-        address = factories.AddressFactory(
+        address = factories.UserAddressFactory(
             owner=user,
             first_name="John",
             last_name="Doe",

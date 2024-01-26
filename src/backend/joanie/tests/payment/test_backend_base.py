@@ -8,7 +8,7 @@ from django.core import mail
 from rest_framework.test import APIRequestFactory
 
 from joanie.core import enums
-from joanie.core.factories import AddressFactory, OrderFactory, UserFactory
+from joanie.core.factories import OrderFactory, UserAddressFactory, UserFactory
 from joanie.core.models import Address
 from joanie.payment.backends.base import BasePaymentBackend
 from joanie.payment.factories import BillingAddressDictFactory
@@ -186,7 +186,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase):
         backend = TestBasePaymentBackend()
         owner = UserFactory(email="sam@fun-test.fr", language="en-us")
         order = OrderFactory(owner=owner, state=enums.ORDER_STATE_SUBMITTED)
-        billing_address = AddressFactory(owner=owner, is_reusable=True)
+        billing_address = UserAddressFactory(owner=owner, is_reusable=True)
         payment = {
             "id": "pay_0",
             "amount": order.total,

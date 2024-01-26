@@ -53,7 +53,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
             email="student_do@example.fr", first_name="John Doe", last_name=""
         )
         owner = factories.UserFactory(email="johndoe@example.fr")
-        factories.AddressFactory(owner=owner)
+        factories.UserAddressFactory(owner=owner)
         order = factories.OrderFactory(
             owner=owner,
             state=enums.ORDER_STATE_VALIDATED,
@@ -81,7 +81,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         user = factories.UserFactory(
             email="student_do@example.fr", first_name="John Doe", last_name=""
         )
-        factories.AddressFactory(owner=user)
+        factories.UserAddressFactory(owner=user)
         order = factories.OrderFactory(
             owner=user,
             state=random.choice(
@@ -118,7 +118,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         user = factories.UserFactory(
             email="student_do@example.fr", first_name="John Doe", last_name=""
         )
-        factories.AddressFactory(owner=user)
+        factories.UserAddressFactory(owner=user)
         order = factories.OrderFactory(
             owner=user,
             state=enums.ORDER_STATE_VALIDATED,

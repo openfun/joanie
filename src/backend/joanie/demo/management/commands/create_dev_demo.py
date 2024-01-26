@@ -270,7 +270,7 @@ class Command(BaseCommand):
             first_name="Étudiant",
         )
         payment_factories.CreditCardFactory(owner=student_user)
-        factories.AddressFactory(owner=student_user)
+        factories.UserAddressFactory(owner=student_user)
 
         # First create a course product to learn how to become a botanist
         # 1/ some course runs are required to become a botanist

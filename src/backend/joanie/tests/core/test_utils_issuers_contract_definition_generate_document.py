@@ -24,7 +24,7 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
         user = factories.UserFactory(
             email="student@example.fr", first_name="John", last_name="Doe"
         )
-        address = factories.AddressFactory(
+        address = factories.UserAddressFactory(
             owner=user,
             address="1 Rue de L'Exemple",
             postcode="75000",

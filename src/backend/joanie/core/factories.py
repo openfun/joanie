@@ -673,7 +673,7 @@ class OrderTargetCourseRelationFactory(factory.django.DjangoModelFactory):
 
 
 class AddressFactory(factory.django.DjangoModelFactory):
-    """A factory to create an user address"""
+    """A factory to create an address"""
 
     class Meta:
         model = models.Address
@@ -685,7 +685,18 @@ class AddressFactory(factory.django.DjangoModelFactory):
     country = factory.Faker("country_code")
     first_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")
+
+
+class UserAddressFactory(AddressFactory):
+    """A factory to create a user address"""
+
     owner = factory.SubFactory(UserFactory)
+
+
+class OrganizationAddressFactory(AddressFactory):
+    """A factory to create an organization address"""
+
+    organization = factory.SubFactory(OrganizationFactory)
 
 
 class OrderCertificateFactory(factory.django.DjangoModelFactory):
