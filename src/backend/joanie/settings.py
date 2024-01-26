@@ -297,7 +297,7 @@ class Base(Configuration):
             "nested_multipart_parser.drf.DrfNestedParser",
         ],
         "EXCEPTION_HANDLER": "joanie.core.api.exception_handler",
-        "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+        "DEFAULT_PAGINATION_CLASS": "joanie.core.pagination.Pagination",
         "PAGE_SIZE": 20,
         "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.URLPathVersioning",
         "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
