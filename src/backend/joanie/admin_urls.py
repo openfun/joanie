@@ -67,6 +67,11 @@ admin_organization_related_router.register(
     api_admin.OrganizationAccessViewSet,
     basename="admin_organization_accesses",
 )
+admin_organization_related_router.register(
+    "addresses",
+    api_admin.OrganizationAddressViewSet,
+    basename="admin_organization_addresses",
+)
 
 # Admin API routes nested under products
 admin_product_related_router = DefaultRouter()

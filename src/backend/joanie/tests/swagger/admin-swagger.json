@@ -2789,6 +2789,217 @@
                 }
             }
         },
+        "/api/v1.0/admin/organizations/{organization_id}/addresses/": {
+            "post": {
+                "operationId": "organizations_addresses_create",
+                "description": "Write only Address for Organizations ViewSet.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "organization_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "organizations"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminOrganizationAddressRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminOrganizationAddressRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminOrganizationAddress"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/admin/organizations/{organization_id}/addresses/{id}/": {
+            "put": {
+                "operationId": "organizations_addresses_update",
+                "description": "Write only Address for Organizations ViewSet.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "path",
+                        "name": "organization_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "organizations"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminOrganizationAddressRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminOrganizationAddressRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminOrganizationAddress"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "organizations_addresses_partial_update",
+                "description": "Write only Address for Organizations ViewSet.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "path",
+                        "name": "organization_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "organizations"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedAdminOrganizationAddressRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedAdminOrganizationAddressRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminOrganizationAddress"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "organizations_addresses_destroy",
+                "description": "Delete the address of an organization when the relation exists only.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "path",
+                        "name": "organization_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "organizations"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
         "/api/v1.0/admin/organizations/{id}/": {
             "get": {
                 "operationId": "organizations_retrieve",
@@ -4836,10 +5047,61 @@
                     },
                     "title": {
                         "type": "string"
+                    },
+                    "enterprise_code": {
+                        "type": "string",
+                        "nullable": true,
+                        "maxLength": 50
+                    },
+                    "activity_category_code": {
+                        "type": "string",
+                        "maxLength": 50
+                    },
+                    "representative_profession": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Profession of the organization's representative",
+                        "description": "representative profession",
+                        "maxLength": 100
+                    },
+                    "signatory_representative": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "This field is optional. If it is set, you must set the field'signatory_representative_profession' as well",
+                        "maxLength": 100
+                    },
+                    "signatory_representative_profession": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Profession of the signatory representative",
+                        "description": "signatory representative profession",
+                        "maxLength": 100
+                    },
+                    "contact_phone": {
+                        "type": "string",
+                        "title": "Contact phone number",
+                        "maxLength": 40
+                    },
+                    "contact_email": {
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "dpo_email": {
+                        "type": "string",
+                        "title": "Data protection officer email",
+                        "maxLength": 100
+                    },
+                    "addresses": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AdminOrganizationAddress"
+                        },
+                        "readOnly": true
                     }
                 },
                 "required": [
                     "accesses",
+                    "addresses",
                     "code",
                     "id",
                     "title"
@@ -4880,6 +5142,119 @@
                         "$ref": "#/components/schemas/OrganizationAccessRoleChoiceEnum"
                     }
                 }
+            },
+            "AdminOrganizationAddress": {
+                "type": "object",
+                "description": "Serializer for the Address model for an organization",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "description": "primary key for the record as UUID"
+                    },
+                    "title": {
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "address": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "postcode": {
+                        "type": "string",
+                        "maxLength": 50
+                    },
+                    "city": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "country": {
+                        "$ref": "#/components/schemas/CountryEnum"
+                    },
+                    "first_name": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "last_name": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "is_main": {
+                        "type": "boolean",
+                        "title": "Main"
+                    },
+                    "is_reusable": {
+                        "type": "boolean",
+                        "title": "Reusable"
+                    }
+                },
+                "required": [
+                    "address",
+                    "city",
+                    "country",
+                    "first_name",
+                    "id",
+                    "last_name",
+                    "postcode",
+                    "title"
+                ]
+            },
+            "AdminOrganizationAddressRequest": {
+                "type": "object",
+                "description": "Serializer for the Address model for an organization",
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 100
+                    },
+                    "address": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                    },
+                    "postcode": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 50
+                    },
+                    "city": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                    },
+                    "country": {
+                        "$ref": "#/components/schemas/CountryEnum"
+                    },
+                    "first_name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                    },
+                    "last_name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                    },
+                    "is_main": {
+                        "type": "boolean",
+                        "title": "Main"
+                    },
+                    "is_reusable": {
+                        "type": "boolean",
+                        "title": "Reusable"
+                    }
+                },
+                "required": [
+                    "address",
+                    "city",
+                    "country",
+                    "first_name",
+                    "last_name",
+                    "postcode",
+                    "title"
+                ]
             },
             "AdminOrganizationLight": {
                 "type": "object",
@@ -4939,6 +5314,49 @@
                     "title": {
                         "type": "string",
                         "minLength": 1
+                    },
+                    "enterprise_code": {
+                        "type": "string",
+                        "nullable": true,
+                        "maxLength": 50
+                    },
+                    "activity_category_code": {
+                        "type": "string",
+                        "maxLength": 50
+                    },
+                    "representative_profession": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Profession of the organization's representative",
+                        "description": "representative profession",
+                        "maxLength": 100
+                    },
+                    "signatory_representative": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "This field is optional. If it is set, you must set the field'signatory_representative_profession' as well",
+                        "maxLength": 100
+                    },
+                    "signatory_representative_profession": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Profession of the signatory representative",
+                        "description": "signatory representative profession",
+                        "maxLength": 100
+                    },
+                    "contact_phone": {
+                        "type": "string",
+                        "title": "Contact phone number",
+                        "maxLength": 40
+                    },
+                    "contact_email": {
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "dpo_email": {
+                        "type": "string",
+                        "title": "Data protection officer email",
+                        "maxLength": 100
                     }
                 },
                 "required": [
@@ -6185,6 +6603,53 @@
                     }
                 }
             },
+            "PatchedAdminOrganizationAddressRequest": {
+                "type": "object",
+                "description": "Serializer for the Address model for an organization",
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 100
+                    },
+                    "address": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                    },
+                    "postcode": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 50
+                    },
+                    "city": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                    },
+                    "country": {
+                        "$ref": "#/components/schemas/CountryEnum"
+                    },
+                    "first_name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                    },
+                    "last_name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                    },
+                    "is_main": {
+                        "type": "boolean",
+                        "title": "Main"
+                    },
+                    "is_reusable": {
+                        "type": "boolean",
+                        "title": "Reusable"
+                    }
+                }
+            },
             "PatchedAdminOrganizationRequest": {
                 "type": "object",
                 "description": "Serializer for Organization model.",
@@ -6218,6 +6683,49 @@
                     "title": {
                         "type": "string",
                         "minLength": 1
+                    },
+                    "enterprise_code": {
+                        "type": "string",
+                        "nullable": true,
+                        "maxLength": 50
+                    },
+                    "activity_category_code": {
+                        "type": "string",
+                        "maxLength": 50
+                    },
+                    "representative_profession": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Profession of the organization's representative",
+                        "description": "representative profession",
+                        "maxLength": 100
+                    },
+                    "signatory_representative": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "This field is optional. If it is set, you must set the field'signatory_representative_profession' as well",
+                        "maxLength": 100
+                    },
+                    "signatory_representative_profession": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Profession of the signatory representative",
+                        "description": "signatory representative profession",
+                        "maxLength": 100
+                    },
+                    "contact_phone": {
+                        "type": "string",
+                        "title": "Contact phone number",
+                        "maxLength": 40
+                    },
+                    "contact_email": {
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "dpo_email": {
+                        "type": "string",
+                        "title": "Data protection officer email",
+                        "maxLength": 100
                     }
                 }
             },

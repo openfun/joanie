@@ -85,13 +85,6 @@ class OwnerFilter(AutocompleteFilter):
     field_name = "owner"
 
 
-class RequiredOwnerFilter(RequiredFilterMixin, AutocompleteFilter):
-    """Required filter on an "owner" foreign key."""
-
-    title = _("Owner")
-    field_name = "owner"
-
-
 class RequiredUserFilter(RequiredFilterMixin, AutocompleteFilter):
     """Required filter on an "user" foreign key."""
 
@@ -611,7 +604,7 @@ class EnrollmentAdmin(admin.ModelAdmin):
 class AddressAdmin(admin.ModelAdmin):
     """Admin class for the Address model"""
 
-    autocomplete_fields = ["owner"]
+    autocomplete_fields = ["owner", "organization"]
     list_display = (
         "title",
         "full_name",
@@ -621,19 +614,34 @@ class AddressAdmin(admin.ModelAdmin):
         "country",
         "is_main",
         "owner",
+        "organization",
     )
-    list_filter = [RequiredOwnerFilter, "is_main"]
-    list_select_related = ["owner"]
+    list_filter = [OwnerFilter, OrganizationFilter, "is_main"]
+    list_select_related = ["owner", "organization"]
     search_fields = ["title", "first_name", "last_name", "address", "postcode", "city"]
+
+    @csrf_protect_m
+    def get_queryset(self, request):
+        """
+        Returns an empty queryset of Addresses because we want the user to apply a filter to get
+        some results (either an owner or an organization).
+        """
+        queryset = super().get_queryset(request)
+        if not request.GET:
+            return models.Address.objects.none()
+        return queryset
 
     @csrf_protect_m
     def changelist_view(self, request, extra_context=None):
         """
-        Add instruction to explain that, due to the RequiredOwnerFilter, no results will be
-        shown until the view is filtered for a specific owner.
+        Add instructions to explain that, due to the `OrganizationFilter` and
+        `OwnerFilter`, no result will be shown until the view is filtered for a specific
+        'organization' or 'owner'.
         """
         extra_context = extra_context or {}
-        extra_context["subtitle"] = _("To get results, choose an owner on the right")
+        extra_context["subtitle"] = _(
+            "To get results, choose an owner or an organization on the right"
+        )
         return super().changelist_view(request, extra_context=extra_context)
 
 
