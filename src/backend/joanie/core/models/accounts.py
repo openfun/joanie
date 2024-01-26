@@ -99,6 +99,16 @@ class Address(BaseModel):
         verbose_name=_("owner"),
         related_name="addresses",
         on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    organization = models.ForeignKey(
+        to="core.Organization",
+        verbose_name=_("organization"),
+        related_name="addresses",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
     )
     is_main = models.BooleanField(_("main"), default=False)
     is_reusable = models.BooleanField(_("reusable"), default=False)
@@ -114,6 +124,19 @@ class Address(BaseModel):
                 fields=["owner"],
                 name="unique_main_address_per_user",
             ),
+            models.UniqueConstraint(
+                condition=models.Q(is_main=True),
+                fields=["organization"],
+                name="unique_main_address_per_organization",
+            ),
+            models.CheckConstraint(
+                check=(
+                    models.Q(organization__isnull=False, owner__isnull=True)
+                    | models.Q(organization__isnull=True, owner__isnull=False)
+                ),
+                name="either_owner_or_organization",
+                violation_error_message=_("Either owner or organization must be set."),
+            ),
             models.CheckConstraint(
                 check=(models.Q(is_reusable=True) | models.Q(is_main=False)),
                 name="main_address_must_be_reusable",
@@ -127,18 +150,19 @@ class Address(BaseModel):
     def clean(self):
         """
         If the address is reusable, we enforce some rules:
-        First if this is the user's first address, we enforce is_main to True.
-        Else if we are promoting an address as main, we demote the existing main address
-        Finally prevent to demote the main address directly.
+        If this is the user's or the organization's first address, we set 'is_main' to True.
+        If we are promoting an address as the main one, we demote the existing main address.
+        Finally, we prevent directly demoting the main address.
         """
         if self.is_reusable:
-            if not self.owner.addresses.exists():
+            instance = self.owner or self.organization
+            if not instance.addresses.exists():
                 self.is_main = True
             elif self.is_main:
-                self.owner.addresses.filter(is_main=True).update(is_main=False)
+                instance.addresses.filter(is_main=True).update(is_main=False)
             elif (
                 self.created_on
-                and self.owner.addresses.filter(is_main=True, pk=self.pk).exists()
+                and instance.addresses.filter(is_main=True, pk=self.pk).exists()
             ):
                 raise ValidationError(_("Demote a main address is forbidden"))
 

@@ -102,12 +102,12 @@ class AddressAPITestCase(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         # Create an address not reusable
-        factories.AddressFactory.create(owner=user, title="Home", is_reusable=False)
+        factories.UserAddressFactory.create(owner=user, title="Home", is_reusable=False)
 
-        address1 = factories.AddressFactory.create(
+        address1 = factories.UserAddressFactory.create(
             owner=user, title="Office", is_reusable=True
         )
-        address2 = factories.AddressFactory.create(
+        address2 = factories.UserAddressFactory.create(
             owner=user, title="Home", is_reusable=True
         )
 
@@ -146,7 +146,7 @@ class AddressAPITestCase(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
 
-        addresses = factories.AddressFactory.create_batch(
+        addresses = factories.UserAddressFactory.create_batch(
             3, owner=user, is_reusable=True
         )
         address_ids = [str(address.id) for address in addresses]
@@ -186,7 +186,7 @@ class AddressAPITestCase(BaseAPITestCase):
     def test_api_address_create_without_authorization(self):
         """Create/update user addresses not allowed without HTTP AUTH"""
         # Try to create address without Authorization
-        address = factories.AddressFactory.build()
+        address = factories.UserAddressFactory.build()
 
         response = self.client.post(
             "/api/v1.0/addresses/",
@@ -203,8 +203,8 @@ class AddressAPITestCase(BaseAPITestCase):
         """Update user addresses not allowed without HTTP AUTH"""
         # Try to update address without Authorization
         user = factories.UserFactory()
-        address = factories.AddressFactory(owner=user)
-        new_address = factories.AddressFactory.build()
+        address = factories.UserAddressFactory(owner=user)
+        new_address = factories.UserAddressFactory.build()
 
         response = self.client.put(
             f"/api/v1.0/addresses/{address.id}",
@@ -222,7 +222,7 @@ class AddressAPITestCase(BaseAPITestCase):
     def test_api_address_create_with_bad_token(self):
         """Create addresses not allowed with bad user token"""
         # Try to create addresses with bad token
-        address = factories.AddressFactory.build()
+        address = factories.UserAddressFactory.build()
 
         response = self.client.post(
             "/api/v1.0/addresses/",
@@ -238,8 +238,8 @@ class AddressAPITestCase(BaseAPITestCase):
         """Update addresses not allowed with bad user token"""
         # Try to update addresses with bad token
         user = factories.UserFactory()
-        address = factories.AddressFactory.create(owner=user)
-        new_address = factories.AddressFactory.build()
+        address = factories.UserAddressFactory.create(owner=user)
+        new_address = factories.UserAddressFactory.build()
 
         response = self.client.put(
             f"/api/v1.0/addresses/{address.id}",
@@ -261,7 +261,7 @@ class AddressAPITestCase(BaseAPITestCase):
             user,
             expires_at=arrow.utcnow().shift(days=-1).datetime,
         )
-        address = factories.AddressFactory.build()
+        address = factories.UserAddressFactory.build()
 
         response = self.client.post(
             "/api/v1.0/addresses/",
@@ -282,8 +282,8 @@ class AddressAPITestCase(BaseAPITestCase):
             user,
             expires_at=arrow.utcnow().shift(days=-1).datetime,
         )
-        address = factories.AddressFactory.create(owner=user)
-        new_address = factories.AddressFactory.build()
+        address = factories.UserAddressFactory.create(owner=user)
+        new_address = factories.UserAddressFactory.build()
 
         response = self.client.put(
             f"/api/v1.0/addresses/{address.id}",
@@ -301,7 +301,7 @@ class AddressAPITestCase(BaseAPITestCase):
         """Create user addresses with valid token but bad data"""
         username = "panoramix"
         token = self.get_user_token(username)
-        address = factories.AddressFactory.build()
+        address = factories.UserAddressFactory.build()
         bad_payload = get_payload(address).copy()
         bad_payload["country"] = "FRANCE"
 
@@ -332,8 +332,8 @@ class AddressAPITestCase(BaseAPITestCase):
         """Update user addresses with valid token but bad data"""
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        address = factories.AddressFactory.create(owner=user, is_reusable=True)
-        new_address = factories.AddressFactory.build()
+        address = factories.UserAddressFactory.create(owner=user, is_reusable=True)
+        new_address = factories.UserAddressFactory.build()
         payload = get_payload(new_address)
 
         # Put request without address id should not be allowed
@@ -375,8 +375,8 @@ class AddressAPITestCase(BaseAPITestCase):
     def test_api_address_update_with_bad_user(self):
         """User token has to match with owner of address to update"""
         # create an address for a user
-        address = factories.AddressFactory()
-        new_address = factories.AddressFactory.build()
+        address = factories.UserAddressFactory()
+        new_address = factories.UserAddressFactory.build()
         # now use a token for an other user to update address
         token = self.get_user_token("panoramix")
         response = self.client.put(
@@ -394,7 +394,9 @@ class AddressAPITestCase(BaseAPITestCase):
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        address = factories.AddressFactory(owner=user, is_main=True, is_reusable=True)
+        address = factories.UserAddressFactory(
+            owner=user, is_main=True, is_reusable=True
+        )
 
         payload = get_payload(address)
         payload["is_main"] = False
@@ -416,7 +418,7 @@ class AddressAPITestCase(BaseAPITestCase):
         """Create/update user addresses with valid token and data"""
         username = "panoramix"
         token = self.get_user_token(username)
-        address = factories.AddressFactory.build()
+        address = factories.UserAddressFactory.build()
         payload = get_payload(address)
 
         response = self.client.post(
@@ -459,7 +461,7 @@ class AddressAPITestCase(BaseAPITestCase):
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        address = factories.AddressFactory.build()
+        address = factories.UserAddressFactory.build()
         # - Add an id field to the request body
         payload = get_payload(address)
         payload["id"] = uuid.uuid4()
@@ -501,7 +503,7 @@ class AddressAPITestCase(BaseAPITestCase):
     def test_api_address_delete_without_authorization(self):
         """Delete address is not allowed without authorization"""
         user = factories.UserFactory()
-        address = factories.AddressFactory.create(owner=user, title="Office")
+        address = factories.UserAddressFactory.create(owner=user, title="Office")
         response = self.client.delete(
             f"/api/v1.0/addresses/{address.id}/",
         )
@@ -510,7 +512,7 @@ class AddressAPITestCase(BaseAPITestCase):
     def test_api_address_delete_with_bad_authorization(self):
         """Delete address is not allowed with bad authorization"""
         user = factories.UserFactory()
-        address = factories.AddressFactory.create(owner=user)
+        address = factories.UserAddressFactory.create(owner=user)
         response = self.client.delete(
             f"/api/v1.0/addresses/{address.id}/",
             HTTP_AUTHORIZATION="Bearer nawak",
@@ -524,7 +526,7 @@ class AddressAPITestCase(BaseAPITestCase):
             user,
             expires_at=arrow.utcnow().shift(days=-1).datetime,
         )
-        address = factories.AddressFactory.create(owner=user)
+        address = factories.UserAddressFactory.create(owner=user)
         response = self.client.delete(
             f"/api/v1.0/addresses/{address.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -534,7 +536,7 @@ class AddressAPITestCase(BaseAPITestCase):
     def test_api_address_delete_with_bad_user(self):
         """User token has to match with owner of address to delete"""
         # create an address for a user
-        address = factories.AddressFactory()
+        address = factories.UserAddressFactory()
         # now use a token for an other user to update address
         token = self.get_user_token("panoramix")
         response = self.client.delete(
@@ -547,7 +549,7 @@ class AddressAPITestCase(BaseAPITestCase):
         """Delete reusable address is allowed with valid token"""
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        address = factories.AddressFactory.create(owner=user, is_reusable=True)
+        address = factories.UserAddressFactory.create(owner=user, is_reusable=True)
         response = self.client.delete(
             f"/api/v1.0/addresses/{address.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -559,7 +561,7 @@ class AddressAPITestCase(BaseAPITestCase):
         """Authenticated user should not be able to delete a not reusable address."""
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        address = factories.AddressFactory.create(owner=user, is_reusable=False)
+        address = factories.UserAddressFactory.create(owner=user, is_reusable=False)
         response = self.client.delete(
             f"/api/v1.0/addresses/{address.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -575,7 +577,7 @@ class AddressAPITestCase(BaseAPITestCase):
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        address = factories.AddressFactory.create(owner=user, is_reusable=True)
+        address = factories.UserAddressFactory.create(owner=user, is_reusable=True)
         InvoiceFactory(recipient_address=address)
         response = self.client.delete(
             f"/api/v1.0/addresses/{address.id}/",

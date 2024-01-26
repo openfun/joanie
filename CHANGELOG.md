@@ -10,6 +10,8 @@ and this project adheres to
 
 ## Added
 
+- Link Organization to Address Model
+- New properties on Organization model to complete contract definition context
 - Allow to bulk sign contracts by training
 - Filtering orders by organization, product, and course product relation
 - Allow to set CSRF_COOKIE_DOMAIN through env vars

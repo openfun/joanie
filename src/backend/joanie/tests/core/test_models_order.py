@@ -1244,7 +1244,7 @@ class OrderModelsTestCase(TestCase):
         error when trying to submit the order's contract for a signature.
         """
         user = factories.UserFactory()
-        factories.AddressFactory(owner=user)
+        factories.UserAddressFactory(owner=user)
         order = factories.OrderFactory(
             owner=user,
             product=factories.ProductFactory(contract_definition=None),
@@ -1266,7 +1266,7 @@ class OrderModelsTestCase(TestCase):
         signature.
         """
         user = factories.UserFactory()
-        factories.AddressFactory(owner=user)
+        factories.UserAddressFactory(owner=user)
         order = factories.OrderFactory(
             owner=user,
             state=random.choice(
@@ -1445,7 +1445,7 @@ class OrderModelsTestCase(TestCase):
         we cannot submit it again.
         """
         user = factories.UserFactory()
-        factories.AddressFactory(owner=user)
+        factories.UserAddressFactory(owner=user)
         order = factories.OrderFactory(
             owner=user,
             state=enums.ORDER_STATE_VALIDATED,

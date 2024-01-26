@@ -29,7 +29,7 @@ class ContractModelTestCase(TestCase):
         Check the signature dates constraints.
         """
         user = factories.UserFactory()
-        factories.AddressFactory.create(owner=user)
+        factories.UserAddressFactory.create(owner=user)
         order = factories.OrderFactory(
             owner=user,
             product__contract_definition=factories.ContractDefinitionFactory(),
@@ -144,7 +144,7 @@ class ContractModelTestCase(TestCase):
         'student_signed_on' and 'submitted_for_signature_on' can both be None.
         """
         user = factories.UserFactory()
-        factories.AddressFactory.create(owner=user)
+        factories.UserAddressFactory.create(owner=user)
         order = factories.OrderFactory(
             owner=user,
             product__contract_definition=factories.ContractDefinitionFactory(),
@@ -164,7 +164,7 @@ class ContractModelTestCase(TestCase):
         with a datetime value.
         """
         user = factories.UserFactory()
-        factories.AddressFactory.create(owner=user)
+        factories.UserAddressFactory.create(owner=user)
         order = factories.OrderFactory(
             owner=user,
             product__contract_definition=factories.ContractDefinitionFactory(),
@@ -190,7 +190,7 @@ class ContractModelTestCase(TestCase):
         with a datetime value.
         """
         user = factories.UserFactory()
-        factories.AddressFactory.create(owner=user)
+        factories.UserAddressFactory.create(owner=user)
         order = factories.OrderFactory(
             owner=user,
             product__contract_definition=factories.ContractDefinitionFactory(),
@@ -216,7 +216,7 @@ class ContractModelTestCase(TestCase):
         or 'submitted_for_signature_on' must also be set.
         """
         user = factories.UserFactory()
-        factories.AddressFactory.create(owner=user)
+        factories.UserAddressFactory.create(owner=user)
         order = factories.OrderFactory(
             owner=user,
             product=factories.ProductFactory(
@@ -248,7 +248,7 @@ class ContractModelTestCase(TestCase):
         can be set as long as the 'submitted_for_signature' datetime is not set.
         """
         user = factories.UserFactory()
-        factories.AddressFactory.create(owner=user)
+        factories.UserAddressFactory.create(owner=user)
         order = factories.OrderFactory(
             owner=user,
             product__contract_definition=factories.ContractDefinitionFactory(),
@@ -276,7 +276,7 @@ class ContractModelTestCase(TestCase):
         be set as long as the 'student_signed_on' datetime is not set.
         """
         user = factories.UserFactory()
-        factories.AddressFactory.create(owner=user)
+        factories.UserAddressFactory.create(owner=user)
         order = factories.OrderFactory(
             owner=user,
             product__contract_definition=factories.ContractDefinitionFactory(),
@@ -305,7 +305,7 @@ class ContractModelTestCase(TestCase):
         reciprocally.
         """
         user = factories.UserFactory()
-        factories.AddressFactory.create(owner=user)
+        factories.UserAddressFactory.create(owner=user)
         order = factories.OrderFactory(
             owner=user,
             product=factories.ProductFactory(),
@@ -352,7 +352,7 @@ class ContractModelTestCase(TestCase):
         not submitted for signature.
         """
         user = factories.UserFactory()
-        factories.AddressFactory.create(owner=user)
+        factories.UserAddressFactory.create(owner=user)
         order = factories.OrderFactory(
             owner=user,
             product__contract_definition=factories.ContractDefinitionFactory(),
@@ -369,7 +369,7 @@ class ContractModelTestCase(TestCase):
         'context' and 'definition_checksum' can not be left empty when the contract is signed.
         """
         user = factories.UserFactory()
-        factories.AddressFactory.create(owner=user)
+        factories.UserAddressFactory.create(owner=user)
         order = factories.OrderFactory(
             owner=user,
             product=factories.ProductFactory(),
@@ -397,7 +397,7 @@ class ContractModelTestCase(TestCase):
         'context' is set to None.
         """
         user = factories.UserFactory()
-        factories.AddressFactory.create(owner=user)
+        factories.UserAddressFactory.create(owner=user)
         order = factories.OrderFactory(
             owner=user,
             product=factories.ProductFactory(),
@@ -430,7 +430,7 @@ class ContractModelTestCase(TestCase):
         A signed document should have a context and a definition checksum set.
         """
         user = factories.UserFactory()
-        factories.AddressFactory.create(owner=user)
+        factories.UserAddressFactory.create(owner=user)
         order = factories.OrderFactory(
             owner=user,
             product=factories.ProductFactory(),
@@ -460,7 +460,7 @@ class ContractModelTestCase(TestCase):
         when 'student_signed_on' has a value.
         """
         user = factories.UserFactory()
-        factories.AddressFactory.create(owner=user)
+        factories.UserAddressFactory.create(owner=user)
         order = factories.OrderFactory(
             owner=user,
             product=factories.ProductFactory(),

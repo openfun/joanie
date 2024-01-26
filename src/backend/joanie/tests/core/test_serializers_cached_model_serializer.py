@@ -22,7 +22,7 @@ class TestCachedModelSerializer(TestCase):
                 fields = ("title",)
 
         # - First serializer should return address title and is_main property
-        address = factories.AddressFactory(title="Home")
+        address = factories.UserAddressFactory(title="Home")
         serializer = AddressCachedSerializer(address)
         self.assertEqual(serializer.data, {"title": "Home"})
 
@@ -55,7 +55,7 @@ class TestCachedModelSerializer(TestCase):
                 fields = ("title",)
 
         # - First serializer should return address title and is_main property
-        address = factories.AddressFactory(title="Home")
+        address = factories.UserAddressFactory(title="Home")
         serializer = AddressCachedSerializer(address)
         self.assertEqual(serializer.data, {"title": "Home"})
 
@@ -82,7 +82,7 @@ class TestCachedModelSerializer(TestCase):
                 fields = ("title",)
 
         # - First serializer should return address title and is_main property
-        address = factories.AddressFactory(title="Home")
+        address = factories.UserAddressFactory(title="Home")
         serializer = AddressCachedSerializer(address)
         self.assertEqual(serializer.data, {"title": "Home"})
 
