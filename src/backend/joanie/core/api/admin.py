@@ -436,3 +436,46 @@ class OrderViewSet(
         "order_group",
     )
     ordering = "created_on"
+
+
+class OrganizationAddressViewSet(
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
+    """
+    Write only Address for Organizations ViewSet.
+    """
+
+    authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
+    permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
+    serializer_class = serializers.AdminOrganizationAddressSerializer
+    queryset = models.Address.objects.filter(owner__isnull=True).select_related(
+        "organization"
+    )
+    ordering = "created_on"
+
+    def get_serializer_context(self):
+        """
+        Extra context provided to the serializer class.
+        """
+        context = super().get_serializer_context()
+        context["organization_id"] = self.kwargs["organization_id"]
+        return context
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Delete the address of an organization when the relation exists only.
+        """
+        address = self.get_object()
+        organization_id = self.kwargs["organization_id"]
+
+        try:
+            models.Address.objects.get(pk=address.pk, organization_id=organization_id)
+        except models.Address.DoesNotExist as error:
+            raise ValidationError(
+                "The relation does not exist between the address and the organization."
+            ) from error
+
+        return super().destroy(request, *args, **kwargs)

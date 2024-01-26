@@ -161,6 +161,78 @@ class AdminOrganizationAccessSerializer(serializers.ModelSerializer):
         return validated_data
 
 
+class AdminOrganizationAddressSerializer(serializers.ModelSerializer):
+    """Serializer for the Address model for an organization"""
+
+    class Meta:
+        model = models.Address
+        fields = [
+            "id",
+            "title",
+            "address",
+            "postcode",
+            "city",
+            "country",
+            "first_name",
+            "last_name",
+            "is_main",
+            "is_reusable",
+        ]
+        read_only_fields = [
+            "id",
+        ]
+
+    def create(self, validated_data):
+        """
+        Create a new address and attach it to the provided organization.
+        """
+        validation_error = {}
+        organization_id = self.context.get("organization_id", None)
+
+        if organization_id is None:
+            validation_error["organization_id"] = "This field is required"
+
+        if validation_error:
+            raise serializers.ValidationError(validation_error)
+
+        try:
+            organization = models.Organization.objects.get(pk=organization_id)
+        except models.Organization.DoesNotExist as exception:
+            raise serializers.ValidationError(
+                {"organization_id": "Resource does not exist."}
+            ) from exception
+
+        validated_data["organization"] = organization
+
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        """
+        Update the address object if the relation exists between the address and the
+        provided organization.
+        """
+        if organization_id := self.context.get("organization_id", None):
+            try:
+                models.Address.objects.get(
+                    pk=instance.pk, organization_id=organization_id
+                )
+            except models.Address.DoesNotExist as exception:
+                raise serializers.ValidationError(
+                    {
+                        "detail": (
+                            "The relation does not exist between the address and the organization."
+                        )
+                    }
+                ) from exception
+
+        if organization_id is None:
+            raise serializers.ValidationError(
+                {"organization_id": "This field is required."}
+            )
+
+        return super().update(instance, validated_data)
+
+
 class AdminOrganizationSerializer(serializers.ModelSerializer):
     """Serializer for Organization model."""
 
@@ -168,6 +240,7 @@ class AdminOrganizationSerializer(serializers.ModelSerializer):
     logo = ThumbnailDetailField(required=False)
     signature = ImageDetailField(required=False)
     accesses = AdminOrganizationAccessSerializer(many=True, read_only=True)
+    addresses = AdminOrganizationAddressSerializer(many=True, read_only=True)
 
     class Meta:
         model = models.Organization
@@ -180,9 +253,19 @@ class AdminOrganizationSerializer(serializers.ModelSerializer):
             "representative",
             "signature",
             "title",
+            "enterprise_code",
+            "activity_category_code",
+            "representative_profession",
+            "signatory_representative",
+            "signatory_representative_profession",
+            "contact_phone",
+            "contact_email",
+            "dpo_email",
+            "addresses",
         )
         read_only_fields = (
             "accesses",
+            "addresses",
             "id",
         )
 

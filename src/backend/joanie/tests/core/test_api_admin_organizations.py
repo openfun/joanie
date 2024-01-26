@@ -197,7 +197,8 @@ class OrganizationAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
         organization = factories.OrganizationFactory()
-
+        # Add addresses to organization
+        address = factories.OrganizationAddressFactory(organization=organization)
         # Add accesses to organization
         accesses_count = random.randint(0, 5)
         factories.UserOrganizationAccessFactory.create_batch(
@@ -240,6 +241,30 @@ class OrganizationAdminApiTest(TestCase):
                     ),
                     "filename": organization.logo.name,
                 },
+                "enterprise_code": organization.enterprise_code,
+                "activity_category_code": organization.activity_category_code,
+                "representative_profession": organization.representative_profession,
+                "signatory_representative": organization.signatory_representative,
+                "signatory_representative_profession": (
+                    organization.signatory_representative_profession
+                ),
+                "contact_phone": organization.contact_phone,
+                "contact_email": organization.contact_email,
+                "dpo_email": organization.dpo_email,
+                "addresses": [
+                    {
+                        "id": str(address.id),
+                        "title": address.title,
+                        "address": address.address,
+                        "city": address.city,
+                        "country": address.country,
+                        "first_name": address.first_name,
+                        "last_name": address.last_name,
+                        "is_main": address.is_main,
+                        "is_reusable": address.is_reusable,
+                        "postcode": address.postcode,
+                    }
+                ],
                 "accesses": [
                     {
                         "id": str(access.id),
