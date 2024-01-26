@@ -18,9 +18,10 @@ from sqlalchemy.sql.functions import count
 
 from joanie.core import models, utils
 from joanie.lms_handler.api import detect_lms_from_resource_link
+from joanie.lms_handler.backends.openedx import split_course_key
 
 # pylint: disable=too-many-statements
-# ruff: noqa: PLR0915
+# ruff: noqa: PLR0915,SLF001
 
 logging.StreamHandler.terminator = ""
 logger = logging.getLogger(__name__)
@@ -40,7 +41,7 @@ EDX_DATABASE_URL = (
     f"mysql+pymysql://{EDX_DATABASE_USER}:{EDX_DATABASE_PASSWORD}@"
     f"{EDX_DATABASE_HOST}:{EDX_DATABASE_PORT}/{EDX_DATABASE_NAME}"
 )
-EDX_TIME_ZONE = "Europe/Paris"
+EDX_TIME_ZONE = "UTC"
 DEBUG = False
 
 
@@ -54,6 +55,10 @@ def format_date(value: datetime) -> str | None:
         return make_date_aware(value).isoformat()
     except AttributeError:
         return None
+
+
+def extract_course_number(course_overview_id):
+    return utils.normalize_code(split_course_key(course_overview_id)[1])
 
 
 class Command(BaseCommand):
@@ -189,13 +194,14 @@ class Command(BaseCommand):
                 )
                 course_run = models.CourseRun.objects.get(pk=target_course_run.pk)
             else:
+                course_number = extract_course_number(edx_course_overview.id)
                 try:
-                    course = models.Course.objects.get(code=course_code)
+                    course = models.Course.objects.get(code=course_number)
                 except models.Course.DoesNotExist:
                     course = models.Course.objects.create(
                         created_on=format_date(edx_course_overview.created),
-                        code=course_code,
-                        title=edx_course_overview.display_name,
+                        code=course_number,
+                        title=edx_course_overview.display_name or course_number,
                     )
                     course.created_on = make_date_aware(edx_course_overview.created)
                     course.save()
@@ -205,7 +211,7 @@ class Command(BaseCommand):
                     **edx_course_run_dict,
                     course=course,
                 )
-                course_run.created_on = edx_course_overview.created
+                course_run.created_on = make_date_aware(edx_course_overview.created)
                 course_run.save()
 
             if title := edx_course_overview.display_name:
@@ -395,7 +401,9 @@ class Command(BaseCommand):
 
                 try:
                     course_run = models.CourseRun.objects.only("pk").get(
-                        resource_link__contains=edx_enrollment.course_id
+                        resource_link__contains=extract_course_number(
+                            edx_enrollment.course_id
+                        )
                     )
                 except models.CourseRun.DoesNotExist:
                     logger.error(
@@ -433,6 +441,12 @@ class Command(BaseCommand):
             build_end_time = time.time()
             logger.info(f"{build_end_time - build_time:.2f}s | ")
             create_time = time.time()
+
+            enrollment_created_on_field = models.Enrollment._meta.get_field(
+                "created_on"
+            )
+            enrollment_created_on_field.auto_now_add = False
+            enrollment_created_on_field.editable = True
             enrollments_created = models.Enrollment.objects.bulk_create(
                 enrollments_to_create
             )
@@ -443,6 +457,8 @@ class Command(BaseCommand):
             enrollments_updated = models.Enrollment.objects.bulk_update(
                 enrollments_to_update, ["is_active", "created_on"]
             )
+            enrollment_created_on_field.auto_now_add = True
+            enrollment_created_on_field.editable = False
             update_end_time = time.time()
             logger.info("Updated %s enrollments ", enrollments_updated)
             logger.info(f"{update_end_time - update_time:.2f}s | ")
