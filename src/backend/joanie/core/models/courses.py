@@ -218,18 +218,19 @@ class Organization(parler_models.TranslatableModel, BaseModel):
             "sign_contracts": role == enums.OWNER,
         }
 
-    def signature_backend_references_to_sign(
-        self, contracts_ids: list[str] | None = None
-    ):
+    def signature_backend_references_to_sign(self, **kwargs):
         """
         Return the list of references that should be signed by the organization.
         """
-        contracts_ids_filter = Q()
-        if contracts_ids:
-            contracts_ids_filter = Q(id__in=contracts_ids)
+        filters = Q()
+        if contract_ids := kwargs.get("contract_ids"):
+            filters &= Q(id__in=contract_ids)
+        if relation_ids := kwargs.get("course_product_relation_ids"):
+            filters &= Q(order__product__course_relations__id__in=relation_ids)
+
         contracts_to_sign = list(
             Contract.objects.filter(
-                contracts_ids_filter,
+                filters,
                 signature_backend_reference__isnull=False,
                 submitted_for_signature_on__isnull=False,
                 student_signed_on__isnull=False,
@@ -237,20 +238,19 @@ class Organization(parler_models.TranslatableModel, BaseModel):
                 order__state=enums.ORDER_STATE_VALIDATED,
             ).values_list("id", "signature_backend_reference")
         )
-        if contracts_ids and len(contracts_to_sign) != len(contracts_ids):
+
+        if contract_ids and len(contracts_to_sign) != len(contract_ids):
             raise exceptions.NoContractToSignError(
                 "Some contracts are not available for this organization."
             )
 
         return tuple(zip(*contracts_to_sign, strict=True)) or ((), ())
 
-    def contracts_signature_link(
-        self, user: User, contracts_ids: list[str] | None = None
-    ):
+    def contracts_signature_link(self, user: User, **kwargs):
         """
         Retrieve a signature invitation link for all available contracts.
         """
-        ids, references = self.signature_backend_references_to_sign(contracts_ids)
+        ids, references = self.signature_backend_references_to_sign(**kwargs)
         if not references:
             raise exceptions.NoContractToSignError(
                 "No contract to sign for this organization."

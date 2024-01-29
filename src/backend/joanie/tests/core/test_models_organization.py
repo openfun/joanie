@@ -268,7 +268,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
 
         self.assertEqual(
             organization.signature_backend_references_to_sign(
-                contracts_ids=contracts_to_sign_ids
+                contract_ids=contracts_to_sign_ids
             ),
             (
                 tuple(contract.id for contract in reversed(contracts_to_sign)),
@@ -339,7 +339,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
 
         with self.assertRaises(NoContractToSignError) as context:
             organization.signature_backend_references_to_sign(
-                contracts_ids=contracts_to_sign_ids
+                contract_ids=contracts_to_sign_ids
             )
 
         self.assertEqual(
@@ -413,7 +413,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         contracts_to_sign_ids = [contract.id for contract in contracts_to_sign]
 
         (invitation_url, contract_ids) = organization.contracts_signature_link(
-            user=user, contracts_ids=contracts_to_sign_ids
+            user=user, contract_ids=contracts_to_sign_ids
         )
         self.assertIn("https://dummysignaturebackend.fr/?requestToken=", invitation_url)
         self.assertCountEqual(contract_ids, contracts_to_sign_ids)
