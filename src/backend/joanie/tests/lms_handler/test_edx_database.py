@@ -1,54 +1,33 @@
-from unittest.mock import patch, MagicMock
-
+"""Module for testing the OpenEdxDB class."""
 from django.test import TestCase
 
-from joanie.lms_handler.edx_imports.edx_database import OpenEdxDB, DEBUG, EDX_DATABASE_URL
+from joanie.lms_handler.edx_imports.edx_database import OpenEdxDB
+from joanie.lms_handler.edx_imports.edx_factories import engine, session, EdxUniversityFactory
+from joanie.lms_handler.edx_imports.edx_models import Base
 
 
 class OpenEdxDBTestCase(TestCase):
+    """Test case for the OpenEdxDB class."""
     def setUp(self):
-        self.db = OpenEdxDB()
+        """Set up the test case."""
+        self.db = OpenEdxDB(engine, session)
+        Base.metadata.create_all(engine)
 
-    @patch('joanie.lms_handler.edx_imports.edx_database.create_engine')
-    @patch('joanie.lms_handler.edx_imports.edx_database.automap_base')
-    @patch('joanie.lms_handler.edx_imports.edx_database.Session')
-    def test_edx_database_connect_to_edx_db(self, mock_session, mock_base, mock_create_engine):
-        mock_engine = MagicMock()
-        mock_create_engine.return_value = mock_engine
+    def tearDown(self):
+        """Tear down the test case."""
+        self.db.session.rollback()
 
-        mock_base_instance = MagicMock()
-        mock_base.return_value = mock_base_instance
-
-        self.db.connect_to_edx_db()
-
-        mock_create_engine.assert_called_once_with(EDX_DATABASE_URL, echo=DEBUG)
-        mock_base_instance.prepare.assert_called_once()
-        mock_session.assert_called_once_with(mock_engine)
-        self.assertEqual(self.db.University, mock_base_instance.classes.universities_university)
-        self.assertEqual(self.db.CourseOverview, mock_base_instance.classes.course_overviews_courseoverview)
-        self.assertEqual(self.db.User, mock_base_instance.classes.auth_user)
-        self.assertEqual(self.db.StudentCourseEnrollment, mock_base_instance.classes.student_courseenrollment)
-
-    @patch('joanie.lms_handler.edx_imports.edx_database.connect_to_edx_db')
-    @patch('joanie.lms_handler.edx_imports.edx_database.Session')
-    @patch('joanie.lms_handler.edx_imports.edx_database.select')
-    def test_edx_database_get_universities(self, mock_select, mock_session, mock_connect):
-        mock_session_instance = MagicMock()
-        mock_session.return_value = mock_session_instance
-
-        mock_select_instance = MagicMock()
-        mock_select.return_value = mock_select_instance
-
-        mock_scalars = MagicMock()
-        mock_session_instance.scalars.return_value = mock_scalars
-
-        mock
+    def test_edx_database_get_universities(self):
+        """Test the get_universities method."""
+        edx_universities = EdxUniversityFactory.create_batch(3)
 
         universities = self.db.get_universities()
 
-        mock_select.assert_called_once_with(self.db.University)
-        mock_session_instance.scalars.assert_called_once_with(mock_select_instance)
-        mock_scalars.all.assert_called_once()
+        for edx_university in edx_universities:
+            self.assertIn(edx_university, universities)
 
-        self.assertEqual(universities, mock_scalars.all.return_value)
-        breakpoint()
+    def test_edx_database_get_universities_empty(self):
+        """Test the get_universities method when there are no universities."""
+        universities = self.db.get_universities()
+
+        self.assertEqual(universities, [])

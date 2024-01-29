@@ -6,6 +6,14 @@ from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session, joinedload, load_only
 from sqlalchemy.sql.functions import count
 
+from joanie.lms_handler.edx_imports.edx_models import (
+    UniversitiesUniversity,
+    CourseOverviewsCourseoverview,
+    AuthUser,
+    StudentCourseenrollment,
+)
+
+
 logging.StreamHandler.terminator = ""
 logger = logging.getLogger(__name__)
 
@@ -37,34 +45,23 @@ class OpenEdxDB:
     User = None
     StudentCourseEnrollment = None
 
-    def connect_to_edx_db(self):
-        """Connect to OpenEdxDb and create models"""
-        logger.info("Connecting to OpenEdxDb ")
-        engine = create_engine(EDX_DATABASE_URL, echo=DEBUG)
-        Base = automap_base()  # pylint: disable=invalid-name
-        Base.prepare(
-            engine,
-            reflect=True,
-            reflection_options={
-                "only": [
-                    "auth_user",
-                    "universities_university",
-                    "course_overviews_courseoverview",
-                    "student_courseenrollment",
-                ]
-            },
-        )
-        self.session = Session(engine)
-        self.University = Base.classes.universities_university  # pylint: disable=invalid-name
-        self.CourseOverview = Base.classes.course_overviews_courseoverview  # pylint: disable=invalid-name
-        self.User = Base.classes.auth_user  # pylint: disable=invalid-name
-        self.StudentCourseEnrollment = Base.classes.student_courseenrollment  # pylint: disable=invalid-name
-        logger.info("Connected\n")
+    def __init__(self, engine=None, session=None):
+        if engine is not None:
+            self.engine = engine
+        else:
+            self.engine = create_engine(EDX_DATABASE_URL, echo=DEBUG)
+        if session is not None:
+            self.session = session
+        else:
+            self.session = Session(self.engine)
+
+        self.University = UniversitiesUniversity  # pylint: disable=invalid-name
+        self.CourseOverview = CourseOverviewsCourseoverview  # pylint: disable=invalid-name
+        self.User = AuthUser  # pylint: disable=invalid-name
+        self.StudentCourseEnrollment = StudentCourseenrollment  # pylint: disable=invalid-name
 
     def get_universities(self):
         """Get universities from OpenEdxDb"""
-        if not self.session:
-            self.connect_to_edx_db()
         return self.session.scalars(
             select(self.University).options(
                 load_only(
@@ -77,8 +74,6 @@ class OpenEdxDB:
 
     def get_course_overviews(self):
         """Get course_overviews from OpenEdxDb"""
-        if not self.session:
-            self.connect_to_edx_db()
         return self.session.scalars(
             select(self.CourseOverview).options(
                 load_only(
@@ -95,15 +90,11 @@ class OpenEdxDB:
 
     def get_users_count(self):
         """Get users count from OpenEdxDb"""
-        if not self.session:
-            self.connect_to_edx_db()
         query_count = select(count(self.User.id))
         return self.session.execute(query_count).scalar()
 
     def get_users(self, start, stop):
         """Get users from OpenEdxDb by slicing"""
-        if not self.session:
-            self.connect_to_edx_db()
         query = (
             select(self.User)
             .options(
@@ -127,8 +118,6 @@ class OpenEdxDB:
 
     def get_enrollments_count(self):
         """Get enrollments count from OpenEdxDb"""
-        if not self.session:
-            self.connect_to_edx_db()
         query_count = select(count(self.StudentCourseEnrollment.id)).join(
             self.CourseOverview,
             self.StudentCourseEnrollment.course_id == self.CourseOverview.id,
@@ -137,8 +126,6 @@ class OpenEdxDB:
 
     def get_enrollments(self, start, stop):
         """Get enrollments from OpenEdxDb by slicing"""
-        if not self.session:
-            self.connect_to_edx_db()
         query = (
             select(self.StudentCourseEnrollment, self.User)
             .join(

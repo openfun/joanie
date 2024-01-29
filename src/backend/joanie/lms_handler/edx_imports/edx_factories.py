@@ -2,14 +2,14 @@
 import factory
 from faker import Faker
 from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.orm import registry, Session
 
 from joanie.lms_handler.edx_imports import edx_models
 
 faker = Faker()
-
-engine = create_engine("sqlite://")
-session = scoped_session(sessionmaker(bind=engine))
+engine = create_engine("sqlite+pysqlite:///:memory:", echo=False)
+session = Session(engine)
+registry().metadata.create_all(engine)
 
 
 class EdxUniversityFactory(factory.alchemy.SQLAlchemyModelFactory):
@@ -23,9 +23,18 @@ class EdxUniversityFactory(factory.alchemy.SQLAlchemyModelFactory):
         model = edx_models.UniversitiesUniversity
         sqlalchemy_session = session
 
-    code = factory.Faker("pystr")
+    id = factory.Faker("pyint")
     name = factory.Faker("company")
+    slug = factory.Faker("slug")
+    code = factory.Faker("pystr")
     logo = factory.Faker("file_name")
+    description = factory.Faker("sentence")
+    detail_page_enabled = True
+    score = factory.Faker("pyint")
+    short_name = factory.Faker("company")
+    is_obsolete = False
+    prevent_auto_update = False
+    partnership_level = factory.Faker("pystr")
 
 
 class EdxCourseOverviewFactory(factory.alchemy.SQLAlchemyModelFactory):

@@ -26,8 +26,6 @@ from joanie.lms_handler.edx_imports.edx_database import (
 logging.StreamHandler.terminator = ""
 logger = logging.getLogger(__name__)
 
-open_edx_db = OpenEdxDB()
-
 
 def make_date_aware(date: datetime) -> datetime:
     """Make a datetime aware using the OpenEdx timezone"""
@@ -62,10 +60,10 @@ def download_and_store(filename):
         logger.error("Unable to download file, status code: %s", response.status_code)
 
 
-def import_universities():
+def import_universities(db=OpenEdxDB()):
     """Import organizations from OpenEdx universities"""
     logger.info("Getting universities ")
-    universities = open_edx_db.get_universities()
+    universities = db.get_universities()
     logger.info("OK\n")
     for university in universities:
         logger.info("  Import %s: ", university.name)
@@ -85,10 +83,10 @@ def import_universities():
     logger.info("Universities import Done\n")
 
 
-def import_course_runs():
+def import_course_runs(db=OpenEdxDB()):
     """Import course runs and courses from OpenEdx course_overviews"""
     logger.info("Getting course runs ")
-    edx_course_overviews = open_edx_db.get_course_overviews()
+    edx_course_overviews = db.get_course_overviews()
     logger.info("OK\n")
     for edx_course_overview in edx_course_overviews:
         logger.info("  Import course run %s: ", edx_course_overview.id)
@@ -151,17 +149,17 @@ def import_course_runs():
     logger.info("Course runs import Done\n")
 
 
-def import_users(batch_size=1000):
+def import_users(batch_size=1000, db=OpenEdxDB()):
     """Import users from OpenEdx auth_user"""
     logger.info("Getting users by batch of %s\n", batch_size)
-    users_count = open_edx_db.get_users_count()
+    users_count = db.get_users_count()
 
     for current_user_index in range(0, users_count, batch_size):
         start = current_user_index
         stop = current_user_index + batch_size
         start_time = time.time()
         logger.info("  Processing %s-%s/%s ", start, stop, users_count)
-        users = open_edx_db.get_users(start, stop)
+        users = db.get_users(start, stop)
         get_time = time.time()
         logger.info(" %s | ", f"{get_time - start_time:.2f}s")
 
@@ -236,10 +234,10 @@ def import_users(batch_size=1000):
     logger.info("Users import Done\n\n")
 
 
-def import_enrollments(batch_size=1000):
+def import_enrollments(batch_size=1000, db=OpenEdxDB()):
     """Import enrollments from OpenEdx student_course_enrollment"""
     logger.info("Getting enrollments by batch of %s\n", batch_size)
-    enrollments_count = open_edx_db.get_enrollments_count()
+    enrollments_count = db.get_enrollments_count()
 
     last_batch_time = 0
     for current_enrollment_index in range(0, enrollments_count, batch_size):
@@ -253,7 +251,7 @@ def import_enrollments(batch_size=1000):
         stop = current_enrollment_index + batch_size
         logger.info("  Processing %s-%s/%s ", start, stop, enrollments_count)
         start_time = time.time()
-        enrollments = open_edx_db.get_enrollments(start, stop)
+        enrollments = db.get_enrollments(start, stop)
         get_time = time.time()
         logger.info(" %s | ", f"{get_time - start_time:.2f}s")
 
