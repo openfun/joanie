@@ -1,9 +1,12 @@
 """Factory classes for generating fake data for testing."""
 import factory
+from faker import Faker
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
 from joanie.lms_handler.edx_imports import edx_models
+
+faker = Faker()
 
 engine = create_engine("sqlite://")
 session = scoped_session(sessionmaker(bind=engine))
@@ -80,9 +83,7 @@ class EdxEnrollmentFactory(factory.alchemy.SQLAlchemyModelFactory):
         sqlalchemy_session = session
 
     user_id = factory.Faker("pyint")
-    course_id = factory.Sequence(
-        lambda n: f"course-v1:edX+{factory.Faker('pystr')}+{n}"
-    )
+    course_id = factory.Sequence(lambda n: f"course-v1:edX+{faker.pystr()}+{n}")
     created = factory.Faker("date_time")
     is_active = True
 

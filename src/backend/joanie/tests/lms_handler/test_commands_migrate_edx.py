@@ -507,12 +507,15 @@ class MigrateOpenEdxTestCase(TestCase):
         exists.
         """
         edx_enrollments = edx_factories.EdxEnrollmentFactory.create_batch(10)
+        edx_enrollments_with_course_run = []
         i = 0
         for edx_enrollment in edx_enrollments:
             if i % 2 == 0:
                 factories.CourseRunFactory.create(
-                    course__code=extract_course_number(edx_enrollment.course_id)
+                    course__code=extract_course_number(edx_enrollment.course_id),
+                    resource_link=f"http://openedx.test/courses/{edx_enrollment.course_id}/course/",
                 )
+                edx_enrollments_with_course_run.append(edx_enrollment)
             factories.UserFactory.create(username=edx_enrollment.auth_user.username)
             i += 1
         mock_get_enrollments.return_value = edx_enrollments
@@ -520,11 +523,14 @@ class MigrateOpenEdxTestCase(TestCase):
 
         call_command("migrate_edx", "--enrollments")
 
-        self.assertEqual(models.Enrollment.objects.count(), len(edx_enrollments) // 2)
-        i = 0
-        for edx_enrollment in edx_enrollments:
-            if i % 2 == 0:
-                continue
+        self.assertEqual(
+            models.CourseRun.objects.count(), len(edx_enrollments_with_course_run)
+        )
+        self.assertEqual(
+            models.Enrollment.objects.count(), len(edx_enrollments_with_course_run)
+        )
+
+        for edx_enrollment in edx_enrollments_with_course_run:
             enrollment = models.Enrollment.objects.get(
                 user__username=edx_enrollment.auth_user.username,
                 course_run__course__code=extract_course_number(
@@ -542,4 +548,3 @@ class MigrateOpenEdxTestCase(TestCase):
                 enrollment.course_run.course.code,
                 extract_course_number(edx_enrollment.course_id),
             )
-            i += 1
