@@ -4,7 +4,8 @@ Test suite for Contract definition Admin API.
 import random
 from http import HTTPStatus
 
-from django.test import TestCase
+from django.conf import settings
+from django.test import TestCase, override_settings
 
 from joanie.core import enums, factories, models
 
@@ -91,6 +92,58 @@ class ContractDefinitionAdminApiTest(TestCase):
                         "title": contract_definition_1.title,
                     }
                 ],
+            },
+        )
+
+    @override_settings(LANGUAGES=(("fr-fr", "French"), ("en-us", "English")))
+    def test_admin_api_contract_definition_list_filter_by_language(self):
+        """
+        Staff user should be able to get a paginated list of contract definition
+        filtered by language.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        # Create one contract definition per language
+        for [language, _] in settings.LANGUAGES:
+            factories.ContractDefinitionFactory(language=language)
+
+        # Filter contract definition by each language
+        for [language, _] in settings.LANGUAGES:
+            response = self.client.get(
+                f"/api/v1.0/admin/contract-definitions/?language={language}"
+            )
+
+            self.assertEqual(response.status_code, HTTPStatus.OK)
+            content = response.json()
+            self.assertEqual(content["count"], 1)
+            self.assertEqual(content["results"][0]["language"], language)
+
+    def test_admin_api_contract_definition_list_filter_by_language_invalid(self):
+        """
+        Staff user should be able to get a paginated list of contract definition
+        filtered by language but if an invalid value is provided, an error should be
+        returned.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        # Create one contract definition per language
+        for [language, _] in settings.LANGUAGES:
+            factories.ContractDefinitionFactory(language=language)
+
+        response = self.client.get(
+            "/api/v1.0/admin/contract-definitions/?language=invalid"
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        content = response.json()
+        self.assertEqual(
+            content,
+            {
+                "language": [
+                    "Select a valid choice. invalid is not one of the available choices."
+                ]
             },
         )
 

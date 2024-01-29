@@ -3,6 +3,7 @@ Admin API Resource Filters
 """
 from typing import List
 
+from django.conf import settings
 from django.db.models import Q
 from django.utils import timezone as django_timezone
 
@@ -177,9 +178,10 @@ class ContractDefinitionAdminFilterSet(filters.FilterSet):
 
     class Meta:
         model = models.ContractDefinition
-        fields: List[str] = ["query"]
+        fields: List[str] = ["query", "language"]
 
     query = filters.CharFilter(method="filter_by_query")
+    language = filters.ChoiceFilter(choices=settings.LANGUAGES)
 
     def filter_by_query(self, queryset, _name, value):
         """
