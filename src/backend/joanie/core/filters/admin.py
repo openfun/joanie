@@ -8,7 +8,7 @@ from django.utils import timezone as django_timezone
 
 from django_filters import rest_framework as filters
 
-from joanie.core import models
+from joanie.core import enums, models
 
 
 class OrganizationAdminFilterSet(filters.FilterSet):
@@ -153,9 +153,10 @@ class CertificateDefinitionAdminFilterSet(filters.FilterSet):
 
     class Meta:
         model = models.CertificateDefinition
-        fields: List[str] = ["query"]
+        fields: List[str] = ["query", "template"]
 
     query = filters.CharFilter(method="filter_by_query")
+    template = filters.ChoiceFilter(choices=enums.CERTIFICATE_NAME_CHOICES)
 
     def filter_by_query(self, queryset, _name, value):
         """

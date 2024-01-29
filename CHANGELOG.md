@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Add several admin api endpoint filters
 - Filter course product relation client api endpoint by product type
 - Link Organization to Address Model
 - New properties on Organization model to complete contract definition context

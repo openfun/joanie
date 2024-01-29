@@ -144,6 +144,56 @@ class CertificateDefinitionAdminApiTest(TestCase):
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["title"], "Certificat 1")
 
+    def test_admin_api_certificate_definition_list_filter_by_template(self):
+        """
+        Staff user should be able to get a paginated list of certificates definitions
+        filtered through a template choice
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        # Create one certificate definition for each existing template choice
+        for [template, _] in enums.CERTIFICATE_NAME_CHOICES:
+            factories.CertificateDefinitionFactory(template=template)
+
+        # Filter certificate definition list by each existing template
+        for [template, _] in enums.CERTIFICATE_NAME_CHOICES:
+            response = self.client.get(
+                f"/api/v1.0/admin/certificate-definitions/?template={template}"
+            )
+
+            self.assertEqual(response.status_code, HTTPStatus.OK)
+            content = response.json()
+            self.assertEqual(content["count"], 1)
+            self.assertEqual(content["results"][0]["template"], template)
+
+    def test_admin_api_certificate_definition_list_filter_by_template_invalid(self):
+        """
+        Staff user should be able to get a paginated list of certificates definitions
+        filtered through a template choice but if an invalid value is provided, an error
+        should be returned
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        for [template, _] in enums.CERTIFICATE_NAME_CHOICES:
+            factories.CertificateDefinitionFactory(template=template)
+
+        response = self.client.get(
+            "/api/v1.0/admin/certificate-definitions/?template=invalid"
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        content = response.json()
+        self.assertEqual(
+            content,
+            {
+                "template": [
+                    "Select a valid choice. invalid is not one of the available choices."
+                ]
+            },
+        )
+
     def test_admin_api_certificate_definition_get(self):
         """
         Staff user should be able to get a certificate definition through its id.

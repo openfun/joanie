@@ -35,6 +35,20 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "in": "query",
+                        "name": "template",
+                        "schema": {
+                            "type": "string",
+                            "nullable": true,
+                            "title": "Template to generate pdf",
+                            "enum": [
+                                "certificate",
+                                "degree"
+                            ]
+                        },
+                        "description": "* `certificate` - Certificate\n* `degree` - Degree"
                     }
                 ],
                 "tags": [
