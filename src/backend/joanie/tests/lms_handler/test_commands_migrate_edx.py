@@ -423,7 +423,8 @@ class MigrateOpenEdxTestCase(TestCase):
         edx_enrollments = edx_factories.EdxEnrollmentFactory.create_batch(10)
         for edx_enrollment in edx_enrollments:
             factories.CourseRunFactory.create(
-                course__code=extract_course_number(edx_enrollment.course_id)
+                course__code=extract_course_number(edx_enrollment.course_id),
+                resource_link=f"http://openedx.test/courses/{edx_enrollment.course_id}/course/",
             )
             factories.UserFactory.create(username=edx_enrollment.auth_user.username)
         mock_get_enrollments.return_value = edx_enrollments

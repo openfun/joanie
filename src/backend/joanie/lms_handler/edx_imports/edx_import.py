@@ -60,9 +60,10 @@ def download_and_store(filename):
         logger.error("Unable to download file, status code: %s", response.status_code)
 
 
-def import_universities(db=OpenEdxDB()):
+def import_universities():
     """Import organizations from OpenEdx universities"""
     logger.info("Getting universities ")
+    db = OpenEdxDB()
     universities = db.get_universities()
     logger.info("OK\n")
     for university in universities:
@@ -83,9 +84,10 @@ def import_universities(db=OpenEdxDB()):
     logger.info("Universities import Done\n")
 
 
-def import_course_runs(db=OpenEdxDB()):
+def import_course_runs():
     """Import course runs and courses from OpenEdx course_overviews"""
     logger.info("Getting course runs ")
+    db = OpenEdxDB()
     edx_course_overviews = db.get_course_overviews()
     logger.info("OK\n")
     for edx_course_overview in edx_course_overviews:
@@ -149,9 +151,10 @@ def import_course_runs(db=OpenEdxDB()):
     logger.info("Course runs import Done\n")
 
 
-def import_users(batch_size=1000, db=OpenEdxDB()):
+def import_users(batch_size=1000):
     """Import users from OpenEdx auth_user"""
     logger.info("Getting users by batch of %s\n", batch_size)
+    db = OpenEdxDB()
     users_count = db.get_users_count()
 
     for current_user_index in range(0, users_count, batch_size):
@@ -234,9 +237,10 @@ def import_users(batch_size=1000, db=OpenEdxDB()):
     logger.info("Users import Done\n\n")
 
 
-def import_enrollments(batch_size=1000, db=OpenEdxDB()):
+def import_enrollments(batch_size=1000):
     """Import enrollments from OpenEdx student_course_enrollment"""
     logger.info("Getting enrollments by batch of %s\n", batch_size)
+    db = OpenEdxDB()
     enrollments_count = db.get_enrollments_count()
 
     last_batch_time = 0

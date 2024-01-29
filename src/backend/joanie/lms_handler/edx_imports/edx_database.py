@@ -2,17 +2,15 @@
 import logging
 
 from sqlalchemy import create_engine, select
-from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session, joinedload, load_only
 from sqlalchemy.sql.functions import count
 
 from joanie.lms_handler.edx_imports.edx_models import (
-    UniversitiesUniversity,
-    CourseOverviewsCourseoverview,
     AuthUser,
+    CourseOverviewsCourseoverview,
     StudentCourseenrollment,
+    UniversitiesUniversity,
 )
-
 
 logging.StreamHandler.terminator = ""
 logger = logging.getLogger(__name__)

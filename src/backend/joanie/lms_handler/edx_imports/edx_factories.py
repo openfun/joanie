@@ -2,12 +2,12 @@
 import factory
 from faker import Faker
 from sqlalchemy import create_engine
-from sqlalchemy.orm import registry, Session
+from sqlalchemy.orm import Session, registry
 
 from joanie.lms_handler.edx_imports import edx_models
 
 faker = Faker()
-engine = create_engine("sqlite+pysqlite:///:memory:", echo=False)
+engine = create_engine("sqlite+pysqlite:///:memory:")
 session = Session(engine)
 registry().metadata.create_all(engine)
 
