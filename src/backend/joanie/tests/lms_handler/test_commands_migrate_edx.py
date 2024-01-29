@@ -12,8 +12,8 @@ import responses
 from joanie.core import factories, models, utils
 from joanie.lms_handler.api import detect_lms_from_resource_link
 from joanie.lms_handler.edx_imports import edx_factories
-from joanie.lms_handler.management.commands.migrate_edx import (
-    EDX_DOMAIN,
+from joanie.lms_handler.edx_imports.edx_database import EDX_DOMAIN
+from joanie.lms_handler.edx_imports.edx_import import (
     extract_course_number,
     make_date_aware,
 )

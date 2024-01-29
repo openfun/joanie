@@ -11,8 +11,6 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 class Base(DeclarativeBase):
     """Base class for all models in the database."""
 
-    pass
-
 
 class AuthUser(Base):
     """Model for the `auth_user` table."""

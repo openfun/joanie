@@ -80,7 +80,6 @@ class EdxEnrollmentFactory(factory.alchemy.SQLAlchemyModelFactory):
         sqlalchemy_session = session
 
     user_id = factory.Faker("pyint")
-    auth_user = None
     course_id = factory.Sequence(
         lambda n: f"course-v1:edX+{factory.Faker('pystr')}+{n}"
     )
