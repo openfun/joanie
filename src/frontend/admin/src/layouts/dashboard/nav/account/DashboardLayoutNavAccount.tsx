@@ -12,6 +12,7 @@ import { useTheme } from "@mui/material/styles";
 import { DashboardNavItemsList } from "@/layouts/dashboard/nav/item/list/DasboardNavItemsList";
 import { useAuthContext } from "@/contexts/auth/AuthContext";
 import { PATH_ADMIN } from "@/utils/routes/path";
+import { CustomLink } from "@/components/presentational/link/CustomLink";
 
 const messages = defineMessages({
   settingsSubHeader: {
@@ -23,6 +24,11 @@ const messages = defineMessages({
     id: "layouts.dashboard.nav.account.notificationNav",
     defaultMessage: "Notifications",
     description: "Notifications navigation label",
+  },
+  djangoAdmin: {
+    id: "layouts.dashboard.nav.account.djangoAdmin",
+    defaultMessage: "Django admin",
+    description: "Django admin link label",
   },
   logout: {
     id: "layouts.dashboard.nav.account.logout",
@@ -36,12 +42,28 @@ const messages = defineMessages({
   },
 });
 
+type AccountMenuItem = {
+  label: string;
+  link?: string;
+};
+
 export function DashboardLayoutNavAccount() {
   const { user } = useAuthContext();
   const ref = useRef<HTMLButtonElement>(null);
   const [navAccountMenuIsOpen, setNavAccountMenuIsOpen] = useState(false);
   const intl = useIntl();
   const theme = useTheme();
+
+  const menuItems: AccountMenuItem[] = [
+    {
+      label: intl.formatMessage(messages.djangoAdmin),
+      link: process.env.NEXT_PUBLIC_DJANGO_ADMIN_BASE_URL,
+    },
+    {
+      label: intl.formatMessage(messages.logout),
+      link: PATH_ADMIN.auth.logout(),
+    },
+  ];
 
   const handleOpenMenu = () => {
     setNavAccountMenuIsOpen(true);
@@ -96,14 +118,18 @@ export function DashboardLayoutNavAccount() {
             open={navAccountMenuIsOpen}
             onClose={handleCloseMenu}
           >
-            <MenuItem
-              onClick={() => {
-                handleCloseMenu();
-                window.location.replace(PATH_ADMIN.auth.logout());
-              }}
-            >
-              {intl.formatMessage(messages.logout)}
-            </MenuItem>
+            {menuItems.map((item) => (
+              <MenuItem
+                onClick={() => {
+                  handleCloseMenu();
+                }}
+              >
+                {item.link && (
+                  <CustomLink href={item.link}>{item.label}</CustomLink>
+                )}
+                {!item.link && item.label}
+              </MenuItem>
+            ))}
           </Menu>
         </Box>
       </DashboardNavItemsList>
