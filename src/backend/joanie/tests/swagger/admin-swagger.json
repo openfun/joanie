@@ -286,6 +286,18 @@
                 "description": "Admin Contract Definition ViewSet",
                 "parameters": [
                     {
+                        "in": "query",
+                        "name": "language",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "en-us",
+                                "fr-fr"
+                            ]
+                        },
+                        "description": "Language of the contract definition\n\n* `en-us` - English\n* `fr-fr` - French"
+                    },
+                    {
                         "name": "page",
                         "required": false,
                         "in": "query",
