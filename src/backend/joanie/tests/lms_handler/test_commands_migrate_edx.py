@@ -45,7 +45,7 @@ class MigrateOpenEdxTestCase(TestCase):
     """Test case for the management command `migrate_edx`."""
 
     @patch(
-        "joanie.lms_handler.management.commands.migrate_edx.Command.get_universities"
+        "joanie.lms_handler.edx_imports.edx_database.OpenEdxDB.get_universities"
     )
     @responses.activate(assert_all_requests_are_fired=True)
     def test_import_universities_create(self, mock_get_universities):
@@ -76,7 +76,7 @@ class MigrateOpenEdxTestCase(TestCase):
             self.assertTrue(default_storage.exists(organization.logo.name))
 
     @patch(
-        "joanie.lms_handler.management.commands.migrate_edx.Command.get_universities"
+        "joanie.lms_handler.edx_imports.edx_database.OpenEdxDB.get_universities"
     )
     @responses.activate(assert_all_requests_are_fired=True)
     def test_import_universities_update(self, mock_get_universities):
@@ -118,7 +118,7 @@ class MigrateOpenEdxTestCase(TestCase):
             self.assertTrue(default_storage.exists(organization.logo.name))
 
     @patch(
-        "joanie.lms_handler.management.commands.migrate_edx.Command.get_course_overviews"
+        "joanie.lms_handler.edx_imports.edx_database.OpenEdxDB.get_course_overviews"
     )
     def test_import_course_runs_create(self, mock_get_course_overviews):
         """
@@ -159,7 +159,7 @@ class MigrateOpenEdxTestCase(TestCase):
             self.assertEqual(course_run.languages, ["fr"])
 
     @patch(
-        "joanie.lms_handler.management.commands.migrate_edx.Command.get_course_overviews"
+        "joanie.lms_handler.edx_imports.edx_database.OpenEdxDB.get_course_overviews"
     )
     def test_import_course_create_unknown_course_with_title(
         self, mock_get_course_overviews
@@ -207,7 +207,7 @@ class MigrateOpenEdxTestCase(TestCase):
             self.assertEqual(course_run.languages, ["fr"])
 
     @patch(
-        "joanie.lms_handler.management.commands.migrate_edx.Command.get_course_overviews"
+        "joanie.lms_handler.edx_imports.edx_database.OpenEdxDB.get_course_overviews"
     )
     def test_import_course_create_unknown_course_no_title(
         self, mock_get_course_overviews
@@ -256,7 +256,7 @@ class MigrateOpenEdxTestCase(TestCase):
             self.assertEqual(course_run.languages, ["fr"])
 
     @patch(
-        "joanie.lms_handler.management.commands.migrate_edx.Command.get_course_overviews"
+        "joanie.lms_handler.edx_imports.edx_database.OpenEdxDB.get_course_overviews"
     )
     def test_import_course_runs_create_same_course(self, mock_get_course_overviews):
         """
@@ -302,7 +302,7 @@ class MigrateOpenEdxTestCase(TestCase):
             self.assertEqual(course_run.languages, ["fr"])
 
     @patch(
-        "joanie.lms_handler.management.commands.migrate_edx.Command.get_course_overviews"
+        "joanie.lms_handler.edx_imports.edx_database.OpenEdxDB.get_course_overviews"
     )
     def test_import_course_runs_create_known_course(self, mock_get_course_overviews):
         """
@@ -347,8 +347,8 @@ class MigrateOpenEdxTestCase(TestCase):
             )
             self.assertEqual(course_run.languages, ["fr"])
 
-    @patch("joanie.lms_handler.management.commands.migrate_edx.Command.get_users_count")
-    @patch("joanie.lms_handler.management.commands.migrate_edx.Command.get_users")
+    @patch("joanie.lms_handler.edx_imports.edx_database.OpenEdxDB.get_users_count")
+    @patch("joanie.lms_handler.edx_imports.edx_database.OpenEdxDB.get_users")
     def test_import_users_create(self, mock_get_users, mock_get_users_count):
         """
         Test that users are created from the edx users.
@@ -372,8 +372,8 @@ class MigrateOpenEdxTestCase(TestCase):
             self.assertEqual(user.date_joined, make_date_aware(edx_user.date_joined))
             self.assertEqual(user.last_login, make_date_aware(edx_user.last_login))
 
-    @patch("joanie.lms_handler.management.commands.migrate_edx.Command.get_users_count")
-    @patch("joanie.lms_handler.management.commands.migrate_edx.Command.get_users")
+    @patch("joanie.lms_handler.edx_imports.edx_database.OpenEdxDB.get_users_count")
+    @patch("joanie.lms_handler.edx_imports.edx_database.OpenEdxDB.get_users")
     def test_import_users_update(self, mock_get_users, mock_get_users_count):
         """
         Test that users are updated from the edx users.
@@ -424,9 +424,9 @@ class MigrateOpenEdxTestCase(TestCase):
                 self.assertEqual(user.last_login, make_date_aware(edx_user.last_login))
 
     @patch(
-        "joanie.lms_handler.management.commands.migrate_edx.Command.get_enrollments_count"
+        "joanie.lms_handler.edx_imports.edx_database.OpenEdxDB.get_enrollments_count"
     )
-    @patch("joanie.lms_handler.management.commands.migrate_edx.Command.get_enrollments")
+    @patch("joanie.lms_handler.edx_imports.edx_database.OpenEdxDB.get_enrollments")
     def test_import_enrollments_create(
         self, mock_get_enrollments, mock_get_enrollments_count
     ):
@@ -465,9 +465,9 @@ class MigrateOpenEdxTestCase(TestCase):
             )
 
     @patch(
-        "joanie.lms_handler.management.commands.migrate_edx.Command.get_enrollments_count"
+        "joanie.lms_handler.edx_imports.edx_database.OpenEdxDB.get_enrollments_count"
     )
-    @patch("joanie.lms_handler.management.commands.migrate_edx.Command.get_enrollments")
+    @patch("joanie.lms_handler.edx_imports.edx_database.OpenEdxDB.get_enrollments")
     def test_import_enrollments_update(
         self, mock_get_enrollments, mock_get_enrollments_count
     ):
@@ -509,9 +509,9 @@ class MigrateOpenEdxTestCase(TestCase):
             )
 
     @patch(
-        "joanie.lms_handler.management.commands.migrate_edx.Command.get_enrollments_count"
+        "joanie.lms_handler.edx_imports.edx_database.OpenEdxDB.get_enrollments_count"
     )
-    @patch("joanie.lms_handler.management.commands.migrate_edx.Command.get_enrollments")
+    @patch("joanie.lms_handler.edx_imports.edx_database.OpenEdxDB.get_enrollments")
     def test_import_enrollments_create_missing_course_run(
         self, mock_get_enrollments, mock_get_enrollments_count
     ):

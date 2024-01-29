@@ -10,39 +10,16 @@ from django.utils.timezone import make_aware as django_make_aware
 
 import requests
 from parler.utils import get_language_settings
-from pprintpp import pprint
-from sqlalchemy import create_engine, select
-from sqlalchemy.ext.automap import automap_base
-from sqlalchemy.orm import Session, joinedload, load_only
-from sqlalchemy.sql.functions import count
 
 from joanie.core import models, utils
 from joanie.lms_handler.api import detect_lms_from_resource_link
 from joanie.lms_handler.backends.openedx import split_course_key
-
-# pylint: disable=too-many-statements
-# ruff: noqa: PLR0915,SLF001
+from joanie.lms_handler.edx_imports.edx_database import OpenEdxDB, EDX_TIME_ZONE, EDX_DOMAIN
 
 logging.StreamHandler.terminator = ""
 logger = logging.getLogger(__name__)
 
-# TODO: use env variables and django settings
-## Preprod
-# DATABASE_HOST = "10.1.2.110"
-## Preprod RO
-
-EDX_DOMAIN = "lms.preprod-fun.apps.openfun.fr"
-EDX_DATABASE_HOST = "10.1.2.109"
-EDX_DATABASE_NAME = "edxapp"
-EDX_DATABASE_USER = "edx"
-EDX_DATABASE_PASSWORD = "edx_password"  # noqa: S105
-EDX_DATABASE_PORT = "3306"
-EDX_DATABASE_URL = (
-    f"mysql+pymysql://{EDX_DATABASE_USER}:{EDX_DATABASE_PASSWORD}@"
-    f"{EDX_DATABASE_HOST}:{EDX_DATABASE_PORT}/{EDX_DATABASE_NAME}"
-)
-EDX_TIME_ZONE = "UTC"
-DEBUG = False
+open_edx_db = OpenEdxDB()
 
 
 def make_date_aware(date: datetime) -> datetime:
@@ -62,51 +39,6 @@ def extract_course_number(course_overview_id):
 
 
 class Command(BaseCommand):
-    Base = None
-    session = None
-    University = None
-    CourseOverview = None
-    User = None
-    StudentCourseEnrollment = None
-
-    # OpenEdxDb
-    def connect_to_edx_db(self):
-        logger.info("Connecting to OpenEdxDb ")
-        engine = create_engine(EDX_DATABASE_URL, echo=DEBUG)
-        self.Base = automap_base()
-        self.Base.prepare(
-            engine,
-            reflect=True,
-            reflection_options={
-                "only": [
-                    "auth_user",
-                    "universities_university",
-                    "course_overviews_courseoverview",
-                    "student_courseenrollment",
-                ]
-            },
-        )
-        self.session = Session(engine)
-        self.University = self.Base.classes.universities_university
-        self.CourseOverview = self.Base.classes.course_overviews_courseoverview
-        self.User = self.Base.classes.auth_user
-        self.StudentCourseEnrollment = self.Base.classes.student_courseenrollment
-        logger.info("Connected\n")
-
-    # OpenEdxDb
-    def get_universities(self):
-        if not self.session:
-            self.connect_to_edx_db()
-        return self.session.scalars(
-            select(self.University).options(
-                load_only(
-                    self.University.code,
-                    self.University.name,
-                    self.University.logo,
-                )
-            )
-        ).all()
-
     def download_and_store(self, filename):
         url = f"https://{EDX_DOMAIN}/media/{filename}"
         response = requests.get(url, stream=True, timeout=3)
@@ -124,7 +56,7 @@ class Command(BaseCommand):
 
     def import_universities(self):
         logger.info("Getting universities ")
-        universities = self.get_universities()
+        universities = open_edx_db.get_universities()
         logger.info("OK\n")
         for university in universities:
             logger.info(f"  Import {university.name}: ")
@@ -140,26 +72,9 @@ class Command(BaseCommand):
 
         logger.info("Universities import Done\n")
 
-    def get_course_overviews(self):
-        if not self.session:
-            self.connect_to_edx_db()
-        return self.session.scalars(
-            select(self.CourseOverview).options(
-                load_only(
-                    self.CourseOverview.id,
-                    self.CourseOverview.display_name,
-                    self.CourseOverview.start,
-                    self.CourseOverview.end,
-                    self.CourseOverview.enrollment_start,
-                    self.CourseOverview.enrollment_end,
-                    self.CourseOverview.created,
-                )
-            )
-        ).all()
-
     def import_course_runs(self):
         logger.info("Getting course runs ")
-        edx_course_overviews = self.get_course_overviews()
+        edx_course_overviews = open_edx_db.get_course_overviews()
         logger.info("OK\n")
         for edx_course_overview in edx_course_overviews:
             logger.info(f"  Import course run {edx_course_overview.id}: ")
@@ -224,46 +139,16 @@ class Command(BaseCommand):
             logger.info("OK\n")
         logger.info("Course runs import Done\n")
 
-    def get_users_count(self):
-        if not self.session:
-            self.connect_to_edx_db()
-        query_count = select(count(self.User.id))
-        return self.session.execute(query_count).scalar()
-
-    def get_users(self, start, stop):
-        if not self.session:
-            self.connect_to_edx_db()
-        query = (
-            select(self.User)
-            .options(
-                load_only(
-                    self.User.id,
-                    self.User.username,
-                    self.User.password,
-                    self.User.email,
-                    self.User.first_name,
-                    self.User.last_name,
-                    self.User.is_active,
-                    self.User.is_staff,
-                    self.User.is_superuser,
-                    self.User.date_joined,
-                    self.User.last_login,
-                )
-            )
-            .slice(start, stop)
-        )
-        return self.session.scalars(query).all()
-
     def import_users(self, batch_size=1000):
         logger.info(f"Getting users by batch of {batch_size}\n")
-        users_count = self.get_users_count()
+        users_count = open_edx_db.get_users_count()
 
         for current_user_index in range(0, users_count, batch_size):
             start = current_user_index
             stop = current_user_index + batch_size
             start_time = time.time()
             logger.info(f"  Processing {start}-{stop}/{users_count} ")
-            users = self.get_users(start, stop)
+            users = open_edx_db.get_users(start, stop)
             get_time = time.time()
             logger.info(f" {get_time - start_time:.2f}s | ")
 
@@ -337,43 +222,9 @@ class Command(BaseCommand):
             logger.info(f"{update_end_time - start_time:.2f}s\n")
         logger.info("Users import Done\n\n")
 
-    def get_enrollments_count(self):
-        if not self.session:
-            self.connect_to_edx_db()
-        query_count = select(count(self.StudentCourseEnrollment.id)).join(
-            self.CourseOverview,
-            self.StudentCourseEnrollment.course_id == self.CourseOverview.id,
-        )
-        return self.session.execute(query_count).scalar()
-
-    def get_enrollments(self, start, stop):
-        if not self.session:
-            self.connect_to_edx_db()
-        query = (
-            select(self.StudentCourseEnrollment, self.User)
-            .join(
-                self.CourseOverview,
-                self.StudentCourseEnrollment.course_id == self.CourseOverview.id,
-            )
-            .join(self.User, self.StudentCourseEnrollment.user_id == self.User.id)
-            .options(
-                load_only(
-                    self.StudentCourseEnrollment.course_id,
-                    self.StudentCourseEnrollment.created,
-                    self.StudentCourseEnrollment.is_active,
-                    self.StudentCourseEnrollment.user_id,
-                ),
-                joinedload(self.StudentCourseEnrollment.auth_user).load_only(
-                    self.User.username,
-                ),
-            )
-            .slice(start, stop)
-        )
-        return self.session.scalars(query).all()
-
     def import_enrollments(self, batch_size=1000):
         logger.info(f"Getting enrollments by batch of {batch_size}\n")
-        enrollments_count = self.get_enrollments_count()
+        enrollments_count = open_edx_db.get_enrollments_count()
 
         last_batch_time = 0
         for current_enrollment_index in range(0, enrollments_count, batch_size):
@@ -385,7 +236,7 @@ class Command(BaseCommand):
             stop = current_enrollment_index + batch_size
             logger.info(f"  Processing {start}-{stop}/{enrollments_count} ")
             start_time = time.time()
-            enrollments = self.get_enrollments(start, stop)
+            enrollments = open_edx_db.get_enrollments(start, stop)
             get_time = time.time()
             logger.info(f" {get_time - start_time:.2f}s | ")
 
