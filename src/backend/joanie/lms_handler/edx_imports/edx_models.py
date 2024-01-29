@@ -1,3 +1,4 @@
+"""Models for the Open edX database."""
 import datetime
 import decimal
 from typing import List, Optional
@@ -8,10 +9,14 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
 class Base(DeclarativeBase):
+    """Base class for all models in the database."""
+
     pass
 
 
 class AuthUser(Base):
+    """Model for the `auth_user` table."""
+
     __tablename__ = "auth_user"
     __table_args__ = (
         Index("email", "email", unique=True),
@@ -36,6 +41,8 @@ class AuthUser(Base):
 
 
 class CourseOverviewsCourseoverview(Base):
+    """Model for the `course_overviews_courseoverview` table."""
+
     __tablename__ = "course_overviews_courseoverview"
 
     id: Mapped[str] = mapped_column(String(255), primary_key=True)
@@ -82,6 +89,8 @@ class CourseOverviewsCourseoverview(Base):
 
 
 class UniversitiesUniversity(Base):
+    """Model for the `universities_university` table."""
+
     __tablename__ = "universities_university"
     __table_args__ = (
         Index("code", "code", unique=True),
@@ -110,6 +119,8 @@ class UniversitiesUniversity(Base):
 
 
 class StudentCourseenrollment(Base):
+    """Model for the `student_courseenrollment` table."""
+
     __tablename__ = "student_courseenrollment"
     __table_args__ = (
         ForeignKeyConstraint(

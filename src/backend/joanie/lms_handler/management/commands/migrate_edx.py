@@ -1,3 +1,4 @@
+"""Import data from OpenEdx database to Joanie database"""
 import logging
 import time
 from datetime import datetime
@@ -14,7 +15,14 @@ from parler.utils import get_language_settings
 from joanie.core import models, utils
 from joanie.lms_handler.api import detect_lms_from_resource_link
 from joanie.lms_handler.backends.openedx import split_course_key
-from joanie.lms_handler.edx_imports.edx_database import OpenEdxDB, EDX_TIME_ZONE, EDX_DOMAIN
+from joanie.lms_handler.edx_imports.edx_database import (
+    EDX_DOMAIN,
+    EDX_TIME_ZONE,
+    OpenEdxDB,
+)
+
+# pylint: disable=too-many-statements
+# ruff: noqa: PLR0915,SLF001
 
 logging.StreamHandler.terminator = ""
 logger = logging.getLogger(__name__)
@@ -23,11 +31,12 @@ open_edx_db = OpenEdxDB()
 
 
 def make_date_aware(date: datetime) -> datetime:
+    """Make a datetime aware using the OpenEdx timezone"""
     return django_make_aware(date, ZoneInfo(key=EDX_TIME_ZONE))
 
 
 def format_date(value: datetime) -> str | None:
-    """Format a datetime to be used in a json response"""
+    """Format a date to isoformat and make it aware"""
     try:
         return make_date_aware(value).isoformat()
     except AttributeError:
@@ -35,14 +44,18 @@ def format_date(value: datetime) -> str | None:
 
 
 def extract_course_number(course_overview_id):
+    """Extract the course number from a course overview id"""
     return utils.normalize_code(split_course_key(course_overview_id)[1])
 
 
 class Command(BaseCommand):
+    """Import data from OpenEdx database to Joanie database"""
+
     def download_and_store(self, filename):
+        """Download a file from edx and store it in the default storage"""
         url = f"https://{EDX_DOMAIN}/media/{filename}"
         response = requests.get(url, stream=True, timeout=3)
-        logger.info(f"Downloading {url} ")
+        logger.info("Downloading %s", url)
 
         if response.status_code == HTTPStatus.OK:
             with default_storage.open(filename, "wb") as output_file:
@@ -51,38 +64,42 @@ class Command(BaseCommand):
                         output_file.write(chunk)
         else:
             logger.error(
-                f"Unable to download file, status code: {response.status_code}"
+                "Unable to download file, status code: %s", response.status_code
             )
 
     def import_universities(self):
+        """Import organizations from OpenEdx universities"""
         logger.info("Getting universities ")
         universities = open_edx_db.get_universities()
         logger.info("OK\n")
         for university in universities:
-            logger.info(f"  Import {university.name}: ")
-            organization, created = models.Organization.objects.update_or_create(
+            logger.info("  Import %s: ", university.name)
+            _, created = models.Organization.objects.update_or_create(
                 code=utils.normalize_code(university.code),
                 defaults={
                     "title": university.name,
                     "logo": university.logo,
                 },
             )
-            logger.info(("created" if created else "Updated") + "\n")
+            if created:
+                logger.info("created\n")
+            else:
+                logger.info("updated\n")
             self.download_and_store(university.logo)
 
         logger.info("Universities import Done\n")
 
     def import_course_runs(self):
+        """Import course runs and courses from OpenEdx course_overviews"""
         logger.info("Getting course runs ")
         edx_course_overviews = open_edx_db.get_course_overviews()
         logger.info("OK\n")
         for edx_course_overview in edx_course_overviews:
-            logger.info(f"  Import course run {edx_course_overview.id}: ")
+            logger.info("  Import course run %s: ", edx_course_overview.id)
             # Select LMS from resource link
             resource_link = (
                 f"https://{EDX_DOMAIN}/courses/{edx_course_overview.id}/course"
             )
-            course_code = utils.normalize_code(edx_course_overview.id)
             lms = detect_lms_from_resource_link(resource_link)
 
             try:
@@ -140,17 +157,18 @@ class Command(BaseCommand):
         logger.info("Course runs import Done\n")
 
     def import_users(self, batch_size=1000):
-        logger.info(f"Getting users by batch of {batch_size}\n")
+        """Import users from OpenEdx auth_user"""
+        logger.info("Getting users by batch of %s\n", batch_size)
         users_count = open_edx_db.get_users_count()
 
         for current_user_index in range(0, users_count, batch_size):
             start = current_user_index
             stop = current_user_index + batch_size
             start_time = time.time()
-            logger.info(f"  Processing {start}-{stop}/{users_count} ")
+            logger.info("  Processing %s-%s/%s ", start, stop, users_count)
             users = open_edx_db.get_users(start, stop)
             get_time = time.time()
-            logger.info(f" {get_time - start_time:.2f}s | ")
+            logger.info(" %s | ", f"{get_time - start_time:.2f}s")
 
             build_time = time.time()
             users_to_create = []
@@ -194,12 +212,12 @@ class Command(BaseCommand):
                         )
                     )
             build_end_time = time.time()
-            logger.info(f"{build_end_time - build_time:.2f}s | ")
+            logger.info(" %s | ", f"{build_end_time - build_time:.2f}s")
             create_time = time.time()
             users_created = models.User.objects.bulk_create(users_to_create)
             create_end_time = time.time()
             logger.info("Created %s users ", len(users_created))
-            logger.info(f"{create_end_time - create_time:.2f}s | ")
+            logger.info(" %s | ", f"{create_end_time - create_time:.2f}s")
 
             update_time = time.time()
             users_updated = models.User.objects.bulk_update(
@@ -218,27 +236,30 @@ class Command(BaseCommand):
             )
             update_end_time = time.time()
             logger.info("Updated %s users ", users_updated)
-            logger.info(f"{update_end_time - update_time:.2f}s | ")
-            logger.info(f"{update_end_time - start_time:.2f}s\n")
+            logger.info(" %s | ", f"{update_end_time - update_time:.2f}s")
+            logger.info(" %s\n", f"{update_end_time - start_time:.2f}s")
         logger.info("Users import Done\n\n")
 
     def import_enrollments(self, batch_size=1000):
-        logger.info(f"Getting enrollments by batch of {batch_size}\n")
+        """Import enrollments from OpenEdx student_course_enrollment"""
+        logger.info("Getting enrollments by batch of %s\n", batch_size)
         enrollments_count = open_edx_db.get_enrollments_count()
 
         last_batch_time = 0
         for current_enrollment_index in range(0, enrollments_count, batch_size):
             enrollments_left = enrollments_count - current_enrollment_index
             eta = enrollments_left / batch_size * last_batch_time / 60 / 60
-            logger.info(f"  {enrollments_left} enrollments left | ETA: {eta:.2f}h \n")
+            logger.info(
+                "  %s enrollments left | ETA: %s | ", enrollments_left, f"{eta:.2f}h"
+            )
 
             start = current_enrollment_index
             stop = current_enrollment_index + batch_size
-            logger.info(f"  Processing {start}-{stop}/{enrollments_count} ")
+            logger.info("  Processing %s-%s/%s ", start, stop, enrollments_count)
             start_time = time.time()
             enrollments = open_edx_db.get_enrollments(start, stop)
             get_time = time.time()
-            logger.info(f" {get_time - start_time:.2f}s | ")
+            logger.info(" %s | ", f"{get_time - start_time:.2f}s")
 
             build_time = time.time()
             enrollments_to_create = []
@@ -290,7 +311,7 @@ class Command(BaseCommand):
                         )
                     )
             build_end_time = time.time()
-            logger.info(f"{build_end_time - build_time:.2f}s | ")
+            logger.info("%s | ", f"{build_end_time - build_time:.2f}s")
             create_time = time.time()
 
             enrollment_created_on_field = models.Enrollment._meta.get_field(
@@ -303,7 +324,7 @@ class Command(BaseCommand):
             )
             create_end_time = time.time()
             logger.info("Created %s enrollments ", len(enrollments_created))
-            logger.info(f"{create_end_time - create_time:.2f}s | ")
+            logger.info(" %s | ", f"{create_end_time - create_time:.2f}s")
             update_time = time.time()
             enrollments_updated = models.Enrollment.objects.bulk_update(
                 enrollments_to_update, ["is_active", "created_on"]
@@ -312,12 +333,14 @@ class Command(BaseCommand):
             enrollment_created_on_field.editable = False
             update_end_time = time.time()
             logger.info("Updated %s enrollments ", enrollments_updated)
-            logger.info(f"{update_end_time - update_time:.2f}s | ")
+            logger.info(" %s | ", f"{update_end_time - update_time:.2f}s")
+
             last_batch_time = update_end_time - start_time
-            logger.info(f"{last_batch_time:.2f}s\n")
+            logger.info(" %s\n", f"{last_batch_time:.2f}s")
         logger.info("Enrollments import Done\n\n")
 
     def add_arguments(self, parser):
+        """Add arguments to the command"""
         parser.add_argument(
             "--universities", action="store_true", help="Import universities"
         )
@@ -331,6 +354,7 @@ class Command(BaseCommand):
         parser.add_argument("--all", action="store_true", help="Import all")
 
     def handle(self, *args, **options):
+        """Handle the command"""
         import_all = options["all"]
         universities_import = options["universities"] or import_all
         course_runs_import = options["course_runs"] or import_all

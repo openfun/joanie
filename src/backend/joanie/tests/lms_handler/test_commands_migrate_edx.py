@@ -11,13 +11,14 @@ import responses
 
 from joanie.core import factories, models, utils
 from joanie.lms_handler.api import detect_lms_from_resource_link
-from joanie.lms_handler.backends.openedx import split_course_key
 from joanie.lms_handler.edx_imports import edx_factories
 from joanie.lms_handler.management.commands.migrate_edx import (
     EDX_DOMAIN,
     extract_course_number,
     make_date_aware,
 )
+
+# pylint: disable=unexpected-keyword-arg,no-value-for-parameter
 
 LOGO_NAME = "creative_common.jpeg"
 with open(join(dirname(realpath(__file__)), f"images/{LOGO_NAME}"), "rb") as logo:
@@ -44,9 +45,7 @@ with open(join(dirname(realpath(__file__)), f"images/{LOGO_NAME}"), "rb") as log
 class MigrateOpenEdxTestCase(TestCase):
     """Test case for the management command `migrate_edx`."""
 
-    @patch(
-        "joanie.lms_handler.edx_imports.edx_database.OpenEdxDB.get_universities"
-    )
+    @patch("joanie.lms_handler.edx_imports.edx_database.OpenEdxDB.get_universities")
     @responses.activate(assert_all_requests_are_fired=True)
     def test_import_universities_create(self, mock_get_universities):
         """
@@ -75,9 +74,7 @@ class MigrateOpenEdxTestCase(TestCase):
             self.assertIsNotNone(organization.logo.read())
             self.assertTrue(default_storage.exists(organization.logo.name))
 
-    @patch(
-        "joanie.lms_handler.edx_imports.edx_database.OpenEdxDB.get_universities"
-    )
+    @patch("joanie.lms_handler.edx_imports.edx_database.OpenEdxDB.get_universities")
     @responses.activate(assert_all_requests_are_fired=True)
     def test_import_universities_update(self, mock_get_universities):
         """
@@ -117,9 +114,7 @@ class MigrateOpenEdxTestCase(TestCase):
             self.assertIsNotNone(organization.logo.read())
             self.assertTrue(default_storage.exists(organization.logo.name))
 
-    @patch(
-        "joanie.lms_handler.edx_imports.edx_database.OpenEdxDB.get_course_overviews"
-    )
+    @patch("joanie.lms_handler.edx_imports.edx_database.OpenEdxDB.get_course_overviews")
     def test_import_course_runs_create(self, mock_get_course_overviews):
         """
         Test that course runs are created from the edx course overviews.
@@ -158,9 +153,7 @@ class MigrateOpenEdxTestCase(TestCase):
             )
             self.assertEqual(course_run.languages, ["fr"])
 
-    @patch(
-        "joanie.lms_handler.edx_imports.edx_database.OpenEdxDB.get_course_overviews"
-    )
+    @patch("joanie.lms_handler.edx_imports.edx_database.OpenEdxDB.get_course_overviews")
     def test_import_course_create_unknown_course_with_title(
         self, mock_get_course_overviews
     ):
@@ -206,9 +199,7 @@ class MigrateOpenEdxTestCase(TestCase):
             )
             self.assertEqual(course_run.languages, ["fr"])
 
-    @patch(
-        "joanie.lms_handler.edx_imports.edx_database.OpenEdxDB.get_course_overviews"
-    )
+    @patch("joanie.lms_handler.edx_imports.edx_database.OpenEdxDB.get_course_overviews")
     def test_import_course_create_unknown_course_no_title(
         self, mock_get_course_overviews
     ):
@@ -255,9 +246,7 @@ class MigrateOpenEdxTestCase(TestCase):
             )
             self.assertEqual(course_run.languages, ["fr"])
 
-    @patch(
-        "joanie.lms_handler.edx_imports.edx_database.OpenEdxDB.get_course_overviews"
-    )
+    @patch("joanie.lms_handler.edx_imports.edx_database.OpenEdxDB.get_course_overviews")
     def test_import_course_runs_create_same_course(self, mock_get_course_overviews):
         """
         Test that course runs are created from the edx course overviews and that the
@@ -301,9 +290,7 @@ class MigrateOpenEdxTestCase(TestCase):
             )
             self.assertEqual(course_run.languages, ["fr"])
 
-    @patch(
-        "joanie.lms_handler.edx_imports.edx_database.OpenEdxDB.get_course_overviews"
-    )
+    @patch("joanie.lms_handler.edx_imports.edx_database.OpenEdxDB.get_course_overviews")
     def test_import_course_runs_create_known_course(self, mock_get_course_overviews):
         """
         Test that course runs are created from the edx course overviews and that the

@@ -1,3 +1,4 @@
+"""Factory classes for generating fake data for testing."""
 import factory
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -9,7 +10,13 @@ session = scoped_session(sessionmaker(bind=engine))
 
 
 class EdxUniversityFactory(factory.alchemy.SQLAlchemyModelFactory):
+    """
+    Factory for generating fake OpenEdX universities.
+    """
+
     class Meta:
+        """Factory configuration."""
+
         model = edx_models.UniversitiesUniversity
         sqlalchemy_session = session
 
@@ -19,7 +26,13 @@ class EdxUniversityFactory(factory.alchemy.SQLAlchemyModelFactory):
 
 
 class EdxCourseOverviewFactory(factory.alchemy.SQLAlchemyModelFactory):
+    """
+    Factory for generating fake OpenEdX course overviews.
+    """
+
     class Meta:
+        """Factory configuration."""
+
         model = edx_models.CourseOverviewsCourseoverview
         sqlalchemy_session = session
 
@@ -33,7 +46,13 @@ class EdxCourseOverviewFactory(factory.alchemy.SQLAlchemyModelFactory):
 
 
 class EdxUserFactory(factory.alchemy.SQLAlchemyModelFactory):
+    """
+    Factory for generating fake OpenEdX users.
+    """
+
     class Meta:
+        """Factory configuration."""
+
         model = edx_models.AuthUser
         sqlalchemy_session = session
 
@@ -50,11 +69,18 @@ class EdxUserFactory(factory.alchemy.SQLAlchemyModelFactory):
 
 
 class EdxEnrollmentFactory(factory.alchemy.SQLAlchemyModelFactory):
+    """
+    Factory for generating fake OpenEdX enrollments.
+    """
+
     class Meta:
+        """Factory configuration."""
+
         model = edx_models.StudentCourseenrollment
         sqlalchemy_session = session
 
     user_id = factory.Faker("pyint")
+    auth_user = None
     course_id = factory.Sequence(
         lambda n: f"course-v1:edX+{factory.Faker('pystr')}+{n}"
     )
