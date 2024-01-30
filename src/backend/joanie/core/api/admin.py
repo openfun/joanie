@@ -428,6 +428,7 @@ class OrderViewSet(
         "list": serializers.AdminOrderLightSerializer,
     }
     default_serializer_class = serializers.AdminOrderSerializer
+    filterset_class = filters.OrderAdminFilterSet
     queryset = models.Order.objects.all().select_related(
         "product",
         "owner",
