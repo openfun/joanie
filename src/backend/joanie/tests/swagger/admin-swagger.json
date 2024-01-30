@@ -2908,6 +2908,19 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "in": "query",
+                        "name": "type",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "certificate",
+                                "credential",
+                                "enrollment"
+                            ]
+                        },
+                        "description": "* `credential` - Credential\n* `enrollment` - Enrollment\n* `certificate` - Certificate"
                     }
                 ],
                 "tags": [
