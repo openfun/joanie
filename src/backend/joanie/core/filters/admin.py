@@ -58,22 +58,32 @@ class CourseRunAdminFilterSet(filters.FilterSet):
 
     class Meta:
         model = models.CourseRun
-        fields: List[str] = ["query", "start", "state"]
+        fields: List[str] = ["query", "state"]
 
     query = filters.CharFilter(method="filter_by_query")
     start = filters.IsoDateTimeFilter(field_name="start", lookup_expr="gte")
     state = filters.NumberFilter(method="filter_by_state")
-
-    resource_link = filters.CharFilter(
-        field_name="resource_link", lookup_expr="icontains"
+    course_ids = filters.ModelMultipleChoiceFilter(
+        queryset=models.Course.objects.all().only("pk"),
+        field_name="course",
+        distinct=True,
     )
+    organization_ids = filters.ModelMultipleChoiceFilter(
+        queryset=models.Organization.objects.all().only("pk"),
+        field_name="course__organizations",
+        distinct=True,
+    )
+    is_gradable = filters.BooleanFilter()
+    is_listed = filters.BooleanFilter()
 
     def filter_by_query(self, queryset, _name, value):
         """
         Filter resource by looking for title which contains provided value in
         "query" query parameter.
         """
-        return queryset.filter(translations__title__icontains=value).distinct()
+        return queryset.filter(
+            Q(translations__title__icontains=value) | Q(resource_link__icontains=value)
+        ).distinct()
 
     def filter_by_state(self, queryset, _name, value):
         """
