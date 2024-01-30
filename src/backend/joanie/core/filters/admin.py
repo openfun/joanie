@@ -227,4 +227,55 @@ class UserAdminFilterSet(filters.FilterSet):
             | Q(first_name__icontains=value)
             | Q(last_name__icontains=value)
             | Q(email__icontains=value)
-        )
+        ).distinct()
+
+
+class OrderAdminFilterSet(filters.FilterSet):
+    """
+    FilterSet to filter orders by several criteria.
+    """
+
+    class Meta:
+        model = models.Order
+        fields: List[str] = ["query"]
+
+    query = filters.CharFilter(method="filter_by_query")
+    course_ids = filters.ModelMultipleChoiceFilter(
+        queryset=models.Course.objects.all().only("pk"),
+        field_name="course",
+        distinct=True,
+    )
+    organization_ids = filters.ModelMultipleChoiceFilter(
+        queryset=models.Organization.objects.all().only("pk"),
+        field_name="organization",
+        distinct=True,
+    )
+    owner_ids = filters.ModelMultipleChoiceFilter(
+        queryset=models.User.objects.all().only("pk"),
+        field_name="owner",
+        distinct=True,
+    )
+    product_ids = filters.ModelMultipleChoiceFilter(
+        queryset=models.Product.objects.all().only("pk"),
+        field_name="product",
+        distinct=True,
+    )
+    state = filters.ChoiceFilter(choices=enums.ORDER_STATE_CHOICES)
+
+    def filter_by_query(self, queryset, _name, value):
+        """
+        Filter resource by looking for product title, course title | code, organization
+        title | code, owner username, email, full_name
+        """
+
+        return queryset.filter(
+            Q(course__translations__title__icontains=value)
+            | Q(course__code__icontains=value)
+            | Q(organization__translations__title__icontains=value)
+            | Q(organization__code__icontains=value)
+            | Q(product__translations__title__icontains=value)
+            | Q(owner__email__icontains=value)
+            | Q(owner__username__icontains=value)
+            | Q(owner__first_name__icontains=value)
+            | Q(owner__last_name__icontains=value)
+        ).distinct()

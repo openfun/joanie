@@ -1,4 +1,5 @@
 """Test suite for the admin orders API endpoints."""
+import uuid
 from decimal import Decimal as D
 from http import HTTPStatus
 
@@ -6,6 +7,7 @@ from django.conf import settings
 from django.test import TestCase
 
 from joanie.core import enums, factories
+from joanie.core.models import Order
 from joanie.payment.factories import InvoiceFactory
 from joanie.tests import format_date
 
@@ -90,6 +92,387 @@ class OrdersAdminApiTestCase(TestCase):
         }
 
         self.assertEqual(content, expected_content)
+
+    def test_api_admin_orders_list_filter_by_course_ids(self):
+        """
+        Authenticated admin user should be able to list all existing orders filtered by
+        one or several course_id
+        """
+        orders = factories.OrderFactory.create_batch(2)
+        # - Create random orders
+        factories.OrderFactory.create_batch(2)
+
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        response = self.client.get("/api/v1.0/admin/orders/")
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 4)
+
+        for order in orders:
+            response = self.client.get(
+                f"/api/v1.0/admin/orders/?course_ids={order.course.id}"
+            )
+            self.assertEqual(response.status_code, HTTPStatus.OK)
+            content = response.json()
+            self.assertEqual(content["count"], 1)
+            self.assertEqual(content["results"][0]["id"], str(order.id))
+
+        response = self.client.get(
+            f"/api/v1.0/admin/orders/"
+            f"?course_ids={orders[0].course.id}"
+            f"&course_ids={orders[1].course.id}"
+        )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 2)
+
+        unknown_id = uuid.uuid4()
+        response = self.client.get(f"/api/v1.0/admin/orders/?course_ids={unknown_id}")
+        self.assertContains(
+            response,
+            f'{{"course_ids":["'
+            f"Select a valid choice. {unknown_id} is not one of the available choices."
+            f'"]}}',
+            status_code=HTTPStatus.BAD_REQUEST,
+        )
+
+    def test_api_admin_orders_list_filter_by_invalid_course_ids(self):
+        """
+        Authenticated admin user should be able to list all existing orders filtered by
+        course_id and get a bad request if the course id is not a valid uuid
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        response = self.client.get("/api/v1.0/admin/orders/?course_ids=invalid")
+
+        self.assertContains(
+            response,
+            '{"course_ids":["“invalid” is not a valid UUID."]}',
+            status_code=HTTPStatus.BAD_REQUEST,
+        )
+
+    def test_api_admin_orders_list_filter_by_product_ids(self):
+        """
+        Authenticated admin user should be able to list all existing orders filtered by
+        one or several product_id
+        """
+        orders = factories.OrderFactory.create_batch(2)
+        # - Create random orders
+        factories.OrderFactory.create_batch(2)
+
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        response = self.client.get("/api/v1.0/admin/orders/")
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 4)
+
+        for order in orders:
+            response = self.client.get(
+                f"/api/v1.0/admin/orders/?product_ids={order.product.id}"
+            )
+            self.assertEqual(response.status_code, HTTPStatus.OK)
+            content = response.json()
+            self.assertEqual(content["count"], 1)
+            self.assertEqual(content["results"][0]["id"], str(order.id))
+
+        # - Filter by several product ids
+        response = self.client.get(
+            f"/api/v1.0/admin/orders/"
+            f"?product_ids={orders[0].product.id}"
+            f"&product_ids={orders[1].product.id}"
+        )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 2)
+
+        unknown_id = uuid.uuid4()
+        response = self.client.get(f"/api/v1.0/admin/orders/?product_ids={unknown_id}")
+        self.assertContains(
+            response,
+            f'{{"product_ids":["'
+            f"Select a valid choice. {unknown_id} is not one of the available choices."
+            f'"]}}',
+            status_code=HTTPStatus.BAD_REQUEST,
+        )
+
+    def test_api_admin_orders_list_filter_by_invalid_product_ids(self):
+        """
+        Authenticated admin user should be able to list all existing orders filtered by
+        product_ids and get a bad request if the product id is not a valid uuid
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        response = self.client.get("/api/v1.0/admin/orders/?product_ids=invalid")
+
+        self.assertContains(
+            response,
+            '{"product_ids":["“invalid” is not a valid UUID."]}',
+            status_code=HTTPStatus.BAD_REQUEST,
+        )
+
+    def test_api_admin_orders_list_filter_by_organization_ids(self):
+        """
+        Authenticated admin user should be able to list all existing orders filtered by
+        one or several organization id
+        """
+        orders = factories.OrderFactory.create_batch(2)
+        # - Create random orders
+        factories.OrderFactory.create_batch(2)
+
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        response = self.client.get("/api/v1.0/admin/orders/")
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 4)
+
+        for order in orders:
+            response = self.client.get(
+                f"/api/v1.0/admin/orders/?organization_ids={order.organization.id}"
+            )
+            self.assertEqual(response.status_code, HTTPStatus.OK)
+            content = response.json()
+            self.assertEqual(content["count"], 1)
+            self.assertEqual(content["results"][0]["id"], str(order.id))
+
+        # - Filter by several organization id
+        response = self.client.get(
+            f"/api/v1.0/admin/orders/"
+            f"?organization_ids={orders[0].organization.id}"
+            f"&organization_ids={orders[1].organization.id}"
+        )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 2)
+
+        unknown_id = uuid.uuid4()
+        response = self.client.get(
+            f"/api/v1.0/admin/orders/?organization_ids={unknown_id}"
+        )
+        self.assertContains(
+            response,
+            f'{{"organization_ids":["'
+            f"Select a valid choice. {unknown_id} is not one of the available choices."
+            f'"]}}',
+            status_code=HTTPStatus.BAD_REQUEST,
+        )
+
+    def test_api_admin_orders_list_filter_by_invalid_organization_ids(self):
+        """
+        Authenticated admin user should be able to list all existing orders filtered by
+        organization_id and get a bad request if the organization id is not a valid uuid
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        response = self.client.get("/api/v1.0/admin/orders/?organization_ids=invalid")
+
+        self.assertContains(
+            response,
+            '{"organization_ids":["“invalid” is not a valid UUID."]}',
+            status_code=HTTPStatus.BAD_REQUEST,
+        )
+
+    def test_api_admin_orders_list_filter_by_owner_ids(self):
+        """
+        Authenticated admin user should be able to list all existing orders filtered by
+        one or several owner_id
+        """
+        orders = factories.OrderFactory.create_batch(2)
+        # - Create random orders
+        factories.OrderFactory.create_batch(2)
+
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        response = self.client.get("/api/v1.0/admin/orders/")
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 4)
+
+        for order in orders:
+            response = self.client.get(
+                f"/api/v1.0/admin/orders/?owner_ids={order.owner.id}"
+            )
+            self.assertEqual(response.status_code, HTTPStatus.OK)
+            content = response.json()
+            self.assertEqual(content["count"], 1)
+            self.assertEqual(content["results"][0]["id"], str(order.id))
+
+        # - Filter by several owner id
+        response = self.client.get(
+            f"/api/v1.0/admin/orders/"
+            f"?owner_ids={orders[0].owner.id}"
+            f"&owner_ids={orders[1].owner.id}"
+        )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 2)
+
+        unknown_id = uuid.uuid4()
+        response = self.client.get(f"/api/v1.0/admin/orders/?owner_ids={unknown_id}")
+        self.assertContains(
+            response,
+            f'{{"owner_ids":["'
+            f"Select a valid choice. {unknown_id} is not one of the available choices."
+            f'"]}}',
+            status_code=HTTPStatus.BAD_REQUEST,
+        )
+
+    def test_api_admin_orders_list_filter_by_invalid_owner_ids(self):
+        """
+        Authenticated admin user should be able to list all existing orders filtered by
+        owner_id and get a bad request if the owner id is not a valid uuid
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        response = self.client.get("/api/v1.0/admin/orders/?owner_ids=invalid")
+
+        self.assertContains(
+            response,
+            '{"owner_ids":["“invalid” is not a valid UUID."]}',
+            status_code=HTTPStatus.BAD_REQUEST,
+        )
+
+    def test_api_admin_orders_list_filter_by_state(self):
+        """
+        Authenticated admin user should be able to list all existing orders filtered by
+        state
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        for [state, _] in enums.ORDER_STATE_CHOICES:
+            factories.OrderFactory(state=state)
+
+        for [state, _] in enums.ORDER_STATE_CHOICES:
+            response = self.client.get(f"/api/v1.0/admin/orders/?state={state}")
+            order = Order.objects.get(state=state)
+            self.assertEqual(response.status_code, HTTPStatus.OK)
+            content = response.json()
+            self.assertEqual(content["count"], 1)
+            self.assertEqual(content["results"][0]["id"], str(order.id))
+
+    def test_api_admin_orders_list_filter_by_invalid_state(self):
+        """
+        Authenticated admin user should be able to list all existing orders filtered by
+        state and get a bad request if the state is not a valid choice
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        response = self.client.get("/api/v1.0/admin/orders/?state=invalid_state")
+
+        self.assertContains(
+            response,
+            '{"state":["'
+            "Select a valid choice. invalid_state is not one of the available choices."
+            '"]}',
+            status_code=HTTPStatus.BAD_REQUEST,
+        )
+
+    def test_api_admin_orders_list_filter_by_query_language(self):
+        """
+        Authenticated admin user should be able to list all existing orders filtered by
+        a query. This query should allow to search order on owner, product, course and
+        organization.
+        """
+        # Create an admin user
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        # - Create random orders
+        factories.OrderFactory.create_batch(2)
+
+        # - Create an order to test the query filter
+        course = factories.CourseFactory(
+            title="Introduction to resource filtering",
+            code="C_101",
+        )
+        course.translations.create(
+            language_code="fr-fr", title="Introduction au filtrage de resource"
+        )
+
+        product = factories.ProductFactory(
+            title="Micro credential",
+        )
+        product.translations.create(language_code="fr-fr", title="Micro certification")
+
+        organization = factories.OrganizationFactory(
+            title="Acme University", code="U_ACME"
+        )
+        organization.translations.create(language_code="fr-fr", title="Université Acme")
+
+        factories.CourseProductRelationFactory(
+            organizations=[organization],
+            course=course,
+            product=product,
+        )
+        order = factories.OrderFactory(
+            owner=factories.UserFactory(
+                username="jo_cun",
+                first_name="Joanie",
+                last_name="Cunningham",
+                email="jo_cun@example.com",
+            ),
+            product=product,
+            course=course,
+            organization=organization,
+        )
+
+        response = self.client.get("/api/v1.0/admin/orders/")
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 3)
+
+        # Prepare queries to test
+        # - Queries related to owner (username, first_name, last_name, email)
+        queries = [
+            "jo_cun",
+            "jo_",
+            "Joanie",
+            "oani",
+            "Cunningham",
+            "nning",
+            "jo_cun@example.com",
+            "_cun@examp",
+        ]
+        # - Queries related to product (title in any language))
+        queries += [
+            "Micro credential",
+            "credential",
+            "Micro certification",
+            "certification",
+        ]
+        # - Queries related to course (code, title in any language)
+        queries += [
+            "Introduction to resource filtering",
+            "Introduction au filtrage de resource",
+            "Introduction",
+            "resource",
+            "C_101",
+        ]
+        # - Queries related to organization (code, title in any language)
+        queries += [
+            "Acme University",
+            "Université Acme",
+            "Acme",
+            "U_ACME",
+        ]
+
+        for query in queries:
+            response = self.client.get(f"/api/v1.0/admin/orders/?query={query}")
+            self.assertEqual(response.status_code, HTTPStatus.OK)
+            content = response.json()
+            self.assertEqual(content["count"], 1)
+            self.assertEqual(content["results"][0]["id"], str(order.id))
 
     def test_api_admin_orders_course_retrieve(self):
         """An admin user should be able to retrieve a single course order through its id."""
