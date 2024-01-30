@@ -42,6 +42,7 @@ class ProductAdminFilterSet(filters.FilterSet):
         fields: List[str] = ["query"]
 
     query = filters.CharFilter(method="filter_by_query")
+    type = filters.ChoiceFilter(choices=enums.PRODUCT_TYPE_CHOICES)
 
     def filter_by_query(self, queryset, _name, value):
         """

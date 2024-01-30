@@ -6,7 +6,7 @@ from http import HTTPStatus
 
 from django.test import TestCase
 
-from joanie.core import factories, models
+from joanie.core import enums, factories, models
 
 
 class ProductAdminApiTest(TestCase):
@@ -55,6 +55,44 @@ class ProductAdminApiTest(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], product_count)
+
+    def test_admin_api_product_list_filter_by_type(self):
+        """
+        Staff user should be able to get paginated list of products filtered by
+        type
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        for [product_type, _] in enums.PRODUCT_TYPE_CHOICES:
+            factories.ProductFactory.create(type=product_type)
+
+        for [product_type, _] in enums.PRODUCT_TYPE_CHOICES:
+            response = self.client.get(f"/api/v1.0/admin/products/?type={product_type}")
+
+            product = models.Product.objects.get(type=product_type)
+            self.assertEqual(response.status_code, HTTPStatus.OK)
+            content = response.json()
+            self.assertEqual(content["count"], 1)
+            self.assertEqual(content["results"][0]["id"], str(product.id))
+
+    def test_admin_api_product_list_filter_by_invalid_type(self):
+        """
+        Staff user should be able to get paginated list of products filtered by
+        type but an error should be returned if the type is not valid
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        response = self.client.get("/api/v1.0/admin/products/?type=invalid_type")
+
+        self.assertContains(
+            response,
+            '{"type":["'
+            "Select a valid choice. invalid_type is not one of the available choices."
+            '"]}',
+            status_code=HTTPStatus.BAD_REQUEST,
+        )
 
     def test_admin_api_product_get(self):
         """
