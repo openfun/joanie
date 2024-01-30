@@ -2,6 +2,7 @@
 Test suite for Course Admin API.
 """
 import random
+import uuid
 from http import HTTPStatus
 
 from django.test import TestCase
@@ -130,6 +131,80 @@ class CourseAdminApiTest(TestCase):
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["title"], "Leçon 1")
+
+    def test_admin_api_course_list_filter_by_organization_ids(self):
+        """
+        Staff user should be able to get a paginated list of courses filtered through
+        one or several organization id
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        organizations = factories.OrganizationFactory.create_batch(2)
+
+        for organization in organizations:
+            factories.CourseFactory.create(organizations=[organization])
+
+        # - Create random courses
+        factories.CourseFactory.create_batch(2)
+
+        for organization in organizations:
+            response = self.client.get(
+                f"/api/v1.0/admin/courses/?organization_ids={organization.id}"
+            )
+            course = organization.courses.first()
+            self.assertEqual(response.status_code, HTTPStatus.OK)
+            content = response.json()
+            self.assertEqual(content["count"], 1)
+            self.assertEqual(content["results"][0]["id"], str(course.id))
+
+        # - Test with several organizations
+        response = self.client.get(
+            f"/api/v1.0/admin/courses/"
+            f"?organization_ids={organizations[0].id}"
+            f"&organization_ids={organizations[1].id}"
+        )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 2)
+
+        # Test with an organization that does not have any course
+        other_organization = factories.OrganizationFactory()
+        response = self.client.get(
+            f"/api/v1.0/admin/courses/?organization_ids={other_organization.id}"
+        )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 0)
+
+        # Test with non existing organization
+        unknown_id = uuid.uuid4()
+        response = self.client.get(
+            f"/api/v1.0/admin/courses/?organization_ids={unknown_id}"
+        )
+        self.assertContains(
+            response,
+            '{"organization_ids":['
+            f'"Select a valid choice. {unknown_id} is not one of the available choices."'
+            "]}",
+            status_code=HTTPStatus.BAD_REQUEST,
+        )
+
+    def test_admin_api_course_list_filter_by_invalid_organization_ids(self):
+        """
+        Staff user should be able to get a paginated list of courses filtered
+        through an organization id and get a bad request if the organization id is not
+        a valid uuid.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        response = self.client.get("/api/v1.0/admin/courses/?organization_ids=invalid")
+
+        self.assertContains(
+            response,
+            '{"organization_ids":["“invalid” is not a valid UUID."]}',
+            status_code=HTTPStatus.BAD_REQUEST,
+        )
 
     def test_admin_api_course_get(self):
         """
