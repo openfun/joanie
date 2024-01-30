@@ -3,7 +3,10 @@ import Cookies from "js-cookie";
 import { LocalesEnum } from "@/types/i18n/LocalesEnum";
 import { HttpStatus } from "@/types/utils";
 import { HttpError } from "@/services/http/HttpError";
-import { TRANSLATE_CONTENT_LANGUAGE } from "@/utils/constants";
+import {
+  FORCE_TRANSLATE_CONTENT_LANGUAGE,
+  TRANSLATE_CONTENT_LANGUAGE,
+} from "@/utils/constants";
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { getDjangoLang, getLocaleFromDjangoLang } from "@/utils/lang";
 
@@ -23,10 +26,13 @@ export const fetchApi = (routes: RequestInfo, options: RequestInit = {}) => {
 };
 
 export const getAcceptLanguage = (): string => {
+  const force = localStorage.getItem(FORCE_TRANSLATE_CONTENT_LANGUAGE);
   const translateContent = localStorage.getItem(TRANSLATE_CONTENT_LANGUAGE);
   const interfaceLang = getDjangoLang();
 
-  if (translateContent) {
+  if (force) {
+    return force;
+  } else if (translateContent) {
     return translateContent;
   } else if (interfaceLang) {
     return getLocaleFromDjangoLang(interfaceLang);
