@@ -32,7 +32,19 @@ export function TranslatableContent({ ...props }: PropsWithChildren<Props>) {
   };
   useEffect(() => {
     localStorage.setItem(TRANSLATE_CONTENT_LANGUAGE, getLocaleFromDjangoLang());
+    const oldOnbeforeunload = window.onbeforeunload;
+    /*
+      The translation of content and the retrieval of an object according to a given language are done via the same
+      header on a GET / POST request. We play on the priorities in the "getAcceptLanguage" method of HttpService.
+      We add this event because if we are on a page with translatable content, we need to reset the
+      TRANSLATE_CONTENT_LANGUAGE key in localStorage when we leave or refresh the page so that the object is retrieved
+      in the current language and not in the current language forced. by the TranslatableContent component
+     */
+    window.onbeforeunload = () => {
+      localStorage.removeItem(TRANSLATE_CONTENT_LANGUAGE);
+    };
     return () => {
+      window.onbeforeunload = oldOnbeforeunload;
       localStorage.removeItem(TRANSLATE_CONTENT_LANGUAGE);
       props.onSelectLang(getLocaleFromDjangoLang());
     };

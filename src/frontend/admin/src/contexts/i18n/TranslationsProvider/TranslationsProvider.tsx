@@ -15,6 +15,7 @@ import {
 } from "@/contexts/i18n/TranslationsProvider/TranslationContext";
 import { useAllLanguages } from "@/hooks/useAllLanguages/useAllLanguages";
 import { getLocaleFromDjangoLang, setDjangoLangFromLocale } from "@/utils/lang";
+import { FORCE_TRANSLATE_CONTENT_LANGUAGE } from "@/utils/constants";
 
 export function TranslationsProvider({ children }: PropsWithChildren<{}>) {
   const queryClient = useQueryClient();
@@ -24,6 +25,20 @@ export function TranslationsProvider({ children }: PropsWithChildren<{}>) {
   const [adapterLocale] = useState<Locale>(
     defaultLocal !== LocalesEnum.FRENCH ? fr : enUS,
   );
+
+  const invalidateInfinityQueries = async (newLocale: string) => {
+    const queries = [
+      "certificateDefinitionTemplates",
+      "allLanguages",
+      "allOrganizationAccesses",
+      "allCourseAccesses",
+    ];
+    localStorage.setItem(FORCE_TRANSLATE_CONTENT_LANGUAGE, newLocale);
+    await queryClient.invalidateQueries({
+      predicate: (query) => queries.includes(query.queryKey[0] as string),
+    });
+    localStorage.removeItem(FORCE_TRANSLATE_CONTENT_LANGUAGE);
+  };
 
   const translations = useMemo(() => {
     switch (currentLocale) {
@@ -41,6 +56,7 @@ export function TranslationsProvider({ children }: PropsWithChildren<{}>) {
         setCurrentLocale(newLocale);
         setDjangoLangFromLocale(newLocale);
         await queryClient.invalidateQueries();
+        await invalidateInfinityQueries(newLocale);
       },
     }),
     [currentLocale],
