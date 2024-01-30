@@ -22,7 +22,7 @@ const navTranslations = defineMessages({
   },
   certificatesNavTitle: {
     id: "layouts.dashboard.nav.config.certificatesNavTitle",
-    defaultMessage: "Certificates",
+    defaultMessage: "Certificate definition",
     description: "Title for the Certificates nav item",
   },
   contractDefinitionNavTitle: {
