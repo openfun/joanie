@@ -16,4 +16,5 @@ export type CertificateDefinitionFormValues = ToFormValues<
 
 export enum CertificationDefinitionTemplate {
   CERTIFICATE = "certificate",
+  DEGREE = "degree",
 }

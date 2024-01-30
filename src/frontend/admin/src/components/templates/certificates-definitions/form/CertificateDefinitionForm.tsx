@@ -8,7 +8,6 @@ import { defineMessages, useIntl } from "react-intl";
 import Box from "@mui/material/Box";
 import { RHFProvider } from "@/components/presentational/hook-form/RHFProvider";
 import { RHFTextField } from "@/components/presentational/hook-form/RHFTextField";
-import { RHFSelect } from "@/components/presentational/hook-form/RHFSelect";
 import { useCertificateDefinitions } from "@/hooks/useCertificateDefinitions/useCertificateDefinitions";
 import { ServerSideErrorForm } from "@/types/utils";
 import { genericUpdateFormError } from "@/utils/forms";
@@ -18,6 +17,7 @@ import {
   CertificationDefinitionTemplate,
   DTOCertificateDefinition,
 } from "@/services/api/models/CertificateDefinition";
+import { RHFCertificateDefinitionTemplates } from "@/components/templates/certificates-definitions/inputs/RHFCertificateDefinitionTemplate";
 
 const messages = defineMessages({
   titleLabel: {
@@ -56,6 +56,7 @@ export function CertificateDefinitionForm({ definition, ...props }: Props) {
     {},
     { enabled: false },
   );
+
   const RegisterSchema = Yup.object().shape({
     name: Yup.string().required(),
     title: Yup.string().required(),
@@ -130,18 +131,7 @@ export function CertificateDefinitionForm({ definition, ...props }: Props) {
               />
             </Grid>
             <Grid xs={12}>
-              <RHFSelect
-                data-testid="template-select"
-                name="template"
-                disabled={true}
-                options={[
-                  {
-                    label: "Default",
-                    value: CertificationDefinitionTemplate.CERTIFICATE,
-                  },
-                ]}
-                label={intl.formatMessage(messages.templateLabel)}
-              />
+              <RHFCertificateDefinitionTemplates name="template" />
             </Grid>
             <Grid xs={12}>
               <RHFTextField

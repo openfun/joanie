@@ -10,6 +10,7 @@ import {
   DTOCertificateDefinition,
 } from "@/services/api/models/CertificateDefinition";
 import { ResourcesQuery } from "@/hooks/useResources/types";
+import { SelectOption } from "@/components/presentational/hook-form/RHFSelect";
 
 export const certificateDefinitionRoutes: BaseEntityRoutesPaths = {
   get: (id: string, params: string = "") =>
@@ -20,11 +21,16 @@ export const certificateDefinitionRoutes: BaseEntityRoutesPaths = {
   delete: (id: string) => `/certificate-definitions/${id}/`,
 };
 
-export const CertificateDefinitionRepository: AbstractRepository<
-  CertificateDefinition,
-  ResourcesQuery,
-  DTOCertificateDefinition
-> = class CertificateDefinitionRepository {
+interface Repository
+  extends AbstractRepository<
+    CertificateDefinition,
+    ResourcesQuery,
+    DTOCertificateDefinition
+  > {
+  getAllTemplates: () => Promise<SelectOption[]>;
+}
+
+export const CertificateDefinitionRepository: Repository = class CertificateDefinitionRepository {
   static get(
     id: string,
     filters?: Maybe<ResourcesQuery>,
@@ -68,5 +74,19 @@ export const CertificateDefinitionRepository: AbstractRepository<
       method: "PATCH",
       body: exportToFormData(payload),
     }).then(checkStatus);
+  }
+
+  static getAllTemplates(): Promise<SelectOption[]> {
+    return fetchApi(certificateDefinitionRoutes.getAll(), {
+      method: "OPTIONS",
+    }).then(async (response) => {
+      const checkedResponse = await checkStatus(response);
+      const result: { value: string; display_name: string }[] =
+        checkedResponse.actions.POST.template.choices;
+      return result.map(({ value, display_name: label }) => ({
+        value,
+        label,
+      }));
+    });
   }
 };

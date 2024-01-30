@@ -13,7 +13,7 @@ export interface SelectOption {
   value: any;
 }
 
-type RHFSelectProps = TextFieldProps & {
+export type RHFSelectProps = TextFieldProps & {
   name: string;
   native?: boolean;
   maxHeight?: boolean | number;
