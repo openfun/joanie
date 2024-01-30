@@ -12,7 +12,6 @@ from joanie.lms_handler.edx_imports.edx_models import (
     UniversitiesUniversity,
 )
 
-logging.StreamHandler.terminator = ""
 logger = logging.getLogger(__name__)
 
 # TODO: use env variables and django settings
@@ -138,7 +137,7 @@ class OpenEdxDB:
                     self.StudentCourseEnrollment.is_active,
                     self.StudentCourseEnrollment.user_id,
                 ),
-                joinedload(self.StudentCourseEnrollment.auth_user).load_only(
+                joinedload(self.StudentCourseEnrollment.user).load_only(
                     self.User.username,
                 ),
             )

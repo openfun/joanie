@@ -23,7 +23,6 @@ from joanie.lms_handler.edx_imports.edx_database import (
 # pylint: disable=too-many-statements
 # ruff: noqa: PLR0915,SLF001
 
-logging.StreamHandler.terminator = ""
 logger = logging.getLogger(__name__)
 
 
@@ -282,12 +281,12 @@ def import_enrollments(batch_size=1000):
                 continue
 
             try:
-                user_name = edx_enrollment.auth_user.username
+                user_name = edx_enrollment.user.username
                 user = models.User.objects.only("pk").get(username=user_name)
             except models.User.DoesNotExist:
                 logger.error(
                     "No User found for username %s\n",
-                    edx_enrollment.auth_user.username,
+                    edx_enrollment.user.username,
                 )
                 continue
 

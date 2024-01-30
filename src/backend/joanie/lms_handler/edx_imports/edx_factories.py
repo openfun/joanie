@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session, registry
 from joanie.lms_handler.edx_imports import edx_models
 
 faker = Faker()
-engine = create_engine("sqlite+pysqlite:///:memory:")
+engine = create_engine("sqlite+pysqlite:///:memory:", echo=True)
 session = Session(engine)
 registry().metadata.create_all(engine)
 
@@ -55,6 +55,22 @@ class EdxCourseOverviewFactory(factory.alchemy.SQLAlchemyModelFactory):
     enrollment_start = factory.Faker("date_time")
     enrollment_end = factory.Faker("date_time")
     created = factory.Faker("date_time")
+    _location = factory.Faker("pystr")
+    display_number_with_default = factory.Faker("pystr")
+    display_org_with_default = factory.Faker("pystr")
+    course_image_url = factory.Faker("pystr")
+    certificates_show_before_end = factory.Faker("pyint")
+    has_any_active_web_certificate = factory.Faker("pyint")
+    cert_name_short = factory.Faker("pystr")
+    cert_name_long = factory.Faker("pystr")
+    mobile_available = factory.Faker("pyint")
+    visible_to_staff_only = factory.Faker("pyint")
+    _pre_requisite_courses_json = factory.Faker("pystr")
+    cert_html_view_enabled = factory.Faker("pyint")
+    invitation_only = factory.Faker("pyint")
+    modified = factory.Faker("date_time")
+    version = factory.Faker("pyint")
+    org = factory.Faker("pystr")
 
 
 class EdxUserFactory(factory.alchemy.SQLAlchemyModelFactory):
@@ -68,6 +84,7 @@ class EdxUserFactory(factory.alchemy.SQLAlchemyModelFactory):
         model = edx_models.AuthUser
         sqlalchemy_session = session
 
+    id = factory.Sequence(lambda n: n)
     username = factory.Faker("user_name")
     password = factory.Faker("password")
     email = factory.Faker("email")
@@ -92,16 +109,8 @@ class EdxEnrollmentFactory(factory.alchemy.SQLAlchemyModelFactory):
         sqlalchemy_session = session
 
     user_id = factory.Faker("pyint")
+    user = factory.SubFactory(EdxUserFactory, id=factory.SelfAttribute("..user_id"))
     course_id = factory.Sequence(lambda n: f"course-v1:edX+{faker.pystr()}+{n}")
     created = factory.Faker("date_time")
     is_active = True
-
-    @factory.post_generation
-    def auth_user(self, create, extracted, **kwargs):
-        if not create:
-            return
-
-        if extracted:
-            self.auth_user = extracted
-        else:
-            self.auth_user = EdxUserFactory.create(id=self.user_id)
+    mode = factory.Faker("pystr")

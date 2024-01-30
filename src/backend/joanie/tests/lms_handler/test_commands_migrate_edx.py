@@ -426,7 +426,7 @@ class MigrateOpenEdxTestCase(TestCase):
                 course__code=extract_course_number(edx_enrollment.course_id),
                 resource_link=f"http://openedx.test/courses/{edx_enrollment.course_id}/course/",
             )
-            factories.UserFactory.create(username=edx_enrollment.auth_user.username)
+            factories.UserFactory.create(username=edx_enrollment.user.username)
         mock_get_enrollments.return_value = edx_enrollments
         mock_get_enrollments_count.return_value = len(edx_enrollments)
 
@@ -435,7 +435,7 @@ class MigrateOpenEdxTestCase(TestCase):
         self.assertEqual(models.Enrollment.objects.count(), len(edx_enrollments))
         for edx_enrollment in edx_enrollments:
             enrollment = models.Enrollment.objects.get(
-                user__username=edx_enrollment.auth_user.username,
+                user__username=edx_enrollment.user.username,
                 course_run__course__code=extract_course_number(
                     edx_enrollment.course_id
                 ),
@@ -444,9 +444,7 @@ class MigrateOpenEdxTestCase(TestCase):
             self.assertEqual(
                 enrollment.created_on, make_date_aware(edx_enrollment.created)
             )
-            self.assertEqual(
-                enrollment.user.username, edx_enrollment.auth_user.username
-            )
+            self.assertEqual(enrollment.user.username, edx_enrollment.user.username)
             self.assertEqual(
                 enrollment.course_run.course.code,
                 extract_course_number(edx_enrollment.course_id),
@@ -466,7 +464,8 @@ class MigrateOpenEdxTestCase(TestCase):
         lms = detect_lms_from_resource_link(enrollments[0].course_run.resource_link)
         edx_enrollments = [
             edx_factories.EdxEnrollmentFactory.create(
-                auth_user=enrollment.user,
+                user_id=enrollment.user.id,
+                user__username=enrollment.user.username,
                 course_id=lms.extract_course_id(enrollment.course_run.resource_link),
             )
             for enrollment in enrollments
@@ -479,7 +478,7 @@ class MigrateOpenEdxTestCase(TestCase):
         self.assertEqual(models.Enrollment.objects.count(), len(edx_enrollments))
         for edx_enrollment in edx_enrollments:
             enrollment = models.Enrollment.objects.get(
-                user__username=edx_enrollment.auth_user.username,
+                user__username=edx_enrollment.user.username,
                 course_run__course__code=extract_course_number(
                     edx_enrollment.course_id
                 ),
@@ -488,9 +487,7 @@ class MigrateOpenEdxTestCase(TestCase):
             self.assertEqual(
                 enrollment.created_on, make_date_aware(edx_enrollment.created)
             )
-            self.assertEqual(
-                enrollment.user.username, edx_enrollment.auth_user.username
-            )
+            self.assertEqual(enrollment.user.username, edx_enrollment.user.username)
             self.assertEqual(
                 enrollment.course_run.course.code,
                 extract_course_number(edx_enrollment.course_id),
@@ -517,7 +514,7 @@ class MigrateOpenEdxTestCase(TestCase):
                     resource_link=f"http://openedx.test/courses/{edx_enrollment.course_id}/course/",
                 )
                 edx_enrollments_with_course_run.append(edx_enrollment)
-            factories.UserFactory.create(username=edx_enrollment.auth_user.username)
+            factories.UserFactory.create(username=edx_enrollment.user.username)
             i += 1
         mock_get_enrollments.return_value = edx_enrollments
         mock_get_enrollments_count.return_value = len(edx_enrollments)
@@ -533,7 +530,7 @@ class MigrateOpenEdxTestCase(TestCase):
 
         for edx_enrollment in edx_enrollments_with_course_run:
             enrollment = models.Enrollment.objects.get(
-                user__username=edx_enrollment.auth_user.username,
+                user__username=edx_enrollment.user.username,
                 course_run__course__code=extract_course_number(
                     edx_enrollment.course_id
                 ),
@@ -542,9 +539,7 @@ class MigrateOpenEdxTestCase(TestCase):
             self.assertEqual(
                 enrollment.created_on, make_date_aware(edx_enrollment.created)
             )
-            self.assertEqual(
-                enrollment.user.username, edx_enrollment.auth_user.username
-            )
+            self.assertEqual(enrollment.user.username, edx_enrollment.user.username)
             self.assertEqual(
                 enrollment.course_run.course.code,
                 extract_course_number(edx_enrollment.course_id),

@@ -10,7 +10,6 @@ from joanie.lms_handler.edx_imports.edx_import import (
     import_users,
 )
 
-logging.StreamHandler.terminator = ""
 logger = logging.getLogger(__name__)
 
 
