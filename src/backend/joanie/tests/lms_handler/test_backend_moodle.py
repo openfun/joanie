@@ -381,7 +381,7 @@ class MoodleLMSBackendTestCase(TestCase):
                 )
             ],
             status=HTTPStatus.OK,
-            json={"id": 5, "username": user.username},
+            json=[{"id": 5, "username": user.username}],
         )
 
         result = self.backend.create_user(user)
@@ -644,7 +644,7 @@ class MoodleLMSBackendTestCase(TestCase):
                 )
             ],
             status=HTTPStatus.OK,
-            json={"id": 5, "username": user.username},
+            json=[{"id": 5, "username": user.username}],
         )
 
         responses.add(

@@ -123,7 +123,7 @@ class MoodleLMSBackend(BaseLMSBackend):
             "auth": settings.MOODLE_AUTH_METHOD,
         }
         try:
-            return self.moodle("core_user_create_users", users=[user_data])
+            return self.moodle("core_user_create_users", users=[user_data])[0]
         except EmptyResponseException as e:
             logger.error("Moodle error while creating user %s: %s", user.username, e)
             raise MoodleUserCreateException() from e
@@ -141,8 +141,8 @@ class MoodleLMSBackend(BaseLMSBackend):
         except MoodleUserException as e:
             if not enrollment.is_active:
                 raise EnrollmentError() from e
-            user_created_response = self.create_user(enrollment.user)
-            user_id = user_created_response.get("id")
+            user_created = self.create_user(enrollment.user)
+            user_id = user_created.get("id")
 
         course_id = self.extract_course_id(enrollment.course_run.resource_link)
         moodle_enrollment = {
