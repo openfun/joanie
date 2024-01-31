@@ -680,8 +680,9 @@ class AdminCourseRunSerializer(serializers.ModelSerializer):
             "enrollment_start",
             "enrollment_end",
             "uri",
+            "state",
         ]
-        read_only_fields = ["id", "uri"]
+        read_only_fields = ["id", "uri", "state"]
 
     def validate(self, attrs):
         """

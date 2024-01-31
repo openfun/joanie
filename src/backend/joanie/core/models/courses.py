@@ -6,6 +6,7 @@ import logging
 from collections.abc import Mapping
 from datetime import MAXYEAR, datetime
 from datetime import timezone as tz
+from typing import TypedDict
 
 from django.apps import apps
 from django.conf import settings
@@ -41,8 +42,19 @@ MAX_DATE = datetime(MAXYEAR, 12, 31, tzinfo=tz.utc)
 logger = logging.getLogger(__name__)
 
 
+class CourseStateType(TypedDict):
+    """Type of course state."""
+
+    priority: int
+    datetime: datetime | None
+    call_to_action: str | None
+    text: str
+
+
 class CourseState(Mapping):
     """An immutable object to describe a course (resp. course run) state."""
+
+    _d: CourseStateType
 
     (
         ONGOING_OPEN,
@@ -900,7 +912,7 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
         return CourseState(CourseState.FUTURE_CLOSED)
 
     @property
-    def state(self) -> str:
+    def state(self) -> CourseStateType:
         """Return the state of the course run at the current time."""
         return self.compute_state(
             self.start, self.end, self.enrollment_start, self.enrollment_end

@@ -4359,6 +4359,34 @@
                     "uri": {
                         "type": "string",
                         "readOnly": true
+                    },
+                    "state": {
+                        "type": "object",
+                        "description": "Return the state of the course run at the current time.",
+                        "properties": {
+                            "priority": {
+                                "type": "integer"
+                            },
+                            "datetime": {
+                                "type": "string",
+                                "format": "date-time",
+                                "nullable": true
+                            },
+                            "call_to_action": {
+                                "type": "string",
+                                "nullable": true
+                            },
+                            "text": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "call_to_action",
+                            "datetime",
+                            "priority",
+                            "text"
+                        ],
+                        "readOnly": true
                     }
                 },
                 "required": [
@@ -4366,6 +4394,7 @@
                     "id",
                     "languages",
                     "resource_link",
+                    "state",
                     "title",
                     "uri"
                 ]
@@ -4428,8 +4457,31 @@
                         "readOnly": true
                     },
                     "state": {
-                        "type": "string",
+                        "type": "object",
                         "description": "Return the state of the course run at the current time.",
+                        "properties": {
+                            "priority": {
+                                "type": "integer"
+                            },
+                            "datetime": {
+                                "type": "string",
+                                "format": "date-time",
+                                "nullable": true
+                            },
+                            "call_to_action": {
+                                "type": "string",
+                                "nullable": true
+                            },
+                            "text": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "call_to_action",
+                            "datetime",
+                            "priority",
+                            "text"
+                        ],
                         "readOnly": true
                     }
                 },

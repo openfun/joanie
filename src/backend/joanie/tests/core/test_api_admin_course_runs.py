@@ -351,6 +351,12 @@ class CourseRunAdminApiTest(TestCase):
                 "is_listed": course_run.is_listed,
                 "languages": course_run.languages,
                 "uri": course_run.uri,
+                "state": {
+                    "priority": course_run.state["priority"],
+                    "datetime": format_date(course_run.state["datetime"]),
+                    "call_to_action": course_run.state["call_to_action"],
+                    "text": course_run.state["text"],
+                },
             },
         )
 
