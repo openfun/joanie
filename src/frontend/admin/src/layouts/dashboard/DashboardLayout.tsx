@@ -4,6 +4,7 @@ import { styled, useTheme } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 
 import useMediaQuery from "@mui/material/useMediaQuery";
+import { useRouter } from "next/router";
 import { DashboardLayoutHeader } from "@/layouts/dashboard/header/DashboardLayoutHeader";
 import { DashboardNav } from "@/layouts/dashboard/nav/DashboardNav";
 
@@ -42,6 +43,7 @@ const Main = styled("main", {
 
 export function DashboardLayout(props: PropsWithChildren) {
   const theme = useTheme();
+  const router = useRouter();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [open, setOpen] = useState(!isMobile);
   const handleToggleDrawer = () => {
@@ -60,7 +62,7 @@ export function DashboardLayout(props: PropsWithChildren) {
       />
       <DashboardNav open={open} handleClose={handleDrawerClose} />
 
-      <Main open={open}>{props.children}</Main>
+      <Main open={open}>{router.isReady && props.children}</Main>
     </Box>
   );
 }
