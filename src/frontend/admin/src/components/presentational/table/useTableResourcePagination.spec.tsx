@@ -1,4 +1,5 @@
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
+import mockRouter from "next-router-mock";
 import { usePaginatedTableResource } from "@/components/presentational/table/usePaginatedTableResource";
 import { Organization } from "@/services/api/models/Organization";
 import { useOrganizations } from "@/hooks/useOrganizations/useOrganizations";
@@ -6,6 +7,7 @@ import { TestingWrapper } from "@/components/testing/TestingWrapper";
 
 describe("usePaginatedTableResource Hook", () => {
   beforeEach(() => {
+    mockRouter.query.page = undefined;
     jest.useFakeTimers({
       // Explicitly tell Jest not to affect the "queueMicrotask" calls.
       advanceTimers: true,

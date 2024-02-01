@@ -4,8 +4,8 @@ import { Course, DTOCourse } from "@/services/api/models/Course";
 import { CourseRun, DTOCourseRun } from "@/services/api/models/CourseRun";
 import { mockResource } from "@/tests/mockResource";
 
-export const getCourseRunTestScenario = () => {
-  const courseRuns = CourseRunFactory(4);
+export const getCourseRunTestScenario = (nbItems: number = 4) => {
+  const courseRuns = CourseRunFactory(nbItems);
   const courses: Course[] = [];
   courseRuns.forEach((courseRun) => {
     courses.push(courseRun.course);
