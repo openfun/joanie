@@ -113,8 +113,9 @@ export function OrderView({ order }: Props) {
                 disabled={true}
                 multiline={true}
                 label={intl.formatMessage(orderViewMessages.enrollment)}
-                value={`${order.enrollment.course_run.title} (${order.enrollment
-                  .course_run.state?.text})\n${intl.formatMessage(
+                value={`${order.enrollment.course_run.title} (${
+                  order.enrollment.course_run.state?.text
+                })\n${intl.formatMessage(
                   orderViewMessages.enrollmentAt,
                 )}: ${new Date(
                   order.enrollment.created_on,
