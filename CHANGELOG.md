@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Filter course product relation client api endpoint by product type
 - Link Organization to Address Model
 - New properties on Organization model to complete contract definition context
 - Allow to bulk sign contracts by training

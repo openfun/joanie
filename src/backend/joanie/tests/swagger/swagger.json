@@ -748,6 +748,42 @@
                         "schema": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "in": "query",
+                        "name": "product_type",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "enum": [
+                                    "certificate",
+                                    "credential",
+                                    "enrollment"
+                                ]
+                            }
+                        },
+                        "description": "* `credential` - Credential\n* `enrollment` - Enrollment\n* `certificate` - Certificate",
+                        "explode": true,
+                        "style": "form"
+                    },
+                    {
+                        "in": "query",
+                        "name": "product_type_exclude",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "enum": [
+                                    "certificate",
+                                    "credential",
+                                    "enrollment"
+                                ]
+                            }
+                        },
+                        "description": "* `credential` - Credential\n* `enrollment` - Enrollment\n* `certificate` - Certificate",
+                        "explode": true,
+                        "style": "form"
                     }
                 ],
                 "tags": [
@@ -1666,6 +1702,42 @@
                         "schema": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "in": "query",
+                        "name": "product_type",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "enum": [
+                                    "certificate",
+                                    "credential",
+                                    "enrollment"
+                                ]
+                            }
+                        },
+                        "description": "* `credential` - Credential\n* `enrollment` - Enrollment\n* `certificate` - Certificate",
+                        "explode": true,
+                        "style": "form"
+                    },
+                    {
+                        "in": "query",
+                        "name": "product_type_exclude",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "enum": [
+                                    "certificate",
+                                    "credential",
+                                    "enrollment"
+                                ]
+                            }
+                        },
+                        "description": "* `credential` - Credential\n* `enrollment` - Enrollment\n* `certificate` - Certificate",
+                        "explode": true,
+                        "style": "form"
                     }
                 ],
                 "tags": [
@@ -3397,6 +3469,42 @@
                         "schema": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "in": "query",
+                        "name": "product_type",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "enum": [
+                                    "certificate",
+                                    "credential",
+                                    "enrollment"
+                                ]
+                            }
+                        },
+                        "description": "* `credential` - Credential\n* `enrollment` - Enrollment\n* `certificate` - Certificate",
+                        "explode": true,
+                        "style": "form"
+                    },
+                    {
+                        "in": "query",
+                        "name": "product_type_exclude",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "enum": [
+                                    "certificate",
+                                    "credential",
+                                    "enrollment"
+                                ]
+                            }
+                        },
+                        "description": "* `credential` - Credential\n* `enrollment` - Enrollment\n* `certificate` - Certificate",
+                        "explode": true,
+                        "style": "form"
                     }
                 ],
                 "tags": [

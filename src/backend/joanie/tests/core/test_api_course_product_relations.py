@@ -300,6 +300,151 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             },
         )
 
+    def test_api_course_product_relation_read_list_filtered_by_product_type(self):
+        """
+        An authenticated user should be able to list all course's product relations
+        filtered by product type.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        access = factories.UserCourseAccessFactory(user=user)
+
+        for [product_type, _] in enums.PRODUCT_TYPE_CHOICES:
+            factories.CourseProductRelationFactory(
+                product=factories.ProductFactory(type=product_type, courses=[]),
+                course=access.course,
+                organizations=factories.OrganizationFactory.create_batch(1),
+            )
+
+        response = self.client.get(
+            f"/api/v1.0/courses/{access.course.id}/products/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(len(content["results"]), 3)
+
+        for [product_type, _] in enums.PRODUCT_TYPE_CHOICES:
+            response = self.client.get(
+                f"/api/v1.0/courses/{access.course.id}/products/?product_type={product_type}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+            self.assertEqual(response.status_code, HTTPStatus.OK)
+            content = response.json()
+            self.assertEqual(len(content["results"]), 1)
+
+        # Test with multiple product types
+        response = self.client.get(
+            f"/api/v1.0/courses/{access.course.id}/products/"
+            "?product_type=credential"
+            "&product_type=certificate",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(len(content["results"]), 2)
+
+    def test_api_course_product_relation_read_list_filtered_by_invalid_product_type(
+        self,
+    ):
+        """
+        An authenticated user should be able to list all course's product relations
+        filtered by product type but if the type is invalid, it should
+        return a 400.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        access = factories.UserCourseAccessFactory(user=user)
+
+        response = self.client.get(
+            f"/api/v1.0/courses/{access.course.id}/products/?product_type=invalid",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertContains(
+            response,
+            '{"product_type":['
+            '"Select a valid choice. invalid is not one of the available choices."'
+            "]}",
+            status_code=HTTPStatus.BAD_REQUEST,
+        )
+
+    def test_api_course_product_relation_read_list_filtered_by_excluded_product_type(
+        self,
+    ):
+        """
+        An authenticated user should be able to list all course's product relations
+        filtered by excluding product type.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        access = factories.UserCourseAccessFactory(user=user)
+
+        for [product_type, _] in enums.PRODUCT_TYPE_CHOICES:
+            factories.CourseProductRelationFactory(
+                product=factories.ProductFactory(type=product_type, courses=[]),
+                course=access.course,
+                organizations=factories.OrganizationFactory.create_batch(1),
+            )
+
+        response = self.client.get(
+            f"/api/v1.0/courses/{access.course.id}/products/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(len(content["results"]), 3)
+
+        for [product_type, _] in enums.PRODUCT_TYPE_CHOICES:
+            response = self.client.get(
+                f"/api/v1.0/courses/{access.course.id}/products/"
+                f"?product_type_exclude={product_type}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+            self.assertEqual(response.status_code, HTTPStatus.OK)
+            content = response.json()
+            self.assertEqual(len(content["results"]), 2)
+
+        # Test with multiple excluded product types
+        response = self.client.get(
+            f"/api/v1.0/courses/{access.course.id}/products/"
+            "?product_type_exclude=credential"
+            "&product_type_exclude=certificate",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(len(content["results"]), 1)
+
+    def test_api_course_product_relation_read_list_filtered_by_invalid_excluded_product_type(
+        self,
+    ):
+        """
+        An authenticated user should be able to list all course's product relations
+        filtered by excluded product type but if the type is invalid, it should
+        return a 400.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        access = factories.UserCourseAccessFactory(user=user)
+
+        response = self.client.get(
+            f"/api/v1.0/courses/{access.course.id}/products/?product_type_exclude=invalid",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertContains(
+            response,
+            '{"product_type_exclude":['
+            '"Select a valid choice. invalid is not one of the available choices."'
+            "]}",
+            status_code=HTTPStatus.BAD_REQUEST,
+        )
+
     def test_api_course_product_relation_read_detail_anonymous(self):
         """
         Anonymous users should not be able to retrieve a single relation through its id.
