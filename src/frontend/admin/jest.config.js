@@ -2,6 +2,7 @@
 /** @type {import('jest').Config} */
 const customJestConfig = {
   // Add more setup options before each test is run
+  resetMocks: true,
   setupFiles: ["<rootDir>/jest.env.js"],
   setupFilesAfterEnv: [
     "./jest.polyfills.js",
