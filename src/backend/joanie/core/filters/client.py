@@ -193,3 +193,23 @@ class NestedOrderCourseViewSetFilter(filters.FilterSet):
                 "pk", flat=True
             ),
         )
+
+
+class CourseProductRelationViewSetFilter(filters.FilterSet):
+    """
+    Filter course product relations by product type.
+    """
+
+    product_type = filters.MultipleChoiceFilter(
+        field_name="product__type",
+        choices=enums.PRODUCT_TYPE_CHOICES,
+    )
+    product_type_exclude = filters.MultipleChoiceFilter(
+        field_name="product__type",
+        choices=enums.PRODUCT_TYPE_CHOICES,
+        exclude=True,
+    )
+
+    class Meta:
+        model = models.CourseProductRelation
+        fields: List[str] = []

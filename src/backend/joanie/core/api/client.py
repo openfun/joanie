@@ -83,6 +83,7 @@ class CourseProductRelationViewSet(
     lookup_url_kwarg = "pk_or_product_id"
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = serializers.CourseProductRelationSerializer
+    filterset_class = filters.CourseProductRelationViewSetFilter
     ordering = ["-created_on"]
     queryset = (
         models.CourseProductRelation.objects.filter(
