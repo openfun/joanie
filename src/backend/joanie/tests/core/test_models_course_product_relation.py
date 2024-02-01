@@ -14,7 +14,7 @@ class CourseProductRelationModelTestCase(TestCase):
         CourseProductRelation instance should have a property `uri`
         that returns the API url to get instance detail.
         """
-        relation = factories.CourseProductRelationFactory()
+        relation = factories.CourseProductRelationFactory(course__code="C_0001-2")
 
         self.assertEqual(
             relation.uri,

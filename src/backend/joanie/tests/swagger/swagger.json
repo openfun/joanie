@@ -992,7 +992,7 @@
                         "name": "course_id",
                         "schema": {
                             "type": "string",
-                            "pattern": "^[0-9a-z-]*$"
+                            "pattern": "^[a-zA-Z0-9-_]+$"
                         },
                         "required": true
                     },
@@ -1045,7 +1045,7 @@
                         "name": "course_id",
                         "schema": {
                             "type": "string",
-                            "pattern": "^[0-9a-z-]*$"
+                            "pattern": "^[a-zA-Z0-9-_]+$"
                         },
                         "required": true
                     }
@@ -1097,7 +1097,7 @@
                         "name": "course_id",
                         "schema": {
                             "type": "string",
-                            "pattern": "^[0-9a-z-]*$"
+                            "pattern": "^[a-zA-Z0-9-_]+$"
                         },
                         "required": true
                     },
@@ -1142,7 +1142,7 @@
                         "name": "course_id",
                         "schema": {
                             "type": "string",
-                            "pattern": "^[0-9a-z-]*$"
+                            "pattern": "^[a-zA-Z0-9-_]+$"
                         },
                         "required": true
                     },
@@ -1202,7 +1202,7 @@
                         "name": "course_id",
                         "schema": {
                             "type": "string",
-                            "pattern": "^[0-9a-z-]*$"
+                            "pattern": "^[a-zA-Z0-9-_]+$"
                         },
                         "required": true
                     },
@@ -1261,7 +1261,7 @@
                         "name": "course_id",
                         "schema": {
                             "type": "string",
-                            "pattern": "^[0-9a-z-]*$"
+                            "pattern": "^[a-zA-Z0-9-_]+$"
                         },
                         "required": true
                     },
@@ -1301,7 +1301,7 @@
                         "name": "course_id",
                         "schema": {
                             "type": "string",
-                            "pattern": "^[0-9a-z-]*$"
+                            "pattern": "^[a-zA-Z0-9-_]+$"
                         },
                         "required": true
                     },
@@ -1415,7 +1415,7 @@
                         "name": "course_id",
                         "schema": {
                             "type": "string",
-                            "pattern": "^[0-9a-z-]*$"
+                            "pattern": "^[a-zA-Z0-9-_]+$"
                         },
                         "required": true
                     },
@@ -1462,7 +1462,7 @@
                         "name": "course_id",
                         "schema": {
                             "type": "string",
-                            "pattern": "^[0-9a-z-]*$"
+                            "pattern": "^[a-zA-Z0-9-_]+$"
                         },
                         "required": true
                     },
@@ -1518,7 +1518,7 @@
                         "name": "course_id",
                         "schema": {
                             "type": "string",
-                            "pattern": "^[0-9a-z-]*$"
+                            "pattern": "^[a-zA-Z0-9-_]+$"
                         },
                         "required": true
                     },
@@ -1566,7 +1566,7 @@
                         "name": "course_id",
                         "schema": {
                             "type": "string",
-                            "pattern": "^[0-9a-z-]*$"
+                            "pattern": "^[a-zA-Z0-9-_]+$"
                         },
                         "required": true
                     },
@@ -1645,7 +1645,7 @@
                         "name": "course_id",
                         "schema": {
                             "type": "string",
-                            "pattern": "^[0-9a-z-]*$"
+                            "pattern": "^[a-zA-Z0-9-_]+$"
                         },
                         "required": true
                     },
@@ -1700,7 +1700,7 @@
                         "name": "course_id",
                         "schema": {
                             "type": "string",
-                            "pattern": "^[0-9a-z-]*$"
+                            "pattern": "^[a-zA-Z0-9-_]+$"
                         },
                         "required": true
                     },
@@ -2906,7 +2906,7 @@
                         "name": "organization_id",
                         "schema": {
                             "type": "string",
-                            "pattern": "^[0-9a-z-]*$"
+                            "pattern": "^[a-zA-Z0-9-_]+$"
                         },
                         "required": true
                     },
@@ -2959,7 +2959,7 @@
                         "name": "organization_id",
                         "schema": {
                             "type": "string",
-                            "pattern": "^[0-9a-z-]*$"
+                            "pattern": "^[a-zA-Z0-9-_]+$"
                         },
                         "required": true
                     }
@@ -3021,7 +3021,7 @@
                         "name": "organization_id",
                         "schema": {
                             "type": "string",
-                            "pattern": "^[0-9a-z-]*$"
+                            "pattern": "^[a-zA-Z0-9-_]+$"
                         },
                         "required": true
                     }
@@ -3066,7 +3066,7 @@
                         "name": "organization_id",
                         "schema": {
                             "type": "string",
-                            "pattern": "^[0-9a-z-]*$"
+                            "pattern": "^[a-zA-Z0-9-_]+$"
                         },
                         "required": true
                     }
@@ -3126,7 +3126,7 @@
                         "name": "organization_id",
                         "schema": {
                             "type": "string",
-                            "pattern": "^[0-9a-z-]*$"
+                            "pattern": "^[a-zA-Z0-9-_]+$"
                         },
                         "required": true
                     }
@@ -3185,7 +3185,7 @@
                         "name": "organization_id",
                         "schema": {
                             "type": "string",
-                            "pattern": "^[0-9a-z-]*$"
+                            "pattern": "^[a-zA-Z0-9-_]+$"
                         },
                         "required": true
                     }
@@ -3245,7 +3245,7 @@
                         "name": "organization_id",
                         "schema": {
                             "type": "string",
-                            "pattern": "^[0-9a-z-]*$"
+                            "pattern": "^[a-zA-Z0-9-_]+$"
                         },
                         "required": true
                     },
@@ -3339,7 +3339,7 @@
                         "name": "organization_id",
                         "schema": {
                             "type": "string",
-                            "pattern": "^[0-9a-z-]*$"
+                            "pattern": "^[a-zA-Z0-9-_]+$"
                         },
                         "required": true
                     }
@@ -3376,7 +3376,7 @@
                         "name": "organization_id",
                         "schema": {
                             "type": "string",
-                            "pattern": "^[0-9a-z-]*$"
+                            "pattern": "^[a-zA-Z0-9-_]+$"
                         },
                         "required": true
                     },
@@ -3431,7 +3431,7 @@
                         "name": "organization_id",
                         "schema": {
                             "type": "string",
-                            "pattern": "^[0-9a-z-]*$"
+                            "pattern": "^[a-zA-Z0-9-_]+$"
                         },
                         "required": true
                     },
@@ -3485,7 +3485,7 @@
                         "name": "organization_id",
                         "schema": {
                             "type": "string",
-                            "pattern": "^[0-9a-z-]*$"
+                            "pattern": "^[a-zA-Z0-9-_]+$"
                         },
                         "required": true
                     },
@@ -3562,7 +3562,7 @@
                         "name": "organization_id",
                         "schema": {
                             "type": "string",
-                            "pattern": "^[0-9a-z-]*$"
+                            "pattern": "^[a-zA-Z0-9-_]+$"
                         },
                         "required": true
                     }
@@ -3608,7 +3608,7 @@
                         "name": "organization_id",
                         "schema": {
                             "type": "string",
-                            "pattern": "^[0-9a-z-]*$"
+                            "pattern": "^[a-zA-Z0-9-_]+$"
                         },
                         "required": true
                     }
@@ -3652,7 +3652,7 @@
                         "name": "organization_id",
                         "schema": {
                             "type": "string",
-                            "pattern": "^[0-9a-z-]*$"
+                            "pattern": "^[a-zA-Z0-9-_]+$"
                         },
                         "required": true
                     }
@@ -3711,7 +3711,7 @@
                         "name": "organization_id",
                         "schema": {
                             "type": "string",
-                            "pattern": "^[0-9a-z-]*$"
+                            "pattern": "^[a-zA-Z0-9-_]+$"
                         },
                         "required": true
                     }
