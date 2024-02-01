@@ -20,6 +20,6 @@
   },
   "homepage": "https://github.com/openfun/joanie#readme",
   "devDependencies": {
-    "openapi-typescript-codegen": "0.26.0"
+    "openapi-typescript-codegen": "0.27.0"
   }
 }
