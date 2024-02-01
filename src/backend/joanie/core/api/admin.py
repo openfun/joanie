@@ -5,7 +5,6 @@ from http import HTTPStatus
 
 from django.core.exceptions import ValidationError
 
-import django_filters.rest_framework
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import mixins, permissions, viewsets
@@ -27,7 +26,6 @@ class OrganizationViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_class = serializers.AdminOrganizationSerializer
     queryset = models.Organization.objects.all()
-    filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
     filterset_class = filters.OrganizationAdminFilterSet
 
     def get_serializer_class(self):
@@ -66,7 +64,6 @@ class CourseViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_class = serializers.AdminCourseSerializer
     queryset = models.Course.objects.all().prefetch_related("organizations", "products")
-    filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
     filterset_class = filters.CourseAdminFilterSet
 
     def get_serializer_class(self):
@@ -87,7 +84,6 @@ class CourseRunViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_class = serializers.AdminCourseRunSerializer
     queryset = models.CourseRun.objects.all().select_related("course")
-    filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
     filterset_class = filters.CourseRunAdminFilterSet
 
     def get_queryset(self):
@@ -113,7 +109,6 @@ class CertificateDefinitionViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_class = serializers.AdminCertificateDefinitionSerializer
     queryset = models.CertificateDefinition.objects.all()
-    filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
     filterset_class = filters.CertificateDefinitionAdminFilterSet
 
 
@@ -127,7 +122,6 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     serializer_class = serializers.AdminUserSerializer
     me_serializer_class = serializers.AdminUserCompleteSerializer
     queryset = models.User.objects.all().order_by("username")
-    filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
     filterset_class = filters.UserAdminFilterSet
 
     def get_queryset(self):
@@ -313,7 +307,6 @@ class ContractDefinitionViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_class = serializers.AdminContractDefinitionSerializer
     queryset = models.ContractDefinition.objects.all()
-    filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
     filterset_class = filters.ContractDefinitionAdminFilterSet
 
 
