@@ -17,6 +17,7 @@ import {
 import { tableTranslations } from "@/components/presentational/table/translations";
 import { DEFAULT_PAGE_SIZE } from "@/utils/constants";
 import { mergeArrayUnique } from "@/utils/array";
+import { CustomTablePagination } from "@/components/presentational/table/TablePagination";
 
 export type DefaultTableProps<T extends GridValidRowModel> = {
   enableSelect?: boolean;
@@ -189,7 +190,9 @@ export function TableComponent<T extends GridValidRowModel>({
         <DataGrid
           {...props}
           paginationMode={paginationMode}
-          getRowHeight={() => "auto"}
+          getRowHeight={() => {
+            return 40;
+          }}
           sx={{
             border: "none",
             borderRadius: 0,
@@ -211,8 +214,10 @@ export function TableComponent<T extends GridValidRowModel>({
           columns={getColumns()}
           columnBuffer={props?.columnBuffer ?? 3}
           loading={props.loading}
+          pagination={true}
           slots={{
             loadingOverlay: LoaderCircular,
+            pagination: CustomTablePagination,
           }}
           initialState={{
             pagination: {
@@ -221,13 +226,13 @@ export function TableComponent<T extends GridValidRowModel>({
               },
             },
           }}
+          pageSizeOptions={[20]}
           autoHeight={true}
           localeText={{
             noRowsLabel: intl.formatMessage(tableTranslations.noRows),
             footerRowSelected: (count) =>
               intl.formatMessage(tableTranslations.rowsSelected, { count }),
           }}
-          pageSizeOptions={[DEFAULT_PAGE_SIZE]}
           checkboxSelection={enableSelect}
           onRowSelectionModelChange={(newRowSelectionModel) => {
             onSelectItems(newRowSelectionModel as string[]);
