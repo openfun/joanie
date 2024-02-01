@@ -114,11 +114,11 @@ urlpatterns = [
                 *payment_urlpatterns,
                 *signature_urlpatterns,
                 re_path(
-                    r"^courses/(?P<course_id>[0-9a-z-]*)/",
+                    r"^courses/(?P<course_id>[a-zA-Z0-9-_]+)/",
                     include(course_related_router.urls),
                 ),
                 re_path(
-                    r"^organizations/(?P<organization_id>[0-9a-z-]*)/",
+                    r"^organizations/(?P<organization_id>[a-zA-Z0-9-_]+)/",
                     include(organization_related_router.urls),
                 ),
             ]
