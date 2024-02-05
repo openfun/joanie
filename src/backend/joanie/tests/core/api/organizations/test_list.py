@@ -41,7 +41,7 @@ class OrganizationApiListTest(BaseAPITestCase):
             user=user, organization=organizations[1]
         )
 
-        with self.assertNumQueries(47):
+        with self.assertNumQueries(49):
             response = self.client.get(
                 "/api/v1.0/organizations/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -65,6 +65,9 @@ class OrganizationApiListTest(BaseAPITestCase):
 
         factories.OrganizationFactory()
         organization = factories.OrganizationFactory()
+        address_organization = factories.OrganizationAddressFactory(
+            organization=organization, is_main=True, is_reusable=True
+        )
         factories.UserOrganizationAccessFactory(user=user, organization=organization)
 
         with mock.patch.object(
@@ -105,6 +108,32 @@ class OrganizationApiListTest(BaseAPITestCase):
                             "size": organization.logo.size,
                         },
                         "title": organization.title,
+                        "address": {
+                            "id": str(address_organization.id),
+                            "address": address_organization.address,
+                            "city": address_organization.city,
+                            "postcode": address_organization.postcode,
+                            "country": address_organization.country,
+                            "first_name": address_organization.first_name,
+                            "last_name": address_organization.last_name,
+                            "title": address_organization.title,
+                            "is_main": True,
+                        },
+                        "enterprise_code": organization.enterprise_code,
+                        "activity_category_code": (organization.activity_category_code),
+                        "representative": organization.representative,
+                        "representative_profession": (
+                            organization.representative_profession
+                        ),
+                        "signatory_representative": (
+                            organization.signatory_representative
+                        ),
+                        "signatory_representative_profession": (
+                            organization.signatory_representative_profession
+                        ),
+                        "contact_email": organization.contact_email,
+                        "contact_phone": organization.contact_phone,
+                        "dpo_email": organization.dpo_email,
                     }
                 ],
             },

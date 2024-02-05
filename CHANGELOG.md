@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Add address and new properties on client OrganizationSerializer
 - Add admin endpoints to create/update/delete organization addresses
 - Add several admin api endpoint filters
 - Filter course product relation client api endpoint by product type

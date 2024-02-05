@@ -5596,16 +5596,85 @@
                     },
                     "logo": {
                         "type": "string",
-                        "format": "uri"
+                        "format": "uri",
+                        "nullable": true
                     },
                     "title": {
                         "type": "string",
                         "readOnly": true
+                    },
+                    "address": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/Address"
+                            }
+                        ],
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "enterprise_code": {
+                        "type": "string",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "activity_category_code": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "representative": {
+                        "type": "string",
+                        "readOnly": true,
+                        "description": "representative fullname (to sign certificate for example)"
+                    },
+                    "representative_profession": {
+                        "type": "string",
+                        "readOnly": true,
+                        "nullable": true,
+                        "title": "Profession of the organization's representative",
+                        "description": "representative profession"
+                    },
+                    "signatory_representative": {
+                        "type": "string",
+                        "readOnly": true,
+                        "nullable": true,
+                        "description": "This field is optional. If it is set, you must set the field'signatory_representative_profession' as well"
+                    },
+                    "signatory_representative_profession": {
+                        "type": "string",
+                        "readOnly": true,
+                        "nullable": true,
+                        "title": "Profession of the signatory representative",
+                        "description": "signatory representative profession"
+                    },
+                    "contact_phone": {
+                        "type": "string",
+                        "readOnly": true,
+                        "title": "Contact phone number"
+                    },
+                    "contact_email": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "dpo_email": {
+                        "type": "string",
+                        "readOnly": true,
+                        "title": "Data protection officer email"
                     }
                 },
                 "required": [
+                    "activity_category_code",
+                    "address",
                     "code",
+                    "contact_email",
+                    "contact_phone",
+                    "dpo_email",
+                    "enterprise_code",
                     "id",
+                    "logo",
+                    "representative",
+                    "representative_profession",
+                    "signatory_representative",
+                    "signatory_representative_profession",
                     "title"
                 ]
             },
@@ -5665,9 +5734,13 @@
                 "properties": {
                     "logo": {
                         "type": "string",
-                        "format": "binary"
+                        "format": "binary",
+                        "nullable": true
                     }
-                }
+                },
+                "required": [
+                    "logo"
+                ]
             },
             "PaginatedAddressList": {
                 "type": "object",
