@@ -1555,3 +1555,36 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
                         "{'__all__': ['Order should have an organization if not in draft state']}"
                     ),
                 )
+
+    def test_models_order_get_equivalent_course_run_dates(self):
+        """
+        Check that order's product dates are processed
+        by aggregating target course runs dates as expected.
+        """
+        earliest_start_date = django_timezone.now() - timedelta(days=1)
+        latest_end_date = django_timezone.now() + timedelta(days=2)
+        latest_enrollment_start_date = django_timezone.now() - timedelta(days=2)
+        earliest_enrollment_end_date = django_timezone.now() + timedelta(days=1)
+        course = factories.CourseFactory()
+        factories.CourseRunFactory(
+            is_listed=True,
+            course=course,
+            start=earliest_start_date,
+            end=latest_end_date,
+            enrollment_start=latest_enrollment_start_date,
+            enrollment_end=earliest_enrollment_end_date,
+            languages="fr",
+        )
+        product = factories.ProductFactory(target_courses=[course])
+        order = factories.OrderFactory(product=product)
+        factories.OrderTargetCourseRelationFactory(
+            course=course, order=order, position=1
+        )
+        expected_result = {
+            "start": earliest_start_date,
+            "end": latest_end_date,
+            "enrollment_start": latest_enrollment_start_date,
+            "enrollment_end": earliest_enrollment_end_date,
+        }
+
+        self.assertEqual(order.get_equivalent_course_run_dates(), expected_result)

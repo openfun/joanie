@@ -12,6 +12,7 @@ from django.conf import settings
 from django.contrib.auth.hashers import make_password
 from django.contrib.sites.models import Site
 from django.utils import timezone as django_timezone
+from django.utils.translation import gettext as _
 
 import factory.fuzzy
 from easy_thumbnails.files import ThumbnailerImageFieldFile, generate_all_aliases
@@ -777,12 +778,11 @@ class ContractFactory(factory.django.DjangoModelFactory):
         """
         if self.student_signed_on:
             student_address = self.order.owner.addresses.filter(is_main=True).first()
+            organization_address = self.order.organization.addresses.filter(
+                is_main=True
+            ).first()
+            course_dates = self.order.get_equivalent_course_run_dates()
             return {
-                "student": {
-                    "name": self.order.owner.get_full_name()
-                    or self.order.owner.username,
-                    "address": AddressSerializer(student_address).data,
-                },
                 "contract": {
                     "body": self.definition.get_body_in_html(),
                     "title": self.definition.title,
@@ -791,13 +791,45 @@ class ContractFactory(factory.django.DjangoModelFactory):
                     "name": self.order.product.safe_translation_getter(
                         "title", language_code=self.definition.language
                     ),
+                    "code": self.order.course.code,
+                    "start": (
+                        course_dates["start"].isoformat()
+                        if course_dates["start"] is not None
+                        else _("<COURSE_START_DATE>")
+                    ),
+                    "end": (
+                        course_dates["end"].isoformat()
+                        if course_dates["end"] is not None
+                        else _("<COURSE_END_DATE>")
+                    ),
+                    "effort": None,
+                    "price": str(self.order.total),
+                },
+                "student": {
+                    "name": self.order.owner.get_full_name()
+                    or self.order.owner.username,
+                    "address": AddressSerializer(student_address).data,
+                    "email": self.order.owner.email,
+                    "phone_number": None,
                 },
                 "organization": {
                     "logo": image_to_base64(self.order.organization.logo),
                     "name": self.order.organization.safe_translation_getter(
                         "title", language_code=self.definition.language
                     ),
+                    "address": AddressSerializer(organization_address).data,
                     "signature": image_to_base64(self.order.organization.signature),
+                    "representative": self.order.organization.representative,
+                    "representative_profession": self.order.organization.representative_profession,
+                    "enterprise_code": self.order.organization.enterprise_code,
+                    "activity_category_code": self.order.organization.activity_category_code,
+                    "signatory_representative": self.order.organization.signatory_representative,
+                    "signatory_representative_profession": (
+                        self.order.organization.signatory_representative_profession
+                    ),
+                    "contact_phone": self.order.organization.contact_phone,
+                    "contact_email": self.order.organization.contact_email,
+                    "dpo_email": self.order.organization.dpo_email,
                 },
             }
         return None
