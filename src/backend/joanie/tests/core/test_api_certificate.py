@@ -59,7 +59,7 @@ class CertificateApiTest(BaseAPITestCase):
 
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(4):
             response = self.client.get(
                 "/api/v1.0/certificates/", HTTP_AUTHORIZATION=f"Bearer {token}"
             )
@@ -128,6 +128,24 @@ class CertificateApiTest(BaseAPITestCase):
                                 "code": other_order.organization.code,
                                 "logo": "_this_field_is_mocked",
                                 "title": other_order.organization.title,
+                                "address": None,
+                                "enterprise_code": other_order.organization.enterprise_code,
+                                "activity_category_code": (
+                                    other_order.organization.activity_category_code
+                                ),
+                                "representative": other_order.organization.representative,
+                                "representative_profession": (
+                                    other_order.organization.representative_profession
+                                ),
+                                "signatory_representative": (
+                                    other_order.organization.signatory_representative
+                                ),
+                                "signatory_representative_profession": (
+                                    other_order.organization.signatory_representative_profession
+                                ),
+                                "contact_email": other_order.organization.contact_email,
+                                "contact_phone": other_order.organization.contact_phone,
+                                "dpo_email": other_order.organization.dpo_email,
                             },
                             "owner_name": other_certificate.order.owner.username,
                             "product_title": other_certificate.order.product.title,
@@ -155,6 +173,24 @@ class CertificateApiTest(BaseAPITestCase):
                                 "code": order.organization.code,
                                 "logo": "_this_field_is_mocked",
                                 "title": order.organization.title,
+                                "address": None,
+                                "enterprise_code": order.organization.enterprise_code,
+                                "activity_category_code": (
+                                    order.organization.activity_category_code
+                                ),
+                                "representative": order.organization.representative,
+                                "representative_profession": (
+                                    order.organization.representative_profession
+                                ),
+                                "signatory_representative": (
+                                    order.organization.signatory_representative
+                                ),
+                                "signatory_representative_profession": (
+                                    order.organization.signatory_representative_profession
+                                ),
+                                "contact_email": order.organization.contact_email,
+                                "contact_phone": order.organization.contact_phone,
+                                "dpo_email": order.organization.dpo_email,
                             },
                             "owner_name": certificate.order.owner.username,
                             "product_title": certificate.order.product.title,
@@ -241,7 +277,9 @@ class CertificateApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         order = factories.OrderFactory(owner=user, product=factories.ProductFactory())
         certificate = factories.OrderCertificateFactory(order=order)
-
+        address_organization = factories.OrganizationAddressFactory(
+            organization=certificate.order.organization, is_main=True, is_reusable=True
+        )
         token = self.generate_token_from_user(user)
 
         # - Try to retrieve a not owned certificate should return a 404
@@ -285,6 +323,34 @@ class CertificateApiTest(BaseAPITestCase):
                         "code": certificate.order.organization.code,
                         "logo": "_this_field_is_mocked",
                         "title": certificate.order.organization.title,
+                        "address": {
+                            "id": str(address_organization.id),
+                            "address": address_organization.address,
+                            "city": address_organization.city,
+                            "postcode": address_organization.postcode,
+                            "country": address_organization.country,
+                            "first_name": address_organization.first_name,
+                            "last_name": address_organization.last_name,
+                            "title": address_organization.title,
+                            "is_main": address_organization.is_main,
+                        },
+                        "enterprise_code": certificate.order.organization.enterprise_code,
+                        "activity_category_code": (
+                            certificate.order.organization.activity_category_code
+                        ),
+                        "representative": certificate.order.organization.representative,
+                        "representative_profession": (
+                            certificate.order.organization.representative_profession
+                        ),
+                        "signatory_representative": (
+                            certificate.order.organization.signatory_representative
+                        ),
+                        "signatory_representative_profession": (
+                            certificate.order.organization.signatory_representative_profession
+                        ),
+                        "contact_email": certificate.order.organization.contact_email,
+                        "contact_phone": certificate.order.organization.contact_phone,
+                        "dpo_email": certificate.order.organization.dpo_email,
                     },
                     "owner_name": certificate.order.owner.username,
                     "product_title": certificate.order.product.title,

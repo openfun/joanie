@@ -77,6 +77,9 @@ class OrganizationContractApiTest(BaseAPITestCase):
         can query organization's contracts.
         """
         organizations = factories.OrganizationFactory.create_batch(2)
+        address_organization = factories.OrganizationAddressFactory(
+            organization=organizations[0], is_main=True, is_reusable=True
+        )
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
 
@@ -109,7 +112,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         factories.ContractFactory.create_batch(5)
         factories.ContractFactory(order__owner=user)
 
-        with self.assertNumQueries(9):
+        with self.assertNumQueries(14):
             response = self.client.get(
                 f"/api/v1.0/organizations/{str(organizations[0].id)}/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -165,6 +168,34 @@ class OrganizationContractApiTest(BaseAPITestCase):
                             "code": contract.order.organization.code,
                             "logo": "_this_field_is_mocked",
                             "title": contract.order.organization.title,
+                            "address": {
+                                "id": str(address_organization.id),
+                                "address": address_organization.address,
+                                "city": address_organization.city,
+                                "country": address_organization.country,
+                                "first_name": address_organization.first_name,
+                                "is_main": address_organization.is_main,
+                                "last_name": address_organization.last_name,
+                                "postcode": address_organization.postcode,
+                                "title": address_organization.title,
+                            },
+                            "enterprise_code": contract.order.organization.enterprise_code,
+                            "activity_category_code": (
+                                contract.order.organization.activity_category_code
+                            ),
+                            "representative": contract.order.organization.representative,
+                            "representative_profession": (
+                                contract.order.organization.representative_profession
+                            ),
+                            "signatory_representative": (
+                                contract.order.organization.signatory_representative
+                            ),
+                            "signatory_representative_profession": (
+                                contract.order.organization.signatory_representative_profession
+                            ),
+                            "contact_email": contract.order.organization.contact_email,
+                            "contact_phone": contract.order.organization.contact_phone,
+                            "dpo_email": contract.order.organization.dpo_email,
                         },
                         "owner_name": contract.order.owner.username,
                         "product_title": contract.order.product.title,
@@ -224,7 +255,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         factories.ContractFactory(order__owner=user)
 
         # - List without filter should return 6 contracts
-        with self.assertNumQueries(57):
+        with self.assertNumQueries(66):
             response = self.client.get(
                 f"/api/v1.0/organizations/{str(organization.id)}/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -235,7 +266,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         self.assertEqual(content["count"], 9)
 
         # - Filter by state=unsigned should return 5 contracts
-        with self.assertNumQueries(9):
+        with self.assertNumQueries(14):
             response = self.client.get(
                 (
                     f"/api/v1.0/organizations/{str(organization.id)}"
@@ -254,7 +285,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         )
 
         # - Filter by state=half_signed should return 3 contracts
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(10):
             response = self.client.get(
                 (
                     f"/api/v1.0/organizations/{str(organization.id)}"
@@ -273,7 +304,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         )
 
         # - Filter by state=signed should return 1 contract
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
             response = self.client.get(
                 f"/api/v1.0/organizations/{str(organization.id)}/contracts/?signature_state=signed",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -350,7 +381,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         factories.ContractFactory(order__owner=user)
 
         # - List without filter should return 8 contracts
-        with self.assertNumQueries(78):
+        with self.assertNumQueries(86):
             response = self.client.get(
                 f"/api/v1.0/organizations/{organizations[0].id}/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -361,7 +392,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         self.assertEqual(content["count"], 8)
 
         # - Filter by the first relation should return 5 contracts
-        with self.assertNumQueries(10):
+        with self.assertNumQueries(15):
             response = self.client.get(
                 f"/api/v1.0/organizations/{organizations[0].id}/contracts/"
                 f"?course_product_relation_id={relation_1.id}",
@@ -378,7 +409,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         )
 
         # - Filter by the second relation should return 3 contracts
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(11):
             response = self.client.get(
                 f"/api/v1.0/organizations/{organizations[0].id}/contracts/"
                 f"?course_product_relation_id={relation_2.id}",
@@ -458,6 +489,9 @@ class OrganizationContractApiTest(BaseAPITestCase):
         can query an organization's contract.
         """
         organizations = factories.OrganizationFactory.create_batch(2)
+        address = factories.OrganizationAddressFactory(
+            organization=organizations[0], is_main=True, is_reusable=True
+        )
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
 
@@ -482,7 +516,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
             order__organization=organizations[0]
         ).first()
 
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             response = self.client.get(
                 (
                     f"/api/v1.0/organizations/{str(organizations[0].id)}"
@@ -530,6 +564,34 @@ class OrganizationContractApiTest(BaseAPITestCase):
                     "code": contract.order.organization.code,
                     "logo": "_this_field_is_mocked",
                     "title": contract.order.organization.title,
+                    "address": {
+                        "id": str(address.id),
+                        "address": address.address,
+                        "city": address.city,
+                        "postcode": address.postcode,
+                        "country": address.country,
+                        "first_name": address.first_name,
+                        "last_name": address.last_name,
+                        "title": address.title,
+                        "is_main": True,
+                    },
+                    "enterprise_code": contract.order.organization.enterprise_code,
+                    "activity_category_code": (
+                        contract.order.organization.activity_category_code
+                    ),
+                    "representative": contract.order.organization.representative,
+                    "representative_profession": (
+                        contract.order.organization.representative_profession
+                    ),
+                    "signatory_representative": (
+                        contract.order.organization.signatory_representative
+                    ),
+                    "signatory_representative_profession": (
+                        contract.order.organization.signatory_representative_profession
+                    ),
+                    "contact_email": contract.order.organization.contact_email,
+                    "contact_phone": contract.order.organization.contact_phone,
+                    "dpo_email": contract.order.organization.dpo_email,
                 },
                 "owner_name": contract.order.owner.username,
                 "product_title": contract.order.product.title,
@@ -608,7 +670,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
             order__organization=organization,
         )
 
-        with self.assertNumQueries(48):
+        with self.assertNumQueries(49):
             response = self.client.get(
                 f"/api/v1.0/organizations/{organization.code}/contracts/{str(contract.id)}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",

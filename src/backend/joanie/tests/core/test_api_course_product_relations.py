@@ -217,6 +217,22 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                         "id": str(organization.id),
                         "logo": "_this_field_is_mocked",
                         "title": organization.title,
+                        "address": None,
+                        "enterprise_code": organization.enterprise_code,
+                        "activity_category_code": (organization.activity_category_code),
+                        "representative": organization.representative,
+                        "representative_profession": (
+                            organization.representative_profession
+                        ),
+                        "signatory_representative": (
+                            organization.signatory_representative
+                        ),
+                        "signatory_representative_profession": (
+                            organization.signatory_representative_profession
+                        ),
+                        "contact_email": organization.contact_email,
+                        "contact_phone": organization.contact_phone,
+                        "dpo_email": organization.dpo_email,
                     }
                     for organization in relation.organizations.all()
                 ],
@@ -486,7 +502,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             organizations=factories.OrganizationFactory.create_batch(2),
         )
 
-        with self.assertNumQueries(75):
+        with self.assertNumQueries(77):
             self.client.get(f"/api/v1.0/courses/{course.code}/products/{product.id}/")
 
         # A second call to the url should benefit from caching on the product serializer
@@ -511,7 +527,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
         # Then cache should be language sensitive
-        with self.assertNumQueries(16):
+        with self.assertNumQueries(18):
             self.client.get(
                 f"/api/v1.0/courses/{course.code}/products/{product.id}/",
                 HTTP_ACCEPT_LANGUAGE="fr-fr",
@@ -613,7 +629,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         )
         factories.UserCourseAccessFactory(user=user, course=course)
 
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
             self.client.get(
                 f"/api/v1.0/course-product-relations/{relation.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -726,6 +742,22 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                         "id": str(organization.id),
                         "logo": "_this_field_is_mocked",
                         "title": organization.title,
+                        "address": None,
+                        "enterprise_code": organization.enterprise_code,
+                        "activity_category_code": (organization.activity_category_code),
+                        "representative": organization.representative,
+                        "representative_profession": (
+                            organization.representative_profession
+                        ),
+                        "signatory_representative": (
+                            organization.signatory_representative
+                        ),
+                        "signatory_representative_profession": (
+                            organization.signatory_representative_profession
+                        ),
+                        "contact_email": organization.contact_email,
+                        "contact_phone": organization.contact_phone,
+                        "dpo_email": organization.dpo_email,
                     }
                     for organization in relation.organizations.all()
                 ],
@@ -759,7 +791,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                 course=course, product=product, order_group=order_group1, state=state
             )
 
-        with self.assertNumQueries(51):
+        with self.assertNumQueries(52):
             self.client.get(
                 f"/api/v1.0/course-product-relations/{relation.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",

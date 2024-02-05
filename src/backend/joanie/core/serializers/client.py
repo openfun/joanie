@@ -1,9 +1,11 @@
 """Client serializers for Joanie Core app."""
+# pylint: disable=too-many-lines
 from django.conf import settings
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
 import markdown
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import exceptions, serializers
 
 from joanie.core import enums, models
@@ -183,12 +185,34 @@ class OrganizationSerializer(AbilitiesModelSerializer):
     Serialize all non-sensitive information about an organization
     """
 
-    logo = ThumbnailDetailField(required=False)
+    logo = ThumbnailDetailField(allow_null=True)
+    address = serializers.SerializerMethodField(allow_null=True)
 
     class Meta:
         model = models.Organization
-        fields = ["id", "code", "logo", "title"]
+        fields = [
+            "id",
+            "code",
+            "logo",
+            "title",
+            "address",
+            "enterprise_code",
+            "activity_category_code",
+            "representative",
+            "representative_profession",
+            "signatory_representative",
+            "signatory_representative_profession",
+            "contact_phone",
+            "contact_email",
+            "dpo_email",
+        ]
         read_only_fields = fields
+
+    @extend_schema_field(AddressSerializer)
+    def get_address(self, instance) -> dict | None:
+        """Return only the main address of the organization."""
+        main_address = instance.addresses.filter(is_main=True, is_reusable=True).first()
+        return AddressSerializer(main_address).data if main_address else None
 
 
 class OrganizationAccessSerializer(AbilitiesModelSerializer):

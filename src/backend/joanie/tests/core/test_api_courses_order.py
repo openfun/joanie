@@ -293,7 +293,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         )
         token = self.get_user_token(user.username)
 
-        with self.assertNumQueries(24):
+        with self.assertNumQueries(25):
             response = self.client.get(
                 f"/api/v1.0/courses/{relation_1.course.id}/orders/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -340,7 +340,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         ]
         token = self.get_user_token(user.username)
 
-        with self.assertNumQueries(24):
+        with self.assertNumQueries(25):
             response = self.client.get(
                 f"/api/v1.0/courses/{relation.course.id}/orders/"
                 f"?organization_id={organizations[1].id}",
@@ -448,7 +448,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         )
         token = self.get_user_token(user.username)
 
-        with self.assertNumQueries(24):
+        with self.assertNumQueries(26):
             response = self.client.get(
                 f"/api/v1.0/courses/{courses[0].id}/orders/"
                 f"?product_id={product.id}",
@@ -468,7 +468,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
             response.json()["results"][1]["owner"]["id"], str(user_learners[0].id)
         )
 
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(3):
             response = self.client.get(
                 f"/api/v1.0/courses/{courses[1].id}/orders/"
                 f"?product_id={product.id}",
@@ -535,7 +535,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         )
         token = self.get_user_token(user.username)
 
-        with self.assertNumQueries(24):
+        with self.assertNumQueries(26):
             response = self.client.get(
                 f"/api/v1.0/courses/{courses[0].id}/orders/"
                 f"?organization_id={organizations[0].id}&product_id={product.id}",
@@ -557,7 +557,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
             str(organizations[0].id),
         )
 
-        with self.assertNumQueries(24):
+        with self.assertNumQueries(25):
             response = self.client.get(
                 f"/api/v1.0/courses/{courses[1].id}/orders/"
                 f"?organization_id={organizations[1].id}&product_id={product.id}",

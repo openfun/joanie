@@ -102,7 +102,7 @@ class ContractApiTest(BaseAPITestCase):
         # - Create random contracts that should not be returned
         factories.ContractFactory.create_batch(5)
 
-        with self.assertNumQueries(9):
+        with self.assertNumQueries(14):
             response = self.client.get(
                 "/api/v1.0/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -154,6 +154,24 @@ class ContractApiTest(BaseAPITestCase):
                             "code": contract.order.organization.code,
                             "logo": "_this_field_is_mocked",
                             "title": contract.order.organization.title,
+                            "address": None,
+                            "enterprise_code": contract.order.organization.enterprise_code,
+                            "activity_category_code": (
+                                contract.order.organization.activity_category_code
+                            ),
+                            "representative": contract.order.organization.representative,
+                            "representative_profession": (
+                                contract.order.organization.representative_profession
+                            ),
+                            "signatory_representative": (
+                                contract.order.organization.signatory_representative
+                            ),
+                            "signatory_representative_profession": (
+                                contract.order.organization.signatory_representative_profession
+                            ),
+                            "contact_email": contract.order.organization.contact_email,
+                            "contact_phone": contract.order.organization.contact_phone,
+                            "dpo_email": contract.order.organization.dpo_email,
                         },
                         "owner_name": contract.order.owner.username,
                         "product_title": contract.order.product.title,
@@ -196,7 +214,7 @@ class ContractApiTest(BaseAPITestCase):
         factories.ContractFactory.create_batch(5)
 
         # - List without filter should return 9 contracts
-        with self.assertNumQueries(409):
+        with self.assertNumQueries(418):
             response = self.client.get(
                 "/api/v1.0/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -207,7 +225,7 @@ class ContractApiTest(BaseAPITestCase):
         self.assertEqual(content["count"], 9)
 
         # - Filter by state=unsigned should return 5 contracts
-        with self.assertNumQueries(9):
+        with self.assertNumQueries(14):
             response = self.client.get(
                 "/api/v1.0/contracts/?signature_state=unsigned",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -223,7 +241,7 @@ class ContractApiTest(BaseAPITestCase):
         )
 
         # - Filter by state=half_signed should return 3 contracts
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(10):
             response = self.client.get(
                 "/api/v1.0/contracts/?signature_state=half_signed",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -239,7 +257,7 @@ class ContractApiTest(BaseAPITestCase):
         )
 
         # - Filter by state=signed should return 1 contract
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
             response = self.client.get(
                 "/api/v1.0/contracts/?signature_state=signed",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -307,7 +325,7 @@ class ContractApiTest(BaseAPITestCase):
         factories.ContractFactory.create_batch(5)
 
         # - List without filter should return 2 contracts
-        with self.assertNumQueries(94):
+        with self.assertNumQueries(96):
             response = self.client.get(
                 "/api/v1.0/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -318,7 +336,7 @@ class ContractApiTest(BaseAPITestCase):
         self.assertEqual(content["count"], 2)
 
         # - Filter by org1 should return 1 contract
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
             response = self.client.get(
                 f"/api/v1.0/contracts/?organization_id={str(org1.id)}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -332,7 +350,7 @@ class ContractApiTest(BaseAPITestCase):
         self.assertCountEqual(result_ids, [str(org1_contract.id)])
 
         # - Filter by org2 should return 1 contract
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
             response = self.client.get(
                 f"/api/v1.0/contracts/?organization_id={str(org2.id)}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -378,7 +396,7 @@ class ContractApiTest(BaseAPITestCase):
         factories.ContractFactory.create_batch(5)
 
         # - List without filter should return 2 contracts
-        with self.assertNumQueries(94):
+        with self.assertNumQueries(96):
             response = self.client.get(
                 "/api/v1.0/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -389,7 +407,7 @@ class ContractApiTest(BaseAPITestCase):
         self.assertEqual(content["count"], 2)
 
         # - Filter by c1 should return 1 contract
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
             response = self.client.get(
                 f"/api/v1.0/contracts/?course_id={str(c1.id)}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -403,7 +421,7 @@ class ContractApiTest(BaseAPITestCase):
         self.assertCountEqual(result_ids, [str(c1_contract.id)])
 
         # - Filter by c2 should return 1 contract
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
             response = self.client.get(
                 f"/api/v1.0/contracts/?course_id={str(c2.id)}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -445,7 +463,7 @@ class ContractApiTest(BaseAPITestCase):
         factories.ContractFactory.create_batch(5)
 
         # - List without filter should return 2 contracts
-        with self.assertNumQueries(94):
+        with self.assertNumQueries(96):
             response = self.client.get(
                 "/api/v1.0/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -456,7 +474,7 @@ class ContractApiTest(BaseAPITestCase):
         self.assertEqual(content["count"], 2)
 
         # - Filter by c1 should return 1 contract
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
             response = self.client.get(
                 f"/api/v1.0/contracts/?product_id={str(p1.id)}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -470,7 +488,7 @@ class ContractApiTest(BaseAPITestCase):
         self.assertCountEqual(result_ids, [str(p1_contract.id)])
 
         # - Filter by c2 should return 1 contract
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
             response = self.client.get(
                 f"/api/v1.0/contracts/?product_id={str(p2.id)}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -527,7 +545,7 @@ class ContractApiTest(BaseAPITestCase):
         factories.ContractFactory.create_batch(8)
 
         # - List without filter should return 8 contracts
-        with self.assertNumQueries(94):
+        with self.assertNumQueries(96):
             response = self.client.get(
                 "/api/v1.0/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -539,7 +557,7 @@ class ContractApiTest(BaseAPITestCase):
         self.assertEqual(content["count"], 2)
 
         # - Filter by the first relation should return 5 contracts
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(7):
             response = self.client.get(
                 f"/api/v1.0/contracts/?course_product_relation_id={relation_1.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -553,7 +571,7 @@ class ContractApiTest(BaseAPITestCase):
         self.assertCountEqual(result_ids, [str(contract_1.id)])
 
         # - Filter by the second relation should return 3 contracts
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(7):
             response = self.client.get(
                 f"/api/v1.0/contracts/?course_product_relation_id={relation_2.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -606,7 +624,7 @@ class ContractApiTest(BaseAPITestCase):
         factories.ContractFactory.create_batch(5)
 
         # - List without filter should return 5 contracts
-        with self.assertNumQueries(229):
+        with self.assertNumQueries(234):
             response = self.client.get(
                 "/api/v1.0/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -617,7 +635,7 @@ class ContractApiTest(BaseAPITestCase):
         self.assertEqual(content["count"], 5)
 
         # - List by filter id should return only contracts with those ids
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(10):
             response = self.client.get(
                 f"/api/v1.0/contracts/?id={contracts[0].id}&id={contracts[3].id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -712,7 +730,7 @@ class ContractApiTest(BaseAPITestCase):
             order__owner=user, organization_signatory=organization_signatory
         )
 
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(7):
             response = self.client.get(
                 f"/api/v1.0/contracts/{str(contract.id)}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -771,6 +789,24 @@ class ContractApiTest(BaseAPITestCase):
                     "code": contract.order.organization.code,
                     "logo": "_this_field_is_mocked",
                     "title": contract.order.organization.title,
+                    "address": None,
+                    "enterprise_code": contract.order.organization.enterprise_code,
+                    "activity_category_code": (
+                        contract.order.organization.activity_category_code
+                    ),
+                    "representative": contract.order.organization.representative,
+                    "representative_profession": (
+                        contract.order.organization.representative_profession
+                    ),
+                    "signatory_representative": (
+                        contract.order.organization.signatory_representative
+                    ),
+                    "signatory_representative_profession": (
+                        contract.order.organization.signatory_representative_profession
+                    ),
+                    "contact_email": contract.order.organization.contact_email,
+                    "contact_phone": contract.order.organization.contact_phone,
+                    "dpo_email": contract.order.organization.dpo_email,
                 },
                 "owner_name": contract.order.owner.username,
                 "product_title": contract.order.product.title,

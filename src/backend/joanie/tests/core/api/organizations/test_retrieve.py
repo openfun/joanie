@@ -60,7 +60,9 @@ class OrganizationApiRetrieveTest(BaseAPITestCase):
 
         organization = factories.OrganizationFactory()
         factories.UserOrganizationAccessFactory(user=user, organization=organization)
-
+        address_organization = factories.OrganizationAddressFactory(
+            organization=organization, is_main=True, is_reusable=True
+        )
         response = self.client.get(
             f"/api/v1.0/organizations/{organization.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -76,5 +78,75 @@ class OrganizationApiRetrieveTest(BaseAPITestCase):
                 "id": str(organization.id),
                 "logo": "_this_field_is_mocked",
                 "title": organization.title,
+                "enterprise_code": organization.enterprise_code,
+                "activity_category_code": (organization.activity_category_code),
+                "representative": organization.representative,
+                "representative_profession": (organization.representative_profession),
+                "signatory_representative": (organization.signatory_representative),
+                "signatory_representative_profession": (
+                    organization.signatory_representative_profession
+                ),
+                "contact_email": organization.contact_email,
+                "contact_phone": organization.contact_phone,
+                "dpo_email": organization.dpo_email,
+                "address": {
+                    "id": str(address_organization.id),
+                    "address": address_organization.address,
+                    "city": address_organization.city,
+                    "postcode": address_organization.postcode,
+                    "country": address_organization.country,
+                    "first_name": address_organization.first_name,
+                    "last_name": address_organization.last_name,
+                    "title": address_organization.title,
+                    "is_main": True,
+                },
+            },
+        )
+
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_organization_retrieve_when_organization_has_no_main_address(self, _):
+        """
+        Authenticated users should not be able to see the address of the organization
+        if the address is not main and not reusable.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(user=user, organization=organization)
+        factories.OrganizationAddressFactory(
+            organization=organization, is_main=False, is_reusable=False
+        )
+        response = self.client.get(
+            f"/api/v1.0/organizations/{organization.id}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertTrue(content.pop("abilities")["get"])
+        self.assertEqual(
+            content,
+            {
+                "code": organization.code,
+                "id": str(organization.id),
+                "logo": "_this_field_is_mocked",
+                "title": organization.title,
+                "address": None,
+                "enterprise_code": organization.enterprise_code,
+                "activity_category_code": (organization.activity_category_code),
+                "representative": organization.representative,
+                "representative_profession": (organization.representative_profession),
+                "signatory_representative": (organization.signatory_representative),
+                "signatory_representative_profession": (
+                    organization.signatory_representative_profession
+                ),
+                "contact_email": organization.contact_email,
+                "contact_phone": organization.contact_phone,
+                "dpo_email": organization.dpo_email,
             },
         )
