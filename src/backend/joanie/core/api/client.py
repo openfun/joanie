@@ -1169,7 +1169,7 @@ class ContractViewSet(GenericContractViewSet):
 
         if request.method == "GET":
             return FileResponse(
-                storage.open(f"{storage.location}/{zip_archive_name}", mode="rb"),
+                storage.open(zip_archive_name, mode="rb"),
                 as_attachment=True,
                 filename=zip_archive_name,
                 content_type="application/zip",
