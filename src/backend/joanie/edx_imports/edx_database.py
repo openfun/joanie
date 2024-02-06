@@ -13,6 +13,9 @@ from joanie.edx_imports.edx_models import (
     Course,
     CourseOverview,
     University,
+    User,
+    UserPreference,
+    UserProfile,
 )
 
 logger = logging.getLogger(__name__)
@@ -50,6 +53,9 @@ class OpenEdxDB:
         self.University = University  # pylint: disable=invalid-name
         self.CourseOverview = CourseOverview  # pylint: disable=invalid-name
         self.Course = Course  # pylint: disable=invalid-name
+        self.User = User  # pylint: disable=invalid-name
+        self.UserProfile = UserProfile  # pylint: disable=invalid-name
+        self.UserPreference = UserPreference  # pylint: disable=invalid-name
 
     def get_universities_count(self, offset=0, limit=0):
         """
@@ -147,3 +153,112 @@ class OpenEdxDB:
             .slice(start, stop)
         )
         return self.session.scalars(query).all()
+
+    def get_users_count(self, offset=0, limit=0):
+        """
+        Get users count from Open edX database
+
+        SELECT count(auth_user.id) AS count_1
+        FROM auth_user
+                 JOIN auth_userprofile ON auth_user.id = auth_userprofile.user_id
+                 JOIN user_api_userpreference ON auth_user.id = user_api_userpreference.user_id
+        WHERE user_api_userpreference.key = "pref-lang"
+        """
+        query_count = (
+            select(count(self.User.id))
+            .join(self.UserProfile, self.User.id == self.UserProfile.user_id)
+            .join(self.UserPreference, self.User.id == self.UserPreference.user_id)
+            .where(self.UserPreference.key == "pref-lang")
+        )
+        users_count = self.session.execute(query_count).scalar()
+        users_count -= offset
+        if limit:
+            return min(users_count, limit)
+        return users_count
+
+    def get_users(self, start, stop):
+        """
+        Get users from Open edX database by slicing
+
+        SELECT anon_1.id,
+               anon_1.username,
+               anon_1.first_name,
+               anon_1.last_name,
+               anon_1.email,
+               anon_1.password,
+               anon_1.is_staff,
+               anon_1.is_active,
+               anon_1.is_superuser,
+               anon_1.date_joined,
+               anon_1.last_login,
+               anon_1.name,
+               anon_1.id_1,
+               anon_1.user_id,
+               anon_1.key,
+               anon_1.value,
+               auth_userprofile_1.id AS id_2,
+               auth_userprofile_1.name AS name_1,
+               user_api_userpreference_1.id AS id_3,
+               user_api_userpreference_1.key AS key_1,
+               user_api_userpreference_1.value AS value_1
+        FROM (
+            SELECT
+                auth_user.id AS id,
+                auth_user.username AS username,
+                auth_user.first_name AS first_name,
+                auth_user.last_name AS last_name,
+                auth_user.email AS email,
+                auth_user.password AS password,
+                auth_user.is_staff AS is_staff,
+                auth_user.is_active AS is_active,
+                auth_user.is_superuser AS is_superuser,
+                auth_user.date_joined AS date_joined,
+                auth_user.last_login AS last_login,
+                auth_userprofile.name AS name,
+                user_api_userpreference.id AS id_1,
+                user_api_userpreference.user_id AS user_id,
+                user_api_userpreference.key AS key,
+                user_api_userpreference.value AS value
+            FROM auth_user
+            JOIN auth_userprofile
+                ON auth_user.id = auth_userprofile.user_id
+            JOIN user_api_userpreference
+                ON auth_user.id = user_api_userpreference.user_id
+            WHERE user_api_userpreference.key = :key_2
+            LIMIT :param_1 OFFSET :param_2
+        ) AS anon_1
+        LEFT OUTER JOIN auth_userprofile AS auth_userprofile_1
+            ON anon_1.id = auth_userprofile_1.user_id
+        LEFT OUTER JOIN user_api_userpreference AS user_api_userpreference_1
+            ON anon_1.id = user_api_userpreference_1.user_id
+        """
+        query = (
+            select(self.User, self.UserProfile.name, self.UserPreference)
+            .join(self.UserProfile, self.User.id == self.UserProfile.user_id)
+            .join(self.UserPreference, self.User.id == self.UserPreference.user_id)
+            .where(self.UserPreference.key == "pref-lang")
+            .options(
+                load_only(
+                    self.User.id,
+                    self.User.username,
+                    self.User.password,
+                    self.User.email,
+                    self.User.first_name,
+                    self.User.last_name,
+                    self.User.is_active,
+                    self.User.is_staff,
+                    self.User.is_superuser,
+                    self.User.date_joined,
+                    self.User.last_login,
+                ),
+                joinedload(self.User.auth_userprofile).load_only(
+                    self.UserProfile.name,
+                ),
+                joinedload(self.User.user_api_userpreference).load_only(
+                    self.UserPreference.key,
+                    self.UserPreference.value,
+                ),
+            )
+            .slice(start, stop)
+        )
+        return self.session.scalars(query).unique().all()

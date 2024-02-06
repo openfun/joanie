@@ -12,6 +12,106 @@ class Base(DeclarativeBase):
     """Base class for all models in the database."""
 
 
+class User(Base):
+    """Model for the `auth_user` table."""
+
+    __tablename__ = "auth_user"
+    __table_args__ = (
+        Index("email", "email", unique=True),
+        Index("username", "username", unique=True),
+    )
+
+    id: Mapped[int] = mapped_column(INTEGER(11), primary_key=True)
+    username: Mapped[str] = mapped_column(String(30))
+    first_name: Mapped[str] = mapped_column(String(30))
+    last_name: Mapped[str] = mapped_column(String(30))
+    email: Mapped[str] = mapped_column(String(254))
+    password: Mapped[str] = mapped_column(String(128))
+    is_staff: Mapped[int] = mapped_column(INTEGER(1))
+    is_active: Mapped[int] = mapped_column(INTEGER(1))
+    is_superuser: Mapped[int] = mapped_column(INTEGER(1))
+    date_joined: Mapped[datetime.datetime] = mapped_column(DateTime)
+    last_login: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime)
+
+    student_courseenrollment: Mapped[List["CourseEnrollment"]] = relationship(
+        "CourseEnrollment", back_populates="user"
+    )
+    auth_userprofile: Mapped["UserProfile"] = relationship(
+        "UserProfile", back_populates="user"
+    )
+    user_api_userpreference: Mapped[List["UserPreference"]] = relationship(
+        "UserPreference", back_populates="user"
+    )
+
+
+class UserProfile(Base):
+    """Model for the `auth_userprofile` table."""
+
+    __tablename__ = "auth_userprofile"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["user_id"], ["auth_user.id"], name="user_id_refs_id_3daaa960628b4c11"
+        ),
+        Index("auth_userprofile_52094d6e", "name"),
+        Index("auth_userprofile_551e365c", "level_of_education"),
+        Index("auth_userprofile_8a7ac9ab", "language"),
+        Index("auth_userprofile_b54954de", "location"),
+        Index("auth_userprofile_d85587", "year_of_birth"),
+        Index("auth_userprofile_fca3d292", "gender"),
+        Index("user_id", "user_id", unique=True),
+    )
+
+    id: Mapped[int] = mapped_column(INTEGER(11), primary_key=True)
+    user_id: Mapped[int] = mapped_column(INTEGER(11))
+    name: Mapped[str] = mapped_column(String(255))
+    language: Mapped[str] = mapped_column(String(255))
+    location: Mapped[str] = mapped_column(String(255))
+    meta: Mapped[str] = mapped_column(TEXT)
+    courseware: Mapped[str] = mapped_column(String(255))
+    allow_certificate: Mapped[int] = mapped_column(INTEGER(1))
+    gender: Mapped[Optional[str]] = mapped_column(String(6))
+    mailing_address: Mapped[Optional[str]] = mapped_column(TEXT)
+    year_of_birth: Mapped[Optional[int]] = mapped_column(INTEGER(11))
+    level_of_education: Mapped[Optional[str]] = mapped_column(String(6))
+    goals: Mapped[Optional[str]] = mapped_column(TEXT)
+    country: Mapped[Optional[str]] = mapped_column(String(2))
+    city: Mapped[Optional[str]] = mapped_column(TEXT)
+    bio: Mapped[Optional[str]] = mapped_column(String(3000))
+    profile_image_uploaded_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        DateTime
+    )
+
+    user: Mapped["User"] = relationship("User", back_populates="auth_userprofile")
+
+
+class UserPreference(Base):
+    """Model for the `user_api_userpreference` table."""
+
+    __tablename__ = "user_api_userpreference"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["user_id"], ["auth_user.id"], name="user_id_refs_id_2839c1f4f3473b9e"
+        ),
+        Index("user_api_userpreference_45544485", "key"),
+        Index("user_api_userpreference_fbfc09f1", "user_id"),
+        Index(
+            "user_api_userpreference_user_id_4e4942d73f760072_uniq",
+            "user_id",
+            "key",
+            unique=True,
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(INTEGER(11), primary_key=True)
+    user_id: Mapped[int] = mapped_column(INTEGER(11))
+    key: Mapped[str] = mapped_column(String(255))
+    value: Mapped[str] = mapped_column(TEXT)
+
+    user: Mapped["User"] = relationship(
+        "User", back_populates="user_api_userpreference"
+    )
+
+
 class CourseOverview(Base):
     """Model for the `course_overviews_courseoverview` table."""
 

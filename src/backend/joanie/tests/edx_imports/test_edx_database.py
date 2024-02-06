@@ -5,6 +5,7 @@ from joanie.edx_imports.edx_database import OpenEdxDB
 from joanie.edx_imports.edx_factories import (
     EdxCourseOverviewFactory,
     EdxUniversityFactory,
+    EdxUserFactory,
     engine,
     session,
 )
@@ -56,3 +57,77 @@ class OpenEdxDBTestCase(TestCase):
         course_overviews = self.db.get_course_overviews(start=0, stop=9)
 
         self.assertEqual(course_overviews, [])
+
+    def test_edx_database_get_users_count(self):
+        """Test the get_users_count method."""
+        EdxUserFactory.create_batch(3)
+        EdxUserFactory(auth_userprofile=None)
+        EdxUserFactory(user_api_userpreference=None)
+
+        users_count = self.db.get_users_count()
+
+        self.assertEqual(users_count, 3)
+
+    def test_edx_database_get_users_count_empty(self):
+        """Test the get_users_count method when there are no users."""
+        users_count = self.db.get_users_count()
+
+        self.assertEqual(users_count, 0)
+
+    def test_edx_database_get_users_count_offset(self):
+        """Test the get_users_count method with an offset."""
+        EdxUserFactory.create_batch(10)
+
+        users_count = self.db.get_users_count(offset=1)
+
+        self.assertEqual(users_count, 9)
+
+    def test_edx_database_get_users_count_limit(self):
+        """Test the get_users_count method with a limit."""
+        EdxUserFactory.create_batch(10)
+
+        users_count = self.db.get_users_count(limit=5)
+
+        self.assertEqual(users_count, 5)
+
+    def test_edx_database_get_users_count_offset_limit(self):
+        """Test the get_users_count method with an offset and a limit."""
+        EdxUserFactory.create_batch(10)
+
+        users_count = self.db.get_users_count(offset=1, limit=5)
+
+        self.assertEqual(users_count, 5)
+
+    def test_edx_database_get_users(self):
+        """Test the get_users method."""
+        edx_users = EdxUserFactory.create_batch(3)
+
+        users = self.db.get_users(start=0, stop=9)
+
+        self.assertEqual(len(users), 3)
+        self.assertEqual(len(edx_users), 3)
+        self.assertCountEqual(users, edx_users)
+
+    def test_edx_database_get_users_empty(self):
+        """Test the get_users method when there are no users."""
+        users = self.db.get_users(start=0, stop=9)
+
+        self.assertEqual(users, [])
+
+    def test_edx_database_get_users_slice(self):
+        """Test the get_users method with a slice."""
+        edx_users = EdxUserFactory.create_batch(3)
+
+        users = self.db.get_users(start=0, stop=2)
+
+        self.assertEqual(len(users), 2)
+        self.assertEqual(len(edx_users), 3)
+        self.assertCountEqual(users, edx_users[:2])
+
+    def test_edx_database_get_users_slice_empty(self):
+        """Test the get_users method with a slice when there are no users."""
+        EdxUserFactory.create_batch(3)
+
+        users = self.db.get_users(start=3, stop=9)
+
+        self.assertEqual(users, [])
