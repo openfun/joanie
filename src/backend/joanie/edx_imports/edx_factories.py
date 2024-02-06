@@ -218,3 +218,22 @@ class EdxUserFactory(factory.alchemy.SQLAlchemyModelFactory):
     user_api_userpreference = factory.RelatedFactoryList(
         EdxUserPreferenceFactory, "user", size=3, user_id=factory.SelfAttribute("..id")
     )
+
+
+class EdxEnrollmentFactory(factory.alchemy.SQLAlchemyModelFactory):
+    """
+    Factory for generating fake Open edX enrollments.
+    """
+
+    class Meta:
+        """Factory configuration."""
+
+        model = edx_models.CourseEnrollment
+        sqlalchemy_session = session
+
+    user_id = factory.Faker("pyint")
+    user = factory.SubFactory(EdxUserFactory, id=factory.SelfAttribute("..user_id"))
+    course_id = factory.Sequence(lambda n: f"course-v1:edX+{faker.pystr()}+{n}")
+    created = factory.Faker("date_time")
+    is_active = True
+    mode = factory.Faker("pystr")

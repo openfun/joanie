@@ -4,6 +4,7 @@ from django.test import TestCase
 from joanie.edx_imports.edx_database import OpenEdxDB
 from joanie.edx_imports.edx_factories import (
     EdxCourseOverviewFactory,
+    EdxEnrollmentFactory,
     EdxUniversityFactory,
     EdxUserFactory,
     engine,
@@ -131,3 +132,32 @@ class OpenEdxDBTestCase(TestCase):
         users = self.db.get_users(start=3, stop=9)
 
         self.assertEqual(users, [])
+
+    def test_edx_database_get_enrollments_count(self):
+        """Test the get_enrollments_count method."""
+        edx_course_overviews = EdxCourseOverviewFactory.create_batch(3)
+        for edx_course_overview in edx_course_overviews:
+            EdxEnrollmentFactory(course_id=edx_course_overview.id)
+
+        enrollments_count = self.db.get_enrollments_count()
+
+        self.assertEqual(enrollments_count, 3)
+
+    def test_edx_database_get_enrollments_count_empty(self):
+        """Test the get_enrollments_count method when there are no enrollments."""
+        enrollments_count = self.db.get_enrollments_count()
+
+        self.assertEqual(enrollments_count, 0)
+
+    def test_edx_database_get_enrollments(self):
+        """Test the get_enrollments method."""
+        edx_course_overviews = EdxCourseOverviewFactory.create_batch(3)
+        edx_users = EdxUserFactory.create_batch(3)
+        for edx_course_overview in edx_course_overviews:
+            for edx_user in edx_users:
+                EdxEnrollmentFactory(
+                    course_id=edx_course_overview.id, user_id=edx_user.id, user=edx_user
+                )
+        enrollments = self.db.get_enrollments(start=0, stop=9)
+
+        self.assertEqual(len(enrollments), 9)
