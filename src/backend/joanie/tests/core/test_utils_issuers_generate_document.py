@@ -30,11 +30,19 @@ class UtilsGenerateDocumentTestCase(TestCase):
         ## Article 3
         The student has paid in advance the whole course before the start
         """
-        body_content = textwrap.dedent(markdown_content)
-        content = markdown.markdown(body_content)
+        markdown_terms_and_conditions = """
+        ## Terms and conditions
+        Here are the terms and conditions of the current contract
+        """
+
+        body_content = markdown.markdown(textwrap.dedent(markdown_content))
+        terms_and_conditions_content = markdown.markdown(
+            textwrap.dedent(markdown_terms_and_conditions)
+        )
         context = {
             "contract": {
-                "body": content,
+                "body": body_content,
+                "terms_and_conditions": terms_and_conditions_content,
                 "title": "Contract Definition",
             },
             "course": {
@@ -68,15 +76,17 @@ class UtilsGenerateDocumentTestCase(TestCase):
                 )
             )
         ).replace("\n", "")
+
         self.assertRegex(document_text, r"CONTRACT DEFINITION")
         self.assertRegex(document_text, r"John Doe")
         self.assertRegex(document_text, r"1 Rue de L'Exemple 75000, Paris")
         self.assertRegex(document_text, r"must have a computer")
         self.assertRegex(document_text, r"student and the organization are tied")
+        self.assertRegex(document_text, r"are the terms and conditions of the")
         self.assertRegex(document_text, r"[SignatureField#1]")
 
         with self.assertRaises(TemplateDoesNotExist) as context:
-            issuers.generate_document(name="convention", context=content)
+            issuers.generate_document(name="convention", context=context)
         self.assertEqual(
             str(context.exception),
             "issuers/convention.html",

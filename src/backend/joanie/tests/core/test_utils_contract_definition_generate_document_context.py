@@ -1,4 +1,5 @@
 """Test suite for `generate_document_context` utility"""
+from django.contrib.sites.models import Site
 from django.test import TestCase
 
 from joanie.core import enums, factories
@@ -11,12 +12,16 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
 
     def test_utils_contract_definition_generate_document_context_with_order(self):
         """
-        When we generate the document context for a contract definition with an order, it should
-        return a context with all the data attached to the contract definition, the user and
-        the order.
+        When we generate the document context for a contract definition with an order,
+        it should return a context with all the data attached to the contract definition
+        the user, the order and the terms and conditions of the current site.
         """
         user = factories.UserFactory(
             email="student@exmaple.fr", first_name="John Doe", last_name=""
+        )
+        factories.SiteConfigFactory(
+            site=Site.objects.get_current(),
+            terms_and_conditions="## Terms and conditions",
         )
         address = factories.UserAddressFactory(
             owner=user,
@@ -43,6 +48,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         expected_context = {
             "contract": {
                 "body": "<p>Articles de la convention</p>",
+                "terms_and_conditions": "<h2>Terms and conditions</h2>",
                 "title": "CONTRACT DEFINITION 1",
             },
             "course": {
@@ -93,6 +99,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         expected_context = {
             "contract": {
                 "body": "<p>Articles de la convention</p>",
+                "terms_and_conditions": "",
                 "title": "CONTRACT DEFINITION 2",
             },
             "course": {
@@ -153,6 +160,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         expected_context = {
             "contract": {
                 "body": "<p>Articles de la convention</p>",
+                "terms_and_conditions": "",
                 "title": "CONTRACT DEFINITION 2",
             },
             "course": {
