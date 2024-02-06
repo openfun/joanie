@@ -219,6 +219,7 @@ class Base(Configuration):
         "joanie.payment",
         "joanie.badges",
         "joanie.demo",
+        "joanie.edx_imports",
         "joanie.signature",
         "drf_spectacular",
     ]
