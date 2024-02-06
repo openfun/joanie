@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+BASE_DIR=$(dirname "${BASH_SOURCE[0]}")
+source "${BASE_DIR}/_config.sh"
+source "${BASE_DIR}/../env.d/development/common"
+
+_dc_run \
+    -e DJANGO_CONFIGURATION=Test \
+    app-dev \
+    sqlacodegen "$@" --generator=declarative \
+    --tables user_api_userpreference,auth_userprofile \
+    --outfile joanie/lms_handler/edx_imports/edx_models_to_add.py \
+    "mysql+pymysql://$EDX_DATABASE_USER:$EDX_DATABASE_PASSWORD@$EDX_DATABASE_HOST:$EDX_DATABASE_PORT/$EDX_DATABASE_NAME"

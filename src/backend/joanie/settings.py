@@ -475,6 +475,30 @@ class Base(Configuration):
     CELERY_BROKER_TRANSPORT_OPTIONS = values.DictValue({})
     CELERY_DEFAULT_QUEUE = values.Value("celery")
 
+    # Open edX database import
+    EDX_DOMAIN = values.Value(None, environ_name="EDX_DOMAIN", environ_prefix=None)
+    EDX_DATABASE_HOST = values.Value(
+        None, environ_name="EDX_DATABASE_HOST", environ_prefix=None
+    )
+    EDX_DATABASE_NAME = values.Value(
+        None, environ_name="EDX_DATABASE_NAME", environ_prefix=None
+    )
+    EDX_DATABASE_USER = values.Value(
+        None, environ_name="EDX_DATABASE_USER", environ_prefix=None
+    )
+    EDX_DATABASE_PASSWORD = values.Value(
+        None, environ_name="EDX_DATABASE_PASSWORD", environ_prefix=None
+    )
+    EDX_DATABASE_PORT = values.IntegerValue(
+        None, environ_name="EDX_DATABASE_PORT", environ_prefix=None
+    )
+    EDX_DATABASE_DEBUG = values.BooleanValue(
+        False, environ_name="EDX_DATABASE_DEBUG", environ_prefix=None
+    )
+    EDX_TIME_ZONE = values.Value(
+        None, environ_name="EDX_TIME_ZONE", environ_prefix=None
+    )
+
     # pylint: disable=invalid-name
     @property
     def ENVIRONMENT(self):
@@ -561,6 +585,28 @@ class Development(Base):
         "developer@example.com",
         environ_name="DEVELOPER_EMAIL",
         environ_prefix=None,
+    )
+
+    LOGGING = values.DictValue(
+        {
+            "version": 1,
+            "disable_existing_loggers": False,
+            "handlers": {
+                "console": {
+                    "class": "logging.StreamHandler",
+                },
+            },
+            "loggers": {
+                "joanie": {
+                    "handlers": ["console"],
+                    "level": "DEBUG",
+                },
+                "request.summary": {
+                    "handlers": ["console"],
+                    "level": "DEBUG",
+                },
+            },
+        }
     )
 
     SESSION_COOKIE_NAME = "joanie_sessionid"
