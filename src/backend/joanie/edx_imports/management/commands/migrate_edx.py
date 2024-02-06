@@ -4,6 +4,7 @@ import logging
 from django.core.management import BaseCommand
 
 from joanie.edx_imports.tasks.course_runs import import_course_runs
+from joanie.edx_imports.tasks.enrollments import import_enrollments
 from joanie.edx_imports.tasks.universities import import_universities
 from joanie.edx_imports.tasks.users import import_users
 
@@ -57,6 +58,21 @@ class Command(BaseCommand):
         parser.add_argument(
             "--users-limit", type=int, help="Limit of users to import", default=0
         )
+        parser.add_argument(
+            "--enrollments", action="store_true", help="Import enrollments"
+        )
+        parser.add_argument(
+            "--enrollments-offset",
+            type=int,
+            help="Offset to start importing enrollments",
+            default=0,
+        )
+        parser.add_argument(
+            "--enrollments-limit",
+            type=int,
+            help="Limit of enrollments to import",
+            default=0,
+        )
         parser.add_argument("--all", action="store_true", help="Import all")
         parser.add_argument(
             "--batch-size",
@@ -84,10 +100,15 @@ class Command(BaseCommand):
         users_import = options["users"] or import_all
         users_import_offset = options["users_offset"]
         users_import_limit = options["users_limit"]
+        enrollments_import = options["enrollments"] or import_all
+        enrollments_import_offset = options["enrollments_offset"]
+        enrollments_import_limit = options["enrollments_limit"]
         batch_size = options["batch_size"]
         dry_run = options["dry_run"]
 
-        if not any([universities_import, course_runs_import, users_import]):
+        if not any(
+            [universities_import, course_runs_import, users_import, enrollments_import]
+        ):
             logger.error(self.style.ERROR("Nothing to import"))
             return
 
@@ -114,5 +135,14 @@ class Command(BaseCommand):
                 batch_size=batch_size,
                 offset=users_import_offset,
                 limit=users_import_limit,
+                dry_run=dry_run,
+            )
+
+        if enrollments_import:
+            logger.info("Importing enrollments...")
+            import_enrollments(
+                batch_size=batch_size,
+                offset=enrollments_import_offset,
+                limit=enrollments_import_limit,
                 dry_run=dry_run,
             )

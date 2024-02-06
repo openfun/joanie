@@ -11,6 +11,7 @@ from sqlalchemy.sql.functions import count
 
 from joanie.edx_imports.edx_models import (
     Course,
+    CourseEnrollment,
     CourseOverview,
     University,
     User,
@@ -56,6 +57,7 @@ class OpenEdxDB:
         self.User = User  # pylint: disable=invalid-name
         self.UserProfile = UserProfile  # pylint: disable=invalid-name
         self.UserPreference = UserPreference  # pylint: disable=invalid-name
+        self.StudentCourseEnrollment = CourseEnrollment  # pylint: disable=invalid-name
 
     def get_universities_count(self, offset=0, limit=0):
         """
@@ -262,3 +264,82 @@ class OpenEdxDB:
             .slice(start, stop)
         )
         return self.session.scalars(query).unique().all()
+
+    def get_enrollments_count(self, offset=0, limit=0):
+        """
+        Get enrollments count from Open edX database
+
+        SELECT
+            count(student_courseenrollment.id) AS count_1
+        FROM student_courseenrollment
+            JOIN course_overviews_courseoverview
+                ON student_courseenrollment.course_id = course_overviews_courseoverview.id
+            JOIN auth_user
+                ON student_courseenrollment.user_id = auth_user.id
+        """
+        query_count = (
+            select(count(self.StudentCourseEnrollment.id))
+            .join(
+                self.CourseOverview,
+                self.StudentCourseEnrollment.course_id == self.CourseOverview.id,
+            )
+            .join(self.User, self.StudentCourseEnrollment.user_id == self.User.id)
+        )
+        enrollments_count = self.session.execute(query_count).scalar()
+        enrollments_count -= offset
+        if limit:
+            return min(enrollments_count, limit)
+        return enrollments_count
+
+    def get_enrollments(self, start, stop):
+        """
+        Get enrollments from Open edX database by slicing
+
+        SELECT student_courseenrollment.id,
+               student_courseenrollment.user_id,
+               student_courseenrollment.course_id,
+               student_courseenrollment.is_active,
+               student_courseenrollment.created,
+               auth_user.id AS id_1,
+               auth_user.username,
+               auth_user.first_name,
+               auth_user.last_name,
+               auth_user.email,
+               auth_user.password,
+               auth_user.is_staff,
+               auth_user.is_active AS is_active_1,
+               auth_user.is_superuser,
+               auth_user.date_joined,
+               auth_user.last_login,
+               auth_user_1.id AS id_2,
+               auth_user_1.username AS username_1
+        FROM student_courseenrollment
+        JOIN course_overviews_courseoverview
+            ON student_courseenrollment.course_id = course_overviews_courseoverview.id
+        JOIN auth_user
+            ON student_courseenrollment.user_id = auth_user.id
+        LEFT OUTER JOIN auth_user AS auth_user_1
+            ON auth_user_1.id = student_courseenrollment.user_id
+        LIMIT :param_1
+        """
+        query = (
+            select(self.StudentCourseEnrollment, self.User)
+            .join(
+                self.CourseOverview,
+                self.StudentCourseEnrollment.course_id == self.CourseOverview.id,
+            )
+            .join(self.User, self.StudentCourseEnrollment.user_id == self.User.id)
+            .options(
+                load_only(
+                    self.StudentCourseEnrollment.course_id,
+                    self.StudentCourseEnrollment.created,
+                    self.StudentCourseEnrollment.is_active,
+                    self.StudentCourseEnrollment.user_id,
+                ),
+                joinedload(self.StudentCourseEnrollment.user).load_only(
+                    self.User.username,
+                ),
+            )
+            .slice(start, stop)
+        )
+        return self.session.scalars(query).all()

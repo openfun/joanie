@@ -287,3 +287,34 @@ class CourseUniversityRelation(Base):
     university: Mapped["University"] = relationship(
         "University", back_populates="courses_courseuniversityrelation"
     )
+
+
+class CourseEnrollment(Base):
+    """Model for the `student_courseenrollment` table."""
+
+    __tablename__ = "student_courseenrollment"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["user_id"], ["auth_user.id"], name="user_id_refs_id_45948fcded37bc9d"
+        ),
+        Index("student_courseenrollment_3216ff68", "created"),
+        Index("student_courseenrollment_fbfc09f1", "user_id"),
+        Index("student_courseenrollment_ff48d8e5", "course_id"),
+        Index(
+            "student_courseenrollment_user_id_2d2a572f07dd8e37_uniq",
+            "user_id",
+            "course_id",
+            unique=True,
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(INTEGER(11), primary_key=True)
+    user_id: Mapped[int] = mapped_column(INTEGER(11))
+    course_id: Mapped[str] = mapped_column(String(255))
+    is_active: Mapped[int] = mapped_column(INTEGER(1))
+    mode: Mapped[str] = mapped_column(String(100))
+    created: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime)
+
+    user: Mapped["User"] = relationship(
+        "User", back_populates="student_courseenrollment"
+    )
