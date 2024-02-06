@@ -3,6 +3,7 @@ from django.test import TestCase
 
 from joanie.edx_imports.edx_database import OpenEdxDB
 from joanie.edx_imports.edx_factories import (
+    EdxCourseOverviewFactory,
     EdxUniversityFactory,
     engine,
     session,
@@ -39,3 +40,19 @@ class OpenEdxDBTestCase(TestCase):
         universities = self.db.get_universities(start=0, stop=9)
 
         self.assertEqual(universities, [])
+
+    def test_edx_database_get_course_overviews(self):
+        """Test the get_course_overviews method."""
+        edx_course_overviews = EdxCourseOverviewFactory.create_batch(3)
+
+        course_overviews = self.db.get_course_overviews(start=0, stop=9)
+
+        self.assertEqual(len(course_overviews), 3)
+        self.assertEqual(len(edx_course_overviews), 3)
+        self.assertCountEqual(course_overviews, edx_course_overviews)
+
+    def test_edx_database_get_course_overviews_empty(self):
+        """Test the get_course_overviews method when there are no course_overviews."""
+        course_overviews = self.db.get_course_overviews(start=0, stop=9)
+
+        self.assertEqual(course_overviews, [])

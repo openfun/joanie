@@ -3,6 +3,7 @@ import logging
 
 from django.core.management import BaseCommand
 
+from joanie.edx_imports.tasks.course_runs import import_course_runs
 from joanie.edx_imports.tasks.universities import import_universities
 
 # pylint: disable=too-many-locals
@@ -30,6 +31,21 @@ class Command(BaseCommand):
             help="Limit of universities to import",
             default=0,
         )
+        parser.add_argument(
+            "--course-runs", action="store_true", help="Import course runs"
+        )
+        parser.add_argument(
+            "--course-runs-offset",
+            type=int,
+            help="Offset to start importing course runs",
+            default=0,
+        )
+        parser.add_argument(
+            "--course-runs-limit",
+            type=int,
+            help="Limit of course runs to import",
+            default=0,
+        )
         parser.add_argument("--all", action="store_true", help="Import all")
         parser.add_argument(
             "--batch-size",
@@ -51,12 +67,13 @@ class Command(BaseCommand):
         universities_import = options["universities"] or import_all
         universities_import_offset = options["universities_offset"]
         universities_import_limit = options["universities_limit"]
+        course_runs_import = options["course_runs"] or import_all
+        course_runs_import_offset = options["course_runs_offset"]
+        course_runs_import_limit = options["course_runs_limit"]
         batch_size = options["batch_size"]
         dry_run = options["dry_run"]
 
-        if not any(
-            [universities_import]
-        ):
+        if not any([universities_import, course_runs_import]):
             logger.error(self.style.ERROR("Nothing to import"))
             return
 
@@ -66,5 +83,13 @@ class Command(BaseCommand):
             import_universities(
                 offset=universities_import_offset,
                 limit=universities_import_limit,
+                dry_run=dry_run,
+            )
+
+        if course_runs_import:
+            logger.info("Importing course runs...")
+            import_course_runs(
+                offset=course_runs_import_offset,
+                limit=course_runs_import_limit,
                 dry_run=dry_run,
             )
