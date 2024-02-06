@@ -106,6 +106,18 @@ logs: ## display app-dev logs (follow mode)
 	@$(COMPOSE) logs -f app-dev
 .PHONY: logs
 
+logs-celery: ## display celery-dev logs (follow mode)
+	@$(COMPOSE) logs -f celery-dev
+.PHONY: logs-celery
+
+purge-celery: ## purge celery tasks
+	@$(COMPOSE_EXEC) celery-dev celery -A joanie.celery_app purge
+.PHONY: purge-celery
+
+flower: ## run flower
+	@$(COMPOSE_EXEC) celery-dev celery -A joanie.celery_app flower
+.PHONY: flower
+
 run: ## start the wsgi (production) and development server
 	@$(COMPOSE) up --force-recreate -d nginx
 	@$(COMPOSE) up --force-recreate -d app-dev

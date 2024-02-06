@@ -61,6 +61,9 @@ dependencies = [
     "url-normalize==1.4.3",
     "WeasyPrint>=60.2",
     "whitenoise==6.6.0",
+    # edx_imports
+    "pymysql==1.1.0",
+    "SQLAlchemy==2.0.25",
 ]
 
 [project.urls]
@@ -90,6 +93,8 @@ dev = [
     "responses==0.24.1",
     "ruff==0.2.1",
     "types-requests==2.31.0.20240125",
+    # edx_imports
+    "sqlacodegen==3.0.0rc3",
 ]
 
 [tool.setuptools]

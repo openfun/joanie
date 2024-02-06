@@ -10,6 +10,8 @@ services:
 
   redis:
     image: redis:5
+    ports:
+      - "6379:6379"
 
   app-dev:
     build:
@@ -51,6 +53,8 @@ services:
     env_file:
       - env.d/development/common
       - env.d/development/postgresql
+    ports:
+      - "5555:5555"
     volumes:
       - ./src/backend:/app
       - ./data/media:/data/media
