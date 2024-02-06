@@ -5,6 +5,7 @@ Core application admin
 from django.contrib import admin, messages
 from django.contrib.admin.options import csrf_protect_m
 from django.contrib.auth import admin as auth_admin
+from django.contrib.sites.models import Site
 from django.http import HttpResponseRedirect
 from django.urls import re_path, reverse
 from django.utils.html import format_html
@@ -14,7 +15,7 @@ from django.utils.translation import ngettext_lazy
 from admin_auto_filters.filters import AutocompleteFilter
 from adminsortable2.admin import SortableAdminBase, SortableInlineAdminMixin
 from django_object_actions import DjangoObjectActions, takes_instance_or_queryset
-from parler.admin import TranslatableAdmin
+from parler.admin import TranslatableAdmin, TranslatableStackedInline
 
 from joanie.core import forms, helpers, models
 from joanie.core.enums import PRODUCT_TYPE_CERTIFICATE_ALLOWED
@@ -662,3 +663,27 @@ class CourseWishAdmin(admin.ModelAdmin):
         "course__code",
         "course__translations__title",
     ]
+
+
+class SiteConfigInline(TranslatableStackedInline):
+    """Inline for sites with config fields."""
+
+    model = models.SiteConfig
+    can_delete = False
+    verbose_name = _("Config field")
+    verbose_name_plural = _("Config fields")
+
+
+class SiteAdmin(admin.ModelAdmin):
+    """Admin class for the SiteConfig model."""
+
+    list_display = ("name", "domain")
+    search_fields = ("name", "domain")
+    inlines = [
+        SiteConfigInline,
+    ]
+
+
+# Unregister the original Site admin
+admin.site.unregister(Site)
+admin.site.register(Site, SiteAdmin)
