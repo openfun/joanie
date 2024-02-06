@@ -10,6 +10,7 @@ from datetime import datetime, timedelta, timezone
 
 from django.conf import settings
 from django.contrib.auth.hashers import make_password
+from django.contrib.sites.models import Site
 from django.utils import timezone as django_timezone
 
 import factory.fuzzy
@@ -821,3 +822,22 @@ class ContractFactory(factory.django.DjangoModelFactory):
             return f"wfl_fake_dummy_demo_dev_{uuid.uuid4()}"
 
         return None
+
+
+class SiteFactory(factory.django.DjangoModelFactory):
+    """Factory for the Site model"""
+
+    name = factory.Sequence(lambda n: f"Site {n:03d}")
+    domain = factory.Faker("domain_name")
+
+    class Meta:
+        model = Site
+
+
+class SiteConfigFactory(factory.django.DjangoModelFactory):
+    """Factory for the Site Config model"""
+
+    site = factory.SubFactory(SiteFactory)
+
+    class Meta:
+        model = models.SiteConfig

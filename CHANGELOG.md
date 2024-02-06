@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Extend Site model to store terms and conditions
 - Add `join_and` and `list_key` template tags
 - Add address and new properties on client OrganizationSerializer
 - Add admin endpoints to create/update/delete organization addresses
