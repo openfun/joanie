@@ -54,6 +54,7 @@
         <div class="articles">
             {% if contract %}
               {{ contract.body|safe }}
+              {{ contract.terms_and_conditions|safe }}
             {% endif %}
         </div>
       </section>

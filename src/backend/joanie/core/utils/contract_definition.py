@@ -1,4 +1,5 @@
 """Utility to `generate document context` data"""
+from django.contrib.sites.models import Site
 from django.utils.translation import gettext as _
 
 from joanie.core.utils import image_to_base64
@@ -38,9 +39,19 @@ def generate_document_context(contract_definition, user, order=None):
 
     address = AddressSerializer(user_address).data
 
+    try:
+        site_config = Site.objects.get_current().site_config
+    except Site.site_config.RelatedObjectDoesNotExist:  # pylint: disable=no-member
+        terms_and_conditions = ""
+    else:
+        terms_and_conditions = site_config.get_terms_and_conditions_in_html(
+            contract_definition.language
+        )
+
     return {
         "contract": {
             "body": contract_definition.get_body_in_html(),
+            "terms_and_conditions": terms_and_conditions,
             "title": contract_definition.title,
         },
         "course": {

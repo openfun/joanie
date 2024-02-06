@@ -138,8 +138,8 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
 
     def test_api_order_submit_for_signature_authenticated(self):
         """
-        Authenticated users should be able to create a contract from an order and get in return
-        the invitation url to sign the file.
+        Authenticated users should be able to create a contract from an order and get in
+        return the invitation url to sign the file.
         """
         user = factories.UserFactory(
             email="student_do@example.fr", first_name="John Doe", last_name=""
