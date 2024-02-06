@@ -12,6 +12,7 @@ from django.core.files.storage import default_storage
 from django.utils.timezone import make_aware as django_make_aware
 
 import requests
+from parler.utils import get_language_settings
 
 from joanie.core import enums, utils
 from joanie.lms_handler.backends.openedx import split_course_key
@@ -59,3 +60,13 @@ def check_language_code(language_code):
     if language_code not in [language[0] for language in enums.ALL_LANGUAGES]:
         language_code = "en"
     return language_code
+
+
+def extract_language_code(edx_user):
+    """Extract the language code from a user"""
+    language = next(
+        pref.value
+        for pref in edx_user.user_api_userpreference
+        if pref.key == "pref-lang"
+    )
+    return get_language_settings(language).get("code")

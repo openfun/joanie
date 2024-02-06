@@ -126,3 +126,95 @@ class EdxCourseOverviewFactory(factory.alchemy.SQLAlchemyModelFactory):
     version = factory.Faker("pyint")
     org = factory.Faker("pystr")
     course = factory.SubFactory(EdxCourseFactory, key=factory.SelfAttribute("..id"))
+
+
+class EdxUserProfileFactory(factory.alchemy.SQLAlchemyModelFactory):
+    """
+    Factory for generating fake Open edX user profiles.
+    """
+
+    class Meta:
+        """Factory configuration."""
+
+        model = edx_models.UserProfile
+        sqlalchemy_session = session
+
+    id = factory.Sequence(lambda n: n)
+    user_id = factory.Faker("pyint")
+    name = factory.Faker("name")
+    location = factory.Faker("address")
+    meta = factory.Faker("pystr")
+    courseware = factory.Faker("pystr")
+    allow_certificate = True
+
+    # pylint: disable=no-self-use
+    @factory.lazy_attribute
+    def language(self):
+        """
+        Pick a random language from the complete list of Django supported languages.
+        """
+        return random.choice(enums.ALL_LANGUAGES)[0]  # noqa: S311
+
+
+class EdxUserPreferenceFactory(factory.alchemy.SQLAlchemyModelFactory):
+    """
+    Factory for generating fake Open edX user preferences.
+    """
+
+    class Meta:
+        """Factory configuration."""
+
+        model = edx_models.UserPreference
+        sqlalchemy_session = session
+
+    id = factory.Sequence(lambda n: n)
+    user_id = factory.Faker("pyint")
+
+    # pylint: disable=no-self-use
+    @factory.lazy_attribute
+    def key(self):
+        """
+        Pick a random key from the complete list of Open edX user preferences.
+        """
+        return ["account_privacy", "dark-lang", "pref-lang"][self.id % 3]
+
+    # pylint: disable=no-self-use
+    @factory.lazy_attribute
+    def value(self):
+        """
+        Pick a random language from the complete list of Django supported languages.
+        """
+        if self.key == "account_privacy":
+            return random.choice(["private", "all_users"])  # noqa: S311
+
+        return random.choice(enums.ALL_LANGUAGES)[0]  # noqa: S311
+
+
+class EdxUserFactory(factory.alchemy.SQLAlchemyModelFactory):
+    """
+    Factory for generating fake Open edX users.
+    """
+
+    class Meta:
+        """Factory configuration."""
+
+        model = edx_models.User
+        sqlalchemy_session = session
+
+    id = factory.Sequence(lambda n: n)
+    username = factory.Sequence(lambda n: f"{faker.user_name()}{n}")
+    password = factory.Faker("password")
+    email = factory.Faker("email")
+    first_name = ""
+    last_name = ""
+    is_active = True
+    is_staff = False
+    is_superuser = False
+    date_joined = factory.Faker("date_time")
+    last_login = factory.Faker("date_time")
+    auth_userprofile = factory.SubFactory(
+        EdxUserProfileFactory, user_id=factory.SelfAttribute("..id")
+    )
+    user_api_userpreference = factory.RelatedFactoryList(
+        EdxUserPreferenceFactory, "user", size=3, user_id=factory.SelfAttribute("..id")
+    )
