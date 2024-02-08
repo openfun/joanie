@@ -235,3 +235,46 @@ class UserModelTestCase(BaseAPITestCase):
 
         self.assertTrue(abilities["has_course_access"])
         self.assertFalse(abilities["has_organization_access"])
+
+    def test_models_user_field_phone_number_formatted(self):
+        """The `phone_number` field should be formatted without spaces on save."""
+        user1 = factories.UserFactory(phone_number="00 11 1 23 45 67 89")
+        user1.save()
+
+        self.assertEqual(user1.phone_number, "0011123456789")
+
+        user2 = factories.UserFactory(phone_number="01 23 45 67 89")
+        user2.save()
+
+        self.assertEqual(user2.phone_number, "0123456789")
+
+    def test_models_user_field_phone_number_special_characters_normalized(
+        self,
+    ):
+        """
+        The `phone_number` field should be normalized without non-digits and spaces on save.
+        The field should only include digits and '+' characters.
+        """
+        user = factories.UserFactory(phone_number="+1 (123) 123-4567")
+        user.save()
+
+        self.assertEqual(user.phone_number, "+11231234567")
+
+        user2 = factories.UserFactory(phone_number="+(33) 1 23 45 67 89")
+        user2.save()
+
+        self.assertEqual(user2.phone_number, "+33123456789")
+
+    def test_models_user_field_phone_number_empty(self):
+        """The `phone_number` field should remain empty if initially empty."""
+        user = factories.UserFactory(phone_number="")
+        user.save()
+
+        self.assertEqual(user.phone_number, "")
+
+    def test_models_user_field_phone_number_no_digits(self):
+        """The `phone_number` field should be empty if no digits are provided."""
+        user = factories.UserFactory(phone_number="abc wrong number")
+        user.save()
+
+        self.assertEqual(user.phone_number, "")

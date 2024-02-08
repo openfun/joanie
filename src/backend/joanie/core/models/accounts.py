@@ -13,6 +13,7 @@ from rest_framework_simplejwt.settings import api_settings
 
 from joanie.core.authentication import get_user_dict
 from joanie.core.models.base import BaseModel
+from joanie.core.utils import normalize_phone_number
 
 
 class User(BaseModel, auth_models.AbstractUser):
@@ -32,6 +33,13 @@ class User(BaseModel, auth_models.AbstractUser):
         verbose_name=_("password"),
     )
 
+    phone_number = models.CharField(
+        verbose_name=_("Phone number"),
+        max_length=40,
+        blank=True,
+        null=True,
+    )
+
     class Meta:
         db_table = "joanie_user"
         verbose_name = _("User")
@@ -39,6 +47,14 @@ class User(BaseModel, auth_models.AbstractUser):
 
     def __str__(self):
         return self.username
+
+    def clean(self):
+        """
+        Normalize the `phone_number` value for consistency in database.
+        """
+        if phone_number := self.phone_number:
+            self.phone_number = normalize_phone_number(phone_number)
+        return super().clean()
 
     def save(self, *args, **kwargs):
         """Enforce validation each time an instance is saved."""
