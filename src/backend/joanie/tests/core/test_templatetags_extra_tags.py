@@ -3,7 +3,7 @@ Test suite for extra template tags of the joanie core app
 """
 from django.test import TestCase
 
-from joanie.core.templatetags.extra_tags import base64_static, join_and
+from joanie.core.templatetags.extra_tags import base64_static, join_and, list_key
 
 
 class TemplateTagsExtraTagsTestCase(TestCase):
@@ -48,3 +48,19 @@ class TemplateTagsExtraTagsTestCase(TestCase):
         # - Test with four items
         items += ["Marsha"]
         self.assertEqual(join_and(items), "Joanie, Richie, Fonzie and Marsha")
+
+    def test_templatetags_extra_tags_list_key(self):
+        """
+        The template tags `list_key` should return a list of values from a list of
+        dictionaries.
+        """
+        data = [
+            {"username": "joanie"},
+            {"username": "richie"},
+            {"username": "fonzie"},
+            {"username": "marsha"},
+        ]
+
+        self.assertEqual(
+            list_key(data, "username"), ["joanie", "richie", "fonzie", "marsha"]
+        )

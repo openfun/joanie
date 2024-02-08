@@ -28,3 +28,11 @@ def join_and(items: list):
         )
 
     return _(" and ").join(map(str, items))
+
+
+@register.filter
+def list_key(items: list[dict], key: str):
+    """
+    A template tag filter to get a list of values from a list of dictionaries.
+    """
+    return [item[key] for item in items]
