@@ -465,28 +465,16 @@ class CertificateApiTest(BaseAPITestCase):
         document_text = pdf_extract_text(BytesIO(response.content)).replace("\n", "")
         self.assertRegex(document_text, r"ATTESTATION OF ACHIEVEMENT")
 
-    def test_api_certificate_download_unprocessable_entity(self):
+    @mock.patch(
+        "joanie.core.models.Certificate.get_document_context", side_effect=ValueError
+    )
+    def test_api_certificate_download_unprocessable_entity(self, _):
         """
         If the server is not able to create the certificate document, it should return
         a 422 error.
         """
         user = factories.UserFactory()
-        organization = factories.OrganizationFactory(
-            title="University X", representative="Joanie Cunningham", logo=None
-        )
-
-        product = factories.ProductFactory(
-            courses=[],
-            title="Graded product",
-        )
-        factories.CourseProductRelationFactory(
-            product=product, organizations=[organization]
-        )
-
-        order = factories.OrderFactory(
-            product=product, organization=organization, owner=user
-        )
-        certificate = factories.OrderCertificateFactory(order=order)
+        certificate = factories.OrderCertificateFactory(order__owner=user)
 
         token = self.generate_token_from_user(user)
 

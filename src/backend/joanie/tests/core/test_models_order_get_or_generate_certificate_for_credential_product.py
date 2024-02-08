@@ -32,6 +32,11 @@ class CredentialProductGetOrGenerateCertificateOrderModelsTestCase(TestCase):
             type="credential",
             certificate_definition=factories.CertificateDefinitionFactory(),
             target_courses=[course_run.course],
+            courses=[
+                factories.CourseFactory(
+                    organizations=factories.OrganizationFactory.create_batch(2)
+                )
+            ],
         )
         order = factories.OrderFactory(product=product)
         order.submit()
@@ -55,11 +60,11 @@ class CredentialProductGetOrGenerateCertificateOrderModelsTestCase(TestCase):
             "PgPAAEDAQAIicLsAAAAAElFTkSuQmCC"
         )
         self.assertEqual(
-            document_context["organization"]["logo"],
+            document_context["organizations"][0]["logo"],
             blue_square_base64,
         )
         self.assertEqual(
-            document_context["organization"]["signature"],
+            document_context["organizations"][0]["signature"],
             blue_square_base64,
         )
 

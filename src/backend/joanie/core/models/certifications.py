@@ -123,8 +123,17 @@ class Certificate(BaseModel):
 
     @property
     def course(self):
-        """Returns the certificate owner depending from the related order or enrollment."""
-        return self.order.course if self.order else self.enrollment.course_run.course
+        """Returns the certificate course depending from the related order or enrollment."""
+        if self.order:
+            course = (
+                self.order.course
+                if self.order.course
+                else self.order.enrollment.course_run.course
+            )
+        else:
+            course = self.enrollment.course_run.course
+
+        return course
 
     @property
     def owner(self):
@@ -138,7 +147,6 @@ class Certificate(BaseModel):
         Saving is left to the caller.
         """
         context = {}
-        organization = self.organization
         title_object = (
             self.order.product if self.order else self.enrollment.course_run.course
         )
@@ -150,11 +158,17 @@ class Certificate(BaseModel):
                         "title", language_code=language
                     ),
                 },
-                "organization": {
-                    "name": organization.safe_translation_getter(
-                        "title", language_code=language
-                    ),
-                },
+                "organizations": [
+                    {
+                        "name": organization.safe_translation_getter(
+                            "title", language_code=language
+                        ),
+                        "representative": organization.representative,
+                        "signature": image_to_base64(organization.signature),
+                        "logo": image_to_base64(organization.logo),
+                    }
+                    for organization in self.course.organizations.all()
+                ],
             }
         self.localized_context = context
 
@@ -172,11 +186,6 @@ class Certificate(BaseModel):
             "delivery_stamp": timezone.now(),
             "student": {
                 "name": self.owner.get_full_name() or self.owner.username,
-            },
-            "organization": {
-                "representative": self.organization.representative,
-                "signature": image_to_base64(self.organization.signature),
-                "logo": image_to_base64(self.organization.logo),
             },
             "site": {
                 "name": site.name,

@@ -21,21 +21,23 @@ class CertificateProductGetOrGenerateCertificateOrderModelsTestCase(TestCase):
         self,
     ):
         """Generate a certificate for a product order"""
+        course = factories.CourseFactory(
+            organizations=factories.OrganizationFactory.create_batch(2)
+        )
         enrollment = factories.EnrollmentFactory(
             course_run__is_gradable=True,
             course_run__is_listed=True,
             course_run__state=models.CourseState.ONGOING_OPEN,
+            course_run__course=course,
             is_active=True,
         )
         product = factories.ProductFactory(
             price="0.00",
             type="certificate",
             certificate_definition=factories.CertificateDefinitionFactory(),
-            courses=[enrollment.course_run.course],
+            courses=[course],
         )
-        organization = product.course_relations.first().organizations.first()
         order = factories.OrderFactory(
-            organization=organization,
             product=product,
             course=None,
             enrollment=enrollment,
@@ -59,12 +61,21 @@ class CertificateProductGetOrGenerateCertificateOrderModelsTestCase(TestCase):
             "data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgY"
             "PgPAAEDAQAIicLsAAAAAElFTkSuQmCC"
         )
+        # Should contain all course organizations
+        organizations = course.organizations.all()
+        self.assertEqual(len(document_context["organizations"]), 2)
         self.assertEqual(
-            document_context["organization"]["logo"],
+            document_context["organizations"][0]["name"], organizations[0].title
+        )
+        self.assertEqual(
+            document_context["organizations"][1]["name"], organizations[1].title
+        )
+        self.assertEqual(
+            document_context["organizations"][0]["logo"],
             blue_square_base64,
         )
         self.assertEqual(
-            document_context["organization"]["signature"],
+            document_context["organizations"][0]["signature"],
             blue_square_base64,
         )
 
