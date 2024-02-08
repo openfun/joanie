@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Add `join_and` template tags
 - Add address and new properties on client OrganizationSerializer
 - Add admin endpoints to create/update/delete organization addresses
 - Add several admin api endpoint filters
