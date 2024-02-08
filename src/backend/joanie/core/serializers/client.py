@@ -696,6 +696,7 @@ class OrderSerializer(serializers.ModelSerializer):
         read_only=True, slug_field="id", source="certificate"
     )
     contract = ContractSerializer(read_only=True, exclude_abilities=True)
+    has_consent_to_terms = serializers.BooleanField(write_only=True)
 
     class Meta:
         model = models.Order
@@ -716,6 +717,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "target_enrollments",
             "total",
             "total_currency",
+            "has_consent_to_terms",
         ]
         read_only_fields = fields
 
@@ -729,6 +731,14 @@ class OrderSerializer(serializers.ModelSerializer):
             context=self.context,
         ).data
 
+    def validate_has_consent_to_terms(self, value):
+        """Check that user has accepted terms and conditions."""
+        if not value:
+            message = _("You must accept the terms and conditions to proceed.")
+            raise serializers.ValidationError(message)
+
+        return value
+
     def update(self, instance, validated_data):
         """
         Make the "course", "organization", "order_group" and "product" fields read_only
@@ -739,6 +749,7 @@ class OrderSerializer(serializers.ModelSerializer):
         validated_data.pop("organization", None)
         validated_data.pop("product", None)
         validated_data.pop("order_group", None)
+        validated_data.pop("has_consent_to_terms", None)
         return super().update(instance, validated_data)
 
     def get_total_currency(self, *args, **kwargs) -> str:
