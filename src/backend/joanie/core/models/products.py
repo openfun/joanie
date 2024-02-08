@@ -1030,7 +1030,10 @@ class Order(BaseModel):
             models.Min("enrollment_end"),
         )
 
-        return {key.split("__")[0]: value for key, value in aggregate.items()}
+        return {
+            key.split("__")[0]: value if value else None
+            for key, value in aggregate.items()
+        }
 
 
 @receiver(post_transition, sender=Order)

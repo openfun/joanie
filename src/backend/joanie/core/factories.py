@@ -152,6 +152,7 @@ class CourseFactory(factory.django.DjangoModelFactory):
     cover = factory.django.ImageField(
         filename="cover.png", format="png", width=1, height=1
     )
+    effort = factory.Faker("time_delta", end_datetime=timedelta(hours=100))
 
     @factory.post_generation
     # pylint: disable=unused-argument,no-member
@@ -810,7 +811,7 @@ class ContractFactory(factory.django.DjangoModelFactory):
                     or self.order.owner.username,
                     "address": AddressSerializer(student_address).data,
                     "email": self.order.owner.email,
-                    "phone_number": None,
+                    "phone_number": self.order.owner.phone_number,
                 },
                 "organization": {
                     "logo": image_to_base64(self.order.organization.logo),

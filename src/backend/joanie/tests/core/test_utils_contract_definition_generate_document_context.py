@@ -15,13 +15,14 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
     def test_utils_contract_definition_generate_document_context_with_order(self):
         """
         When we generate the document context for a contract definition with an order,
-        it should return a context with all the data attached to the contract definition
+        it should return a context with all the data attached to the contract definition,
         the user, the order and the terms and conditions of the current site.
         """
         user = factories.UserFactory(
             email="johndoe@example.fr",
             first_name="John Doe",
             last_name="",
+            phone_number="0123456789",
         )
         factories.SiteConfigFactory(
             site=Site.objects.get_current(),
@@ -99,7 +100,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                     "is_main": user_address.is_main,
                 },
                 "email": user.email,
-                "phone_number": None,
+                "phone_number": str(user.phone_number),
             },
             "organization": {
                 "address": {
@@ -141,7 +142,14 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         """
         When we generate the document context for a contract definition without an order and
         the user's address, it should return default values for the keys :
+        `student.address`,
+        `course.start`, `course.end`, `course.effort`, `course.price`
         `course.name`, `organization.logo`, `organization.signature`, `organization.title`.
+        `organization.address`, `organization.representative`, `organization.enterprise_code`,
+        `organization.activity_category_code` `organization.signatory_representative`,
+        `organization.contact_phone`, `organization.signatory_representative_profession`,
+        `organization.contact_email` `organization.dpo_email`,
+        `organization.representative_profession`.
         """
         organization_fallback_logo = (
             "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR"
@@ -151,6 +159,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             email="student@example.fr",
             first_name="John Doe",
             last_name="",
+            phone_number="0123456789",
         )
         definition = factories.ContractDefinitionFactory(
             title="CONTRACT DEFINITION 2", body="Articles de la convention"
@@ -180,8 +189,8 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                     "postcode": "<STUDENT_ADDRESS_POSTCODE>",
                     "title": "<STUDENT_ADDRESS_TITLE>",
                 },
-                "email": "student@example.fr",
-                "phone_number": None,
+                "email": str(user.email),
+                "phone_number": str(user.phone_number),
             },
             "organization": {
                 "address": {
@@ -221,14 +230,14 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         an address, it should return the default placeholder values for different sections of the
         context :
 
-        For course :
+        - For course :
         `course.start`, `course.end`, `course.effort`, `course.price`
         `course.name`.
 
-        For student :
+        - For student :
         `student.address`, `student.phone_number`.
 
-        For organization :
+        - For organization :
         `organization.address`, `organization.logo`, `organization.signature`,
         `organization.title`, `organization.representative`,
         `organization.enterprise_code`, `organization.activity_category_code`
@@ -274,7 +283,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                     "title": "<STUDENT_ADDRESS_TITLE>",
                 },
                 "email": "student@example.fr",
-                "phone_number": None,
+                "phone_number": "<USER_PHONE_NUMBER>",
             },
             "organization": {
                 "address": {

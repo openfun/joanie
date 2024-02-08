@@ -31,7 +31,7 @@ from joanie.core.fields.multiselect import MultiSelectField
 from joanie.core.models.accounts import User
 from joanie.core.models.base import BaseModel
 from joanie.core.models.contracts import Contract
-from joanie.core.utils import webhooks
+from joanie.core.utils import normalize_phone_number, webhooks
 from joanie.lms_handler import LMSHandler
 from joanie.signature.backends import get_signature_backend
 
@@ -263,13 +263,11 @@ class Organization(parler_models.TranslatableModel, BaseModel):
 
     def clean(self):
         """
-        We normalize the code with slugify for better uniqueness. We also format the
+        We normalize the code with slugify for better uniqueness. We also normalize the
         `contact_phone` value for consistency in database.
         """
         if phone_number := self.contact_phone:
-            self.contact_phone = "".join(
-                char for char in phone_number if char.isdigit() or char == "+"
-            )
+            self.contact_phone = normalize_phone_number(phone_number)
         # Normalize the code by slugifying and capitalizing it
         self.code = utils.normalize_code(self.code)
         return super().clean()
@@ -482,6 +480,13 @@ class Course(parler_models.TranslatableModel, BaseModel):
         through_fields=("course", "product"),
         verbose_name=_("products"),
         blank=True,
+    )
+    # to represent the volume in seconds to accomplish the course theoretically
+    effort = models.DurationField(
+        verbose_name="Effort in seconds",
+        blank=True,
+        null=True,
+        help_text="The duration effort required in seconds",
     )
 
     class Meta:

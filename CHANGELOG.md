@@ -10,6 +10,8 @@ and this project adheres to
 
 ## Added
 
+- Add effort duration field for the Course Model
+- Add phone number field for the User Model
 - Add property `verification_uri` to `Certificate` model
 - Add a certificate verification view
 - Add `has_consent_terms` boolean field to `Order` model
@@ -91,7 +93,7 @@ and this project adheres to
 
 ### Changed
 
-- Improve `degree` certificate template 
+- Improve `degree` certificate template
 - Bind organization course author into certificate context
   instead of organization order
 - Prevent to create an order with course run that has ended

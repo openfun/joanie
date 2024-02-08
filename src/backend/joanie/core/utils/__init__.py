@@ -16,6 +16,17 @@ def normalize_code(code):
     return slugify(code, allow_unicode=False).upper() if code else None
 
 
+def normalize_phone_number(phone_number):
+    """
+    Cleans up and formats the phone number by removing non-digit characters
+    while preserving the '+' symbol.
+
+    Example :
+        - From "+1 (555) 123-4567"  to "+15551234567"
+    """
+    return "".join(char for char in phone_number if char.isdigit() or char == "+")
+
+
 def merge_dict(base_dict, update_dict):
     """Utility for deep dictionary updates.
 

@@ -1,6 +1,7 @@
 """
 Test suite for course models
 """
+from datetime import timedelta
 
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
@@ -23,6 +24,34 @@ class CourseModelsTestCase(BaseAPITestCase):
         course.code = "Là&ça boô"
         course.save()
         self.assertEqual(course.code, "LACA-BOO")
+
+    def test_models_course_effort_duration_field(self):
+        """
+        The duration field effort must accept timedelta values when instanciated.
+        """
+        course = factories.CourseFactory(effort=timedelta(seconds=3600))
+
+        self.assertEqual(models.Course.objects.count(), 1)
+        self.assertEqual(type(course.effort), timedelta)
+
+    def test_models_course_effort_duration_field_querying(self):
+        """
+        We should be able to compare two courses with different effort duration values.
+        Allowing us to filter through queryset on Course through the effort field.
+        """
+        course_1 = factories.CourseFactory(effort=timedelta(seconds=3700))
+        course_2 = factories.CourseFactory(effort=timedelta(seconds=3600))
+
+        self.assertGreater(course_1.effort, course_2.effort)
+        self.assertEqual(
+            models.Course.objects.filter(effort__gte=timedelta(seconds=3500)).count(), 2
+        )
+        self.assertEqual(
+            models.Course.objects.filter(effort__lte=timedelta(seconds=3699)).count(), 1
+        )
+        self.assertEqual(
+            models.Course.objects.filter(effort=timedelta(seconds=3600)).count(), 1
+        )
 
     def test_models_course_fields_code_unique(self):
         """The `code` field should be unique among courses."""

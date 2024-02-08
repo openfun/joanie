@@ -137,7 +137,11 @@ def generate_document_context(contract_definition, user, order=None):
             "address": address_user,
             "name": user.get_full_name() or user.username,
             "email": (user.email if user else _("<USER_EMAIL>")),
-            "phone_number": None,
+            "phone_number": (
+                user.phone_number
+                if user and user.phone_number
+                else _("<USER_PHONE_NUMBER>")
+            ),
         },
         "organization": {
             "address": address_organization,
