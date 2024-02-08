@@ -542,7 +542,13 @@ class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
     change_actions = (ACTION_NAME_GENERATE_CERTIFICATES,)
     list_display = ("id", "organization", "owner", "product", "state")
     list_filter = [OwnerFilter, OrganizationFilter, ProductFilter, "state"]
-    readonly_fields = ("state", "total", "invoice", "certificate")
+    readonly_fields = (
+        "state",
+        "total",
+        "has_consent_to_terms",
+        "invoice",
+        "certificate",
+    )
     search_fields = ["course__translations__title", "organization__translations__title"]
 
     @admin.action(description=_("Cancel selected orders"))

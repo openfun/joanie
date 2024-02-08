@@ -433,7 +433,12 @@ class Order(BaseModel):
         on_delete=models.RESTRICT,
         db_index=True,
     )
-
+    has_consent_to_terms = models.BooleanField(
+        verbose_name=_("has consent to terms"),
+        editable=False,
+        default=False,
+        help_text=_("User has consented to the platform terms and conditions."),
+    )
     state = FSMField(
         default=enums.ORDER_STATE_DRAFT,
         choices=enums.ORDER_STATE_CHOICES,
