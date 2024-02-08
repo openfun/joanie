@@ -2,6 +2,11 @@
 {% load static %}
 {% load extra_tags %}
 
+{% comment %}
+This template is used for FUN use case. It assumes that there is only one organization
+which is the course provider. So the organization is accessed with organizations.0.
+{% endcomment %}
+
 <html>
 {% if debug %}
 <head>
@@ -18,7 +23,7 @@
                 <img src="{% base64_static "joanie/images/logo_fun.png" %}" />
             </div>
             <div class="organization">
-                <img src="{{ organization.logo }}" />
+                <img src="{{ organizations.0.logo }}" />
             </div>
         </div>
         <div class="title">
@@ -28,7 +33,7 @@
     <article class="main">
         <section id="representative">
             <p>
-                {% blocktranslate trimmed with representative=organization.representative organization=organization.name %}
+                {% blocktranslate trimmed with representative=organizations.0.representative organization=organizations.0.name %}
                 I, {{ representative }},<br/>
                 legal representative of the course provider {{ organization }}<br/>
                 certifies that:
@@ -55,7 +60,7 @@
                     {% translate "Stamp and signature of the course provider manager" %}
                 </p>
                 <div class="manager">
-                    <img src="{{ organization.signature }}" />
+                    <img src="{{ organizations.0.signature }}" />
                 </div>
             </div>
         </section>

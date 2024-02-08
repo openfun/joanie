@@ -158,12 +158,14 @@ class DebugCertificateTemplateView(DebugPdfTemplateView):
                 2024, 1, 5, 13, 57, 53, 275708, tzinfo=datetime.timezone.utc
             ),
             "student": {"name": "John Doe"},
-            "organization": {
-                "representative": "Joanie Cunningham",
-                "signature": SIGNATURE_FALLBACK,
-                "logo": LOGO_FALLBACK,
-                "name": "Organization 0",
-            },
+            "organizations": [
+                {
+                    "representative": "Joanie Cunningham",
+                    "signature": SIGNATURE_FALLBACK,
+                    "logo": LOGO_FALLBACK,
+                    "name": "Organization 0",
+                }
+            ],
             "site": {"name": "example.com", "hostname": "https://example.com"},
             "course": {"name": "Full Stack Pancake, Full Stack Developer"},
         }
@@ -205,12 +207,14 @@ class DebugDegreeTemplateView(DebugPdfTemplateView):
                 2024, 1, 5, 10, 40, 54, 50357, tzinfo=datetime.timezone.utc
             ),
             "student": {"name": "Joanie Cunningham"},
-            "organization": {
-                "representative": "Joanie Cunningham",
-                "signature": SIGNATURE_FALLBACK,
-                "logo": LOGO_FALLBACK,
-                "name": "Organization Test",
-            },
+            "organizations": [
+                {
+                    "representative": "Joanie Cunningham",
+                    "signature": SIGNATURE_FALLBACK,
+                    "logo": LOGO_FALLBACK,
+                    "name": "Organization Test",
+                }
+            ],
             "site": {"name": "example.com", "hostname": "https://example.com"},
             "course": {"name": "Full Stack Pancake, Full Stack Developer"},
         }

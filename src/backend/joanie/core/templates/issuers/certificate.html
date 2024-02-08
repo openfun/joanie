@@ -15,7 +15,11 @@
         <header class="header">
             <div class="header__logos">
                 <img src="{% base64_static "joanie/images/logo_fun.png" %}" />
-                <img src="{{ organization.logo }}" />
+                <div class="header__logos-organizations">
+                    {% for organization in organizations %}
+                        <img src="{{ organization.logo }}" />
+                    {% endfor %}
+                </div>
             </div>
             <h1 class="header__title">{% translate "Attestation of achievement" %}</h1>
         </header>
@@ -23,11 +27,11 @@
             <div class="content">
                 <section class="details">
                     <p>
-                    {% blocktranslate trimmed with student=student.name course=course.name organization=organization.name site=site.name %}
+                    {% blocktranslate trimmed with student=student.name course=course.name organizations=organizations|list_key:'name'|join_and site=site.name %}
                     <strong class="details__student-name">{{ student }}</strong>
                     <br/>has successfully completed the MOOC<sup>*</sup>
                     <br/><strong class="details__course-name">{{ course }}</strong>
-                    <br/>proposed by <strong>{{ organization }}</strong>
+                    <br/>proposed by <strong>{{ organizations }}</strong>
                     <br />and published on the platform <strong>{{ site }}</strong>
                     {% endblocktranslate %}
                     </p>

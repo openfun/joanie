@@ -60,8 +60,24 @@ sup {
 }
 
 .header__logos img {
-  height: 28mm;
+  height: 24mm;
   width: auto;
+}
+
+.header__logos-organizations {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  flex: 1;
+  margin: -2mm -2mm -2mm 5mm;
+}
+
+.header__logos-organizations img {
+  height: 28mm;
+  object-position: center;
+  object-fit: contain;
+  width: 28mm;
+  padding: 2mm;
 }
 
 .header__title {

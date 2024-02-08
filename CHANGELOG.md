@@ -86,6 +86,8 @@ and this project adheres to
 
 ### Changed
 
+- Bind organization course author into certificate context
+  instead of organization order
 - Prevent to create an order with course run that has ended
 - Debug view for Certificate, Degree, Contract Definition and Invoice
 - Internalize invoice template

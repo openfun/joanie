@@ -24,17 +24,14 @@ class UtilsIssuersCertificateAndDegreeGenerateDocumentTestCase(TestCase):
         organization = factories.OrganizationFactory(
             title="University X", representative="Joanie Cunningham"
         )
-        course = factories.CourseFactory()
+        course = factories.CourseFactory(organizations=[organization])
         certificate_definition = factories.CertificateDefinitionFactory(
             template=enums.DEGREE
         )
         product = factories.ProductFactory(
-            courses=[],
+            courses=[course],
             title="Graded product",
             certificate_definition=certificate_definition,
-        )
-        factories.CourseProductRelationFactory(
-            course=course, product=product, organizations=[organization]
         )
 
         # - Add French translations
@@ -82,7 +79,9 @@ class UtilsIssuersCertificateAndDegreeGenerateDocumentTestCase(TestCase):
         """
         organization = factories.OrganizationFactory(title="University X")
         user = factories.UserFactory(first_name="Joanie Cunningham")
-        course = factories.CourseFactory(title="Course with attestation")
+        course = factories.CourseFactory(
+            title="Course with attestation", organizations=[organization]
+        )
         enrollment = factories.EnrollmentFactory(user=user, course_run__course=course)
         certificate_definition = factories.CertificateDefinitionFactory(
             template=enums.CERTIFICATE
@@ -97,7 +96,6 @@ class UtilsIssuersCertificateAndDegreeGenerateDocumentTestCase(TestCase):
         certificate = factories.EnrollmentCertificateFactory(
             certificate_definition=certificate_definition,
             enrollment=enrollment,
-            organization=organization,
         )
 
         document = issuers.generate_document(

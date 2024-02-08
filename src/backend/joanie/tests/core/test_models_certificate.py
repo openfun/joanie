@@ -25,42 +25,41 @@ class CertificateModelTestCase(TestCase):
         through parler settings ("en-us" in our case).
         """
         organization = factories.OrganizationFactory(title="Organization 1")
-        course = factories.CourseFactory()
+        course = factories.CourseFactory(organizations=[organization])
         product = factories.ProductFactory(
             courses=[],
             title="Graded product",
         )
-        factories.CourseProductRelationFactory(
-            course=course, product=product, organizations=[organization]
-        )
+        factories.CourseProductRelationFactory(course=course, product=product)
 
         # - Add French translations
         organization.translations.create(language_code="fr-fr", title="Établissement 1")
         product.translations.create(language_code="fr-fr", title="Produit certifiant")
 
-        order = factories.OrderFactory(product=product, organization=organization)
+        order = factories.OrderFactory(product=product)
         certificate = factories.OrderCertificateFactory(order=order)
 
         context = certificate.get_document_context("en-us")
         self.assertEqual(context["course"]["name"], "Graded product")
-        self.assertEqual(context["organization"]["name"], "Organization 1")
+        self.assertEqual(len(context["organizations"]), 1)
+        self.assertEqual(context["organizations"][0]["name"], "Organization 1")
 
         context = certificate.get_document_context("fr-fr")
         self.assertEqual(context["course"]["name"], "Produit certifiant")
-        self.assertEqual(context["organization"]["name"], "Établissement 1")
+        self.assertEqual(context["organizations"][0]["name"], "Établissement 1")
 
         # When translation for the given language does not exist,
         # we should get the fallback language translation.
         context = certificate.get_document_context("de-de")
         self.assertEqual(context["course"]["name"], "Graded product")
-        self.assertEqual(context["organization"]["name"], "Organization 1")
+        self.assertEqual(context["organizations"][0]["name"], "Organization 1")
 
     def test_models_certificate_get_document_context_with_incomplete_information_raises_error(
         self,
     ):
         """
         If the certificate context is incomplete (missing logo or signature for example),
-        it should raise a Value Error while getting the document's context.
+        it should raise a Value Error while creating the certificate.
         """
         organization = factories.OrganizationFactory(
             title="University X",
@@ -69,21 +68,17 @@ class CertificateModelTestCase(TestCase):
             signature=None,
         )
 
-        course = factories.CourseFactory()
+        course = factories.CourseFactory(organizations=[organization])
         product = factories.ProductFactory(
-            courses=[],
+            courses=[course],
             title="Graded product",
-        )
-        factories.CourseProductRelationFactory(
-            course=course, product=product, organizations=[organization]
         )
 
         order = factories.OrderFactory(product=product, organization=organization)
-        certificate = factories.OrderCertificateFactory(order=order)
 
         # - Retrieve the document context should raise a ValueError
         with self.assertRaises(ValueError) as context:
-            certificate.get_document_context()
+            factories.OrderCertificateFactory(order=order)
 
         self.assertEqual(
             str(context.exception),
