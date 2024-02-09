@@ -73,7 +73,7 @@ def import_universities_batch(start, stop, dry_run=False):
                     "logo": university.logo,
                 },
             )
-            download_and_store(university.logo)
+            download_and_store(university.logo, "media")
             if created:
                 report["universities"]["created"] += 1
             else:

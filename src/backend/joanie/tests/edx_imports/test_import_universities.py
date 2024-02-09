@@ -1,6 +1,7 @@
 """Tests for the import_universities task."""
-# pylint: disable=unexpected-keyword-arg,no-value-for-parameter
 
+# pylint: disable=unexpected-keyword-arg,no-value-for-parameter
+import os
 from os.path import dirname, join, realpath
 from unittest.mock import patch
 
@@ -22,8 +23,12 @@ with open(join(dirname(realpath(__file__)), f"images/{LOGO_NAME}"), "rb") as log
 @override_settings(
     STORAGES={
         "default": {
-            "BACKEND": "django.core.files.storage.InMemoryStorage",
-        },
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+            "OPTIONS": {
+                "location": os.path.join(settings.MEDIA_ROOT, "tests"),
+                "base_url": "/media/tests/",
+            },
+        }
     },
     JOANIE_LMS_BACKENDS=[
         {
@@ -120,7 +125,6 @@ class EdxImportUniversitiesTestCase(TestCase):
             edx_factories.EdxUniversityFactory.create(
                 code=organization.code,
                 name="Organization 1",
-                logo="logo.png",
             )
         ]
         mock_get_universities.return_value = edx_universities

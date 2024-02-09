@@ -1,11 +1,14 @@
 """Tests for the migrate_edx command to import universities from Open edX."""
+
 # pylint: disable=unexpected-keyword-arg,no-value-for-parameter
 
+import os
 from os.path import dirname, join, realpath
 from unittest.mock import patch
 
 from django.conf import settings
 from django.core.management import call_command
+from django.test import override_settings
 
 import responses
 
@@ -20,6 +23,17 @@ with open(join(dirname(realpath(__file__)), f"images/{LOGO_NAME}"), "rb") as log
     LOGO_CONTENT = logo.read()
 
 
+@override_settings(
+    STORAGES={
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+            "OPTIONS": {
+                "location": os.path.join(settings.MEDIA_ROOT, "tests"),
+                "base_url": "/media/tests/",
+            },
+        }
+    },
+)
 class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
     """Tests for the migrate_edx command to import universities from Open edX."""
 
@@ -77,7 +91,6 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             edx_factories.EdxUniversityFactory.create(
                 code=organization.code,
                 name="Organization 1",
-                logo="logo.png",
             )
         ]
         mock_get_universities.return_value = edx_universities
@@ -89,7 +102,6 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
                 f"https://{settings.EDX_DOMAIN}/media/{edx_university.logo}",
                 body=LOGO_CONTENT,
             )
-        # out = StringIO()
 
         with self.assertLogs() as logger:
             call_command("migrate_edx", "--universities")

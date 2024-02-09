@@ -10,7 +10,10 @@
         "setup-cfg",
         "pep621"
       ],
-      "matchPackageNames": []
+      "matchPackageNames": [
+        "hashids",
+        "PyMongo"
+      ]
     },
     {
       "groupName": "allowed django versions",

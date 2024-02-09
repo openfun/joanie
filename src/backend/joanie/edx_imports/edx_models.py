@@ -42,6 +42,9 @@ class User(Base):
     user_api_userpreference: Mapped[List["UserPreference"]] = relationship(
         "UserPreference", back_populates="user"
     )
+    certificates_generatedcertificate: Mapped[
+        List["GeneratedCertificate"]
+    ] = relationship("GeneratedCertificate", back_populates="user")
 
 
 class UserProfile(Base):
@@ -317,4 +320,46 @@ class CourseEnrollment(Base):
 
     user: Mapped["User"] = relationship(
         "User", back_populates="student_courseenrollment"
+    )
+
+
+class GeneratedCertificate(Base):
+    """Model for the `certificates_generatedcertificate` table."""
+
+    __tablename__ = "certificates_generatedcertificate"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["user_id"], ["auth_user.id"], name="user_id_refs_id_6c4fb3478e23bfe2"
+        ),
+        Index(
+            "certificates_generatedcertific_verify_uuid_1b5a14bb83c471ff_uniq",
+            "verify_uuid",
+        ),
+        Index(
+            "certificates_generatedcertifica_course_id_1389f6b2d72f5e78_uniq",
+            "course_id",
+            "user_id",
+            unique=True,
+        ),
+        Index("certificates_generatedcertificate_fbfc09f1", "user_id"),
+    )
+
+    id: Mapped[int] = mapped_column(INTEGER(11), primary_key=True)
+    user_id: Mapped[int] = mapped_column(INTEGER(11))
+    download_url: Mapped[str] = mapped_column(String(128))
+    grade: Mapped[str] = mapped_column(String(5))
+    course_id: Mapped[str] = mapped_column(String(255))
+    key: Mapped[str] = mapped_column(String(32))
+    distinction: Mapped[int] = mapped_column(INTEGER(1))
+    status: Mapped[str] = mapped_column(String(32))
+    verify_uuid: Mapped[str] = mapped_column(String(32))
+    download_uuid: Mapped[str] = mapped_column(String(32))
+    name: Mapped[str] = mapped_column(String(255))
+    created_date: Mapped[datetime.datetime] = mapped_column(DateTime)
+    modified_date: Mapped[datetime.datetime] = mapped_column(DateTime)
+    error_reason: Mapped[str] = mapped_column(String(512))
+    mode: Mapped[str] = mapped_column(String(32))
+
+    user: Mapped["User"] = relationship(
+        "User", back_populates="certificates_generatedcertificate"
     )

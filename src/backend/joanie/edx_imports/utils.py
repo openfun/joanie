@@ -20,21 +20,24 @@ from joanie.lms_handler.backends.openedx import split_course_key
 logger = getLogger(__name__)
 
 
-def download_and_store(filename):
+def download_and_store(filename, source_path=""):
     """Download a file from edx and store it in the default storage"""
     if default_storage.exists(filename):
-        return
+        return default_storage.path(filename)
+
     logger.info("Download %s", filename)
-    url = f"https://{settings.EDX_DOMAIN}/media/{filename}"
+    url = f"https://{settings.EDX_DOMAIN}/"
+    if source_path:
+        url += f"{source_path}/"
+    url += filename
+
     response = requests.get(url, stream=True, timeout=3)
 
     if response.status_code == HTTPStatus.OK:
-        with default_storage.open(filename, "wb") as output_file:
-            for chunk in response.iter_content(chunk_size=1024):
-                if chunk:
-                    output_file.write(chunk)
-    else:
-        logger.error("Unable to download %s", filename)
+        return default_storage.save(filename, response.raw)
+
+    logger.error("Unable to download %s", filename)
+    return None
 
 
 def make_date_aware(date: datetime) -> datetime:
