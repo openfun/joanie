@@ -1,5 +1,4 @@
 """Base test case for the migrate command."""
-
 from django.test import TestCase, override_settings
 
 from joanie.edx_imports.edx_factories import session
@@ -23,6 +22,7 @@ from joanie.edx_imports.edx_factories import session
     EDX_DATABASE_PORT="1234",
     EDX_DATABASE_NAME="test",
     EDX_DOMAIN="openedx.test",
+    EDX_SECRET="test",
     EDX_TIME_ZONE="UTC",
     TIME_ZONE="UTC",
 )

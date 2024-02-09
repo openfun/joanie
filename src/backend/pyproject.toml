@@ -64,6 +64,8 @@ dependencies = [
     # edx_imports
     "pymysql==1.1.0",
     "SQLAlchemy==2.0.27",
+    "hashids==1.1.0",
+    "PyMongo==3.13.0",
 ]
 
 [project.urls]

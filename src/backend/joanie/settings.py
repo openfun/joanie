@@ -496,9 +496,27 @@ class Base(Configuration):
     EDX_DATABASE_DEBUG = values.BooleanValue(
         False, environ_name="EDX_DATABASE_DEBUG", environ_prefix=None
     )
+
+    EDX_MONGODB_HOST = values.Value(
+        None, environ_name="EDX_MONGODB_HOST", environ_prefix=None
+    )
+    EDX_MONGODB_PORT = values.IntegerValue(
+        None, environ_name="EDX_MONGODB_PORT", environ_prefix=None
+    )
+    EDX_MONGODB_USER = values.Value(
+        None, environ_name="EDX_MONGODB_USER", environ_prefix=None
+    )
+    EDX_MONGODB_PASSWORD = values.Value(
+        None, environ_name="EDX_MONGODB_PASSWORD", environ_prefix=None
+    )
+    EDX_MONGODB_NAME = values.Value(
+        None, environ_name="EDX_MONGODB_NAME", environ_prefix=None
+    )
+
     EDX_TIME_ZONE = values.Value(
         None, environ_name="EDX_TIME_ZONE", environ_prefix=None
     )
+    EDX_SECRET = values.Value(None, environ_name="EDX_SECRET", environ_prefix=None)
 
     # pylint: disable=invalid-name
     @property

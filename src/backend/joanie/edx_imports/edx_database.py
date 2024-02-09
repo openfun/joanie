@@ -13,6 +13,7 @@ from joanie.edx_imports.edx_models import (
     Course,
     CourseEnrollment,
     CourseOverview,
+    GeneratedCertificate,
     University,
     User,
     UserPreference,
@@ -58,6 +59,7 @@ class OpenEdxDB:
         self.UserProfile = UserProfile  # pylint: disable=invalid-name
         self.UserPreference = UserPreference  # pylint: disable=invalid-name
         self.StudentCourseEnrollment = CourseEnrollment  # pylint: disable=invalid-name
+        self.Certificate = GeneratedCertificate  # pylint: disable=invalid-name
 
     def get_universities_count(self, offset=0, limit=0):
         """
@@ -340,6 +342,53 @@ class OpenEdxDB:
                     self.User.username,
                 ),
             )
+            .slice(start, stop)
+        )
+        return self.session.scalars(query).all()
+
+    def get_certificates_count(self, offset=0, limit=0):
+        """
+        Get downloadable certificates count from Open edX database
+
+        SELECT count(generated_certificate.id) AS count_1
+        FROM generated_certificate
+        WHERE generated_certificate.status = "downloadable"
+        """
+        query_count = select(count(self.Certificate.id)).where(
+            self.Certificate.status == "downloadable"
+        )
+        certificates_count = self.session.execute(query_count).scalar()
+        certificates_count -= offset
+        if limit:
+            return min(certificates_count, limit)
+        return certificates_count
+
+    def get_certificates(self, start, stop):
+        """
+        Get downloadable certificates from Open edX database by slicing
+
+        SELECT generated_certificate.id,
+                generated_certificate.user_id,
+                generated_certificate.course_id,
+                generated_certificate.created_date,
+                generated_certificate.mode
+        FROM generated_certificate
+        WHERE generated_certificate.status = "downloadable"
+        LIMIT :param_1
+        OFFSET :param_2
+        """
+        query = (
+            select(self.Certificate)
+            .options(
+                load_only(
+                    self.Certificate.id,
+                    self.Certificate.user_id,
+                    self.Certificate.course_id,
+                    self.Certificate.created_date,
+                    self.Certificate.mode,
+                )
+            )
+            .where(self.Certificate.status == "downloadable")
             .slice(start, stop)
         )
         return self.session.scalars(query).all()

@@ -26,11 +26,11 @@ class EdxUniversityFactory(factory.alchemy.SQLAlchemyModelFactory):
         model = edx_models.University
         sqlalchemy_session = session
 
-    id = factory.Faker("pyint")
+    id = factory.Sequence(lambda n: n)
     name = factory.Faker("company")
     slug = factory.Faker("slug")
     code = factory.Faker("pystr")
-    logo = factory.Faker("file_name")
+    logo = factory.Faker("file_path", absolute=False)
     description = factory.Faker("sentence")
     detail_page_enabled = True
     score = factory.Faker("pyint")
@@ -80,8 +80,8 @@ class EdxCourseUniversityRelationFactory(factory.alchemy.SQLAlchemyModelFactory)
         sqlalchemy_session = session
 
     id = factory.Sequence(lambda n: n)
-    course_id = factory.Faker("pyint")
-    university_id = factory.Faker("pyint")
+    course_id = factory.Sequence(lambda n: n)
+    university_id = factory.Sequence(lambda n: n)
     course = factory.SubFactory(
         EdxCourseFactory, id=factory.SelfAttribute("..course_id")
     )
@@ -140,7 +140,7 @@ class EdxUserProfileFactory(factory.alchemy.SQLAlchemyModelFactory):
         sqlalchemy_session = session
 
     id = factory.Sequence(lambda n: n)
-    user_id = factory.Faker("pyint")
+    user_id = factory.Sequence(lambda n: n)
     name = factory.Faker("name")
     location = factory.Faker("address")
     meta = factory.Faker("pystr")
@@ -168,7 +168,7 @@ class EdxUserPreferenceFactory(factory.alchemy.SQLAlchemyModelFactory):
         sqlalchemy_session = session
 
     id = factory.Sequence(lambda n: n)
-    user_id = factory.Faker("pyint")
+    user_id = factory.Sequence(lambda n: n)
 
     # pylint: disable=no-self-use
     @factory.lazy_attribute
@@ -231,9 +231,57 @@ class EdxEnrollmentFactory(factory.alchemy.SQLAlchemyModelFactory):
         model = edx_models.CourseEnrollment
         sqlalchemy_session = session
 
-    user_id = factory.Faker("pyint")
+    user_id = factory.Sequence(lambda n: n)
     user = factory.SubFactory(EdxUserFactory, id=factory.SelfAttribute("..user_id"))
     course_id = factory.Sequence(lambda n: f"course-v1:edX+{faker.pystr()}+{n}")
     created = factory.Faker("date_time")
     is_active = True
     mode = factory.Faker("pystr")
+
+
+class EdxGeneratedCertificateFactory(factory.alchemy.SQLAlchemyModelFactory):
+    """
+    Factory for generating fake Open edX generated certificates.
+    """
+
+    class Meta:
+        """Factory configuration."""
+
+        model = edx_models.GeneratedCertificate
+        sqlalchemy_session = session
+
+    id = factory.Sequence(lambda n: n)
+    user_id = factory.Sequence(lambda n: n)
+    user = factory.SubFactory(EdxUserFactory, id=factory.SelfAttribute("..user_id"))
+    course_id = factory.Sequence(lambda n: f"course-v1:edX+{faker.pystr()}+{n}")
+    download_url = factory.Faker("uri")
+    grade = factory.Faker("pystr")
+    key = factory.Faker("pystr")
+    distinction = factory.Faker("pyint")
+    status = random.choice(("downloadable", "notpassing", "unavailable"))  # noqa: S311
+    verify_uuid = factory.Faker("uuid4")
+    download_uuid = factory.Faker("uuid4")
+    name = factory.Faker("name")
+    created_date = factory.Faker("date_time")
+    modified_date = factory.Faker("date_time")
+    error_reason = factory.Faker("pystr")
+    mode = random.choice(("verified", "honor"))  # noqa: S311
+
+
+class EdxMongoSignatoryFactory(factory.Factory):
+    """
+    Factory for generating fake Open edX mongo signatories.
+    """
+
+    class Meta:
+        """Factory configuration."""
+
+        abstract = False
+        model = dict
+
+    id = factory.Sequence(lambda n: n)
+    name = f"{faker.first_name()} {faker.last_name()}, {faker.job()}"
+    certificate = factory.Faker("pyint")
+    title = factory.Faker("sentence")
+    organization = factory.Faker("company")
+    signature_image_path = factory.Faker("file_path", absolute=True, depth=4)

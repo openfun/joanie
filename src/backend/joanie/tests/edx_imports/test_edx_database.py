@@ -5,6 +5,7 @@ from joanie.edx_imports.edx_database import OpenEdxDB
 from joanie.edx_imports.edx_factories import (
     EdxCourseOverviewFactory,
     EdxEnrollmentFactory,
+    EdxGeneratedCertificateFactory,
     EdxUniversityFactory,
     EdxUserFactory,
     engine,
@@ -161,3 +162,27 @@ class OpenEdxDBTestCase(TestCase):
         enrollments = self.db.get_enrollments(start=0, stop=9)
 
         self.assertEqual(len(enrollments), 9)
+
+    def test_edx_database_get_certificates_count(self):
+        """Test the get_certificates_count method."""
+        EdxGeneratedCertificateFactory.create_batch(3, status="notpassing")
+        EdxGeneratedCertificateFactory.create_batch(3, status="downloadable")
+        EdxGeneratedCertificateFactory.create_batch(3, status="unavailable")
+
+        certificates_count = self.db.get_certificates_count()
+
+        self.assertEqual(certificates_count, 3)
+
+    def test_edx_database_get_certificates(self):
+        """Test the get_certificates method."""
+        EdxGeneratedCertificateFactory.create_batch(3, status="notpassing")
+        edx_certificates_downloadable = EdxGeneratedCertificateFactory.create_batch(
+            3, status="downloadable"
+        )
+        EdxGeneratedCertificateFactory.create_batch(3, status="unavailable")
+
+        certificates = self.db.get_certificates(start=0, stop=9)
+
+        self.assertEqual(len(certificates), 3)
+        self.assertEqual(len(edx_certificates_downloadable), 3)
+        self.assertCountEqual(certificates, edx_certificates_downloadable)
