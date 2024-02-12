@@ -1,8 +1,8 @@
-@import url("https://fonts.googleapis.com/css2?family=Hind:wght@300;500&family=Montserrat:wght@600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Hind:wght@300;500&family=Montserrat:wght@400;600&display=swap&family=Cinzel:wght@500");
 
 body {
-  font-family: "Hind", sans-serif;
-  font-size: 19px;
+  font-family: 'Hind', Arial, sans-serif;
+  font-size: 17px;
   font-weight: 300;
   color: #222;
 }
@@ -17,12 +17,17 @@ body {
     padding: 0;
   }
 
-  body {
-    margin: 0.3cm;
-    padding: 0.7cm;
-    background: #fff;
-    border: 0.3cm solid #e1e5ea;
-    height: 18.4cm;
+  html {
+    background-image: var(--document-bg);
+    background-size: 33mm auto, 100% 100%;
+    background-repeat: no-repeat;
+    background-position: center 2mm, center center;
+    padding: 23mm 23mm;
+    height: 210mm;
+    width: 297mm;
+    box-sizing: border-box;
+    display: block;
+    z-index: 999;
   }
 
   * {
@@ -30,92 +35,119 @@ body {
     padding: 0;
   }
 
-  /* ----------------------
-   * Header
-   * ---------------------- */
-  #certificate header .logos {
+  /* == Certificate */
+  #certificate {
     display: flex;
+    flex-direction: column;
+    height: 100%;
   }
 
-  #certificate header .logos > * {
-    width: 50%;
-  }
-
-  #certificate header .logos > div > img {
-    max-height: 100px;
-  }
-
-  #certificate header .logos > *:nth-child(2) {
-    text-align: right;
-  }
-
-  #certificate header .title {
-    font-family: "Montserrat", sans-serif;
-    font-size: 21px;
-    text-transform: uppercase;
+  /* == Header */
+  #certificate header {
+    display: inline-block;
     text-align: center;
-    letter-spacing: 3px;
-    margin: 1.3cm;
+    padding-top: 10mm;
+    width: 100%;
   }
 
-  #certificate header .title h1 {
-    font-weight: 600 !important;
+  #certificate header div {
+      display: inline-block;
+      margin: 0 auto;
   }
 
-  /* ----------------------
-   * Main
-   * ---------------------- */
-  #certificate article.main {
-    height: 11.5cm;
-  }
-  #certificate article.main #student {
+  #certificate header h1 {
+    font-family: 'Cinzel', "Times New Roman", serif;
     font-weight: 500;
-    margin-top: 0.6cm;
+    font-size: 96px;
+    text-align: center;
+    display: inline-block;
+    line-height: 0.8;
+  }
+  #certificate header h1::first-letter {
+    font-size: 120px;
+  }
+  #certificate .issuance-date {
+    text-align: right;
+    line-height: 1;
   }
 
-  #certificate article.main #signatures {
+
+  /* == Student */
+  #certificate .student {
+    text-align: center;
+    padding: 5mm 0;
+    flex: 1;
+    line-height: 1.1;
+  }
+
+  #certificate .student strong {
+    font-size: 2rem;
+    font-weight: inherit;
+  }
+
+  #certificate .student strong:first-child {
+    line-height: 1.75;
+  }
+
+  /* == Signatories */
+  #certificate .signatories {
     display: flex;
-    margin-top: 1.2cm;
+    margin-bottom: 24mm;
+    padding-bottom: 5mm;
   }
 
-  #certificate article.main #signatures > *:first-child {
-    width: 40%;
+  #certificate .signatories__column {
+    flex: 1;
+    margin: 0;
+    font-size: 0.7rem;
+    line-height: 1.25;
   }
 
-  #certificate article.main #signatures .seal {
-    width: 60%;
-    min-height: 3cm;
-    border: 1px solid #969098;
+  #certificate .signatories__column-content {
+    display: flex;
+    flex-direction: column;
+    justify-items: center;
+    align-items: center;
+    align-self: center;
+    flex: 1;
+    margin: 0;
+    padding: 0;
     text-align: center;
   }
 
-  #certificate article.main #signatures .seal p {
-    font-size: 0.6rem;
-    color: #969098;
-    margin-top: 3px;
+  #certificate .signatories__column-content > * {
+    display: inline-block;
+    margin: 0 auto;
   }
 
-  #certificate article.main #signatures .seal .manager img {
-    max-width: 100%;
-    max-height: 100px;
+  /* == Signatories - Organization */
+  .signatories__column-content.organization img {
+    display: block;
+    height: 25mm;
+    padding-top: 2mm;
+    width: auto;
   }
 
-  /* ----------------------
-   * Footer
-   * ---------------------- */
-  #certificate footer {
-    border-top: 1px solid #e1e4e9;
-    font-size: 0.6rem;
-    display: flex;
+  .signatories__column-content.organization > .organization__signature {
+    height: 13mm;
   }
 
-  #certificate footer > div {
-    width: 50%;
-    margin-top: 3px;
-    color: #969098;
+  .signatories__column-content.organization .organization__signatory em {
+    display: block;
+    font-style: italic;
+    margin: 0;
+  }
+  .signatories__column-content.organization .organization__signatory:before {
+    height: 1px;
+    background: #ccc;
+    content: '';
+    display: block;
+    margin: 2mm auto;
+    width: 50mm;
   }
 
-  #certificate footer .identifier {
-    text-align: right;
+  /* == Signatories - Platform */
+  .signatories__column-content.platform img {
+    padding: 2mm;
   }
 }
