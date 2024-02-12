@@ -45,7 +45,7 @@ services:
   celery-dev:
     user: ${DOCKER_USER:-1000}
     image: joanie:development
-    command: ["celery", "-A", "joanie.celery_app", "worker", "-l", "DEBUG"]
+    command: ["celery", "-A", "joanie.celery_app", "worker", "-l", "DEBUG", "-n", "joanie@%h"]
     environment:
       - DJANGO_CONFIGURATION=Development
     env_file:
