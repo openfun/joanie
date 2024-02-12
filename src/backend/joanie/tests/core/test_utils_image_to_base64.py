@@ -3,7 +3,7 @@ Test suite for utils of the joanie core app
 """
 import io
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from joanie.core import factories, utils
 
@@ -13,6 +13,9 @@ BLUE_SQUARE_BASE64 = (
 )
 
 
+@override_settings(
+    STORAGES={"default": {"BACKEND": "django.core.files.storage.FileSystemStorage"}}
+)
 class UtilsTestCase(TestCase):
     """Test suite for utils."""
 
