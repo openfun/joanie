@@ -8,7 +8,11 @@ from rest_framework.generics import get_object_or_404
 
 from joanie.core import models
 from joanie.core.enums import ALL_LANGUAGES
-from joanie.core.serializers.fields import ImageDetailField, ThumbnailDetailField
+from joanie.core.serializers.fields import (
+    ImageDetailField,
+    ISO8601DurationField,
+    ThumbnailDetailField,
+)
 from joanie.payment import models as payment_models
 
 
@@ -561,6 +565,7 @@ class AdminCourseSerializer(serializers.ModelSerializer):
     product_relations = AdminProductRelationSerializer(many=True, read_only=True)
     accesses = AdminCourseAccessSerializer(many=True, read_only=True)
     course_runs = AdminCourseRunLightSerializer(many=True, read_only=True)
+    effort = ISO8601DurationField(allow_null=True, required=False)
 
     class Meta:
         model = models.Course
@@ -574,6 +579,7 @@ class AdminCourseSerializer(serializers.ModelSerializer):
             "product_relations",
             "state",
             "title",
+            "effort",
         )
         read_only_fields = (
             "accesses",
