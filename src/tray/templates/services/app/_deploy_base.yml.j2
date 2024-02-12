@@ -78,6 +78,8 @@ spec:
               value: joanie.configs.settings
             - name: JOANIE_BACKOFFICE_BASE_URL
               value: "https://{{ joanie_admin_host }}"
+            - name: DJANGO_CELERY_DEFAULT_QUEUE
+              value: "default-queue-{{ deployment_stamp }}"
           envFrom:
             - secretRef:
                 name: "{{ joanie_secret_name }}"
