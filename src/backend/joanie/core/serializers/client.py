@@ -11,7 +11,7 @@ from rest_framework.generics import get_object_or_404
 
 from joanie.core import enums, models
 from joanie.core.serializers.base import CachedModelSerializer
-from joanie.core.serializers.fields import ThumbnailDetailField
+from joanie.core.serializers.fields import ISO8601DurationField, ThumbnailDetailField
 
 
 class AbilitiesModelSerializer(serializers.ModelSerializer):
@@ -890,6 +890,7 @@ class CourseSerializer(AbilitiesModelSerializer):
     course_run_ids = serializers.SlugRelatedField(
         many=True, read_only=True, slug_field="id", source="course_runs"
     )
+    effort = ISO8601DurationField()
 
     class Meta:
         model = models.Course
@@ -903,6 +904,7 @@ class CourseSerializer(AbilitiesModelSerializer):
             "product_ids",
             "state",
             "title",
+            "effort",
         ]
         read_only_fields = fields
 

@@ -34,6 +34,17 @@ class CourseModelsTestCase(BaseAPITestCase):
         self.assertEqual(models.Course.objects.count(), 1)
         self.assertEqual(type(course.effort), timedelta)
 
+    def test_models_course_effort_duration_field_accepts_iso8601_value(self):
+        """
+        It should be possible to set an ISO 8601 value representing 10 hours into the
+        effort DurationField when instanciating a new object Course.
+        """
+        course = factories.CourseFactory(effort="PT10H")  # represents 10 hours
+
+        self.assertEqual(models.Course.objects.count(), 1)
+        self.assertEqual(course.effort, timedelta(seconds=36000))
+        self.assertEqual(type(course.effort), timedelta)
+
     def test_models_course_effort_duration_field_querying(self):
         """
         We should be able to compare two courses with different effort duration values.

@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Add custom serializer field for duration field to format ISO 8601
 - Add effort duration field for the Course Model
 - Add phone number field for the User Model
 - Add property `verification_uri` to `Certificate` model

@@ -2,6 +2,8 @@
 from easy_thumbnails.alias import aliases
 from easy_thumbnails.files import ThumbnailerImageFieldFile
 from rest_framework import serializers
+from rest_framework.fields import DurationField
+from timedelta_isoformat import timedelta as timedelta_isoformat
 
 
 class ImageDetailField(serializers.ImageField):
@@ -63,3 +65,17 @@ class ThumbnailDetailField(ImageDetailField):
                 representation["srcset"] = ", ".join(srcset)
 
         return representation
+
+
+class ISO8601DurationField(DurationField):
+    """
+    Custom serializer DurationField to return the value into ISO 8601 format.
+    When it comes to internal value, it returns the ISO 8601 format value
+    into python's datetime.timedelta.
+    """
+
+    def to_representation(self, value):
+        """
+        Return the value of timedelta type into ISO 8601 format.
+        """
+        return timedelta_isoformat(seconds=value.total_seconds()).isoformat()

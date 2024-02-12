@@ -5,6 +5,8 @@ import random
 from http import HTTPStatus
 from unittest import mock
 
+from timedelta_isoformat import timedelta as timedelta_isoformat
+
 from joanie.core import enums, factories, models
 from joanie.core.serializers import fields
 from joanie.tests.base import BaseAPITestCase
@@ -96,6 +98,9 @@ class CourseApiTest(BaseAPITestCase):
                         "code": course.code,
                         "id": str(course.id),
                         "cover": "_this_field_is_mocked",
+                        "effort": timedelta_isoformat(
+                            seconds=course.effort.total_seconds()
+                        ).isoformat(),
                         "title": course.title,
                         "organizations": [
                             {
@@ -292,6 +297,9 @@ class CourseApiTest(BaseAPITestCase):
                 "code": course.code,
                 "id": str(course.id),
                 "cover": "_this_field_is_mocked",
+                "effort": timedelta_isoformat(
+                    seconds=course.effort.total_seconds()
+                ).isoformat(),
                 "title": course.title,
                 "organizations": [
                     {
