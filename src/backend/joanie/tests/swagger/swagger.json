@@ -4639,6 +4639,9 @@
                     "title": {
                         "type": "string",
                         "readOnly": true
+                    },
+                    "effort": {
+                        "type": "string"
                     }
                 },
                 "required": [
@@ -4646,6 +4649,7 @@
                     "course_run_ids",
                     "cover",
                     "created_on",
+                    "effort",
                     "id",
                     "organizations",
                     "product_ids",
@@ -4810,10 +4814,14 @@
                     "cover": {
                         "type": "string",
                         "format": "binary"
+                    },
+                    "effort": {
+                        "type": "string"
                     }
                 },
                 "required": [
-                    "cover"
+                    "cover",
+                    "effort"
                 ]
             },
             "CourseRun": {
