@@ -28,8 +28,9 @@ def generate_document(name: str, context: dict) -> bytes:
         .get_template(html_template_path)
         .render(Context(context))
     )
+    font_config = FontConfiguration()
     css = CSS(
         string=get_template(css_template_name).render(context),
-        font_config=FontConfiguration(),
+        font_config=font_config,
     )
-    return doc_html.write_pdf(stylesheets=[css], zoom=1)
+    return doc_html.write_pdf(stylesheets=[css], zoom=1, font_config=font_config)
