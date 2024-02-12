@@ -90,6 +90,7 @@ and this project adheres to
 
 ### Changed
 
+- Improve `degree` certificate template 
 - Bind organization course author into certificate context
   instead of organization order
 - Prevent to create an order with course run that has ended

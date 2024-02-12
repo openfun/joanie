@@ -8,71 +8,66 @@ which is the course provider. So the organization is accessed with organizations
 {% endcomment %}
 
 <html>
-{% if debug %}
 <head>
     <style>
-      {{ css }}
+        :root {
+          --document-bg: url("{% base64_static "joanie/images/degree_bg_decorator.png" %}"), url("{% base64_static "joanie/images/degree_bg_frame.png" %}");
+        }
     </style>
+    {% if debug %}
+        <style>
+            {{ css }}
+        </style>
+    {% endif %}
 </head>
-{% endif %}
 <body>
 <div id="certificate">
     <header>
-        <div class="logos">
-            <div class="fun">
-                <img src="{% base64_static "joanie/images/logo_fun.png" %}" />
-            </div>
-            <div class="organization">
-                <img src="{{ organizations.0.logo }}" />
-            </div>
-        </div>
-        <div class="title">
+        <div>
             <h1>{% translate "Certificate" %}</h1>
+            <p class="issuance-date">
+            {% blocktranslate trimmed with creation_date=creation_date|date:"SHORT_DATE_FORMAT" %}
+            Issued on {{ creation_date }}
+            {% endblocktranslate %}
+            </p>
         </div>
     </header>
-    <article class="main">
-        <section id="representative">
-            <p>
-                {% blocktranslate trimmed with representative=organizations.0.representative organization=organizations.0.name %}
-                I, {{ representative }},<br/>
-                legal representative of the course provider {{ organization }}<br/>
-                certifies that:
-                {% endblocktranslate %}
-            </p>
-        </section>
-        <section id="student">
-            <p>
-                {% blocktranslate trimmed with student=student.name course=course.name %}
-                {{ student }}
-                <br>successfully completed the course {{ course }}.
-                {% endblocktranslate %}
-            </p>
-            <p>
-                {% blocktranslate trimmed with creation_date=creation_date|date:"SHORT_DATE_FORMAT" %}
-                Issued on {{ creation_date }}
-                {% endblocktranslate %}
-            </p>
-        </section>
-        <section id="signatures">
-            <div></div>
-            <div class="seal">
-                <p>
-                    {% translate "Stamp and signature of the course provider manager" %}
+    <section class="student">
+        <p>
+            <strong class="student-name">{{ student.name }}</strong>
+            {% blocktranslate trimmed with student=student.name course=course.name %}
+            <br>
+            successfully completed the course
+            <br>
+            <strong class="coure-name">{{ course }}</strong>.
+            {% endblocktranslate %}
+        </p>
+    </section>
+    <section class="signatories">
+        <div class="signatories__column">
+            <div class="signatories__column-content organization">
+                <h2 class="organization__name">{{ organizations.0.name }}</h2>
+                <img class="organization__logo" src="{{ organizations.0.logo }}" />
+                <img class="organization__signature" src="{{ organizations.0.signature }}" />
+                <p class="organization__signatory">
+                    <em>{{ organizations.0.representative }}</em>
+                    <em>{{ organizations.0.representative_profession }}</em>
                 </p>
-                <div class="manager">
-                    <img src="{{ organizations.0.signature }}" />
-                </div>
             </div>
-        </section>
-    </article>
-    <footer>
-        <div class="generated-at">
-            {% translate "Delivery stamp: " %}{{ delivery_stamp }}
         </div>
-        <div class="identifier">
-            {% translate "Certificate ID: "%}{{ id }}
+        <div class="signatories__column">
+            <div class="signatories__column-content platform">
+                <img src="{% base64_static "joanie/images/degree_fun_verified_badge.png" %}" />
+                <p>
+                    {% blocktranslate with link=authenticity_link %}
+                    To verify the authenticity of this certificate, please visit:
+                    <br/>
+                    {{link}}
+                    {% endblocktranslate %}
+                </p>
+            </div>
         </div>
-    </footer>
+    </section>
 </div>
 </body>
 </html>
