@@ -4641,7 +4641,8 @@
                         "readOnly": true
                     },
                     "effort": {
-                        "type": "string"
+                        "type": "string",
+                        "format": "byte"
                     }
                 },
                 "required": [
@@ -4816,7 +4817,8 @@
                         "format": "binary"
                     },
                     "effort": {
-                        "type": "string"
+                        "type": "string",
+                        "format": "byte"
                     }
                 },
                 "required": [

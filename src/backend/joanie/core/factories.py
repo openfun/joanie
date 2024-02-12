@@ -17,6 +17,7 @@ from django.utils.translation import gettext as _
 import factory.fuzzy
 from easy_thumbnails.files import ThumbnailerImageFieldFile, generate_all_aliases
 from faker import Faker
+from timedelta_isoformat import timedelta as timedelta_isoformat
 
 from joanie.core import enums, models
 from joanie.core.models import OrderTargetCourseRelation, ProductTargetCourseRelation
@@ -803,7 +804,13 @@ class ContractFactory(factory.django.DjangoModelFactory):
                         if course_dates["end"] is not None
                         else _("<COURSE_END_DATE>")
                     ),
-                    "effort": None,
+                    "effort": (
+                        timedelta_isoformat(
+                            seconds=self.order.course.effort.total_seconds()
+                        ).isoformat()
+                        if self.order
+                        else _("<EFFORT_DURATION>")
+                    ),
                     "price": str(self.order.total),
                 },
                 "student": {

@@ -1,10 +1,10 @@
 """
 Test suite for Course Admin API.
 """
+import datetime
 import random
 import uuid
 from http import HTTPStatus
-import datetime
 
 from django.test import TestCase
 
@@ -353,7 +353,7 @@ class CourseAdminApiTest(TestCase):
             "code": "UPDATED-COURSE-001",
             "title": "Updated Course 001",
             "organization_ids": [str(organization.id)],
-            "effort": "PT10H"
+            "effort": "PT10H",
         }
 
         response = self.client.put(
@@ -440,7 +440,7 @@ class CourseAdminApiTest(TestCase):
         organization = factories.OrganizationFactory()
         product = factories.ProductFactory(courses=[])
         data = {
-            "effort": "PT10H", # represents 10 hours in ISO 8601
+            "effort": "PT10H",  # represents 10 hours in ISO 8601
             "code": "00001",
             "title": "Course 001",
             "organization_ids": [str(organization.id)],
@@ -465,7 +465,6 @@ class CourseAdminApiTest(TestCase):
         self.assertNotEqual(course.effort, "PT10H")
         self.assertEqual(course.effort, datetime.timedelta(seconds=36000))
 
-
     def test_admin_api_course_create_effort_with_timedelta_value(self):
         """
         Staff user should be able to create a course and give python's `datetime.timedelta`
@@ -476,7 +475,9 @@ class CourseAdminApiTest(TestCase):
         organization = factories.OrganizationFactory()
         product = factories.ProductFactory(courses=[])
         data = {
-            "effort": datetime.timedelta(seconds=36000), # represents 10 hours in ISO 8601
+            "effort": datetime.timedelta(
+                seconds=36000
+            ),  # represents 10 hours in ISO 8601
             "code": "00001",
             "title": "Course 001",
             "organization_ids": [str(organization.id)],

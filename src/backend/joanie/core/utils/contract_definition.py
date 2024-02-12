@@ -2,6 +2,8 @@
 from django.contrib.sites.models import Site
 from django.utils.translation import gettext as _
 
+from timedelta_isoformat import timedelta as timedelta_isoformat
+
 from joanie.core.utils import image_to_base64
 
 # Organization section for generating contract definition
@@ -130,7 +132,13 @@ def generate_document_context(contract_definition, user, order=None):
             "code": course_code,
             "start": course_start,
             "end": course_end,
-            "effort": None,
+            "effort": (
+                timedelta_isoformat(
+                    seconds=order.course.effort.total_seconds()
+                ).isoformat()
+                if order
+                else _("<EFFORT_DURATION>")
+            ),
             "price": course_price,
         },
         "student": {

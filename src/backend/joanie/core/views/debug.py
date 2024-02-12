@@ -260,7 +260,7 @@ class DebugContractTemplateView(DebugPdfTemplateView):
                 "code": "<COURSE_CODE>",
                 "start": "<COURSE_START_DATE>",
                 "end": "<COURSE_END_DATE>",
-                "effort": "<EFFORT_DURATION>",
+                "effort": "PT10H55M15S",  # 10h55min and 5 secs
                 "price": "<PRICE>",
             },
             "student": {
