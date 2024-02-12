@@ -2,6 +2,8 @@
 from django.contrib.sites.models import Site
 from django.test import TestCase
 
+from timedelta_isoformat import timedelta as timedelta_isoformat
+
 from joanie.core import enums, factories
 from joanie.core.utils import contract_definition, image_to_base64
 from joanie.payment.factories import InvoiceFactory
@@ -83,7 +85,9 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                 "code": relation.course.code,
                 "start": freezed_course_data["start"],
                 "end": freezed_course_data["end"],
-                "effort": None,
+                "effort": timedelta_isoformat(
+                    seconds=order.course.effort.total_seconds()
+                ).isoformat(),
                 "price": str(order.total),
             },
             "student": {
@@ -175,7 +179,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                 "code": "<COURSE_CODE>",
                 "start": "<COURSE_START_DATE>",
                 "end": "<COURSE_END_DATE>",
-                "effort": None,
+                "effort": "<EFFORT_DURATION>",
                 "price": "<PRICE>",
             },
             "student": {
@@ -268,7 +272,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                 "code": "<COURSE_CODE>",
                 "start": "<COURSE_START_DATE>",
                 "end": "<COURSE_END_DATE>",
-                "effort": None,
+                "effort": "<EFFORT_DURATION>",
                 "price": "<PRICE>",
             },
             "student": {

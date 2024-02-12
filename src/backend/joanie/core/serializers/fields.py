@@ -1,4 +1,6 @@
 """Custom serializer fields."""
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema_field
 from easy_thumbnails.alias import aliases
 from easy_thumbnails.files import ThumbnailerImageFieldFile
 from rest_framework import serializers
@@ -67,15 +69,14 @@ class ThumbnailDetailField(ImageDetailField):
         return representation
 
 
+@extend_schema_field(OpenApiTypes.BYTE)
 class ISO8601DurationField(DurationField):
     """
     Custom serializer DurationField to return the value into ISO 8601 format.
-    When it comes to internal value, it returns the ISO 8601 format value
+    When it comes to internal value, it returns the ISO 8601 duration value
     into python's datetime.timedelta.
     """
 
     def to_representation(self, value):
-        """
-        Return the value of timedelta type into ISO 8601 format.
-        """
+        """Return the value of timedelta type into ISO 8601 format."""
         return timedelta_isoformat(seconds=value.total_seconds()).isoformat()

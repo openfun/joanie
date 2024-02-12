@@ -4,6 +4,7 @@ Utils that can be useful throughout Joanie's core app
 import base64
 import collections.abc
 import json
+import math
 
 from django.utils.text import slugify
 

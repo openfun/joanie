@@ -1,9 +1,16 @@
 """
 Test suite for extra template tags of the joanie core app
 """
+import random
+
 from django.test import TestCase
 
-from joanie.core.templatetags.extra_tags import base64_static, join_and, list_key
+from joanie.core.templatetags.extra_tags import (
+    base64_static,
+    iso8601_to_duration,
+    join_and,
+    list_key,
+)
 
 
 class TemplateTagsExtraTagsTestCase(TestCase):
@@ -64,3 +71,58 @@ class TemplateTagsExtraTagsTestCase(TestCase):
         self.assertEqual(
             list_key(data, "username"), ["joanie", "richie", "fonzie", "marsha"]
         )
+
+    def test_templatetags_extra_tags_iso8601_to_duration_fails_because_input_value_is_not_iso8601(
+        self,
+    ):
+        """
+        The template tags `iso8601_to_duration` should return an empty string if the input value is
+        not ISO 8601 compliant. ISO 8601 durations should follow the format "PnYnMnDTnHnMnS,
+        where each component is optional, but they should appear in the correct order.
+        """
+        iso8601_duration = random.choice(
+            ["10H40M55S", "P10H30M60S", "P1W5D", "P3YM6M", "P1.5H", "P22H40S39M"]
+        )
+
+        with self.assertRaises(ValueError) as context:
+            iso8601_to_duration(duration=iso8601_duration, unit="hours")
+
+        self.assertEqual(
+            str(context.exception),
+            f"Duration input '{iso8601_duration}' is not ISO 8601 compliant.",
+        )
+
+    def test_templatetags_extra_tags_iso8601_to_duration_in_seconds(self):
+        """
+        The template tags `iso8601_to_duration` should return in seconds the duration
+        in ISO 8601 format.
+        """
+        iso8601_duration = "PT10H"
+
+        result = iso8601_to_duration(duration=iso8601_duration, unit="seconds")
+
+        self.assertEqual(result, 36000)
+
+    def test_templatetags_extra_tags_iso8601_to_duration_to_minutes(self):
+        """
+        The template tags `iso8601_to_duration` should return in minutes the duration in
+        ISO 8601 format.
+        """
+        iso8601_duration = "PT10H30M"
+
+        result = iso8601_to_duration(duration=iso8601_duration, unit="minutes")
+
+        self.assertEqual(result, 630)
+
+    def test_templatetags_extra_tags_iso8601_to_duration_in_hours(self):
+        """
+        The template tags `iso8601_to_duration` should return in hours the duration in ISO 8601
+        format. The value will represent the hours that will be rounded up.
+        """
+        iso8601_duration = random.choice(
+            ["PT10H01M", "PT10H10M", "PT10H20M", "PT10H40M", "PT10H59M"]
+        )
+
+        result = iso8601_to_duration(duration=iso8601_duration, unit="hours")
+
+        self.assertEqual(result, 11)
