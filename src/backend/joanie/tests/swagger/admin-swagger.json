@@ -4068,6 +4068,10 @@
                     },
                     "title": {
                         "type": "string"
+                    },
+                    "effort": {
+                        "type": "string",
+                        "nullable": true
                     }
                 },
                 "required": [
@@ -4288,6 +4292,10 @@
                     "title": {
                         "type": "string",
                         "minLength": 1
+                    },
+                    "effort": {
+                        "type": "string",
+                        "nullable": true
                     }
                 },
                 "required": [
@@ -6576,6 +6584,10 @@
                     "title": {
                         "type": "string",
                         "minLength": 1
+                    },
+                    "effort": {
+                        "type": "string",
+                        "nullable": true
                     }
                 }
             },

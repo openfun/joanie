@@ -4,10 +4,14 @@ Test suite for Course Admin API.
 import random
 import uuid
 from http import HTTPStatus
+import datetime
 
 from django.test import TestCase
 
+from timedelta_isoformat import timedelta as timedelta_isoformat
+
 from joanie.core import factories
+from joanie.core.models.courses import Course
 from joanie.tests import format_date
 
 
@@ -268,6 +272,9 @@ class CourseAdminApiTest(TestCase):
                     "width": course.cover.width,
                     "filename": course.cover.name,
                 },
+                "effort": timedelta_isoformat(
+                    seconds=course.effort.total_seconds()
+                ).isoformat(),
                 "title": course.title,
                 "organizations": [],
                 "product_relations": [],
@@ -300,7 +307,7 @@ class CourseAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
         organization = factories.OrganizationFactory()
-        product = factories.ProductFactory()
+        product = factories.ProductFactory(courses=[])
         data = {
             "code": "00001",
             "title": "Course 001",
@@ -346,6 +353,7 @@ class CourseAdminApiTest(TestCase):
             "code": "UPDATED-COURSE-001",
             "title": "Updated Course 001",
             "organization_ids": [str(organization.id)],
+            "effort": "PT10H"
         }
 
         response = self.client.put(
@@ -359,6 +367,7 @@ class CourseAdminApiTest(TestCase):
         self.assertEqual(content["id"], str(course.id))
         self.assertEqual(content["code"], "UPDATED-COURSE-001")
         self.assertEqual(content["title"], "Updated Course 001")
+        self.assertEqual(content["effort"], "PT10H")
         self.assertListEqual(
             content["organizations"],
             [
@@ -369,6 +378,12 @@ class CourseAdminApiTest(TestCase):
                 }
             ],
         )
+
+        courses_count = Course.objects.all().count()
+        course = Course.objects.all().first()
+
+        self.assertEqual(courses_count, 1)
+        self.assertEqual(course.effort, datetime.timedelta(seconds=36000))
 
     def test_admin_api_course_partially_update(self):
         """
@@ -413,3 +428,71 @@ class CourseAdminApiTest(TestCase):
         response = self.client.delete(f"/api/v1.0/admin/courses/{course.id}/")
 
         self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+
+    def test_admin_api_course_create_effort_with_iso_8601_formatted_value(self):
+        """
+        Staff user should be able to create a course and give an effort value formatted in ISO
+        8601. We make sure that the object is created, and we verify that the value saved in
+        database is of type python's `datetime.timedelta`.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        organization = factories.OrganizationFactory()
+        product = factories.ProductFactory(courses=[])
+        data = {
+            "effort": "PT10H", # represents 10 hours in ISO 8601
+            "code": "00001",
+            "title": "Course 001",
+            "organization_ids": [str(organization.id)],
+            "product_relations": [
+                {
+                    "product_id": str(product.id),
+                    "organization_ids": [str(organization.id)],
+                }
+            ],
+        }
+
+        response = self.client.post(
+            "/api/v1.0/admin/courses/", content_type="application/json", data=data
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+
+        courses_count = Course.objects.all().count()
+        course = Course.objects.all().first()
+
+        self.assertEqual(courses_count, 1)
+        self.assertNotEqual(course.effort, "PT10H")
+        self.assertEqual(course.effort, datetime.timedelta(seconds=36000))
+
+
+    def test_admin_api_course_create_effort_with_timedelta_value(self):
+        """
+        Staff user should be able to create a course and give python's `datetime.timedelta`
+        value for the effort.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        organization = factories.OrganizationFactory()
+        product = factories.ProductFactory(courses=[])
+        data = {
+            "effort": datetime.timedelta(seconds=36000), # represents 10 hours in ISO 8601
+            "code": "00001",
+            "title": "Course 001",
+            "organization_ids": [str(organization.id)],
+            "product_relations": [
+                {
+                    "product_id": str(product.id),
+                    "organization_ids": [str(organization.id)],
+                }
+            ],
+        }
+
+        response = self.client.post(
+            "/api/v1.0/admin/courses/", content_type="application/json", data=data
+        )
+
+        course = Course.objects.all().first()
+
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertEqual(course.effort, datetime.timedelta(seconds=36000))
