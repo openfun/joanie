@@ -41,7 +41,7 @@ export default function CoursesRunsListPage() {
       }
     >
       <SimpleCard>
-        <CoursesRunsList />
+        <CoursesRunsList changeUrlOnPageChange={true} />
       </SimpleCard>
     </DashboardLayoutPage>
   );
