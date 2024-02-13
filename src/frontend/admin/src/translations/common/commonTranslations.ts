@@ -36,6 +36,11 @@ export const commonTranslations = defineMessages({
     defaultMessage: "Delete",
     description: "Common delete label",
   },
+  state: {
+    id: "translations.common.commonTranslations.state",
+    defaultMessage: "State",
+    description: "Common state label",
+  },
   language: {
     id: "translations.common.commonTranslations.language",
     defaultMessage: "Language",
@@ -60,6 +65,21 @@ export const commonTranslations = defineMessages({
     id: "translations.common.commonTranslations.successCopy",
     defaultMessage: "Link added to your clipboard",
     description: "Text for the success click to copy notification",
+  },
+  none: {
+    id: "translations.common.commonTranslations.none",
+    defaultMessage: "None",
+    description: "None label",
+  },
+  yes: {
+    id: "translations.common.commonTranslations.yes",
+    defaultMessage: "Yes",
+    description: "Text for the yes word",
+  },
+  no: {
+    id: "translations.common.commonTranslations.no",
+    defaultMessage: "No",
+    description: "Text for the no word",
   },
   clickToView: {
     id: "translations.common.commonTranslations.clickToView",
