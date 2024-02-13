@@ -10,6 +10,7 @@ import {
   DTOContractDefinition,
 } from "@/services/api/models/ContractDefinition";
 import { ResourcesQuery } from "@/hooks/useResources/types";
+import { SelectOption } from "@/components/presentational/hook-form/RHFSelect";
 
 export const contractDefinitionRoutes: BaseEntityRoutesPaths = {
   get: (id: string, params: string = "") =>
@@ -20,11 +21,16 @@ export const contractDefinitionRoutes: BaseEntityRoutesPaths = {
   delete: (id: string) => `/contract-definitions/${id}/`,
 };
 
-export const ContractDefinitionRepository: AbstractRepository<
-  ContractDefinition,
-  ResourcesQuery,
-  DTOContractDefinition
-> = class ContractDefinitionRepository {
+interface Repository
+  extends AbstractRepository<
+    ContractDefinition,
+    ResourcesQuery,
+    DTOContractDefinition
+  > {
+  getAllLanguages: () => Promise<SelectOption[]>;
+}
+
+export const ContractDefinitionRepository: Repository = class ContractDefinitionRepository {
   static get(
     id: string,
     filters?: Maybe<ResourcesQuery>,
@@ -64,5 +70,19 @@ export const ContractDefinitionRepository: AbstractRepository<
       method: "PATCH",
       body: exportToFormData(payload),
     }).then(checkStatus);
+  }
+
+  static getAllLanguages(): Promise<SelectOption[]> {
+    return fetchApi(contractDefinitionRoutes.getAll(), {
+      method: "OPTIONS",
+    }).then(async (response) => {
+      const checkedResponse = await checkStatus(response);
+      const result: { value: string; display_name: string }[] =
+        checkedResponse.actions.POST.language.choices;
+      return result.map(({ value, display_name: label }) => ({
+        value,
+        label,
+      }));
+    });
   }
 };
