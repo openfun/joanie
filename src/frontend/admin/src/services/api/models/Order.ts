@@ -66,8 +66,6 @@ export type OrderMainInvoiceChildren = {
   updated_on: string;
 };
 
-export type OrderListQuery = ResourcesQuery & {};
-
 export type OrderQuery = ResourcesQuery & {};
 
 export enum OrderInvoiceTypesEnum {

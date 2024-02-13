@@ -10,6 +10,7 @@ import {
 import { Product } from "@/services/api/models/Product";
 import { ProductRepository } from "@/services/repositories/products/ProductRepository";
 import { DTOProductTargetCourseRelation } from "@/services/api/models/ProductTargetCourseRelation";
+import { Nullable } from "@/types/utils";
 
 const messages = defineMessages({
   errorUpdate: {
@@ -68,6 +69,10 @@ const messages = defineMessages({
   },
 });
 
+export type ProductResourceQuery = ResourcesQuery & {
+  state?: Nullable<number>;
+};
+
 /** const certifs = useProducts();
  * Joanie Api hook to retrieve/create/update/delete products
  * owned by the authenticated user.
@@ -98,7 +103,7 @@ const props: UseResourcesProps<Product> = {
 // eslint-disable-next-line react-hooks/rules-of-hooks
 
 export const useProducts = (
-  filters?: ResourcesQuery,
+  filters?: ProductResourceQuery,
   queryOptions?: QueryOptions<Product>,
 ) => {
   const intl = useIntl();

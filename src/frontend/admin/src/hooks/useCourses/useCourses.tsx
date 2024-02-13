@@ -48,6 +48,12 @@ export const useCoursesMessages = defineMessages({
   },
 });
 
+export type CourseResourceQuery = ResourcesQuery & {
+  state?: string;
+  organization_ids?: string[];
+  start?: string;
+};
+
 /** const course = useCourse();
  * Joanie Api hook to retrieve/create/update/delete courses
  * owned by the authenticated user.
@@ -78,7 +84,7 @@ const props: UseResourcesProps<Course> = {
 // eslint-disable-next-line react-hooks/rules-of-hooks
 
 export const useCourses = (
-  filters?: ResourcesQuery,
+  filters?: CourseResourceQuery,
   queryOptions?: QueryOptions<Course>,
 ) => {
   const custom = useResourcesCustom({ ...props, filters, queryOptions });

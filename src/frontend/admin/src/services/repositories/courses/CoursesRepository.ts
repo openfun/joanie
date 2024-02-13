@@ -1,7 +1,6 @@
 import queryString from "query-string";
 import { BaseEntityRoutesPaths } from "@/types/routes";
 import { AbstractRepository } from "@/services/repositories/AbstractRepository";
-import { ResourcesQuery } from "@/hooks/useResources";
 import { Maybe } from "@/types/utils";
 import { checkStatus, fetchApi } from "@/services/http/HttpService";
 import { Course, DTOCourse } from "@/services/api/models/Course";
@@ -10,11 +9,7 @@ import { DTOAccesses } from "@/services/api/models/Accesses";
 import { SelectOption } from "@/components/presentational/hook-form/RHFSelect";
 import { CourseRun } from "@/services/api/models/CourseRun";
 import { CourseRunResourcesQuery } from "@/hooks/useCourseRun/useCourseRun";
-
-export type CourseResourceQuery = ResourcesQuery & {
-  state?: string;
-  start?: string;
-};
+import { CourseResourceQuery } from "@/hooks/useCourses/useCourses";
 
 type CourseRoutes = BaseEntityRoutesPaths & {
   addUserAccess: (id: string) => string;

@@ -45,8 +45,9 @@ const messages = defineMessages({
   },
 });
 
-type ContractDefinitionRessourceQuery = ResourcesQuery & {
+export type ContractDefinitionResourceQuery = ResourcesQuery & {
   name?: string;
+  language?: string;
 };
 
 /**
@@ -55,7 +56,7 @@ type ContractDefinitionRessourceQuery = ResourcesQuery & {
  */
 const props: UseResourcesProps<
   ContractDefinition,
-  ContractDefinitionRessourceQuery
+  ContractDefinitionResourceQuery
 > = {
   queryKey: ["contractDefinitions"],
   apiInterface: () => ({
