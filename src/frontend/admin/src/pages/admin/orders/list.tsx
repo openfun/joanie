@@ -28,7 +28,7 @@ export default function OrderListPage() {
       ]}
       stretch={false}
     >
-      <OrdersList />
+      <OrdersList changeUrlOnPageChange={true} />
     </DashboardLayoutPage>
   );
 }

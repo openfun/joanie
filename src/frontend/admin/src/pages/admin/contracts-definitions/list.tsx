@@ -44,7 +44,7 @@ export default function ContractsDefinitionsListPage() {
         </Button>
       }
     >
-      <ContractsDefinitionsList />
+      <ContractsDefinitionsList changeUrlOnPageChange={true} />
     </DashboardLayoutPage>
   );
 }

@@ -41,7 +41,7 @@ export default function CoursesListPage() {
         </Button>
       }
     >
-      <CoursesList />
+      <CoursesList changeUrlOnPageChange={true} />
     </DashboardLayoutPage>
   );
 }

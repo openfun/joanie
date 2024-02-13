@@ -44,7 +44,7 @@ export default function CertificatesDefinitionsListPage() {
         </Button>
       }
     >
-      <CertificatesDefinitionsList />
+      <CertificatesDefinitionsList changeUrlOnPageChange={true} />
     </DashboardLayoutPage>
   );
 }

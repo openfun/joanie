@@ -43,7 +43,7 @@ export default function ProductListPage() {
       }
     >
       <SimpleCard>
-        <ProductList />
+        <ProductList changeUrlOnPageChange={true} />
       </SimpleCard>
     </DashboardLayoutPage>
   );
