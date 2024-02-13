@@ -120,6 +120,7 @@ export function DashboardLayoutNavAccount() {
           >
             {menuItems.map((item) => (
               <MenuItem
+                key={item.label}
                 onClick={() => {
                   handleCloseMenu();
                 }}
