@@ -417,6 +417,15 @@ class ContractDefinitionSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
+class ContractLightSerializer(serializers.ModelSerializer):
+    """Light serializer for Contract model."""
+
+    class Meta:
+        model = models.Contract
+        fields = ["id", "organization_signed_on", "student_signed_on"]
+        read_only_fields = fields
+
+
 class ContractSerializer(AbilitiesModelSerializer):
     """Serializer for Contract model serializer"""
 
@@ -775,6 +784,25 @@ class OrderGroupSerializer(serializers.ModelSerializer):
         return order_group.nb_seats - order_group.get_nb_binding_orders()
 
 
+class DefinitionResourcesProductSerializer(serializers.ModelSerializer):
+    """
+    A serializer for product model which only bind the related
+    definition resources.
+    """
+
+    certificate_definition_id = serializers.SlugRelatedField(
+        read_only=True, source="certificate_definition", slug_field="id"
+    )
+    contract_definition_id = serializers.SlugRelatedField(
+        read_only=True, source="contract_definition", slug_field="id"
+    )
+
+    class Meta:
+        model = models.Product
+        fields = ["id", "contract_definition_id", "certificate_definition_id"]
+        read_only_fields = fields
+
+
 class ProductSerializer(serializers.ModelSerializer):
     """
     Product serializer including
@@ -800,9 +828,7 @@ class ProductSerializer(serializers.ModelSerializer):
     target_courses = ProductTargetCourseRelationSerializer(
         read_only=True, many=True, source="target_course_relations"
     )
-    contract_definition = contract_definition = ContractDefinitionSerializer(
-        read_only=True
-    )
+    contract_definition = ContractDefinitionSerializer(read_only=True)
 
     class Meta:
         model = models.Product
@@ -995,26 +1021,30 @@ class NestedOrderCourseSerializer(serializers.ModelSerializer):
     id = serializers.CharField(read_only=True)
     organization = OrganizationSerializer(read_only=True, exclude_abilities=True)
     owner = UserLightSerializer(read_only=True)
+    product = DefinitionResourcesProductSerializer(read_only=True)
+    contract = ContractLightSerializer(read_only=True)
     course_id = serializers.SlugRelatedField(
         read_only=True, slug_field="id", source="course"
     )
     enrollment_id = serializers.SlugRelatedField(
         read_only=True, slug_field="id", source="enrollment"
     )
-    product_id = serializers.SlugRelatedField(
-        read_only=True, slug_field="id", source="product"
+    certificate_id = serializers.SlugRelatedField(
+        read_only=True, slug_field="id", source="certificate"
     )
 
     class Meta:
         model = models.Order
         fields = [
-            "id",
+            "certificate_id",
+            "contract",
+            "course_id",
             "created_on",
+            "enrollment_id",
+            "id",
             "organization",
             "owner",
-            "course_id",
-            "enrollment_id",
-            "product_id",
+            "product",
             "state",
         ]
         read_only_fields = fields

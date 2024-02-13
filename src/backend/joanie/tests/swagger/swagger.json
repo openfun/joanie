@@ -4296,6 +4296,37 @@
                     "title"
                 ]
             },
+            "ContractLight": {
+                "type": "object",
+                "description": "Light serializer for Contract model.",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "description": "primary key for the record as UUID"
+                    },
+                    "organization_signed_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true,
+                        "title": "Date and time the organization signed the contract"
+                    },
+                    "student_signed_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true,
+                        "title": "Date and time of issuance"
+                    }
+                },
+                "required": [
+                    "id",
+                    "organization_signed_on",
+                    "student_signed_on"
+                ]
+            },
             "CountryEnum": {
                 "enum": [
                     "AF",
@@ -4948,6 +4979,35 @@
                     }
                 }
             },
+            "DefinitionResourcesProduct": {
+                "type": "object",
+                "description": "A serializer for product model which only bind the related\ndefinition resources.",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "description": "primary key for the record as UUID"
+                    },
+                    "contract_definition_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "readOnly": true
+                    },
+                    "certificate_definition_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "certificate_definition_id",
+                    "contract_definition_id",
+                    "id"
+                ]
+            },
             "Enrollment": {
                 "type": "object",
                 "description": "Enrollment model serializer",
@@ -5286,8 +5346,24 @@
                 "type": "object",
                 "description": "Serializer for orders made on courses.",
                 "properties": {
-                    "id": {
+                    "certificate_id": {
                         "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "readOnly": true
+                    },
+                    "contract": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ContractLight"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "course_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
                         "readOnly": true
                     },
                     "created_on": {
@@ -5295,6 +5371,16 @@
                         "format": "date-time",
                         "readOnly": true,
                         "description": "date and time at which a record was created"
+                    },
+                    "enrollment_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "readOnly": true
+                    },
+                    "id": {
+                        "type": "string",
+                        "readOnly": true
                     },
                     "organization": {
                         "allOf": [
@@ -5312,22 +5398,12 @@
                         ],
                         "readOnly": true
                     },
-                    "course_id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "primary key for the record as UUID",
-                        "readOnly": true
-                    },
-                    "enrollment_id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "primary key for the record as UUID",
-                        "readOnly": true
-                    },
-                    "product_id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "primary key for the record as UUID",
+                    "product": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/DefinitionResourcesProduct"
+                            }
+                        ],
                         "readOnly": true
                     },
                     "state": {
@@ -5340,13 +5416,15 @@
                     }
                 },
                 "required": [
+                    "certificate_id",
+                    "contract",
                     "course_id",
                     "created_on",
                     "enrollment_id",
                     "id",
                     "organization",
                     "owner",
-                    "product_id",
+                    "product",
                     "state"
                 ]
             },

@@ -1411,6 +1411,7 @@ class NestedOrderCourseViewSet(NestedGenericViewSet, mixins.ListModelMixin):
         models.Order.objects.filter(state=enums.ORDER_STATE_VALIDATED)
         .select_related(
             "contract",
+            "certificate",
             "course",
             "enrollment",
             "organization",
