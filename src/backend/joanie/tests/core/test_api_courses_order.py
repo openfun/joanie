@@ -293,7 +293,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         )
         token = self.get_user_token(user.username)
 
-        with self.assertNumQueries(25):
+        with self.assertNumQueries(26):
             response = self.client.get(
                 f"/api/v1.0/courses/{relation_1.course.id}/orders/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -303,7 +303,9 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         self.assertEqual(response.json()["count"], 1)
         self.assertEqual(response.json()["results"][0]["id"], str(order.id))
         self.assertEqual(response.json()["results"][0]["course_id"], str(courses[0].id))
-        self.assertEqual(response.json()["results"][0]["product_id"], str(product.id))
+        self.assertEqual(
+            response.json()["results"][0]["product"]["id"], str(product.id)
+        )
         self.assertEqual(
             response.json()["results"][0]["owner"]["id"], str(user_learners[0].id)
         )
@@ -326,21 +328,26 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         ]
         organizations = factories.OrganizationFactory.create_batch(2)
         relation = factories.CourseProductRelationFactory(
+            product__certificate_definition=factories.CertificateDefinitionFactory(),
+            product__contract_definition=factories.ContractDefinitionFactory(),
             organizations=organizations,
         )
-        orders = [
-            factories.OrderFactory(
+        orders = []
+        for i in range(2):
+            order = factories.OrderFactory(
                 organization=organizations[i],
                 owner=user_learners[i],
                 product=relation.product,
                 course=relation.course,
                 state=enums.ORDER_STATE_VALIDATED,
             )
-            for i in range(2)
-        ]
+            factories.ContractFactory(order=order)
+            factories.OrderCertificateFactory(order=order)
+            orders += [order]
+
         token = self.get_user_token(user.username)
 
-        with self.assertNumQueries(25):
+        with self.assertNumQueries(27):
             response = self.client.get(
                 f"/api/v1.0/courses/{relation.course.id}/orders/"
                 f"?organization_id={organizations[1].id}",
@@ -349,7 +356,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 1)
-        self.assertCountEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 "count": 1,
@@ -359,6 +366,12 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
                     {
                         "id": str(orders[1].id),
                         "created_on": format_date(orders[1].created_on),
+                        "contract": {
+                            "id": str(orders[1].contract.id),
+                            "organization_signed_on": None,
+                            "student_signed_on": None,
+                        },
+                        "certificate_id": str(orders[1].certificate.id),
                         "organization": {
                             "id": str(organizations[1].id),
                             "code": str(organizations[1].code),
@@ -380,6 +393,24 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
                                 ),
                             },
                             "title": str(organizations[1].title),
+                            "address": None,
+                            "enterprise_code": organizations[1].enterprise_code,
+                            "activity_category_code": organizations[
+                                1
+                            ].activity_category_code,
+                            "representative": organizations[1].representative,
+                            "representative_profession": organizations[
+                                1
+                            ].representative_profession,
+                            "signatory_representative": organizations[
+                                1
+                            ].signatory_representative,
+                            "signatory_representative_profession": organizations[
+                                1
+                            ].signatory_representative_profession,
+                            "contact_phone": organizations[1].contact_phone,
+                            "contact_email": organizations[1].contact_email,
+                            "dpo_email": organizations[1].dpo_email,
                         },
                         "owner": {
                             "id": str(user_learners[1].id),
@@ -389,7 +420,15 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
                         },
                         "course_id": str(relation.course.id),
                         "enrollment_id": None,
-                        "product_id": str(relation.product.id),
+                        "product": {
+                            "id": str(relation.product.id),
+                            "contract_definition_id": str(
+                                relation.product.contract_definition_id
+                            ),
+                            "certificate_definition_id": str(
+                                relation.product.certificate_definition_id
+                            ),
+                        },
                         "state": str(orders[1].state),
                     }
                 ],
@@ -448,7 +487,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         )
         token = self.get_user_token(user.username)
 
-        with self.assertNumQueries(26):
+        with self.assertNumQueries(28):
             response = self.client.get(
                 f"/api/v1.0/courses/{courses[0].id}/orders/"
                 f"?product_id={product.id}",
@@ -458,17 +497,21 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 2)
         self.assertEqual(response.json()["results"][0]["course_id"], str(courses[0].id))
-        self.assertEqual(response.json()["results"][0]["product_id"], str(product.id))
+        self.assertEqual(
+            response.json()["results"][0]["product"]["id"], str(product.id)
+        )
         self.assertEqual(
             response.json()["results"][0]["owner"]["id"], str(user_learners[1].id)
         )
         self.assertEqual(response.json()["results"][1]["course_id"], str(courses[0].id))
-        self.assertEqual(response.json()["results"][1]["product_id"], str(product.id))
+        self.assertEqual(
+            response.json()["results"][1]["product"]["id"], str(product.id)
+        )
         self.assertEqual(
             response.json()["results"][1]["owner"]["id"], str(user_learners[0].id)
         )
 
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(4):
             response = self.client.get(
                 f"/api/v1.0/courses/{courses[1].id}/orders/"
                 f"?product_id={product.id}",
@@ -478,7 +521,9 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 1)
         self.assertEqual(response.json()["results"][0]["course_id"], str(courses[1].id))
-        self.assertEqual(response.json()["results"][0]["product_id"], str(product.id))
+        self.assertEqual(
+            response.json()["results"][0]["product"]["id"], str(product.id)
+        )
         self.assertEqual(
             response.json()["results"][0]["owner"]["id"], str(user_learners[2].id)
         )
@@ -535,7 +580,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         )
         token = self.get_user_token(user.username)
 
-        with self.assertNumQueries(26):
+        with self.assertNumQueries(28):
             response = self.client.get(
                 f"/api/v1.0/courses/{courses[0].id}/orders/"
                 f"?organization_id={organizations[0].id}&product_id={product.id}",
@@ -545,19 +590,23 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 2)
         self.assertEqual(response.json()["results"][0]["course_id"], str(courses[0].id))
-        self.assertEqual(response.json()["results"][0]["product_id"], str(product.id))
+        self.assertEqual(
+            response.json()["results"][0]["product"]["id"], str(product.id)
+        )
         self.assertEqual(
             response.json()["results"][0]["organization"]["id"],
             str(organizations[0].id),
         )
         self.assertEqual(response.json()["results"][1]["course_id"], str(courses[0].id))
-        self.assertEqual(response.json()["results"][1]["product_id"], str(product.id))
+        self.assertEqual(
+            response.json()["results"][1]["product"]["id"], str(product.id)
+        )
         self.assertEqual(
             response.json()["results"][1]["organization"]["id"],
             str(organizations[0].id),
         )
 
-        with self.assertNumQueries(25):
+        with self.assertNumQueries(26):
             response = self.client.get(
                 f"/api/v1.0/courses/{courses[1].id}/orders/"
                 f"?organization_id={organizations[1].id}&product_id={product.id}",
@@ -567,7 +616,9 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 1)
         self.assertEqual(response.json()["results"][0]["course_id"], str(courses[1].id))
-        self.assertEqual(response.json()["results"][0]["product_id"], str(product.id))
+        self.assertEqual(
+            response.json()["results"][0]["product"]["id"], str(product.id)
+        )
         self.assertEqual(
             response.json()["results"][0]["organization"]["id"],
             str(organizations[1].id),
@@ -634,9 +685,13 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 2)
-        self.assertEqual(response.json()["results"][0]["product_id"], str(product.id))
+        self.assertEqual(
+            response.json()["results"][0]["product"]["id"], str(product.id)
+        )
         self.assertEqual(response.json()["results"][0]["course_id"], str(course_1.id))
-        self.assertEqual(response.json()["results"][1]["product_id"], str(product.id))
+        self.assertEqual(
+            response.json()["results"][1]["product"]["id"], str(product.id)
+        )
         self.assertEqual(response.json()["results"][1]["course_id"], str(course_1.id))
 
         # should return 1 out of 3 learners
@@ -648,7 +703,9 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 1)
-        self.assertEqual(response.json()["results"][0]["product_id"], str(product.id))
+        self.assertEqual(
+            response.json()["results"][0]["product"]["id"], str(product.id)
+        )
         self.assertEqual(response.json()["results"][0]["course_id"], str(course_2.id))
 
     def test_api_courses_order_get_list_with_course_id_not_related_to_course_product_relation_id(
