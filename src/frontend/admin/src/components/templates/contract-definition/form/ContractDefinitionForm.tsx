@@ -12,7 +12,6 @@ import { ErrorMessage } from "@hookform/error-message";
 import FormHelperText from "@mui/material/FormHelperText";
 import { RHFProvider } from "@/components/presentational/hook-form/RHFProvider";
 import { RHFTextField } from "@/components/presentational/hook-form/RHFTextField";
-import { RHFSelect } from "@/components/presentational/hook-form/RHFSelect";
 import { ServerSideErrorForm } from "@/types/utils";
 import { genericUpdateFormError } from "@/utils/forms";
 import { useContractDefinitions } from "@/hooks/useContractDefinitions/useContractDefinitions";
@@ -22,7 +21,7 @@ import {
 } from "@/services/api/models/ContractDefinition";
 import { MarkdownComponent } from "@/components/presentational/inputs/markdown/MardownComponent";
 import { removeEOL } from "@/utils/string";
-import { languageTranslations } from "@/translations/common/languageTranslations";
+import { RHFContractDefinitionLanguage } from "@/components/templates/contract-definition/inputs/RHFContractDefinitionLanguage";
 
 const messages = defineMessages({
   informationText: {
@@ -155,20 +154,7 @@ export function ContractDefinitionForm({
             />
           </Grid>
           <Grid xs={12}>
-            <RHFSelect
-              name="language"
-              options={[
-                {
-                  label: intl.formatMessage(languageTranslations.french),
-                  value: "fr-fr",
-                },
-                {
-                  label: intl.formatMessage(languageTranslations.english),
-                  value: "en-us",
-                },
-              ]}
-              label={intl.formatMessage(messages.languageLabel)}
-            />
+            <RHFContractDefinitionLanguage name="language" />
           </Grid>
           <Grid xs={12}>
             <RHFTextField

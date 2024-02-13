@@ -2,14 +2,21 @@ import * as React from "react";
 import { defineMessages, useIntl } from "react-intl";
 import { useRouter } from "next/router";
 import { GridColDef } from "@mui/x-data-grid";
-import { TableComponent } from "@/components/presentational/table/TableComponent";
+import {
+  DefaultTableProps,
+  TableComponent,
+} from "@/components/presentational/table/TableComponent";
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { CertificateDefinition } from "@/services/api/models/CertificateDefinition";
-import { useCertificateDefinitions } from "@/hooks/useCertificateDefinitions/useCertificateDefinitions";
+import {
+  CertificateDefinitionResourceQuery,
+  useCertificateDefinitions,
+} from "@/hooks/useCertificateDefinitions/useCertificateDefinitions";
 import { CustomLink } from "@/components/presentational/link/CustomLink";
 import { commonTranslations } from "@/translations/common/commonTranslations";
 import { SimpleCard } from "@/components/presentational/card/SimpleCard";
 import { usePaginatedTableResource } from "@/components/presentational/table/usePaginatedTableResource";
+import { CertificateDefinitionFilters } from "@/components/templates/certificates-definitions/filters/CertificateDefinitionFilters";
 
 const messages = defineMessages({
   nameHeader: {
@@ -24,12 +31,19 @@ const messages = defineMessages({
   },
 });
 
-export function CertificatesDefinitionsList() {
+type Props = DefaultTableProps<CertificateDefinition>;
+
+export function CertificatesDefinitionsList(props: Props) {
   const intl = useIntl();
-  const paginatedResource = usePaginatedTableResource<CertificateDefinition>({
-    useResource: useCertificateDefinitions,
-  });
   const { push } = useRouter();
+
+  const paginatedResource = usePaginatedTableResource<
+    CertificateDefinition,
+    CertificateDefinitionResourceQuery
+  >({
+    useResource: useCertificateDefinitions,
+    changeUrlOnPageChange: props.changeUrlOnPageChange,
+  });
 
   const columns: GridColDef<CertificateDefinition>[] = [
     {
@@ -67,6 +81,11 @@ export function CertificatesDefinitionsList() {
   return (
     <SimpleCard>
       <TableComponent
+        {...paginatedResource.tableProps}
+        {...props}
+        filters={
+          <CertificateDefinitionFilters {...paginatedResource.filtersProps} />
+        }
         columns={columns}
         columnBuffer={3}
         onEditClick={(certificateDefinition: CertificateDefinition) => {
@@ -75,7 +94,6 @@ export function CertificatesDefinitionsList() {
           }
           push(PATH_ADMIN.certificates.edit(certificateDefinition.id));
         }}
-        {...paginatedResource.tableProps}
         onUseAsTemplateClick={(certificateDefinition) => {
           if (certificateDefinition.id === undefined) {
             return;

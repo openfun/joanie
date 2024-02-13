@@ -2,14 +2,21 @@ import * as React from "react";
 import { defineMessages, useIntl } from "react-intl";
 import { useRouter } from "next/router";
 import { GridColDef } from "@mui/x-data-grid";
-import { TableComponent } from "@/components/presentational/table/TableComponent";
+import {
+  DefaultTableProps,
+  TableComponent,
+} from "@/components/presentational/table/TableComponent";
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { CustomLink } from "@/components/presentational/link/CustomLink";
 import { commonTranslations } from "@/translations/common/commonTranslations";
 import { SimpleCard } from "@/components/presentational/card/SimpleCard";
-import { useContractDefinitions } from "@/hooks/useContractDefinitions/useContractDefinitions";
+import {
+  ContractDefinitionResourceQuery,
+  useContractDefinitions,
+} from "@/hooks/useContractDefinitions/useContractDefinitions";
 import { ContractDefinition } from "@/services/api/models/ContractDefinition";
 import { usePaginatedTableResource } from "@/components/presentational/table/usePaginatedTableResource";
+import { ContractDefinitionFilters } from "@/components/templates/contract-definition/filters/ContractDefinitionFilters";
 
 const messages = defineMessages({
   languageHeader: {
@@ -24,10 +31,16 @@ const messages = defineMessages({
   },
 });
 
-export function ContractsDefinitionsList() {
+type Props = DefaultTableProps<ContractDefinition>;
+
+export function ContractsDefinitionsList(props: Props) {
   const intl = useIntl();
-  const paginatedResource = usePaginatedTableResource<ContractDefinition>({
+  const paginatedResource = usePaginatedTableResource<
+    ContractDefinition,
+    ContractDefinitionResourceQuery
+  >({
     useResource: useContractDefinitions,
+    changeUrlOnPageChange: props.changeUrlOnPageChange,
   });
 
   const { push } = useRouter();
@@ -60,7 +73,11 @@ export function ContractsDefinitionsList() {
     <SimpleCard>
       <TableComponent
         {...paginatedResource.tableProps}
+        {...props}
         columns={columns}
+        filters={
+          <ContractDefinitionFilters {...paginatedResource.filtersProps} />
+        }
         columnBuffer={3}
         onEditClick={(contractsDefinition: ContractDefinition) => {
           if (contractsDefinition.id === undefined) {
