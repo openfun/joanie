@@ -62,11 +62,17 @@ test.describe("Course product relation", () => {
     await page.getByRole("link", { name: course.title }).click();
 
     await page.getByRole("button", { name: "Add a course run" }).click();
-    await expect(page.getByRole("textbox", { name: "Title" })).toBeVisible();
-    await expect(page.getByLabel("Course", { exact: true })).toBeDisabled();
-    await expect(page.getByLabel("Course", { exact: true })).toHaveValue(
-      course.title,
-    );
+    const modalLocator = page.getByTestId("target-course-runs-modal");
+    await expect(modalLocator).toBeVisible();
+    await expect(
+      modalLocator.getByRole("textbox", { name: "Title" }),
+    ).toBeVisible();
+    await expect(
+      modalLocator.getByLabel("Course", { exact: true }),
+    ).toBeDisabled();
+    await expect(
+      modalLocator.getByLabel("Course", { exact: true }),
+    ).toHaveValue(course.title);
   });
   test("Copy url inside the clipboard", async ({ page, context }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);

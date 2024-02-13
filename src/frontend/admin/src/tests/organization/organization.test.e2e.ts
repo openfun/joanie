@@ -9,6 +9,8 @@ import { PATH_ADMIN } from "@/utils/routes/path";
 import { ORGANIZATION_OPTIONS_REQUEST_RESULT } from "@/tests/mocks/organizations/organization-mock";
 import { User } from "@/services/api/models/User";
 
+const searchPlaceholder = "Search by title, code";
+
 test.describe("Organization Form", () => {
   let store = getOrganizationScenarioStore();
   test.beforeEach(async ({ page }) => {
@@ -100,7 +102,7 @@ test.describe("Organization List", () => {
       page.getByRole("heading", { name: "Organizations" }),
     ).toHaveCount(1);
 
-    await expect(page.getByPlaceholder("Search...")).toBeVisible();
+    await expect(page.getByPlaceholder(searchPlaceholder)).toBeVisible();
     await Promise.all(
       store.list.map(async (org) => {
         await expect(page.getByText(org.title)).toBeVisible();
@@ -127,14 +129,14 @@ test.describe("Organization List", () => {
       page.getByRole("heading", { name: "Organizations" }),
     ).toHaveCount(1);
 
-    await expect(page.getByPlaceholder("Search...")).toBeVisible();
+    await expect(page.getByPlaceholder(searchPlaceholder)).toBeVisible();
     await expect(page.getByText(store.list[1].title)).toBeVisible();
-    await page.getByPlaceholder("Search...").fill(store.list[0].title);
+    await page.getByPlaceholder(searchPlaceholder).fill(store.list[0].title);
     await expect(page.getByTestId("circular-loader-container")).toBeVisible();
     await expect(page.getByTestId("circular-loader-container")).toBeHidden();
     await expect(page.getByText(store.list[1].title)).toBeHidden();
     await expect(page.getByText(store.list[0].title)).toBeVisible();
-    await page.getByPlaceholder("Search...").fill("");
+    await page.getByPlaceholder(searchPlaceholder).fill("");
     await expect(page.getByTestId("circular-loader-container")).toBeVisible();
     await expect(page.getByTestId("circular-loader-container")).toBeHidden();
     await expect(page.getByText(store.list[1].title)).toBeVisible();

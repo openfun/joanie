@@ -7,6 +7,7 @@ import {
 } from "@/services/api/models/ContractDefinition";
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { expectHaveClasses } from "@/tests/utils";
+import { CONTRACT_DEFINITION_OPTIONS_REQUEST_RESULT } from "@/tests/mocks/contract-definitions/contract-definition-mocks";
 
 const contractDefinitionApiUrl =
   "http://localhost:8071/api/v1.0/admin/contract-definitions/";
@@ -19,6 +20,7 @@ test.describe("Contract definition form", () => {
     await mockPlaywrightCrud<ContractDefinition, DTOContractDefinition>({
       data: store.list,
       routeUrl: contractDefinitionApiUrl,
+      optionsResult: CONTRACT_DEFINITION_OPTIONS_REQUEST_RESULT,
       page,
       createCallback: store.postUpdate,
       updateCallback: store.postUpdate,
@@ -51,7 +53,7 @@ test.describe("Contract definition form", () => {
 
     await expect(page.getByTestId("InfoOutlinedIcon")).toHaveCount(1);
     await expect(page.getByLabel("Title", { exact: true })).toHaveCount(1);
-    await page.getByLabel("Language").click();
+    await page.getByTestId("contract-definition-language-input").click();
     await expect(page.getByRole("option", { name: "English" })).toHaveCount(1);
     await expect(page.getByRole("option", { name: "French" })).toHaveCount(1);
     await page.getByRole("option", { name: "French" }).click();
