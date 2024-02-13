@@ -1,14 +1,18 @@
 import * as React from "react";
 import { GridColDef } from "@mui/x-data-grid";
 import { defineMessages, useIntl } from "react-intl";
-import { TableComponent } from "@/components/presentational/table/TableComponent";
+import {
+  DefaultTableProps,
+  TableComponent,
+} from "@/components/presentational/table/TableComponent";
 import { SimpleCard } from "@/components/presentational/card/SimpleCard";
 import { usePaginatedTableResource } from "@/components/presentational/table/usePaginatedTableResource";
 import { OrderListItem } from "@/services/api/models/Order";
-import { useOrders } from "@/hooks/useOrders/useOrders";
+import { OrderListQuery, useOrders } from "@/hooks/useOrders/useOrders";
 import { CustomLink } from "@/components/presentational/link/CustomLink";
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { commonTranslations } from "@/translations/common/commonTranslations";
+import { OrderFilters } from "@/components/templates/orders/filters/OrderFilters";
 
 const messages = defineMessages({
   id: {
@@ -38,10 +42,17 @@ const messages = defineMessages({
   },
 });
 
-export function OrdersList() {
+type Props = DefaultTableProps<OrderListItem>;
+
+export function OrdersList(props: Props) {
   const intl = useIntl();
-  const paginatedResource = usePaginatedTableResource<OrderListItem>({
+
+  const paginatedResource = usePaginatedTableResource<
+    OrderListItem,
+    OrderListQuery
+  >({
     useResource: useOrders,
+    changeUrlOnPageChange: props.changeUrlOnPageChange,
   });
 
   const columns: GridColDef[] = [
@@ -81,11 +92,13 @@ export function OrdersList() {
     <SimpleCard>
       <TableComponent
         {...paginatedResource.tableProps}
+        {...props}
+        filters={<OrderFilters {...paginatedResource.filtersProps} />}
         enableEdit={false}
         columns={columns}
         columnBuffer={5}
-        getEntityName={(organization) => {
-          return organization.title;
+        getEntityName={(order) => {
+          return order.organization_title;
         }}
       />
     </SimpleCard>

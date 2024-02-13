@@ -2,14 +2,18 @@ import * as React from "react";
 import { defineMessages, useIntl } from "react-intl";
 import { useRouter } from "next/router";
 import { GridColDef } from "@mui/x-data-grid";
-import { TableComponent } from "@/components/presentational/table/TableComponent";
+import {
+  DefaultTableProps,
+  TableComponent,
+} from "@/components/presentational/table/TableComponent";
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { Course } from "@/services/api/models/Course";
-import { useCourses } from "@/hooks/useCourses/useCourses";
+import { CourseResourceQuery, useCourses } from "@/hooks/useCourses/useCourses";
 import { CustomLink } from "@/components/presentational/link/CustomLink";
 import { commonTranslations } from "@/translations/common/commonTranslations";
 import { SimpleCard } from "@/components/presentational/card/SimpleCard";
 import { usePaginatedTableResource } from "@/components/presentational/table/usePaginatedTableResource";
+import { CourseFilters } from "@/components/templates/courses/filters/CourseFilters";
 
 const messages = defineMessages({
   codeHeader: {
@@ -29,10 +33,16 @@ const messages = defineMessages({
   },
 });
 
-export function CoursesList() {
+type Props = DefaultTableProps<Course>;
+
+export function CoursesList(props: Props) {
   const intl = useIntl();
   const { push } = useRouter();
-  const paginatedResource = usePaginatedTableResource<Course>({
+
+  const paginatedResource = usePaginatedTableResource<
+    Course,
+    CourseResourceQuery
+  >({
     useResource: useCourses,
   });
 
@@ -69,6 +79,8 @@ export function CoursesList() {
     <SimpleCard>
       <TableComponent
         {...paginatedResource.tableProps}
+        {...props}
+        filters={<CourseFilters {...paginatedResource.filtersProps} />}
         columns={columns}
         columnBuffer={4}
         getEntityName={(course) => {

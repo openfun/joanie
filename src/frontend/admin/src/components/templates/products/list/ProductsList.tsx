@@ -2,13 +2,20 @@ import * as React from "react";
 import { GridColDef } from "@mui/x-data-grid";
 import { defineMessages, useIntl } from "react-intl";
 import { useRouter } from "next/router";
-import { TableComponent } from "@/components/presentational/table/TableComponent";
+import {
+  DefaultTableProps,
+  TableComponent,
+} from "@/components/presentational/table/TableComponent";
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { CustomLink } from "@/components/presentational/link/CustomLink";
 import { commonTranslations } from "@/translations/common/commonTranslations";
-import { useProducts } from "@/hooks/useProducts/useProducts";
+import {
+  ProductResourceQuery,
+  useProducts,
+} from "@/hooks/useProducts/useProducts";
 import { Product } from "@/services/api/models/Product";
 import { usePaginatedTableResource } from "@/components/presentational/table/usePaginatedTableResource";
+import { ProductFilers } from "@/components/templates/products/filters/ProductFilters";
 
 const messages = defineMessages({
   priceHeader: {
@@ -28,11 +35,17 @@ const messages = defineMessages({
   },
 });
 
-export function ProductList() {
+type Props = DefaultTableProps<Product>;
+
+export function ProductList(props: Props) {
   const intl = useIntl();
   const { push } = useRouter();
-  const paginatedResource = usePaginatedTableResource({
+  const paginatedResource = usePaginatedTableResource<
+    Product,
+    ProductResourceQuery
+  >({
     useResource: useProducts,
+    changeUrlOnPageChange: props.changeUrlOnPageChange,
   });
 
   const columns: GridColDef[] = [
@@ -65,6 +78,8 @@ export function ProductList() {
   return (
     <TableComponent
       {...paginatedResource.tableProps}
+      {...props}
+      filters={<ProductFilers {...paginatedResource.filtersProps} />}
       columns={columns}
       columnBuffer={3}
       onEditClick={(product: Product) => {
