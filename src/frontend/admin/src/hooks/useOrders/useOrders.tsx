@@ -1,15 +1,11 @@
 import { defineMessages } from "react-intl";
 import {
+  ResourcesQuery,
   useResource,
   useResources,
   UseResourcesProps,
 } from "@/hooks/useResources";
-import {
-  Order,
-  OrderListItem,
-  OrderListQuery,
-  OrderQuery,
-} from "@/services/api/models/Order";
+import { Order, OrderListItem, OrderQuery } from "@/services/api/models/Order";
 import { OrderRepository } from "@/services/repositories/orders/OrderRepository";
 
 export const useOrdersMessages = defineMessages({
@@ -47,6 +43,18 @@ export const useOrdersMessages = defineMessages({
     defaultMessage: "Cannot find the order",
   },
 });
+
+export type OrderListQuery = ResourcesQuery & {
+  product_ids?: string[];
+  course_ids?: string[];
+  organization_ids?: string[];
+  owner_ids?: string[];
+  productId?: string;
+  courseId?: string;
+  organizationId?: string;
+  ownerId?: string;
+  state?: string;
+};
 
 const listProps: UseResourcesProps<OrderListItem, OrderListQuery> = {
   queryKey: ["ordersList"],

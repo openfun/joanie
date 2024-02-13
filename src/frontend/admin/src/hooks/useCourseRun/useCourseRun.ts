@@ -49,8 +49,12 @@ export const useCourseRunMessages = defineMessages({
 
 export type CourseRunResourcesQuery = ResourcesQuery & {
   courseId?: string;
+  course_ids?: string[];
+  organization_ids?: string[];
   state?: Nullable<string>;
   start?: Nullable<string>;
+  is_gradable?: Nullable<boolean>;
+  is_listed?: Nullable<boolean>;
 };
 
 /**

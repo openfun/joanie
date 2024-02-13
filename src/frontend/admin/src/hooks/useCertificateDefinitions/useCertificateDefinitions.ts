@@ -45,8 +45,9 @@ const messages = defineMessages({
   },
 });
 
-type CertificateDefintionRessourceQuery = ResourcesQuery & {
+export type CertificateDefinitionResourceQuery = ResourcesQuery & {
   name?: string;
+  template?: string;
 };
 
 /**
@@ -55,7 +56,7 @@ type CertificateDefintionRessourceQuery = ResourcesQuery & {
  */
 const props: UseResourcesProps<
   CertificateDefinition,
-  CertificateDefintionRessourceQuery
+  CertificateDefinitionResourceQuery
 > = {
   queryKey: ["certificatesDefinitions"],
   apiInterface: () => ({
