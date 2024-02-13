@@ -258,7 +258,6 @@ test.describe("Certificate definition list", () => {
     // await expect(page.getByText(certificateDefinition.name)).toBeVisible();
     await Promise.all(
       store.list.map(async (certificateDefinition, index) => {
-        // console.log(certificateDefinition.title);
         if (index > 19) {
           return;
         }
@@ -269,7 +268,6 @@ test.describe("Certificate definition list", () => {
     await page.getByLabel("Go to next page").click();
     await Promise.all(
       store.list.map(async (certificateDefinition, index) => {
-        // console.log(certificateDefinition.title);
         if (index <= 19) {
           return;
         }

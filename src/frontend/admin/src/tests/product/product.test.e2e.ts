@@ -244,6 +244,7 @@ test.describe("Product form", () => {
 
     const course = store.courses[0];
     const courseRuns = course.courses_runs as CourseRun[];
+
     await mockCourseRunsFromCourse(page, courseRuns);
     await mockTargetCourses(
       page,
