@@ -1,6 +1,11 @@
 import { defineMessages } from "react-intl";
 
 export const productFormMessages = defineMessages({
+  microCredentialTitle: {
+    id: "components.templates.products.form.sections.ProductFormTypeSection.microCredentialTitle",
+    defaultMessage: "Microcredential",
+    description: "Title for the credential product type",
+  },
   mainSectionWizardTitle: {
     id: "components.templates.products.form.translations.mainSectionWizardTitle",
     defaultMessage: "Main",

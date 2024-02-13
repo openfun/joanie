@@ -19,6 +19,7 @@ import {
 import { usePaginatedTableResource } from "@/components/presentational/table/usePaginatedTableResource";
 import { commonTranslations } from "@/translations/common/commonTranslations";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
+import { CourseRunFilters } from "@/components/templates/courses-runs/filters/CourseRunFilters";
 
 type Props = DefaultTableProps<CourseRun> & {
   courseId?: string;
@@ -35,6 +36,7 @@ export function CoursesRunsList({ courseId, ...props }: Props) {
     CourseRunResourcesQuery
   >({
     useResource: useCoursesRuns,
+    changeUrlOnPageChange: props.changeUrlOnPageChange,
     filters: { courseId },
   });
 
@@ -54,6 +56,7 @@ export function CoursesRunsList({ courseId, ...props }: Props) {
     <TableComponent
       {...paginatedResource.tableProps}
       {...props}
+      filters={<CourseRunFilters {...paginatedResource.filtersProps} />}
       columns={columns}
       columnBuffer={6}
       getOptions={(courseRun) => {

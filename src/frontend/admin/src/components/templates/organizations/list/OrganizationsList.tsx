@@ -3,13 +3,17 @@ import { GridColDef } from "@mui/x-data-grid";
 import { defineMessages, useIntl } from "react-intl";
 import { useRouter } from "next/router";
 import { Organization } from "@/services/api/models/Organization";
-import { TableComponent } from "@/components/presentational/table/TableComponent";
+import {
+  DefaultTableProps,
+  TableComponent,
+} from "@/components/presentational/table/TableComponent";
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { useOrganizations } from "@/hooks/useOrganizations/useOrganizations";
 import { CustomLink } from "@/components/presentational/link/CustomLink";
 import { commonTranslations } from "@/translations/common/commonTranslations";
 import { SimpleCard } from "@/components/presentational/card/SimpleCard";
 import { usePaginatedTableResource } from "@/components/presentational/table/usePaginatedTableResource";
+import { OrganizationFilters } from "@/components/templates/organizations/filters/OrganizationFilters";
 
 const messages = defineMessages({
   codeHeader: {
@@ -24,11 +28,14 @@ const messages = defineMessages({
   },
 });
 
-export function OrganizationsList() {
+type Props = DefaultTableProps<Organization>;
+
+export function OrganizationsList(props: Props) {
   const intl = useIntl();
   const { push } = useRouter();
   const paginatedResource = usePaginatedTableResource<Organization>({
     useResource: useOrganizations,
+    changeUrlOnPageChange: props.changeUrlOnPageChange,
   });
 
   const columns: GridColDef[] = [
@@ -58,6 +65,13 @@ export function OrganizationsList() {
     <SimpleCard>
       <TableComponent
         {...paginatedResource.tableProps}
+        {...props}
+        filters={
+          <OrganizationFilters
+            onSearch={paginatedResource.tableProps.onSearch}
+            loading={paginatedResource.tableProps.loading}
+          />
+        }
         columns={columns}
         columnBuffer={3}
         onEditClick={(organization: Organization) =>
