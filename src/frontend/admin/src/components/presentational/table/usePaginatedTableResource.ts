@@ -12,6 +12,7 @@ interface Props<T extends Resource, TFilters extends ResourcesQuery> {
   initialPage?: number;
   useResource: ReturnType<typeof useResources<T>>;
   filters?: TFilters;
+  changeUrlOnPageChange?: boolean;
 }
 
 export const usePaginatedTableResource = <
@@ -22,6 +23,7 @@ export const usePaginatedTableResource = <
   initialPage = 0,
   useResource,
   filters,
+  changeUrlOnPageChange = false,
 }: Props<T, TFilters>) => {
   const router = useRouter();
   const initialQueryPage = router.query.page
@@ -30,12 +32,13 @@ export const usePaginatedTableResource = <
   const [query, setQuery] = useState<Maybe<string>>();
   const [currentPage, setCurrentPage] = useState<number>(initialQueryPage);
   const [pageSize, setPageSize] = useState(initialItemsPerPage);
+  const [listFilters, setListFilters] = useState<Maybe<TFilters>>(filters);
 
   const resource = useResource(
     {
       query,
       page: currentPage + 1,
-      ...filters,
+      ...listFilters,
     },
     { placeholderData: keepPreviousData },
   );
@@ -45,7 +48,15 @@ export const usePaginatedTableResource = <
     setCurrentPage(0);
   }, DEFAULT_SEARCH_DEBOUNCE);
 
+  const onFilter = (newFilters: TFilters) => {
+    setCurrentPage(0);
+    setListFilters({ ...listFilters, ...newFilters });
+  };
+
   useEffect(() => {
+    if (!changeUrlOnPageChange) {
+      return;
+    }
     router.push({ query: { page: currentPage + 1 } }, undefined, {
       shallow: true,
     });
@@ -53,8 +64,14 @@ export const usePaginatedTableResource = <
 
   return {
     ...resource,
+    filtersProps: {
+      onSearch: debouncedSetQuery,
+      onFilter,
+      loading: resource.states.fetching ?? false,
+    },
     tableProps: {
       onSearch: debouncedSetQuery,
+      setFilter: setListFilters,
       loading: resource.states.fetching ?? false,
       rowCount: resource?.meta?.pagination?.count ?? 0,
       onPaginationModelChange: (pagination: GridPaginationModel) => {

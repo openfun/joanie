@@ -1,15 +1,15 @@
 import * as React from "react";
-import { useState } from "react";
+import { ReactElement, useState } from "react";
 import { DataGrid, GridColDef, GridRowSelectionModel } from "@mui/x-data-grid";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
-import InputAdornment from "@mui/material/InputAdornment";
-import TextField from "@mui/material/TextField";
-import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import { useIntl } from "react-intl";
 import { useDebouncedCallback } from "use-debounce";
 import { DataGridProps } from "@mui/x-data-grid/models/props/DataGridProps";
 import { GridValidRowModel } from "@mui/x-data-grid/models/gridRows";
+import TextField from "@mui/material/TextField";
+import InputAdornment from "@mui/material/InputAdornment";
+import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import {
   TableDefaultActions,
   TableDefaultMenuItem,
@@ -24,9 +24,11 @@ export type DefaultTableProps<T extends GridValidRowModel> = {
   selectAllByDefault?: boolean;
   onSelectRows?: (ids: string[], items: T[]) => void;
   defaultSelectedRows?: string[];
-  multiSelectActions?: React.ReactElement;
-  topActions?: React.ReactElement;
+  filters?: ReactElement;
+  multiSelectActions?: ReactElement;
+  topActions?: ReactElement;
   enableSearch?: boolean;
+  changeUrlOnPageChange?: boolean;
 };
 
 export type TableComponentProps<T extends GridValidRowModel> =
@@ -40,7 +42,7 @@ export type TableComponentProps<T extends GridValidRowModel> =
       onRemoveClick?: (row: T) => void;
       getEntityName?: (row: T) => string;
       onSearch?: (term: string) => void;
-      multiSelectActions?: React.ReactElement;
+      multiSelectActions?: ReactElement;
       loading?: boolean;
       columnBuffer?: number;
       getOptions?: (row: T) => TableDefaultMenuItem[];
@@ -143,7 +145,9 @@ export function TableComponent<T extends GridValidRowModel>({
         {props.topActions && (
           <Box mb={enableSearch ? 2 : 0}>{props.topActions}</Box>
         )}
-        {enableSearch && props.onSearch && (
+
+        {props.filters}
+        {enableSearch && props.onSearch && !props.filters && (
           <TextField
             margin="none"
             autoComplete="off"
@@ -226,13 +230,13 @@ export function TableComponent<T extends GridValidRowModel>({
               },
             },
           }}
-          pageSizeOptions={[20]}
           autoHeight={true}
           localeText={{
             noRowsLabel: intl.formatMessage(tableTranslations.noRows),
             footerRowSelected: (count) =>
               intl.formatMessage(tableTranslations.rowsSelected, { count }),
           }}
+          pageSizeOptions={[DEFAULT_PAGE_SIZE]}
           checkboxSelection={enableSelect}
           onRowSelectionModelChange={(newRowSelectionModel) => {
             onSelectItems(newRowSelectionModel as string[]);
