@@ -14,6 +14,8 @@ import { expectHaveClasses } from "@/tests/utils";
 const certificateDefinitionApiUrl =
   "http://localhost:8071/api/v1.0/admin/certificate-definitions/";
 
+const searchPlaceholder = "Search by title or name";
+
 test.describe("Certificate definition form", () => {
   let store = getCertificateDefinitionScenarioStore();
 
@@ -253,12 +255,11 @@ test.describe("Certificate definition list", () => {
     page,
   }) => {
     await page.goto(PATH_ADMIN.certificates.list);
-    await expect(page.getByPlaceholder("Search...")).toBeVisible();
+    await expect(page.getByPlaceholder(searchPlaceholder)).toBeVisible();
 
     // await expect(page.getByText(certificateDefinition.name)).toBeVisible();
     await Promise.all(
       store.list.map(async (certificateDefinition, index) => {
-        // console.log(certificateDefinition.title);
         if (index > 19) {
           return;
         }
@@ -269,7 +270,6 @@ test.describe("Certificate definition list", () => {
     await page.getByLabel("Go to next page").click();
     await Promise.all(
       store.list.map(async (certificateDefinition, index) => {
-        // console.log(certificateDefinition.title);
         if (index <= 19) {
           return;
         }
@@ -313,7 +313,7 @@ test.describe("Certificate definition list", () => {
       searchResult: store.list[1],
     });
     await page.goto(PATH_ADMIN.certificates.list);
-    await expect(page.getByPlaceholder("Search...")).toBeVisible();
+    await expect(page.getByPlaceholder(searchPlaceholder)).toBeVisible();
 
     await Promise.all(
       store.list.map(async (certificateDefinition) => {
@@ -322,8 +322,8 @@ test.describe("Certificate definition list", () => {
       }),
     );
 
-    await page.getByPlaceholder("Search...").click();
-    await page.getByPlaceholder("Search...").fill("search");
+    await page.getByPlaceholder(searchPlaceholder).click();
+    await page.getByPlaceholder(searchPlaceholder).fill("search");
     await expect(page.getByTestId("circular-loader-container")).toBeVisible();
     await expect(page.getByTestId("circular-loader-container")).toBeHidden();
 
@@ -345,8 +345,8 @@ test.describe("Certificate definition list", () => {
       }),
     );
 
-    await page.getByPlaceholder("Search...").click();
-    await page.getByPlaceholder("Search...").fill("");
+    await page.getByPlaceholder(searchPlaceholder).click();
+    await page.getByPlaceholder(searchPlaceholder).fill("");
     await Promise.all(
       store.list.map(async (certificateDefinition) => {
         await expect(page.getByText(certificateDefinition.title)).toBeVisible();

@@ -6,10 +6,11 @@ type Props<T extends WithId, Payload> = {
   routeUrl: string;
   page: Page;
   searchTimeout?: number;
+  forceFiltersMode?: boolean;
   updateCallback?: (payload: Payload, item?: T) => T;
   createCallback?: (payload: Payload) => T;
   optionsResult?: any;
-  searchResult?: T;
+  searchResult?: T | T[];
   getByIdResult?: T;
   data: T[];
 };
@@ -39,6 +40,7 @@ export const catchAllIdRegex = (
 export const mockPlaywrightCrud = async <T extends WithId, Payload>({
   routeUrl,
   searchTimeout = 0,
+  forceFiltersMode = false,
   page,
   ...props
 }: Props<T, Payload>) => {
@@ -64,8 +66,13 @@ export const mockPlaywrightCrud = async <T extends WithId, Payload>({
       const url = new URL(request.url());
       const query = url.searchParams.get("query");
 
-      let result = [props.searchResult ?? resources.data[0]];
-      if (query === null || query === "") {
+      let result = [resources.data[0]];
+      if (props.searchResult) {
+        result = Array.isArray(props.searchResult)
+          ? props.searchResult
+          : [props.searchResult];
+      }
+      if ((query === null || query === "") && !forceFiltersMode) {
         result = [...resources.data];
       }
 

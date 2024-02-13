@@ -47,6 +47,7 @@ export function CourseFormTargetCourseRunsSection({ course }: Props) {
         />
       </SimpleCard>
       <CustomModal
+        data-testid="target-course-runs-modal"
         fullWidth
         maxWidth="lg"
         title={intl.formatMessage(courseFormMessages.addCourseRunModalTitle)}

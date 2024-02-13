@@ -21,6 +21,8 @@ import {
   DTOContractDefinition,
 } from "@/services/api/models/ContractDefinition";
 
+const searchPlaceholder = "Search by title";
+
 test.describe("Product list", () => {
   const store = getProductScenarioStore();
   test.beforeEach(async ({ page }) => {
@@ -34,7 +36,7 @@ test.describe("Product list", () => {
   test("verify all products are inside the list", async ({ page }) => {
     // Go to the page
     await page.goto(PATH_ADMIN.products.list);
-    await expect(page.getByPlaceholder("Search...")).toBeVisible();
+    await expect(page.getByPlaceholder(searchPlaceholder)).toBeVisible();
     await Promise.all(
       store.products.map(async (product) => {
         await expect(page.getByText(product.title)).toBeVisible();
@@ -53,7 +55,7 @@ test.describe("Product list", () => {
     });
     // Go to the page
     await page.goto(PATH_ADMIN.products.list);
-    await expect(page.getByPlaceholder("Search...")).toBeVisible();
+    await expect(page.getByPlaceholder(searchPlaceholder)).toBeVisible();
 
     await Promise.all(
       store.products.map(async (product) => {
@@ -61,15 +63,15 @@ test.describe("Product list", () => {
       }),
     );
 
-    await page.getByPlaceholder("Search...").click();
-    await page.getByPlaceholder("Search...").fill(productToSearch.title);
+    await page.getByPlaceholder(searchPlaceholder).click();
+    await page.getByPlaceholder(searchPlaceholder).fill(productToSearch.title);
     await expect(page.getByTestId("circular-loader-container")).toBeVisible();
     await expect(page.getByTestId("circular-loader-container")).toBeHidden();
     await expect(page.getByText(productToSearch.title)).toBeVisible();
     await expect(page.getByText(store.products[1].title)).toBeHidden();
 
-    await page.getByPlaceholder("Search...").click();
-    await page.getByPlaceholder("Search...").fill("");
+    await page.getByPlaceholder(searchPlaceholder).click();
+    await page.getByPlaceholder(searchPlaceholder).fill("");
     await Promise.all(
       store.products.map(async (product) => {
         await expect(page.getByText(product.title)).toBeVisible();
@@ -244,6 +246,7 @@ test.describe("Product form", () => {
 
     const course = store.courses[0];
     const courseRuns = course.courses_runs as CourseRun[];
+
     await mockCourseRunsFromCourse(page, courseRuns);
     await mockTargetCourses(
       page,

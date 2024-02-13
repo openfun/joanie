@@ -181,8 +181,10 @@ test.describe("Course form", async () => {
       page.getByRole("heading", { name: `Edit course: ${oldCourseTitle}` }),
     ).toBeVisible();
 
-    await page.getByRole("textbox", { name: "Title" }).click();
-    await page.getByRole("textbox", { name: "Title" }).fill(newCourseTitle);
+    await page.getByRole("textbox", { name: "Title", exact: true }).click();
+    await page
+      .getByRole("textbox", { name: "Title", exact: true })
+      .fill(newCourseTitle);
     await page.getByRole("button", { name: "Submit" }).click();
     await page.getByText("Operation completed successfully.").click();
     await expect(
@@ -276,14 +278,15 @@ test.describe("Course list", async () => {
         await expect(page.getByText(course.code)).toBeVisible();
       }),
     );
-    await page.getByPlaceholder("Search...").click();
-    await page.getByPlaceholder("Search...").fill(store.list[1].title);
+    const searchPlaceholder = "Search by title or code";
+    await page.getByPlaceholder(searchPlaceholder).click();
+    await page.getByPlaceholder(searchPlaceholder).fill(store.list[1].title);
     await expect(page.getByTestId("circular-loader-container")).toBeVisible();
     await expect(page.getByTestId("circular-loader-container")).toBeHidden();
     await expect(page.getByText(store.list[1].title)).toBeVisible();
     await expect(page.getByText(store.list[0].title)).toBeHidden();
-    await page.getByPlaceholder("Search...").click();
-    await page.getByPlaceholder("Search...").fill("");
+    await page.getByPlaceholder(searchPlaceholder).click();
+    await page.getByPlaceholder(searchPlaceholder).fill("");
     await expect(page.getByTestId("circular-loader-container")).toBeVisible();
     await expect(page.getByTestId("circular-loader-container")).toBeHidden();
     await Promise.all(
