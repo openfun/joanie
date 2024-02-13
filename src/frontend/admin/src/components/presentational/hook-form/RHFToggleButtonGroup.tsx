@@ -5,20 +5,13 @@ import FormHelperText from "@mui/material/FormHelperText";
 import FormLabel from "@mui/material/FormLabel";
 import Radio from "@mui/material/Radio";
 import RadioGroup, { RadioGroupProps } from "@mui/material/RadioGroup";
-import { SelectOption } from "@/components/presentational/hook-form/RHFSelect";
-import {
-  SearchFilterComponentProps,
-  useSearchFilterContext,
-} from "@/components/presentational/filters/SearchFilters";
 
-type Props<> = RadioGroupProps &
-  SearchFilterComponentProps & {
-    name: string;
-    options: SelectOption[];
-    label?: string;
-    helperText?: React.ReactNode;
-    getValueLabel?: (value: string) => string;
-  };
+type Props = RadioGroupProps & {
+  name: string;
+  options: { label: string; value: any }[];
+  label?: string;
+  helperText?: React.ReactNode;
+};
 
 export default function RHFRadioGroup({
   row,
@@ -26,36 +19,11 @@ export default function RHFRadioGroup({
   label,
   options,
   helperText,
-  isFilterContext,
-  getValueLabel,
   ...other
 }: Props) {
-  const { control, setValue } = useFormContext();
-  const searchFilterContext = useSearchFilterContext(isFilterContext);
+  const { control } = useFormContext();
 
   const labelledby = label ? `${name}-${label}` : "";
-
-  const afterChange = (newValue?: string) => {
-    if (!searchFilterContext) {
-      return;
-    }
-    if (newValue && newValue !== "none" && newValue !== "") {
-      const hasNoneOption =
-        options.filter((option) => option.value === "none").length > 0;
-      searchFilterContext.addChip({
-        name,
-        label: label ?? "",
-        value: getValueLabel ? getValueLabel(newValue) : "",
-        onDelete: () =>
-          setValue(name, hasNoneOption ? "none" : "", {
-            shouldValidate: true,
-            shouldDirty: true,
-          }),
-      });
-    } else {
-      searchFilterContext.removeChip(name);
-    }
-  };
 
   return (
     <Controller
@@ -71,10 +39,6 @@ export default function RHFRadioGroup({
 
           <RadioGroup
             {...field}
-            onChange={(e, v) => {
-              field.onChange(e, v);
-              afterChange(v);
-            }}
             aria-labelledby={labelledby}
             row={row}
             {...other}

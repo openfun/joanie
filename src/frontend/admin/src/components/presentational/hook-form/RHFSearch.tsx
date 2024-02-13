@@ -10,14 +10,17 @@ import RHFAutocomplete, {
   RHFAutocompleteProps,
 } from "@/components/presentational/hook-form/RHFAutocomplete";
 import { Maybe, Nullable } from "@/types/utils";
+import { SearchFilterComponentProps } from "@/components/presentational/filters/SearchFilters";
 
-export interface RHFAutocompleteSearchProps<T>
-  extends Omit<RHFAutocompleteProps<T, Maybe<boolean>>, "options"> {
+export type RHFAutocompleteSearchProps<T> = Omit<
+  RHFAutocompleteProps<T, Maybe<boolean>>,
+  "options"
+> & {
   enableAdd?: boolean;
   enableEdit?: boolean;
   onAddClick?: () => void;
   onEditClick?: () => void;
-}
+};
 
 export interface RHFSearchProps<T> extends RHFAutocompleteSearchProps<T> {
   items: T[];
@@ -32,7 +35,7 @@ export function RHFSearch<T>({
   items,
   onFilter,
   ...props
-}: RHFSearchProps<T>) {
+}: RHFSearchProps<T> & SearchFilterComponentProps) {
   const { getValues } = useFormContext();
   const value: Nullable<T> = getValues(props.name);
   const [search, setSearch] = useState("");
