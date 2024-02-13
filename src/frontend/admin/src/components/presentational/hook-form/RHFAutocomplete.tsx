@@ -6,8 +6,12 @@ import InputAdornment from "@mui/material/InputAdornment";
 import React, { ReactNode } from "react";
 import Divider from "@mui/material/Divider";
 import { Maybe } from "@/types/utils";
+import {
+  SearchFilterComponentProps,
+  useSearchFilterContext,
+} from "@/components/presentational/filters/SearchFilters";
 
-export interface RHFAutocompleteProps<
+export interface RHFAutocompleteProps2<
   T,
   Multiple extends boolean | undefined,
   DisableClearable extends boolean | undefined = false,
@@ -23,6 +27,23 @@ export interface RHFAutocompleteProps<
   placeholder?: string;
 }
 
+export type RHFAutocompleteProps<
+  T,
+  Multiple extends boolean | undefined,
+  DisableClearable extends boolean | undefined = false,
+  FreeSolo extends boolean | undefined = false,
+> = Omit<
+  AutocompleteProps<T, Multiple, DisableClearable, FreeSolo>,
+  "renderInput"
+> &
+  SearchFilterComponentProps & {
+    name: string;
+    label?: string;
+    helperText?: React.ReactNode;
+    leftIcons?: React.ReactNode;
+    placeholder?: string;
+  };
+
 export default function RHFAutocomplete<
   T,
   Multiple extends boolean | undefined = false,
@@ -34,11 +55,13 @@ export default function RHFAutocomplete<
   helperText,
   leftIcons,
   placeholder,
+  isFilterContext,
   ...other
 }: Omit<
   RHFAutocompleteProps<T, Multiple, DisableClearable, FreeSolo>,
   "renderInput"
 >) {
+  const searchFilterContext = useSearchFilterContext(isFilterContext);
   const { control, setValue } = useFormContext();
 
   const getLeftIcons = (originLeft: Maybe<ReactNode>): Maybe<ReactNode> => {
@@ -59,6 +82,32 @@ export default function RHFAutocomplete<
         {originLeft}
       </>
     );
+  };
+
+  const afterChange = (newValue?: T | T[]) => {
+    if (!searchFilterContext) {
+      return;
+    }
+
+    const isArray = Array.isArray(newValue);
+    if (newValue && isArray && newValue.length > 0) {
+      const values = newValue.map((val) => other.getOptionLabel?.(val)) ?? "";
+      searchFilterContext.addChip({
+        name,
+        label: label ?? "",
+        value: values.join(","),
+        onDelete: () => setValue(name, []),
+      });
+    } else if (newValue && !isArray) {
+      searchFilterContext.addChip({
+        name,
+        label: label ?? "",
+        value: other.getOptionLabel?.(newValue) ?? "",
+        onDelete: () => setValue(name, null),
+      });
+    } else {
+      searchFilterContext.removeChip(name);
+    }
   };
 
   return (
@@ -84,6 +133,7 @@ export default function RHFAutocomplete<
           {...other}
           onChange={(event, newValue, reason, details) => {
             other.onChange?.(event, newValue, reason, details);
+            afterChange(newValue as T | T[]);
             setValue(name, newValue, {
               shouldValidate: true,
               shouldDirty: true,
