@@ -41,7 +41,7 @@ export default function OrganizationListPage() {
         </Button>
       }
     >
-      <OrganizationsList />
+      <OrganizationsList changeUrlOnPageChange={true} />
     </DashboardLayoutPage>
   );
 }
