@@ -45,9 +45,10 @@ class OrderReadApiTest(BaseAPITestCase):
         order = factories.OrderFactory(
             product=product, owner=owner, contract=factories.ContractFactory()
         )
+        organization_address = order.organization.addresses.filter(is_main=True).first()
         token = self.generate_token_from_user(owner)
 
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             response = self.client.get(
                 f"/api/v1.0/orders/{order.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -71,7 +72,30 @@ class OrderReadApiTest(BaseAPITestCase):
                 "state": order.state,
                 "main_invoice_reference": None,
                 "order_group_id": None,
-                "organization_id": str(order.organization.id),
+                "organization": {
+                    "id": str(order.organization.id),
+                    "code": order.organization.code,
+                    "title": order.organization.title,
+                    "logo": "_this_field_is_mocked",
+                    "address": {
+                        "id": str(organization_address.id),
+                        "address": organization_address.address,
+                        "city": organization_address.city,
+                        "country": organization_address.country,
+                        "first_name": organization_address.first_name,
+                        "is_main": organization_address.is_main,
+                        "last_name": organization_address.last_name,
+                        "postcode": organization_address.postcode,
+                        "title": organization_address.title,
+                    }
+                    if organization_address
+                    else None,
+                    "enterprise_code": order.organization.enterprise_code,
+                    "activity_category_code": order.organization.activity_category_code,
+                    "contact_phone": order.organization.contact_phone,
+                    "contact_email": order.organization.contact_email,
+                    "dpo_email": order.organization.dpo_email,
+                },
                 "owner": owner.username,
                 "total": float(product.price),
                 "total_currency": settings.DEFAULT_CURRENCY,

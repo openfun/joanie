@@ -7,6 +7,7 @@ from django.utils.translation import gettext_lazy as _
 import markdown
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import exceptions, serializers
+from rest_framework.generics import get_object_or_404
 
 from joanie.core import enums, models
 from joanie.core.serializers.base import CachedModelSerializer
@@ -666,12 +667,7 @@ class OrderSerializer(serializers.ModelSerializer):
         required=False,
     )
     total_currency = serializers.SerializerMethodField(read_only=True)
-    organization_id = serializers.SlugRelatedField(
-        queryset=models.Organization.objects.all(),
-        slug_field="id",
-        required=False,
-        source="organization",
-    )
+    organization = OrganizationSerializer(read_only=True, exclude_abilities=True)
     product_id = serializers.SlugRelatedField(
         queryset=models.Product.objects.all(), slug_field="id", source="product"
     )
@@ -705,7 +701,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "id",
             "main_invoice_reference",
             "order_group_id",
-            "organization_id",
+            "organization",
             "owner",
             "product_id",
             "state",
@@ -734,6 +730,18 @@ class OrderSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(message)
 
         return value
+
+    def create(self, validated_data):
+        """
+        Create a new order and set the organization if provided.
+        """
+        organization_id = self.initial_data.get("organization_id")
+
+        if organization_id:
+            organization = get_object_or_404(models.Organization, id=organization_id)
+            validated_data["organization"] = organization
+
+        return super().create(validated_data)
 
     def update(self, instance, validated_data):
         """
