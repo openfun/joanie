@@ -28,6 +28,7 @@ export type DefaultTableProps<T extends GridValidRowModel> = {
   multiSelectActions?: ReactElement;
   topActions?: ReactElement;
   enableSearch?: boolean;
+  enableDelete?: boolean;
   changeUrlOnPageChange?: boolean;
 };
 
@@ -50,6 +51,7 @@ export type TableComponentProps<T extends GridValidRowModel> =
 
 export function TableComponent<T extends GridValidRowModel>({
   enableEdit = true,
+  enableDelete = true,
   enableSelect = false,
   paginationMode = "server",
   enableSearch = true,
@@ -79,13 +81,16 @@ export function TableComponent<T extends GridValidRowModel>({
         renderCell: (params) => {
           const entityName = props.getEntityName?.(params.row) ?? undefined;
           const extendedOptions = props.getOptions?.(params.row) ?? [];
+          const onDelete =
+            enableDelete && props.onRemoveClick
+              ? () => props.onRemoveClick?.(params.row)
+              : undefined;
+
           return (
             <TableDefaultActions
               extendedOptions={extendedOptions}
               entityName={entityName}
-              onDelete={
-                props.onRemoveClick && (() => props.onRemoveClick?.(params.row))
-              }
+              onDelete={onDelete}
               onUseAsTemplate={
                 props.onUseAsTemplateClick &&
                 (() => props.onUseAsTemplateClick?.(params.row))
