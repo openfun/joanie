@@ -398,16 +398,6 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
                             "activity_category_code": organizations[
                                 1
                             ].activity_category_code,
-                            "representative": organizations[1].representative,
-                            "representative_profession": organizations[
-                                1
-                            ].representative_profession,
-                            "signatory_representative": organizations[
-                                1
-                            ].signatory_representative,
-                            "signatory_representative_profession": organizations[
-                                1
-                            ].signatory_representative_profession,
                             "contact_phone": organizations[1].contact_phone,
                             "contact_email": organizations[1].contact_email,
                             "dpo_email": organizations[1].dpo_email,
