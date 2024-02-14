@@ -121,16 +121,6 @@ class OrganizationApiListTest(BaseAPITestCase):
                         },
                         "enterprise_code": organization.enterprise_code,
                         "activity_category_code": (organization.activity_category_code),
-                        "representative": organization.representative,
-                        "representative_profession": (
-                            organization.representative_profession
-                        ),
-                        "signatory_representative": (
-                            organization.signatory_representative
-                        ),
-                        "signatory_representative_profession": (
-                            organization.signatory_representative_profession
-                        ),
                         "contact_email": organization.contact_email,
                         "contact_phone": organization.contact_phone,
                         "dpo_email": organization.dpo_email,

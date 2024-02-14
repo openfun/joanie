@@ -133,16 +133,6 @@ class CertificateApiTest(BaseAPITestCase):
                                 "activity_category_code": (
                                     other_order.organization.activity_category_code
                                 ),
-                                "representative": other_order.organization.representative,
-                                "representative_profession": (
-                                    other_order.organization.representative_profession
-                                ),
-                                "signatory_representative": (
-                                    other_order.organization.signatory_representative
-                                ),
-                                "signatory_representative_profession": (
-                                    other_order.organization.signatory_representative_profession
-                                ),
                                 "contact_email": other_order.organization.contact_email,
                                 "contact_phone": other_order.organization.contact_phone,
                                 "dpo_email": other_order.organization.dpo_email,
@@ -177,16 +167,6 @@ class CertificateApiTest(BaseAPITestCase):
                                 "enterprise_code": order.organization.enterprise_code,
                                 "activity_category_code": (
                                     order.organization.activity_category_code
-                                ),
-                                "representative": order.organization.representative,
-                                "representative_profession": (
-                                    order.organization.representative_profession
-                                ),
-                                "signatory_representative": (
-                                    order.organization.signatory_representative
-                                ),
-                                "signatory_representative_profession": (
-                                    order.organization.signatory_representative_profession
                                 ),
                                 "contact_email": order.organization.contact_email,
                                 "contact_phone": order.organization.contact_phone,
@@ -337,16 +317,6 @@ class CertificateApiTest(BaseAPITestCase):
                         "enterprise_code": certificate.order.organization.enterprise_code,
                         "activity_category_code": (
                             certificate.order.organization.activity_category_code
-                        ),
-                        "representative": certificate.order.organization.representative,
-                        "representative_profession": (
-                            certificate.order.organization.representative_profession
-                        ),
-                        "signatory_representative": (
-                            certificate.order.organization.signatory_representative
-                        ),
-                        "signatory_representative_profession": (
-                            certificate.order.organization.signatory_representative_profession
                         ),
                         "contact_email": certificate.order.organization.contact_email,
                         "contact_phone": certificate.order.organization.contact_phone,

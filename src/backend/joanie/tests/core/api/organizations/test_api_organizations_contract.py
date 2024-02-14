@@ -183,16 +183,6 @@ class OrganizationContractApiTest(BaseAPITestCase):
                             "activity_category_code": (
                                 contract.order.organization.activity_category_code
                             ),
-                            "representative": contract.order.organization.representative,
-                            "representative_profession": (
-                                contract.order.organization.representative_profession
-                            ),
-                            "signatory_representative": (
-                                contract.order.organization.signatory_representative
-                            ),
-                            "signatory_representative_profession": (
-                                contract.order.organization.signatory_representative_profession
-                            ),
                             "contact_email": contract.order.organization.contact_email,
                             "contact_phone": contract.order.organization.contact_phone,
                             "dpo_email": contract.order.organization.dpo_email,
@@ -578,16 +568,6 @@ class OrganizationContractApiTest(BaseAPITestCase):
                     "enterprise_code": contract.order.organization.enterprise_code,
                     "activity_category_code": (
                         contract.order.organization.activity_category_code
-                    ),
-                    "representative": contract.order.organization.representative,
-                    "representative_profession": (
-                        contract.order.organization.representative_profession
-                    ),
-                    "signatory_representative": (
-                        contract.order.organization.signatory_representative
-                    ),
-                    "signatory_representative_profession": (
-                        contract.order.organization.signatory_representative_profession
                     ),
                     "contact_email": contract.order.organization.contact_email,
                     "contact_phone": contract.order.organization.contact_phone,
