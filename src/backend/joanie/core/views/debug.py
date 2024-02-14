@@ -1,11 +1,10 @@
-"""Views of the ``core`` app of the Joanie project."""
+"""All debug views of the `core`app."""
 import base64
 import datetime
 from logging import getLogger
 
-from django.conf import settings
 from django.contrib.sites.models import Site
-from django.views.generic.base import RedirectView, TemplateView
+from django.views.generic.base import TemplateView
 
 from joanie.core import factories
 from joanie.core.enums import CERTIFICATE, CONTRACT_DEFINITION, DEGREE
@@ -16,8 +15,6 @@ from joanie.payment.enums import INVOICE_TYPE_INVOICE
 from joanie.payment.models import Invoice
 
 logger = getLogger(__name__)
-
-
 LOGO_FALLBACK = (
     "data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR"
     "42mO8cPX6fwAIdgN9pHTGJwAAAABJRU5ErkJggg=="
@@ -339,21 +336,3 @@ class DebugInvoiceTemplateView(DebugPdfTemplateView):
                 "product": {"name": "deploy turn-key partnerships", "description": ""},
             },
         }
-
-
-class BackOfficeRedirectView(RedirectView):
-    """
-    Redirect to the next.js backoffice application
-    with the path caught in the redirect url
-    """
-
-    permanent = True
-    query_string = False
-    pattern_name = None
-    http_method_names = ["get"]
-
-    def get_redirect_url(self, *args, **kwargs):
-        """
-        Redirect to the backoffice pathname caught in the url
-        """
-        return f"{settings.JOANIE_BACKOFFICE_BASE_URL}/{self.kwargs['path']}"
