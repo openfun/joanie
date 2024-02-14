@@ -1,0 +1,176 @@
+/* == Reset */
+/* Box sizing rules */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Prevent font size inflation */
+html {
+  -moz-text-size-adjust: none;
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
+}
+
+/* Remove default margin in favour of better control in authored CSS */
+body, h1, h2, h3, h4, p,
+figure, blockquote, dl, dd {
+  margin-block-end: 0;
+}
+
+/* Remove list styles on ul, ol elements with a list role, which suggests default styling will be removed */
+ul[role='list'],
+ol[role='list'] {
+  list-style: none;
+}
+
+/* Set core body defaults */
+body {
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+/* Set shorter line heights on headings and interactive elements */
+h1, h2, h3, h4,
+button, input, label {
+  line-height: 1.1;
+}
+
+/* Balance text wrapping on headings */
+h1, h2,
+h3, h4 {
+  text-wrap: balance;
+}
+
+/* A elements that don't have a class get default styles */
+a:not([class]) {
+  text-decoration-skip-ink: auto;
+  color: currentColor;
+}
+
+/* Make images easier to work with */
+img,
+picture {
+  max-width: 100%;
+  display: block;
+}
+
+/* Inherit fonts for inputs and buttons */
+input, button,
+textarea, select {
+  font: inherit;
+}
+
+/* Make sure textareas without a rows attribute are not tiny */
+textarea:not([rows]) {
+  min-height: 10em;
+}
+
+/* Anything that has been anchored to should have extra scroll margin */
+:target {
+  scroll-margin-block: 5ex;
+}
+
+/* == Global */
+body {
+  align-items: center;
+  background: radial-gradient(99.61% 99.61% at 50% 0.39%, #212332 18.5%, #151517 99.99%);
+  color: #FFF;
+  display: flex;
+  flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+  font-size: clamp(13px, 2.2vw, 16px);
+  margin: 0;
+  perspective: 900px;
+}
+
+/* == Header */
+.header__logo {
+  background: #FFF;
+  border-radius: 0 0 40px 40px;
+  padding: 32px 32px 32px 28px;
+  width: 220px;
+}
+
+/* == Main */
+.content {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  margin: 8rem 2rem;
+  width: 100%;
+}
+
+.content > section {
+  max-width: 1200px;
+  width: 100%;
+}
+
+.content__information {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 4rem;
+  text-align: center;
+}
+
+.content__information h1 {
+  background: linear-gradient(0deg, #866637 19.3%, #B09C55 69.96%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  font-size: clamp(2.5rem, 5vw, 3rem);
+  font-weight: 900;
+  margin: 0;
+  -webkit-text-fill-color: transparent;
+  text-fill-color: transparent;
+}
+
+.content__information p {
+  opacity: 0.6;
+  margin: 0;
+  max-width: 680px;
+  text-align: center;
+}
+
+.content__document {
+  position: relative;
+  border: 4px solid #333639;
+  border-radius: 8px;
+  transform-origin: center bottom;
+  animation: certificate-display 1.5s ease-in-out
+}
+
+@keyframes certificate-display {
+  0% {
+    transform: translateY(33vh);
+    opacity: 0;
+  }
+  60 % {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0);
+  }
+
+}
+
+#pdf-viewer {
+  aspect-ratio: 297 / 210;
+  border: none;
+  border-radius: 4px;
+  margin: 0 auto;
+  max-width: 1200px;
+  width: 100%;
+}
+
+/* == Footer */
+.footer {
+  color: #8f9097;
+  font-size: 0.8rem;
+  line-height: 1rem;
+  padding: 8px 32px 16px 32px;
+  text-align: center;
+  width: 100%;
+}
