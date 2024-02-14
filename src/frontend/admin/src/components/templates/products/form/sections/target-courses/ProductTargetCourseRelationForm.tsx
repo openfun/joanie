@@ -92,6 +92,7 @@ export function ProductTargetCourseRelationForm(props: Props) {
                   />
                 </Typography>
                 <CoursesRunsList
+                  enableDelete={false}
                   defaultSelectedRows={
                     props.targetCourse?.course_runs.map(
                       (courseRun) => courseRun.id,
