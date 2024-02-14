@@ -15,6 +15,7 @@ Including another URLconf
 """
 
 from django.conf import settings
+from django.conf.urls.i18n import i18n_patterns
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
@@ -29,6 +30,7 @@ from drf_spectacular.views import (
 from joanie import admin_urls, client_urls, remote_endpoints_urls
 from joanie.core.views import (
     BackOfficeRedirectView,
+    CertificateVerificationView,
     DebugCertificateTemplateView,
     DebugContractTemplateView,
     DebugDegreeTemplateView,
@@ -51,6 +53,14 @@ urlpatterns = (
     + admin_urls.urlpatterns
     + client_urls.urlpatterns
     + remote_endpoints_urls.urlpatterns
+)
+
+urlpatterns += i18n_patterns(
+    path(
+        "certificates/<uuid:certificate_id>",
+        CertificateVerificationView.as_view(),
+        name="certificate-verification",
+    ),
 )
 
 if settings.DEBUG:
