@@ -66,25 +66,21 @@ joanie_celery_command:
 joanie_celery_livenessprobe:
   exec:
     command:
-      - celery
-      - -A
-      - joanie.celery_app
-      - inspect
-      - ping
-      - -d
-      - joanie@$HOSTNAME
+      - /bin/bash
+      - -c
+      - "celery -A joanie.celery_app inspect ping -d joanie@$HOSTNAME"
   initialDelaySeconds: 60
+  periodSeconds: 30
+  timeoutSeconds: 5
 joanie_celery_readynessprobe:
   exec:
     command:
-      - celery
-      - -A
-      - joanie.celery_app
-      - inspect
-      - ping
-      - -d
-      - joanie@$HOSTNAME
+      - /bin/bash
+      - -c
+      - "celery -A joanie.celery_app inspect ping -d joanie@$HOSTNAME"
   initialDelaySeconds: 15
+  periodSeconds: 10
+  timeoutSeconds: 5
 
 # -- resources
 {% set app_resources = {
