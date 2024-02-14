@@ -74,6 +74,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         # order has been created
         self.assertEqual(models.Order.objects.count(), 1)
         order = models.Order.objects.get()
+        organization_address = order.organization.addresses.filter(is_main=True).first()
 
         self.assertDictEqual(
             response.json(),
@@ -91,7 +92,30 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "enrollment": None,
                 "main_invoice_reference": None,
                 "order_group_id": None,
-                "organization_id": str(order.organization.id),
+                "organization": {
+                    "id": str(order.organization.id),
+                    "code": order.organization.code,
+                    "title": order.organization.title,
+                    "logo": "_this_field_is_mocked",
+                    "address": {
+                        "id": str(organization_address.id),
+                        "address": organization_address.address,
+                        "city": organization_address.city,
+                        "country": organization_address.country,
+                        "first_name": organization_address.first_name,
+                        "is_main": organization_address.is_main,
+                        "last_name": organization_address.last_name,
+                        "postcode": organization_address.postcode,
+                        "title": organization_address.title,
+                    }
+                    if organization_address
+                    else None,
+                    "enterprise_code": order.organization.enterprise_code,
+                    "activity_category_code": order.organization.activity_category_code,
+                    "contact_phone": order.organization.contact_phone,
+                    "contact_email": order.organization.contact_email,
+                    "dpo_email": order.organization.dpo_email,
+                },
                 "owner": "panoramix",
                 "product_id": str(product.id),
                 "state": "draft",
@@ -206,6 +230,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             organization=organization,
             product=product,
         )
+        organization_address = order.organization.addresses.filter(is_main=True).first()
 
         self.assertEqual(list(order.target_courses.all()), [])
         self.assertDictEqual(
@@ -265,7 +290,30 @@ class OrderCreateApiTest(BaseAPITestCase):
                 },
                 "main_invoice_reference": None,
                 "order_group_id": None,
-                "organization_id": str(order.organization.id),
+                "organization": {
+                    "id": str(order.organization.id),
+                    "code": order.organization.code,
+                    "title": order.organization.title,
+                    "logo": "_this_field_is_mocked",
+                    "address": {
+                        "id": str(organization_address.id),
+                        "address": organization_address.address,
+                        "city": organization_address.city,
+                        "country": organization_address.country,
+                        "first_name": organization_address.first_name,
+                        "is_main": organization_address.is_main,
+                        "last_name": organization_address.last_name,
+                        "postcode": organization_address.postcode,
+                        "title": organization_address.title,
+                    }
+                    if organization_address
+                    else None,
+                    "enterprise_code": order.organization.enterprise_code,
+                    "activity_category_code": order.organization.activity_category_code,
+                    "contact_phone": order.organization.contact_phone,
+                    "contact_email": order.organization.contact_email,
+                    "dpo_email": order.organization.dpo_email,
+                },
                 "owner": enrollment.user.username,
                 "product_id": str(product.id),
                 "state": "draft",
@@ -554,6 +602,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
+        organization_address = order.organization.addresses.filter(is_main=True).first()
         # - id, price and state has not been set according to data values
         self.assertDictEqual(
             response.json(),
@@ -571,7 +620,30 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "enrollment": None,
                 "main_invoice_reference": None,
                 "order_group_id": None,
-                "organization_id": str(order.organization.id),
+                "organization": {
+                    "id": str(order.organization.id),
+                    "code": order.organization.code,
+                    "title": order.organization.title,
+                    "logo": "_this_field_is_mocked",
+                    "address": {
+                        "id": str(organization_address.id),
+                        "address": organization_address.address,
+                        "city": organization_address.city,
+                        "country": organization_address.country,
+                        "first_name": organization_address.first_name,
+                        "is_main": organization_address.is_main,
+                        "last_name": organization_address.last_name,
+                        "postcode": organization_address.postcode,
+                        "title": organization_address.title,
+                    }
+                    if organization_address
+                    else None,
+                    "enterprise_code": order.organization.enterprise_code,
+                    "activity_category_code": order.organization.activity_category_code,
+                    "contact_phone": order.organization.contact_phone,
+                    "contact_email": order.organization.contact_email,
+                    "dpo_email": order.organization.dpo_email,
+                },
                 "owner": "panoramix",
                 "product_id": str(product.id),
                 "target_enrollments": [],
@@ -895,14 +967,14 @@ class OrderCreateApiTest(BaseAPITestCase):
         self.assertEqual(order.state, enums.ORDER_STATE_DRAFT)
 
     @mock.patch.object(
-        DummyPaymentBackend,
-        "create_payment",
-        side_effect=DummyPaymentBackend().create_payment,
-    )
-    @mock.patch.object(
         fields.ThumbnailDetailField,
         "to_representation",
         return_value="_this_field_is_mocked",
+    )
+    @mock.patch.object(
+        DummyPaymentBackend,
+        "create_payment",
+        side_effect=DummyPaymentBackend().create_payment,
     )
     def test_api_order_create_authenticated_payment_binding(
         self, mock_create_payment, _mock_thumbnail
@@ -927,7 +999,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             "has_consent_to_terms": True,
         }
 
-        with self.assertNumQueries(22):
+        with self.assertNumQueries(23):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -936,9 +1008,11 @@ class OrderCreateApiTest(BaseAPITestCase):
             )
 
         self.assertEqual(models.Order.objects.count(), 1)
-        order = models.Order.objects.get(product=product, course=course, owner=user)
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
 
+        order = models.Order.objects.get(product=product, course=course, owner=user)
+        organization_address = order.organization.addresses.filter(is_main=True).first()
+
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
         self.assertDictEqual(
             response.json(),
             {
@@ -955,7 +1029,30 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "enrollment": None,
                 "main_invoice_reference": None,
                 "order_group_id": None,
-                "organization_id": str(order.organization.id),
+                "organization": {
+                    "id": str(order.organization.id),
+                    "code": order.organization.code,
+                    "title": order.organization.title,
+                    "logo": "_this_field_is_mocked",
+                    "address": {
+                        "id": str(organization_address.id),
+                        "address": organization_address.address,
+                        "city": organization_address.city,
+                        "country": organization_address.country,
+                        "first_name": organization_address.first_name,
+                        "is_main": organization_address.is_main,
+                        "last_name": organization_address.last_name,
+                        "postcode": organization_address.postcode,
+                        "title": organization_address.title,
+                    }
+                    if organization_address
+                    else None,
+                    "enterprise_code": order.organization.enterprise_code,
+                    "activity_category_code": order.organization.activity_category_code,
+                    "contact_phone": order.organization.contact_phone,
+                    "contact_email": order.organization.contact_email,
+                    "dpo_email": order.organization.dpo_email,
+                },
                 "owner": user.username,
                 "product_id": str(product.id),
                 "total": float(product.price),
@@ -1080,6 +1177,8 @@ class OrderCreateApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
         self.assertEqual(models.Order.objects.count(), 1)
         order = models.Order.objects.get(product=product, course=course, owner=user)
+        organization_address = order.organization.addresses.filter(is_main=True).first()
+
         expected_json = {
             "id": str(order.id),
             "certificate_id": None,
@@ -1094,7 +1193,30 @@ class OrderCreateApiTest(BaseAPITestCase):
             "enrollment": None,
             "main_invoice_reference": None,
             "order_group_id": None,
-            "organization_id": str(order.organization.id),
+            "organization": {
+                "id": str(order.organization.id),
+                "code": order.organization.code,
+                "title": order.organization.title,
+                "logo": "_this_field_is_mocked",
+                "address": {
+                    "id": str(organization_address.id),
+                    "address": organization_address.address,
+                    "city": organization_address.city,
+                    "country": organization_address.country,
+                    "first_name": organization_address.first_name,
+                    "is_main": organization_address.is_main,
+                    "last_name": organization_address.last_name,
+                    "postcode": organization_address.postcode,
+                    "title": organization_address.title,
+                }
+                if organization_address
+                else None,
+                "enterprise_code": order.organization.enterprise_code,
+                "activity_category_code": order.organization.activity_category_code,
+                "contact_phone": order.organization.contact_phone,
+                "contact_email": order.organization.contact_email,
+                "dpo_email": order.organization.dpo_email,
+            },
             "owner": user.username,
             "product_id": str(product.id),
             "total": float(product.price),
@@ -1248,7 +1370,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         }
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(47):
+        with self.assertNumQueries(70):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
