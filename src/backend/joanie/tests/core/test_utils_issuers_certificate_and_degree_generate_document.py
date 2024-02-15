@@ -22,7 +22,9 @@ class UtilsIssuersCertificateAndDegreeGenerateDocumentTestCase(TestCase):
         in the appropriate language.
         """
         organization = factories.OrganizationFactory(
-            title="University X", representative="Joanie Cunningham"
+            title="University X",
+            representative="Joanie Cunningham",
+            representative_profession="Head of the Life long learning department",
         )
         course = factories.CourseFactory(organizations=[organization])
         certificate_definition = factories.CertificateDefinitionFactory(
@@ -38,7 +40,8 @@ class UtilsIssuersCertificateAndDegreeGenerateDocumentTestCase(TestCase):
         organization.translations.create(language_code="fr-fr", title="Université X")
         product.translations.create(language_code="fr-fr", title="Produit certifiant")
 
-        order = factories.OrderFactory(product=product)
+        owner = factories.UserFactory(first_name="Richie Cunningham")
+        order = factories.OrderFactory(product=product, owner=owner)
         certificate = factories.OrderCertificateFactory(order=order)
 
         document = issuers.generate_document(
@@ -48,9 +51,16 @@ class UtilsIssuersCertificateAndDegreeGenerateDocumentTestCase(TestCase):
 
         document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
         self.assertRegex(document_text, "Certificate")
-        self.assertRegex(document_text, rf"Certificate ID: {str(certificate.id)}")
         self.assertRegex(
-            document_text, r"Joanie Cunningham.*University X.*Graded product"
+            document_text, f"Issued on {certificate.issued_on.strftime('%m/%d/%Y')}"
+        )
+        self.assertRegex(document_text, r"Richie Cunningham.*Graded product")
+        self.assertRegex(
+            document_text,
+            r"University X.*Joanie Cunningham.*Head of the Life long learning department",
+        )
+        self.assertRegex(
+            document_text, rf"https://example.com/en-us/certificates/{certificate.id}"
         )
 
         with switch_language(product, "fr-fr"):
@@ -59,7 +69,14 @@ class UtilsIssuersCertificateAndDegreeGenerateDocumentTestCase(TestCase):
                 context=certificate.get_document_context(),
             )
             document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
-            self.assertRegex(document_text, r"Joanie Cunningham.*Université X")
+            self.assertRegex(
+                document_text,
+                r"Université X.*Joanie Cunningham.*Head of the Life long learning department",
+            )
+            self.assertRegex(
+                document_text,
+                rf"https://example.com/fr-fr/certificates/{certificate.id}",
+            )
 
         with switch_language(product, "de-de"):
             # - Finally, unknown language should use the default language as fallback
@@ -68,7 +85,14 @@ class UtilsIssuersCertificateAndDegreeGenerateDocumentTestCase(TestCase):
                 context=certificate.get_document_context(),
             )
             document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
-            self.assertRegex(document_text, r"Joanie Cunningham.*University X")
+            self.assertRegex(
+                document_text,
+                r"University X.*Joanie Cunningham.*Head of the Life long learning department",
+            )
+            self.assertRegex(
+                document_text,
+                rf"https://example.com/en-us/certificates/{certificate.id}",
+            )
 
     def test_utils_issuers_generate_document_certificate_document(self):
         """

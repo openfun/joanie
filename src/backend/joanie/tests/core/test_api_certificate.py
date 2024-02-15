@@ -390,7 +390,7 @@ class CertificateApiTest(BaseAPITestCase):
         )
 
         document_text = pdf_extract_text(BytesIO(response.content)).replace("\n", "")
-        self.assertRegex(document_text, r"CERTIFICATE")
+        self.assertRegex(document_text, r"Certificate")
 
     def test_api_certificate_download_authenticated_enrollment(self):
         """

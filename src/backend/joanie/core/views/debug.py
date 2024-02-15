@@ -195,8 +195,9 @@ class DebugDegreeTemplateView(DebugPdfTemplateView):
 
     def get_basic_document_context(self):
         """Returns a basic document context to preview the template of a `degree`."""
+        certificate_id = "8c4a2469-78db-4785-8eec-7690a096b5bf"
         return {
-            "id": "8c4a2469-78db-4785-8eec-7690a096b5bf",
+            "id": certificate_id,
             "creation_date": datetime.datetime(
                 2024, 1, 5, 10, 40, 54, 47499, tzinfo=datetime.timezone.utc
             ),
@@ -207,12 +208,14 @@ class DebugDegreeTemplateView(DebugPdfTemplateView):
             "organizations": [
                 {
                     "representative": "Joanie Cunningham",
+                    "representative_profession": "Director",
                     "signature": SIGNATURE_FALLBACK,
                     "logo": LOGO_FALLBACK,
                     "name": "Organization Test",
                 }
             ],
             "site": {"name": "example.com", "hostname": "https://example.com"},
+            "verification_link": f"http://localhost:8071/en-us/certificates/{certificate_id}",
             "course": {"name": "Full Stack Pancake, Full Stack Developer"},
         }
 
