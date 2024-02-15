@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Add property `verification_uri` to `Certificate` model
 - Add a certificate verification view
 - Add `has_consent_terms` boolean field to `Order` model
 - Bind terms and conditions to the contract definition template
