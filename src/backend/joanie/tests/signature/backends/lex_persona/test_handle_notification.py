@@ -1,6 +1,6 @@
 """Test suite for the Lex Persona Signature Backend handle_notification"""
 import json
-from datetime import timedelta
+from datetime import datetime, timedelta
 from http import HTTPStatus
 
 from django.core.exceptions import ValidationError
@@ -13,6 +13,7 @@ import responses
 
 from joanie.core import factories
 from joanie.signature.backends import get_signature_backend
+from joanie.tests.base import BaseLogMixinTestCase
 
 
 @override_settings(
@@ -25,7 +26,7 @@ from joanie.signature.backends import get_signature_backend
     JOANIE_SIGNATURE_VALIDITY_PERIOD=60 * 60 * 24 * 15,
     JOANIE_SIGNATURE_TIMEOUT=3,
 )
-class LexPersonaBackendHandleNotificationTestCase(TestCase):
+class LexPersonaBackendHandleNotificationTestCase(TestCase, BaseLogMixinTestCase):
     """Test suite for Lex Persona Signature provider Backend handle_notification."""
 
     @responses.activate
@@ -76,7 +77,9 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
 
         backend = get_signature_backend()
 
-        with self.assertRaises(ValidationError) as context:
+        with self.assertRaises(ValidationError) as context, self.assertLogs(
+            "joanie"
+        ) as logger:
             backend.handle_notification(request)
 
         self.assertEqual(
@@ -90,6 +93,19 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
             responses.calls[0].request.headers["Authorization"], "Bearer token_id_fake"
         )
         self.assertEqual(responses.calls[0].request.method, "GET")
+
+        self.assertLogsEquals(
+            logger.records,
+            [
+                (
+                    "ERROR",
+                    "'workflowStarted' is not an event type that we handle.",
+                    {
+                        "trusted_event_signature_provider": dict,
+                    },
+                )
+            ],
+        )
 
     @responses.activate
     def test_backend_lex_persona_handle_notification_workflowstopped_unsupported_event_type(
@@ -137,7 +153,9 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
         )
         backend = get_signature_backend()
 
-        with self.assertRaises(ValidationError) as context:
+        with self.assertRaises(ValidationError) as context, self.assertLogs(
+            "joanie"
+        ) as logger:
             backend.handle_notification(request)
 
         self.assertEqual(
@@ -151,6 +169,16 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
             responses.calls[0].request.headers["Authorization"], "Bearer token_id_fake"
         )
         self.assertEqual(responses.calls[0].request.method, "GET")
+        self.assertLogsEquals(
+            logger.records,
+            [
+                (
+                    "ERROR",
+                    "'workflowStopped' is not an event type that we handle.",
+                    {"trusted_event_signature_provider": dict},
+                )
+            ],
+        )
 
     def test_backend_lex_persona_handle_notification_incoming_request_body_is_an_empty_dictionary(
         self,
@@ -169,12 +197,18 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
         request.__dict__.update(request_data)
         backend = get_signature_backend()
 
-        with self.assertRaises(KeyError) as context:
+        with self.assertRaises(KeyError) as context, self.assertLogs(
+            "joanie"
+        ) as logger:
             backend.handle_notification(request)
 
         self.assertEqual(
             str(context.exception),
             "'Missing the key id to retrieve from the webhook event data'",
+        )
+        self.assertLogsEquals(
+            logger.records,
+            [("ERROR", "There is no ID key in the request body", {"data": dict})],
         )
 
     def test_backend_lex_persona_handle_notification_body_is_missing_id_key(self):
@@ -203,12 +237,18 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
         request.__dict__.update(request_data)
         backend = get_signature_backend()
 
-        with self.assertRaises(KeyError) as context:
+        with self.assertRaises(KeyError) as context, self.assertLogs(
+            "joanie"
+        ) as logger:
             backend.handle_notification(request)
 
         self.assertEqual(
             str(context.exception),
             "'Missing the key id to retrieve from the webhook event data'",
+        )
+        self.assertLogsEquals(
+            logger.records,
+            [("ERROR", "There is no ID key in the request body", {"data": dict})],
         )
 
     def test_backend_lex_persona_handle_notification_with_malformed_json_body(self):
@@ -226,11 +266,17 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
         request.__dict__.update(request_data)
         backend = get_signature_backend()
 
-        with self.assertRaises(ValidationError) as context:
+        with self.assertRaises(ValidationError) as context, self.assertLogs(
+            "joanie"
+        ) as logger:
             backend.handle_notification(request)
 
         self.assertEqual(
             str(context.exception), "['The JSON body of the request is malformed']"
+        )
+        self.assertLogsEquals(
+            logger.records,
+            [("ERROR", "The JSON body of the request is malformed", {"request": str})],
         )
 
     @responses.activate
@@ -278,7 +324,9 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
         )
         backend = get_signature_backend()
 
-        with self.assertRaises(ValidationError) as context:
+        with self.assertRaises(ValidationError) as context, self.assertLogs(
+            "joanie"
+        ) as logger:
             backend.handle_notification(request)
 
         self.assertEqual(
@@ -291,6 +339,21 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
             responses.calls[0].request.headers["Authorization"], "Bearer token_id_fake"
         )
         self.assertEqual(responses.calls[0].request.method, "GET")
+        self.assertLogsEquals(
+            logger.records,
+            [
+                (
+                    "WARNING",
+                    "Lex Persona: Unable to verify the webhook event with the signature provider",
+                    {"url": str, "response": dict},
+                ),
+                (
+                    "ERROR",
+                    "The webhook event cannot be trusted",
+                    {"data": dict},
+                ),
+            ],
+        )
 
     @responses.activate
     def test_backend_lex_persona_handle_notification_workflow_finished_event(self):
@@ -352,11 +415,16 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
 
         backend = get_signature_backend()
 
-        backend.handle_notification(request)
+        with self.assertLogs("joanie") as logger:
+            backend.handle_notification(request)
 
         contract.refresh_from_db()
         self.assertIsNotNone(contract.student_signed_on)
         self.assertIsNotNone(contract.submitted_for_signature_on)
+        self.assertLogsEquals(
+            logger.records,
+            [("INFO", f"Student signed the contract '{contract.id}'")],
+        )
 
     @override_settings(
         JOANIE_SIGNATURE_VALIDITY_PERIOD=60 * 60 * 24 * 15,
@@ -422,7 +490,9 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
 
         backend = get_signature_backend()
 
-        with self.assertRaises(ValidationError) as context:
+        with self.assertRaises(ValidationError) as context, self.assertLogs(
+            "joanie"
+        ) as logger:
             backend.handle_notification(request)
 
         self.assertEqual(
@@ -431,6 +501,27 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
         )
         self.assertIsNotNone(contract.submitted_for_signature_on)
         self.assertIsNone(contract.student_signed_on)
+        self.assertLogsEquals(
+            logger.records,
+            [
+                (
+                    "WARNING",
+                    "contract is not eligible for signing: signature validity period has passed",
+                    {
+                        "contract": dict,
+                        "submitted_for_signature_on": datetime,
+                        "signature_validity_period": int,
+                        "valid_until": datetime,
+                    },
+                ),
+                (
+                    "ERROR",
+                    f"When student signed, contract's validity date has passed for contract id : "
+                    f"'{contract.id}'",
+                    {"contract": dict},
+                ),
+            ],
+        )
 
     @responses.activate
     def test_backend_lex_persona_handle_notification_recipient_refused_should_reset_contract(
@@ -494,7 +585,8 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
 
         backend = get_signature_backend()
 
-        backend.handle_notification(request)
+        with self.assertLogs("joanie") as logger:
+            backend.handle_notification(request)
 
         contract.refresh_from_db()
         self.assertIsNone(contract.student_signed_on)
@@ -502,3 +594,12 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase):
         self.assertIsNone(contract.submitted_for_signature_on)
         self.assertIsNone(contract.signature_backend_reference)
         self.assertIsNone(contract.definition_checksum)
+        self.assertLogsEquals(
+            logger.records,
+            [
+                (
+                    "INFO",
+                    f"Document signature refused for the contract '{contract.id}'",
+                ),
+            ],
+        )

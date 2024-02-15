@@ -944,10 +944,22 @@ class Order(BaseModel):
         to submit.
         """
         if not self.product.contract_definition_id:
-            raise ValidationError("No contract definition attached to the product.")
+            message = "No contract definition attached to the contract's product."
+            logger.error(
+                message,
+                extra={
+                    "context": {
+                        "order": self.to_dict(),
+                        "product": self.product.to_dict(),
+                    }
+                },
+            )
+            raise ValidationError(message)
 
         if self.state != enums.ORDER_STATE_VALIDATED:
-            raise ValidationError("Cannot submit an order that is not yet validated.")
+            message = "Cannot submit an order that is not yet validated."
+            logger.error(message, extra={"context": {"order": self.to_dict()}})
+            raise ValidationError(message)
 
         contract_definition = self.product.contract_definition
 
@@ -957,7 +969,11 @@ class Order(BaseModel):
             contract = Contract(order=self, definition=contract_definition)
 
         if self.contract and self.contract.student_signed_on:
-            raise PermissionDenied("Contract is already signed, cannot resubmit.")
+            message = "Contract is already signed by the student, cannot resubmit."
+            logger.error(
+                message, extra={"context": {"contract": self.contract.to_dict()}}
+            )
+            raise PermissionDenied(message)
 
         backend_signature = get_signature_backend()
         context = contract_definition_utility.generate_document_context(

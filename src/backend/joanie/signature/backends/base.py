@@ -54,6 +54,7 @@ class BaseSignatureBackend:
             logger.error(
                 "When student signed, contract's validity date has passed for contract id : '%s'",
                 contract.id,
+                extra={"context": {"contract": contract.to_dict()}},
             )
             raise ValidationError(
                 "The contract validity date of expiration has passed."
@@ -81,6 +82,7 @@ class BaseSignatureBackend:
                 "When organization signed, "
                 "contract's validity date has passed for contract id : '%s'",
                 contract.id,
+                extra=contract.to_dict(),
             )
             raise ValidationError(
                 "The contract validity date of expiration has passed."

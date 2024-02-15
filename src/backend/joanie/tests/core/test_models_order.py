@@ -4,7 +4,7 @@ Test suite for order models
 # pylint: disable=too-many-lines
 import json
 import random
-from datetime import timedelta
+from datetime import datetime, timedelta
 from http import HTTPStatus
 from unittest import mock
 
@@ -22,10 +22,11 @@ from joanie.core.utils import contract_definition
 from joanie.lms_handler import LMSHandler
 from joanie.lms_handler.backends.dummy import DummyLMSBackend
 from joanie.payment.factories import BillingAddressDictFactory, InvoiceFactory
+from joanie.tests.base import BaseLogMixinTestCase
 
 
 # pylint: disable=too-many-public-methods
-class OrderModelsTestCase(TestCase):
+class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
     """Test suite for the Order model."""
 
     def test_models_order_enrollment_was_created_by_order(self):
@@ -1250,12 +1251,25 @@ class OrderModelsTestCase(TestCase):
             product=factories.ProductFactory(contract_definition=None),
         )
 
-        with self.assertRaises(ValidationError) as context:
+        with self.assertRaises(ValidationError) as context, self.assertLogs(
+            "joanie"
+        ) as logger:
             order.submit_for_signature(user=user)
 
         self.assertEqual(
             str(context.exception),
-            "['No contract definition attached to the product.']",
+            '["No contract definition attached to the contract\'s product."]',
+        )
+
+        self.assertLogsEquals(
+            logger.records,
+            [
+                (
+                    "ERROR",
+                    "No contract definition attached to the contract's product.",
+                    {"order": dict, "product": dict},
+                ),
+            ],
         )
 
     def test_models_order_submit_for_signature_fails_because_order_is_not_state_validate(
@@ -1280,12 +1294,25 @@ class OrderModelsTestCase(TestCase):
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
 
-        with self.assertRaises(ValidationError) as context:
+        with self.assertRaises(ValidationError) as context, self.assertLogs(
+            "joanie"
+        ) as logger:
             order.submit_for_signature(user=user)
 
         self.assertEqual(
             str(context.exception),
             "['Cannot submit an order that is not yet validated.']",
+        )
+
+        self.assertLogsEquals(
+            logger.records,
+            [
+                (
+                    "ERROR",
+                    "Cannot submit an order that is not yet validated.",
+                    {"order": dict},
+                ),
+            ],
         )
 
     def test_models_order_submit_for_signature_with_a_brand_new_contract(
@@ -1427,7 +1454,8 @@ class OrderModelsTestCase(TestCase):
             submitted_for_signature_on=django_timezone.now() - timedelta(days=16),
         )
 
-        invitation_url = order.submit_for_signature(user=user)
+        with self.assertLogs("joanie") as logger:
+            invitation_url = order.submit_for_signature(user=user)
 
         contract.refresh_from_db()
         self.assertEqual(contract.context, context)
@@ -1436,6 +1464,32 @@ class OrderModelsTestCase(TestCase):
         self.assertNotEqual("wfl_fake_dummy_id_1", contract.signature_backend_reference)
         self.assertIsNotNone(contract.submitted_for_signature_on)
         self.assertIsNotNone(contract.student_signed_on)
+
+        self.assertLogsEquals(
+            logger.records,
+            [
+                (
+                    "WARNING",
+                    "contract is not eligible for signing: signature validity period has passed",
+                    {
+                        "contract": dict,
+                        "submitted_for_signature_on": datetime,
+                        "signature_validity_period": int,
+                        "valid_until": datetime,
+                    },
+                ),
+                (
+                    "INFO",
+                    f"Document signature refused for the contract '{contract.id}'",
+                ),
+                ("INFO", f"Student signed the contract '{contract.id}'"),
+                (
+                    "INFO",
+                    f"Mail for '{contract.signature_backend_reference}' "
+                    f"is sent from Dummy Signature Backend",
+                ),
+            ],
+        )
 
     def test_models_order_submit_for_signature_but_contract_is_already_signed_should_fail(
         self,
@@ -1463,11 +1517,24 @@ class OrderModelsTestCase(TestCase):
             organization_signed_on=now,
         )
 
-        with self.assertRaises(PermissionDenied) as context:
+        with self.assertRaises(PermissionDenied) as context, self.assertLogs(
+            "joanie"
+        ) as logger:
             order.submit_for_signature(user=user)
 
         self.assertEqual(
-            str(context.exception), "Contract is already signed, cannot resubmit."
+            str(context.exception),
+            "Contract is already signed by the student, cannot resubmit.",
+        )
+        self.assertLogsEquals(
+            logger.records,
+            [
+                (
+                    "ERROR",
+                    "Contract is already signed by the student, cannot resubmit.",
+                    {"contract": dict},
+                ),
+            ],
         )
 
     def test_models_order_organization_required_if_not_draft_constraint(self):

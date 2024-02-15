@@ -242,11 +242,29 @@ class Contract(BaseModel):
         make sure to return False.
         """
         if not self.submitted_for_signature_on:
+            logger.info(
+                "contract is not eligible for signing: submitted_for_signature_on is None",
+                extra={"contract": self.to_dict()},
+            )
             return False
 
-        return timezone.now() < self.submitted_for_signature_on + timedelta(
+        valid_until = self.submitted_for_signature_on + timedelta(
             seconds=settings.JOANIE_SIGNATURE_VALIDITY_PERIOD
         )
+        is_still_valid = timezone.now() < valid_until
+        if not is_still_valid:
+            logger.warning(
+                "contract is not eligible for signing: signature validity period has passed",
+                extra={
+                    "context": {
+                        "contract": self.to_dict(),
+                        "submitted_for_signature_on": self.submitted_for_signature_on,
+                        "signature_validity_period": settings.JOANIE_SIGNATURE_VALIDITY_PERIOD,
+                        "valid_until": valid_until,
+                    },
+                },
+            )
+        return is_still_valid
 
     def get_abilities(self, user):
         """
