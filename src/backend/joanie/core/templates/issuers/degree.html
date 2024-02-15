@@ -39,7 +39,7 @@ which is the course provider. So the organization is accessed with organizations
             <br>
             successfully completed the course
             <br>
-            <strong class="coure-name">{{ course }}</strong>.
+            <strong class="coure-name">{{ course }}</strong>
             {% endblocktranslate %}
         </p>
     </section>
@@ -59,7 +59,7 @@ which is the course provider. So the organization is accessed with organizations
             <div class="signatories__column-content platform">
                 <img src="{% base64_static "joanie/images/degree_fun_verified_badge.png" %}" />
                 <p>
-                    {% blocktranslate with link=authenticity_link %}
+                    {% blocktranslate with link=verification_link %}
                     To verify the authenticity of this certificate, please visit:
                     <br/>
                     {{link}}

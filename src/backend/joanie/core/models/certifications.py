@@ -164,7 +164,11 @@ class Certificate(BaseModel):
                         "name": organization.safe_translation_getter(
                             "title", language_code=language
                         ),
-                        "representative": organization.representative,
+                        "representative": organization.signatory_representative
+                        or organization.representative,
+                        "representative_profession": organization.signatory_representative_profession
+                        if organization.signatory_representative
+                        else organization.representative_profession,
                         "signature": image_to_base64(organization.signature),
                         "logo": image_to_base64(organization.logo),
                     }
@@ -204,6 +208,7 @@ class Certificate(BaseModel):
             "id": str(self.pk),
             "creation_date": self.issued_on,
             "delivery_stamp": timezone.now(),
+            "verification_link": self.verification_uri,
             "student": {
                 "name": self.owner.get_full_name() or self.owner.username,
             },
