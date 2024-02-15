@@ -29,7 +29,12 @@ export function CustomModal({
   ...props
 }: PropsWithChildren<CustomModalProps>) {
   return (
-    <Dialog {...props} open={open} onClose={handleClose}>
+    <Dialog
+      {...props}
+      open={open}
+      onClose={handleClose}
+      data-testid="custom-modal"
+    >
       <DialogTitle>{title}</DialogTitle>
       <IconButton
         aria-label="close"

@@ -13,7 +13,8 @@
     "test:e2e:generate": "npx playwright codegen localhost:8072",
     "prettier-write": "prettier --write 'src/**/*.+(ts|tsx|json|js|jsx)' '*.+(ts|tsx|json|js|jsx)' '**/*.+(css|scss)'",
     "i18n:extract": "formatjs extract './**/*.ts*' --ignore ./node_modules --ignore './**/*.d.ts' --ignore './**/*.spec.*' --out-file './i18n/frontend.json' --id-interpolation-pattern '[sha512:contenthash:base64:6]' --format crowdin",
-    "i18n:compile": "formatjs compile-folder --format crowdin ./i18n/locales ./src/translations"
+    "i18n:compile": "formatjs compile-folder --format crowdin ./i18n/locales ./src/translations",
+    "test-ct": "playwright test -c playwright-ct.config.ts"
   },
   "dependencies": {
     "@boiseitguru/cookie-cutter": "0.2.3",
@@ -58,6 +59,7 @@
     "@babel/core": "7.23.9",
     "@formatjs/cli": "6.2.7",
     "@jest/globals": "29.7.0",
+    "@playwright/experimental-ct-react": "^1.41.2",
     "@playwright/test": "1.41.2",
     "@testing-library/dom": "9.3.4",
     "@testing-library/jest-dom": "6.4.2",
