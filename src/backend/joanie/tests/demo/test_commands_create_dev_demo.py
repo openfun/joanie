@@ -20,7 +20,12 @@ class CreateDevDemoTestCase(TestCase):
         call_command("create_dev_demo")
 
         nb_users = models.User.objects.count()
-        self.assertEqual(nb_users, 8)
+        expected_nb_users = 1  # admin
+        expected_nb_users += 5  # other organization owners
+        expected_nb_users += 1  # organization_owner
+        expected_nb_users += 1  # student_user
+        expected_nb_users += 1  # second_user
+        self.assertEqual(nb_users, expected_nb_users)
         nb_product_certificate = NB_DEV_OBJECTS["product_certificate"]
         nb_product_certificate += 1  # product_certificate_enrollment
         nb_product_certificate += 1  # create_product_purchased (type CERTIFICATE)

@@ -99,6 +99,8 @@ and this project adheres to
 
 ### Changed
 
+- Update demo-dev command to add a second product purchase with learner
+  signature.
 - Improve `degree` certificate template
 - Bind organization course author into certificate context
   instead of organization order
