@@ -107,9 +107,8 @@ class DummySignatureBackend(BaseSignatureBackend):
             logger.error("Failed to send mail: '%s'", exception)
 
         logger.info(
-            "Mail for '%s' is sent to %s from Dummy Signature Backend",
+            "Mail for '%s' is sent from Dummy Signature Backend",
             reference_id,
-            recipient_email,
         )
 
     def get_signed_file(self, reference_id: str) -> bytes:

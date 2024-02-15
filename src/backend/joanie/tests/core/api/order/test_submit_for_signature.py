@@ -134,7 +134,9 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
 
         content = response.json()
-        self.assertEqual(content[0], "No contract definition attached to the product.")
+        self.assertEqual(
+            content[0], "No contract definition attached to the contract's product."
+        )
 
     def test_api_order_submit_for_signature_authenticated(self):
         """

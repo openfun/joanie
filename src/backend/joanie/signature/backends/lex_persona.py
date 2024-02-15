@@ -155,6 +155,11 @@ class LexPersonaBackend(BaseSignatureBackend):
             logger.error(
                 "Lex Persona: Cannot create a signature procedure, reason: %s",
                 response.json(),
+                extra={
+                    "url": url,
+                    "payload": payload,
+                    "response": response.json(),
+                },
             )
             raise exceptions.CreateSignatureProcedureFailed(
                 "Lex Persona: Cannot create a signature procedure."
@@ -197,6 +202,12 @@ class LexPersonaBackend(BaseSignatureBackend):
                 "Lex Persona: Cannot upload the file to the signature provider with the signature"
                 " reference, reason: %s",
                 response.json(),
+                extra={
+                    "url": url,
+                    "params": params,
+                    "reference_id": reference_id,
+                    "response": response.json(),
+                },
             )
             raise exceptions.UploadFileFailed(
                 "Lex Persona: Cannot upload the file to the signature provider "
@@ -225,6 +236,12 @@ class LexPersonaBackend(BaseSignatureBackend):
                 "Lex Persona: Cannot start the signature procedure with signature reference, "
                 "reason: %s",
                 response.json(),
+                extra={
+                    "url": url,
+                    "payload": payload,
+                    "reference_id": reference_id,
+                    "response": response.json(),
+                },
             )
             raise exceptions.StartSignatureProcedureFailed(
                 "Lex Persona: Cannot start the signature procedure with signature reference"
@@ -241,20 +258,8 @@ class LexPersonaBackend(BaseSignatureBackend):
         response = self._create_invitation_link_to_sign(
             recipient_email=recipient_email, reference_id=reference_id
         )
-        if not response.ok:
-            logger.error(
-                "Lex Persona: Cannot create invitation link for %s, reason: %s",
-                recipient_email,
-                response.json(),
-            )
-            raise exceptions.InvitationSignatureFailed(
-                f"Lex Persona: Cannot create invitation link for {recipient_email}"
-            )
-
         invitation_link = response.json().get("inviteUrl")
-        token_jwt = self._extract_jwt_token_from_invitation_link(invitation_link)
-
-        return token_jwt
+        return self._extract_jwt_token_from_invitation_link(invitation_link)
 
     def _extract_jwt_token_from_invitation_link(self, invitation_link: str):
         """
@@ -263,21 +268,23 @@ class LexPersonaBackend(BaseSignatureBackend):
         JWT token from it. If a valid JWT token is found in the URL, it is returned as a string.
         Otherwise, if no token is found, it returns None.
         """
-        token = None
         pattern = r"invite\?token=(?P<token>[^&]+)"
 
         match = re.search(pattern, invitation_link)
 
         if match is None:
             logger.error(
-                "Cannot extract JWT Token from the invite url of the signature provider"
+                "Cannot extract JWT Token from the invite url of the signature provider",
+                extra={
+                    "invitation_link": invitation_link,
+                    "pattern": pattern,
+                },
             )
             raise ValueError(
                 "Cannot extract JWT Token from the invite url of the signature provider"
             )
 
-        token = match.group("token")
-        return token
+        return match.group("token")
 
     def _create_invitation_link_to_sign(self, recipient_email: str, reference_id: str):
         """
@@ -300,6 +307,7 @@ class LexPersonaBackend(BaseSignatureBackend):
                 "Lex Persona: %s has no documents registered to sign at the moment, reason: %s",
                 recipient_email,
                 response.json(),
+                extra={"url": url, "payload": payload, "response": response.json()},
             )
             raise exceptions.InvitationSignatureFailed(
                 f"Lex Persona: {recipient_email} has no documents "
@@ -334,6 +342,11 @@ class LexPersonaBackend(BaseSignatureBackend):
                 "Lex Persona: Cannot get invitation link to sign the file from the signature"
                 " provider, reason: %s",
                 response.json(),
+                extra={
+                    "url": url,
+                    "payload": payload,
+                    "response": response.json(),
+                },
             )
             raise exceptions.InvitationSignatureFailed(
                 "Lex Persona: Cannot get invitation link to sign the file "
@@ -358,10 +371,15 @@ class LexPersonaBackend(BaseSignatureBackend):
 
         response = requests.get(url, headers=headers, timeout=timeout)
         if not response.ok:
-            logger.error(
+            logger.warning(
                 "Lex Persona: Unable to verify the webhook event with the signature "
-                "provider, reason: %s",
-                response.json(),
+                "provider",
+                extra={
+                    "context": {
+                        "url": url,
+                        "response": response.json(),
+                    }
+                },
             )
             raise ValidationError(
                 "Lex Persona: Unable to verify the webhook event with the signature provider."
@@ -401,7 +419,14 @@ class LexPersonaBackend(BaseSignatureBackend):
         try:
             data = json.loads(request.body)
         except json.JSONDecodeError as error:
-            logger.error("The JSON body of the request is malformed")
+            logger.error(
+                "The JSON body of the request is malformed",
+                extra={
+                    "context": {
+                        "request": request.body,
+                    }
+                },
+            )
             raise ValidationError(
                 "The JSON body of the request is malformed"
             ) from error
@@ -409,7 +434,10 @@ class LexPersonaBackend(BaseSignatureBackend):
         try:
             webhook_event_id = data["id"]
         except KeyError as error:
-            logger.error("There is no ID key in the request body")
+            logger.error(
+                "There is no ID key in the request body",
+                extra={"context": {"data": data}},
+            )
             raise KeyError(
                 "Missing the key id to retrieve from the webhook event data"
             ) from error
@@ -419,7 +447,10 @@ class LexPersonaBackend(BaseSignatureBackend):
                 webhook_event_id
             )
         except ValidationError as error:
-            logger.error("The webhook event cannot be trusted : %s", webhook_event_id)
+            logger.error(
+                "The webhook event cannot be trusted",
+                extra={"context": {"data": data}},
+            )
             raise ValidationError(
                 "Lex Persona: Unable to verify the webhook event with the signature provider."
             ) from error
@@ -433,7 +464,15 @@ class LexPersonaBackend(BaseSignatureBackend):
         elif event_type == "recipientRefused":
             self.reset_contract(reference_id)
         else:
-            logger.error("'%s' is not an event type that we handle.")
+            logger.error(
+                "'%s' is not an event type that we handle.",
+                event_type,
+                extra={
+                    "context": {
+                        "trusted_event_signature_provider": trusted_event_signature_provider
+                    }
+                },
+            )
             raise ValidationError(
                 f"The notification {event_type} is not supported.",
             )
@@ -450,18 +489,6 @@ class LexPersonaBackend(BaseSignatureBackend):
         response = self._sign_specific_selection_of_references(
             reference_ids=reference_ids, token_jwt=token_jwt
         )
-
-        if not response.ok:
-            logger.error(
-                "Lex Persona: Cannot get invitation link to sign the file from the signature"
-                " provider, reason: %s",
-                response.json(),
-            )
-            raise exceptions.InvitationSignatureFailed(
-                "Lex Persona: Cannot get invitation link to sign the file from "
-                "the signature provider."
-            )
-
         return response.json().get("consentPageUrl")
 
     def delete_signing_procedure(self, reference_id: str):
@@ -491,6 +518,10 @@ class LexPersonaBackend(BaseSignatureBackend):
                 " the reference does not exist %s, reason: %s",
                 reference_id,
                 response.json(),
+                extra={
+                    "url": url,
+                    "response": response.json(),
+                },
             )
             raise exceptions.DeleteSignatureProcedureFailed(
                 "Lex Persona: Unable to delete the signature procedure"
@@ -518,6 +549,10 @@ class LexPersonaBackend(BaseSignatureBackend):
                 "Lex Persona: There is no document with the specified reference : %s, reason : %s",
                 reference_id,
                 response.json(),
+                extra={
+                    "url": url,
+                    "response": response.json(),
+                },
             )
             raise ValidationError(
                 f"Lex Persona: The specified reference can not be found : {reference_id}."
