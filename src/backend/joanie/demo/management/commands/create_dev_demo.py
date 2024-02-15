@@ -1,4 +1,4 @@
-# ruff: noqa: S311, PLR0913
+# ruff: noqa: S311, PLR0913, PLR0915
 """Management command to initialize some fake data (products, courses and course runs)"""
 import random
 
@@ -178,16 +178,18 @@ class Command(BaseCommand):
         product_type=enums.PRODUCT_TYPE_CERTIFICATE,
         order_status=enums.ORDER_STATE_VALIDATED,
         contract_definition=None,
+        product=None,
     ):  # pylint: disable=too-many-arguments
         """Create a product, it's enrollment and it's order."""
-        if product_type == enums.PRODUCT_TYPE_CERTIFICATE:
-            product = self.create_product_certificate(course_user, organization)
-        elif product_type == enums.PRODUCT_TYPE_CREDENTIAL:
-            product = self.create_product_credential(
-                course_user, organization, contract_definition
-            )
-        else:
-            raise ValueError(f"Given product_type ({product_type}) is not allowed.")
+        if not product:
+            if product_type == enums.PRODUCT_TYPE_CERTIFICATE:
+                product = self.create_product_certificate(course_user, organization)
+            elif product_type == enums.PRODUCT_TYPE_CREDENTIAL:
+                product = self.create_product_credential(
+                    course_user, organization, contract_definition
+                )
+            else:
+                raise ValueError(f"Given product_type ({product_type}) is not allowed.")
 
         course = product.courses.first()
 
@@ -238,7 +240,7 @@ class Command(BaseCommand):
             organization=organization,
         )
 
-    def handle(self, *args, **options):  # pylint: disable=too-many-locals
+    def handle(self, *args, **options):  # pylint: disable=too-many-locals,too-many-statements
         translation.activate("en-us")
 
         # Create an organization
@@ -271,6 +273,14 @@ class Command(BaseCommand):
         )
         payment_factories.CreditCardFactory(owner=student_user)
         factories.UserAddressFactory(owner=student_user)
+
+        second_student_user = factories.UserFactory(
+            username="second_student_user",
+            email=email_user + "+second_student_user@" + email_domain,
+            first_name="Étudiant 002",
+        )
+        payment_factories.CreditCardFactory(owner=second_student_user)
+        factories.UserAddressFactory(owner=second_student_user)
 
         # First create a course product to learn how to become a botanist
         # 1/ some course runs are required to become a botanist
@@ -467,7 +477,7 @@ class Command(BaseCommand):
         )
 
         # Order for a PRODUCT_CREDENTIAL with a learner signed contract
-        order = self.create_product_purchased(
+        learner_signed_order = self.create_product_purchased(
             student_user,
             organization_owner,
             organization,
@@ -476,6 +486,23 @@ class Command(BaseCommand):
             factories.ContractDefinitionFactory(),
         )
 
+        factories.ContractFactory(
+            order=learner_signed_order,
+            definition=learner_signed_order.product.contract_definition,
+            submitted_for_signature_on=django_timezone.now(),
+            student_signed_on=django_timezone.now(),
+        )
+
+        # create a second purchase with a learner signed contract for the same PRODUCT_CREDENTIAL
+        order = self.create_product_purchased(
+            second_student_user,
+            organization_owner,
+            organization,
+            enums.PRODUCT_TYPE_CREDENTIAL,
+            enums.ORDER_STATE_VALIDATED,
+            factories.ContractDefinitionFactory(),
+            product=learner_signed_order.product,
+        )
         factories.ContractFactory(
             order=order,
             definition=order.product.contract_definition,
