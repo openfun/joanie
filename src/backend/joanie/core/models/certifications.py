@@ -6,8 +6,9 @@ import logging
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.db import models
+from django.urls import reverse
 from django.utils import timezone
-from django.utils.translation import get_language
+from django.utils.translation import get_language, override
 from django.utils.translation import gettext_lazy as _
 
 from parler import models as parler_models
@@ -171,6 +172,25 @@ class Certificate(BaseModel):
                 ],
             }
         self.localized_context = context
+
+    @property
+    def verification_uri(self):
+        """
+        Return the verification uri for the certificate if
+        this one is a degree certificate.
+        """
+        if self.certificate_definition.template != enums.DEGREE:
+            return None
+
+        # - Retrieve the current language code or a fallback if the language is not available
+        current_language_code = get_language_settings(get_language()).get("code")
+        site = Site.objects.get_current()
+        with override(current_language_code, True):
+            path = reverse(
+                "certificate-verification", kwargs={"certificate_id": self.pk}
+            )
+
+        return f"https://{site.domain}{path}"
 
     def get_document_context(self, language_code=None):
         """

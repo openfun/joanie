@@ -2,7 +2,7 @@
 from django.conf import settings
 from django.test import TestCase
 
-from joanie.core import factories
+from joanie.core import enums, factories
 
 
 class CertificateModelTestCase(TestCase):
@@ -84,3 +84,19 @@ class CertificateModelTestCase(TestCase):
             str(context.exception),
             "The 'signature' attribute has no file associated with it.",
         )
+
+    def test_models_certificate_verification_uri(self):
+        """
+        The verification uri should be returned only for degree certificates.
+        """
+        for [template_name, _] in enums.CERTIFICATE_NAME_CHOICES:
+            certificate = factories.EnrollmentCertificateFactory(
+                certificate_definition__template=template_name
+            )
+            if template_name == enums.DEGREE:
+                self.assertEqual(
+                    certificate.verification_uri,
+                    f"https://example.com/en-us/certificates/{certificate.id}",
+                )
+            else:
+                self.assertIsNone(certificate.verification_uri)
