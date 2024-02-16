@@ -1,4 +1,4 @@
-"""All debug views of the `core`app."""
+"""All debug views of the `debug`app."""
 import base64
 import datetime
 from logging import getLogger

@@ -10,6 +10,8 @@ and this project adheres to
 
 ## Added
 
+- Debug app to preview template (certificate, degree, invoice,
+  contract definition)
 - Allow to filter out organization through course product relation id on
   the client API
 - Add custom template tag to convert ISO 8601 duration to a specified time unit.

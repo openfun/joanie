@@ -637,7 +637,11 @@ class Development(Base):
 
     def __init__(self):
         # pylint: disable=invalid-name
-        self.INSTALLED_APPS += ["django_extensions", "drf_spectacular_sidecar"]
+        self.INSTALLED_APPS += [
+            "django_extensions",
+            "drf_spectacular_sidecar",
+            "joanie.debug",
+        ]
 
 
 class Test(Base):
@@ -708,7 +712,11 @@ class Test(Base):
 
     def __init__(self):
         # pylint: disable=invalid-name
-        self.INSTALLED_APPS += ["joanie.tests", "drf_spectacular_sidecar"]
+        self.INSTALLED_APPS += [
+            "joanie.tests",
+            "drf_spectacular_sidecar",
+            "joanie.debug",
+        ]
 
 
 class ContinuousIntegration(Test):
