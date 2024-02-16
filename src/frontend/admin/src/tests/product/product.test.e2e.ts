@@ -259,6 +259,19 @@ test.describe("Product form", () => {
     await page.getByLabel("Course search").fill(course.title);
     await page.getByRole("option", { name: course.title }).click();
 
+    await expect(
+      addTargetCourseModal
+        .getByTestId("product-target-course-runs-selection-alert")
+        .getByText(
+          "By default all course runs are selected, turn this switch on if you want to choose which course runs are selected.",
+        ),
+    ).toBeVisible();
+
+    await addTargetCourseModal
+      .getByTestId("product-target-course-runs-selection-alert")
+      .getByTestId("enable-course-runs-selection")
+      .click();
+
     await page
       .getByRole("row", { name: `Select row ${courseRuns[0].title} Click` })
       .getByLabel("Select row")

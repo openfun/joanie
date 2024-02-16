@@ -166,6 +166,17 @@ export const productFormMessages = defineMessages({
     defaultMessage: "Add target courses",
     description: "Title for the add target courses modal",
   },
+  choiceTargetCourseCourseRunModalTitle: {
+    id: "components.templates.products.form.translations.choiceTargetCourseCourseRunModalTitle",
+    defaultMessage: "Course run selection",
+    description: "Title for the course runs selection section",
+  },
+  choiceTargetCourseCourseRunModalAlertContent: {
+    id: "components.templates.products.form.translations.choiceTargetCourseCourseRunModalAlertContent",
+    defaultMessage:
+      "By default all course runs are selected, turn this switch on if you want to choose which course runs are selected.",
+    description: "Content for the select course runs selection alert",
+  },
   addTargetCourseCourseRunModalTitle: {
     id: "components.templates.products.form.translations.addTargetCourseCourseRunModalTitle",
     defaultMessage: "List of available course runs",

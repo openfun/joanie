@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -9,6 +9,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import Alert from "@mui/material/Alert";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
+import Switch from "@mui/material/Switch";
 import {
   ProductTargetCourseRelation,
   ProductTargetCourseRelationFormValues,
@@ -27,6 +28,11 @@ type Props = {
 };
 export function ProductTargetCourseRelationForm(props: Props) {
   const intl = useIntl();
+  const [enableCourseRuns, setEnableCourseRuns] = useState(
+    props.targetCourse && props.targetCourse.course_runs
+      ? props.targetCourse.course_runs.length > 0
+      : false,
+  );
 
   const Schema = Yup.object().shape({
     course: Yup.mixed<Course>().required(),
@@ -36,6 +42,7 @@ export function ProductTargetCourseRelationForm(props: Props) {
   const getDefaultValues = (): ProductTargetCourseRelationFormValues => {
     let courseRunsDefault: CourseRun[] = [];
     let courseDefault: any = null;
+
     if (props.targetCourse) {
       const { course_runs: courseRuns, ...course } = props.targetCourse;
       courseRunsDefault = courseRuns ?? [];
@@ -61,6 +68,13 @@ export function ProductTargetCourseRelationForm(props: Props) {
   };
 
   const valueCourse = methods.watch("course");
+  const courseRuns = methods.watch("course_runs");
+
+  useEffect(() => {
+    if (!valueCourse) {
+      setEnableCourseRuns(false);
+    }
+  }, [valueCourse]);
 
   useEffect(() => {
     methods.reset(getDefaultValues());
@@ -85,18 +99,43 @@ export function ProductTargetCourseRelationForm(props: Props) {
             <CourseSearch enableAdd enableEdit name="course" />
 
             {valueCourse != null && (
-              <Box mt={4}>
+              <Box sx={{ mt: 3 }}>
                 <Typography variant="subtitle2" component="h6">
                   <FormattedMessage
-                    {...productFormMessages.addTargetCourseCourseRunModalTitle}
+                    {...productFormMessages.choiceTargetCourseCourseRunModalTitle}
                   />
                 </Typography>
+                <Alert
+                  data-testid="product-target-course-runs-selection-alert"
+                  sx={{ mt: 1 }}
+                  icon={
+                    <Switch
+                      data-testid="enable-course-runs-selection"
+                      checked={enableCourseRuns}
+                      size="small"
+                      onChange={(event, checked) => {
+                        setEnableCourseRuns(checked);
+                        if (!checked) {
+                          methods.setValue("course_runs", []);
+                        }
+                      }}
+                    />
+                  }
+                  severity="warning"
+                >
+                  <FormattedMessage
+                    {...productFormMessages.choiceTargetCourseCourseRunModalAlertContent}
+                  />
+                </Alert>
+              </Box>
+            )}
+
+            {valueCourse != null && enableCourseRuns && (
+              <Box mt={4}>
                 <CoursesRunsList
                   enableDelete={false}
                   defaultSelectedRows={
-                    props.targetCourse?.course_runs.map(
-                      (courseRun) => courseRun.id,
-                    ) ?? []
+                    courseRuns?.map((courseRun) => courseRun.id) ?? []
                   }
                   enableSelect
                   onSelectRows={(ids, selectedCourseRuns) => {
