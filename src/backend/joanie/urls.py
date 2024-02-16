@@ -31,13 +31,8 @@ from joanie import admin_urls, client_urls, remote_endpoints_urls
 from joanie.core.views import (
     BackOfficeRedirectView,
     CertificateVerificationView,
-    DebugCertificateTemplateView,
-    DebugContractTemplateView,
-    DebugDegreeTemplateView,
-    DebugInvoiceTemplateView,
-    DebugMailSuccessPaymentViewHtml,
-    DebugMailSuccessPaymentViewTxt,
 )
+from joanie.debug import urls as debug_urls
 
 API_VERSION = settings.API_VERSION
 
@@ -64,80 +59,48 @@ urlpatterns += i18n_patterns(
 )
 
 if settings.DEBUG:
-    urlpatterns = (
-        urlpatterns
-        + [
+    urlpatterns += debug_urls.urlpatterns
+
+if settings.USE_SWAGGER or settings.DEBUG:
+    urlpatterns += (
+        [
             path(
-                "__debug__/mail/order_validated_html",
-                DebugMailSuccessPaymentViewHtml.as_view(),
-                name="debug.mail.order_validated_html",
+                f"{API_VERSION}/admin-swagger.json",
+                SpectacularJSONAPIView.as_view(
+                    api_version=API_VERSION,
+                    urlconf="joanie.admin_urls",
+                ),
+                name="admin-api-schema",
             ),
             path(
-                "__debug__/mail/order_validated_txt",
-                DebugMailSuccessPaymentViewTxt.as_view(),
-                name="debug.mail.order_validated_txt",
+                f"{API_VERSION}/admin-swagger/",
+                SpectacularSwaggerView.as_view(url_name="admin-api-schema"),
+                name="swagger-ui-schema",
+            ),
+            re_path(
+                f"{API_VERSION}/admin-redoc/",
+                SpectacularRedocView.as_view(url_name="admin-api-schema"),
+                name="redoc-schema",
             ),
             path(
-                "__debug__/pdf-templates/certificate",
-                DebugCertificateTemplateView.as_view(),
-                name="debug.certificate_definition.certificate",
+                f"{API_VERSION}/swagger.json",
+                SpectacularJSONAPIView.as_view(
+                    api_version=API_VERSION,
+                    urlconf="joanie.client_urls",
+                ),
+                name="client-api-schema",
             ),
             path(
-                "__debug__/pdf-templates/degree",
-                DebugDegreeTemplateView.as_view(),
-                name="debug.certificate_definition.degree",
+                f"{API_VERSION}/swagger/",
+                SpectacularSwaggerView.as_view(url_name="client-api-schema"),
+                name="swagger-ui-schema",
             ),
-            path(
-                "__debug__/pdf-templates/contract",
-                DebugContractTemplateView.as_view(),
-                name="debug.contract.definition",
-            ),
-            path(
-                "__debug__/pdf-templates/invoice",
-                DebugInvoiceTemplateView.as_view(),
-                name="debug.invoice_template.invoice",
+            re_path(
+                f"{API_VERSION}/redoc/",
+                SpectacularRedocView.as_view(url_name="client-api-schema"),
+                name="redoc-schema",
             ),
         ]
         + staticfiles_urlpatterns()
         + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     )
-
-if settings.USE_SWAGGER or settings.DEBUG:
-    urlpatterns += [
-        path(
-            f"{API_VERSION}/admin-swagger.json",
-            SpectacularJSONAPIView.as_view(
-                api_version=API_VERSION,
-                urlconf="joanie.admin_urls",
-            ),
-            name="admin-api-schema",
-        ),
-        path(
-            f"{API_VERSION}/admin-swagger/",
-            SpectacularSwaggerView.as_view(url_name="admin-api-schema"),
-            name="swagger-ui-schema",
-        ),
-        re_path(
-            f"{API_VERSION}/admin-redoc/",
-            SpectacularRedocView.as_view(url_name="admin-api-schema"),
-            name="redoc-schema",
-        ),
-        path(
-            f"{API_VERSION}/swagger.json",
-            SpectacularJSONAPIView.as_view(
-                api_version=API_VERSION,
-                urlconf="joanie.client_urls",
-            ),
-            name="client-api-schema",
-        ),
-        path(
-            f"{API_VERSION}/swagger/",
-            SpectacularSwaggerView.as_view(url_name="client-api-schema"),
-            name="swagger-ui-schema",
-        ),
-        re_path(
-            f"{API_VERSION}/redoc/",
-            SpectacularRedocView.as_view(url_name="client-api-schema"),
-            name="redoc-schema",
-        ),
-    ]
