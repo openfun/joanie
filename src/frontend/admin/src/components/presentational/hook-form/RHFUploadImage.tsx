@@ -4,10 +4,10 @@ import { Controller, useFormContext } from "react-hook-form";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Collapse from "@mui/material/Collapse";
-import FormLabel from "@mui/material/FormLabel";
 import { TransitionGroup } from "react-transition-group";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { useIntl } from "react-intl";
+import Typography from "@mui/material/Typography";
 import { FileThumbnail } from "@/components/presentational/files/thumbnail/FileThumbnail";
 import { ThumbnailDetailField } from "@/services/api/models/Image";
 import { commonTranslations } from "@/translations/common/commonTranslations";
@@ -62,11 +62,7 @@ export function RHFUploadImage({
         render={({ field }) => {
           return (
             <>
-              {label && (
-                <FormLabel sx={{ mb: 1 }} component="legend">
-                  {label}
-                </FormLabel>
-              )}
+              {label && <Typography variant="caption">{label}</Typography>}
 
               <Button
                 variant="outlined"

@@ -4,10 +4,11 @@ import * as Yup from "yup";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import Grid from "@mui/material/Unstable_Grid2";
-import { useIntl } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import Alert from "@mui/material/Alert";
 import { RHFProvider } from "@/components/presentational/hook-form/RHFProvider";
 import { RHFTextField } from "@/components/presentational/hook-form/RHFTextField";
 import { RHFUploadImage } from "@/components/presentational/hook-form/RHFUploadImage";
@@ -19,7 +20,7 @@ import {
 import { commonTranslations } from "@/translations/common/commonTranslations";
 import { organizationFormMessages } from "@/components/templates/organizations/form/translations";
 import { useOrganizations } from "@/hooks/useOrganizations/useOrganizations";
-import { ServerSideErrorForm } from "@/types/utils";
+import { Maybe, ServerSideErrorForm } from "@/types/utils";
 import { genericUpdateFormError } from "@/utils/forms";
 import { TranslatableContent } from "@/components/presentational/translatable-content/TranslatableContent";
 import { SimpleCard } from "@/components/presentational/card/SimpleCard";
@@ -34,6 +35,14 @@ interface FormValues {
   representative: string | undefined;
   signature: File[] | undefined;
   logo: File[] | undefined;
+  enterprise_code?: string; // SIRET in France
+  activity_category_code?: string; // APE in France
+  representative_profession?: string;
+  signatory_representative?: string;
+  signatory_representative_profession?: string;
+  contact_phone?: string;
+  contact_email?: string;
+  dpo_email?: string;
 }
 
 interface Props {
@@ -53,6 +62,17 @@ export function OrganizationForm(props: Props) {
       title: defaultOrganization?.title ?? "",
       representative: defaultOrganization?.representative ?? "",
       country: defaultOrganization?.country ?? "FR",
+      enterprise_code: defaultOrganization?.enterprise_code ?? "",
+      activity_category_code: defaultOrganization?.activity_category_code ?? "",
+      representative_profession:
+        defaultOrganization?.representative_profession ?? "",
+      signatory_representative:
+        defaultOrganization?.signatory_representative ?? "",
+      signatory_representative_profession:
+        defaultOrganization?.signatory_representative_profession ?? "",
+      contact_phone: defaultOrganization?.contact_phone ?? "",
+      contact_email: defaultOrganization?.contact_email ?? "",
+      dpo_email: defaultOrganization?.dpo_email ?? "",
     };
   };
 
@@ -63,6 +83,21 @@ export function OrganizationForm(props: Props) {
     signature: Yup.mixed(),
     logo: Yup.mixed(),
     country: Yup.string(),
+    enterprise_code: Yup.string(),
+    activity_category_code: Yup.string(),
+    representative_profession: Yup.string(),
+    signatory_representative: Yup.string(),
+    signatory_representative_profession: Yup.string().when(
+      ["signatory_representative"],
+      {
+        is: (signatory_representative: Maybe<string>) =>
+          signatory_representative != null && signatory_representative !== "",
+        then: (schema) => schema.required(),
+      },
+    ),
+    contact_phone: Yup.string(),
+    contact_email: Yup.string().email(),
+    dpo_email: Yup.string().email(),
   });
 
   const methods = useForm({
@@ -141,6 +176,14 @@ export function OrganizationForm(props: Props) {
             >
               <Grid container spacing={2}>
                 <Grid xs={12}>
+                  <Typography variant="subtitle2">
+                    <FormattedMessage
+                      {...organizationFormMessages.generalSectionTitle}
+                    />
+                  </Typography>
+                </Grid>
+
+                <Grid xs={12} md={6}>
                   <RHFTextField
                     name="title"
                     label={intl.formatMessage(commonTranslations.title)}
@@ -154,6 +197,7 @@ export function OrganizationForm(props: Props) {
                     )}
                   />
                 </Grid>
+
                 <Grid xs={12} md={6}>
                   <RHFTextField
                     name="representative"
@@ -162,6 +206,15 @@ export function OrganizationForm(props: Props) {
                     )}
                   />
                 </Grid>
+                <Grid xs={12} md={6}>
+                  <RHFTextField
+                    name="representative_profession"
+                    label={intl.formatMessage(
+                      organizationFormMessages.representativeProfessionLabel,
+                    )}
+                  />
+                </Grid>
+
                 <Grid xs={12}>
                   <RHFSelect
                     disabled={!organizationQuery.countries}
@@ -172,7 +225,8 @@ export function OrganizationForm(props: Props) {
                     )}
                   />
                 </Grid>
-                <Grid xs={12} md={6}>
+
+                <Grid xs={12}>
                   <RHFUploadImage
                     thumbnailFiles={getUploadedLogo()}
                     buttonLabel={intl.formatMessage(
@@ -185,7 +239,44 @@ export function OrganizationForm(props: Props) {
                     )}
                   />
                 </Grid>
+
+                <Grid xs={12}>
+                  <Typography variant="subtitle2">
+                    <FormattedMessage
+                      {...organizationFormMessages.signatoryDetailsSectionTitle}
+                    />
+                  </Typography>
+                </Grid>
+
+                <Grid xs={12}>
+                  <Alert severity="info">
+                    <FormattedMessage
+                      {...organizationFormMessages.signatoryDetailsSectionInfo}
+                    />
+                  </Alert>
+                </Grid>
+
                 <Grid xs={12} md={6}>
+                  <RHFTextField
+                    name="signatory_representative"
+                    label={intl.formatMessage(
+                      organizationFormMessages.signatoryRepresentativeLabel,
+                    )}
+                  />
+                </Grid>
+
+                <Grid xs={12} md={6}>
+                  <RHFTextField
+                    name="signatory_representative_profession"
+                    helperText={intl.formatMessage(
+                      organizationFormMessages.signatoryRepresentativeProfessionHelperText,
+                    )}
+                    label={intl.formatMessage(
+                      organizationFormMessages.signatoryRepresentativeProfessionLabel,
+                    )}
+                  />
+                </Grid>
+                <Grid xs={12}>
                   <RHFUploadImage
                     thumbnailFiles={getUploadedSignature()}
                     name="signature"
@@ -195,6 +286,62 @@ export function OrganizationForm(props: Props) {
                     accept="image/*"
                     label={intl.formatMessage(
                       organizationFormMessages.signatureLabel,
+                    )}
+                  />
+                </Grid>
+
+                <Grid xs={12}>
+                  <Typography variant="subtitle2">
+                    <FormattedMessage
+                      {...organizationFormMessages.legalPartSectionTitle}
+                    />
+                  </Typography>
+                </Grid>
+                <Grid xs={12} md={6}>
+                  <RHFTextField
+                    name="enterprise_code"
+                    label={intl.formatMessage(
+                      organizationFormMessages.enterpriseCodeLabel,
+                    )}
+                  />
+                </Grid>
+                <Grid xs={12} lg={6}>
+                  <RHFTextField
+                    name="activity_category_code"
+                    label={intl.formatMessage(
+                      organizationFormMessages.activityCategoryCodeLabel,
+                    )}
+                  />
+                </Grid>
+
+                <Grid xs={12}>
+                  <Typography variant="subtitle2">
+                    <FormattedMessage
+                      {...organizationFormMessages.contactSectionTitle}
+                    />
+                  </Typography>
+                </Grid>
+                <Grid xs={12} md={6} lg={4}>
+                  <RHFTextField
+                    name="contact_phone"
+                    label={intl.formatMessage(
+                      organizationFormMessages.contactPhoneLabel,
+                    )}
+                  />
+                </Grid>
+                <Grid xs={12} md={6} lg={4}>
+                  <RHFTextField
+                    name="contact_email"
+                    label={intl.formatMessage(
+                      organizationFormMessages.contactEmailLabel,
+                    )}
+                  />
+                </Grid>
+                <Grid xs={12} lg={4}>
+                  <RHFTextField
+                    name="dpo_email"
+                    label={intl.formatMessage(
+                      organizationFormMessages.dpoContactEmailLabel,
                     )}
                   />
                 </Grid>
