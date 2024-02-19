@@ -213,3 +213,15 @@ class CourseProductRelationViewSetFilter(filters.FilterSet):
     class Meta:
         model = models.CourseProductRelation
         fields: List[str] = []
+
+
+class OrganizationViewSetFilter(filters.FilterSet):
+    """
+    Filter organizations by course product relation.
+    """
+
+    course_product_relation_id = filters.UUIDFilter(field_name="product_relations__id")
+
+    class Meta:
+        model = models.Organization
+        fields: List[str] = []

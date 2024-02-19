@@ -679,6 +679,7 @@ class OrganizationViewSet(
     lookup_field = "pk"
     permission_classes = [permissions.AccessPermission]
     serializer_class = serializers.OrganizationSerializer
+    filterset_class = filters.OrganizationViewSetFilter
 
     def get_queryset(self):
         """

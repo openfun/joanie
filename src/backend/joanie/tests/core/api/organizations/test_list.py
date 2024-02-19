@@ -1,6 +1,7 @@
 """
 Test suite for Organization list API endpoint.
 """
+import uuid
 from http import HTTPStatus
 from unittest import mock
 
@@ -129,3 +130,79 @@ class OrganizationApiListTest(BaseAPITestCase):
             },
         )
         mock_abilities.called_once_with(user)
+
+    def test_api_organization_list_filtered_by_course_product_relation_id(self):
+        """
+        Authenticated users should only see the organizations to which they have access
+        and should be able to filter them by course product relation.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        factories.OrganizationFactory()
+        organizations = factories.OrganizationFactory.create_batch(3)
+        for organization in organizations:
+            factories.UserOrganizationAccessFactory(
+                user=user, organization=organization
+            )
+
+        # Create a course product relation with the first organization
+        relation = factories.CourseProductRelationFactory(
+            organizations=[organizations[0]]
+        )
+
+        # - Without filter all organizations with access should be returned
+        response = self.client.get(
+            "/api/v1.0/organizations/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 3)
+
+        # - With filter only organizations linked to the relation should be returned
+        response = self.client.get(
+            f"/api/v1.0/organizations/?course_product_relation_id={relation.id}",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+        self.assertEqual(content["results"][0]["id"], str(organizations[0].id))
+
+        # - If the relation does not exist, no organization should be returned
+        response = self.client.get(
+            f"/api/v1.0/organizations/?course_product_relation_id={uuid.uuid4()}",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 0)
+
+    def test_api_organization_list_filtered_by_invalid_course_product_relation_id(self):
+        """
+        If the user tries to filter organizations by an invalid course product relation
+        id, a bad request should be returned.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        factories.OrganizationFactory()
+        organizations = factories.OrganizationFactory.create_batch(3)
+        for organization in organizations:
+            factories.UserOrganizationAccessFactory(
+                user=user, organization=organization
+            )
+
+        response = self.client.get(
+            "/api/v1.0/organizations/?course_product_relation_id=invalid_id",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertContains(
+            response,
+            '{"course_product_relation_id":["Enter a valid UUID."]}',
+            status_code=HTTPStatus.BAD_REQUEST,
+        )
