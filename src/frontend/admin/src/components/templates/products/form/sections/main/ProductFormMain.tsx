@@ -29,6 +29,7 @@ import { ProductFormInstructions } from "@/components/templates/products/form/se
 import { removeEOL } from "@/utils/string";
 import { ContractDefinition } from "@/services/api/models/ContractDefinition";
 import { ContractDefinitionSearch } from "@/components/templates/contract-definition/inputs/ContractDefinitionSearch";
+import { TranslatableContent } from "@/components/presentational/translatable-content/TranslatableContent";
 
 type Props = WizardStepProps & {
   product?: Product;
@@ -111,94 +112,102 @@ export function ProductFormMain({
   };
 
   return (
-    <RHFProvider id="product-main-form" showSubmit={false} methods={methods}>
-      <RHFValuesChange<ProductFormMainValues>
-        onSubmit={(values) => onSubmit(values)}
-      >
-        <Grid container spacing={2}>
-          <Grid xs={12}>
-            <Typography variant="subtitle2">
-              {intl.formatMessage(productFormMessages.mainInformationTitle)}
-            </Typography>
-          </Grid>
-          <Grid xs={12} md={6}>
-            <RHFTextField
-              required
-              name="title"
-              label={intl.formatMessage(commonTranslations.title)}
-            />
-          </Grid>
-          <Grid xs={12} md={6}>
-            <RHFSelect
-              required
-              leftIcons={
-                <IconButton onClick={props.onResetType} size="small">
-                  <ModeEditOutlineTwoToneIcon color="primary" />
-                </IconButton>
-              }
-              data-testid="type-select"
-              disabled
-              name="type"
-              label={intl.formatMessage(productFormMessages.productTypeLabel)}
-              options={[
-                {
-                  label: ProductType.CERTIFICATE,
-                  value: ProductType.CERTIFICATE,
-                },
-                {
-                  label: ProductType.CREDENTIAL,
-                  value: ProductType.CREDENTIAL,
-                },
-                {
-                  label: ProductType.ENROLLMENT,
-                  value: ProductType.ENROLLMENT,
-                },
-              ]}
-            />
-          </Grid>
-
-          <Grid xs={12}>
-            <RHFTextField
-              name="description"
-              required
-              multiline
-              minRows={3}
-              label={intl.formatMessage(commonTranslations.description)}
-            />
-          </Grid>
-
-          {productType !== ProductType.ENROLLMENT && (
+    <TranslatableContent
+      onSelectLang={() => {
+        if (productRepository) productRepository.methods.invalidate();
+      }}
+    >
+      <RHFProvider id="product-main-form" showSubmit={false} methods={methods}>
+        <RHFValuesChange<ProductFormMainValues>
+          onSubmit={(values) => onSubmit(values)}
+        >
+          <Grid container spacing={2}>
             <Grid xs={12}>
-              <CertificateSearch
-                placeholder="search"
-                enableAdd={true}
-                helperText={intl.formatMessage(
-                  productFormMessages.definitionHelper,
-                )}
-                enableEdit={true}
-                name="certificate_definition"
-                label={intl.formatMessage(productFormMessages.definition)}
+              <Typography variant="subtitle2">
+                {intl.formatMessage(productFormMessages.mainInformationTitle)}
+              </Typography>
+            </Grid>
+            <Grid xs={12} md={6}>
+              <RHFTextField
+                required
+                name="title"
+                label={intl.formatMessage(commonTranslations.title)}
               />
             </Grid>
-          )}
-          <Grid xs={12}>
-            <ContractDefinitionSearch
-              placeholder={intl.formatMessage(
-                productFormMessages.contractDefinitionPlaceholder,
-              )}
-              enableAdd={true}
-              helperText={intl.formatMessage(
-                productFormMessages.contractDefinitionHelper,
-              )}
-              enableEdit={true}
-              name="contract_definition"
-              label={intl.formatMessage(productFormMessages.contractDefinition)}
-            />
+            <Grid xs={12} md={6}>
+              <RHFSelect
+                required
+                leftIcons={
+                  <IconButton onClick={props.onResetType} size="small">
+                    <ModeEditOutlineTwoToneIcon color="primary" />
+                  </IconButton>
+                }
+                data-testid="type-select"
+                disabled
+                name="type"
+                label={intl.formatMessage(productFormMessages.productTypeLabel)}
+                options={[
+                  {
+                    label: ProductType.CERTIFICATE,
+                    value: ProductType.CERTIFICATE,
+                  },
+                  {
+                    label: ProductType.CREDENTIAL,
+                    value: ProductType.CREDENTIAL,
+                  },
+                  {
+                    label: ProductType.ENROLLMENT,
+                    value: ProductType.ENROLLMENT,
+                  },
+                ]}
+              />
+            </Grid>
+
+            <Grid xs={12}>
+              <RHFTextField
+                name="description"
+                required
+                multiline
+                minRows={3}
+                label={intl.formatMessage(commonTranslations.description)}
+              />
+            </Grid>
+
+            {productType !== ProductType.ENROLLMENT && (
+              <Grid xs={12}>
+                <CertificateSearch
+                  placeholder="search"
+                  enableAdd={true}
+                  helperText={intl.formatMessage(
+                    productFormMessages.definitionHelper,
+                  )}
+                  enableEdit={true}
+                  name="certificate_definition"
+                  label={intl.formatMessage(productFormMessages.definition)}
+                />
+              </Grid>
+            )}
+            <Grid xs={12}>
+              <ContractDefinitionSearch
+                placeholder={intl.formatMessage(
+                  productFormMessages.contractDefinitionPlaceholder,
+                )}
+                enableAdd={true}
+                helperText={intl.formatMessage(
+                  productFormMessages.contractDefinitionHelper,
+                )}
+                enableEdit={true}
+                name="contract_definition"
+                label={intl.formatMessage(
+                  productFormMessages.contractDefinition,
+                )}
+              />
+            </Grid>
           </Grid>
-        </Grid>
-        <ProductFormFinancial />
-        <ProductFormInstructions />
-      </RHFValuesChange>
-    </RHFProvider>
+          <ProductFormFinancial />
+          <ProductFormInstructions />
+        </RHFValuesChange>
+      </RHFProvider>
+    </TranslatableContent>
   );
 }
