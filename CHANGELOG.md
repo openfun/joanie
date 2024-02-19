@@ -10,6 +10,8 @@ and this project adheres to
 
 ## Added
 
+- Allow to filter out organization through course product relation id on
+  the client API
 - Add custom template tag to convert ISO 8601 duration to a specified time unit.
 - Add custom serializer field for duration field to format ISO 8601
 - Add effort duration field for the Course Model

@@ -2928,6 +2928,14 @@
                 "description": "API ViewSet for all interactions with organizations.\n\nGET /api/organizations/:organization_id\n    Return list of all organizations related to the logged-in user or one organization\n    if an id is provided.",
                 "parameters": [
                     {
+                        "in": "query",
+                        "name": "course_product_relation_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
                         "name": "page",
                         "required": false,
                         "in": "query",
