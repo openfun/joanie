@@ -4796,6 +4796,11 @@
                     },
                     "main_invoice": {
                         "$ref": "#/components/schemas/AdminInvoice"
+                    },
+                    "has_consent_to_terms": {
+                        "type": "boolean",
+                        "readOnly": true,
+                        "description": "User has consented to the platform terms and conditions."
                     }
                 },
                 "required": [
@@ -4804,6 +4809,7 @@
                     "course",
                     "created_on",
                     "enrollment",
+                    "has_consent_to_terms",
                     "id",
                     "main_invoice",
                     "order_group",
