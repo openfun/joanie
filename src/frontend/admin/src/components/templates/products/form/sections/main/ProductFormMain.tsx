@@ -24,7 +24,6 @@ import { WizardStepProps } from "@/components/presentational/wizard/Wizard";
 import { CertificateDefinition } from "@/services/api/models/CertificateDefinition";
 import { useProducts } from "@/hooks/useProducts/useProducts";
 import { RHFProvider } from "@/components/presentational/hook-form/RHFProvider";
-import { RHFValuesChange } from "@/components/presentational/hook-form/RFHValuesChange";
 import { ProductFormInstructions } from "@/components/templates/products/form/sections/main/instructions/ProductFormInstructions";
 import { removeEOL } from "@/utils/string";
 import { ContractDefinition } from "@/services/api/models/ContractDefinition";
@@ -43,7 +42,7 @@ const Schema = Yup.object().shape({
   title: Yup.string().required(),
   type: Yup.string<ProductType>().required(),
   description: Yup.string().required(),
-  price: Yup.number().min(0).optional(),
+  price: Yup.number().min(0.0).required(),
   price_currency: Yup.string().optional(),
   instructions: Yup.string().optional(),
   call_to_action: Yup.string().required(),
@@ -81,7 +80,7 @@ export function ProductFormMain({
 
   const methods = useForm({
     resolver: yupResolver(Schema),
-    defaultValues: getDefaultValues(),
+    defaultValues: getDefaultValues() as any,
   });
 
   useEffect(() => {
@@ -117,96 +116,94 @@ export function ProductFormMain({
         if (productRepository) productRepository.methods.invalidate();
       }}
     >
-      <RHFProvider id="product-main-form" showSubmit={false} methods={methods}>
-        <RHFValuesChange<ProductFormMainValues>
-          onSubmit={(values) => onSubmit(values)}
-        >
-          <Grid container spacing={2}>
-            <Grid xs={12}>
-              <Typography variant="subtitle2">
-                {intl.formatMessage(productFormMessages.mainInformationTitle)}
-              </Typography>
-            </Grid>
-            <Grid xs={12} md={6}>
-              <RHFTextField
-                required
-                name="title"
-                label={intl.formatMessage(commonTranslations.title)}
-              />
-            </Grid>
-            <Grid xs={12} md={6}>
-              <RHFSelect
-                required
-                leftIcons={
-                  <IconButton onClick={props.onResetType} size="small">
-                    <ModeEditOutlineTwoToneIcon color="primary" />
-                  </IconButton>
-                }
-                data-testid="type-select"
-                disabled
-                name="type"
-                label={intl.formatMessage(productFormMessages.productTypeLabel)}
-                options={[
-                  {
-                    label: ProductType.CERTIFICATE,
-                    value: ProductType.CERTIFICATE,
-                  },
-                  {
-                    label: ProductType.CREDENTIAL,
-                    value: ProductType.CREDENTIAL,
-                  },
-                  {
-                    label: ProductType.ENROLLMENT,
-                    value: ProductType.ENROLLMENT,
-                  },
-                ]}
-              />
-            </Grid>
+      <RHFProvider
+        id="product-main-form"
+        methods={methods}
+        onSubmit={methods.handleSubmit(onSubmit)}
+      >
+        <Grid container spacing={2}>
+          <Grid xs={12}>
+            <Typography variant="subtitle2">
+              {intl.formatMessage(productFormMessages.mainInformationTitle)}
+            </Typography>
+          </Grid>
+          <Grid xs={12} md={6}>
+            <RHFTextField
+              required
+              name="title"
+              label={intl.formatMessage(commonTranslations.title)}
+            />
+          </Grid>
+          <Grid xs={12} md={6}>
+            <RHFSelect
+              required
+              leftIcons={
+                <IconButton onClick={props.onResetType} size="small">
+                  <ModeEditOutlineTwoToneIcon color="primary" />
+                </IconButton>
+              }
+              data-testid="type-select"
+              disabled
+              name="type"
+              label={intl.formatMessage(productFormMessages.productTypeLabel)}
+              options={[
+                {
+                  label: ProductType.CERTIFICATE,
+                  value: ProductType.CERTIFICATE,
+                },
+                {
+                  label: ProductType.CREDENTIAL,
+                  value: ProductType.CREDENTIAL,
+                },
+                {
+                  label: ProductType.ENROLLMENT,
+                  value: ProductType.ENROLLMENT,
+                },
+              ]}
+            />
+          </Grid>
 
-            <Grid xs={12}>
-              <RHFTextField
-                name="description"
-                required
-                multiline
-                minRows={3}
-                label={intl.formatMessage(commonTranslations.description)}
-              />
-            </Grid>
+          <Grid xs={12}>
+            <RHFTextField
+              name="description"
+              required
+              multiline
+              minRows={3}
+              label={intl.formatMessage(commonTranslations.description)}
+            />
+          </Grid>
 
-            {productType !== ProductType.ENROLLMENT && (
-              <Grid xs={12}>
-                <CertificateSearch
-                  placeholder="search"
-                  enableAdd={true}
-                  helperText={intl.formatMessage(
-                    productFormMessages.definitionHelper,
-                  )}
-                  enableEdit={true}
-                  name="certificate_definition"
-                  label={intl.formatMessage(productFormMessages.definition)}
-                />
-              </Grid>
-            )}
+          {productType !== ProductType.ENROLLMENT && (
             <Grid xs={12}>
-              <ContractDefinitionSearch
-                placeholder={intl.formatMessage(
-                  productFormMessages.contractDefinitionPlaceholder,
-                )}
+              <CertificateSearch
+                placeholder="search"
                 enableAdd={true}
                 helperText={intl.formatMessage(
-                  productFormMessages.contractDefinitionHelper,
+                  productFormMessages.definitionHelper,
                 )}
                 enableEdit={true}
-                name="contract_definition"
-                label={intl.formatMessage(
-                  productFormMessages.contractDefinition,
-                )}
+                name="certificate_definition"
+                label={intl.formatMessage(productFormMessages.definition)}
               />
             </Grid>
+          )}
+          <Grid xs={12}>
+            <ContractDefinitionSearch
+              placeholder={intl.formatMessage(
+                productFormMessages.contractDefinitionPlaceholder,
+              )}
+              enableAdd={true}
+              helperText={intl.formatMessage(
+                productFormMessages.contractDefinitionHelper,
+              )}
+              enableEdit={true}
+              name="contract_definition"
+              label={intl.formatMessage(productFormMessages.contractDefinition)}
+            />
           </Grid>
-          <ProductFormFinancial />
-          <ProductFormInstructions />
-        </RHFValuesChange>
+        </Grid>
+        <ProductFormFinancial />
+        <ProductFormInstructions />
       </RHFProvider>
     </TranslatableContent>
   );

@@ -145,6 +145,8 @@ test.describe("Product form", () => {
     const cta = page.getByLabel("Call to action *");
     await cta.click();
     await cta.fill("Test product");
+
+    await page.getByRole("button", { name: "Submit" }).click();
     await expect(
       page.getByText("Operation completed successfully."),
     ).toBeVisible();
