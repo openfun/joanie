@@ -11,6 +11,14 @@ export type Organization = {
   logo?: ThumbnailDetailField;
   accesses?: Accesses<OrganizationRoles>[];
   country?: string;
+  enterprise_code?: string; // SIRET in France
+  activity_category_code?: string; // APE in France
+  representative_profession?: string;
+  signatory_representative?: string;
+  signatory_representative_profession?: string;
+  contact_phone?: string;
+  contact_email?: string;
+  dpo_email?: string;
 };
 
 export enum OrganizationRoles {

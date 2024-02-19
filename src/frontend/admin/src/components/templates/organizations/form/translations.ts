@@ -1,6 +1,37 @@
 import { defineMessages } from "react-intl";
 
 export const organizationFormMessages = defineMessages({
+  generalSectionTitle: {
+    id: "components.templates.organizations.form.translations.generalSectionTitle",
+    defaultMessage: "General",
+    description: "Title for the general section of organization form",
+  },
+  legalPartSectionTitle: {
+    id: "components.templates.organizations.form.translations.legalPartSectionTitle",
+    defaultMessage: "Legal part",
+    description: "Title for the legal part section of organization form",
+  },
+  contactSectionTitle: {
+    id: "components.templates.organizations.form.translations.contactSectionTitle",
+    defaultMessage: "Contact",
+    description: "Title for the contact section of organization form",
+  },
+  imagesSectionTitle: {
+    id: "components.templates.organizations.form.translations.imagesSectionTitle",
+    defaultMessage: "Images",
+    description: "Title for the images section of organization form",
+  },
+  signatoryDetailsSectionTitle: {
+    id: "components.templates.organizations.form.translations.signatoryDetailsSectionTitle",
+    defaultMessage: "Signatory details",
+    description: "Title for the signatory section of organization form",
+  },
+  signatoryDetailsSectionInfo: {
+    id: "components.templates.organizations.form.translations.signatoryDetails",
+    defaultMessage:
+      "If you do not specify the representative signatory, the representative name will be used.",
+    description: "Title for the signatory section info",
+  },
   codeLabel: {
     id: "components.templates.organizations.form.translations.codeLabel",
     defaultMessage: "Code",
@@ -40,5 +71,51 @@ export const organizationFormMessages = defineMessages({
     id: "components.templates.organizations.form.translations.membersSectionTitle",
     defaultMessage: "Organization members",
     description: "Title for the member section",
+  },
+
+  representativeProfessionLabel: {
+    id: "components.templates.organizations.form.translations.representativeProfessionLabel",
+    defaultMessage: "Profession of the representative",
+    description: "Label for the representative profession input",
+  },
+  signatoryRepresentativeLabel: {
+    id: "components.templates.organizations.form.translations.signatoryRepresentativeLabel",
+    defaultMessage: "Signatory representative",
+    description: "Label for the signatory representative input",
+  },
+  signatoryRepresentativeProfessionLabel: {
+    id: "components.templates.organizations.form.translations.signatoryRepresentativeProfessionLabel",
+    defaultMessage: "Profession of the signatory representative",
+    description: "Label for the signatory representative profession input",
+  },
+  signatoryRepresentativeProfessionHelperText: {
+    id: "components.templates.organizations.form.translations.signatoryRepresentativeProfessionHelperText",
+    defaultMessage: "Mandatory if signatory representative is set",
+    description: "Label for the signatory representative profession input",
+  },
+  enterpriseCodeLabel: {
+    id: "components.templates.organizations.form.translations.enterpriseCodeLabel",
+    defaultMessage: "Enterprise code",
+    description: "Label for the enterprise code input",
+  },
+  activityCategoryCodeLabel: {
+    id: "components.templates.organizations.form.translations.activityCategoryCodeLabel",
+    defaultMessage: "Activity category code",
+    description: "Label for the activity category code input",
+  },
+  contactPhoneLabel: {
+    id: "components.templates.organizations.form.translations.contactPhoneLabel",
+    defaultMessage: "Contact phone",
+    description: "Label for the activity contact phone input",
+  },
+  contactEmailLabel: {
+    id: "components.templates.organizations.form.translations.contactEmailLabel",
+    defaultMessage: "Contact email",
+    description: "Label for the activity contact email input",
+  },
+  dpoContactEmailLabel: {
+    id: "components.templates.organizations.form.translations.dpoContactEmailLabel",
+    defaultMessage: "DPO Contact email",
+    description: "Label for the activity DPO contact email input",
   },
 });
