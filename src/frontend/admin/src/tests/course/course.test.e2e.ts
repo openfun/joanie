@@ -89,8 +89,8 @@ test.describe("Course form", async () => {
 
     await page.getByLabel("Title").click();
     await page.getByLabel("Title").fill("Test course");
-    await page.getByLabel("Code").click();
-    await page.getByLabel("Code").fill("Test_Course_Code");
+    await page.getByLabel("Code", { exact: true }).click();
+    await page.getByLabel("Code", { exact: true }).fill("Test_Course_Code");
     await page.getByLabel("Organizations").click();
     await page
       .getByRole("option", { name: store.organizations[0].title })
@@ -112,10 +112,14 @@ test.describe("Course form", async () => {
       .click();
     await page.getByRole("textbox", { name: "Title" }).click();
     await page.getByRole("textbox", { name: "Title" }).fill("Org title");
-    await page.getByRole("textbox", { name: "Code" }).click();
-    await page.getByRole("textbox", { name: "Code" }).fill("Org code");
-    await page.getByLabel("Representative").click();
-    await page.getByLabel("Representative").fill("john.doe@yoppmail.com");
+    await page.getByRole("textbox", { name: "Code", exact: true }).click();
+    await page
+      .getByRole("textbox", { name: "Code", exact: true })
+      .fill("Org code");
+    await page.getByLabel("Representative", { exact: true }).click();
+    await page
+      .getByLabel("Representative", { exact: true })
+      .fill("john.doe@yoppmail.com");
     await page.getByTestId("submit-button-organization-form").click();
     await page.getByText("Operation completed successfully.").click();
     await expect(page.getByRole("button", { name: "Org title" })).toBeVisible();
@@ -156,8 +160,8 @@ test.describe("Course form", async () => {
     await page.getByLabel("Title").click();
     await page.getByLabel("Title").fill("Test course");
     await expect(page.getByText("title is a required field")).toHaveCount(0);
-    await page.getByLabel("Code").click();
-    await page.getByLabel("Code").fill("fd");
+    await page.getByLabel("Code", { exact: true }).click();
+    await page.getByLabel("Code", { exact: true }).fill("fd");
     await expect(page.getByText("code is a required field")).toHaveCount(0);
     await page.getByLabel("Organizations").click();
     await page
