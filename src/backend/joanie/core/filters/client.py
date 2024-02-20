@@ -56,10 +56,19 @@ class EnrollmentViewSetFilter(filters.FilterSet):
 
     course_run_id = filters.UUIDFilter(field_name="course_run__id")
     was_created_by_order = filters.BooleanFilter(field_name="was_created_by_order")
+    query = filters.CharFilter(method="filter_by_query")
 
     class Meta:
         model = models.Enrollment
         fields: List[str] = []
+
+    def filter_by_query(self, queryset, _name, value):
+        """
+        Filter resource by looking for course title
+        """
+        return queryset.filter(
+            course_run__course__translations__title__icontains=value
+        ).distinct()
 
 
 class CourseViewSetFilter(filters.FilterSet):

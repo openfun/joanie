@@ -2207,6 +2207,13 @@
                     },
                     {
                         "in": "query",
+                        "name": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
                         "name": "was_created_by_order",
                         "schema": {
                             "type": "boolean"

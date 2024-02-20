@@ -2204,3 +2204,110 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "was_created_by_order": True,
             },
         )
+
+    @mock.patch.object(OpenEdXLMSBackend, "set_enrollment", return_value="enrolled")
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_enrollment_filter_by_query_course_title(self, _, __):
+        """
+        Authenticated users retrieving the list of enrollments should be able to filter
+        by course title if he is enrolled to the course run.
+        """
+        open_states = [
+            CourseState.ONGOING_OPEN,
+            CourseState.FUTURE_OPEN,
+            CourseState.ARCHIVED_OPEN,
+        ]
+        user = factories.UserFactory()
+        course_1 = factories.CourseFactory(title="Introduction to resource filtering")
+        course_1.translations.create(
+            language_code="fr-fr", title="Introduction au filtrage de ressource"
+        )
+        course_2 = factories.CourseFactory(title="Advanced aerodynamic flows")
+        course_2.translations.create(
+            language_code="fr-fr", title="Flux aérodynamiques avancés"
+        )
+        course_3 = factories.CourseFactory(title="Rubber management on a single-seater")
+        course_3.translations.create(
+            language_code="fr-fr", title="Gestion d'une gomme sur une monoplace"
+        )
+        # Create course run 1, 2 and 3
+        course_run_1 = CourseRunFactory(
+            course=course_1, state=random.choice(open_states), is_listed=True
+        )
+        course_run_2 = CourseRunFactory(
+            course=course_2, state=random.choice(open_states), is_listed=True
+        )
+        course_run_3 = CourseRunFactory(
+            course=course_3, state=random.choice(open_states), is_listed=True
+        )
+        # User enrolls to two course_runs out of three
+        enrollment_1 = factories.EnrollmentFactory(user=user, course_run=course_run_1)
+        enrollment_2 = factories.EnrollmentFactory(user=user, course_run=course_run_2)
+        token = self.generate_token_from_user(user)
+
+        # without parsing a query string, we should find both enrollments of the user
+        response = self.client.get(
+            "/api/v1.0/enrollments/?query=",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 2)
+        self.assertCountEqual(
+            [result["id"] for result in content["results"]],
+            [str(enrollment_1.id), str(enrollment_2.id)],
+        )
+
+        # Prepare queries to test
+        queries = [
+            "Flux aérodynamiques avancés",
+            "Flux+aérodynamiques+avancés",
+            "aérodynamiques",
+            "aerodynamic",
+            "aéro",
+            "aero",
+            "aer",
+            "advanced",
+            "flows",
+            "flo",
+            "Advanced aerodynamic flows",
+            "dynamic",
+            "ows",
+            "av",
+            "ux",
+        ]
+
+        for query in queries:
+            response = self.client.get(
+                f"/api/v1.0/enrollments/?query={query}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+            self.assertEqual(response.status_code, HTTPStatus.OK)
+            content = response.json()
+            self.assertEqual(content["count"], 1)
+            self.assertEqual(content["results"][0].get("id"), str(enrollment_2.id))
+
+        # User attempts to search on the course run where he did not enroll
+        response = self.client.get(
+            f"/api/v1.0/enrollments/?query={str(course_run_3.course.title)}",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 0)
+
+        # User attempts to search with a course title that does not exist at all
+        response = self.client.get(
+            "/api/v1.0/enrollments/?query=veryFakeCourseTitle",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 0)
