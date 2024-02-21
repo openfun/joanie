@@ -24,17 +24,21 @@ export interface AlertModalProps extends CustomModalProps {
   message: string;
   handleAccept: () => void;
   validateLabel?: string;
+  closeOnAccept?: boolean;
 }
 
 export function AlertModal({
   handleAccept,
   validateLabel,
   message,
+  closeOnAccept = true,
   ...modalProps
 }: AlertModalProps) {
   const intl = useIntl();
   const onHandleAccept = (): void => {
-    modalProps.handleClose();
+    if (closeOnAccept) {
+      modalProps.handleClose();
+    }
     handleAccept();
   };
 
