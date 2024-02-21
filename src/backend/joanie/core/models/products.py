@@ -371,11 +371,25 @@ class OrderGroup(BaseModel):
         return not self.orders.exists()
 
 
+class OrderManager(models.Manager):
+    """Custom manager for the Order model."""
+
+    def find_installments(self, due_date):
+        """Retrieve orders with a payment schedule containing a due date."""
+        return (
+            super()
+            .get_queryset()
+            .filter(payment_schedule__contains=[{"due_date": due_date.isoformat()}])
+        )
+
+
 class Order(BaseModel):
     """
     Order model represents and records details user's order (for free or not) to a course product
     All course runs to enroll selected are defined here.
     """
+
+    objects = OrderManager()
 
     organization = models.ForeignKey(
         to=Organization,

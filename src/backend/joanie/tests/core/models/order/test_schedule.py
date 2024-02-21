@@ -20,6 +20,7 @@ from joanie.core.enums import (
     PAYMENT_STATE_PENDING,
     PAYMENT_STATE_REFUSED,
 )
+from joanie.core.models import Order
 from joanie.tests.base import BaseLogMixinTestCase
 
 
@@ -545,3 +546,60 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
                 },
             ],
         )
+
+    def test_models_order_schedule_find_installment(self):
+        """Check that matching orders are found"""
+        order = factories.OrderFactory(
+            payment_schedule=[
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-03-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "199.99",
+                    "due_date": "2024-04-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ]
+        )
+        factories.OrderFactory(
+            payment_schedule=[
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-18T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-02-18T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-03-18T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "199.99",
+                    "due_date": "2024-04-18T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ]
+        )
+
+        found_orders = Order.objects.find_installments(
+            due_date=datetime(2024, 2, 17, 0, 0, tzinfo=ZoneInfo("UTC"))
+        )
+        self.assertEqual(len(found_orders), 1)
+        self.assertIn(order, found_orders)
