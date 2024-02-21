@@ -7,6 +7,7 @@ import logging
 from collections import defaultdict
 from datetime import timedelta
 
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -1072,6 +1073,16 @@ class Order(BaseModel):
                 retraction_date, 1, keep_datetime=True
             )
         return retraction_date
+
+    def get_installments_percentages(self):
+        """
+        Return the payment installments percentages for the order.
+        """
+        percentages = None
+        for limit, percentages in settings.PAYMENT_SCHEDULE_LIMITS.items():
+            if self.total <= limit:
+                return percentages
+        return percentages
 
 
 @receiver(post_transition, sender=Order)
