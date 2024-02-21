@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Add order payment schedule
 - Filter admin resources list through their pk
 - Allow backoffice to generate certificate if order is eligible
 - Allow backoffice admin user to cancel an order
