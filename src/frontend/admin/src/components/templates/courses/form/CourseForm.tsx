@@ -43,6 +43,13 @@ export function CourseForm({ course, shortcutMode = false, ...props }: Props) {
   const coursesQuery = useCourses({}, { enabled: false });
   const defaultCourse = course ?? props.fromCourse;
 
+  const getUploadedCover = (): ThumbnailDetailField[] => {
+    if (props.fromCourse || !course) {
+      return [];
+    }
+    return defaultCourse?.cover ? [defaultCourse.cover] : [];
+  };
+
   const RegisterSchema = Yup.object().shape({
     code: Yup.string().required(),
     title: Yup.string().required(),
@@ -55,6 +62,7 @@ export function CourseForm({ course, shortcutMode = false, ...props }: Props) {
       code: defaultCourse?.code ?? "",
       title: defaultCourse?.title ?? "",
       organizations: defaultCourse?.organizations ?? [],
+      cover: undefined,
     };
   };
 
@@ -87,13 +95,6 @@ export function CourseForm({ course, shortcutMode = false, ...props }: Props) {
     }
   };
 
-  const getUploadedCover = (): ThumbnailDetailField[] => {
-    if (props.fromCourse || !course) {
-      return [];
-    }
-    return defaultCourse?.cover ? [defaultCourse.cover] : [];
-  };
-
   useEffect(() => {
     methods.reset(getDefaultValues());
   }, [course]);
@@ -108,6 +109,7 @@ export function CourseForm({ course, shortcutMode = false, ...props }: Props) {
         >
           <Box padding={4}>
             <RHFProvider
+              checkBeforeUnload={true}
               methods={methods}
               id="course-form"
               onSubmit={methods.handleSubmit(onSubmit)}

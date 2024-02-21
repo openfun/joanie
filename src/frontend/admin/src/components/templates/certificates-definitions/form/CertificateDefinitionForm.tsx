@@ -113,6 +113,7 @@ export function CertificateDefinitionForm({ definition, ...props }: Props) {
     >
       <Box padding={4}>
         <RHFProvider
+          checkBeforeUnload={true}
           methods={methods}
           id="certificate-definition-form"
           onSubmit={methods.handleSubmit(onSubmit)}
