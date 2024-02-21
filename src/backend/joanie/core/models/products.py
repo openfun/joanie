@@ -21,6 +21,7 @@ from dateutil.relativedelta import relativedelta
 from django_fsm import FSMField, transition
 from django_fsm.signals import post_transition
 from parler import models as parler_models
+from stockholm import Money, Number
 from urllib3.util import Retry
 from workalendar.europe import France
 
@@ -1114,6 +1115,29 @@ class Order(BaseModel):
                 break
             due_dates.append(min(due_date, end_date))
         return due_dates
+
+    def _calculate_installments(self, due_dates, percentages):
+        """
+        Calculate the installments for the order.
+        """
+        total_amount = Money(self.total, settings.DEFAULT_CURRENCY)
+        installments = []
+        for i, due_date in enumerate(due_dates):
+            if i < len(due_dates) - 1:
+                # All installments are using the setting percentages except the last one
+                amount = round(total_amount * Number(percentages[i] / 100), 2)
+            else:
+                # Last installment is the remaining amount
+                amount_sum = sum(installment["amount"] for installment in installments)
+                amount = total_amount - amount_sum
+            installments.append(
+                {
+                    "due_date": due_date,
+                    "amount": amount,
+                    "state": enums.PAYMENT_STATE_PENDING,
+                }
+            )
+        return installments
 
 
 @receiver(post_transition, sender=Order)
