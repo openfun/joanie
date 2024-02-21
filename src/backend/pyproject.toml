@@ -60,6 +60,7 @@ dependencies = [
     "sentry-sdk==1.42.0",
     "timedelta-isoformat==0.6.2.11",
     "url-normalize==1.4.3",
+    "workalendar==17.0.0",
     "WeasyPrint>=60.2",
     "whitenoise==6.6.0",
     # edx_imports
