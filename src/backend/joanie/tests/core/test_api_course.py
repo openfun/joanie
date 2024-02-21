@@ -530,3 +530,185 @@ class CourseApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
         self.assertEqual(models.Course.objects.count(), 1)
+
+    def test_api_course_filter_query_by_course_title(self):
+        """
+        Authenticated users should be able to filter courses by their title if they have
+        access to it.
+        """
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+
+        course_1 = factories.CourseFactory(
+            title="Introduction to resource filtering", code="MYCODE-0090"
+        )
+        course_2 = factories.CourseFactory(
+            title="Advanced aerodynamic flows", code="MYCODE-0091"
+        )
+        course_3 = factories.CourseFactory(
+            title="Rubber management on a single-seater", code="MYCODE-0092"
+        )
+        course_without_user_access = factories.CourseFactory(
+            title="Drag reduce system optimization", code="MYCODE-0010"
+        )
+        course_1.translations.create(
+            language_code="fr-fr", title="Introduction au filtrage de ressource"
+        )
+        course_2.translations.create(
+            language_code="fr-fr", title="Flux aérodynamiques avancés"
+        )
+        course_3.translations.create(
+            language_code="fr-fr", title="Gestion d'une gomme sur une monoplace"
+        )
+
+        # Give user access to all courses
+        for course in [course_1, course_2, course_3]:
+            factories.UserCourseAccessFactory(user=user, course=course)
+
+        response = self.client.get(
+            "/api/v1.0/courses/?query=",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 3)
+        self.assertCountEqual(
+            [result["id"] for result in content["results"]],
+            [str(course_1.id), str(course_2.id), str(course_3.id)],
+        )
+
+        queries = [
+            "Flux aérodynamiques avancés",
+            "Flux+aérodynamiques+avancés",
+            "aérodynamiques",
+            "aerodynamic",
+            "aéro",
+            "aero",
+            "aer",
+            "advanced",
+            "flows",
+            "flo",
+            "Advanced aerodynamic flows",
+            "dynamic",
+            "ows",
+            "av",
+            "ux",
+        ]
+
+        # Retrieve only the course with the title 'Advanced aerodynamic flows'
+        # that our user has access to.
+        for query in queries:
+            response = self.client.get(
+                f"/api/v1.0/courses/?query={query}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+            self.assertEqual(response.status_code, HTTPStatus.OK)
+            content = response.json()
+            self.assertEqual(content["count"], 1)
+            self.assertEqual(content["results"][0].get("id"), str(course_2.id))
+
+        # User type the title of a course he does not have access to
+        response = self.client.get(
+            f"/api/v1.0/courses/?query={course_without_user_access.title}",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 0)
+
+        # User type the title of a course that does not exist at all
+        response = self.client.get(
+            "/api/v1.0/courses/?query=veryFakeCourseTitle",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 0)
+
+    def test_api_course_filter_query_by_course_code(self):
+        """
+        Authenticated users should be able to filter courses by their code if they have
+        access to it.
+        """
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+        course_1 = factories.CourseFactory(
+            title="Introduction to resource filtering", code="MYCODE-0990"
+        )
+        course_2 = factories.CourseFactory(
+            title="Advanced aerodynamic flows", code="MYCODE-0991"
+        )
+        course_3 = factories.CourseFactory(
+            title="Rubber management on a single-seater", code="MYCODE-0992"
+        )
+        course_without_user_access = factories.CourseFactory(
+            title="Drag reduce system optimization", code="MYCODE-0993"
+        )
+        factories.CourseFactory(
+            title="Single-seater porpoising introduction", code="MYCODE-0994"
+        )
+        # Give user access to all courses except 'course_without_user_access'
+        for course in [course_1, course_2, course_3]:
+            factories.UserCourseAccessFactory(user=user, course=course)
+
+        response = self.client.get(
+            f"/api/v1.0/courses/?query={course_1.code}",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+        self.assertEqual(content["results"][0].get("id"), str(course_1.id))
+
+        # Retrieve 3 courses because only the last characters changes
+        response = self.client.get(
+            f"/api/v1.0/courses/?query={course_1.code[:1]}",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 3)
+        self.assertCountEqual(
+            [result["id"] for result in content["results"]],
+            [str(course_1.id), str(course_2.id), str(course_3.id)],
+        )
+
+        # Parsing nothing in query should return all courses that the user has access to
+        response = self.client.get(
+            "/api/v1.0/courses/?query=",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 3)
+        self.assertCountEqual(
+            [result["id"] for result in content["results"]],
+            [str(course_1.id), str(course_2.id), str(course_3.id)],
+        )
+
+        # User searches with a course code that does not exists
+        response = self.client.get(
+            "/api/v1.0/courses/?query=fakeCourseCode",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 0)
+
+        # User searches with a course code where he does not have access
+        response = self.client.get(
+            f"/api/v1.0/courses/?query={course_without_user_access.code}",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 0)

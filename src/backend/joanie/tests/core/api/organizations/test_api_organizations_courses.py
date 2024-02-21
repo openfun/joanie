@@ -429,3 +429,239 @@ class OrganizationCourseApiTest(BaseAPITestCase):
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
         self.assertTrue(models.Course.objects.filter(id=course.id).exists())
+
+    def test_api_organizations_courses_read_list_filter_by_query_by_course_title(self):
+        """
+        Authenticated user should be able to get specific courses by their title from an
+        organization when the user has access to it.
+        """
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+        organizations = factories.OrganizationFactory.create_batch(2)
+        # Create courses
+        course_1 = factories.CourseFactory(
+            title="Introduction to resource filtering",
+            organizations=[organizations[0]],
+        )
+        course_2 = factories.CourseFactory(
+            title="Advanced aerodynamic flows",
+            organizations=[organizations[0]],
+        )
+        course_3 = factories.CourseFactory(
+            title="Rubber management on a single-seater",
+            organizations=[organizations[0]],
+        )
+        course_4 = factories.CourseFactory(
+            title="Drag reduce system optimization",
+            organizations=[organizations[1]],
+        )
+        course_1.translations.create(
+            language_code="fr-fr", title="Introduction au filtrage de resource"
+        )
+        course_2.translations.create(
+            language_code="fr-fr", title="Flux aérodynamiques avancés"
+        )
+        course_3.translations.create(
+            language_code="fr-fr", title="Gestion d'une gomme sur une monoplace"
+        )
+        course_4.translations.create(
+            language_code="fr-fr",
+            title="Optimisation du système de réduction de la traînée",
+        )
+        # Create course run with the courses
+        factories.CourseRunFactory(course=course_1, is_listed=False)
+        factories.CourseRunFactory(course=course_1, is_listed=True)
+        factories.CourseRunFactory(course=course_2, is_listed=False)
+        factories.CourseRunFactory(course=course_3, is_listed=False)
+        factories.CourseRunFactory(course=course_4, is_listed=True)
+        # Give access to organization for the user
+        factories.UserOrganizationAccessFactory(
+            organization=organizations[0], user=user
+        )
+        factories.UserOrganizationAccessFactory(
+            organization=organizations[1], user=user
+        )
+
+        # Prepare queries to test
+        queries = [
+            "Flux",
+            "aérodynamiques",
+            "avancés",
+            "Advanced aerodynamic flows",
+            "Advanced+aerodynamic+flows",
+            "Flux aéro",
+            "fl",
+            "ux",
+        ]
+        # We should only find 1 Course : course_2
+        for query in queries:
+            response = self.client.get(
+                f"/api/v1.0/organizations/{organizations[0].id}/courses/?query={query}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+            self.assertEqual(response.status_code, HTTPStatus.OK)
+            content = response.json()
+            self.assertEqual(content["count"], 1)
+            self.assertEqual(content["results"][0].get("id"), str(course_2.id))
+
+        # Prepare queries to test for the second organization : course_4
+        queries = [
+            "Optimisation du système de réduction de la traînée",
+            "Drag reduce system optimization",
+            "Optimisation",
+            "drag",
+            "system",
+            "za",
+            "de",
+            "la",
+        ]
+        # We should only find 1 Course : course_
+        for query in queries:
+            response = self.client.get(
+                f"/api/v1.0/organizations/{organizations[1].id}/courses/?query={query}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+            self.assertEqual(response.status_code, HTTPStatus.OK)
+            content = response.json()
+            self.assertEqual(content["count"], 1)
+            self.assertEqual(
+                content["results"][0].get("id"),
+                str(course_4.id),
+            )
+
+        # When parsing nothing, we should see the course_1, course_2 and course_3
+        # from organization[0]
+        response = self.client.get(
+            f"/api/v1.0/organizations/{organizations[0].id}/courses/?query=",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 3)
+        self.assertCountEqual(
+            [result["id"] for result in content["results"]],
+            [str(course_1.id), str(course_2.id), str(course_3.id)],
+        )
+
+        # Retrieve the course from the second organization : we should find 1, course_4
+        response = self.client.get(
+            f"/api/v1.0/organizations/{organizations[1].id}/courses/?query=",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+        self.assertCountEqual(
+            [result["id"] for result in content["results"]],
+            [str(course_4.id)],
+        )
+
+        # We should get no result if we parse a fake Course title that does not exist
+        response = self.client.get(
+            f"/api/v1.0/organizations/{organizations[0].id}/courses/?query=veryFakeCourseTitle",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 0)
+
+    def test_api_organizations_courses_read_list_filter_by_query_by_course_code(self):
+        """
+        Authenticated user should be able to get a specific course by its code from an
+        organization when the user has access to it.
+        """
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+        organizations = factories.OrganizationFactory.create_batch(2)
+        course_1 = factories.CourseFactory(
+            code="MYCODE-0090", organizations=[organizations[0]]
+        )
+        course_2 = factories.CourseFactory(
+            code="MYCODE-0091", organizations=[organizations[0]]
+        )
+        course_3 = factories.CourseFactory(
+            code="MYCODE-0092", organizations=[organizations[0]]
+        )
+        course_4 = factories.CourseFactory(
+            code="MYCODE-0093", organizations=[organizations[1]]
+        )
+        factories.CourseRunFactory(course=course_1, is_listed=False)
+        factories.CourseRunFactory(course=course_1, is_listed=True)
+        factories.CourseRunFactory(course=course_2, is_listed=False)
+        factories.CourseRunFactory(course=course_3, is_listed=True)
+        factories.CourseRunFactory(course=course_4, is_listed=True)
+
+        factories.UserOrganizationAccessFactory(
+            organization=organizations[0], user=user
+        )
+        factories.UserOrganizationAccessFactory(
+            organization=organizations[1], user=user
+        )
+
+        # We should find the course_1 in return
+        response = self.client.get(
+            f"/api/v1.0/organizations/{organizations[0].id}/courses/?query={course_1.code}",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+        self.assertEqual(content["results"][0].get("id"), str(course_1.id))
+
+        # Retrieve 3 courses because only the last characters changes from that same organization
+        response = self.client.get(
+            f"/api/v1.0/organizations/{organizations[0].id}/courses/?query={course_1.code[:1]}",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 3)
+        self.assertCountEqual(
+            [result["id"] for result in content["results"]],
+            [str(course_1.id), str(course_2.id), str(course_3.id)],
+        )
+
+        # When parsing nothing, we should find the 3 courses available by the organization[0]
+        response = self.client.get(
+            f"/api/v1.0/organizations/{organizations[0].id}/courses/?query=",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 3)
+        self.assertCountEqual(
+            [result["id"] for result in content["results"]],
+            [str(course_1.id), str(course_2.id), str(course_3.id)],
+        )
+
+        # Retrieve 1 course from the other organization (course_4)
+        response = self.client.get(
+            f"/api/v1.0/organizations/{organizations[1].id}/courses/?query=MYCODE-009",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+        self.assertCountEqual(
+            [result["id"] for result in content["results"]],
+            [str(course_4.id)],
+        )
+
+        # When parsing a fake course code, we should get no result.
+        response = self.client.get(
+            f"/api/v1.0/organizations/{organizations[1].id}/courses/?query=veryFakeCourseCode",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 0)
