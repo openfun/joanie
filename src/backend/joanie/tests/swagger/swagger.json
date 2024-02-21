@@ -2504,6 +2504,13 @@
                     },
                     {
                         "in": "query",
+                        "name": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
                         "name": "state",
                         "schema": {
                             "type": "array",

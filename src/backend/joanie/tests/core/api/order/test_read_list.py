@@ -1223,3 +1223,108 @@ class OrderListApiTest(BaseAPITestCase):
                 ]
             },
         )
+
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_order_read_list_filtered_by_product_title(self, _mock_thumbnail):
+        """Authenticated user should be able to filter their orders by product title."""
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        # Create products
+        product_1 = factories.ProductFactory(title="Introduction to resource filtering")
+        product_2 = factories.ProductFactory(title="Advanced aerodynamic flows")
+        product_3 = factories.ProductFactory(
+            title="Rubber management on a single-seater"
+        )
+        # Create translations title for products
+        product_1.translations.create(
+            language_code="fr-fr", title="Introduction au filtrage de ressource"
+        )
+        product_2.translations.create(
+            language_code="fr-fr", title="Flux aérodynamiques avancés"
+        )
+        product_3.translations.create(
+            language_code="fr-fr", title="Gestion d'une gomme sur une monoplace"
+        )
+        # Random order for product 2 from another random user
+        factories.OrderFactory(product=product_2)
+        # Our user purchases the product 1 and product 3
+        order_1 = factories.OrderFactory(owner=user, product=product_1)
+        order_2 = factories.OrderFactory(owner=user, product=product_3)
+
+        response = self.client.get(
+            "/api/v1.0/orders/?query=",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        # We should find both orders of the user
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 2)
+        self.assertCountEqual(
+            [result["id"] for result in content["results"]],
+            [str(order_1.id), str(order_2.id)],
+        )
+
+        # Prepare queries to test
+        queries = [
+            "Introduction to resource filtering",
+            "Introduction+to+resource+filtering",
+            "Introduction au filtrage de ressource",
+            "Introduction",
+            "resource",
+            "filtering",
+            "filtrage",
+            "Int",
+            "to",
+            "de",
+            "filter",
+        ]
+
+        # Retrieve user's order related to order_1 and product 1 title
+        for query in queries:
+            response = self.client.get(
+                f"/api/v1.0/orders/?query={query}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+            self.assertEqual(response.status_code, HTTPStatus.OK)
+            content = response.json()
+            self.assertEqual(content["count"], 1)
+            self.assertEqual(content["results"][0].get("id"), str(order_1.id))
+
+        # Prepare queries to test with key words that are not in our Orders products' titles.
+        queries = [
+            "Advanced aerodynamic flows",
+            "Flux aérodynamiques avancés",
+            "Flux+aérodynamiques+avancés",
+            "Advanced",
+            "flows",
+            "flux",
+            "fl",
+            "dyna",
+            "aero",
+            "aéro",
+            "avancés",
+        ]
+
+        for query in queries:
+            response = self.client.get(
+                f"/api/v1.0/orders/?query={query}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+            self.assertEqual(response.status_code, HTTPStatus.OK)
+            content = response.json()
+            self.assertEqual(content["count"], 0)
+
+        # User attemps to search for a product title that does not exist at all
+        response = self.client.get(
+            "/api/v1.0/orders/?query=veryFakeProductTitle",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 0)

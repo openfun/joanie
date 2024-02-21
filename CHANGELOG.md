@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Allow to filter orders by product title on the client API
 - Allow to filter enrollments by course title on the client API
 - Debug app to preview template (certificate, degree, invoice,
   contract definition)
