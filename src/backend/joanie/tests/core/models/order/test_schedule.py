@@ -242,3 +242,306 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
                 },
             ],
         )
+
+    def test_models_order_schedule_2_parts(self):
+        """
+        Check that order's schedule is correctly set for 1 part
+        """
+        course_run = factories.CourseRunFactory(
+            enrollment_start=datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            end=datetime(2024, 5, 1, 14, tzinfo=ZoneInfo("UTC")),
+        )
+        contract = factories.ContractFactory(
+            student_signed_on=datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            submitted_for_signature_on=datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            order__product__price=3,
+            order__product__target_courses=[course_run.course],
+        )
+
+        schedule = contract.order.generate_schedule()
+
+        self.assertEqual(
+            schedule,
+            [
+                {
+                    "amount": Money(0.90, settings.DEFAULT_CURRENCY),
+                    "due_date": datetime(2024, 1, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": Money(2.10, settings.DEFAULT_CURRENCY),
+                    "due_date": datetime(2024, 2, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        contract.order.refresh_from_db()
+        self.assertEqual(
+            contract.order.payment_schedule,
+            [
+                {
+                    "amount": "0.90",
+                    "due_date": "2024-01-17T00:00:00Z",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "2.10",
+                    "due_date": "2024-02-17T00:00:00Z",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+    def test_models_order_schedule_3_parts(self):
+        """
+        Check that order's schedule is correctly set for 3 parts
+        """
+        course_run = factories.CourseRunFactory(
+            enrollment_start=datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            end=datetime(2024, 5, 1, 14, tzinfo=ZoneInfo("UTC")),
+        )
+        contract = factories.ContractFactory(
+            student_signed_on=datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            submitted_for_signature_on=datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            order__product__price=10,
+            order__product__target_courses=[course_run.course],
+        )
+
+        schedule = contract.order.generate_schedule()
+
+        self.assertEqual(
+            schedule,
+            [
+                {
+                    "amount": Money(3.00, settings.DEFAULT_CURRENCY),
+                    "due_date": datetime(2024, 1, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": Money(4.50, settings.DEFAULT_CURRENCY),
+                    "due_date": datetime(2024, 2, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": Money(2.50, settings.DEFAULT_CURRENCY),
+                    "due_date": datetime(2024, 3, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        contract.order.refresh_from_db()
+        self.assertEqual(
+            contract.order.payment_schedule,
+            [
+                {
+                    "amount": "3.00",
+                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "4.50",
+                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "2.50",
+                    "due_date": "2024-03-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+    def test_models_order_schedule_4_parts(self):
+        """
+        Check that order's schedule is correctly set for 3 parts
+        """
+        course_run = factories.CourseRunFactory(
+            enrollment_start=datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            end=datetime(2024, 5, 1, 14, tzinfo=ZoneInfo("UTC")),
+        )
+        contract = factories.ContractFactory(
+            student_signed_on=datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            submitted_for_signature_on=datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            order__product__price=100,
+            order__product__target_courses=[course_run.course],
+        )
+
+        schedule = contract.order.generate_schedule()
+
+        self.assertEqual(
+            schedule,
+            [
+                {
+                    "amount": Money(20.00, settings.DEFAULT_CURRENCY),
+                    "due_date": datetime(2024, 1, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": Money(30.00, settings.DEFAULT_CURRENCY),
+                    "due_date": datetime(2024, 2, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": Money(30.00, settings.DEFAULT_CURRENCY),
+                    "due_date": datetime(2024, 3, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": Money(20.00, settings.DEFAULT_CURRENCY),
+                    "due_date": datetime(2024, 4, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        contract.order.refresh_from_db()
+        self.assertEqual(
+            contract.order.payment_schedule,
+            [
+                {
+                    "amount": "20.00",
+                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "30.00",
+                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "30.00",
+                    "due_date": "2024-03-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "20.00",
+                    "due_date": "2024-04-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+    def test_models_order_schedule_4_parts_end_date(self):
+        """
+        Check that order's schedule is correctly set for an amount that should be
+        split in 3 parts, but the end date is before the second part
+        """
+        course_run = factories.CourseRunFactory(
+            enrollment_start=datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            end=datetime(2024, 1, 20, 8, tzinfo=ZoneInfo("UTC")),
+        )
+        contract = factories.ContractFactory(
+            student_signed_on=datetime(2024, 1, 1, 0, tzinfo=ZoneInfo("UTC")),
+            submitted_for_signature_on=datetime(2024, 1, 1, 0, tzinfo=ZoneInfo("UTC")),
+            order__product__price=100,
+            order__product__target_courses=[course_run.course],
+        )
+
+        schedule = contract.order.generate_schedule()
+
+        self.assertEqual(
+            schedule,
+            [
+                {
+                    "amount": Money(20.00, settings.DEFAULT_CURRENCY),
+                    "due_date": datetime(2024, 1, 17, 0, tzinfo=ZoneInfo("UTC")),
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": Money(80.00, settings.DEFAULT_CURRENCY),
+                    "due_date": course_run.end,
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        contract.order.refresh_from_db()
+        self.assertEqual(
+            contract.order.payment_schedule,
+            [
+                {
+                    "amount": "20.00",
+                    "due_date": datetime(
+                        2024, 1, 17, 0, tzinfo=ZoneInfo("UTC")
+                    ).isoformat(),
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "80.00",
+                    "due_date": course_run.end.isoformat(),
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+    def test_models_order_schedule_4_parts_tricky_amount(self):
+        """
+        Check that order's schedule is correctly set for 3 parts
+        """
+        course_run = factories.CourseRunFactory(
+            enrollment_start=datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            end=datetime(2024, 5, 1, 14, tzinfo=ZoneInfo("UTC")),
+        )
+        contract = factories.ContractFactory(
+            student_signed_on=datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            submitted_for_signature_on=datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            order__product__price="999.99",
+            order__product__target_courses=[course_run.course],
+        )
+
+        schedule = contract.order.generate_schedule()
+
+        self.assertEqual(
+            schedule,
+            [
+                {
+                    "amount": Money(200.00, settings.DEFAULT_CURRENCY),
+                    "due_date": datetime(2024, 1, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": Money(300.0, settings.DEFAULT_CURRENCY),
+                    "due_date": datetime(2024, 2, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": Money(300.00, settings.DEFAULT_CURRENCY),
+                    "due_date": datetime(2024, 3, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": Money(199.99, settings.DEFAULT_CURRENCY),
+                    "due_date": datetime(2024, 4, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        contract.order.refresh_from_db()
+        self.assertEqual(
+            contract.order.payment_schedule,
+            [
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-03-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "199.99",
+                    "due_date": "2024-04-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
