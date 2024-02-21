@@ -10,6 +10,8 @@ and this project adheres to
 
 ## Added
 
+- Allow to filter course product relation by organization title or
+  product title or by course code on the client API.
 - Allow to filter courses by course code or title on the client API
 - Allow to filter orders by product title on the client API
 - Allow to filter enrollments by course title on the client API
