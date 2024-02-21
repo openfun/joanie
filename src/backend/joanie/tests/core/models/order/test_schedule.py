@@ -9,11 +9,15 @@ from zoneinfo import ZoneInfo
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.test import TestCase
+from django.test.utils import override_settings
 
 from joanie.core import factories
 from joanie.tests.base import BaseLogMixinTestCase
 
 
+@override_settings(
+    PAYMENT_SCHEDULE_LIMITS={5: (30, 70), 10: (30, 45, 45), 100: (20, 30, 30, 20)},
+)
 class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
     """
     Test suite for order payment schedule
@@ -88,3 +92,24 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             contract.order._retraction_date(),
             datetime(2024, 1, 2, 0, 0, tzinfo=ZoneInfo("UTC")),
         )
+
+    def test_models_order_schedule_get_installments_percentages(self):
+        """
+        Check that the correct payment limits are returned for different amounts
+        """
+        order = factories.OrderFactory(product__price=3)
+        self.assertEqual(order._get_installments_percentages(), (30, 70))
+        order = factories.OrderFactory(product__price=5)
+        self.assertEqual(order._get_installments_percentages(), (30, 70))
+
+        order = factories.OrderFactory(product__price=7)
+        self.assertEqual(order._get_installments_percentages(), (30, 45, 45))
+        order = factories.OrderFactory(product__price=10)
+        self.assertEqual(order._get_installments_percentages(), (30, 45, 45))
+
+        order = factories.OrderFactory(product__price=80)
+        self.assertEqual(order._get_installments_percentages(), (20, 30, 30, 20))
+        order = factories.OrderFactory(product__price=100)
+        self.assertEqual(order._get_installments_percentages(), (20, 30, 30, 20))
+        order = factories.OrderFactory(product__price=150)
+        self.assertEqual(order.get_installments_percentages(), (20, 30, 30, 20))
