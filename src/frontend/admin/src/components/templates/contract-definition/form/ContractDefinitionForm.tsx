@@ -132,6 +132,7 @@ export function ContractDefinitionForm({
   return (
     <Box padding={4}>
       <RHFProvider
+        checkBeforeUnload={true}
         methods={methods}
         id="contract-definition-form"
         onSubmit={methods.handleSubmit(onSubmit)}

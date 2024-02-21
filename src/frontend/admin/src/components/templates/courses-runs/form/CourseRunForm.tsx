@@ -123,6 +123,7 @@ export function CourseRunForm({ courseRun, addToCourse, ...props }: Props) {
     >
       <Box padding={4}>
         <RHFProvider
+          checkBeforeUnload={true}
           methods={methods}
           isSubmitting={
             courseRunsQuery.states.creating || courseRunsQuery.states.updating

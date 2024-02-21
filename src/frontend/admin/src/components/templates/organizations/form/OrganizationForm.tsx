@@ -168,6 +168,7 @@ export function OrganizationForm(props: Props) {
         >
           <Box padding={4}>
             <RHFProvider
+              checkBeforeUnload={true}
               showSubmit={true}
               methods={methods}
               isSubmitting={organizationQuery.states.updating}

@@ -20,7 +20,10 @@ import {
 } from "@/services/api/models/Product";
 import { CertificateSearch } from "@/components/templates/certificates-definitions/inputs/search/CertificateSearch";
 import { ProductFormFinancial } from "@/components/templates/products/form/sections/main/financial/ProductFormFinancial";
-import { WizardStepProps } from "@/components/presentational/wizard/Wizard";
+import {
+  useWizardContext,
+  WizardStepProps,
+} from "@/components/presentational/wizard/Wizard";
 import { CertificateDefinition } from "@/services/api/models/CertificateDefinition";
 import { useProducts } from "@/hooks/useProducts/useProducts";
 import { RHFProvider } from "@/components/presentational/hook-form/RHFProvider";
@@ -62,6 +65,7 @@ export function ProductFormMain({
   ...props
 }: Props) {
   const intl = useIntl();
+  const wizardContext = useWizardContext();
   const productRepository = useProducts({}, { enabled: false });
   const defaultProduct = product ?? fromProduct;
   const getDefaultValues = (): ProductFormMainValues => {
@@ -94,6 +98,14 @@ export function ProductFormMain({
   useEffect(() => {
     methods.setValue("type", productType);
   }, [productType]);
+
+  useEffect(() => {
+    const { isDirty } = methods.formState;
+    wizardContext.setIsValidStep(
+      !isDirty,
+      isDirty ? intl.formatMessage(commonTranslations.formIsDirty) : "",
+    );
+  }, [methods.formState.isDirty]);
 
   const onSubmit = (values: ProductFormMainValues): void => {
     const payload = transformProductToDTO({ id: product?.id, ...values });
