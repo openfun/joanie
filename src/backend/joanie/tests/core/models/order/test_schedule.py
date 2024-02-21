@@ -7,16 +7,25 @@ from datetime import datetime
 from unittest.mock import patch
 from zoneinfo import ZoneInfo
 
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.test import TestCase
 from django.test.utils import override_settings
 
+from stockholm import Money
+
 from joanie.core import factories
+from joanie.core.enums import (
+    PAYMENT_STATE_PAYED,
+    PAYMENT_STATE_PENDING,
+    PAYMENT_STATE_REFUSED,
+)
 from joanie.tests.base import BaseLogMixinTestCase
 
 
 @override_settings(
     PAYMENT_SCHEDULE_LIMITS={5: (30, 70), 10: (30, 45, 45), 100: (20, 30, 30, 20)},
+    DEFAULT_CURRENCY="EUR",
 )
 class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
     """
@@ -205,3 +214,31 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             due_dates = order._calculate_due_dates(3)
 
         self.assertEqual(due_dates, [start_date, end_date])
+
+    def test_models_order_schedule_calculate_installments(self):
+        """
+        Check that the installments are correctly calculated
+        """
+        order = factories.OrderFactory(product__price=3)
+        due_dates = [
+            datetime(2024, 1, 1, 0, 0, tzinfo=ZoneInfo("UTC")),
+            datetime(2024, 2, 1, 0, 0, tzinfo=ZoneInfo("UTC")),
+        ]
+        percentages = (30, 70)
+        installments = order._calculate_installments(due_dates, percentages)
+
+        self.assertEqual(
+            installments,
+            [
+                {
+                    "amount": Money(0.90, settings.DEFAULT_CURRENCY),
+                    "due_date": datetime(2024, 1, 1, 0, 0, tzinfo=ZoneInfo("UTC")),
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": Money(2.10, settings.DEFAULT_CURRENCY),
+                    "due_date": datetime(2024, 2, 1, 0, 0, tzinfo=ZoneInfo("UTC")),
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
