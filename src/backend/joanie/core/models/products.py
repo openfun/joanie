@@ -17,6 +17,7 @@ from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
 import requests
+from dateutil.relativedelta import relativedelta
 from django_fsm import FSMField, transition
 from django_fsm.signals import post_transition
 from parler import models as parler_models
@@ -1074,7 +1075,21 @@ class Order(BaseModel):
             )
         return retraction_date
 
-    def get_installments_percentages(self):
+    def _get_schedule_dates(self):
+        """
+        Return the schedule date for the order.
+        """
+        start_date = self._retraction_date()
+        end_date = self.get_equivalent_course_run_dates()["end"]
+        if not end_date:
+            logger.error(
+                "Cannot retrieve end date for order",
+                extra={"context": {"order": self.to_dict()}},
+            )
+            raise ValidationError("Cannot retrieve end date for order")
+        return start_date, end_date
+
+    def _get_installments_percentages(self):
         """
         Return the payment installments percentages for the order.
         """
@@ -1083,6 +1098,22 @@ class Order(BaseModel):
             if self.total <= limit:
                 return percentages
         return percentages
+
+    def _calculate_due_dates(self, percentages_count):
+        """
+        Calculate the due dates for the order.
+        """
+        start_date, end_date = self._get_schedule_dates()
+        due_dates = []
+        for i in range(percentages_count):
+            due_date = start_date + relativedelta(months=i)
+            if due_date > end_date:
+                # If due date is after end date, we should stop the loop, and add the end
+                # date as the last due date
+                due_dates.append(end_date)
+                break
+            due_dates.append(min(due_date, end_date))
+        return due_dates
 
 
 @receiver(post_transition, sender=Order)
