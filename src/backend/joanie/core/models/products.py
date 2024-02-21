@@ -27,6 +27,7 @@ from workalendar.europe import France
 
 from joanie.core import enums
 from joanie.core.exceptions import CertificateGenerationError
+from joanie.core.fields.schedule import OrderPaymentScheduleEncoder
 from joanie.core.models.accounts import User
 from joanie.core.models.base import BaseModel
 from joanie.core.models.certifications import Certificate
@@ -450,6 +451,14 @@ class Order(BaseModel):
         default=enums.ORDER_STATE_DRAFT,
         choices=enums.ORDER_STATE_CHOICES,
         db_index=True,
+    )
+    payment_schedule = models.JSONField(
+        _("payment schedule"),
+        help_text=_("Payment schedule for the order."),
+        editable=False,
+        blank=True,
+        null=True,
+        encoder=OrderPaymentScheduleEncoder,
     )
 
     class Meta:
@@ -1137,6 +1146,19 @@ class Order(BaseModel):
                     "state": enums.PAYMENT_STATE_PENDING,
                 }
             )
+        return installments
+
+    def generate_schedule(self):
+        """
+        Generate payment schedule for the order.
+        """
+        percentages = self._get_installments_percentages()
+        due_dates = self._calculate_due_dates(len(percentages))
+        installments = self._calculate_installments(due_dates, percentages)
+
+        self.payment_schedule = installments
+        self.save()
+
         return installments
 
 

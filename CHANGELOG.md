@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Add order payment schedule
 - Manage commercial newsletter subscriptions
 - Allow backoffice to generate certificates from a course and product relation
 - Bind remote catalog syllabus to contract template
