@@ -61,6 +61,7 @@ dependencies = [
     "python-dateutil==2.8.2",
     "requests==2.31.0",
     "sentry-sdk==1.44.1",
+    "stockholm==0.5.7",
     "timedelta-isoformat==0.6.2.11",
     "url-normalize==1.4.3",
     "WeasyPrint>=60.2",
