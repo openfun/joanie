@@ -603,3 +603,216 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         )
         self.assertEqual(len(found_orders), 1)
         self.assertIn(order, found_orders)
+
+    def test_models_order_schedule_set_installment_state(self):
+        """Check that the state of an installment can be set"""
+        order = factories.OrderFactory(
+            payment_schedule=[
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PAYED,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-03-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "199.99",
+                    "due_date": "2024-04-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ]
+        )
+
+        order._set_installment_state(
+            due_date=datetime(2024, 2, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+            state=PAYMENT_STATE_PAYED,
+        )
+
+        order.refresh_from_db()
+        self.assertEqual(
+            order.payment_schedule,
+            [
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PAYED,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PAYED,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-03-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "199.99",
+                    "due_date": "2024-04-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        order._set_installment_state(
+            due_date=datetime(2024, 3, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+            state=PAYMENT_STATE_REFUSED,
+        )
+
+        order.refresh_from_db()
+        self.assertEqual(
+            order.payment_schedule,
+            [
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PAYED,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PAYED,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-03-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_REFUSED,
+                },
+                {
+                    "amount": "199.99",
+                    "due_date": "2024-04-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        with self.assertRaises(ValueError):
+            order._set_installment_state(
+                due_date=datetime(2024, 3, 18, 0, 0, tzinfo=ZoneInfo("UTC")),
+                state=PAYMENT_STATE_REFUSED,
+            )
+
+    def test_models_order_schedule_set_installment_payed(self):
+        """Check that the state of an installment can be set to payed"""
+        order = factories.OrderFactory(
+            payment_schedule=[
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PAYED,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-03-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "199.99",
+                    "due_date": "2024-04-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ]
+        )
+
+        order.set_installment_payed(
+            due_date=datetime(2024, 2, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+        )
+
+        order.refresh_from_db()
+        self.assertEqual(
+            order.payment_schedule,
+            [
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PAYED,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PAYED,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-03-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "199.99",
+                    "due_date": "2024-04-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+    def test_models_order_schedule_set_installment_refused(self):
+        """Check that the state of an installment can be set to refused"""
+        order = factories.OrderFactory(
+            payment_schedule=[
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PAYED,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-03-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "199.99",
+                    "due_date": "2024-04-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ]
+        )
+
+        order.set_installment_refused(
+            due_date=datetime(2024, 3, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+        )
+
+        order.refresh_from_db()
+        self.assertEqual(
+            order.payment_schedule,
+            [
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PAYED,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-03-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_REFUSED,
+                },
+                {
+                    "amount": "199.99",
+                    "due_date": "2024-04-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
