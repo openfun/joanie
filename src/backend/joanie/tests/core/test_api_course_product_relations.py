@@ -1185,3 +1185,244 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
         self.assertEqual(models.CourseProductRelation.objects.count(), 1)
+
+    def test_api_course_product_relation_read_list_filtered_by_product_title(self):
+        """
+        An authenticated user should be able to filter course product relation by
+        product title.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        access = factories.UserCourseAccessFactory(user=user)
+        organization = factories.OrganizationFactory()
+        product_1 = factories.ProductFactory(
+            title="Introduction to resource filtering", courses=[]
+        )
+        product_2 = factories.ProductFactory(
+            title="Advanced aerodynamic flows", courses=[]
+        )
+        product_3 = factories.ProductFactory(
+            title="Rubber management on a single-seater", courses=[]
+        )
+        # Create translations title for products
+        product_1.translations.create(
+            language_code="fr-fr", title="Introduction au filtrage de resource"
+        )
+        product_2.translations.create(
+            language_code="fr-fr", title="Flux aérodynamiques avancés"
+        )
+        product_3.translations.create(
+            language_code="fr-fr", title="Gestion d'une gomme sur une monoplace"
+        )
+        for product in [product_1, product_3]:
+            factories.CourseProductRelationFactory(
+                organizations=[organization], product=product
+            )
+
+        course_product_relation = factories.CourseProductRelationFactory(
+            product=product_2,
+            course=access.course,
+            organizations=[organization],
+        )
+
+        # Prepare queries to test
+        queries = [
+            "Flux aérodynamiques avancés",
+            "Flux+aérodynamiques+avancés",
+            "aérodynamiques",
+            "aerodynamic",
+            "aéro",
+            "aero",
+            "aer",
+            "advanced",
+            "flows",
+            "flo",
+            "Advanced aerodynamic flows",
+            "adv",
+            "dynamic",
+            "dyn",
+            "ows",
+            "av",
+            "ux",
+        ]
+
+        for query in queries:
+            response = self.client.get(
+                f"/api/v1.0/course-product-relations/?query={query}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+            self.assertEqual(response.status_code, HTTPStatus.OK)
+            content = response.json()
+            self.assertEqual(len(content["results"]), 1)
+            self.assertEqual(
+                content["results"][0].get("id"), str(course_product_relation.id)
+            )
+
+        # without parsing a query in parameter
+        response = self.client.get(
+            "/api/v1.0/course-product-relations/?query=",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(len(content["results"]), 1)
+        self.assertEqual(content["count"], 1)
+        self.assertEqual(
+            content["results"][0].get("id"), str(course_product_relation.id)
+        )
+
+        # with parsing a fake product title as query parameter
+        response = self.client.get(
+            "/api/v1.0/course-product-relations/?query=veryFakeProductTitle",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 0)
+
+    def test_api_course_product_relation_read_list_filtered_by_course_code(self):
+        """
+        An authenticated user should be able to filter course product relation by
+        course code.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        organization = factories.OrganizationFactory()
+        course_1 = factories.CourseFactory(
+            title="Introduction to resource filtering", code="MYCODE-0990"
+        )
+        course_2 = factories.CourseFactory(
+            title="Advanced aerodynamic flows", code="MYCODE-0991"
+        )
+        course_3 = factories.CourseFactory(
+            title="Rubber management on a single-seater", code="MYCODE-0992"
+        )
+        access = factories.UserCourseAccessFactory(user=user, course=course_2)
+        course_product_relation = factories.CourseProductRelationFactory(
+            course=access.course,
+            organizations=[organization],
+        )
+        for course in [course_1, course_3]:
+            factories.CourseProductRelationFactory(
+                organizations=[organization], course=course
+            )
+
+        response = self.client.get(
+            f"/api/v1.0/course-product-relations/?query={access.course.code}",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(len(content["results"]), 1)
+        self.assertEqual(
+            content["results"][0].get("id"), str(course_product_relation.id)
+        )
+
+        response = self.client.get(
+            f"/api/v1.0/course-product-relations/?query={access.course.code[:1]}",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(len(content["results"]), 1)
+        self.assertEqual(
+            content["results"][0].get("id"), str(course_product_relation.id)
+        )
+
+        # without parsing a query parameter I should see my course product relation
+        response = self.client.get(
+            "/api/v1.0/course-product-relations/?query=",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(len(content["results"]), 1)
+        self.assertEqual(
+            content["results"][0].get("id"), str(course_product_relation.id)
+        )
+
+        # with parsing a fake product title as query parameter
+        response = self.client.get(
+            "/api/v1.0/course-product-relations/?query=veryFakeCourseCode",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 0)
+
+    def test_api_course_product_relation_read_list_filtered_by_organization_title(self):
+        """
+        An authenticated user should be able to filter course product relation by
+        organization title when they have access to the course.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        access = factories.UserCourseAccessFactory(user=user)
+        organization_1 = factories.OrganizationFactory(title="Organization alpha 01")
+        organization_2 = factories.OrganizationFactory(title="Organization beta 02")
+        organization_3 = factories.OrganizationFactory(title="Organization kappa 03")
+        organization_4 = factories.OrganizationFactory(title="Organization gamma 04")
+        for organization in [organization_1, organization_2, organization_3]:
+            factories.CourseProductRelationFactory(organizations=[organization])
+        course_product_relation = factories.CourseProductRelationFactory(
+            course=access.course,
+            organizations=[organization_4],
+        )
+
+        # Prepare queries to test
+        queries = [
+            "amma",
+            "gamma",
+            "mm",
+            "or",
+            "organ",
+            "organization",
+            "organization g",
+            "organization+ga",
+            "organization gamma",
+            "04",
+            "ma 04",
+        ]
+
+        for query in queries:
+            response = self.client.get(
+                f"/api/v1.0/course-product-relations/?query={query}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+            self.assertEqual(response.status_code, HTTPStatus.OK)
+            content = response.json()
+            self.assertEqual(len(content["results"]), 1)
+            self.assertEqual(
+                content["results"][0].get("id"), str(course_product_relation.id)
+            )
+
+        # without parsing a query in parameter
+        response = self.client.get(
+            "/api/v1.0/course-product-relations/?query=",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(len(content["results"]), 1)
+        self.assertEqual(content["count"], 1)
+        self.assertEqual(
+            content["results"][0].get("id"), str(course_product_relation.id)
+        )
+
+        # with parsing a fake product title as query parameter
+        response = self.client.get(
+            "/api/v1.0/course-product-relations/?query=veryFakeOrganizationTitle",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 0)

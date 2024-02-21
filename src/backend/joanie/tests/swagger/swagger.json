@@ -784,6 +784,13 @@
                         "description": "* `credential` - Credential\n* `enrollment` - Enrollment\n* `certificate` - Certificate",
                         "explode": true,
                         "style": "form"
+                    },
+                    {
+                        "in": "query",
+                        "name": "query",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "tags": [
@@ -1745,6 +1752,13 @@
                         "description": "* `credential` - Credential\n* `enrollment` - Enrollment\n* `certificate` - Certificate",
                         "explode": true,
                         "style": "form"
+                    },
+                    {
+                        "in": "query",
+                        "name": "query",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "tags": [
@@ -3534,6 +3548,13 @@
                         "description": "* `credential` - Credential\n* `enrollment` - Enrollment\n* `certificate` - Certificate",
                         "explode": true,
                         "style": "form"
+                    },
+                    {
+                        "in": "query",
+                        "name": "query",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "tags": [

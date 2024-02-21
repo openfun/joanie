@@ -242,10 +242,31 @@ class CourseProductRelationViewSetFilter(filters.FilterSet):
         choices=enums.PRODUCT_TYPE_CHOICES,
         exclude=True,
     )
+    query = filters.CharFilter(method="filter_by_query")
 
     class Meta:
         model = models.CourseProductRelation
         fields: List[str] = []
+
+    def filter_by_query(self, queryset, _name, value):
+        """
+        Filter course product relation by looking for product title | course code | organization
+        title.
+        """
+        product_title_query = Q(product__translations__title__icontains=value)
+        organization_title_query = Q(
+            organizations__translations__title__icontains=value
+        )
+        course_code_query = Q(course__code__icontains=value)
+        combined_query = (
+            product_title_query | course_code_query | organization_title_query
+        )
+
+        if organization_id := self.request.resolver_match.kwargs.get("organization_id"):
+            organization_filter = Q(organizations__in=[organization_id])
+            combined_query &= organization_filter
+
+        return queryset.filter(combined_query).distinct()
 
 
 class OrganizationViewSetFilter(filters.FilterSet):
