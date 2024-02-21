@@ -5,6 +5,7 @@ Declare and configure the models for the product / order part
 import itertools
 import logging
 from collections import defaultdict
+from datetime import timedelta
 
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ValidationError
 from django.core.validators import MinValueValidator
@@ -19,6 +20,7 @@ from django_fsm import FSMField, transition
 from django_fsm.signals import post_transition
 from parler import models as parler_models
 from urllib3.util import Retry
+from workalendar.europe import France
 
 from joanie.core import enums
 from joanie.core.exceptions import CertificateGenerationError
@@ -1049,6 +1051,27 @@ class Order(BaseModel):
             key.split("__")[0]: value if value else None
             for key, value in aggregate.items()
         }
+
+    def _retraction_date(self):
+        """
+        Return the retraction date for the order.
+        """
+        try:
+            retraction_date = self.contract.student_signed_on.replace(  # pylint: disable=unexpected-keyword-arg
+                hour=0, minute=0, second=0, microsecond=0
+            ) + timedelta(days=16)
+        except Order.contract.RelatedObjectDoesNotExist as e:
+            logger.error(
+                "Contract does not exist, cannot retrieve withdrawal date",
+                extra={"context": {"order": self.to_dict()}},
+            )
+            raise ObjectDoesNotExist("Order has no contract") from e
+        calendar = France()
+        if not calendar.is_working_day(retraction_date):
+            retraction_date = calendar.add_working_days(
+                retraction_date, 1, keep_datetime=True
+            )
+        return retraction_date
 
 
 @receiver(post_transition, sender=Order)

@@ -63,6 +63,7 @@ dependencies = [
     "timedelta-isoformat==0.6.2.11",
     "url-normalize==1.4.3",
     "WeasyPrint>=60.2",
+    "workalendar==17.0.0",
     "whitenoise==6.6.0",
     # edx_imports
     "pymysql==1.1.0",
