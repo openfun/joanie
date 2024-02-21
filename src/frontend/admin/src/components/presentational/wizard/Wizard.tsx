@@ -1,12 +1,21 @@
 import Stepper from "@mui/material/Stepper";
 import * as React from "react";
-import { ReactElement, ReactNode, useEffect, useMemo, useState } from "react";
+import {
+  ReactElement,
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import Step from "@mui/material/Step";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import StepButton from "@mui/material/StepButton";
 import { defineMessages, useIntl } from "react-intl";
 import Tooltip from "@mui/material/Tooltip";
+import { Maybe } from "@/types/utils";
 
 const messages = defineMessages({
   next: {
@@ -55,6 +64,7 @@ type Props = {
 
 export function Wizard({ steps, ...props }: Props) {
   const [activeStep, setActiveStep] = useState<number>(0);
+  const [disabledStepMessage, setDisabledStepMessage] = useState<string>();
   const [stepsAreValid, setStepsAreValid] = useState<boolean[]>(() => {
     return steps.map((step) =>
       step.component.props.defaultIsValid !== undefined
@@ -117,6 +127,25 @@ export function Wizard({ steps, ...props }: Props) {
     }
   };
 
+  const setIsValidStep = useCallback(
+    (isValid: boolean, disableMessage?: string) => {
+      const result = [...stepsAreValid];
+      result[activeStep] = isValid;
+      setStepsAreValid(result);
+      if (disableMessage) {
+        setDisabledStepMessage(disableMessage);
+      }
+    },
+    [activeStep],
+  );
+
+  const contextValue: WizardContextInterface = useMemo(() => {
+    return {
+      setIsValidStep,
+      setDisabledStepMessage,
+    };
+  }, []);
+
   const component = useMemo(() => {
     return React.cloneElement(steps[activeStep].component, {
       onValidate: (isValid: boolean) => {
@@ -127,47 +156,55 @@ export function Wizard({ steps, ...props }: Props) {
     });
   }, [steps, activeStep]);
 
+  useEffect(() => {
+    setDisabledStepMessage(undefined);
+  }, [activeStep]);
+
   return (
-    <Box width="100%">
-      <Stepper nonLinear activeStep={activeStep} alternativeLabel>
-        {steps.map((step, index) => (
-          <Step key={step.label}>
-            <StepButton onClick={handleStep(index)}>{step.label}</StepButton>
-          </Step>
-        ))}
-      </Stepper>
-      <Box p={2} key={activeStep}>
-        {component}
+    <WizardContext.Provider value={contextValue}>
+      <Box width="100%">
+        <Stepper nonLinear activeStep={activeStep} alternativeLabel>
+          {steps.map((step, index) => (
+            <Step key={step.label}>
+              <StepButton onClick={handleStep(index)}>{step.label}</StepButton>
+            </Step>
+          ))}
+        </Stepper>
+        <Box p={2} key={activeStep}>
+          {component}
+        </Box>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "row",
+            justifyContent: "space-between",
+            pt: 2,
+          }}
+        >
+          {steps.length > 1 && (
+            <NavigateButton
+              disableMessage={disabledStepMessage}
+              handleNext={handleNext}
+              handlePrevious={handleBack}
+              activeStep={activeStep}
+              isValidStep={stepsAreValid[activeStep]}
+              maxStep={steps.length}
+            />
+          )}
+          {props.rightActions}
+          {props.lastStepActions && activeStep === steps.length - 1 && (
+            <Box>{props.lastStepActions}</Box>
+          )}
+        </Box>
       </Box>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "row",
-          justifyContent: "space-between",
-          pt: 2,
-        }}
-      >
-        {steps.length > 1 && (
-          <NavigateButton
-            handleNext={handleNext}
-            handlePrevious={handleBack}
-            activeStep={activeStep}
-            isValidStep={stepsAreValid[activeStep]}
-            maxStep={steps.length}
-          />
-        )}
-        {props.rightActions}
-        {props.lastStepActions && activeStep === steps.length - 1 && (
-          <Box>{props.lastStepActions}</Box>
-        )}
-      </Box>
-    </Box>
+    </WizardContext.Provider>
   );
 }
 
 type NavigationButtonsProps = {
   handleNext: () => void;
   handlePrevious: () => void;
+  disableMessage?: string;
   activeStep: number;
   isValidStep: boolean;
   maxStep: number;
@@ -177,9 +214,18 @@ function NavigateButton({
   handleNext,
   activeStep,
   isValidStep,
+  disableMessage,
   maxStep,
 }: NavigationButtonsProps) {
   const intl = useIntl();
+
+  const getTooltipMessage = (): string => {
+    if (disableMessage) {
+      return disableMessage;
+    }
+    return intl.formatMessage(messages.invalidStep);
+  };
+
   const getButtons = () => {
     return (
       <Box data-testid="wizard-buttons-container">
@@ -204,11 +250,7 @@ function NavigateButton({
 
   if (!isValidStep) {
     return (
-      <Tooltip
-        placement="right"
-        title={intl.formatMessage(messages.invalidStep)}
-        arrow
-      >
+      <Tooltip placement="right" title={getTooltipMessage()} arrow>
         {getButtons()}
       </Tooltip>
     );
@@ -216,3 +258,21 @@ function NavigateButton({
 
   return getButtons();
 }
+
+export interface WizardContextInterface {
+  setIsValidStep: (isValid: boolean, disabledMessage?: string) => void;
+  setDisabledStepMessage: (message: string) => void;
+}
+
+export const WizardContext =
+  React.createContext<Maybe<WizardContextInterface>>(undefined);
+
+export const useWizardContext = () => {
+  const wizardFilterContext = useContext(WizardContext);
+
+  if (!wizardFilterContext) {
+    throw new Error(`useWizardContext must be used within a WizardContext`);
+  }
+
+  return wizardFilterContext;
+};

@@ -91,4 +91,9 @@ export const commonTranslations = defineMessages({
     defaultMessage: "Click to copy",
     description: "Text for a click to copy text",
   },
+  formIsDirty: {
+    id: "translations.common.commonTranslations.formIsDirty",
+    defaultMessage: "Changes are not saved",
+    description: "Text for a dirty form",
+  },
 });
