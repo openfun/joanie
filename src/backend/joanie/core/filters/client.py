@@ -3,6 +3,8 @@ Client API Resource Filters
 """
 from typing import List
 
+from django.db.models import Q
+
 from django_filters import rest_framework as filters
 
 from joanie.core import enums, models
@@ -91,6 +93,7 @@ class CourseViewSetFilter(filters.FilterSet):
     product_type = filters.ChoiceFilter(
         choices=enums.PRODUCT_TYPE_CHOICES, method="filter_product_type"
     )
+    query = filters.CharFilter(method="filter_by_query")
 
     class Meta:
         model = models.Course
@@ -112,6 +115,20 @@ class CourseViewSetFilter(filters.FilterSet):
         Filter courses by looking for related products with matching type
         """
         return queryset.filter(products__type=value).distinct()
+
+    def filter_by_query(self, queryset, _name, value):
+        """
+        Filter courses by looking for course title or course code
+        """
+        course_title_query = Q(translations__title__icontains=value)
+        course_code_query = Q(code__icontains=value)
+        combined_query = course_title_query | course_code_query
+
+        if organization_id := self.request.resolver_match.kwargs.get("organization_id"):
+            organization_filter = Q(organizations__in=[organization_id])
+            combined_query &= organization_filter
+
+        return queryset.filter(combined_query).distinct()
 
 
 class ContractViewSetFilter(filters.FilterSet):

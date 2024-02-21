@@ -994,6 +994,13 @@
                             ]
                         },
                         "description": "* `credential` - Credential\n* `enrollment` - Enrollment\n* `certificate` - Certificate"
+                    },
+                    {
+                        "in": "query",
+                        "name": "query",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "tags": [
@@ -3649,6 +3656,13 @@
                             ]
                         },
                         "description": "* `credential` - Credential\n* `enrollment` - Enrollment\n* `certificate` - Certificate"
+                    },
+                    {
+                        "in": "query",
+                        "name": "query",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "tags": [
