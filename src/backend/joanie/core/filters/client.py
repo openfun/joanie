@@ -31,10 +31,17 @@ class OrderViewSetFilter(filters.FilterSet):
         choices=enums.PRODUCT_TYPE_CHOICES,
         exclude=True,
     )
+    query = filters.CharFilter(method="filter_by_query")
 
     class Meta:
         model = models.Order
         fields: List[str] = []
+
+    def filter_by_query(self, queryset, _name, value):
+        """
+        Filter resource by product title
+        """
+        return queryset.filter(product__translations__title__icontains=value).distinct()
 
 
 class ProductViewSetFilter(filters.FilterSet):
