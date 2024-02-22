@@ -6,6 +6,26 @@ import {
 } from "@/services/api/models/Order";
 
 export const orderViewMessages = defineMessages({
+  contract: {
+    id: "components.templates.orders.view.contract",
+    defaultMessage: "Contract",
+    description: "Contract field",
+  },
+  submittedForSignatureOn: {
+    id: "components.templates.orders.view.submittedForSignatureOn",
+    defaultMessage: "Submit for signature",
+    description: "date of signing on start label input",
+  },
+  studentSignedOn: {
+    id: "components.templates.orders.view.studentSignedOn",
+    defaultMessage: "Student signature date",
+    description: "Student signature date label field",
+  },
+  organizationSignedOn: {
+    id: "components.templates.orders.view.organizationSignedOn",
+    defaultMessage: "Organization signature date",
+    description: "Organization signature date label field",
+  },
   organization: {
     id: "components.templates.orders.view.organization",
     defaultMessage: "Organization",
@@ -29,6 +49,12 @@ export const orderViewMessages = defineMessages({
   enrollment: {
     id: "components.templates.orders.view.enrollment",
     defaultMessage: "Enrollment",
+    description: "Enrollment field",
+  },
+  enrollmentValue: {
+    id: "components.templates.orders.view.enrollmentValue",
+    defaultMessage:
+      "{courseRunTitle} ({courseRunState})\nRegistered on: {registerOn}",
     description: "Enrollment field",
   },
   enrollmentAt: {
@@ -60,6 +86,18 @@ export const orderViewMessages = defineMessages({
     id: "components.templates.orders.view.taxIncluded",
     defaultMessage: "tax included",
     description: "Helper text for the price filed",
+  },
+  hasConsentToTerms: {
+    id: "components.templates.orders.view.hasConsentToTerms",
+    defaultMessage:
+      "The user has accepted the terms and conditions when purchasing",
+    description: "Text for the has consent to term label",
+  },
+  hasNotConsentToTerms: {
+    id: "components.templates.orders.view.hasNotConsentToTerms",
+    defaultMessage:
+      "The user has not accepted the terms and conditions when purchasing",
+    description: "Text for the has consent to term label",
   },
   certificate: {
     id: "components.templates.orders.view.certificate",
@@ -105,6 +143,12 @@ export const orderViewMessages = defineMessages({
     id: "components.templates.orders.view.orderDetailsSectionTitle",
     defaultMessage: "Order informations",
     description: "Title for the order section",
+  },
+
+  contractDetailsSectionTitle: {
+    id: "components.templates.orders.view.contractDetailsSectionTitle",
+    defaultMessage: "Contract details",
+    description: "Title for the contract section",
   },
   orderDetailsSectionAlert: {
     id: "components.templates.orders.view.orderDetailsSectionAlert",
