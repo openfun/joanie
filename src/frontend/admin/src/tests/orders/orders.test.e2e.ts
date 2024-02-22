@@ -13,13 +13,15 @@ import {
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { getOrderListItemsScenarioStore } from "@/tests/orders/OrderListItemTestScenario";
 
+const url = "http://localhost:8071/api/v1.0/admin/orders/";
+const catchIdRegex = getUrlCatchIdRegex(url);
+const queryParamsRegex = getUrlCatchSearchParamsRegex(url);
 test.describe("Order view", () => {
   let store = getOrdersScenarioStore();
   test.beforeEach(async ({ page }) => {
-    const url = "http://localhost:8071/api/v1.0/admin/orders/";
     store = getOrdersScenarioStore();
     const list = transformOrdersToOrderListItems(store.list);
-    const catchIdRegex = getUrlCatchIdRegex(url);
+
     await page.unroute(catchIdRegex);
     await page.route(catchIdRegex, async (route, request) => {
       const methods = request.method();
@@ -28,7 +30,6 @@ test.describe("Order view", () => {
       }
     });
 
-    const queryParamsRegex = getUrlCatchSearchParamsRegex(url);
     await page.unroute(queryParamsRegex);
     await page.route(queryParamsRegex, async (route, request) => {
       const methods = request.method();
@@ -45,7 +46,7 @@ test.describe("Order view", () => {
     await page.getByRole("link", { name: order.product.title }).click();
 
     await page.getByRole("heading", { name: "Order informations" }).click();
-    await expect(page.getByLabel("Organization")).toHaveValue(
+    await expect(page.getByLabel("Organization", { exact: true })).toHaveValue(
       order.organization.title,
     );
     await expect(page.getByLabel("Product")).toHaveValue(order.product.title);
@@ -104,7 +105,9 @@ test.describe("Order view", () => {
           "In this view, you can see the details of an order, such as the user concerned, their status etc.",
         ),
     ).toBeVisible();
-    await expect(page.getByLabel("Organization")).toBeVisible();
+    await expect(
+      page.getByLabel("Organization", { exact: true }),
+    ).toBeVisible();
     await expect(page.getByLabel("Product")).toBeVisible();
     await expect(page.getByLabel("Course")).toBeVisible();
     await expect(page.getByLabel("Order group")).toBeVisible();
@@ -135,6 +138,77 @@ test.describe("Order view", () => {
     if (order.certificate) {
       await expect(page.getByLabel("Certificate")).toBeVisible();
     }
+  });
+  test("Check all contract fields field are in this view", async ({ page }) => {
+    const order = store.list[0];
+    await page.goto(PATH_ADMIN.orders.list);
+    await page.getByRole("heading", { name: "Orders" }).click();
+    await page.getByRole("link", { name: order.product.title }).click();
+
+    await expect(
+      page.getByRole("heading", { name: "Contract details" }),
+    ).toBeVisible();
+
+    // Contract field
+    const contract = page.getByTestId("order-view-contract-name");
+    await expect(contract.getByLabel("Contract")).toBeVisible();
+    await expect(contract.getByTestId("RemoveRedEyeIcon")).toBeVisible();
+
+    // Start of signing field
+    const startSigningField = page.getByTestId(
+      "order-view-contract-submitted-for-signature",
+    );
+    await expect(
+      startSigningField.getByLabel("Submit for signature"),
+    ).toBeVisible();
+
+    // Studient signature date field
+    const student = page.getByTestId("order-view-contract-student-signed-on");
+    await expect(student.getByLabel("Student signature date")).toBeVisible();
+    await expect(student.getByTestId("TaskAltIcon")).toBeVisible();
+
+    // Organization signature date field
+    const organization = page.getByTestId(
+      "order-view-contract-organization-signed-on",
+    );
+    await expect(
+      organization.getByLabel("Organization signature date"),
+    ).toBeVisible();
+    await expect(organization.getByTestId("TaskAltIcon")).toBeVisible();
+  });
+
+  test("Check contract signature field icons when no signing has occurred", async ({
+    page,
+  }) => {
+    const order = store.list[0];
+    order.contract!.student_signed_on = null;
+    order.contract!.organization_signed_on = null;
+    order.contract!.submitted_for_signature_on = null;
+
+    await page.unroute(catchIdRegex);
+    await page.route(catchIdRegex, async (route, request) => {
+      const methods = request.method();
+      if (methods === "GET") {
+        await route.fulfill({ json: order });
+      }
+    });
+    await page.goto(PATH_ADMIN.orders.list);
+    await page.getByRole("heading", { name: "Orders" }).click();
+    await page.getByRole("link", { name: order.product.title }).click();
+
+    await expect(
+      page.getByRole("heading", { name: "Contract details" }),
+    ).toBeVisible();
+
+    // Studient signature date field
+    const student = page.getByTestId("order-view-contract-student-signed-on");
+    await expect(student.getByTestId("HighlightOffIcon")).toBeVisible();
+
+    // Organization signature date field
+    const organization = page.getByTestId(
+      "order-view-contract-organization-signed-on",
+    );
+    await expect(organization.getByTestId("HighlightOffIcon")).toBeVisible();
   });
 });
 
