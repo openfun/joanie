@@ -1,3 +1,4 @@
+# pylint: disable=duplicate-code
 """
 Test suite for CourseProductRelation create Admin API.
 """
