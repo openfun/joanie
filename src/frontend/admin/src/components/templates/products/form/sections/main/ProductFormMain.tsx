@@ -130,6 +130,7 @@ export function ProductFormMain({
     >
       <RHFProvider
         id="product-main-form"
+        checkBeforeUnload={true}
         methods={methods}
         onSubmit={methods.handleSubmit(onSubmit)}
       >
