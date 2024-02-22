@@ -9,8 +9,6 @@ from joanie.core import enums, factories, models
 from joanie.core.serializers import fields
 from joanie.tests.base import BaseAPITestCase
 
-# pylint: disable=duplicate-code
-
 
 class CourseContractApiTest(BaseAPITestCase):
     """Tests for the Courses Contract API"""
