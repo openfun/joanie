@@ -1,7 +1,7 @@
 """
 Client API endpoints
 """
-# pylint: disable=too-many-lines
+# pylint: disable=too-many-ancestors, too-many-lines
 import io
 import uuid
 from http import HTTPStatus
@@ -31,8 +31,6 @@ from joanie.core.utils import contract as contract_utility
 from joanie.core.utils import contract_definition, issuers
 from joanie.payment import enums as payment_enums
 from joanie.payment.models import Invoice
-
-# pylint: disable=too-many-ancestors, too-many-lines
 
 UUID_REGEX = (
     "[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}"
@@ -182,7 +180,6 @@ class CourseProductRelationViewSet(
         return [permission() for permission in permission_classes]
 
 
-# pylint: disable=too-many-ancestors
 class EnrollmentViewSet(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
@@ -242,7 +239,6 @@ class EnrollmentViewSet(
         instance.set()
 
 
-# pylint: disable=too-many-ancestors
 class OrderViewSet(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,

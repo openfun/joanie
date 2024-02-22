@@ -1,7 +1,7 @@
 """
 Test suite for order models
 """
-# pylint: disable=too-many-lines
+# pylint: disable=too-many-lines,too-many-public-methods
 import json
 import random
 from datetime import datetime, timedelta
@@ -25,7 +25,6 @@ from joanie.payment.factories import BillingAddressDictFactory, InvoiceFactory
 from joanie.tests.base import BaseLogMixinTestCase
 
 
-# pylint: disable=too-many-public-methods
 class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
     """Test suite for the Order model."""
 
