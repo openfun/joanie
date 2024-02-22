@@ -5,6 +5,7 @@ import { OrderGroup } from "@/services/api/models/OrderGroup";
 import { User } from "@/services/api/models/User";
 import { Product } from "@/services/api/models/Product";
 import { Enrollment } from "@/services/api/models/Enrollment";
+import { Nullable } from "@/types/utils";
 
 export type AbstractOrder = {
   id: string;
@@ -35,6 +36,16 @@ export type Order = AbstractOrder & {
     issued_on: string;
   };
   main_invoice: OrderMainInvoice;
+  has_consent_to_terms: boolean;
+  contract: Nullable<OrderContractDetails>;
+};
+
+export type OrderContractDetails = {
+  definition_title: string;
+  id: string;
+  organization_signed_on: Nullable<string>;
+  student_signed_on: Nullable<string>;
+  submitted_for_signature_on: Nullable<string>;
 };
 
 export type OrderMainInvoice = {

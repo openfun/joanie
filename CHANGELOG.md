@@ -103,6 +103,7 @@ and this project adheres to
 - Add admin endpoint to manage course product relations
 - Add organization contract signature
 - Add moodle LMS backend
+- Add contract details inside order view
 
 ### Changed
 
