@@ -17,7 +17,6 @@ from joanie.edx_imports.utils import (
     format_date,
     make_date_aware,
 )
-from joanie.lms_handler.api import detect_lms_from_resource_link
 
 logger = getLogger(__name__)
 
@@ -64,12 +63,10 @@ def import_course_runs_batch(start, stop, dry_run=False):
     report = {
         "courses": {
             "created": 0,
-            "updated": 0,
             "errors": 0,
         },
         "course_runs": {
             "created": 0,
-            "updated": 0,
             "errors": 0,
         },
     }
@@ -79,7 +76,6 @@ def import_course_runs_batch(start, stop, dry_run=False):
         resource_link = (
             f"https://{settings.EDX_DOMAIN}/courses/{edx_course_overview.id}/course"
         )
-        lms = detect_lms_from_resource_link(resource_link)
 
         try:
             target_course_run = models.CourseRun.objects.only("pk").get(
@@ -101,12 +97,6 @@ def import_course_runs_batch(start, stop, dry_run=False):
         }
 
         if target_course_run:
-            # Remove protected fields before update
-            cleaned_data = lms.clean_course_run_data(edx_course_run_dict)
-            models.CourseRun.objects.filter(pk=target_course_run.pk).update(
-                **cleaned_data
-            )
-            report["course_runs"]["updated"] += 1
             course_run = models.CourseRun.objects.get(pk=target_course_run.pk)
         else:
             course_number = extract_course_number(edx_course_overview.id)
@@ -153,25 +143,21 @@ def import_course_runs_batch(start, stop, dry_run=False):
             course_run.created_on = make_date_aware(edx_course_overview.created)
             course_run.save()
 
-    courses_import_string = "%s courses created, %s updated, %s errors"
-    course_runs_import_string = "%s course runs created, %s updated, %s errors"
+    courses_import_string = "%s courses created, %s errors"
+    course_runs_import_string = "%s course runs created, %s errors"
     if dry_run:
-        courses_import_string = (
-            "Dry run: %s courses would be created, %s updated, %s errors"
-        )
+        courses_import_string = "Dry run: %s courses would be created, %s errors"
         course_runs_import_string = (
-            "Dry run: %s course runs would be created, %s updated, %s errors"
+            "Dry run: %s course runs would be created, %s errors"
         )
     logger.info(
         courses_import_string,
         report["courses"]["created"],
-        report["courses"]["updated"],
         report["courses"]["errors"],
     )
     logger.info(
         course_runs_import_string,
         report["course_runs"]["created"],
-        report["course_runs"]["updated"],
         report["course_runs"]["errors"],
     )
 
