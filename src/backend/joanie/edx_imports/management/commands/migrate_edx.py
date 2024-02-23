@@ -3,6 +3,11 @@ import logging
 
 from django.core.management import BaseCommand
 
+from joanie.edx_imports.checks import (
+    check_import_db_connections,
+    check_import_env,
+    check_openedx_host,
+)
 from joanie.edx_imports.tasks.certificates import import_certificates
 from joanie.edx_imports.tasks.course_runs import import_course_runs
 from joanie.edx_imports.tasks.enrollments import import_enrollments
@@ -19,6 +24,12 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         """Add arguments to the command"""
+        parser.add_argument(
+            "--skip-check",
+            action="store_true",
+            default=False,
+            help="Skip check the env vars and db connections",
+        )
         parser.add_argument(
             "--universities", action="store_true", help="Import universities"
         )
@@ -106,6 +117,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """Handle the command"""
+        skip_check = options["skip_check"]
         import_all = options["all"]
         universities_import = options["universities"] or import_all
         universities_import_offset = options["universities_offset"]
@@ -124,6 +136,22 @@ class Command(BaseCommand):
         certificates_import_limit = options["certificates_limit"]
         batch_size = options["batch_size"]
         dry_run = options["dry_run"]
+
+        if not skip_check:
+            logger.info("Checking the environment and database connections...")
+            check_result = check_import_env(self.style)
+            check_result = check_openedx_host(self.style) and check_result
+            check_result = check_import_db_connections(self.style) and check_result
+            if not check_result:
+                logger.error(self.style.ERROR("\nCheck failed"))
+                continue_import = input(
+                    "\nDo you want to continue importing data? (yes/no): "
+                )
+                if continue_import.lower() not in ["yes", "y"]:
+                    return
+                logger.warning(
+                    self.style.WARNING("Continuing import despite failed checks")
+                )
 
         if not any(
             [

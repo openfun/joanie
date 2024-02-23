@@ -59,7 +59,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             )
 
         with self.assertLogs() as logger:
-            call_command("migrate_edx", "--universities")
+            call_command("migrate_edx", "--skip-check", "--universities")
 
         expected = [
             "Importing data from Open edX database...",
@@ -104,7 +104,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             )
 
         with self.assertLogs() as logger:
-            call_command("migrate_edx", "--universities")
+            call_command("migrate_edx", "--skip-check", "--universities")
 
         expected = [
             "Importing data from Open edX database...",
@@ -133,7 +133,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
         mock_get_universities_count.return_value = len([edx_university])
 
         with self.assertLogs() as logger:
-            call_command("migrate_edx", "--universities")
+            call_command("migrate_edx", "--skip-check", "--universities")
 
         expected = [
             "Importing data from Open edX database...",
@@ -162,7 +162,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
         mock_get_universities_count.return_value = len(edx_universities)
 
         with self.assertLogs() as logger:
-            call_command("migrate_edx", "--universities", "--dry-run")
+            call_command("migrate_edx", "--skip-check", "--universities", "--dry-run")
 
         expected = [
             "Importing data from Open edX database...",

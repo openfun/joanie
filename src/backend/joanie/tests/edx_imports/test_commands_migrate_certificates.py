@@ -99,7 +99,7 @@ class MigrateOpenEdxCertificatesTestCase(MigrateOpenEdxBaseTestCase):
         ]
 
         with self.assertLogs() as logger:
-            call_command("migrate_edx", "--certificates")
+            call_command("migrate_edx", "--skip-check", "--certificates")
 
         expected = [
             "Importing data from Open edX database...",
@@ -165,7 +165,7 @@ class MigrateOpenEdxCertificatesTestCase(MigrateOpenEdxBaseTestCase):
         ]
 
         with self.assertLogs() as logger:
-            call_command("migrate_edx", "--certificates")
+            call_command("migrate_edx", "--skip-check", "--certificates")
 
         expected = [
             "Importing data from Open edX database...",
@@ -239,7 +239,7 @@ class MigrateOpenEdxCertificatesTestCase(MigrateOpenEdxBaseTestCase):
         ]
 
         with self.assertLogs() as logger:
-            call_command("migrate_edx", "--certificates")
+            call_command("migrate_edx", "--skip-check", "--certificates")
 
         expected = [
             "Importing data from Open edX database...",
@@ -317,7 +317,7 @@ class MigrateOpenEdxCertificatesTestCase(MigrateOpenEdxBaseTestCase):
         ]
 
         with self.assertLogs() as logger:
-            call_command("migrate_edx", "--certificates")
+            call_command("migrate_edx", "--skip-check", "--certificates")
 
         expected = [
             "Importing data from Open edX database...",

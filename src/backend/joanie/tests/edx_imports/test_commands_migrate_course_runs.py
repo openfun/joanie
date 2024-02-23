@@ -28,7 +28,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
         mock_get_course_overviews_count.return_value = len(edx_course_overviews)
 
         with self.assertLogs() as logger:
-            call_command("migrate_edx", "--course-runs")
+            call_command("migrate_edx", "--skip-check", "--course-runs")
 
         expected = [
             "Importing data from Open edX database...",
@@ -61,7 +61,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
         mock_get_course_overviews_count.return_value = len(edx_course_overviews)
 
         with self.assertLogs() as logger:
-            call_command("migrate_edx", "--course-runs")
+            call_command("migrate_edx", "--skip-check", "--course-runs")
 
         expected = [
             "Importing data from Open edX database...",
@@ -96,7 +96,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
         mock_get_course_overviews_count.return_value = len(edx_course_overviews)
 
         with self.assertLogs() as logger:
-            call_command("migrate_edx", "--course-runs")
+            call_command("migrate_edx", "--skip-check", "--course-runs")
 
         expected = [
             "Importing data from Open edX database...",
@@ -127,7 +127,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
         mock_get_course_overviews_count.return_value = len(edx_course_overviews)
 
         with self.assertLogs() as logger:
-            call_command("migrate_edx", "--course-runs")
+            call_command("migrate_edx", "--skip-check", "--course-runs")
 
         expected = [
             "Importing data from Open edX database...",
@@ -158,7 +158,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
         mock_get_course_overviews_count.return_value = len(edx_course_overviews)
 
         with self.assertLogs() as logger:
-            call_command("migrate_edx", "--course-runs")
+            call_command("migrate_edx", "--skip-check", "--course-runs")
 
         expected = [
             "Importing data from Open edX database...",
@@ -185,7 +185,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
         mock_get_course_overviews_count.return_value = len(edx_course_overviews)
 
         with self.assertLogs() as logger:
-            call_command("migrate_edx", "--course-runs", "--dry-run")
+            call_command("migrate_edx", "--skip-check", "--course-runs", "--dry-run")
 
         expected = [
             "Importing data from Open edX database...",
