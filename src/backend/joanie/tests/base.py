@@ -15,6 +15,8 @@ from joanie.core.utils.jwt_tokens import generate_jwt_token_from_user
 class BaseAPITestCase(TestCase):
     """Base API test case"""
 
+    maxDiff = None
+
     def setUp(self):
         """
         We are testing in english

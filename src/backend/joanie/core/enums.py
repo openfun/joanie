@@ -121,3 +121,16 @@ CERTIFICATE_NAME_CHOICES = (
     (CERTIFICATE, _("Certificate")),
     (DEGREE, _("Degree")),
 )
+
+# For event level choices
+EVENT_INFO = "info"
+EVENT_SUCCESS = "success"
+EVENT_WARNING = "warning"
+EVENT_ERROR = "error"
+
+EVENT_LEVEL_CHOICES = (
+    (EVENT_INFO, _("Info")),
+    (EVENT_SUCCESS, _("Success")),
+    (EVENT_WARNING, _("Warning")),
+    (EVENT_ERROR, _("Error")),
+)

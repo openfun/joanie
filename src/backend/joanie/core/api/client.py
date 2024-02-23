@@ -1414,3 +1414,22 @@ class NestedOrderCourseViewSet(NestedGenericViewSet, mixins.ListModelMixin):
         )
         .distinct()
     )
+
+
+class EventViewSet(
+    mixins.ListModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet
+):
+    """
+    Event ViewSet
+    """
+
+    permission_classes = [permissions.AccessPermission]
+    serializer_class = serializers.EventSerializer
+
+    def get_queryset(self):
+        """
+        Only return users if a query is provided to filter them.
+        """
+        user = self.request.user
+
+        return models.Event.objects.filter(user_id=user.id)

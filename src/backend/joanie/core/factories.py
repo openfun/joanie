@@ -881,3 +881,14 @@ class SiteConfigFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = models.SiteConfig
+
+
+class EventFactory(factory.django.DjangoModelFactory):
+    """Factory for the Event model"""
+
+    class Meta:
+        model = models.Event
+
+    user = factory.SubFactory(UserFactory)
+    level = factory.fuzzy.FuzzyChoice([level[0] for level in enums.EVENT_LEVEL_CHOICES])
+    created_on = factory.Faker("date_time_this_year")

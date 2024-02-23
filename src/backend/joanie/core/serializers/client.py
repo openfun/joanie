@@ -1065,3 +1065,24 @@ class NestedOrderCourseSerializer(serializers.ModelSerializer):
             "state",
         ]
         read_only_fields = fields
+
+
+class EventSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Event model
+    """
+
+    message = serializers.CharField(read_only=True)
+    level = serializers.CharField(read_only=True)
+    read = serializers.BooleanField(read_only=True)
+    created_on = serializers.DateTimeField(read_only=True)
+
+    class Meta:
+        model = models.Event
+        fields = [
+            "id",
+            "message",
+            "level",
+            "created_on",
+        ]
+        read_only_fields = fields
