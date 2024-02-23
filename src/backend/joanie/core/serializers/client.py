@@ -1072,17 +1072,20 @@ class EventSerializer(serializers.ModelSerializer):
     Serializer for Event model
     """
 
-    message = serializers.CharField(read_only=True)
-    level = serializers.CharField(read_only=True)
-    read = serializers.BooleanField(read_only=True)
+    user_id = serializers.SlugRelatedField(
+        queryset=models.User.objects.all(),
+        slug_field="id",
+        source="user",
+        required=True,
+    )
     created_on = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model = models.Event
         fields = [
             "id",
-            "message",
+            "user_id",
             "level",
             "created_on",
         ]
-        read_only_fields = fields
+        read_only_fields = ["id", "created_on"]

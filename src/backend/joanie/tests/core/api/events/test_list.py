@@ -46,7 +46,7 @@ class EventListApiTest(BaseAPITestCase):
                 "results": [
                     {
                         "id": str(event.id),
-                        "message": event.message,
+                        "user_id": str(event.user.id),
                         "level": event.level,
                         "created_on": format_date(event.created_on),
                     }

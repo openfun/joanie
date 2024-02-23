@@ -29,6 +29,7 @@ from joanie.core.exceptions import NoContractToSignError
 from joanie.core.tasks import generate_zip_archive_task
 from joanie.core.utils import contract as contract_utility
 from joanie.core.utils import contract_definition, issuers
+from joanie.core.utils.signature import check_signature
 from joanie.payment import enums as payment_enums
 from joanie.payment.models import Invoice
 
@@ -1417,7 +1418,9 @@ class NestedOrderCourseViewSet(NestedGenericViewSet, mixins.ListModelMixin):
 
 
 class EventViewSet(
-    mixins.ListModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
 ):
     """
     Event ViewSet
@@ -1426,6 +1429,18 @@ class EventViewSet(
     permission_classes = [permissions.AccessPermission]
     serializer_class = serializers.EventSerializer
 
+    def get_permissions(self):
+        """
+        User only needs to be authenticated, except for create action.
+        Signatures are checked for create action.
+        """
+        if self.action == "create":
+            permission_classes = [drf_permissions.AllowAny]
+        else:
+            return super().get_permissions()
+
+        return [permission() for permission in permission_classes]
+
     def get_queryset(self):
         """
         Only return users if a query is provided to filter them.
@@ -1433,3 +1448,10 @@ class EventViewSet(
         user = self.request.user
 
         return models.Event.objects.filter(user_id=user.id)
+
+    def create(self, request, *args, **kwargs):
+        """
+        Create a new event for user authenticated
+        """
+        check_signature(request, "JOANIE_EVENT_SECRETS")
+        return super().create(request, *args, **kwargs)

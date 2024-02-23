@@ -2485,6 +2485,46 @@
                         "description": ""
                     }
                 }
+            },
+            "post": {
+                "operationId": "events_create",
+                "description": "Create a new event for user authenticated",
+                "tags": [
+                    "events"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EventRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EventRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "DelegatedJWTAuthentication": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Event"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
             }
         },
         "/api/v1.0/orders/": {
@@ -5302,17 +5342,13 @@
                         "readOnly": true,
                         "description": "primary key for the record as UUID"
                     },
-                    "message": {
+                    "user_id": {
                         "type": "string",
-                        "readOnly": true
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID"
                     },
                     "level": {
-                        "type": "string",
-                        "readOnly": true
-                    },
-                    "read": {
-                        "type": "boolean",
-                        "readOnly": true
+                        "$ref": "#/components/schemas/LevelEnum"
                     },
                     "created_on": {
                         "type": "string",
@@ -5323,9 +5359,28 @@
                 "required": [
                     "created_on",
                     "id",
-                    "level",
-                    "message",
-                    "read"
+                    "user_id"
+                ]
+            },
+            "EventRequest": {
+                "type": "object",
+                "description": "Serializer for Event model",
+                "properties": {
+                    "user_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID"
+                    },
+                    "level": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "read": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "user_id"
                 ]
             },
             "LanguageEnum": {
