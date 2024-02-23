@@ -6,6 +6,92 @@
         "description": "This is the Joanie API schema."
     },
     "paths": {
+        "/api/v1.0/activity-logs/": {
+            "get": {
+                "operationId": "activity_logs_list",
+                "description": "ActivityLog ViewSet",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "A page number within the paginated result set.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page_size",
+                        "required": false,
+                        "in": "query",
+                        "description": "Number of results to return per page.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "tags": [
+                    "activity-logs"
+                ],
+                "security": [
+                    {
+                        "DelegatedJWTAuthentication": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedActivityLogList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "activity_logs_create",
+                "description": "Create a new activity log for allowed clients.",
+                "tags": [
+                    "activity-logs"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ActivityLogRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ActivityLogRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "DelegatedJWTAuthentication": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ActivityLog"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1.0/addresses/": {
             "get": {
                 "operationId": "addresses_list",
@@ -4113,6 +4199,116 @@
     },
     "components": {
         "schemas": {
+            "ActivityLog": {
+                "type": "object",
+                "description": "Serializer for ActivityLog model",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "description": "primary key for the record as UUID"
+                    },
+                    "user_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID"
+                    },
+                    "level": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/LevelEnum"
+                            }
+                        ],
+                        "default": "info"
+                    },
+                    "created_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    },
+                    "type": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ActivityLogTypeEnum"
+                            }
+                        ],
+                        "default": "notification"
+                    },
+                    "context": {
+                        "$ref": "#/components/schemas/ActivityLogContext"
+                    }
+                },
+                "required": [
+                    "created_on",
+                    "id",
+                    "user_id"
+                ]
+            },
+            "ActivityLogContext": {
+                "type": "object",
+                "description": "Serializer for the context field of the ActivityLog model",
+                "properties": {
+                    "order_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Order of the failed payment"
+                    }
+                }
+            },
+            "ActivityLogContextRequest": {
+                "type": "object",
+                "description": "Serializer for the context field of the ActivityLog model",
+                "properties": {
+                    "order_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Order of the failed payment"
+                    }
+                }
+            },
+            "ActivityLogRequest": {
+                "type": "object",
+                "description": "Serializer for ActivityLog model",
+                "properties": {
+                    "user_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID"
+                    },
+                    "level": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/LevelEnum"
+                            }
+                        ],
+                        "default": "info"
+                    },
+                    "type": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ActivityLogTypeEnum"
+                            }
+                        ],
+                        "default": "notification"
+                    },
+                    "context": {
+                        "$ref": "#/components/schemas/ActivityLogContextRequest"
+                    }
+                },
+                "required": [
+                    "user_id"
+                ]
+            },
+            "ActivityLogTypeEnum": {
+                "enum": [
+                    "notification",
+                    "payment_succeeded",
+                    "payment_failed"
+                ],
+                "type": "string",
+                "description": "* `notification` - Notification\n* `payment_succeeded` - Payment succeeded\n* `payment_failed` - Payment failed"
+            },
             "Address": {
                 "type": "object",
                 "description": "Address model serializer",
@@ -5389,6 +5585,16 @@
                 "type": "string",
                 "description": "* `af` - Afrikaans\n* `ar` - Arabic\n* `ar-dz` - Algerian Arabic\n* `ast` - Asturian\n* `az` - Azerbaijani\n* `bg` - Bulgarian\n* `be` - Belarusian\n* `bn` - Bengali\n* `br` - Breton\n* `bs` - Bosnian\n* `ca` - Catalan\n* `ckb` - Central Kurdish (Sorani)\n* `cs` - Czech\n* `cy` - Welsh\n* `da` - Danish\n* `de` - German\n* `dsb` - Lower Sorbian\n* `el` - Greek\n* `en` - English\n* `en-au` - Australian English\n* `en-gb` - British English\n* `eo` - Esperanto\n* `es` - Spanish\n* `es-ar` - Argentinian Spanish\n* `es-co` - Colombian Spanish\n* `es-mx` - Mexican Spanish\n* `es-ni` - Nicaraguan Spanish\n* `es-ve` - Venezuelan Spanish\n* `et` - Estonian\n* `eu` - Basque\n* `fa` - Persian\n* `fi` - Finnish\n* `fr` - French\n* `fy` - Frisian\n* `ga` - Irish\n* `gd` - Scottish Gaelic\n* `gl` - Galician\n* `he` - Hebrew\n* `hi` - Hindi\n* `hr` - Croatian\n* `hsb` - Upper Sorbian\n* `hu` - Hungarian\n* `hy` - Armenian\n* `ia` - Interlingua\n* `id` - Indonesian\n* `ig` - Igbo\n* `io` - Ido\n* `is` - Icelandic\n* `it` - Italian\n* `ja` - Japanese\n* `ka` - Georgian\n* `kab` - Kabyle\n* `kk` - Kazakh\n* `km` - Khmer\n* `kn` - Kannada\n* `ko` - Korean\n* `ky` - Kyrgyz\n* `lb` - Luxembourgish\n* `lt` - Lithuanian\n* `lv` - Latvian\n* `mk` - Macedonian\n* `ml` - Malayalam\n* `mn` - Mongolian\n* `mr` - Marathi\n* `ms` - Malay\n* `my` - Burmese\n* `nb` - Norwegian Bokmål\n* `ne` - Nepali\n* `nl` - Dutch\n* `nn` - Norwegian Nynorsk\n* `os` - Ossetic\n* `pa` - Punjabi\n* `pl` - Polish\n* `pt` - Portuguese\n* `pt-br` - Brazilian Portuguese\n* `ro` - Romanian\n* `ru` - Russian\n* `sk` - Slovak\n* `sl` - Slovenian\n* `sq` - Albanian\n* `sr` - Serbian\n* `sr-latn` - Serbian Latin\n* `sv` - Swedish\n* `sw` - Swahili\n* `ta` - Tamil\n* `te` - Telugu\n* `tg` - Tajik\n* `th` - Thai\n* `tk` - Turkmen\n* `tr` - Turkish\n* `tt` - Tatar\n* `udm` - Udmurt\n* `uk` - Ukrainian\n* `ur` - Urdu\n* `uz` - Uzbek\n* `vi` - Vietnamese\n* `zh-hans` - Simplified Chinese\n* `zh-hant` - Traditional Chinese"
             },
+            "LevelEnum": {
+                "enum": [
+                    "info",
+                    "success",
+                    "warning",
+                    "error"
+                ],
+                "type": "string",
+                "description": "* `info` - Info\n* `success` - Success\n* `warning` - Warning\n* `error` - Error"
+            },
             "NestedOrder": {
                 "type": "object",
                 "description": "Order model serializer for the Certificate model",
@@ -5902,6 +6108,37 @@
                 "required": [
                     "logo"
                 ]
+            },
+            "PaginatedActivityLogList": {
+                "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
+                "properties": {
+                    "count": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "next": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=4"
+                    },
+                    "previous": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=2"
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ActivityLog"
+                        }
+                    }
+                }
             },
             "PaginatedAddressList": {
                 "type": "object",
@@ -6500,7 +6737,7 @@
                     "type": {
                         "allOf": [
                             {
-                                "$ref": "#/components/schemas/TypeEnum"
+                                "$ref": "#/components/schemas/ProductTypeEnum"
                             }
                         ],
                         "readOnly": true
@@ -6560,7 +6797,7 @@
                     "title"
                 ]
             },
-            "TypeEnum": {
+            "ProductTypeEnum": {
                 "enum": [
                     "credential",
                     "enrollment",

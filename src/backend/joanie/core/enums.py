@@ -130,3 +130,27 @@ CERTIFICATE_TYPE_CHOICES = (
     (CERTIFICATE_ORDER_TYPE, _("Order")),
     (CERTIFICATE_ENROLLMENT_TYPE, _("Enrollment")),
 )
+
+# For activity log level choices
+ACTIVITY_LOG_LEVEL_INFO = "info"
+ACTIVITY_LOG_LEVEL_SUCCESS = "success"
+ACTIVITY_LOG_LEVEL_WARNING = "warning"
+ACTIVITY_LOG_LEVEL_ERROR = "error"
+
+ACTIVITY_LOG_LEVEL_CHOICES = (
+    (ACTIVITY_LOG_LEVEL_INFO, _("Info")),
+    (ACTIVITY_LOG_LEVEL_SUCCESS, _("Success")),
+    (ACTIVITY_LOG_LEVEL_WARNING, _("Warning")),
+    (ACTIVITY_LOG_LEVEL_ERROR, _("Error")),
+)
+
+# For activity log type choices
+ACTIVITY_LOG_TYPE_NOTIFICATION = "notification"
+ACTIVITY_LOG_TYPE_PAYMENT_SUCCEEDED = "payment_succeeded"
+ACTIVITY_LOG_TYPE_PAYMENT_FAILED = "payment_failed"
+
+ACTIVITY_LOG_TYPE_CHOICES = (
+    (ACTIVITY_LOG_TYPE_NOTIFICATION, _("Notification")),
+    (ACTIVITY_LOG_TYPE_PAYMENT_SUCCEEDED, _("Payment succeeded")),
+    (ACTIVITY_LOG_TYPE_PAYMENT_FAILED, _("Payment failed")),
+)
