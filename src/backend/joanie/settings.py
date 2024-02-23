@@ -512,6 +512,14 @@ class Base(Configuration):
     EDX_MONGODB_NAME = values.Value(
         None, environ_name="EDX_MONGODB_NAME", environ_prefix=None
     )
+    EDX_MONGODB_READPREFERENCE = values.Value(
+        "secondaryPreferred",
+        environ_name="EDX_MONGODB_READPREFERENCE",
+        environ_prefix=None,
+    )
+    EDX_MONGODB_REPLICASET = values.Value(
+        None, environ_name="EDX_MONGODB_REPLICASET", environ_prefix=None
+    )
 
     EDX_TIME_ZONE = values.Value(
         None, environ_name="EDX_TIME_ZONE", environ_prefix=None
