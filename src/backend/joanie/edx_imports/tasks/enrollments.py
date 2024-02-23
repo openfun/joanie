@@ -55,13 +55,11 @@ def import_enrollments_batch(start, stop, dry_run=False):
     report = {
         "enrollments": {
             "created": 0,
-            "updated": 0,
             "errors": 0,
         }
     }
     enrollments = db.get_enrollments(start, stop)
     enrollments_to_create = []
-    enrollments_to_update = []
 
     for edx_enrollment in enrollments:
         try:
@@ -81,24 +79,25 @@ def import_enrollments_batch(start, stop, dry_run=False):
             logger.error("No User found for %s", user_name)
             continue
 
-        try:
-            enrollment = models.Enrollment.objects.get(course_run=course_run, user=user)
-            enrollment.is_active = edx_enrollment.is_active
-            enrollment.created_on = make_date_aware(edx_enrollment.created)
-            enrollment.state = ENROLLMENT_STATE_SET
-            enrollments_to_update.append(enrollment)
-        except models.Enrollment.DoesNotExist:
-            enrollments_to_create.append(
-                models.Enrollment(
-                    course_run=course_run,
-                    user=user,
-                    is_active=edx_enrollment.is_active,
-                    created_on=make_date_aware(edx_enrollment.created),
-                    state=ENROLLMENT_STATE_SET,
-                )
+        if models.Enrollment.objects.filter(course_run=course_run, user=user).exists():
+            logger.info(
+                "Enrollment for %s in %s already exists",
+                user_name,
+                edx_enrollment.course_id,
             )
+            continue
 
-    import_string = "%s enrollments created, %s updated, %s errors"
+        enrollments_to_create.append(
+            models.Enrollment(
+                course_run=course_run,
+                user=user,
+                is_active=edx_enrollment.is_active,
+                created_on=make_date_aware(edx_enrollment.created),
+                state=ENROLLMENT_STATE_SET,
+            )
+        )
+
+    import_string = "%s enrollments created, %s errors"
     if not dry_run:
         enrollment_created_on_field = models.Enrollment._meta.get_field("created_on")
         enrollment_created_on_field.auto_now_add = False
@@ -109,24 +108,15 @@ def import_enrollments_batch(start, stop, dry_run=False):
         )
         report["enrollments"]["created"] += len(enrollments_created)
 
-        enrollments_updated = models.Enrollment.objects.bulk_update(
-            enrollments_to_update, ["is_active", "created_on", "state"]
-        )
-        report["enrollments"]["updated"] += enrollments_updated
-
         enrollment_created_on_field.auto_now_add = True
         enrollment_created_on_field.editable = False
     else:
-        import_string = (
-            "Dry run: %s enrollments would be created, %s updated, %s errors"
-        )
+        import_string = "Dry run: %s enrollments would be created, %s errors"
         report["enrollments"]["created"] += len(enrollments_to_create)
-        report["enrollments"]["updated"] += len(enrollments_to_update)
 
     logger.info(
         import_string,
         report["enrollments"]["created"],
-        report["enrollments"]["updated"],
         report["enrollments"]["errors"],
     )
 
