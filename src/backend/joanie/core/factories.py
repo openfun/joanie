@@ -882,3 +882,33 @@ class SiteConfigFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = models.SiteConfig
+
+
+class ActivityLogFactory(factory.django.DjangoModelFactory):
+    """Factory for the ActivityLog model"""
+
+    class Meta:
+        model = models.ActivityLog
+
+    user = factory.SubFactory(UserFactory)
+    level = factory.fuzzy.FuzzyChoice(
+        [level[0] for level in enums.ACTIVITY_LOG_LEVEL_CHOICES]
+    )
+    created_on = factory.Faker("date_time_this_year")
+    type = factory.fuzzy.FuzzyChoice(
+        [event_type[0] for event_type in enums.ACTIVITY_LOG_TYPE_CHOICES]
+    )
+
+    @factory.lazy_attribute
+    def context(self):
+        """
+        Generate the activity log context depending on the type.
+        """
+        if self.type == enums.ACTIVITY_LOG_TYPE_NOTIFICATION:
+            return {}
+        if self.type in [
+            enums.ACTIVITY_LOG_TYPE_PAYMENT_SUCCEEDED,
+            enums.ACTIVITY_LOG_TYPE_PAYMENT_FAILED,
+        ]:
+            return {"order_id": str(factory.Faker("uuid4"))}
+        return {}

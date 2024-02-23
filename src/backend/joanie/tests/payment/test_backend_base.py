@@ -14,6 +14,7 @@ from joanie.core.models import Address
 from joanie.payment.backends.base import BasePaymentBackend
 from joanie.payment.factories import BillingAddressDictFactory
 from joanie.payment.models import Invoice, Transaction
+from joanie.tests.base import ActivityLogMixingTestCase
 from joanie.tests.payment.base_payment import BasePaymentTestCase
 
 
@@ -52,7 +53,7 @@ class TestBasePaymentBackend(BasePaymentBackend):
         pass
 
 
-class BasePaymentBackendTestCase(BasePaymentTestCase):
+class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase):
     """Test suite for the Base Payment Backend"""
 
     def test_payment_backend_base_name(self):
@@ -177,6 +178,9 @@ class BasePaymentBackendTestCase(BasePaymentTestCase):
             "sam@fun-test.fr", owner.get_full_name(), order
         )
 
+        # - An event has been created
+        self.assertPaymentSuccessActivityLog(order)
+
     def test_payment_backend_base_do_on_payment_success_with_existing_billing_address(
         self,
     ):
@@ -245,6 +249,9 @@ class BasePaymentBackendTestCase(BasePaymentTestCase):
 
         # - No email has been sent
         self.assertEqual(len(mail.outbox), 0)
+
+        # - An event has been created
+        self.assertPaymentFailedActivityLog(order)
 
     def test_payment_backend_base_do_on_refund(self):
         """
