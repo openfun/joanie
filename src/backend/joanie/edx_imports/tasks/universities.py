@@ -50,49 +50,39 @@ def import_universities_batch(start, stop, dry_run=False):
     report = {
         "universities": {
             "created": 0,
-            "updated": 0,
             "errors": 0,
         }
     }
     for university in universities:
         try:
+            if models.Organization.objects.filter(
+                code=utils.normalize_code(university.code)
+            ).exists():
+                logger.info("University %s already exists", university.code)
+                continue
             if dry_run:
-                if models.Organization.objects.filter(
-                    code=utils.normalize_code(university.code)
-                ).exists():
-                    report["universities"]["updated"] += 1
-                    continue
-
                 report["universities"]["created"] += 1
                 continue
 
-            _, created = models.Organization.objects.update_or_create(
+            models.Organization.objects.create(
                 code=utils.normalize_code(university.code),
-                defaults={
-                    "title": university.name,
-                    "logo": university.logo,
-                },
+                title=university.name,
+                logo=university.logo,
             )
             download_and_store(university.logo, "media")
-            if created:
-                report["universities"]["created"] += 1
-            else:
-                report["universities"]["updated"] += 1
+            report["universities"]["created"] += 1
         except Exception as exc:  # pylint: disable=broad-except
             logger.error("Unable to import university %s", university.code)
             logger.exception(exc)
             report["universities"]["errors"] += 1
 
-    import_string = "%s universities created, %s updated, %s errors"
+    import_string = "%s universities created, %s errors"
     if dry_run:
-        import_string = (
-            "Dry run: %s universities would be created, %s updated, %s errors"
-        )
+        import_string = "Dry run: %s universities would be created, %s errors"
 
     logger.info(
         import_string,
         report["universities"]["created"],
-        report["universities"]["updated"],
         report["universities"]["errors"],
     )
 
