@@ -7,6 +7,8 @@ from django.test import TestCase
 class BasePaymentTestCase(TestCase):
     """Common method to test the Payment Backend"""
 
+    maxDiff = None
+
     def _check_order_validated_email_sent(self, email, username, order):
         """Shortcut to check order validated email has been sent"""
         # check email has been sent

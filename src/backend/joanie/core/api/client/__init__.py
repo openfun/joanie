@@ -30,6 +30,7 @@ from joanie.core.exceptions import NoContractToSignError
 from joanie.core.tasks import generate_zip_archive_task
 from joanie.core.utils import contract as contract_utility
 from joanie.core.utils import contract_definition, issuers
+from joanie.core.utils.signature import check_signature
 from joanie.payment import enums as payment_enums
 from joanie.payment.models import Invoice
 
@@ -1424,3 +1425,47 @@ class NestedOrderCourseViewSet(NestedGenericViewSet, mixins.ListModelMixin):
         )
         .distinct()
     )
+
+
+class ActivityLogViewSet(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
+):
+    """
+    ActivityLog ViewSet
+    """
+
+    permission_classes = [permissions.AccessPermission]
+    serializer_class = serializers.ActivityLogSerializer
+
+    def get_permissions(self):
+        """
+        User only needs to be authenticated, except for create action.
+        Signatures are checked for create action.
+        """
+        if self.action == "create":
+            permission_classes = [drf_permissions.AllowAny]
+        else:
+            return super().get_permissions()
+
+        return [permission() for permission in permission_classes]
+
+    def get_queryset(self):
+        """
+        Only return users if a query is provided to filter them.
+        """
+        username = (
+            self.request.auth["username"]
+            if self.request.auth
+            else self.request.user.username
+        )
+
+        return models.ActivityLog.objects.filter(user__username=username)
+
+    def create(self, request, *args, **kwargs):
+        """
+        Create a new activity log for allowed clients.
+        """
+        check_signature(request, "JOANIE_ACTIVITY_LOG_SECRETS")
+        return super().create(request, *args, **kwargs)

@@ -11,7 +11,7 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.utils.translation import override
 
-from joanie.core.models import Address
+from joanie.core.models import ActivityLog, Address
 from joanie.payment.enums import INVOICE_STATE_REFUNDED
 from joanie.payment.models import Invoice, Transaction
 
@@ -66,6 +66,7 @@ class BasePaymentBackend:
 
         # send mail
         cls._send_mail_payment_success(order)
+        ActivityLog.create_payment_succeeded_activity_log(order)
 
     @classmethod
     def _send_mail_payment_success(cls, order):
@@ -111,6 +112,7 @@ class BasePaymentBackend:
         """
         # - Unvalidate order
         order.pending()
+        ActivityLog.create_payment_failed_activity_log(order)
 
     @staticmethod
     def _do_on_refund(amount, invoice, refund_reference):

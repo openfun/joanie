@@ -10,11 +10,15 @@ from django.utils import translation
 
 from rest_framework_simplejwt.tokens import AccessToken
 
+from joanie.core import enums
+from joanie.core.models import ActivityLog
 from joanie.core.utils.jwt_tokens import generate_jwt_token_from_user
 
 
 class BaseAPITestCase(TestCase):
     """Base API test case"""
+
+    maxDiff = None
 
     def setUp(self):
         """
@@ -147,3 +151,31 @@ class BaseLogMixinTestCase:
                     )
         except Exception as error:
             raise error
+
+
+class ActivityLogMixingTestCase:
+    """Mixin for activity log testing"""
+
+    def assertPaymentSuccessActivityLog(self, order):
+        """Check that the activity log is a payment success type"""
+        self.assertTrue(
+            ActivityLog.objects.filter(
+                user=order.owner,
+                level=enums.ACTIVITY_LOG_LEVEL_SUCCESS,
+                type=enums.ACTIVITY_LOG_TYPE_PAYMENT_SUCCEEDED,
+                context={"order_id": str(order.id)},
+            ).exists(),
+            "Payment success activity log not found",
+        )
+
+    def assertPaymentFailedActivityLog(self, order):
+        """Check that the activity log is a payment failed type"""
+        self.assertTrue(
+            ActivityLog.objects.filter(
+                user=order.owner,
+                level=enums.ACTIVITY_LOG_LEVEL_ERROR,
+                type=enums.ACTIVITY_LOG_TYPE_PAYMENT_FAILED,
+                context={"order_id": str(order.id)},
+            ).exists(),
+            "Payment failed activity log not found",
+        )

@@ -1090,3 +1090,61 @@ class NestedOrderCourseSerializer(serializers.ModelSerializer):
             "state",
         ]
         read_only_fields = fields
+
+
+class ActivityLogContextSerializer(serializers.Serializer):
+    """
+    Serializer for the context field of the ActivityLog model
+    """
+
+    order_id = serializers.UUIDField(
+        required=False, help_text="Order of the failed payment"
+    )
+
+    def to_internal_value(self, data):
+        if "order_id" in data:
+            data["order_id"] = str(data["order_id"])
+        return data
+
+    def create(self, validated_data):
+        return validated_data
+
+    def update(self, instance, validated_data):
+        return validated_data
+
+
+class ActivityLogSerializer(serializers.ModelSerializer):
+    """
+    Serializer for ActivityLog model
+    """
+
+    user_id = serializers.SlugRelatedField(
+        queryset=models.User.objects.all(),
+        slug_field="id",
+        source="user",
+        required=True,
+    )
+    created_on = serializers.DateTimeField(read_only=True)
+    context = ActivityLogContextSerializer(required=False)
+    level = serializers.ChoiceField(
+        required=False,
+        choices=models.ActivityLog._meta.get_field("level").choices,
+        default=models.ActivityLog._meta.get_field("level").default,
+    )
+    type = serializers.ChoiceField(
+        required=False,
+        choices=models.ActivityLog._meta.get_field("type").choices,
+        default=models.ActivityLog._meta.get_field("type").default,
+    )
+
+    class Meta:
+        model = models.ActivityLog
+        fields = [
+            "id",
+            "user_id",
+            "level",
+            "created_on",
+            "type",
+            "context",
+        ]
+        read_only_fields = ["id", "created_on"]
