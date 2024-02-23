@@ -12,6 +12,8 @@ def get_enrollment(course_id):
         username=settings.EDX_MONGODB_USER,
         password=settings.EDX_MONGODB_PASSWORD,
         authSource=settings.EDX_MONGODB_NAME,
+        readPreference=settings.EDX_MONGODB_READPREFERENCE,
+        replicaSet=settings.EDX_MONGODB_REPLICASET,
     )
     db = client.edxapp
     mongo_enrollment = db.modulestore.find_one(
