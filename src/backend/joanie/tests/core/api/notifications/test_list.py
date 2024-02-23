@@ -46,6 +46,7 @@ class NotificationListApiTest(BaseAPITestCase):
                 "results": [
                     {
                         "id": str(notification.id),
+                        "user_id": str(notification.user.id),
                         "message": notification.message,
                         "level": notification.level,
                         "read": notification.read,

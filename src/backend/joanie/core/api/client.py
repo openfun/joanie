@@ -29,6 +29,7 @@ from joanie.core.exceptions import NoContractToSignError
 from joanie.core.tasks import generate_zip_archive_task
 from joanie.core.utils import contract as contract_utility
 from joanie.core.utils import contract_definition, issuers
+from joanie.core.utils.signature import check_signature
 from joanie.payment import enums as payment_enums
 from joanie.payment.models import Invoice
 
@@ -1420,7 +1421,10 @@ class NestedOrderCourseViewSet(NestedGenericViewSet, mixins.ListModelMixin):
 
 
 class NotificationViewSet(
-    mixins.ListModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
 ):
     """
     User ViewSet
@@ -1429,6 +1433,18 @@ class NotificationViewSet(
     permission_classes = [permissions.AccessPermission]
     serializer_class = serializers.NotificationSerializer
 
+    def get_permissions(self):
+        """
+        User only needs to be authenticated, except for create action.
+        Signatures are checked for create action.
+        """
+        if self.action == "create":
+            permission_classes = [drf_permissions.AllowAny]
+        else:
+            return super().get_permissions()
+
+        return [permission() for permission in permission_classes]
+
     def get_queryset(self):
         """
         Only return users if a query is provided to filter them.
@@ -1436,3 +1452,10 @@ class NotificationViewSet(
         user = self.request.user
 
         return models.Notification.objects.filter(user_id=user.id)
+
+    def create(self, request, *args, **kwargs):
+        """
+        Create a new notification for user authenticated
+        """
+        check_signature(request, "JOANIE_NOTIFICATION_SECRETS")
+        return super().create(request, *args, **kwargs)

@@ -1072,18 +1072,25 @@ class NotificationSerializer(serializers.ModelSerializer):
     Serializer for Notification model
     """
 
-    message = serializers.CharField(read_only=True)
-    level = serializers.CharField(read_only=True)
-    read = serializers.BooleanField(read_only=True)
+    user_id = serializers.SlugRelatedField(
+        queryset=models.User.objects.all(),
+        slug_field="id",
+        source="user",
+        required=True,
+    )
+    message = serializers.CharField(required=True)
+    level = serializers.CharField(required=True)
+    read = serializers.BooleanField(required=False)
     created_on = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model = models.Notification
         fields = [
             "id",
+            "user_id",
             "message",
             "level",
             "read",
             "created_on",
         ]
-        read_only_fields = fields
+        read_only_fields = ["id", "created_on"]

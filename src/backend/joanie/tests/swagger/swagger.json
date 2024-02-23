@@ -2485,6 +2485,46 @@
                         "description": ""
                     }
                 }
+            },
+            "post": {
+                "operationId": "notifications_create",
+                "description": "Create a new notification for user authenticated",
+                "tags": [
+                    "notifications"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/NotificationRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/NotificationRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "DelegatedJWTAuthentication": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Notification"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
             }
         },
         "/api/v1.0/notifications/{id}/": {
@@ -5582,17 +5622,19 @@
                         "readOnly": true,
                         "description": "primary key for the record as UUID"
                     },
-                    "message": {
+                    "user_id": {
                         "type": "string",
-                        "readOnly": true
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID"
+                    },
+                    "message": {
+                        "type": "string"
                     },
                     "level": {
-                        "type": "string",
-                        "readOnly": true
+                        "type": "string"
                     },
                     "read": {
-                        "type": "boolean",
-                        "readOnly": true
+                        "type": "boolean"
                     },
                     "created_on": {
                         "type": "string",
@@ -5605,7 +5647,34 @@
                     "id",
                     "level",
                     "message",
-                    "read"
+                    "user_id"
+                ]
+            },
+            "NotificationRequest": {
+                "type": "object",
+                "description": "Serializer for Notification model",
+                "properties": {
+                    "user_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID"
+                    },
+                    "message": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "level": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "read": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "level",
+                    "message",
+                    "user_id"
                 ]
             },
             "Order": {
