@@ -88,11 +88,10 @@ class EdxImportUsersTestCase(TestCase):
             )
             for user in users
         ]
-        edx_users.append(
-            edx_factories.EdxUserFactory.create(
-                username=admin.username,
-            )
+        created_user = edx_factories.EdxUserFactory.create(
+            username=admin.username,
         )
+        edx_users.append(created_user)
 
         mock_get_users.return_value = edx_users
         mock_get_users_count.return_value = len(edx_users)
@@ -114,20 +113,26 @@ class EdxImportUsersTestCase(TestCase):
                 self.assertEqual(user.date_joined, admin.date_joined)
                 self.assertEqual(user.last_login, admin.last_login)
                 self.assertEqual(user.language, admin.language)
-            else:
-                self.assertEqual(user.email, edx_user.email)
-                self.assertNotEqual(user.password, edx_user.password)
+            elif user.username == created_user.username:
+                self.assertEqual(user.email, created_user.email)
+                self.assertNotEqual(user.password, created_user.password)
                 self.assertFalse(is_password_usable(user.password))
-                self.assertEqual(user.first_name, edx_user.auth_userprofile.name)
+                self.assertEqual(user.first_name, created_user.auth_userprofile.name)
                 self.assertEqual(user.last_name, "")
-                self.assertEqual(user.is_active, edx_user.is_active)
-                self.assertEqual(user.is_staff, edx_user.is_staff)
-                self.assertEqual(user.is_superuser, edx_user.is_superuser)
+                self.assertEqual(user.is_active, created_user.is_active)
+                self.assertEqual(user.is_staff, created_user.is_staff)
+                self.assertEqual(user.is_superuser, created_user.is_superuser)
                 self.assertEqual(
-                    user.date_joined, make_date_aware(edx_user.date_joined)
+                    user.date_joined, make_date_aware(created_user.date_joined)
                 )
-                self.assertEqual(user.last_login, make_date_aware(edx_user.last_login))
+                self.assertEqual(
+                    user.last_login, make_date_aware(created_user.last_login)
+                )
                 self.assertEqual(user.language, language_code)
+            else:
+                self.assertNotEqual(user.email, edx_user.email)
+                self.assertNotEqual(user.password, edx_user.password)
+                self.assertTrue(is_password_usable(user.password))
 
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_users_count")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_users")
