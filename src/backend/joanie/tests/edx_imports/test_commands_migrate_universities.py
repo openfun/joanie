@@ -66,7 +66,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             "Importing universities...",
             "10 universities to import by batch of 1000",
             "Starting Celery task, importing universities...",
-            "10 universities created, 0 updated, 0 errors",
+            "10 universities created, 0 errors",
             "Done executing Celery importing universities task...",
             "1 import universities tasks launched",
         ]
@@ -74,7 +74,6 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
 
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_universities_count")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_universities")
-    @responses.activate(assert_all_requests_are_fired=True)
     def test_command_migrate_universities_update(
         self, mock_get_universities, mock_get_universities_count
     ):
@@ -96,13 +95,6 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
         mock_get_universities.return_value = edx_universities
         mock_get_universities_count.return_value = len(edx_universities)
 
-        for edx_university in edx_universities:
-            responses.add(
-                responses.GET,
-                f"https://{settings.EDX_DOMAIN}/media/{edx_university.logo}",
-                body=LOGO_CONTENT,
-            )
-
         with self.assertLogs() as logger:
             call_command("migrate_edx", "--skip-check", "--universities")
 
@@ -111,7 +103,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             "Importing universities...",
             "1 universities to import by batch of 1000",
             "Starting Celery task, importing universities...",
-            "0 universities created, 1 updated, 0 errors",
+            "0 universities created, 0 errors",
             "Done executing Celery importing universities task...",
             "1 import universities tasks launched",
         ]
@@ -142,7 +134,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             "Starting Celery task, importing universities...",
             f"Unable to import university {edx_university.code}",
             "{'code': ['This field cannot be null.']}",
-            "0 universities created, 0 updated, 1 errors",
+            "0 universities created, 1 errors",
             "Done executing Celery importing universities task...",
             "1 import universities tasks launched",
         ]
@@ -170,7 +162,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             "Dry run: no university will be imported",
             "10 universities to import by batch of 1000",
             "Starting Celery task, importing universities...",
-            "Dry run: 10 universities would be created, 0 updated, 0 errors",
+            "Dry run: 10 universities would be created, 0 errors",
             "Done executing Celery importing universities task...",
             "1 import universities tasks launched",
         ]

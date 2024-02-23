@@ -108,7 +108,6 @@ class EdxImportUniversitiesTestCase(TestCase):
 
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_universities_count")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_universities")
-    @responses.activate(assert_all_requests_are_fired=True)
     def test_import_universities_update(
         self, mock_get_universities, mock_get_universities_count
     ):
@@ -130,13 +129,6 @@ class EdxImportUniversitiesTestCase(TestCase):
         mock_get_universities.return_value = edx_universities
         mock_get_universities_count.return_value = len(edx_universities)
 
-        for edx_university in edx_universities:
-            responses.add(
-                responses.GET,
-                f"https://{settings.EDX_DOMAIN}/media/{edx_university.logo}",
-                body=LOGO_CONTENT,
-            )
-
         import_universities()
 
         self.assertEqual(models.Organization.objects.count(), len(edx_universities))
@@ -144,10 +136,8 @@ class EdxImportUniversitiesTestCase(TestCase):
             organization = models.Organization.objects.get(
                 code=utils.normalize_code(edx_university.code)
             )
-            self.assertEqual(organization.title, edx_university.name)
-            self.assertEqual(organization.logo.name, edx_university.logo)
-            self.assertIsNotNone(organization.logo.read())
-            self.assertTrue(default_storage.exists(organization.logo.name))
+            self.assertNotEqual(organization.title, edx_university.name)
+            self.assertNotEqual(organization.logo.name, edx_university.logo)
 
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_universities_count")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_universities")
