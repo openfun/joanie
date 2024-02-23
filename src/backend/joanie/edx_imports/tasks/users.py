@@ -48,81 +48,41 @@ def import_users_batch_task(self, **kwargs):
 def import_users_batch(start, stop, dry_run=False):
     """Batch import users from Open edX auth_user"""
     db = OpenEdxDB()
-    report = {
-        "users": {
-            "created": 0,
-            "updated": 0,
-            "errors": 0,
-        }
-    }
+    report = {"users": {"created": 0, "errors": 0}}
     users = db.get_users(start, stop)
     users_to_create = []
-    users_to_update = []
 
     for edx_user in users:
-        if edx_user.username == "admin":
+        if models.User.objects.filter(username=edx_user.username).exists():
+            logger.info("User %s already exists", edx_user.username)
             continue
-        last_login = format_date(edx_user.last_login)
-        date_joined = format_date(edx_user.date_joined)
-        language_code = extract_language_code(edx_user)
-        try:
-            user = models.User.objects.get(username=edx_user.username)
-            user.email = edx_user.email
-            user.password = make_password(None)
-            user.first_name = edx_user.auth_userprofile.name
-            user.is_active = edx_user.is_active
-            user.is_staff = edx_user.is_staff
-            user.is_superuser = edx_user.is_superuser
-            user.date_joined = date_joined
-            user.last_login = last_login
-            user.language = language_code
-            users_to_update.append(user)
-        except models.User.DoesNotExist:
-            users_to_create.append(
-                models.User(
-                    username=edx_user.username,
-                    email=edx_user.email,
-                    password=make_password(None),
-                    first_name=edx_user.auth_userprofile.name,
-                    is_active=edx_user.is_active,
-                    is_staff=edx_user.is_staff,
-                    is_superuser=edx_user.is_superuser,
-                    date_joined=date_joined,
-                    last_login=last_login,
-                    language=language_code,
-                )
-            )
 
-    import_string = "%s users created, %s updated, %s errors"
-    if not dry_run:
+        users_to_create.append(
+            models.User(
+                username=edx_user.username,
+                email=edx_user.email,
+                password=make_password(None),
+                first_name=edx_user.auth_userprofile.name,
+                is_active=edx_user.is_active,
+                is_staff=edx_user.is_staff,
+                is_superuser=edx_user.is_superuser,
+                date_joined=format_date(edx_user.date_joined),
+                last_login=format_date(edx_user.last_login),
+                language=extract_language_code(edx_user),
+            )
+        )
+
+    import_string = "%s users created, %s errors"
+    if dry_run:
+        import_string = "Dry run: %s users would be created, %s errors"
+        report["users"]["created"] += len(users_to_create)
+    else:
         users_created = models.User.objects.bulk_create(users_to_create)
         report["users"]["created"] += len(users_created)
-
-        users_updated = models.User.objects.bulk_update(
-            users_to_update,
-            [
-                "email",
-                "password",
-                "first_name",
-                "last_name",
-                "is_active",
-                "is_staff",
-                "is_superuser",
-                "date_joined",
-                "last_login",
-                "language",
-            ],
-        )
-        report["users"]["updated"] += users_updated
-    else:
-        import_string = "Dry run: %s users would be created, %s updated, %s errors"
-        report["users"]["created"] += len(users_to_create)
-        report["users"]["updated"] += len(users_to_update)
 
     logger.info(
         import_string,
         report["users"]["created"],
-        report["users"]["updated"],
         report["users"]["errors"],
     )
 
