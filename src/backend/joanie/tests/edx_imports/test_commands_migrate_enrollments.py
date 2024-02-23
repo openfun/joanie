@@ -43,7 +43,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             "Importing enrollments...",
             "10 enrollments to import by batch of 1000",
             "Starting Celery task, importing enrollments...",
-            "10 enrollments created, 0 updated, 0 errors",
+            "10 enrollments created, 0 errors",
             "Done executing Celery importing enrollments task...",
             "1 import enrollments tasks launched",
         ]
@@ -78,7 +78,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             "Importing enrollments...",
             "1 enrollments to import by batch of 1000",
             "Starting Celery task, importing enrollments...",
-            "0 enrollments created, 1 updated, 0 errors",
+            "0 enrollments created, 0 errors",
             "Done executing Celery importing enrollments task...",
             "1 import enrollments tasks launched",
         ]
@@ -124,7 +124,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             f"No CourseRun found for {edx_enrollments_without_course_run[2].course_id}",
             f"No CourseRun found for {edx_enrollments_without_course_run[3].course_id}",
             f"No CourseRun found for {edx_enrollments_without_course_run[4].course_id}",
-            "5 enrollments created, 0 updated, 5 errors",
+            "5 enrollments created, 5 errors",
             "Done executing Celery importing enrollments task...",
             "1 import enrollments tasks launched",
         ]
@@ -157,7 +157,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             "Dry run: no enrollment will be imported",
             "10 enrollments to import by batch of 1000",
             "Starting Celery task, importing enrollments...",
-            "Dry run: 10 enrollments would be created, 0 updated, 0 errors",
+            "Dry run: 10 enrollments would be created, 0 errors",
             "Done executing Celery importing enrollments task...",
             "1 import enrollments tasks launched",
         ]
