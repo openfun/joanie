@@ -62,14 +62,12 @@ def import_certificates_batch(start, stop, dry_run=False):
     report = {
         "certificates": {
             "created": 0,
-            "updated": 0,
             "errors": 0,
         }
     }
     hashids = Hashids(salt=settings.EDX_SECRET)
     certificates = db.get_certificates(start, stop)
     certificates_to_create = []
-    certificates_to_update = []
 
     for edx_certificate in certificates:
         try:
@@ -145,30 +143,27 @@ def import_certificates_batch(start, stop, dry_run=False):
         certificate_name = (
             DEGREE if edx_certificate.mode == OPENEDX_MODE_VERIFIED else CERTIFICATE
         )
-        try:
-            certificate = models.Certificate.objects.get(enrollment=enrollment)
-            certificate.certificate_definition = (
-                models.CertificateDefinition.objects.get(name=certificate_name)
+        if models.Certificate.objects.filter(enrollment=enrollment).exists():
+            logger.info(
+                "Certificate for %s in %s already exists",
+                edx_certificate.user.username,
+                edx_certificate.course_id,
             )
-            certificate.organization = organization
-            certificate.enrollment = enrollment
-            certificate.issued_on = make_date_aware(edx_certificate.created_date)
-            certificate.localized_context = certificate_context
-            certificates_to_update.append(certificate)
-        except models.Certificate.DoesNotExist:
-            certificates_to_create.append(
-                models.Certificate(
-                    certificate_definition=models.CertificateDefinition.objects.get(
-                        name=certificate_name
-                    ),
-                    organization=organization,
-                    enrollment=enrollment,
-                    issued_on=make_date_aware(edx_certificate.created_date),
-                    localized_context=certificate_context,
-                )
-            )
+            continue
 
-    import_string = "%s certificates created, %s updated, %s errors"
+        certificates_to_create.append(
+            models.Certificate(
+                certificate_definition=models.CertificateDefinition.objects.get(
+                    name=certificate_name
+                ),
+                organization=organization,
+                enrollment=enrollment,
+                issued_on=make_date_aware(edx_certificate.created_date),
+                localized_context=certificate_context,
+            )
+        )
+
+    import_string = "%s certificates created, %s errors"
     if not dry_run:
         certificate_issued_on_field = models.Certificate._meta.get_field("issued_on")
         certificate_issued_on_field.auto_now = False
@@ -179,31 +174,15 @@ def import_certificates_batch(start, stop, dry_run=False):
         )
         report["certificates"]["created"] += len(certificates_created)
 
-        certificates_updated = models.Certificate.objects.bulk_update(
-            certificates_to_update,
-            [
-                "certificate_definition",
-                "organization",
-                "enrollment",
-                "issued_on",
-                "localized_context",
-            ],
-        )
-        report["certificates"]["updated"] += certificates_updated
-
         certificate_issued_on_field.auto_now = True
         certificate_issued_on_field.editable = False
     else:
-        import_string = (
-            "Dry run: %s certificates would be created, %s updated, %s errors"
-        )
+        import_string = "Dry run: %s certificates would be created, %s errors"
         report["certificates"]["created"] += len(certificates_to_create)
-        report["certificates"]["updated"] += len(certificates_to_update)
 
     logger.info(
         import_string,
         report["certificates"]["created"],
-        report["certificates"]["updated"],
         report["certificates"]["errors"],
     )
 

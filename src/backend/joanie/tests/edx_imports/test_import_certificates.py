@@ -249,66 +249,12 @@ class EdxImportCertificatesTestCase(TestCase):
                 DEGREE if edx_certificate.mode == OPENEDX_MODE_VERIFIED else CERTIFICATE
             )
             self.assertEqual(certificate.certificate_definition.name, certificate_name)
-            self.assertEqual(
+            self.assertNotEqual(
                 certificate.organization.code,
                 mongo_enrollments[edx_certificate.id][0],
             )
-            self.assertEqual(
+            self.assertNotEqual(
                 certificate.issued_on, make_date_aware(edx_certificate.created_date)
-            )
-
-            mongo_signatory = mongo_enrollments[edx_certificate.id][1]
-            self.assertEqual(
-                certificate.localized_context,
-                {
-                    "signatory": mongo_signatory,
-                    "verification_hash": self.hashids.encode(edx_certificate.id),
-                    "en-us": {
-                        "course": {
-                            "name": (
-                                certificate.enrollment.course_run.course.safe_translation_getter(
-                                    "title", language_code="en"
-                                )
-                            ),
-                        },
-                        "organizations": [
-                            {
-                                "name": certificate.organization.safe_translation_getter(
-                                    "title", language_code="en"
-                                ),
-                                "representative": mongo_signatory.get("name"),
-                                "signature": SIGNATURE_CONTENT_BASE64,
-                                "logo": image_to_base64(certificate.organization.logo),
-                            }
-                        ],
-                    },
-                    "fr-fr": {
-                        "course": {
-                            "name": (
-                                certificate.enrollment.course_run.course.safe_translation_getter(
-                                    "title", language_code="fr"
-                                )
-                            ),
-                        },
-                        "organizations": [
-                            {
-                                "name": certificate.organization.safe_translation_getter(
-                                    "title", language_code="fr"
-                                ),
-                                "representative": mongo_signatory.get("name"),
-                                "signature": SIGNATURE_CONTENT_BASE64,
-                                "logo": image_to_base64(certificate.organization.logo),
-                            }
-                        ],
-                    },
-                },
-            )
-            self.assertTrue(
-                default_storage.exists(
-                    certificate.localized_context.get("signatory").get(
-                        "signature_image_path"
-                    )[1:]
-                )
             )
 
     @patch("joanie.edx_imports.edx_mongodb.get_enrollment")

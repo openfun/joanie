@@ -106,7 +106,7 @@ class MigrateOpenEdxCertificatesTestCase(MigrateOpenEdxBaseTestCase):
             "Importing certificates...",
             "10 certificates to import by batch of 1000",
             "Starting Celery task, importing certificates...",
-            "10 certificates created, 0 updated, 0 errors",
+            "10 certificates created, 0 errors",
             "Done executing Celery importing certificates task...",
             "1 import certificates tasks launched",
         ]
@@ -172,7 +172,7 @@ class MigrateOpenEdxCertificatesTestCase(MigrateOpenEdxBaseTestCase):
             "Importing certificates...",
             "10 certificates to import by batch of 1000",
             "Starting Celery task, importing certificates...",
-            "0 certificates created, 10 updated, 0 errors",
+            "0 certificates created, 0 errors",
             "Done executing Celery importing certificates task...",
             "1 import certificates tasks launched",
         ]
@@ -246,7 +246,7 @@ class MigrateOpenEdxCertificatesTestCase(MigrateOpenEdxBaseTestCase):
             "Importing certificates...",
             "10 certificates to import by batch of 1000",
             "Starting Celery task, importing certificates...",
-            "5 certificates created, 0 updated, 5 errors",
+            "5 certificates created, 5 errors",
             "Done executing Celery importing certificates task...",
             "1 import certificates tasks launched",
         ] + [
@@ -324,7 +324,7 @@ class MigrateOpenEdxCertificatesTestCase(MigrateOpenEdxBaseTestCase):
             "Importing certificates...",
             "10 certificates to import by batch of 1000",
             "Starting Celery task, importing certificates...",
-            "5 certificates created, 0 updated, 5 errors",
+            "5 certificates created, 5 errors",
             "Done executing Celery importing certificates task...",
             "1 import certificates tasks launched",
         ] + [
