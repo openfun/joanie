@@ -52,6 +52,9 @@ router.register(
     basename="course-product-relations",
 )
 router.register("users", api_client.UserViewSet, basename="users")
+router.register(
+    "notifications", api_client.NotificationViewSet, basename="notifications"
+)
 
 # - Routes nested under a course
 course_related_router = DefaultRouter()

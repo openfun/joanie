@@ -5,5 +5,6 @@ from .certifications import *
 from .contracts import *
 from .course_wishes import *
 from .courses import *
+from .notifications import *
 from .products import *
 from .site import *

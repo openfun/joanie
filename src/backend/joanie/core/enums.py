@@ -121,3 +121,16 @@ CERTIFICATE_NAME_CHOICES = (
     (CERTIFICATE, _("Certificate")),
     (DEGREE, _("Degree")),
 )
+
+# For notification level choices
+NOTIFICATION_INFO = "info"
+NOTIFICATION_SUCCESS = "success"
+NOTIFICATION_WARNING = "warning"
+NOTIFICATION_ERROR = "error"
+
+NOTIFICATION_LEVEL_CHOICES = (
+    (NOTIFICATION_INFO, _("Info")),
+    (NOTIFICATION_SUCCESS, _("Success")),
+    (NOTIFICATION_WARNING, _("Warning")),
+    (NOTIFICATION_ERROR, _("Error")),
+)

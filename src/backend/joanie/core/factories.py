@@ -881,3 +881,18 @@ class SiteConfigFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = models.SiteConfig
+
+
+class NotificationFactory(factory.django.DjangoModelFactory):
+    """Factory for the Notification model"""
+
+    class Meta:
+        model = models.Notification
+
+    user = factory.SubFactory(UserFactory)
+    message = factory.Faker("sentence")
+    level = factory.fuzzy.FuzzyChoice(
+        [level[0] for level in enums.NOTIFICATION_LEVEL_CHOICES]
+    )
+    read = False
+    created_on = factory.Faker("date_time_this_year")
