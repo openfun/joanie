@@ -607,7 +607,7 @@
         "/api/v1.0/contracts/{id}/download/": {
             "get": {
                 "operationId": "contracts_download_retrieve",
-                "description": "Return the PDF in bytes to download of the contract's definition of an order.",
+                "description": "Return the PDF file in bytes fully signed to download from the signature provider.",
                 "parameters": [
                     {
                         "in": "path",

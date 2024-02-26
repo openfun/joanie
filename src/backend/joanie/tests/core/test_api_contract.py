@@ -1771,3 +1771,100 @@ class ContractApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+
+    def test_api_contract_download_signed_file_must_fail_because_signature_reference_not_exist(
+        self,
+    ):
+        """
+        Authenticated user should not be able to download from the signature provider his contract
+        if he parses a contract id that does not exist.
+        """
+        user = factories.UserFactory()
+        token = self.get_user_token(user.username)
+
+        response = self.client.get(
+            "/api/v1.0/contracts/fake_contract_id/download/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertContains(
+            response,
+            "Not found.",
+            status_code=HTTPStatus.NOT_FOUND,
+        )
+
+    def test_api_contract_download_signed_file_authenticated_not_fully_signed_by_student(
+        self,
+    ):
+        """
+        Authenticated user should not be able to download from the signature provider
+        his contract in PDF format if the contract has not been fully signed by the student.
+        """
+        user = factories.UserFactory(
+            email="student_do@example.fr", first_name="John Doe", last_name=""
+        )
+        order = factories.OrderFactory(
+            owner=user,
+            state=enums.ORDER_STATE_VALIDATED,
+            product__contract_definition=factories.ContractDefinitionFactory(),
+        )
+        contract = factories.ContractFactory(
+            order=order,
+            definition=order.product.contract_definition,
+            signature_backend_reference="wfl_fake_dummy_id",
+            definition_checksum="1234",
+            context="context",
+            submitted_for_signature_on=timezone.now(),
+            student_signed_on=None,
+            organization_signed_on=None,
+        )
+        token = self.get_user_token(user.username)
+
+        response = self.client.get(
+            f"/api/v1.0/contracts/{str(contract.id)}/download/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertContains(
+            response,
+            "Cannot download a contract when it is not yet fully signed.",
+            status_code=HTTPStatus.BAD_REQUEST,
+        )
+
+    def test_api_contract_download_signed_file_authenticated_not_fully_signed_by_organization(
+        self,
+    ):
+        """
+        Authenticated user should not be able to download from the signature provider
+        his contract in PDF format if the contract has not been fully signed by the organization.
+        """
+        user = factories.UserFactory(
+            email="student_do@example.fr", first_name="John Doe", last_name=""
+        )
+        order = factories.OrderFactory(
+            owner=user,
+            state=enums.ORDER_STATE_VALIDATED,
+            product__contract_definition=factories.ContractDefinitionFactory(),
+        )
+        contract = factories.ContractFactory(
+            order=order,
+            definition=order.product.contract_definition,
+            signature_backend_reference="wfl_fake_dummy_id",
+            definition_checksum="1234",
+            context="context",
+            submitted_for_signature_on=timezone.now(),
+            student_signed_on=timezone.now(),
+            organization_signed_on=None,
+        )
+        token = self.get_user_token(user.username)
+
+        response = self.client.get(
+            f"/api/v1.0/contracts/{str(contract.id)}/download/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertContains(
+            response,
+            "Cannot download a contract when it is not yet fully signed.",
+            status_code=HTTPStatus.BAD_REQUEST,
+        )

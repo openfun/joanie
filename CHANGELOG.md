@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Allow student to download his owned contract once fully signed
 - Allow to filter course product relation by organization title or
   product title or by course code on the client API.
 - Allow to filter courses by course code or title on the client API

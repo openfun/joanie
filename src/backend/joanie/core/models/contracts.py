@@ -283,3 +283,15 @@ class Contract(BaseModel):
         return {
             "sign": can_sign,
         }
+
+    @property
+    def is_fully_signed(self):
+        """
+        Determine if a contract is fully signed by all parties. Call this method on the contract
+        instance. It returns a boolean indicating whether the contract is fully signed or not.
+        """
+        return (
+            self.organization_signed_on is not None
+            and self.student_signed_on is not None
+            and not self.submitted_for_signature_on
+        )
