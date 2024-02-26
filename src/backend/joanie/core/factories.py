@@ -892,3 +892,20 @@ class EventFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory(UserFactory)
     level = factory.fuzzy.FuzzyChoice([level[0] for level in enums.EVENT_LEVEL_CHOICES])
     created_on = factory.Faker("date_time_this_year")
+    type = factory.fuzzy.FuzzyChoice(
+        [event_type[0] for event_type in enums.EVENT_TYPE_CHOICES]
+    )
+
+    @factory.lazy_attribute
+    def context(self):
+        """
+        Generate the event context depending on the event type.
+        """
+        if self.type == enums.EVENT_TYPE_NOTIFICATION:
+            return {}
+        if self.type in [
+            enums.EVENT_TYPE_PAYMENT_SUCCEEDED,
+            enums.EVENT_TYPE_PAYMENT_FAILED,
+        ]:
+            return {"order_id": str(factory.Faker("uuid4"))}
+        return {}

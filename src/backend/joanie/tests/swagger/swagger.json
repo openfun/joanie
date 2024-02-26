@@ -5354,6 +5354,12 @@
                         "type": "string",
                         "format": "date-time",
                         "readOnly": true
+                    },
+                    "type": {
+                        "$ref": "#/components/schemas/EventTypeEnum"
+                    },
+                    "context": {
+                        "$ref": "#/components/schemas/EventContext"
                     }
                 },
                 "required": [
@@ -5361,6 +5367,28 @@
                     "id",
                     "user_id"
                 ]
+            },
+            "EventContext": {
+                "type": "object",
+                "description": "Serializer for the context field of the Event model",
+                "properties": {
+                    "order_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Order of the failed payment"
+                    }
+                }
+            },
+            "EventContextRequest": {
+                "type": "object",
+                "description": "Serializer for the context field of the Event model",
+                "properties": {
+                    "order_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Order of the failed payment"
+                    }
+                }
             },
             "EventRequest": {
                 "type": "object",
@@ -5372,16 +5400,26 @@
                         "description": "primary key for the record as UUID"
                     },
                     "level": {
-                        "type": "string",
-                        "minLength": 1
+                        "$ref": "#/components/schemas/LevelEnum"
                     },
-                    "read": {
-                        "type": "boolean"
+                    "type": {
+                        "$ref": "#/components/schemas/EventTypeEnum"
+                    },
+                    "context": {
+                        "$ref": "#/components/schemas/EventContextRequest"
                     }
                 },
                 "required": [
                     "user_id"
                 ]
+            },
+            "EventTypeEnum": {
+                "enum": [
+                    "notification",
+                    "payment_failed"
+                ],
+                "type": "string",
+                "description": "* `notification` - Notification\n* `payment_failed` - Payment failed"
             },
             "LanguageEnum": {
                 "enum": [
@@ -6561,7 +6599,7 @@
                     "type": {
                         "allOf": [
                             {
-                                "$ref": "#/components/schemas/TypeEnum"
+                                "$ref": "#/components/schemas/ProductTypeEnum"
                             }
                         ],
                         "readOnly": true
@@ -6621,7 +6659,7 @@
                     "title"
                 ]
             },
-            "TypeEnum": {
+            "ProductTypeEnum": {
                 "enum": [
                     "credential",
                     "enrollment",

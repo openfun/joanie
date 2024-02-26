@@ -49,6 +49,8 @@ class EventListApiTest(BaseAPITestCase):
                         "user_id": str(event.user.id),
                         "level": event.level,
                         "created_on": format_date(event.created_on),
+                        "type": event.type,
+                        "context": event.context,
                     }
                     for event in user_events
                 ],

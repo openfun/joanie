@@ -1067,6 +1067,27 @@ class NestedOrderCourseSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
+class EventContextSerializer(serializers.Serializer):
+    """
+    Serializer for the context field of the Event model
+    """
+
+    order_id = serializers.UUIDField(
+        required=False, help_text="Order of the failed payment"
+    )
+
+    def to_internal_value(self, data):
+        if "order_id" in data:
+            data["order_id"] = str(data["order_id"])
+        return data
+
+    def create(self, validated_data):
+        return validated_data
+
+    def update(self, instance, validated_data):
+        return validated_data
+
+
 class EventSerializer(serializers.ModelSerializer):
     """
     Serializer for Event model
@@ -1079,6 +1100,7 @@ class EventSerializer(serializers.ModelSerializer):
         required=True,
     )
     created_on = serializers.DateTimeField(read_only=True)
+    context = EventContextSerializer(required=False)
 
     class Meta:
         model = models.Event
@@ -1087,5 +1109,7 @@ class EventSerializer(serializers.ModelSerializer):
             "user_id",
             "level",
             "created_on",
+            "type",
+            "context",
         ]
         read_only_fields = ["id", "created_on"]

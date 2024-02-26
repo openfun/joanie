@@ -134,3 +134,12 @@ EVENT_LEVEL_CHOICES = (
     (EVENT_WARNING, _("Warning")),
     (EVENT_ERROR, _("Error")),
 )
+
+# For event type choices
+EVENT_TYPE_NOTIFICATION = "notification"
+EVENT_TYPE_PAYMENT_FAILED = "payment_failed"
+
+EVENT_TYPE_CHOICES = (
+    (EVENT_TYPE_NOTIFICATION, _("Notification")),
+    (EVENT_TYPE_PAYMENT_FAILED, _("Payment failed")),
+)

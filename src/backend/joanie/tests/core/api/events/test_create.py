@@ -7,7 +7,7 @@ from uuid import uuid4
 
 from django.test import override_settings
 
-from joanie.core import factories, models
+from joanie.core import enums, factories, models
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -61,9 +61,10 @@ class EventCreateApiTest(BaseAPITestCase):
         mock_check_signature.return_value = None
         user = factories.UserFactory()
         data = {
-            "user_id": user.id,
-            "message": "Test message",
-            "level": "info",
+            "user_id": str(user.id),
+            "type": enums.EVENT_TYPE_PAYMENT_SUCCEEDED,
+            "level": enums.EVENT_INFO,
+            "context": {"order_id": uuid4()},
         }
 
         response = self.client.post(

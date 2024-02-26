@@ -3,6 +3,7 @@ Declare and configure the models for Joanie's events
 """
 import logging
 
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.functional import lazy
 from django.utils.translation import gettext_lazy as _
@@ -11,6 +12,43 @@ from joanie.core import enums
 from joanie.core.models.base import BaseModel
 
 logger = logging.getLogger(__name__)
+
+
+class EventContextField(models.JSONField):
+    """
+    EventContextField is a JSONField with validators for each type of event
+    """
+
+    def validate(self, value, model_instance):
+        """
+        Validate the context field
+        """
+        super().validate(value, model_instance)
+
+        if not isinstance(value, dict):
+            raise ValidationError("The context field must be a dictionary")
+
+        event_type = model_instance.type
+        if event_type == enums.EVENT_TYPE_NOTIFICATION:
+            self.validate_notification(value)
+        elif event_type == enums.EVENT_TYPE_PAYMENT_FAILED:
+            self.validate_payment_failed(value)
+        else:
+            raise ValidationError(f"Unknown event type: {event_type}")
+
+    def validate_notification(self, value):
+        """
+        Validate the context field for a notification event
+        """
+        if value:
+            raise ValidationError("The context field must be an empty dictionary")
+
+    def validate_payment_failed(self, value):
+        """
+        Validate the context field for a payment failed event
+        """
+        if "order_id" not in value:
+            raise ValidationError("The context field must have an order_id")
 
 
 class Event(BaseModel):
@@ -30,7 +68,16 @@ class Event(BaseModel):
         choices=enums.EVENT_LEVEL_CHOICES,
         default=enums.EVENT_INFO,
     )
-    read = models.BooleanField(_("read"), default=False)
+    context = EventContextField(
+        _("context"),
+        default=dict,
+    )
+    type = models.CharField(
+        _("type"),
+        max_length=20,
+        choices=lazy(lambda: enums.EVENT_TYPE_CHOICES, tuple)(),
+        default=enums.EVENT_TYPE_NOTIFICATION,
+    )
 
     class Meta:
         verbose_name = _("event")
@@ -38,6 +85,13 @@ class Event(BaseModel):
 
     def __str__(self):
         return f"{self.user}: {self.level} {self.type}"
+
+    def save(self, *args, **kwargs):
+        """
+        Validate the context field
+        """
+        self.full_clean()
+        super().save(*args, **kwargs)
 
     def get_abilities(self, user):
         """
