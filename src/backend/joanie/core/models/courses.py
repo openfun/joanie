@@ -513,8 +513,7 @@ class Course(parler_models.TranslatableModel, BaseModel):
 
         for instance in itertools.chain(course_runs, products):
             state = instance.state
-            if state < best_state:
-                best_state = state
+            best_state = min(state, best_state)
             if state["priority"] == CourseState.ONGOING_OPEN:
                 # We found the best state, don't waste more time
                 break
