@@ -1107,7 +1107,7 @@ class ContractViewSet(GenericContractViewSet):
     )
     def download(self, request, pk=None):  # pylint: disable=unused-argument, invalid-name
         """
-        Return the PDF in bytes to download of the contract's definition of an order.
+        Return the PDF file in bytes fully signed to download from the signature provider.
         """
         contract = self.get_object()
 
@@ -1116,26 +1116,21 @@ class ContractViewSet(GenericContractViewSet):
                 "Cannot get contract when an order is not yet validated."
             )
 
-        if contract.submitted_for_signature_on:
+        if not contract.is_fully_signed:
             raise ValidationError(
                 "Cannot download a contract when it is not yet fully signed."
             )
 
-        context_data = contract_definition.generate_document_context(
-            contract_definition=contract.definition,
-            user=self.request.user,
-            order=contract.order,
+        signed_contract_pdf_bytes = contract_utility.get_pdf_bytes_of_contracts(
+            signature_backend_references=[contract.signature_backend_reference]
         )
-        contract_definition_pdf_bytes = issuers.generate_document(
-            contract.definition.name, context_data
-        )
-        # Note that if you pass a file-like object like io.BytesIO,
+
         # it’s your task to seek() it before passing it to FileResponse.
-        contract_definition_pdf_bytes_io = io.BytesIO(contract_definition_pdf_bytes)
-        contract_definition_pdf_bytes_io.seek(0)
+        contract_pdf_bytes_io = io.BytesIO(signed_contract_pdf_bytes[0])
+        contract_pdf_bytes_io.seek(0)
 
         return FileResponse(
-            contract_definition_pdf_bytes_io,
+            contract_pdf_bytes_io,
             as_attachment=True,
             filename=f"{contract.definition.title}.pdf".replace(" ", "_"),
         )

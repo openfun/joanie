@@ -731,3 +731,73 @@ class ContractModelTestCase(TestCase):
                 "course run that is in archived state.']}"
             ),
         )
+
+    def test_models_contracts_is_fully_signed_property_should_return_true(self):
+        """
+        Check that the property `is_fully_signed` returns True when the contract
+        has values set on the fields `student_signed_on`, `organization_signed_on`
+        and for the field `submitted_for_signature_on` is set to None.
+        """
+        order = factories.OrderFactory(
+            product__contract_definition=factories.ContractDefinitionFactory()
+        )
+        contract = factories.ContractFactory(
+            order=order,
+            definition=order.product.contract_definition,
+            signature_backend_reference="wfl_id_fake",
+            definition_checksum="fake_test_file_hash",
+            context="content",
+            submitted_for_signature_on=None,
+            student_signed_on=django_timezone.now(),
+            organization_signed_on=django_timezone.now() + timedelta(days=1),
+        )
+
+        self.assertTrue(contract.is_fully_signed)
+
+    def test_models_contracts_is_fully_signed_property_should_return_false_missing_organization(
+        self,
+    ):
+        """
+        Check that the property `is_fully_signed` returns False when the contract
+        has values set on the fields `student_signed_on` and `submitted_for_signature_on`
+        and when the field `organization_signed_on` is set to None.
+        """
+        order = factories.OrderFactory(
+            product__contract_definition=factories.ContractDefinitionFactory()
+        )
+        contract = factories.ContractFactory(
+            order=order,
+            definition=order.product.contract_definition,
+            signature_backend_reference="wfl_id_fake",
+            definition_checksum="fake_test_file_hash",
+            context="content",
+            submitted_for_signature_on=django_timezone.now(),
+            student_signed_on=django_timezone.now() + timedelta(days=1),
+            organization_signed_on=None,
+        )
+
+        self.assertFalse(contract.is_fully_signed)
+
+    def test_models_contracts_is_fully_signed_property_should_return_false_missing_both_signatures(
+        self,
+    ):
+        """
+        Check that the property `is_fully_signed` returns False when the contract
+        has a value set on the field `submitted_for_signature_on` and when the
+        fields `student_signed_on` and `organization_signed_on` are set to None.
+        """
+        order = factories.OrderFactory(
+            product__contract_definition=factories.ContractDefinitionFactory()
+        )
+        contract = factories.ContractFactory(
+            order=order,
+            definition=order.product.contract_definition,
+            signature_backend_reference="wfl_id_fake",
+            definition_checksum="fake_test_file_hash",
+            context="content",
+            submitted_for_signature_on=django_timezone.now(),
+            student_signed_on=None,
+            organization_signed_on=None,
+        )
+
+        self.assertFalse(contract.is_fully_signed)
