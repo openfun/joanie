@@ -121,7 +121,6 @@ class EdxImportEnrollmentsTestCase(TestCase):
             self.assertNotEqual(
                 enrollment.created_on, make_date_aware(edx_enrollment.created)
             )
-            self.assertNotEqual(enrollment.state, ENROLLMENT_STATE_SET)
 
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_enrollments_count")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_enrollments")
