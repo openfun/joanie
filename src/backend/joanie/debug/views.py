@@ -9,7 +9,6 @@ from django.views.generic.base import TemplateView
 from joanie.core import factories
 from joanie.core.enums import CERTIFICATE, CONTRACT_DEFINITION, DEGREE
 from joanie.core.models import Certificate, Contract
-from joanie.core.utils import contract_definition as contract_definition_utility
 from joanie.core.utils import issuers
 from joanie.payment.enums import INVOICE_TYPE_INVOICE
 from joanie.payment.models import Invoice
@@ -75,39 +74,16 @@ class DebugPdfTemplateView(TemplateView):
         """
         raise NotImplementedError("subclasses must implement this method.")
 
-    def retrieve_document_from_pk(self, pk):
-        """
-        Retrieve the object from its 'pk', and generate the context and create
-        the document in PDF bytes in return.
-        """
-        object_to_render = self.model.objects.get(pk=pk)
-        if isinstance(object_to_render, Contract):
-            context = contract_definition_utility.generate_document_context(
-                contract_definition=object_to_render.definition,
-                user=object_to_render.order.owner,
-                order=object_to_render.order,
-            )
-        else:
-            context = object_to_render.get_document_context()
-
-        return issuers.generate_document(
-            name=self.issuer_document,
-            context=context,
-        )
-
     def get_context_data(self, **kwargs):
         """
         Base method to prepare the document to render in the debug view in base64.
         """
         context = super().get_context_data()
 
-        # pylint: disable=invalid-name
-        if pk := self.request.GET.get("pk"):
-            document = self.retrieve_document_from_pk(pk)
-        else:
-            document = issuers.generate_document(
-                name=self.issuer_document, context=self.get_document_context()
-            )
+        document_context = self.get_document_context(self.request.GET.get("pk"))
+        document = issuers.generate_document(
+            name=self.issuer_document, context=document_context
+        )
 
         context.update(
             **{
@@ -164,60 +140,27 @@ class DebugCertificateTemplateView(DebugPdfTemplateView):
                 }
             ],
             "site": {"name": "example.com", "hostname": "https://example.com"},
+            "verification_link": None,
             "course": {"name": "Full Stack Pancake, Full Stack Developer"},
         }
 
 
-class DebugDegreeTemplateView(DebugPdfTemplateView):
+class DebugDegreeTemplateView(DebugCertificateTemplateView):
     """
     Debug view to check the layout of "degree" template.
     """
 
-    model = Certificate
     issuer_document = DEGREE
-
-    def get_document_context(self, pk=None):
-        """
-        Build a realistic context to have data similar to a real document generated.
-        If a primary key (pk) is provided, retrieve the corresponding Degree document
-        context. If the Degree (Certificate object) does not exist, we will use a basic fallback
-        for the document context. Otherwise, if no primary key is provided, we return the basic
-        fallback document context.
-        """
-        if not pk:
-            return self.get_basic_document_context()
-
-        certificate_type_degree = Certificate.objects.get(
-            pk=pk, certificate_definition__template=self.issuer_document
-        )
-
-        return certificate_type_degree.get_document_context()
 
     def get_basic_document_context(self):
         """Returns a basic document context to preview the template of a `degree`."""
-        certificate_id = "8c4a2469-78db-4785-8eec-7690a096b5bf"
-        return {
-            "id": certificate_id,
-            "creation_date": datetime.datetime(
-                2024, 1, 5, 10, 40, 54, 47499, tzinfo=datetime.timezone.utc
-            ),
-            "delivery_stamp": datetime.datetime(
-                2024, 1, 5, 10, 40, 54, 50357, tzinfo=datetime.timezone.utc
-            ),
-            "student": {"name": "Joanie Cunningham"},
-            "organizations": [
-                {
-                    "representative": "Joanie Cunningham",
-                    "representative_profession": "Director",
-                    "signature": SIGNATURE_FALLBACK,
-                    "logo": LOGO_FALLBACK,
-                    "name": "Organization Test",
-                }
-            ],
-            "site": {"name": "example.com", "hostname": "https://example.com"},
-            "verification_link": f"http://localhost:8071/en-us/certificates/{certificate_id}",
-            "course": {"name": "Full Stack Pancake, Full Stack Developer"},
-        }
+        context = super().get_basic_document_context()
+        context.update(
+            {
+                "verification_link": f"http://localhost:8071/en-us/certificates/{context['id']}",
+            }
+        )
+        return context
 
 
 class DebugContractTemplateView(DebugPdfTemplateView):
@@ -241,11 +184,7 @@ class DebugContractTemplateView(DebugPdfTemplateView):
 
         contract = Contract.objects.get(pk=pk, definition__name=self.issuer_document)
 
-        return contract_definition_utility.generate_document_context(
-            contract_definition=contract.definition,
-            user=contract.order.owner,
-            order=contract.order,
-        )
+        return contract.context
 
     def get_basic_document_context(self, **kwargs):
         """Returns a basic document context to preview the template of a `contract_definition`."""
