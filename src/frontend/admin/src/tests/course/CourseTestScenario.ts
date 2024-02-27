@@ -106,6 +106,7 @@ export const getCourseScenarioStore = () => {
     const {
       organization_ids: organizationsPayload,
       cover,
+      effort,
       ...restPayload
     } = payload;
 
@@ -116,12 +117,14 @@ export const getCourseScenarioStore = () => {
 
     const index = list.findIndex((item) => item.id === course?.id);
 
+    const effortPayload = effort ? { effort } : {};
     let newCourse: Course;
     if (course && index >= 0) {
       newCourse = {
         ...course,
         ...restPayload,
         organizations: addedOrganizations,
+        ...effortPayload,
       };
       list[index] = newCourse;
     } else {
@@ -130,6 +133,7 @@ export const getCourseScenarioStore = () => {
         ...restPayload,
         organizations: addedOrganizations,
         is_graded: false,
+        ...effortPayload,
       };
       list.push(newCourse);
     }
