@@ -64,12 +64,12 @@ def import_universities_batch(start, stop, dry_run=False):
                 report["universities"]["created"] += 1
                 continue
 
+            logo_downloaded = download_and_store(university.logo, "media")
             models.Organization.objects.create(
                 code=utils.normalize_code(university.code),
                 title=university.name,
-                logo=university.logo,
+                logo=university.logo if logo_downloaded else None,
             )
-            download_and_store(university.logo, "media")
             report["universities"]["created"] += 1
         except Exception as exc:  # pylint: disable=broad-except
             logger.error("Unable to import university %s", university.code)
