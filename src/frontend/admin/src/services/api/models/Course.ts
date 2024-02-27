@@ -1,3 +1,4 @@
+import moment from "moment";
 import { Organization } from "./Organization";
 import { CourseRelationToProduct } from "./Relations";
 import { Accesses } from "@/services/api/models/Accesses";
@@ -15,6 +16,7 @@ export type Course = {
   courses_runs?: CourseRun[];
   cover?: ThumbnailDetailField;
   accesses?: Accesses<CourseRoles>[];
+  effort?: string;
 };
 
 export enum CourseRoles {
@@ -31,10 +33,12 @@ export type CourseFormValues = Omit<
   | "state"
   | "cover"
   | "courses_runs"
+  | "effort"
   | "is_graded"
   | "product_relations"
 > & {
   cover: File[] | undefined;
+  effort?: number;
 };
 
 export interface DTOCourse {
@@ -43,17 +47,20 @@ export interface DTOCourse {
   title: string;
   cover?: File;
   organization_ids: string[];
-  // product_relations?: DTOCourseRelationToProduct[];
+  effort?: string | null;
 }
 
 export const transformCourseToDTO = (course: CourseFormValues): DTOCourse => {
-  const { cover, ...restCourse } = course;
+  const { cover, effort, ...restCourse } = course;
   const organizationIds = course.organizations.map((item) => {
     return item.id;
   });
   const payload: DTOCourse = {
     ...restCourse,
     organization_ids: organizationIds,
+    ...(effort
+      ? { effort: moment.duration({ hour: effort }).toISOString() }
+      : { effort: null }),
   };
 
   if (course.cover?.[0] !== undefined) {
