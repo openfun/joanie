@@ -111,7 +111,11 @@ def import_certificates_batch(start, stop, dry_run=False):
             if signature_image_path.startswith("/"):
                 signature_image_path = signature_image_path[1:]
             signature_path = download_and_store(signature_image_path)
-            signature = image_to_base64(default_storage.path(signature_path))
+            signature = (
+                image_to_base64(default_storage.path(signature_path))
+                if signature_path
+                else None
+            )
             signatory_name = signatory.get("name")
 
         certificate_context = {
@@ -135,7 +139,9 @@ def import_certificates_batch(start, stop, dry_run=False):
                         ),
                         "representative": signatory_name,
                         "signature": signature,
-                        "logo": image_to_base64(organization.logo),
+                        "logo": image_to_base64(organization.logo)
+                        if organization.logo
+                        else None,
                     }
                 ],
             }

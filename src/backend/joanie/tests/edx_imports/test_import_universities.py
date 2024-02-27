@@ -120,8 +120,7 @@ class EdxImportUniversitiesTestCase(TestCase):
         self, mock_get_universities, mock_get_universities_count
     ):
         """
-        Test that universities are not created from the edx universities if the code
-        is null.
+        Test that logos are not stored if the logo is not found.
         """
         edx_university = edx_factories.EdxUniversityFactory()
         mock_get_universities.return_value = [edx_university]
