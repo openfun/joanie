@@ -1,6 +1,7 @@
 import * as React from "react";
 import { useEffect } from "react";
 import * as Yup from "yup";
+import { lazy } from "yup";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import Grid from "@mui/material/Unstable_Grid2";
@@ -8,6 +9,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useIntl } from "react-intl";
+import moment from "moment";
 import {
   Course,
   CourseFormValues,
@@ -55,6 +57,11 @@ export function CourseForm({ course, shortcutMode = false, ...props }: Props) {
     title: Yup.string().required(),
     organizations: Yup.array<any, Organization>().min(1).required(),
     cover: Yup.mixed(),
+    effort: lazy((value) => {
+      return value === ""
+        ? Yup.string().nullable()
+        : Yup.number().positive().nullable();
+    }),
   });
 
   const getDefaultValues = () => {
@@ -63,6 +70,9 @@ export function CourseForm({ course, shortcutMode = false, ...props }: Props) {
       title: defaultCourse?.title ?? "",
       organizations: defaultCourse?.organizations ?? [],
       cover: undefined,
+      effort: defaultCourse?.effort
+        ? moment.duration(defaultCourse.effort).asHours()
+        : null,
     };
   };
 
@@ -120,7 +130,7 @@ export function CourseForm({ course, shortcutMode = false, ...props }: Props) {
                     {intl.formatMessage(courseFormMessages.generalSubtitle)}
                   </Typography>
                 </Grid>
-                <Grid xs={12} md={6}>
+                <Grid xs={12}>
                   <RHFTextField
                     name="title"
                     label={intl.formatMessage(commonTranslations.title)}
@@ -130,6 +140,16 @@ export function CourseForm({ course, shortcutMode = false, ...props }: Props) {
                   <RHFTextField
                     name="code"
                     label={intl.formatMessage(courseFormMessages.codeLabel)}
+                  />
+                </Grid>
+                <Grid xs={12} md={6}>
+                  <RHFTextField
+                    type="number"
+                    name="effort"
+                    helperText={intl.formatMessage(
+                      courseFormMessages.effortHelperText,
+                    )}
+                    label={intl.formatMessage(courseFormMessages.effortLabel)}
                   />
                 </Grid>
 

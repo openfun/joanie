@@ -11,6 +11,16 @@ export const courseFormMessages = defineMessages({
     defaultMessage: "Code",
     description: "Label for the Code input form",
   },
+  effortLabel: {
+    id: "components.templates.course.form.translations.effortLabel",
+    defaultMessage: "Effort",
+    description: "Label for the effort input form",
+  },
+  effortHelperText: {
+    id: "components.templates.course.form.translations.effortHelperText",
+    defaultMessage: "The estimated duration in hours to fulfill the course",
+    description: "Text for the effort helper text",
+  },
   organizationsLabel: {
     id: "components.templates.course.form.translations.organizationsLabel",
     defaultMessage: "Organizations",
