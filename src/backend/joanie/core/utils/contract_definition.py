@@ -2,8 +2,6 @@
 from django.contrib.sites.models import Site
 from django.utils.translation import gettext as _
 
-from timedelta_isoformat import timedelta as timedelta_isoformat
-
 from joanie.core.utils import image_to_base64
 
 # Organization section for generating contract definition
@@ -76,6 +74,7 @@ def generate_document_context(contract_definition, user, order=None):
     course_name = _("<COURSE_NAME>")
     course_start = _("<COURSE_START_DATE>")
     course_end = _("<COURSE_END_DATE>")
+    course_effort = _("<COURSE_EFFORT>")
     course_price = _("<PRICE>")
 
     user_address = USER_FALLBACK_ADDRESS
@@ -104,7 +103,7 @@ def generate_document_context(contract_definition, user, order=None):
         try:
             organization_address = order.organization.addresses.get(is_main=True)
         except Address.DoesNotExist:
-            organization_address = ORGANIZATION_FALLBACK_ADDRESS
+            organization_address = None
 
         # Course
         course_code = order.course.code
@@ -114,7 +113,8 @@ def generate_document_context(contract_definition, user, order=None):
         course_dates = order.get_equivalent_course_run_dates()
         course_start = course_dates["start"]
         course_end = course_dates["end"]
-        course_price = str(order.total)
+        course_effort = order.course.effort
+        course_price = order.total
 
         user_address = order.main_invoice.recipient_address
 
@@ -132,13 +132,7 @@ def generate_document_context(contract_definition, user, order=None):
             "code": course_code,
             "start": course_start,
             "end": course_end,
-            "effort": (
-                timedelta_isoformat(
-                    seconds=order.course.effort.total_seconds()
-                ).isoformat()
-                if order
-                else _("<EFFORT_DURATION>")
-            ),
+            "effort": course_effort,
             "price": course_price,
         },
         "student": {

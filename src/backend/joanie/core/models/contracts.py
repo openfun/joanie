@@ -6,6 +6,7 @@ import textwrap
 from datetime import timedelta
 
 from django.conf import settings
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.utils import timezone
 from django.utils.functional import lazy
@@ -90,6 +91,7 @@ class Contract(BaseModel):
         help_text=_("Localized data snapshot on contract signature"),
         editable=False,
         null=True,
+        encoder=DjangoJSONEncoder,
     )
     signature_backend_reference = models.CharField(
         blank=True,

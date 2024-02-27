@@ -9,6 +9,7 @@ from http import HTTPStatus
 from unittest import mock
 
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.serializers.json import DjangoJSONEncoder
 from django.test import RequestFactory, TestCase
 from django.test.utils import override_settings
 from django.utils import timezone as django_timezone
@@ -27,6 +28,8 @@ from joanie.tests.base import BaseLogMixinTestCase
 
 class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
     """Test suite for the Order model."""
+
+    maxDiff = None
 
     def test_models_order_enrollment_was_created_by_order(self):
         """
@@ -1378,7 +1381,9 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         invitation_url = order.submit_for_signature(user=user)
 
         contract.refresh_from_db()
-        self.assertEqual(contract.context, context)
+        self.assertEqual(
+            contract.context, json.loads(DjangoJSONEncoder().encode(context))
+        )
         self.assertEqual(contract.definition_checksum, "fake_dummy_file_hash_1")
         self.assertEqual(
             contract.signature_backend_reference,
@@ -1438,6 +1443,13 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             owner=user,
             state=enums.ORDER_STATE_VALIDATED,
             product__contract_definition=factories.ContractDefinitionFactory(),
+            product__target_courses=[
+                factories.CourseFactory.create(
+                    course_runs=[
+                        factories.CourseRunFactory(state=CourseState.ONGOING_OPEN)
+                    ]
+                )
+            ],
         )
         context = contract_definition.generate_document_context(
             contract_definition=order.product.contract_definition,
@@ -1457,7 +1469,9 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             invitation_url = order.submit_for_signature(user=user)
 
         contract.refresh_from_db()
-        self.assertEqual(contract.context, context)
+        self.assertEqual(
+            contract.context, json.loads(DjangoJSONEncoder().encode(context))
+        )
         self.assertIn("https://dummysignaturebackend.fr/?requestToken=", invitation_url)
         self.assertIn("fake_dummy_file_hash", contract.definition_checksum)
         self.assertNotEqual("wfl_fake_dummy_id_1", contract.signature_backend_reference)
