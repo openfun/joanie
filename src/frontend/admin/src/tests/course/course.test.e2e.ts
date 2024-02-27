@@ -71,6 +71,11 @@ test.describe("Course form", async () => {
     ).toBeVisible();
     await expect(page.getByLabel("Title")).toBeVisible();
     await expect(page.getByLabel("Code")).toBeVisible();
+    await expect(page.getByLabel("Effort")).toBeVisible();
+    await expect(
+      page.getByText("The estimated duration in hours to fulfill the course"),
+    ).toBeVisible();
+
     await expect(page.getByLabel("Organizations")).toBeVisible();
     await page.getByTestId("search-add-button").click();
     await page
@@ -91,6 +96,8 @@ test.describe("Course form", async () => {
     await page.getByLabel("Title").fill("Test course");
     await page.getByLabel("Code", { exact: true }).click();
     await page.getByLabel("Code", { exact: true }).fill("Test_Course_Code");
+    await page.getByLabel("Effort").click();
+    await page.getByLabel("Effort").fill("30");
     await page.getByLabel("Organizations").click();
     await page
       .getByRole("option", { name: store.organizations[0].title })
