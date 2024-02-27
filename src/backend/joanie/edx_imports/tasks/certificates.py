@@ -112,7 +112,7 @@ def import_certificates_batch(start, stop, dry_run=False):
                 signature_image_path = signature_image_path[1:]
             signature_path = download_and_store(signature_image_path)
             signature = (
-                image_to_base64(default_storage.path(signature_path))
+                image_to_base64(default_storage.open(signature_path))
                 if signature_path
                 else None
             )

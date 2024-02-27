@@ -23,7 +23,7 @@ logger = getLogger(__name__)
 def download_and_store(filename, source_path=""):
     """Download a file from edx and store it in the default storage"""
     if default_storage.exists(filename):
-        return default_storage.path(filename)
+        return filename
 
     logger.info("Download %s", filename)
     url = f"https://{settings.EDX_DOMAIN}/"
