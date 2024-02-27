@@ -137,9 +137,11 @@ EVENT_LEVEL_CHOICES = (
 
 # For event type choices
 EVENT_TYPE_NOTIFICATION = "notification"
+EVENT_TYPE_PAYMENT_SUCCEEDED = "payment_succeeded"
 EVENT_TYPE_PAYMENT_FAILED = "payment_failed"
 
 EVENT_TYPE_CHOICES = (
     (EVENT_TYPE_NOTIFICATION, _("Notification")),
+    (EVENT_TYPE_PAYMENT_SUCCEEDED, _("Payment succeeded")),
     (EVENT_TYPE_PAYMENT_FAILED, _("Payment failed")),
 )

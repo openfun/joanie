@@ -150,6 +150,18 @@ class BaseLogMixinTestCase:
 class EventMixingTestCase:
     """Mixin for event testing"""
 
+    def assertPaymentSuccessEvent(self, order):
+        """Check that the event is a payment success event"""
+        self.assertTrue(
+            Event.objects.filter(
+                user=order.owner,
+                level=enums.EVENT_SUCCESS,
+                type=enums.EVENT_TYPE_PAYMENT_SUCCEEDED,
+                context={"order_id": str(order.id)},
+            ).exists(),
+            "Payment success event not found",
+        )
+
     def assertPaymentFailedEvent(self, order):
         """Check that the event is a payment failed event"""
         self.assertTrue(

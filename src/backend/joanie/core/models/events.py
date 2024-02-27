@@ -29,8 +29,11 @@ class EventContextField(models.JSONField):
         event_type = model_instance.type
         if event_type == enums.EVENT_TYPE_NOTIFICATION:
             self.validate_notification(value)
-        elif event_type == enums.EVENT_TYPE_PAYMENT_FAILED:
-            self.validate_payment_failed(value)
+        elif event_type in [
+            enums.EVENT_TYPE_PAYMENT_SUCCEEDED,
+            enums.EVENT_TYPE_PAYMENT_FAILED,
+        ]:
+            self.validate_payment_type(value)
         else:
             raise ValidationError(f"Unknown event type: {event_type}")
 
@@ -41,9 +44,9 @@ class EventContextField(models.JSONField):
         if value:
             raise ValidationError("The context field must be an empty dictionary")
 
-    def validate_payment_failed(self, value):
+    def validate_payment_type(self, value):
         """
-        Validate the context field for a payment failed event
+        Validate the context field for a payment type event
         """
         if "order_id" not in value:
             raise ValidationError("The context field must have an order_id")
@@ -80,6 +83,18 @@ class Event(BaseModel):
     class Meta:
         verbose_name = _("event")
         verbose_name_plural = _("events")
+
+    @classmethod
+    def create_payment_succeeded_event(cls, order):
+        """
+        Create a payment succeeded event
+        """
+        return cls.objects.create(
+            user=order.owner,
+            level=enums.EVENT_SUCCESS,
+            context={"order_id": str(order.id)},
+            type=enums.EVENT_TYPE_PAYMENT_SUCCEEDED,
+        )
 
     @classmethod
     def create_payment_failed_event(cls, order):

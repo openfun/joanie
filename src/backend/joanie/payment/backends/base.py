@@ -65,6 +65,7 @@ class BasePaymentBackend:
 
         # send mail
         cls._send_mail_payment_success(order)
+        Event.create_payment_succeeded_event(order)
 
     @classmethod
     def _send_mail_payment_success(cls, order):

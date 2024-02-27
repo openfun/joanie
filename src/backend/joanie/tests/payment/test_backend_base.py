@@ -177,6 +177,9 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, EventMixingTestCase):
             "sam@fun-test.fr", owner.get_full_name(), order
         )
 
+        # - An event has been created
+        self.assertPaymentSuccessEvent(order)
+
     def test_payment_backend_base_do_on_payment_success_with_existing_billing_address(
         self,
     ):
