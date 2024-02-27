@@ -10,7 +10,7 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.utils.translation import override
 
-from joanie.core.models import Address
+from joanie.core.models import Address, Event
 from joanie.payment.enums import INVOICE_STATE_REFUNDED
 from joanie.payment.models import Invoice, Transaction
 
@@ -110,6 +110,7 @@ class BasePaymentBackend:
         """
         # - Unvalidate order
         order.pending()
+        Event.create_payment_failed_event(order)
 
     @staticmethod
     def _do_on_refund(amount, invoice, refund_reference):

@@ -9,6 +9,8 @@ from django.utils import translation
 
 from rest_framework_simplejwt.tokens import AccessToken
 
+from joanie.core import enums
+from joanie.core.models import Event
 from joanie.core.utils.jwt_tokens import generate_jwt_token_from_user
 
 
@@ -143,3 +145,19 @@ class BaseLogMixinTestCase:
                     _type,
                     f"{assert_failed_message} context key {key}",
                 )
+
+
+class EventMixingTestCase:
+    """Mixin for event testing"""
+
+    def assertPaymentFailedEvent(self, order):
+        """Check that the event is a payment failed event"""
+        self.assertTrue(
+            Event.objects.filter(
+                user=order.owner,
+                level=enums.EVENT_ERROR,
+                type=enums.EVENT_TYPE_PAYMENT_FAILED,
+                context={"order_id": str(order.id)},
+            ).exists(),
+            "Payment failed event not found",
+        )

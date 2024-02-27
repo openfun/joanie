@@ -23,8 +23,6 @@ class EventContextField(models.JSONField):
         """
         Validate the context field
         """
-        super().validate(value, model_instance)
-
         if not isinstance(value, dict):
             raise ValidationError("The context field must be a dictionary")
 
@@ -82,6 +80,18 @@ class Event(BaseModel):
     class Meta:
         verbose_name = _("event")
         verbose_name_plural = _("events")
+
+    @classmethod
+    def create_payment_failed_event(cls, order):
+        """
+        Create a payment failed event
+        """
+        return cls.objects.create(
+            user=order.owner,
+            level=enums.EVENT_ERROR,
+            context={"order_id": str(order.id)},
+            type=enums.EVENT_TYPE_PAYMENT_FAILED,
+        )
 
     def __str__(self):
         return f"{self.user}: {self.level} {self.type}"
