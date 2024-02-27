@@ -541,3 +541,121 @@ class EdxImportCertificatesTestCase(TestCase):
                     },
                 },
             )
+
+    @patch("joanie.edx_imports.edx_mongodb.get_enrollment")
+    @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates_count")
+    @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates")
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_import_certificates_download_error(
+        self, mock_get_certificates, mock_get_certificates_count, mock_get_enrollment
+    ):
+        """
+        Test that signatures are not stored if the signature is not found.
+        """
+        edx_certificate = edx_factories.EdxGeneratedCertificateFactory()
+        mongo_enrollments = {}
+        course = factories.CourseFactory.create(
+            code=extract_course_number(edx_certificate.course_id),
+            organizations=[factories.OrganizationFactory.create(logo=None)],
+        )
+        course_run = factories.CourseRunFactory.create(
+            course=course,
+            state=models.CourseState.ONGOING_OPEN,
+            resource_link=f"http://openedx.test/courses/{edx_certificate.course_id}/course/",
+            is_listed=True,
+        )
+        factories.EnrollmentFactory.create(
+            user__username=edx_certificate.user.username,
+            course_run=course_run,
+            was_created_by_order=False,
+        )
+
+        edx_mongo_signatory = edx_factories.EdxMongoSignatoryFactory()
+        mongo_enrollments[edx_certificate.id] = (
+            course.organizations.first().code,
+            edx_mongo_signatory,
+        )
+        responses.add(
+            responses.GET,
+            f"https://{settings.EDX_DOMAIN}{edx_mongo_signatory.get('signature_image_path')}",
+            status=404,
+        )
+
+        mock_get_certificates.return_value = [edx_certificate]
+        mock_get_certificates_count.return_value = 1
+        mock_get_enrollment.side_effect = [mongo_enrollments[edx_certificate.id]]
+
+        import_certificates()
+
+        self.assertEqual(models.Certificate.objects.count(), 1)
+        certificate = models.Certificate.objects.get(
+            enrollment__user__username=edx_certificate.user.username,
+            enrollment__course_run__course__code=extract_course_number(
+                edx_certificate.course_id
+            ),
+        )
+        certificate_name = (
+            DEGREE if edx_certificate.mode == OPENEDX_MODE_VERIFIED else CERTIFICATE
+        )
+        self.assertEqual(certificate.certificate_definition.name, certificate_name)
+        self.assertEqual(
+            certificate.organization.code,
+            mongo_enrollments[edx_certificate.id][0],
+        )
+        self.assertEqual(
+            certificate.issued_on, make_date_aware(edx_certificate.created_date)
+        )
+
+        mongo_signatory = mongo_enrollments[edx_certificate.id][1]
+        self.assertEqual(
+            certificate.localized_context,
+            {
+                "signatory": mongo_signatory,
+                "verification_hash": self.hashids.encode(edx_certificate.id),
+                "en-us": {
+                    "course": {
+                        "name": (
+                            certificate.enrollment.course_run.course.safe_translation_getter(
+                                "title", language_code="en"
+                            )
+                        ),
+                    },
+                    "organizations": [
+                        {
+                            "name": certificate.organization.safe_translation_getter(
+                                "title", language_code="en"
+                            ),
+                            "representative": mongo_signatory.get("name"),
+                            "signature": None,
+                            "logo": None,
+                        }
+                    ],
+                },
+                "fr-fr": {
+                    "course": {
+                        "name": (
+                            certificate.enrollment.course_run.course.safe_translation_getter(
+                                "title", language_code="fr"
+                            )
+                        ),
+                    },
+                    "organizations": [
+                        {
+                            "name": certificate.organization.safe_translation_getter(
+                                "title", language_code="fr"
+                            ),
+                            "representative": mongo_signatory.get("name"),
+                            "signature": None,
+                            "logo": None,
+                        }
+                    ],
+                },
+            },
+        )
+        self.assertFalse(
+            default_storage.exists(
+                certificate.localized_context.get("signatory").get(
+                    "signature_image_path"
+                )[1:]
+            )
+        )
