@@ -47,7 +47,7 @@ spec:
         - name: "{{ image_pull_secret_name }}"
 {% endif %}
       containers:
-        - name: joanie
+        - name: "{{ dc_name }}"
           image: "{{ joanie_image_name }}:{{ joanie_image_tag }}"
           imagePullPolicy: Always
 {% if service_variant=="app" %}
