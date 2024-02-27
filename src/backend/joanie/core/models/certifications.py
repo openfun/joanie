@@ -5,6 +5,7 @@ import logging
 
 from django.conf import settings
 from django.contrib.sites.models import Site
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
@@ -101,6 +102,7 @@ class Certificate(BaseModel):
         _("context"),
         help_text=_("Localized data that needs to be frozen on certificate creation"),
         editable=False,
+        encoder=DjangoJSONEncoder,
     )
 
     class Meta:

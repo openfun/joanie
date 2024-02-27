@@ -10,6 +10,7 @@ from django.urls import reverse
 from django.utils import timezone as django_timezone
 
 from joanie.core import enums, factories
+from joanie.core.models import CourseState
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -146,15 +147,23 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         user = factories.UserFactory(
             email="student_do@example.fr", first_name="John Doe", last_name=""
         )
+        target_courses = factories.CourseFactory.create_batch(
+            2,
+            course_runs=factories.CourseRunFactory.create_batch(
+                2, state=CourseState.ONGOING_OPEN
+            ),
+        )
         order = factories.OrderFactory(
             owner=user,
             state=enums.ORDER_STATE_VALIDATED,
             product__contract_definition=factories.ContractDefinitionFactory(),
+            product__target_courses=target_courses,
         )
         token = self.get_user_token(user.username)
         expected_substring_invite_url = (
             "https://dummysignaturebackend.fr/?requestToken="
         )
+
         response = self.client.post(
             reverse("orders-submit-for-signature", kwargs={"pk": order.id}),
             HTTP_AUTHORIZATION=f"Bearer {token}",

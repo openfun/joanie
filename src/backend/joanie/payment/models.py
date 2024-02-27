@@ -7,6 +7,7 @@ from decimal import Decimal as D
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.core.serializers.json import DjangoJSONEncoder
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Q
@@ -72,6 +73,7 @@ class Invoice(BaseModel):
         _("context"),
         help_text=_("Localized data that needs to be frozen on invoice creation"),
         editable=False,
+        encoder=DjangoJSONEncoder,
     )
 
     class Meta:
