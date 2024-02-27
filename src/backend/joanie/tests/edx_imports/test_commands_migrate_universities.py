@@ -111,6 +111,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
 
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_universities_count")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_universities")
+    @responses.activate(assert_all_requests_are_fired=True)
     def test_command_migrate_universities_error(
         self, mock_get_universities, mock_get_universities_count
     ):
@@ -123,6 +124,12 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
         )
         mock_get_universities.return_value = [edx_university]
         mock_get_universities_count.return_value = len([edx_university])
+
+        responses.add(
+            responses.GET,
+            f"https://{settings.EDX_DOMAIN}/media/{edx_university.logo}",
+            body=LOGO_CONTENT,
+        )
 
         with self.assertLogs() as logger:
             call_command("migrate_edx", "--skip-check", "--universities")

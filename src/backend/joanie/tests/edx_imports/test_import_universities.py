@@ -89,6 +89,7 @@ class EdxImportUniversitiesTestCase(TestCase):
 
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_universities_count")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_universities")
+    @responses.activate(assert_all_requests_are_fired=True)
     def test_import_universities_error(
         self, mock_get_universities, mock_get_universities_count
     ):
@@ -102,9 +103,44 @@ class EdxImportUniversitiesTestCase(TestCase):
         mock_get_universities.return_value = [edx_university]
         mock_get_universities_count.return_value = len([edx_university])
 
+        responses.add(
+            responses.GET,
+            f"https://{settings.EDX_DOMAIN}/media/{edx_university.logo}",
+            body=LOGO_CONTENT,
+        )
+
         import_universities()
 
         self.assertEqual(models.Organization.objects.count(), 0)
+
+    @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_universities_count")
+    @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_universities")
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_import_universities_download_error(
+        self, mock_get_universities, mock_get_universities_count
+    ):
+        """
+        Test that universities are not created from the edx universities if the code
+        is null.
+        """
+        edx_university = edx_factories.EdxUniversityFactory()
+        mock_get_universities.return_value = [edx_university]
+        mock_get_universities_count.return_value = len([edx_university])
+
+        responses.add(
+            responses.GET,
+            f"https://{settings.EDX_DOMAIN}/media/{edx_university.logo}",
+            status=404,
+        )
+
+        import_universities()
+
+        self.assertEqual(models.Organization.objects.count(), 1)
+        organization = models.Organization.objects.get(
+            code=utils.normalize_code(edx_university.code)
+        )
+        self.assertEqual(organization.title, edx_university.name)
+        self.assertEqual(organization.logo.name, "")
 
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_universities_count")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_universities")
