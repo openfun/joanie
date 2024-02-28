@@ -105,6 +105,8 @@ and this project adheres to
 
 ### Changed
 
+- Update the certificate viewset for the API client to return
+  certificates from orders and from enrollments owned by a user.
 - Update demo-dev command to add a second product purchase with learner
   signature.
 - Improve `degree` certificate template
