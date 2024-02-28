@@ -9,7 +9,7 @@ from django.views.generic.base import TemplateView
 from joanie.core import factories
 from joanie.core.enums import CERTIFICATE, CONTRACT_DEFINITION, DEGREE
 from joanie.core.models import Certificate, Contract
-from joanie.core.utils import issuers
+from joanie.core.utils import contract_definition, issuers
 from joanie.payment.enums import INVOICE_TYPE_INVOICE
 from joanie.payment.models import Invoice
 
@@ -180,65 +180,11 @@ class DebugContractTemplateView(DebugPdfTemplateView):
         context.
         """
         if not pk:
-            return self.get_basic_document_context()
+            return contract_definition.generate_document_context()
 
         contract = Contract.objects.get(pk=pk, definition__name=self.issuer_document)
 
         return contract.context
-
-    def get_basic_document_context(self, **kwargs):
-        """Returns a basic document context to preview the template of a `contract_definition`."""
-
-        return {
-            "contract": {
-                "body": "Some condition article content",
-                "title": "Contract Definition",
-            },
-            "course": {
-                "name": "Full Stack Pancake, Full Stack Developer",
-                "code": "<COURSE_CODE>",
-                "start": "<COURSE_START_DATE>",
-                "end": "<COURSE_END_DATE>",
-                "effort": "PT10H55M15S",  # 10h55min and 5 secs
-                "price": "<PRICE>",
-            },
-            "student": {
-                "name": "John Cunningham",
-                "address": {
-                    "address": ("<STUDENT_ADDRESS_STREET_NAME>"),
-                    "city": ("<STUDENT_ADDRESS_CITY>"),
-                    "country": ("<STUDENT_ADDRESS_COUNTRY>"),
-                    "last_name": ("<STUDENT_LAST_NAME>"),
-                    "first_name": ("<STUDENT_FIRST_NAME>"),
-                    "postcode": ("<STUDENT_ADDRESS_POSTCODE>"),
-                    "title": "Some student address title",
-                },
-                "email": "johndoe@example.fr",
-                "phone_number": "+33123456789",
-            },
-            "organization": {
-                "address": {
-                    "address": "<ORGANIZATION_ADDRESS_STREET_NAME>",
-                    "city": "<ORGANIZATION_ADDRESS_CITY>",
-                    "country": "<ORGANIZATION_ADDRESS_COUNTRY>",
-                    "last_name": "<ORGANIZATION_LAST_NAME>",
-                    "first_name": "<ORGANIZATION_FIRST_NAME>",
-                    "postcode": "<ORGANIZATION_ADDRESS_POSTCODE>",
-                    "title": "Some organization address title",
-                },
-                "logo": LOGO_FALLBACK,
-                "name": "Organization 0",
-                "representative": "<REPRESENTATIVE>",
-                "representative_profession": "<REPRESENTATIVE_PROFESSION>",
-                "enterprise_code": "<ENTERPRISE_CODE>",
-                "activity_category_code": "<ACTIVITY_CATEGORY_CODE>",
-                "signatory_representative": "<SIGNATORY_REPRESENTATIVE>",
-                "signatory_representative_profession": "<SIGNATURE_REPRESENTATIVE_PROFESSION>",
-                "contact_phone": "<CONTACT_PHONE>",
-                "contact_email": "<CONTACT_EMAIL>",
-                "dpo_email": "<DPO_EMAIL_ADDRESS>",
-            },
-        }
 
 
 class DebugInvoiceTemplateView(DebugPdfTemplateView):

@@ -57,6 +57,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             organizations=[organization],
             product__contract_definition=factories.ContractDefinitionFactory(
                 title="CONTRACT DEFINITION 1",
+                description="Contract definition description",
                 body="Articles de la convention",
             ),
             course=factories.CourseFactory(organizations=[organization]),
@@ -76,6 +77,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             "contract": {
                 "body": "<p>Articles de la convention</p>",
                 "terms_and_conditions": "<h2>Terms and conditions</h2>",
+                "description": "Contract definition description",
                 "title": "CONTRACT DEFINITION 1",
             },
             "course": {
@@ -85,6 +87,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                 "end": freezed_course_data["end"],
                 "effort": order.course.effort,
                 "price": order.total,
+                "currency": "€",
             },
             "student": {
                 "name": user.get_full_name(),
@@ -162,12 +165,15 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             phone_number="0123456789",
         )
         definition = factories.ContractDefinitionFactory(
-            title="CONTRACT DEFINITION 2", body="Articles de la convention"
+            title="CONTRACT DEFINITION 2",
+            body="Articles de la convention",
+            description="Contract definition description",
         )
         expected_context = {
             "contract": {
                 "body": "<p>Articles de la convention</p>",
                 "terms_and_conditions": "",
+                "description": "Contract definition description",
                 "title": "CONTRACT DEFINITION 2",
             },
             "course": {
@@ -176,7 +182,8 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                 "start": "<COURSE_START_DATE>",
                 "end": "<COURSE_END_DATE>",
                 "effort": "<COURSE_EFFORT>",
-                "price": "<PRICE>",
+                "price": "<COURSE_PRICE>",
+                "currency": "€",
             },
             "student": {
                 "name": user.get_full_name(),
@@ -226,41 +233,24 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         self,
     ):
         """
-        When we generate the document context for the contract definition without : an order and
-        an address, it should return the default placeholder values for different sections of the
-        context :
-
-        - For course :
-        `course.start`, `course.end`, `course.effort`, `course.price`
-        `course.name`.
-
-        - For student :
-        `student.address`, `student.phone_number`.
-
-        - For organization :
-        `organization.address`, `organization.logo`, `organization.signature`,
-        `organization.title`, `organization.representative`,
-        `organization.enterprise_code`, `organization.activity_category_code`
-        `organization.signatory_representative`, `organization.contact_phone`,
-        `organization.signatory_representative_profession`, `organization.contact_email`
-        `organization.dpo_email`, `organization.representative_profession`.
+        When we generate the document context for the contract definition without : an order
+        and a user, it should return the default placeholder values for different sections
+        of the context.
         """
         organization_fallback_logo = (
             "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR"
             "42mO8cPX6fwAIdgN9pHTGJwAAAABJRU5ErkJggg=="
         )
-        user = factories.UserFactory(
-            email="student@example.fr",
-            first_name="John Doe",
-            last_name="",
-        )
         definition = factories.ContractDefinitionFactory(
-            title="CONTRACT DEFINITION 3", body="Articles de la convention"
+            title="CONTRACT DEFINITION 3",
+            description="Contract definition description",
+            body="Articles de la convention",
         )
         expected_context = {
             "contract": {
                 "body": "<p>Articles de la convention</p>",
                 "terms_and_conditions": "",
+                "description": "Contract definition description",
                 "title": "CONTRACT DEFINITION 3",
             },
             "course": {
@@ -269,10 +259,11 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                 "start": "<COURSE_START_DATE>",
                 "end": "<COURSE_END_DATE>",
                 "effort": "<COURSE_EFFORT>",
-                "price": "<PRICE>",
+                "price": "<COURSE_PRICE>",
+                "currency": "€",
             },
             "student": {
-                "name": user.get_full_name(),
+                "name": "<STUDENT_NAME>",
                 "address": {
                     "address": "<STUDENT_ADDRESS_STREET_NAME>",
                     "city": "<STUDENT_ADDRESS_CITY>",
@@ -282,8 +273,8 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                     "postcode": "<STUDENT_ADDRESS_POSTCODE>",
                     "title": "<STUDENT_ADDRESS_TITLE>",
                 },
-                "email": "student@example.fr",
-                "phone_number": "<USER_PHONE_NUMBER>",
+                "email": "<STUDENT_EMAIL>",
+                "phone_number": "<STUDENT_PHONE_NUMBER>",
             },
             "organization": {
                 "address": {
@@ -310,7 +301,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         }
 
         context = contract_definition.generate_document_context(
-            contract_definition=definition, user=user
+            contract_definition=definition
         )
 
         self.assertDictEqual(context, expected_context)
