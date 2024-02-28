@@ -3,6 +3,7 @@ import { getOrganizationScenarioStore } from "@/tests/organization/OrganizationT
 import { mockPlaywrightCrud } from "@/tests/useResourceHandler";
 import {
   DTOOrganization,
+  DTOOrganizationAddress,
   Organization,
 } from "@/services/api/models/Organization";
 import { PATH_ADMIN } from "@/utils/routes/path";
@@ -32,7 +33,7 @@ test.describe("Organization Form", () => {
       page,
     });
   });
-  test("Create a new certificate definition", async ({ page }) => {
+  test("Create a new organization", async ({ page }) => {
     await page.goto(PATH_ADMIN.organizations.list);
     // Go to the form
     await page.getByRole("button", { name: "Add" }).click();
@@ -116,6 +117,110 @@ test.describe("Organization Form", () => {
         name: `Organization code Organization title`,
       }),
     ).toHaveCount(1);
+  });
+});
+
+test.describe("Organization address form", () => {
+  let store = getOrganizationScenarioStore();
+  test.beforeEach(async ({ page }) => {
+    store = getOrganizationScenarioStore();
+    store.list[0].addresses = undefined;
+    await mockPlaywrightCrud<Organization, DTOOrganization>({
+      data: store.list,
+      routeUrl: "http://localhost:8071/api/v1.0/admin/organizations/",
+      page,
+      searchResult: store.list[0],
+      optionsResult: ORGANIZATION_OPTIONS_REQUEST_RESULT,
+    });
+
+    await mockPlaywrightCrud<User, any>({
+      data: store.userList,
+      routeUrl: "http://localhost:8071/api/v1.0/admin/users/",
+      page,
+    });
+  });
+  test("Create a new organization address", async ({ page }) => {
+    const org = store.list[0];
+    await page.route(
+      `http://localhost:8071/api/v1.0/admin/organizations/${org.id}/addresses/`,
+      async (route, request) => {
+        const methods = request.method();
+        if (methods === "POST") {
+          const payload: DTOOrganizationAddress = request.postDataJSON();
+          await route.fulfill({ json: payload });
+        }
+      },
+    );
+
+    await page.goto(PATH_ADMIN.organizations.list);
+    await page.getByRole("link", { name: org.title }).click();
+    await expect(
+      page.getByRole("heading", { name: `Edit organization: ${org.title}` }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Organization address" }),
+    ).toBeVisible();
+    await page
+      .locator("#organization-address-form")
+      .getByLabel("Title")
+      .click();
+    await page
+      .locator("#organization-address-form")
+      .getByLabel("Title")
+      .fill("Test address");
+    await page.getByLabel("Address").click();
+    await page.getByLabel("Address").fill("101 John Doe Street");
+    await page.getByLabel("Post code").click();
+    await page.getByLabel("Post code").fill("76000");
+    await page.getByLabel("City").click();
+    await page.getByLabel("City").fill("Paris");
+    await page
+      .locator("#organization-address-form")
+      .getByLabel("France")
+      .click();
+    await page.getByRole("option", { name: "France" }).click();
+    await page.getByLabel("First name").click();
+    await page.getByLabel("First name").fill("John");
+    await page.getByLabel("First name").press("Tab");
+    await page.getByLabel("Last name").fill("Doe");
+    await page.getByTestId("submit-button-organization-address-form").click();
+    await expect(page.getByText("Operation completed")).toBeVisible();
+  });
+  test("Test error form", async ({ page }) => {
+    const org = store.list[0];
+    await page.goto(PATH_ADMIN.organizations.list);
+    await page.getByRole("link", { name: org.title }).click();
+    await expect(
+      page.getByRole("heading", { name: `Edit organization: ${org.title}` }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Organization address" }),
+    ).toBeVisible();
+    await page.getByTestId("submit-button-organization-address-form").click();
+    await expectHaveClasses(
+      page.getByText("title is a required field"),
+      "Mui-error",
+    );
+    await expectHaveClasses(
+      page.getByText("address is a required field"),
+      "Mui-error",
+    );
+    await expectHaveClasses(
+      page.getByText("postcode is a required field"),
+      "Mui-error",
+    );
+    await expectHaveClasses(
+      page.getByText("city is a required field"),
+      "Mui-error",
+    );
+    await expectHaveClasses(
+      page.getByText("first_name is a required field"),
+      "Mui-error",
+    );
+    await expectHaveClasses(
+      page.getByText("last_name is a required field"),
+      "Mui-error",
+    );
   });
 });
 
