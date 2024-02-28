@@ -1,99 +1,127 @@
-body {
-  font-family: "Arial", "Helvetica Neue", sans-serif;
-  font-size: 13px;
-  color: #222;
-}
-
 @media print {
-  /* ----------------------
-   * Reset margins for media
-   * ---------------------- */
   @page {
     size: A4 portrait;
-    margin: 0;
-    padding: 10mm;
-    margin-top: 10mm;
-  }
+    margin: 35mm 25mm 25mm 25mm;
 
-  body {
-    margin: 3mm;
-    padding: 7mm;
-    background: #fff;
-  }
+    @bottom-center {
+      border-top: thin solid #000;
+    }
 
-  * {
-    margin: 0;
-    padding: 0;
-  }
+    @bottom-right {
+      border-top: thin solid #BBB;
+      content: counter(page) " / " counter(pages);
+      display: block;
+      font-size: 8px;
+      height: 15mm;
+      margin-top: 10mm;
+      text-align: right;
+      width: 100%;
+    }
 
-  p {
-    margin-bottom: 5mm;
   }
+}
 
-  /* ----------------------
-   * Header
-   * ---------------------- */
-  header {
-    display: flex;
-    height: 30mm;
-  }
+/* == Global */
+* {
+  margin: 0;
+  padding: 0;
+}
 
-  .logos > * {
-    width: 50%;
-  }
+/* == Document (body) */
+.document {
+  color: #333;
+  font-family: "Arial", sans-serif;
+  font-size: 11px;
+  line-height: 1.5;
+}
 
-  .logos > div > img {
-    max-height: 100px;
-    width: 30mm;
-  }
+/* == Header */
+.document--header {
+  align-items: center;
+  box-sizing: border-box;
+  display: flex;
+  height: 35mm;
+  justify-content: space-between;
+  position: fixed;
+  top: -35mm;
+  width: 100%;
+}
 
-  .logos > *:nth-child(2) {
-    text-align: right;
-  }
 
-  .title {
-    font-family: "Helvetica Neue", "Arial", sans-serif;
-    font-size: 20px;
-    text-transform: uppercase;
-    text-align: right; /* Align text to the right */
-    letter-spacing: 2px;
-    padding-bottom: 10mm;
-    margin: 0; /* Remove default margin for the heading */
-  }
+.document--header > img {
+  height: 20mm;
+}
 
-  /* ----------------------
-   * Main
-   * ---------------------- */
+/* == Content */
+/* == Content - Header  */
+.content--header {
+  text-align: center;
+}
 
-  .main {
-    display: flex;
-    justify-content: space-between; /* Align items with space in between */
-    flex-direction: column;
-  }
+.content--header > h1 {
+  border-bottom: thin solid #BBB;
+  font-size: 14px;
+  margin-bottom: 2mm;
+  padding-bottom: 2mm;
+}
 
-  .contract-articles {
-    padding-top: 3mm;
-  }
+.content--header > p {
+  font-size: 8px;
+}
 
-  .articles {
-    margin-top: 3mm;
-  }
+/* == Content - Context  */
+.content--context {
+  margin: 10mm 0;
+}
 
-  /* ----------------------
-   * Footer
-   * ---------------------- */
-  .footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    flex-direction: row;
-  }
+.content--context dl {
+  border: thin solid #BBB;
+  line-height: 1.3;
+  margin-top: 3mm;
+  padding: 4mm;
+}
 
-  .signature_zone {
-    margin: 10mm;
-  }
+.content--context dt {
+  margin: 4mm 0 1mm 0;
+}
 
-  .signature-recipient {
-    margin-top: 10mm;
-  }
+.content--context dt:first-child {
+  margin-top: 0;
+}
+
+.content--context dd {
+  margin-left: 0;
+}
+
+.content--context ul {
+  list-style-position: inside;
+  padding-left: 3mm;
+}
+
+/* == Content - Articles  */
+.content-articles h1,
+.content-articles h2,
+.content-articles h3,
+.content-articles h4,
+.content-articles h5,
+.content-articles h6 {
+  margin: 8mm 0 2mm 0;
+}
+
+.content-articles ul,
+.content-articles ol {
+  padding-left: 2.5mm;
+}
+
+.content-articles p {
+  margin-bottom: 3mm;
+}
+
+/* == Content - Signatures  */
+.content-signatures {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin-top: 20mm;
 }

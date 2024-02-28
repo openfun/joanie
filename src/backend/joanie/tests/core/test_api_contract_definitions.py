@@ -161,19 +161,20 @@ class ContractDefinitionApiTest(BaseAPITestCase):
 
         document_text = pdf_extract_text(BytesIO(b"".join(response.streaming_content)))
 
-        self.assertIn("CONTRACT", document_text)
-        self.assertIn("DEFINITION", document_text)
+        self.assertIn(contract_definition.title, document_text)
         self.assertIn(
-            "This document certifies that the student wants to enroll to the course",
+            "The current contract is formed between "
+            "the University and the Learner, as identified below:",
             document_text,
         )
         self.assertIn("Terms and conditions", document_text)
-        self.assertIn("Student's signature", document_text)
+        self.assertIn("Learner's signature", document_text)
         self.assertIn("[SignatureField#1]", document_text)
-        self.assertIn("Representative's signature", document_text)
+        self.assertIn("University representative's signature", document_text)
         self.assertIn("[SignatureField#2]", document_text)
-        self.assertIn(user.first_name, document_text)
+        self.assertIn(user.get_full_name(), document_text)
         self.assertIn(
-            "<STUDENT_ADDRESS_STREET_NAME> <STUDENT_ADDRESS_POSTCODE>,\n<STUDENT_ADDRESS_CITY>.",
+            "<STUDENT_ADDRESS_STREET_NAME>, <STUDENT_ADDRESS_POSTCODE>"
+            "\n<STUDENT_ADDRESS_CITY> (<STUDENT_ADDRESS_COUNTRY>)",
             document_text,
         )

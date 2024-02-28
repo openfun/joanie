@@ -348,6 +348,7 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
         reference id exist.
         """
         contract = factories.ContractFactory(
+            definition__title="Contract definition title",
             signature_backend_reference="wfl_fake_dummy_id",
             definition_checksum="1234",
             student_signed_on=django_timezone.now(),
@@ -357,6 +358,7 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
                 recipient_address__address="1 Rue de L'Exemple",
                 recipient_address__postcode=75000,
                 recipient_address__city="Paris",
+                recipient_address__country="FR",
             ),
         )
         backend = DummySignatureBackend()
@@ -369,9 +371,10 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
 
         document_text = pdf_extract_text(BytesIO(pdf_bytes)).replace("\n", "")
 
-        self.assertRegex(
-            document_text, r"This document certifies that the student wants to enroll"
+        self.assertIn(
+            "The current contract is formed between the "
+            "University and the Learner, as identified below:",
+            document_text,
         )
-        self.assertRegex(document_text, r"1 Rue de L'Exemple 75000, Paris.")
-        self.assertRegex(document_text, r"CONTRACT")
-        self.assertRegex(document_text, r"DEFINITION")
+        self.assertIn("1 Rue de L'Exemple, 75000 Paris (FR)", document_text)
+        self.assertIn(contract.definition.title, document_text)

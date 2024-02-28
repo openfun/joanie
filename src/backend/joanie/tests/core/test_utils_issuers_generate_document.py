@@ -44,6 +44,7 @@ class UtilsGenerateDocumentTestCase(TestCase):
                 "body": body_content,
                 "terms_and_conditions": terms_and_conditions_content,
                 "title": "Contract Definition",
+                "description": "This is the contract definition",
             },
             "course": {
                 "name": "Some course name",
@@ -53,7 +54,7 @@ class UtilsGenerateDocumentTestCase(TestCase):
                 "address": {
                     "address": "1 Rue de L'Exemple",
                     "city": "Paris",
-                    "country": "France",
+                    "country": "FR",
                     "last_name": "Doe",
                     "first_name": "John",
                     "postcode": "75000",
@@ -77,13 +78,13 @@ class UtilsGenerateDocumentTestCase(TestCase):
             )
         ).replace("\n", "")
 
-        self.assertRegex(document_text, r"CONTRACT DEFINITION")
-        self.assertRegex(document_text, r"John Doe")
-        self.assertRegex(document_text, r"1 Rue de L'Exemple 75000, Paris")
-        self.assertRegex(document_text, r"must have a computer")
-        self.assertRegex(document_text, r"student and the organization are tied")
-        self.assertRegex(document_text, r"are the terms and conditions of the")
-        self.assertRegex(document_text, r"[SignatureField#1]")
+        self.assertIn("Contract Definition", document_text)
+        self.assertIn("John Doe", document_text)
+        self.assertIn("1 Rue de L'Exemple, 75000 Paris (FR)", document_text)
+        self.assertIn("must have a computer", document_text)
+        self.assertIn("student and the organization are tied", document_text)
+        self.assertIn("are the terms and conditions of the", document_text)
+        self.assertIn("[SignatureField#1]", document_text)
 
         with self.assertRaises(TemplateDoesNotExist) as context:
             issuers.generate_document(name="convention", context=context)

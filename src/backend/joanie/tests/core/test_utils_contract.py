@@ -524,7 +524,9 @@ class UtilsContractTestCase(TestCase):
         users = factories.UserFactory.create_batch(3)
         requesting_user = factories.UserFactory()
         relation = factories.CourseProductRelationFactory(
-            product__contract_definition=factories.ContractDefinitionFactory()
+            product__contract_definition=factories.ContractDefinitionFactory(
+                title="Contract definition title"
+            )
         )
         signature_reference_choices = [
             "wfl_fake_dummy_4",
@@ -542,6 +544,7 @@ class UtilsContractTestCase(TestCase):
                     recipient_address__address="1 Rue de L'Exemple",
                     recipient_address__postcode=75000,
                     recipient_address__city="Paris",
+                    recipient_address__country="FR",
                 ),
             )
             context = contract_definition_utility.generate_document_context(
@@ -586,10 +589,10 @@ class UtilsContractTestCase(TestCase):
                             BytesIO(pdf_file.read())
                         ).replace("\n", "")
 
-                        self.assertRegex(document_text, r"CONTRACT")
-                        self.assertRegex(document_text, r"DEFINITION")
-                        self.assertRegex(
-                            document_text, r"1 Rue de L'Exemple 75000, Paris."
+                        self.assertIn("Contract definition title", document_text)
+                        self.assertIn(
+                            "1 Rue de L'Exemple, 75000 Paris (FR)",
+                            document_text,
                         )
         # Clear file zip archive in storages
         storage.delete(generated_zip_archive_name)

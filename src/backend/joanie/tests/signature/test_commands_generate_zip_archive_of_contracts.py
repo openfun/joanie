@@ -285,7 +285,9 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         )
         relation = factories.CourseProductRelationFactory(
             organizations=[organization],
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition=factories.ContractDefinitionFactory(
+                title="Contract definition 0"
+            ),
         )
         zip_uuid = uuid4()
         options = {
@@ -309,6 +311,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
                     recipient_address__address="1 Rue de L'Exemple",
                     recipient_address__postcode=75000,
                     recipient_address__city="Paris",
+                    recipient_address__country="FR",
                 ),
             )
             context = contract_definition.generate_document_context(
@@ -346,10 +349,9 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
                             BytesIO(pdf_file.read())
                         ).replace("\n", "")
 
-                        self.assertRegex(document_text, r"CONTRACT")
-                        self.assertRegex(document_text, r"DEFINITION")
-                        self.assertRegex(
-                            document_text, r"1 Rue de L'Exemple 75000, Paris."
+                        self.assertIn("Contract definition 0", document_text)
+                        self.assertIn(
+                            "1 Rue de L'Exemple, 75000 Paris (FR)", document_text
                         )
 
         # Clear ZIP archive in storages
@@ -377,7 +379,9 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         )
         relation = factories.CourseProductRelationFactory(
             organizations=[organization],
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition=factories.ContractDefinitionFactory(
+                title="Contract definition 0"
+            ),
         )
         zip_uuid = uuid4()
         options = {
@@ -401,6 +405,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
                     recipient_address__address="1 Rue de L'Exemple",
                     recipient_address__postcode=75000,
                     recipient_address__city="Paris",
+                    recipient_address__country="FR",
                 ),
             )
             context = contract_definition.generate_document_context(
@@ -439,10 +444,9 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
                             BytesIO(pdf_file.read())
                         ).replace("\n", "")
 
-                        self.assertRegex(document_text, r"CONTRACT")
-                        self.assertRegex(document_text, r"DEFINITION")
-                        self.assertRegex(
-                            document_text, r"1 Rue de L'Exemple 75000, Paris."
+                        self.assertIn("Contract definition 0", document_text)
+                        self.assertIn(
+                            "1 Rue de L'Exemple, 75000 Paris (FR)", document_text
                         )
 
         # Clear ZIP archive in storages
