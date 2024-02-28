@@ -7,7 +7,10 @@ import {
   useResourcesCustom,
   UseResourcesProps,
 } from "@/hooks/useResources";
-import { Organization } from "@/services/api/models/Organization";
+import {
+  DTOOrganizationAddress,
+  Organization,
+} from "@/services/api/models/Organization";
 import { OrganizationRepository } from "@/services/repositories/organization/OrganizationRepository";
 import { DTOAccesses } from "@/services/api/models/Accesses";
 import { SelectOption } from "@/components/presentational/hook-form/RHFSelect";
@@ -132,6 +135,32 @@ export const useOrganizations = (
         } catch (e) {
           custom.methods.setError(
             intl.formatMessage(useOrganizationsMessages.errorDelete),
+          );
+        }
+      },
+      addAddress: async (orgId: string, payload: DTOOrganizationAddress) => {
+        try {
+          await OrganizationRepository.addAddress(orgId, payload);
+          await custom.methods.onSuccess();
+          await custom.methods.invalidate();
+        } catch (e) {
+          custom.methods.setError(
+            intl.formatMessage(useOrganizationsMessages.errorCreate),
+          );
+        }
+      },
+      updateAddress: async (
+        orgId: string,
+        addressId: string,
+        payload: DTOOrganizationAddress,
+      ) => {
+        try {
+          await OrganizationRepository.updateAddress(orgId, addressId, payload);
+          await custom.methods.onSuccess();
+          await custom.methods.invalidate();
+        } catch (e) {
+          custom.methods.setError(
+            intl.formatMessage(useOrganizationsMessages.errorUpdate),
           );
         }
       },
