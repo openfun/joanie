@@ -28,6 +28,7 @@ import { AccessesList } from "@/components/templates/accesses/list/AccessesList"
 import { LoadingContent } from "@/components/presentational/loading/LoadingContent";
 import { ThumbnailDetailField } from "@/services/api/models/Image";
 import { RHFSelect } from "@/components/presentational/hook-form/RHFSelect";
+import { OrganizationAddressForm } from "@/components/templates/organizations/form/sections/OrganizationAddressForm";
 
 interface FormValues {
   code: string;
@@ -351,6 +352,9 @@ export function OrganizationForm(props: Props) {
           </Box>
         </TranslatableContent>
       </SimpleCard>
+      {defaultOrganization && (
+        <OrganizationAddressForm organization={defaultOrganization} />
+      )}
       <LoadingContent loading={organizationQuery.accesses === undefined}>
         {props.organization && organizationQuery.accesses && (
           <SimpleCard>
