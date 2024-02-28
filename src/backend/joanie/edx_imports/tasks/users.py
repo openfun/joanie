@@ -1,4 +1,5 @@
 """Celery tasks for importing data from the Open edX database to the Joanie database."""
+# ruff: noqa: SLF001
 # pylint: disable=too-many-locals
 
 from logging import getLogger
@@ -57,12 +58,30 @@ def import_users_batch(start, stop, total, dry_run=False):
             report["users"]["skipped"] += 1
             continue
 
+        username = edx_user.username.strip()
+        email = edx_user.email.strip()
+        first_name = edx_user.auth_userprofile.name.strip()
+        if len(username) > models.User._meta.get_field("username").max_length:
+            report["users"]["errors"] += 1
+            logger.error("Username too long: %s", username)
+            continue
+
+        if len(email) > models.User._meta.get_field("email").max_length:
+            report["users"]["errors"] += 1
+            logger.error("Email too long: %s", email)
+            continue
+
+        if len(first_name) > models.User._meta.get_field("first_name").max_length:
+            report["users"]["errors"] += 1
+            logger.error("First name too long: %s", first_name)
+            continue
+
         users_to_create.append(
             models.User(
-                username=edx_user.username,
-                email=edx_user.email,
+                username=username,
+                email=email,
                 password=make_password(None),
-                first_name=edx_user.auth_userprofile.name,
+                first_name=first_name,
                 is_active=edx_user.is_active,
                 is_staff=edx_user.is_staff,
                 is_superuser=edx_user.is_superuser,

@@ -158,3 +158,39 @@ class EdxImportUsersTestCase(TestCase):
         import_users(dry_run=True)
 
         self.assertEqual(models.User.objects.count(), 0)
+
+    @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_users_count")
+    @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_users")
+    def test_import_users_create_long_usernames(
+        self, mock_get_users, mock_get_users_count
+    ):
+        """
+        Test that users are created from the edx users.
+        """
+        edx_users = []
+        edx_users.append(
+            edx_factories.EdxUserFactory(
+                username="a" * 255,
+                email="a" * 255 + "@example.com",
+                auth_userprofile__name="a" * 255,
+            )
+        )
+        edx_users.append(
+            edx_factories.EdxUserFactory(
+                username=" some username with spaces" + " " * 255,
+                email=" username@example.com" + " " * 255,
+                auth_userprofile__name=" some username with spaces" + " " * 255,
+            )
+        )
+
+        mock_get_users.return_value = edx_users
+        mock_get_users_count.return_value = len(edx_users)
+
+        import_users()
+
+        self.assertEqual(models.User.objects.count(), 1)
+
+        user = models.User.objects.get()
+        self.assertEqual(user.username, "some username with spaces")
+        self.assertEqual(user.email, "username@example.com")
+        self.assertEqual(user.first_name, "some username with spaces")
