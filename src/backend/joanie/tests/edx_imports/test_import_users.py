@@ -54,6 +54,14 @@ class EdxImportUsersTestCase(TestCase):
         Test that users are created from the edx users.
         """
         edx_users = edx_factories.EdxUserFactory.create_batch(10)
+        # User with no profile should not be included
+        edx_factories.EdxUserFactory(auth_userprofile=None)
+        # User with no preference should be included
+        edx_user_no_preference = edx_factories.EdxUserFactory(
+            user_api_userpreference=None
+        )
+        edx_users.append(edx_user_no_preference)
+
         mock_get_users.return_value = edx_users
         mock_get_users_count.return_value = len(edx_users)
 
@@ -72,7 +80,10 @@ class EdxImportUsersTestCase(TestCase):
             self.assertEqual(user.is_superuser, edx_user.is_superuser)
             self.assertEqual(user.date_joined, make_date_aware(edx_user.date_joined))
             self.assertEqual(user.last_login, make_date_aware(edx_user.last_login))
-            self.assertEqual(user.language, extract_language_code(edx_user))
+            if edx_user == edx_user_no_preference:
+                self.assertEqual(user.language, "en-us")
+            else:
+                self.assertEqual(user.language, extract_language_code(edx_user))
 
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_users_count")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_users")

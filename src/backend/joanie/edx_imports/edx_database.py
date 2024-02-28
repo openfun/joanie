@@ -5,7 +5,7 @@ import logging
 
 from django.conf import settings
 
-from sqlalchemy import URL, create_engine, select
+from sqlalchemy import URL, create_engine, distinct, select
 from sqlalchemy.orm import Session, joinedload, load_only
 from sqlalchemy.sql.functions import count
 
@@ -165,14 +165,9 @@ class OpenEdxDB:
         SELECT count(auth_user.id) AS count_1
         FROM auth_user
                  JOIN auth_userprofile ON auth_user.id = auth_userprofile.user_id
-                 JOIN user_api_userpreference ON auth_user.id = user_api_userpreference.user_id
-        WHERE user_api_userpreference.key = "pref-lang"
         """
-        query_count = (
-            select(count(self.User.id))
-            .join(self.UserProfile, self.User.id == self.UserProfile.user_id)
-            .join(self.UserPreference, self.User.id == self.UserPreference.user_id)
-            .where(self.UserPreference.key == "pref-lang")
+        query_count = select(count(distinct(self.User.id))).join(
+            self.UserProfile, self.User.id == self.UserProfile.user_id
         )
         users_count = self.session.execute(query_count).scalar()
         users_count -= offset
@@ -184,63 +179,30 @@ class OpenEdxDB:
         """
         Get users from Open edX database by slicing
 
-        SELECT anon_1.id,
-               anon_1.username,
-               anon_1.first_name,
-               anon_1.last_name,
-               anon_1.email,
-               anon_1.password,
-               anon_1.is_staff,
-               anon_1.is_active,
-               anon_1.is_superuser,
-               anon_1.date_joined,
-               anon_1.last_login,
-               anon_1.name,
-               anon_1.id_1,
-               anon_1.user_id,
-               anon_1.key,
-               anon_1.value,
-               auth_userprofile_1.id AS id_2,
-               auth_userprofile_1.name AS name_1,
-               user_api_userpreference_1.id AS id_3,
-               user_api_userpreference_1.key AS key_1,
-               user_api_userpreference_1.value AS value_1
-        FROM (
-            SELECT
-                auth_user.id AS id,
-                auth_user.username AS username,
-                auth_user.first_name AS first_name,
-                auth_user.last_name AS last_name,
-                auth_user.email AS email,
-                auth_user.password AS password,
-                auth_user.is_staff AS is_staff,
-                auth_user.is_active AS is_active,
-                auth_user.is_superuser AS is_superuser,
-                auth_user.date_joined AS date_joined,
-                auth_user.last_login AS last_login,
-                auth_userprofile.name AS name,
-                user_api_userpreference.id AS id_1,
-                user_api_userpreference.user_id AS user_id,
-                user_api_userpreference.key AS key,
-                user_api_userpreference.value AS value
-            FROM auth_user
-            JOIN auth_userprofile
-                ON auth_user.id = auth_userprofile.user_id
-            JOIN user_api_userpreference
-                ON auth_user.id = user_api_userpreference.user_id
-            WHERE user_api_userpreference.key = :key_2
-            LIMIT :param_1 OFFSET :param_2
-        ) AS anon_1
+        SELECT auth_user.id,
+            auth_user.username,
+            auth_user.first_name,
+            auth_user.last_name,
+            auth_user.email,
+            auth_user.password,
+            auth_user.is_staff,
+            auth_user.is_active,
+            auth_user.is_superuser,
+            auth_user.date_joined,
+            auth_user.last_login,
+            auth_userprofile.name,
+            auth_userprofile_1.id   AS id_1,
+            auth_userprofile_1.name AS name_1
+        FROM auth_user
+        JOIN auth_userprofile
+            ON auth_user.id = auth_userprofile.user_id
         LEFT OUTER JOIN auth_userprofile AS auth_userprofile_1
-            ON anon_1.id = auth_userprofile_1.user_id
-        LEFT OUTER JOIN user_api_userpreference AS user_api_userpreference_1
-            ON anon_1.id = user_api_userpreference_1.user_id
+            ON auth_user.id = auth_userprofile_1.user_id
+        LIMIT :param_1 OFFSET :param_2
         """
         query = (
-            select(self.User, self.UserProfile.name, self.UserPreference)
+            select(self.User, self.UserProfile.name)
             .join(self.UserProfile, self.User.id == self.UserProfile.user_id)
-            .join(self.UserPreference, self.User.id == self.UserPreference.user_id)
-            .where(self.UserPreference.key == "pref-lang")
             .options(
                 load_only(
                     self.User.id,
@@ -257,10 +219,6 @@ class OpenEdxDB:
                 ),
                 joinedload(self.User.auth_userprofile).load_only(
                     self.UserProfile.name,
-                ),
-                joinedload(self.User.user_api_userpreference).load_only(
-                    self.UserPreference.key,
-                    self.UserPreference.value,
                 ),
             )
             .slice(start, stop)

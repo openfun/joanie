@@ -67,9 +67,12 @@ def check_language_code(language_code):
 
 def extract_language_code(edx_user):
     """Extract the language code from a user"""
-    language = next(
-        pref.value
-        for pref in edx_user.user_api_userpreference
-        if pref.key == "pref-lang"
-    )
+    try:
+        language = next(
+            pref.value
+            for pref in edx_user.user_api_userpreference
+            if pref.key == "pref-lang"
+        )
+    except StopIteration:
+        language = settings.LANGUAGE_CODE
     return get_language_settings(language).get("code")
