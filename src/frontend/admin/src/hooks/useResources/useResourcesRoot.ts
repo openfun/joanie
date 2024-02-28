@@ -270,6 +270,7 @@ export const useResourcesRoot = <
         ? writeHandlers.delete.mutate
         : noop) as unknown as MutateFunc<TApiResource["delete"]>,
       setError: updateError,
+      onSuccess,
     },
     states: {
       fetching: readHandler.fetchStatus === "fetching",

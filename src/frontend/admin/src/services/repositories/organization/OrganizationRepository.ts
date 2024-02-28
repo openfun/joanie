@@ -5,6 +5,7 @@ import { Maybe } from "@/types/utils";
 import { checkStatus, fetchApi } from "@/services/http/HttpService";
 import {
   DTOOrganization,
+  DTOOrganizationAddress,
   Organization,
 } from "@/services/api/models/Organization";
 import { exportToFormData } from "@/utils/forms";
@@ -16,6 +17,8 @@ type OrganizationRoutes = BaseEntityRoutesPaths & {
   addUserAccess: (id: string) => string;
   updateUserAccess: (orgId: string, accessId: string) => string;
   removeUserAccess: (orgId: string, accessId: string) => string;
+  addAddress: (orgId: string) => string;
+  updateAddress: (orgId: string, addressId: string) => string;
   options: string;
 };
 
@@ -31,6 +34,9 @@ export const organizationRoute: OrganizationRoutes = {
     `/organizations/${orgId}/accesses/${accessId}/`,
   removeUserAccess: (orgId: string, accessId: string) =>
     `/organizations/${orgId}/accesses/${accessId}/`,
+  addAddress: (id: string) => `/organizations/${id}/addresses/`,
+  updateAddress: (id: string, addressId) =>
+    `/organizations/${id}/addresses/${addressId}/`,
 };
 
 interface Repository
@@ -48,6 +54,12 @@ interface Repository
   removeUserAccess: (orgId: string, accessId: string) => Promise<void>;
   getAvailableAccesses: () => Promise<SelectOption[]>;
   getAvailableCountries: () => Promise<SelectOption[]>;
+  addAddress: (orgId: string, payload: DTOOrganizationAddress) => Promise<void>;
+  updateAddress: (
+    orgId: string,
+    addressId: string,
+    payload: DTOOrganizationAddress,
+  ) => Promise<void>;
 }
 
 export const OrganizationRepository: Repository = class OrganizationRepository {
@@ -113,6 +125,27 @@ export const OrganizationRepository: Repository = class OrganizationRepository {
   static removeUserAccess(orgId: string, accessId: string): Promise<void> {
     return fetchApi(organizationRoute.removeUserAccess(orgId, accessId), {
       method: "DELETE",
+    }).then(checkStatus);
+  }
+
+  static addAddress(
+    orgId: string,
+    payload: DTOOrganizationAddress,
+  ): Promise<void> {
+    return fetchApi(organizationRoute.addAddress(orgId), {
+      method: "POST",
+      body: exportToFormData(payload),
+    }).then(checkStatus);
+  }
+
+  static updateAddress(
+    orgId: string,
+    addressId: string,
+    payload: DTOOrganizationAddress,
+  ): Promise<void> {
+    return fetchApi(organizationRoute.updateAddress(orgId, addressId), {
+      method: "PATCH",
+      body: exportToFormData(payload),
     }).then(checkStatus);
   }
 
