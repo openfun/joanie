@@ -32,9 +32,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             "Importing data from Open edX database...",
             "Importing users...",
             "10 users to import by batch of 1000",
-            "Starting Celery task, importing users...",
-            "10 users created, 0 errors",
-            "Done executing Celery importing users task...",
+            "0-1000/10 10 users created, 0 skipped, 0 errors",
             "1 import users tasks launched",
         ]
         self.assertLogsContains(logger, expected)
@@ -69,9 +67,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             "Importing data from Open edX database...",
             "Importing users...",
             "1 users to import by batch of 1000",
-            "Starting Celery task, importing users...",
-            "0 users created, 0 errors",
-            "Done executing Celery importing users task...",
+            "0-1000/11 0 users created, 11 skipped, 0 errors",
             "1 import users tasks launched",
         ]
         self.assertLogsContains(logger, expected)
@@ -96,9 +92,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             "Importing users...",
             "Dry run: no user will be imported",
             "10 users to import by batch of 1000",
-            "Starting Celery task, importing users...",
-            "Dry run: 10 users would be created, 0 errors",
-            "Done executing Celery importing users task...",
+            "Dry run: 0-1000/10 10 users created, 0 skipped, 0 errors",
             "1 import users tasks launched",
         ]
         self.assertLogsContains(logger, expected)

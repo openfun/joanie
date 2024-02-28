@@ -26,7 +26,9 @@ def import_users(batch_size=1000, offset=0, limit=0, dry_run=False):
         batch_count += 1
         start = current_user_index + offset
         stop = current_user_index + batch_size
-        import_users_batch_task.delay(start=start, stop=stop, dry_run=dry_run)
+        import_users_batch_task.delay(
+            start=start, stop=stop, total=users_count, dry_run=dry_run
+        )
     logger.info("%s import users tasks launched", batch_count)
 
 
@@ -35,26 +37,24 @@ def import_users_batch_task(self, **kwargs):
     """
     Task to import users from the Open edX database to the Joanie database.
     """
-    logger.info("Starting Celery task, importing users...")
     try:
         report = import_users_batch(**kwargs)
     except Exception as e:
         logger.exception(e)
         raise self.retry(exc=e) from e
-    logger.info("Done executing Celery importing users task...")
     return report
 
 
-def import_users_batch(start, stop, dry_run=False):
+def import_users_batch(start, stop, total, dry_run=False):
     """Batch import users from Open edX auth_user"""
     db = OpenEdxDB()
-    report = {"users": {"created": 0, "errors": 0}}
+    report = {"users": {"created": 0, "skipped": 0, "errors": 0}}
     users = db.get_users(start, stop)
     users_to_create = []
 
     for edx_user in users:
         if models.User.objects.filter(username=edx_user.username).exists():
-            logger.info("User %s already exists", edx_user.username)
+            report["users"]["skipped"] += 1
             continue
 
         users_to_create.append(
@@ -72,9 +72,9 @@ def import_users_batch(start, stop, dry_run=False):
             )
         )
 
-    import_string = "%s users created, %s errors"
+    import_string = "%s-%s/%s %s users created, %s skipped, %s errors"
     if dry_run:
-        import_string = "Dry run: %s users would be created, %s errors"
+        import_string = "Dry run: " + import_string
         report["users"]["created"] += len(users_to_create)
     else:
         users_created = models.User.objects.bulk_create(users_to_create)
@@ -82,8 +82,19 @@ def import_users_batch(start, stop, dry_run=False):
 
     logger.info(
         import_string,
+        start,
+        stop,
+        total,
         report["users"]["created"],
+        report["users"]["skipped"],
         report["users"]["errors"],
     )
 
-    return report
+    return import_string % (
+        start,
+        stop,
+        total,
+        report["users"]["created"],
+        report["users"]["skipped"],
+        report["users"]["errors"],
+    )
