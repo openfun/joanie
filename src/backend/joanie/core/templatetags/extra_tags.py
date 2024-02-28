@@ -45,7 +45,7 @@ def list_key(items: list[dict], key: str):
 def iso8601_to_duration(duration, unit):
     """
     Custom tag filter to convert ISO 8601 duration to a specified time unit.
-    The result is rounded-up using the the ceil() method from Python's math
+    The result is rounded-up using the ceil() method from Python's math
     module.
 
     Parameter :
@@ -62,11 +62,13 @@ def iso8601_to_duration(duration, unit):
         "minutes": 60,
         "hours": 3600,
     }
+
+    if not isinstance(duration, str):
+        return ""
+
     try:
         course_effort_timedelta = timedelta_isoformat.fromisoformat(duration)
-    except ValueError as error:
-        raise ValueError(
-            f"Duration input '{duration}' is not ISO 8601 compliant."
-        ) from error
+    except ValueError:
+        return ""
 
     return math.ceil(course_effort_timedelta.total_seconds() / selected_time_unit[unit])

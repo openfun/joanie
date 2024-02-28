@@ -84,13 +84,13 @@ class TemplateTagsExtraTagsTestCase(TestCase):
             ["10H40M55S", "P10H30M60S", "P1W5D", "P3YM6M", "P1.5H", "P22H40S39M"]
         )
 
-        with self.assertRaises(ValueError) as context:
-            iso8601_to_duration(duration=iso8601_duration, unit="hours")
+        result = iso8601_to_duration(duration=None, unit="hours")
 
-        self.assertEqual(
-            str(context.exception),
-            f"Duration input '{iso8601_duration}' is not ISO 8601 compliant.",
-        )
+        self.assertEqual(result, "")
+
+        result = iso8601_to_duration(duration=iso8601_duration, unit="hours")
+
+        self.assertEqual(result, "")
 
     def test_templatetags_extra_tags_iso8601_to_duration_in_seconds(self):
         """
