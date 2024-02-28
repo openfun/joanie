@@ -119,3 +119,46 @@ export const organizationFormMessages = defineMessages({
     description: "Label for the activity DPO contact email input",
   },
 });
+
+export const organizationAddressFormMessages = defineMessages({
+  sectionTitle: {
+    id: "components.templates.organizations.address.form.translations.sectionTitle",
+    defaultMessage: "Organization address",
+    description: "Title for the organization address section",
+  },
+  titleLabel: {
+    id: "components.templates.organizations.address.form.translations.titleLabel",
+    defaultMessage: "Title",
+    description: "Label for title organization address input",
+  },
+  addressLabel: {
+    id: "components.templates.organizations.address.form.translations.addressLabel",
+    defaultMessage: "Address",
+    description: "Label for address organization address input",
+  },
+  postCodeLabel: {
+    id: "components.templates.organizations.address.form.translations.postCodeLabel",
+    defaultMessage: "Post code",
+    description: "Label for post code organization address input",
+  },
+  cityLabel: {
+    id: "components.templates.organizations.address.form.translations.cityLabel",
+    defaultMessage: "City",
+    description: "Label for city organization address input",
+  },
+  countryLabel: {
+    id: "components.templates.organizations.address.form.translations.countryLabel",
+    defaultMessage: "Country",
+    description: "Label for country organization address input",
+  },
+  firstNameLabel: {
+    id: "components.templates.organizations.address.form.translations.firstNameLabel",
+    defaultMessage: "First name",
+    description: "Label for first name organization address input",
+  },
+  lastNameLabel: {
+    id: "components.templates.organizations.address.form.translations.lastNameLabel",
+    defaultMessage: "Last name",
+    description: "Label for last name organization address input",
+  },
+});
