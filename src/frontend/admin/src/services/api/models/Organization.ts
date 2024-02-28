@@ -19,6 +19,20 @@ export type Organization = {
   contact_phone?: string;
   contact_email?: string;
   dpo_email?: string;
+  addresses?: OrganizationAddress[];
+};
+
+export type OrganizationAddress = {
+  id: string;
+  title: string;
+  address: string;
+  postcode: string;
+  city: string;
+  country: string;
+  first_name: string;
+  last_name: string;
+  is_main: boolean;
+  is_reusable: boolean;
 };
 
 export enum OrganizationRoles {
@@ -34,3 +48,8 @@ export type DTOOrganization = Optional<
   signature?: File;
   logo?: File;
 };
+
+export type DTOOrganizationAddress = Optional<
+  Omit<OrganizationAddress, "id">,
+  "is_reusable" | "is_main"
+>;
