@@ -611,7 +611,9 @@ class CertificateViewSet(
             if self.request.auth
             else self.request.user.username
         )
-        return queryset.filter(order__owner__username=username)
+        return queryset.filter(
+            Q(order__owner__username=username) | Q(enrollment__user__username=username),
+        ).distinct()
 
     @extend_schema(
         responses={
