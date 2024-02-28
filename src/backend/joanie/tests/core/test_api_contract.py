@@ -979,12 +979,11 @@ class ContractApiTest(BaseAPITestCase):
 
         document_text = pdf_extract_text(BytesIO(b"".join(response.streaming_content)))
 
-        self.assertRegex(document_text, r"CONTRACT")
-        self.assertRegex(document_text, r"DEFINITION")
-        self.assertRegex(document_text, rf"{user.first_name}")
-        self.assertRegex(
+        self.assertIn(contract.definition.title, document_text)
+        self.assertIn(user.get_full_name(), document_text)
+        self.assertIn(
+            f"{address.address}, {address.postcode} {address.city} ({address.country})",
             document_text,
-            rf"{address.address} {address.postcode}, {address.city}.",
         )
 
     def test_api_contract_download_authenticated_with_not_validate_order(self):
