@@ -7,6 +7,7 @@ from django.test import TestCase
 
 from joanie.core.templatetags.extra_tags import (
     base64_static,
+    iso8601_to_date,
     iso8601_to_duration,
     join_and,
     list_key,
@@ -126,3 +127,40 @@ class TemplateTagsExtraTagsTestCase(TestCase):
         result = iso8601_to_duration(duration=iso8601_duration, unit="hours")
 
         self.assertEqual(result, 11)
+
+    def test_templatetags_extra_tags_iso8601_to_date_fails_because_input_value_is_not_iso8601(
+        self,
+    ):
+        """
+        The template tags `iso8601_to_date` should return an empty string if the input
+        value is not a valid date string.
+        """
+
+        result = iso8601_to_date(None)
+
+        self.assertEqual(result, "")
+
+        result = iso8601_to_date("<COURSE_START>")
+
+        self.assertEqual(result, "")
+
+    def test_templatetags_extra_tags_iso8601_to_date(self):
+        """
+        The template tags `iso8601_to_date` should return a formatted date according to
+        the arg parameter which should accept same values than the date template filter
+        in Django.
+        """
+
+        date_string = "2024-02-29T13:37:00Z"
+
+        result = iso8601_to_date(date_string)
+
+        self.assertEqual(result, "Feb. 29, 2024")
+
+        result = iso8601_to_date(date_string, "d/m/Y H:i:s")
+
+        self.assertEqual(result, "29/02/2024 13:37:00")
+
+        result = iso8601_to_date(date_string, "SHORT_DATETIME_FORMAT")
+
+        self.assertEqual(result, "02/29/2024 1:37 p.m.")

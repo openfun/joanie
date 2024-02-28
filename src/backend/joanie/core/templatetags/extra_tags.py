@@ -3,6 +3,8 @@ import math
 
 from django import template
 from django.contrib.staticfiles import finders
+from django.template.defaultfilters import date
+from django.utils.dateparse import parse_datetime
 from django.utils.translation import gettext as _
 
 from timedelta_isoformat import timedelta as timedelta_isoformat
@@ -42,6 +44,28 @@ def list_key(items: list[dict], key: str):
 
 
 @register.filter
+def iso8601_to_date(value: str, arg: str = None) -> str:
+    """
+    Custom tag filter to format an ISO 8601 datetime string into
+    a formatted date string.
+
+    Paramter:
+        - `value`: An ISO8601 datetime string
+        - `arg`: Date format
+                 https://docs.djangoproject.com/en/5.0/ref/templates/builtins/#date
+
+    Usage in Django HTML template (after loading the extra tags) :
+        - {{ datetime_string|iso8601_to_date:<DATETIME_FORMAT>}}
+
+    """
+    if not isinstance(value, str):
+        return ""
+
+    datetime = parse_datetime(value)
+    return date(datetime, arg)
+
+
+@register.filter
 def iso8601_to_duration(duration, unit):
     """
     Custom tag filter to convert ISO 8601 duration to a specified time unit.
@@ -62,7 +86,6 @@ def iso8601_to_duration(duration, unit):
         "minutes": 60,
         "hours": 3600,
     }
-
     if not isinstance(duration, str):
         return ""
 

@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Add filter tag `iso8601_to_date`
 - Allow student to download his owned contract once fully signed
 - Allow to filter course product relation by organization title or
   product title or by course code on the client API.
