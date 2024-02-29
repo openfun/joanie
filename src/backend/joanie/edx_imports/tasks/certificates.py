@@ -85,6 +85,10 @@ def import_certificates_batch(start, stop, total, dry_run=False):
             )
             continue
 
+        if models.Certificate.objects.filter(enrollment=enrollment).exists():
+            report["certificates"]["skipped"] += 1
+            continue
+
         organization_code, signatory = edx_mongodb.get_enrollment(
             edx_certificate.course_id
         )
@@ -150,9 +154,6 @@ def import_certificates_batch(start, stop, total, dry_run=False):
         certificate_name = (
             DEGREE if edx_certificate.mode == OPENEDX_MODE_VERIFIED else CERTIFICATE
         )
-        if models.Certificate.objects.filter(enrollment=enrollment).exists():
-            report["certificates"]["skipped"] += 1
-            continue
 
         certificates_to_create.append(
             models.Certificate(
