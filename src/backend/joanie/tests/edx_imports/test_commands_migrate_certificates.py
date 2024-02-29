@@ -105,9 +105,7 @@ class MigrateOpenEdxCertificatesTestCase(MigrateOpenEdxBaseTestCase):
             "Importing data from Open edX database...",
             "Importing certificates...",
             "10 certificates to import by batch of 1000",
-            "Starting Celery task, importing certificates...",
-            "10 certificates created, 0 errors",
-            "Done executing Celery importing certificates task...",
+            "0-1000/10 10 certificates created, 0 skipped, 0 errors",
             "1 import certificates tasks launched",
         ]
         self.assertLogsContains(logger, expected)
@@ -171,9 +169,7 @@ class MigrateOpenEdxCertificatesTestCase(MigrateOpenEdxBaseTestCase):
             "Importing data from Open edX database...",
             "Importing certificates...",
             "10 certificates to import by batch of 1000",
-            "Starting Celery task, importing certificates...",
-            "0 certificates created, 0 errors",
-            "Done executing Celery importing certificates task...",
+            "0-1000/10 0 certificates created, 10 skipped, 0 errors",
             "1 import certificates tasks launched",
         ]
         self.assertLogsContains(logger, expected)
@@ -245,9 +241,7 @@ class MigrateOpenEdxCertificatesTestCase(MigrateOpenEdxBaseTestCase):
             "Importing data from Open edX database...",
             "Importing certificates...",
             "10 certificates to import by batch of 1000",
-            "Starting Celery task, importing certificates...",
-            "5 certificates created, 5 errors",
-            "Done executing Celery importing certificates task...",
+            "0-1000/10 5 certificates created, 0 skipped, 5 errors",
             "1 import certificates tasks launched",
         ] + [
             f"No Enrollment found for {edx_certificate.user.username} {edx_certificate.course_id}"
@@ -323,9 +317,7 @@ class MigrateOpenEdxCertificatesTestCase(MigrateOpenEdxBaseTestCase):
             "Importing data from Open edX database...",
             "Importing certificates...",
             "10 certificates to import by batch of 1000",
-            "Starting Celery task, importing certificates...",
-            "5 certificates created, 5 errors",
-            "Done executing Celery importing certificates task...",
+            "0-1000/10 5 certificates created, 0 skipped, 5 errors",
             "1 import certificates tasks launched",
         ] + [
             f"No organization found in mongodb for {edx_certificate.course_id}"

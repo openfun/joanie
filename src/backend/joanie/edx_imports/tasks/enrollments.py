@@ -30,7 +30,9 @@ def import_enrollments(batch_size=1000, offset=0, limit=0, dry_run=False):
         stop = current_enrollment_index + batch_size
         if limit:
             stop = min(stop, limit)
-        import_enrollments_batch_task.delay(start=start, stop=stop, dry_run=dry_run)
+        import_enrollments_batch_task.delay(
+            start=start, stop=stop, total=enrollments_count, dry_run=dry_run
+        )
     logger.info("%s import enrollments tasks launched", batch_count)
 
 
@@ -39,22 +41,21 @@ def import_enrollments_batch_task(self, **kwargs):
     """
     Task to import enrollments from the Open edX database to the Joanie database.
     """
-    logger.info("Starting Celery task, importing enrollments...")
     try:
         report = import_enrollments_batch(**kwargs)
     except Exception as e:
         logger.exception(e)
         raise self.retry(exc=e) from e
-    logger.info("Done executing Celery importing enrollments task...")
     return report
 
 
-def import_enrollments_batch(start, stop, dry_run=False):
+def import_enrollments_batch(start, stop, total, dry_run=False):
     """Batch import enrollments from Open edX student_course_enrollment"""
     db = OpenEdxDB()
     report = {
         "enrollments": {
             "created": 0,
+            "skipped": 0,
             "errors": 0,
         }
     }
@@ -80,11 +81,7 @@ def import_enrollments_batch(start, stop, dry_run=False):
             continue
 
         if models.Enrollment.objects.filter(course_run=course_run, user=user).exists():
-            logger.info(
-                "Enrollment for %s in %s already exists",
-                user_name,
-                edx_enrollment.course_id,
-            )
+            report["enrollments"]["skipped"] += 1
             continue
 
         enrollments_to_create.append(
@@ -97,7 +94,7 @@ def import_enrollments_batch(start, stop, dry_run=False):
             )
         )
 
-    import_string = "%s enrollments created, %s errors"
+    import_string = "%s-%s/%s %s enrollments created, %s skipped, %s errors"
     if not dry_run:
         enrollment_created_on_field = models.Enrollment._meta.get_field("created_on")
         enrollment_created_on_field.auto_now_add = False
@@ -111,12 +108,16 @@ def import_enrollments_batch(start, stop, dry_run=False):
         enrollment_created_on_field.auto_now_add = True
         enrollment_created_on_field.editable = False
     else:
-        import_string = "Dry run: %s enrollments would be created, %s errors"
+        import_string = "Dry run: " + import_string
         report["enrollments"]["created"] += len(enrollments_to_create)
 
     logger.info(
         import_string,
+        start,
+        stop,
+        total,
         report["enrollments"]["created"],
+        report["enrollments"]["skipped"],
         report["enrollments"]["errors"],
     )
 

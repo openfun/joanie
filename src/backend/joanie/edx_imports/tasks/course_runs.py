@@ -38,7 +38,9 @@ def import_course_runs(batch_size=1000, offset=0, limit=0, dry_run=False):
         batch_count += 1
         start = current_course_overview_index + offset
         stop = current_course_overview_index + batch_size
-        import_course_runs_batch_task.delay(start=start, stop=stop, dry_run=dry_run)
+        import_course_runs_batch_task.delay(
+            start=start, stop=stop, total=course_overviews_count, dry_run=dry_run
+        )
     logger.info("%s import course runs tasks launched", batch_count)
 
 
@@ -47,26 +49,26 @@ def import_course_runs_batch_task(self, **kwargs):
     """
     Task to import course runs from the Open edX database to the Joanie database.
     """
-    logger.info("Starting Celery task, importing course runs...")
     try:
         report = import_course_runs_batch(**kwargs)
     except Exception as e:
         logger.exception(e)
         raise self.retry(exc=e) from e
-    logger.info("Done executing Celery importing course runs task...")
     return report
 
 
-def import_course_runs_batch(start, stop, dry_run=False):
+def import_course_runs_batch(start, stop, total, dry_run=False):
     """Batch import course runs and courses from Open edX course_overviews"""
     db = OpenEdxDB()
     report = {
         "courses": {
             "created": 0,
+            "skipped": 0,
             "errors": 0,
         },
         "course_runs": {
             "created": 0,
+            "skipped": 0,
             "errors": 0,
         },
     }
@@ -143,21 +145,25 @@ def import_course_runs_batch(start, stop, dry_run=False):
             course_run.created_on = make_date_aware(edx_course_overview.created)
             course_run.save()
 
-    courses_import_string = "%s courses created, %s errors"
-    course_runs_import_string = "%s course runs created, %s errors"
+    courses_import_string = "%s courses created, %s skipped, %s errors"
+    course_runs_import_string = "%s-%s/%s %s course runs created, %s skipped, %s errors"
     if dry_run:
-        courses_import_string = "Dry run: %s courses would be created, %s errors"
-        course_runs_import_string = (
-            "Dry run: %s course runs would be created, %s errors"
-        )
+        courses_import_string = "Dry run: " + courses_import_string
+        course_runs_import_string = "Dry run: " + course_runs_import_string
+
     logger.info(
         courses_import_string,
         report["courses"]["created"],
+        report["courses"]["skipped"],
         report["courses"]["errors"],
     )
     logger.info(
         course_runs_import_string,
+        start,
+        stop,
+        total,
         report["course_runs"]["created"],
+        report["course_runs"]["skipped"],
         report["course_runs"]["errors"],
     )
 
