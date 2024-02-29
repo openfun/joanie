@@ -408,6 +408,7 @@ class NestedCourseProductRelationOrderGroupViewSet(
 
 class OrderViewSet(
     SerializerPerActionMixin,
+    mixins.DestroyModelMixin,
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
     viewsets.GenericViewSet,
@@ -437,6 +438,12 @@ class OrderViewSet(
         "order_group",
     )
     ordering = "created_on"
+
+    def destroy(self, request, *args, **kwargs):
+        """Cancels an order."""
+        order = self.get_object()
+        order.cancel()
+        return Response(status=HTTPStatus.NO_CONTENT)
 
 
 class OrganizationAddressViewSet(
