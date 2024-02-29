@@ -278,8 +278,8 @@ jobs:
           path: ~/joanie
       - restore_cache:
           keys:
-            - v4-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
-            - v4-frontend-admin-dependencies-
+            - v5-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
+            - v5-frontend-admin-dependencies-
       - run:
           name: Install front-end dependencies
           command: yarn install
@@ -299,7 +299,7 @@ jobs:
       - save_cache:
           paths:
             - ./node_modules
-          key: v4-frontend-admin-dependencies-{{ checksum "yarn.lock" }}
+          key: v5-frontend-admin-dependencies-{{ checksum "yarn.lock" }}
 
   lint-front-admin:
     docker:
@@ -313,8 +313,8 @@ jobs:
           path: ~/joanie
       - restore_cache:
           keys:
-            - v4-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
-            - v4-frontend-admin-dependencies-
+            - v5-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
+            - v5-frontend-admin-dependencies-
       - run:
           name: Run lint command
           command: yarn lint
@@ -333,8 +333,8 @@ jobs:
           path: ~/joanie
       - restore_cache:
           keys:
-            - v4-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
-            - v4-frontend-admin-dependencies-
+            - v5-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
+            - v5-frontend-admin-dependencies-
       - run:
           name: Run test command
           command: yarn test -w 5 --shard "$(($CIRCLE_NODE_INDEX + 1))/$CIRCLE_NODE_TOTAL"
@@ -355,8 +355,8 @@ jobs:
           at: ~/joanie
       - restore_cache:
           keys:
-            - v4-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
-            - v4-frontend-admin-dependencies-
+            - v5-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
+            - v5-frontend-admin-dependencies-
       - run:
           name: Install Playwright dependencies (platform deps + browser)
           command: yarn playwright install --with-deps chromium
