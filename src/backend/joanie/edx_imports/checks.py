@@ -31,7 +31,6 @@ def check_import_env(style):
         "EDX_DATABASE_USER",
         "EDX_DATABASE_PASSWORD",
         "EDX_DATABASE_DEBUG",
-        "EDX_DATABASE_DEBUG",
         "EDX_TIME_ZONE",
         "EDX_SECRET",
         "EDX_MONGODB_HOST",
@@ -48,6 +47,30 @@ def check_import_env(style):
             logger.error(style.ERROR("    %s is not defined"), env_var)
             check_result = False
     return check_result
+
+
+def check_course_sync_env(style):
+    """
+    Check that the environment variables for the course sync is empty.
+    """
+    logger.info("\n- Checking course sync environment variables...")
+
+    env_var = "COURSE_WEB_HOOKS"
+    try:
+        course_web_hook_settings = getattr(settings, env_var)
+        if course_web_hook_settings:
+            logger.error(
+                style.ERROR("    %s is defined: %s"), env_var, course_web_hook_settings
+            )
+            logger.error(
+                style.ERROR("    Courses will be synced during the import process.")
+            )
+            return False
+    except AttributeError:
+        pass
+
+    logger.info(style.SUCCESS("    No course sync environment variables defined"))
+    return True
 
 
 def check_openedx_host(style):

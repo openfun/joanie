@@ -5,6 +5,7 @@ import logging
 from django.core.management import BaseCommand
 
 from joanie.edx_imports.checks import (
+    check_course_sync_env,
     check_import_db_connections,
     check_import_env,
     check_openedx_host,
@@ -141,6 +142,7 @@ class Command(BaseCommand):
         if not skip_check:
             logger.info("Checking the environment and database connections...")
             check_result = check_import_env(self.style)
+            check_result = check_course_sync_env(self.style) and check_result
             check_result = check_openedx_host(self.style) and check_result
             check_result = check_import_db_connections(self.style) and check_result
             if not check_result:
