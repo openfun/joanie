@@ -35,10 +35,8 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             "Importing data from Open edX database...",
             "Importing course runs...",
             "10 course_overviews to import by batch of 1000",
-            "Starting Celery task, importing course runs...",
-            "10 courses created, 0 errors",
-            "10 course runs created, 0 errors",
-            "Done executing Celery importing course runs task...",
+            "10 courses created, 0 skipped, 0 errors",
+            "0-1000/10 10 course runs created, 0 skipped, 0 errors",
             "1 import course runs tasks launched",
         ]
         self.assertLogsContains(logger, expected)
@@ -68,10 +66,8 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             "Importing data from Open edX database...",
             "Importing course runs...",
             "1 course_overviews to import by batch of 1000",
-            "Starting Celery task, importing course runs...",
-            "1 courses created, 0 errors",
-            "1 course runs created, 0 errors",
-            "Done executing Celery importing course runs task...",
+            "1 courses created, 0 skipped, 0 errors",
+            "0-1000/1 1 course runs created, 0 skipped, 0 errors",
             "1 import course runs tasks launched",
         ]
         self.assertLogsContains(logger, expected)
@@ -103,10 +99,8 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             "Importing data from Open edX database...",
             "Importing course runs...",
             "1 course_overviews to import by batch of 1000",
-            "Starting Celery task, importing course runs...",
-            "1 courses created, 0 errors",
-            "1 course runs created, 0 errors",
-            "Done executing Celery importing course runs task...",
+            "1 courses created, 0 skipped, 0 errors",
+            "0-1000/1 1 course runs created, 0 skipped, 0 errors",
             "1 import course runs tasks launched",
         ]
         self.assertLogsContains(logger, expected)
@@ -134,10 +128,8 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             "Importing data from Open edX database...",
             "Importing course runs...",
             "10 course_overviews to import by batch of 1000",
-            "Starting Celery task, importing course runs...",
-            "1 courses created, 0 errors",
-            "10 course runs created, 0 errors",
-            "Done executing Celery importing course runs task...",
+            "1 courses created, 0 skipped, 0 errors",
+            "0-1000/10 10 course runs created, 0 skipped, 0 errors",
             "1 import course runs tasks launched",
         ]
         self.assertLogsContains(logger, expected)
@@ -165,10 +157,8 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             "Importing data from Open edX database...",
             "Importing course runs...",
             "10 course_overviews to import by batch of 1000",
-            "Starting Celery task, importing course runs...",
-            "0 courses created, 0 errors",
-            "10 course runs created, 0 errors",
-            "Done executing Celery importing course runs task...",
+            "0 courses created, 0 skipped, 0 errors",
+            "0-1000/10 10 course runs created, 0 skipped, 0 errors",
             "1 import course runs tasks launched",
         ]
         self.assertLogsContains(logger, expected)
@@ -193,10 +183,8 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             "Importing course runs...",
             "Dry run: no course run will be imported",
             "10 course_overviews to import by batch of 1000",
-            "Starting Celery task, importing course runs...",
-            "Dry run: 10 courses would be created, 0 errors",
-            "Dry run: 10 course runs would be created, 0 errors",
-            "Done executing Celery importing course runs task...",
+            "Dry run: 10 courses created, 0 skipped, 0 errors",
+            "Dry run: 0-1000/10 10 course runs created, 0 skipped, 0 errors",
             "1 import course runs tasks launched",
         ]
         self.assertLogsContains(logger, expected)

@@ -25,7 +25,9 @@ def import_universities(batch_size=1000, offset=0, limit=0, dry_run=False):
         batch_count += 1
         start = current_university_index + offset
         stop = current_university_index + batch_size
-        import_universities_batch_task.delay(start=start, stop=stop, dry_run=dry_run)
+        import_universities_batch_task.delay(
+            start=start, stop=stop, total=universities_count, dry_run=dry_run
+        )
     logger.info("%s import universities tasks launched", batch_count)
 
 
@@ -34,23 +36,22 @@ def import_universities_batch_task(self, **kwargs):
     """
     Task to import universities from the Open edX database to the Joanie database.
     """
-    logger.info("Starting Celery task, importing universities...")
     try:
         report = import_universities_batch(**kwargs)
     except Exception as e:
         logger.exception(e)
         raise self.retry(exc=e) from e
-    logger.info("Done executing Celery importing universities task...")
     return report
 
 
-def import_universities_batch(start, stop, dry_run=False):
+def import_universities_batch(start, stop, total, dry_run=False):
     """Batch import universities from Open edX universities"""
     db = OpenEdxDB()
     universities = db.get_universities(start, stop)
     report = {
         "universities": {
             "created": 0,
+            "skipped": 0,
             "errors": 0,
         }
     }
@@ -59,7 +60,7 @@ def import_universities_batch(start, stop, dry_run=False):
             if models.Organization.objects.filter(
                 code=utils.normalize_code(university.code)
             ).exists():
-                logger.info("University %s already exists", university.code)
+                report["universities"]["skipped"] += 1
                 continue
             if dry_run:
                 report["universities"]["created"] += 1
@@ -77,13 +78,17 @@ def import_universities_batch(start, stop, dry_run=False):
             logger.exception(exc)
             report["universities"]["errors"] += 1
 
-    import_string = "%s universities created, %s errors"
+    import_string = "%s-%s/%s %s universities created, %s skipped, %s errors"
     if dry_run:
-        import_string = "Dry run: %s universities would be created, %s errors"
+        import_string = "Dry run: " + import_string
 
     logger.info(
         import_string,
+        start,
+        stop,
+        total,
         report["universities"]["created"],
+        report["universities"]["skipped"],
         report["universities"]["errors"],
     )
 

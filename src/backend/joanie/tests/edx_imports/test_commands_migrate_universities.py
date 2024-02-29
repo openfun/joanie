@@ -65,9 +65,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             "Importing data from Open edX database...",
             "Importing universities...",
             "10 universities to import by batch of 1000",
-            "Starting Celery task, importing universities...",
-            "10 universities created, 0 errors",
-            "Done executing Celery importing universities task...",
+            "0-1000/10 10 universities created, 0 skipped, 0 errors",
             "1 import universities tasks launched",
         ]
         self.assertLogsContains(logger, expected)
@@ -102,9 +100,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             "Importing data from Open edX database...",
             "Importing universities...",
             "1 universities to import by batch of 1000",
-            "Starting Celery task, importing universities...",
-            "0 universities created, 0 errors",
-            "Done executing Celery importing universities task...",
+            "0-1000/1 0 universities created, 1 skipped, 0 errors",
             "1 import universities tasks launched",
         ]
         self.assertLogsContains(logger, expected)
@@ -138,11 +134,9 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             "Importing data from Open edX database...",
             "Importing universities...",
             "1 universities to import by batch of 1000",
-            "Starting Celery task, importing universities...",
             f"Unable to import university {edx_university.code}",
             "{'code': ['This field cannot be null.']}",
-            "0 universities created, 1 errors",
-            "Done executing Celery importing universities task...",
+            "0-1000/1 0 universities created, 0 skipped, 1 errors",
             "1 import universities tasks launched",
         ]
         self.assertLogsContains(logger, expected)
@@ -168,9 +162,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             "Importing universities...",
             "Dry run: no university will be imported",
             "10 universities to import by batch of 1000",
-            "Starting Celery task, importing universities...",
-            "Dry run: 10 universities would be created, 0 errors",
-            "Done executing Celery importing universities task...",
+            "Dry run: 0-1000/10 10 universities created, 0 skipped, 0 errors",
             "1 import universities tasks launched",
         ]
         self.assertLogsContains(logger, expected)

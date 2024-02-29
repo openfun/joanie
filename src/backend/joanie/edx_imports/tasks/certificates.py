@@ -37,7 +37,9 @@ def import_certificates(batch_size=1000, offset=0, limit=0, dry_run=False):
         batch_count += 1
         start = current_certificate_index + offset
         stop = current_certificate_index + batch_size
-        import_certificates_batch_task.delay(start=start, stop=stop, dry_run=dry_run)
+        import_certificates_batch_task.delay(
+            start=start, stop=stop, total=certificates_count, dry_run=dry_run
+        )
     logger.info("%s import certificates tasks launched", batch_count)
 
 
@@ -46,22 +48,21 @@ def import_certificates_batch_task(self, **kwargs):
     """
     Task to import certificates from the Open edX database to the Joanie database.
     """
-    logger.info("Starting Celery task, importing certificates...")
     try:
         report = import_certificates_batch(**kwargs)
     except Exception as e:
         logger.exception(e)
         raise self.retry(exc=e) from e
-    logger.info("Done executing Celery importing certificates task...")
     return report
 
 
-def import_certificates_batch(start, stop, dry_run=False):
+def import_certificates_batch(start, stop, total, dry_run=False):
     """Batch import certificates from Open edX certificates_generatedcertificate"""
     db = OpenEdxDB()
     report = {
         "certificates": {
             "created": 0,
+            "skipped": 0,
             "errors": 0,
         }
     }
@@ -150,11 +151,7 @@ def import_certificates_batch(start, stop, dry_run=False):
             DEGREE if edx_certificate.mode == OPENEDX_MODE_VERIFIED else CERTIFICATE
         )
         if models.Certificate.objects.filter(enrollment=enrollment).exists():
-            logger.info(
-                "Certificate for %s in %s already exists",
-                edx_certificate.user.username,
-                edx_certificate.course_id,
-            )
+            report["certificates"]["skipped"] += 1
             continue
 
         certificates_to_create.append(
@@ -169,7 +166,7 @@ def import_certificates_batch(start, stop, dry_run=False):
             )
         )
 
-    import_string = "%s certificates created, %s errors"
+    import_string = "%s-%s/%s %s certificates created, %s skipped, %s errors"
     if not dry_run:
         certificate_issued_on_field = models.Certificate._meta.get_field("issued_on")
         certificate_issued_on_field.auto_now = False
@@ -183,12 +180,16 @@ def import_certificates_batch(start, stop, dry_run=False):
         certificate_issued_on_field.auto_now = True
         certificate_issued_on_field.editable = False
     else:
-        import_string = "Dry run: %s certificates would be created, %s errors"
+        import_string = "Dry run: " + import_string
         report["certificates"]["created"] += len(certificates_to_create)
 
     logger.info(
         import_string,
+        start,
+        stop,
+        total,
         report["certificates"]["created"],
+        report["certificates"]["skipped"],
         report["certificates"]["errors"],
     )
 
