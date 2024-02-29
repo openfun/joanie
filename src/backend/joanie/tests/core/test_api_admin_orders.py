@@ -1,5 +1,6 @@
 """Test suite for the admin orders API endpoints."""
 
+import random
 import uuid
 from decimal import Decimal as D
 from http import HTTPStatus
@@ -13,6 +14,7 @@ from joanie.payment.factories import InvoiceFactory
 from joanie.tests import format_date
 
 
+# pylint: disable=too-many-public-methods, too-many-lines
 class OrdersAdminApiTestCase(TestCase):
     """Test suite for the admin orders API endpoints."""
 
@@ -801,7 +803,7 @@ class OrdersAdminApiTestCase(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_admin_orders_delete(self):
-        """Delete an order should be not allowed."""
+        """An admin user should be able to cancel an order."""
         # Create an admin user
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
@@ -810,4 +812,89 @@ class OrdersAdminApiTestCase(TestCase):
 
         response = self.client.delete(f"/api/v1.0/admin/orders/{order.id}/")
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+
+    def test_api_admin_orders_cancel_anonymous(self):
+        """An anonymous user cannot cancel an order."""
+        order = factories.OrderFactory(
+            state=random.choice(
+                [
+                    enums.ORDER_STATE_CANCELED,
+                    enums.ORDER_STATE_SUBMITTED,
+                    enums.ORDER_STATE_DRAFT,
+                    enums.ORDER_STATE_PENDING,
+                    enums.ORDER_STATE_VALIDATED,
+                ]
+            )
+        )
+
+        response = self.client.delete(f"/api/v1.0/admin/orders/{order.id}/")
+
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+
+    def test_api_admin_orders_cancel_authenticated_with_lambda_user(self):
+        """
+        A lambda user should not be able to change the state of an order to canceled.
+        """
+        admin = factories.UserFactory(is_staff=False, is_superuser=False)
+        self.client.login(username=admin.username, password="password")
+        order = factories.OrderFactory(state=enums.ORDER_STATE_SUBMITTED)
+
+        response = self.client.delete(f"/api/v1.0/admin/orders/{order.id}/")
+
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+
+    def test_api_admin_orders_cancel_authenticated_non_existing(self):
+        """
+        An admin user should receive 404 when canceling a non existing order.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        response = self.client.delete("/api/v1.0/admin/orders/unknown_id/")
+
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
+    def test_api_admin_orders_cancel_authenticated(self):
+        """
+        An admin user should be able to cancel an order.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        order_is_draft = factories.OrderFactory(state=enums.ORDER_STATE_DRAFT)
+        order_is_pending = factories.OrderFactory(state=enums.ORDER_STATE_PENDING)
+        order_is_submitted = factories.OrderFactory(state=enums.ORDER_STATE_SUBMITTED)
+        order_is_validated = factories.OrderFactory(state=enums.ORDER_STATE_VALIDATED)
+
+        # Canceling draft order
+        response = self.client.delete(
+            f"/api/v1.0/admin/orders/{order_is_draft.id}/",
+        )
+        order_is_draft.refresh_from_db()
+        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertEqual(order_is_draft.state, enums.ORDER_STATE_CANCELED)
+
+        # Canceling pending order
+        response = self.client.delete(
+            f"/api/v1.0/admin/orders/{order_is_pending.id}/",
+        )
+        order_is_pending.refresh_from_db()
+        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertEqual(order_is_pending.state, enums.ORDER_STATE_CANCELED)
+
+        # Canceling submitted order
+        response = self.client.delete(
+            f"/api/v1.0/admin/orders/{order_is_submitted.id}/",
+        )
+        order_is_submitted.refresh_from_db()
+        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertEqual(order_is_submitted.state, enums.ORDER_STATE_CANCELED)
+
+        # Canceling validated order
+        response = self.client.delete(
+            f"/api/v1.0/admin/orders/{order_is_validated.id}/",
+        )
+        order_is_validated.refresh_from_db()
+        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertEqual(order_is_validated.state, enums.ORDER_STATE_CANCELED)
