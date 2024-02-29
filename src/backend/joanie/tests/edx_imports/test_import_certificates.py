@@ -183,7 +183,6 @@ class EdxImportCertificatesTestCase(TestCase):
     @patch("joanie.edx_imports.edx_mongodb.get_enrollment")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates_count")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates")
-    @responses.activate(assert_all_requests_are_fired=True)
     def test_import_certificates_update(
         self, mock_get_certificates, mock_get_certificates_count, mock_get_enrollment
     ):
@@ -221,11 +220,6 @@ class EdxImportCertificatesTestCase(TestCase):
             mongo_enrollments[edx_certificate.id] = (
                 course.organizations.first().code,
                 edx_mongo_signatory,
-            )
-            responses.add(
-                responses.GET,
-                f"https://{settings.EDX_DOMAIN}{edx_mongo_signatory.get('signature_image_path')}",
-                body=SIGNATURE_CONTENT,
             )
 
         mock_get_certificates.return_value = edx_certificates
