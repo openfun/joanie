@@ -39,6 +39,8 @@ def import_course_runs(batch_size=1000, offset=0, limit=0, dry_run=False):
         batch_count += 1
         start = current_course_overview_index + offset
         stop = current_course_overview_index + batch_size
+        if limit:
+            stop = min(stop, limit)
         import_course_runs_batch_task.delay(
             start=start, stop=stop, total=course_overviews_count, dry_run=dry_run
         )

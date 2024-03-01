@@ -37,6 +37,8 @@ def import_certificates(batch_size=1000, offset=0, limit=0, dry_run=False):
         batch_count += 1
         start = current_certificate_index + offset
         stop = current_certificate_index + batch_size
+        if limit:
+            stop = min(stop, limit)
         import_certificates_batch_task.delay(
             start=start, stop=stop, total=certificates_count, dry_run=dry_run
         )

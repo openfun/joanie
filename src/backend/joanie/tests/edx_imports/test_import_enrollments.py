@@ -89,6 +89,47 @@ class EdxImportEnrollmentsTestCase(TestCase):
 
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_enrollments_count")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_enrollments")
+    def test_import_enrollments_create_offset_limit(
+        self, mock_get_enrollments, mock_get_enrollments_count
+    ):
+        """
+        Test that enrollments are created from the edx enrollments.
+        """
+        edx_enrollments = edx_factories.EdxEnrollmentFactory.create_batch(100)
+        for edx_enrollment in edx_enrollments:
+            factories.CourseRunFactory.create(
+                course__code=extract_course_number(edx_enrollment.course_id),
+                resource_link=f"http://openedx.test/courses/{edx_enrollment.course_id}/course/",
+            )
+            factories.UserFactory.create(username=edx_enrollment.user.username)
+        mock_get_enrollments.return_value = edx_enrollments[20:30]
+        mock_get_enrollments_count.return_value = 10
+
+        import_enrollments(offset=20, limit=10)
+
+        mock_get_enrollments.assert_called_once_with(20, 10)
+
+        self.assertEqual(models.Enrollment.objects.count(), 10)
+        for edx_enrollment in edx_enrollments[20:30]:
+            enrollment = models.Enrollment.objects.get(
+                user__username=edx_enrollment.user.username,
+                course_run__course__code=extract_course_number(
+                    edx_enrollment.course_id
+                ),
+            )
+            self.assertEqual(enrollment.is_active, edx_enrollment.is_active)
+            self.assertEqual(
+                enrollment.created_on, make_date_aware(edx_enrollment.created)
+            )
+            self.assertEqual(enrollment.user.username, edx_enrollment.user.username)
+            self.assertEqual(
+                enrollment.course_run.course.code,
+                extract_course_number(edx_enrollment.course_id),
+            )
+            self.assertEqual(enrollment.state, ENROLLMENT_STATE_SET)
+
+    @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_enrollments_count")
+    @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_enrollments")
     def test_import_enrollments_update(
         self, mock_get_enrollments, mock_get_enrollments_count
     ):

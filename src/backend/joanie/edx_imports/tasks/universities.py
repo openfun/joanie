@@ -25,6 +25,8 @@ def import_universities(batch_size=1000, offset=0, limit=0, dry_run=False):
         batch_count += 1
         start = current_university_index + offset
         stop = current_university_index + batch_size
+        if limit:
+            stop = min(stop, limit)
         import_universities_batch_task.delay(
             start=start, stop=stop, total=universities_count, dry_run=dry_run
         )

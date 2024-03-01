@@ -1,3 +1,4 @@
+# pylint: disable=too-many-public-methods
 """Module for testing the Open edX database class."""
 
 from django.test import TestCase
@@ -99,9 +100,9 @@ class OpenEdxDBTestCase(TestCase):
         """Test the get_users_count method with an offset and a limit."""
         EdxUserFactory.create_batch(10)
 
-        users_count = self.db.get_users_count(offset=1, limit=5)
+        users_count = self.db.get_users_count(offset=8, limit=5)
 
-        self.assertEqual(users_count, 5)
+        self.assertEqual(users_count, 2)
 
     def test_edx_database_get_users(self):
         """Test the get_users method."""
@@ -152,6 +153,16 @@ class OpenEdxDBTestCase(TestCase):
 
         self.assertEqual(enrollments_count, 3)
 
+    def test_edx_database_get_enrollments_count_offset_limit(self):
+        """Test the get_enrollments_count method."""
+        edx_course_overviews = EdxCourseOverviewFactory.create_batch(100)
+        for edx_course_overview in edx_course_overviews:
+            EdxEnrollmentFactory(course_id=edx_course_overview.id)
+
+        enrollments_count = self.db.get_enrollments_count(offset=20, limit=10)
+
+        self.assertEqual(enrollments_count, 10)
+
     def test_edx_database_get_enrollments_count_empty(self):
         """Test the get_enrollments_count method when there are no enrollments."""
         enrollments_count = self.db.get_enrollments_count()
@@ -170,6 +181,19 @@ class OpenEdxDBTestCase(TestCase):
         enrollments = self.db.get_enrollments(start=0, stop=9)
 
         self.assertEqual(len(enrollments), 9)
+
+    def test_edx_database_get_enrollments_offset_limit(self):
+        """Test the get_enrollments method."""
+        edx_course_overviews = EdxCourseOverviewFactory.create_batch(100)
+        edx_users = EdxUserFactory.create_batch(3)
+        for edx_course_overview in edx_course_overviews:
+            for edx_user in edx_users:
+                EdxEnrollmentFactory(
+                    course_id=edx_course_overview.id, user_id=edx_user.id, user=edx_user
+                )
+        enrollments = self.db.get_enrollments(start=20, stop=10)
+
+        self.assertEqual(len(enrollments), len(edx_course_overviews[20:30]))
 
     def test_edx_database_get_certificates_count(self):
         """Test the get_certificates_count method."""
