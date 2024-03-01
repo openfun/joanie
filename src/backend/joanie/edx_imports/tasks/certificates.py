@@ -92,7 +92,7 @@ def import_certificates_batch(start, stop, total, dry_run=False):
             continue
 
         organization_code, signatory = edx_mongodb.get_enrollment(
-            edx_certificate.course_id
+            enrollment.course_run.course.code
         )
 
         if not organization_code:
@@ -153,15 +153,17 @@ def import_certificates_batch(start, stop, total, dry_run=False):
                 ],
             }
 
-        certificate_name = (
+        certificate_template = (
             DEGREE if edx_certificate.mode == OPENEDX_MODE_VERIFIED else CERTIFICATE
         )
 
         certificates_to_create.append(
             models.Certificate(
-                certificate_definition=models.CertificateDefinition.objects.get(
-                    name=certificate_name
-                ),
+                certificate_definition=models.CertificateDefinition.objects.filter(
+                    template=certificate_template
+                )
+                .order_by("created_on")
+                .first(),
                 organization=organization,
                 enrollment=enrollment,
                 issued_on=make_date_aware(edx_certificate.created_date),
