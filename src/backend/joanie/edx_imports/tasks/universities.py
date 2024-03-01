@@ -5,7 +5,7 @@ from logging import getLogger
 from joanie.celery_app import app
 from joanie.core import models, utils
 from joanie.edx_imports.edx_database import OpenEdxDB
-from joanie.edx_imports.utils import download_and_store
+from joanie.edx_imports.utils import download_and_store, format_percent
 
 logger = getLogger(__name__)
 
@@ -78,13 +78,15 @@ def import_universities_batch(start, stop, total, dry_run=False):
             logger.exception(exc)
             report["universities"]["errors"] += 1
 
-    import_string = "%s-%s/%s %s universities created, %s skipped, %s errors"
+    import_string = "%s %s/%s : %s universities created, %s skipped, %s errors"
     if dry_run:
         import_string = "Dry run: " + import_string
 
+    stop = min(stop, total)
+    percent = format_percent(stop, total)
     logger.info(
         import_string,
-        start,
+        percent,
         stop,
         total,
         report["universities"]["created"],
@@ -92,4 +94,11 @@ def import_universities_batch(start, stop, total, dry_run=False):
         report["universities"]["errors"],
     )
 
-    return report
+    return import_string % (
+        percent,
+        stop,
+        total,
+        report["universities"]["created"],
+        report["universities"]["skipped"],
+        report["universities"]["errors"],
+    )

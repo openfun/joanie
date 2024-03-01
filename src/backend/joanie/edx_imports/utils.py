@@ -76,3 +76,10 @@ def extract_language_code(edx_user):
     except StopIteration:
         language = settings.LANGUAGE_CODE
     return get_language_settings(language).get("code")
+
+
+def format_percent(current, total):
+    """Format a percentage"""
+    percent = (current / total) * 100
+    percent = f"{percent:.3f}%" if percent < 100 else "100%"  # noqa: PLR2004
+    return percent

@@ -15,6 +15,7 @@ from joanie.edx_imports.utils import (
     check_language_code,
     extract_course_number,
     format_date,
+    format_percent,
     make_date_aware,
 )
 
@@ -146,11 +147,15 @@ def import_course_runs_batch(start, stop, total, dry_run=False):
             course_run.save()
 
     courses_import_string = "%s courses created, %s skipped, %s errors"
-    course_runs_import_string = "%s-%s/%s %s course runs created, %s skipped, %s errors"
+    course_runs_import_string = (
+        "%s %s/%s : %s course runs created, %s skipped, %s errors"
+    )
     if dry_run:
         courses_import_string = "Dry run: " + courses_import_string
         course_runs_import_string = "Dry run: " + course_runs_import_string
 
+    stop = min(stop, total)
+    percent = format_percent(stop, total)
     logger.info(
         courses_import_string,
         report["courses"]["created"],
@@ -159,7 +164,7 @@ def import_course_runs_batch(start, stop, total, dry_run=False):
     )
     logger.info(
         course_runs_import_string,
-        start,
+        percent,
         stop,
         total,
         report["course_runs"]["created"],
@@ -167,4 +172,21 @@ def import_course_runs_batch(start, stop, total, dry_run=False):
         report["course_runs"]["errors"],
     )
 
-    return report
+    return (
+        courses_import_string
+        % (
+            report["course_runs"]["created"],
+            report["course_runs"]["skipped"],
+            report["course_runs"]["errors"],
+        )
+        + ", "
+        + course_runs_import_string
+        % (
+            percent,
+            stop,
+            total,
+            report["course_runs"]["created"],
+            report["course_runs"]["skipped"],
+            report["course_runs"]["errors"],
+        )
+    )

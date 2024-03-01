@@ -8,7 +8,7 @@ from joanie.celery_app import app
 from joanie.core import models
 from joanie.core.enums import ENROLLMENT_STATE_SET
 from joanie.edx_imports.edx_database import OpenEdxDB
-from joanie.edx_imports.utils import make_date_aware
+from joanie.edx_imports.utils import format_percent, make_date_aware
 
 logger = getLogger(__name__)
 
@@ -94,7 +94,7 @@ def import_enrollments_batch(start, stop, total, dry_run=False):
             )
         )
 
-    import_string = "%s-%s/%s %s enrollments created, %s skipped, %s errors"
+    import_string = "%s %s/%s : %s enrollments created, %s skipped, %s errors"
     if not dry_run:
         enrollment_created_on_field = models.Enrollment._meta.get_field("created_on")
         enrollment_created_on_field.auto_now_add = False
@@ -111,9 +111,11 @@ def import_enrollments_batch(start, stop, total, dry_run=False):
         import_string = "Dry run: " + import_string
         report["enrollments"]["created"] += len(enrollments_to_create)
 
+    stop = min(stop, total)
+    percent = format_percent(stop, total)
     logger.info(
         import_string,
-        start,
+        percent,
         stop,
         total,
         report["enrollments"]["created"],
@@ -121,4 +123,11 @@ def import_enrollments_batch(start, stop, total, dry_run=False):
         report["enrollments"]["errors"],
     )
 
-    return report
+    return import_string % (
+        percent,
+        stop,
+        total,
+        report["enrollments"]["created"],
+        report["enrollments"]["skipped"],
+        report["enrollments"]["errors"],
+    )
