@@ -71,6 +71,15 @@ def import_enrollments_batch(start, stop, total, dry_run=False):
             report["enrollments"]["errors"] += 1
             logger.error("No CourseRun found for %s", edx_enrollment.course_id)
             continue
+        except models.CourseRun.MultipleObjectsReturned:
+            try:
+                course_run = models.CourseRun.objects.only("pk").get(
+                    resource_link__icontains=f"{edx_enrollment.course_id}/info"
+                )
+            except models.CourseRun.DoesNotExist:
+                report["enrollments"]["errors"] += 1
+                logger.error("No CourseRun found for %s", edx_enrollment.course_id)
+                continue
 
         user_name = edx_enrollment.user.username
         try:
