@@ -154,6 +154,7 @@ class OpenEdxDB:
                     self.Course.language,
                 ),
             )
+            .order_by(self.CourseOverview.id)
             .slice(start, start + stop)
         )
         return self.session.scalars(query).all()
@@ -300,6 +301,7 @@ class OpenEdxDB:
                     self.User.username,
                 ),
             )
+            .order_by(self.StudentCourseEnrollment.course_id)
             .slice(start, start + stop)
         )
         return self.session.scalars(query).all()
@@ -347,6 +349,7 @@ class OpenEdxDB:
                 )
             )
             .where(self.Certificate.status == "downloadable")
+            .order_by(self.Certificate.course_id)
             .slice(start, start + stop)
         )
         return self.session.scalars(query).all()
