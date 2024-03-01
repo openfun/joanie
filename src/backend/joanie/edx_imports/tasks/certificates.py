@@ -16,7 +16,7 @@ from joanie.core.enums import CERTIFICATE, DEGREE
 from joanie.core.utils import image_to_base64
 from joanie.edx_imports import edx_mongodb
 from joanie.edx_imports.edx_database import OpenEdxDB
-from joanie.edx_imports.utils import download_and_store, make_date_aware
+from joanie.edx_imports.utils import download_and_store, format_percent, make_date_aware
 from joanie.lms_handler.backends.openedx import OPENEDX_MODE_VERIFIED
 
 logger = getLogger(__name__)
@@ -167,7 +167,7 @@ def import_certificates_batch(start, stop, total, dry_run=False):
             )
         )
 
-    import_string = "%s-%s/%s %s certificates created, %s skipped, %s errors"
+    import_string = "%s %s/%s : %s certificates created, %s skipped, %s errors"
     if not dry_run:
         certificate_issued_on_field = models.Certificate._meta.get_field("issued_on")
         certificate_issued_on_field.auto_now = False
@@ -184,9 +184,11 @@ def import_certificates_batch(start, stop, total, dry_run=False):
         import_string = "Dry run: " + import_string
         report["certificates"]["created"] += len(certificates_to_create)
 
+    stop = min(stop, total)
+    percent = format_percent(stop, total)
     logger.info(
         import_string,
-        start,
+        percent,
         stop,
         total,
         report["certificates"]["created"],
@@ -194,4 +196,11 @@ def import_certificates_batch(start, stop, total, dry_run=False):
         report["certificates"]["errors"],
     )
 
-    return report
+    return import_string % (
+        percent,
+        stop,
+        total,
+        report["certificates"]["created"],
+        report["certificates"]["skipped"],
+        report["certificates"]["errors"],
+    )

@@ -36,7 +36,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             "Importing course runs...",
             "10 course_overviews to import by batch of 1000",
             "10 courses created, 0 skipped, 0 errors",
-            "0-1000/10 10 course runs created, 0 skipped, 0 errors",
+            "100% 10/10 : 10 course runs created, 0 skipped, 0 errors",
             "1 import course runs tasks launched",
         ]
         self.assertLogsContains(logger, expected)
@@ -67,7 +67,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             "Importing course runs...",
             "1 course_overviews to import by batch of 1000",
             "1 courses created, 0 skipped, 0 errors",
-            "0-1000/1 1 course runs created, 0 skipped, 0 errors",
+            "100% 1/1 : 1 course runs created, 0 skipped, 0 errors",
             "1 import course runs tasks launched",
         ]
         self.assertLogsContains(logger, expected)
@@ -100,7 +100,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             "Importing course runs...",
             "1 course_overviews to import by batch of 1000",
             "1 courses created, 0 skipped, 0 errors",
-            "0-1000/1 1 course runs created, 0 skipped, 0 errors",
+            "100% 1/1 : 1 course runs created, 0 skipped, 0 errors",
             "1 import course runs tasks launched",
         ]
         self.assertLogsContains(logger, expected)
@@ -129,7 +129,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             "Importing course runs...",
             "10 course_overviews to import by batch of 1000",
             "1 courses created, 0 skipped, 0 errors",
-            "0-1000/10 10 course runs created, 0 skipped, 0 errors",
+            "100% 10/10 : 10 course runs created, 0 skipped, 0 errors",
             "1 import course runs tasks launched",
         ]
         self.assertLogsContains(logger, expected)
@@ -158,7 +158,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             "Importing course runs...",
             "10 course_overviews to import by batch of 1000",
             "0 courses created, 0 skipped, 0 errors",
-            "0-1000/10 10 course runs created, 0 skipped, 0 errors",
+            "100% 10/10 : 10 course runs created, 0 skipped, 0 errors",
             "1 import course runs tasks launched",
         ]
         self.assertLogsContains(logger, expected)
@@ -184,7 +184,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             "Dry run: no course run will be imported",
             "10 course_overviews to import by batch of 1000",
             "Dry run: 10 courses created, 0 skipped, 0 errors",
-            "Dry run: 0-1000/10 10 course runs created, 0 skipped, 0 errors",
+            "Dry run: 100% 10/10 : 10 course runs created, 0 skipped, 0 errors",
             "1 import course runs tasks launched",
         ]
         self.assertLogsContains(logger, expected)

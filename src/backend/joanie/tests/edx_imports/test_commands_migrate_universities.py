@@ -65,7 +65,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             "Importing data from Open edX database...",
             "Importing universities...",
             "10 universities to import by batch of 1000",
-            "0-1000/10 10 universities created, 0 skipped, 0 errors",
+            "100% 10/10 : 10 universities created, 0 skipped, 0 errors",
             "1 import universities tasks launched",
         ]
         self.assertLogsContains(logger, expected)
@@ -100,7 +100,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             "Importing data from Open edX database...",
             "Importing universities...",
             "1 universities to import by batch of 1000",
-            "0-1000/1 0 universities created, 1 skipped, 0 errors",
+            "100% 1/1 : 0 universities created, 1 skipped, 0 errors",
             "1 import universities tasks launched",
         ]
         self.assertLogsContains(logger, expected)
@@ -136,7 +136,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             "1 universities to import by batch of 1000",
             f"Unable to import university {edx_university.code}",
             "{'code': ['This field cannot be null.']}",
-            "0-1000/1 0 universities created, 0 skipped, 1 errors",
+            "100% 1/1 : 0 universities created, 0 skipped, 1 errors",
             "1 import universities tasks launched",
         ]
         self.assertLogsContains(logger, expected)
@@ -162,7 +162,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             "Importing universities...",
             "Dry run: no university will be imported",
             "10 universities to import by batch of 1000",
-            "Dry run: 0-1000/10 10 universities created, 0 skipped, 0 errors",
+            "Dry run: 100% 10/10 : 10 universities created, 0 skipped, 0 errors",
             "1 import universities tasks launched",
         ]
         self.assertLogsContains(logger, expected)

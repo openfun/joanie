@@ -9,7 +9,7 @@ from django.contrib.auth.hashers import make_password
 from joanie.celery_app import app
 from joanie.core import models
 from joanie.edx_imports.edx_database import OpenEdxDB
-from joanie.edx_imports.utils import extract_language_code, format_date
+from joanie.edx_imports.utils import extract_language_code, format_date, format_percent
 
 logger = getLogger(__name__)
 
@@ -91,7 +91,7 @@ def import_users_batch(start, stop, total, dry_run=False):
             )
         )
 
-    import_string = "%s-%s/%s %s users created, %s skipped, %s errors"
+    import_string = "%s %s/%s : %s users created, %s skipped, %s errors"
     if dry_run:
         import_string = "Dry run: " + import_string
         report["users"]["created"] += len(users_to_create)
@@ -99,9 +99,11 @@ def import_users_batch(start, stop, total, dry_run=False):
         users_created = models.User.objects.bulk_create(users_to_create)
         report["users"]["created"] += len(users_created)
 
+    stop = min(stop, total)
+    percent = format_percent(stop, total)
     logger.info(
         import_string,
-        start,
+        percent,
         stop,
         total,
         report["users"]["created"],
@@ -110,7 +112,7 @@ def import_users_batch(start, stop, total, dry_run=False):
     )
 
     return import_string % (
-        start,
+        percent,
         stop,
         total,
         report["users"]["created"],

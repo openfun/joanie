@@ -42,7 +42,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             "Importing data from Open edX database...",
             "Importing enrollments...",
             "10 enrollments to import by batch of 1000",
-            "0-1000/10 10 enrollments created, 0 skipped, 0 errors",
+            "100% 10/10 : 10 enrollments created, 0 skipped, 0 errors",
             "1 import enrollments tasks launched",
         ]
         self.assertLogsContains(logger, expected)
@@ -75,7 +75,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             "Importing data from Open edX database...",
             "Importing enrollments...",
             "1 enrollments to import by batch of 1000",
-            "0-1000/1 0 enrollments created, 1 skipped, 0 errors",
+            "100% 1/1 : 0 enrollments created, 1 skipped, 0 errors",
             "1 import enrollments tasks launched",
         ]
         self.assertLogsContains(logger, expected)
@@ -119,7 +119,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             f"No CourseRun found for {edx_enrollments_without_course_run[2].course_id}",
             f"No CourseRun found for {edx_enrollments_without_course_run[3].course_id}",
             f"No CourseRun found for {edx_enrollments_without_course_run[4].course_id}",
-            "0-1000/10 5 enrollments created, 0 skipped, 5 errors",
+            "100% 10/10 : 5 enrollments created, 0 skipped, 5 errors",
             "1 import enrollments tasks launched",
         ]
         self.assertLogsContains(logger, expected)
@@ -132,7 +132,7 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
         """
         Test that enrollments are not created from the edx enrollments if the dry-run
         """
-        edx_enrollments = edx_factories.EdxEnrollmentFactory.create_batch(10)
+        edx_enrollments = edx_factories.EdxEnrollmentFactory.create_batch(37)
         for edx_enrollment in edx_enrollments:
             factories.CourseRunFactory.create(
                 course__code=extract_course_number(edx_enrollment.course_id),
@@ -143,14 +143,22 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
         mock_get_enrollments_count.return_value = len(edx_enrollments)
 
         with self.assertLogs() as logger:
-            call_command("migrate_edx", "--skip-check", "--enrollments", "--dry-run")
+            call_command(
+                "migrate_edx",
+                "--skip-check",
+                "--enrollments",
+                "--dry-run",
+                "--batch-size=17",
+            )
 
         expected = [
             "Importing data from Open edX database...",
             "Importing enrollments...",
             "Dry run: no enrollment will be imported",
-            "10 enrollments to import by batch of 1000",
-            "Dry run: 0-1000/10 10 enrollments created, 0 skipped, 0 errors",
-            "1 import enrollments tasks launched",
+            "37 enrollments to import by batch of 17",
+            "Dry run: 45.946% 17/37 : 37 enrollments created, 0 skipped, 0 errors",
+            "Dry run: 91.892% 34/37 : 37 enrollments created, 0 skipped, 0 errors",
+            "Dry run: 100% 37/37 : 37 enrollments created, 0 skipped, 0 errors",
+            "3 import enrollments tasks launched",
         ]
         self.assertLogsContains(logger, expected)
