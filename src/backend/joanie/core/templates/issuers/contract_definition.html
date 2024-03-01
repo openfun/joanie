@@ -1,6 +1,12 @@
 {% load i18n %}
 {% load static %}
+{% load extra_tags %}
 
+{% comment %}
+This template aims to be used as a contract definition for training built by Unicamp© brand.
+Surely you will need to create a new contract template for your training, feel free to use
+this template as a base.
+{% endcomment %}
 <html>
   {% if debug %}
   <head>
@@ -9,69 +15,134 @@
     </style>
   </head>
   {% endif %}
-  <body>
-    <main>
-      <header>
-        <div class="logos">
-          <div class="organization">
+  <body class="document">
+      <header class="document--header">
+            <!-- University logo here -->
             <img src="{{ organization.logo }}" />
-          </div>
-        </div>
-        <div class="title">
-          {% if contract %}
-            <h1> {{contract.title|linebreaks}}</h1>
-          {% endif %}
-        </div>
+            <!-- Unicamp logo here -->
+            <img src="{% base64_static "joanie/images/logo_unicamp.png" %}" />
       </header>
-      <section class="representative">
-        <div>
-          <p>
-            {% translate "This document certifies that the student wants to enroll to the course" %}: {{ course.name|capfirst }}.
-          </p>
-          <p>
-            {% translate "Your order is delivered by the organization" %}:
-            {% if organization %}
-              {{ organization.name }}
-            {% endif %}
-          </p>
-      </div>
-      </section>
-      <section class="student">
-        <div>
-          <p>
-          {% if student %}
-            {% translate "Student name" %}: {{ student.name }}.
-          </br>
-            {% translate "Student address" %}: {{ student.address.address }} {{ student.address.postcode }}, {{ student.address.city }}.
-          </p>
-          {% endif %}
-        </div>
-      </section>
-      <section class="contract-articles">
-        <div>
-          {% translate "Conditions of the contract" %} :
-        </div>
-        <div class="articles">
-            {% if contract %}
-              {{ contract.body|safe }}
-              {{ contract.terms_and_conditions|safe }}
-            {% endif %}
-        </div>
-      </section>
-      <footer class="footer">
-        <div class="signature_zone">
-          {% translate "Student's signature" %}:
-          <div class="signature-recipient">
-            [SignatureField#1]
-          </div>
-        </div>
-        <div class="signature_zone">
-          {% translate "Representative's signature" %}:
-          <div class="signature-recipient">
-            [SignatureField#2]
-          </div>
-        </div>
-      </footer>
+      <main class="document-content">
+          <header class="content--header">
+              <h1>{{ contract.title }}</h1>
+              <p>{{contract.description|linebreaks}}</p>
+          </header>
+          <section class="content--context">
+              <p>The current contract is formed between the University and the Learner, as identified below:</p>
+              <dl>
+                  <dt>{% translate "University (hereinafter \"the University\"): "%}</dt>
+                  <dd>
+                      <ul>
+                          <li>{% translate "Name of the University: "%}{{ organization.name }}</li>
+                          {% if organization.address %}
+                          <li>{% translate "Head office address: "%}{{ organization.address.address }}, {{ organization.address.postcode }} {{ organization.address.city }} ({{ organization.address.country }})</li>
+                          {% endif %}
+                          <li>{% translate "SIRET number: "%}{{ organization.enterprise_code|default:"-" }}</li>
+                          <li>{% translate "Activity Declaration N°: "%}{{ organization.activity_category_code|default:"-" }}</li>
+                          <li>{% translate "Legal Representative: "%}{{ organization.representative }}
+                              {%if organization.representative_profession %} - {{ organization.representative_profession }} {%endif%}
+                          </li>
+                          {% if organization.signatory_representative %}
+                          <li>{% translate "Delegated signatory: "%}{{ organization.signatory_representative }} - {{ organization.signatory_representative_profession }}</li>
+                          {% endif %}
+                          <li>{% translate "Administrative contact: "%}
+                              {% if organization.contact_email and organization.contact_phone %}
+                              {{ organization.contact_email }} - {{ organization.contact_phone }}
+                              {% elif not organization.contact_email and not organization.contact_phone %}
+                              -
+                              {% else %}
+                              {{ organization.contact_email|default:organization.contact_phone }}
+                              {% endif %}
+                          </li>
+                          <li>{% translate "Data Protection Officer contact: "%}{{ organization.dpo_email|default:"-" }}</li>
+                      </ul>
+                  </dd>
+                  <dt>{% translate "Learner (hereinafter \"the Learner\"):" %}</dt>
+                  <dd>
+                      <ul>
+                          <li>{% translate "Full name: " %}{{ student.name }}</li>
+                          <li>{% translate "Postal address: " %}
+                              {{ student.address.address }}, {{ student.address.postcode }} {{ student.address.city }} ({{ student.address.country }})
+                          </li>
+                          <li>{% translate "Email address: " %}{{ student.email }}</li>
+                          <li>{% translate "Telephone number: " %}{{ student.phone_number|default:"-" }}</li>
+                      </ul>
+                  </dd>
+                  <dt>{% translate "Course (hereinafter \"the Course\"):" %}</dt>
+                  <dd>
+                      <ul>
+                          <li>{% translate "Course number: " %}{{ course.code }}</li>
+                          <li>{% translate "Name of the Course: " %}{{ course.name }}</li>
+                          <li>{% translate "Session start date: " %}
+                              {% with start=course.start|iso8601_to_date:"SHORT_DATETIME_FORMAT" %}
+                                {% if start %}
+                                {{ start }}
+                                {% else %}
+                                {{ course.start|default:"-" }}
+                                {% endif %}
+                              {% endwith %}
+                          </li>
+                          <li>{% translate "Session end date: " %}
+                              {% with end=course.end|iso8601_to_date:"SHORT_DATETIME_FORMAT" %}
+                                {% if end %}
+                                {{ end }}
+                                {% else %}
+                                {{ course.end|default:"-" }}
+                                {% endif %}
+                              {% endwith %}
+                          </li>
+                          {% if course.effort %}
+                            <li>{% translate "Total duration of the course: " %}
+                                {% with duration=course.effort|iso8601_to_duration:"hours" %}
+                                {% if duration %}
+                                {% blocktranslate with duration=duration count duration=duration trimmed%}
+                                {{ duration }} hour
+                                {% plural %}
+                                {{ duration }} hours
+                                {% endblocktranslate %}
+                                {% else %}
+                                {{ course.effort|default:"-" }}
+                                {% endif %}
+                                {% endwith %}
+                            </li>
+                          {% endif %}
+                          <li>{% translate "Price of the course: " %}
+                              {% with price=course.price|floatformat:2 currency=course.currency %}
+                                {% if price %}
+                                {{ price }} {{ currency }}
+                                {% else %}
+                                {{ course.price|default:"-" }}
+                                {% endif %}
+                              {% endwith %}
+                          </li>
+                      </ul>
+                  </dd>
+              </dl>
+          </section>
+          <section class="content-articles">
+              {% if contract %}
+                  {{ contract.body|safe }}
+              {% endif %}
+              {% if contract.terms_and_conditions %}
+                  <h2>{% translate "Appendices" %}</h2>
+                  <h3>{% translate "Terms and conditions" %}</h3>
+                  {{ contract.terms_and_conditions|safe }}
+              {% endif %}
+          </section>
+          <footer class="content-signatures">
+              <div class="signature_zone">
+                  <p>{% translate "Learner's signature :" %}</p>
+                  <div class="signature-recipient">
+                      [SignatureField#1]
+                  </div>
+              </div>
+              <div class="signature_zone">
+                  <p>{% translate "University representative's signature :" %}</p>
+                  <div class="signature-recipient">
+                      [SignatureField#2]
+                  </div>
+              </div>
+          </footer>
+      </main>
     </body>
-  </main>
 </html>

@@ -1,6 +1,9 @@
 """Utility to `generate document context` data"""
+from django.conf import settings
 from django.contrib.sites.models import Site
 from django.utils.translation import gettext as _
+
+from babel.numbers import get_currency_symbol
 
 from joanie.core.utils import image_to_base64
 
@@ -29,7 +32,7 @@ USER_FALLBACK_ADDRESS = {
 
 # ruff: noqa: PLR0915
 # pylint: disable=import-outside-toplevel, too-many-locals, too-many-statements
-def generate_document_context(contract_definition, user, order=None):
+def generate_document_context(contract_definition=None, user=None, order=None):
     """
     Generate a document context for a contract definition.
 
@@ -55,6 +58,8 @@ def generate_document_context(contract_definition, user, order=None):
     else:
         terms_and_conditions = site_config.get_terms_and_conditions_in_html(
             contract_definition.language
+            if contract_definition
+            else settings.LANGUAGE_CODE
         )
 
     organization_logo = organization_fallback_logo
@@ -75,9 +80,26 @@ def generate_document_context(contract_definition, user, order=None):
     course_start = _("<COURSE_START_DATE>")
     course_end = _("<COURSE_END_DATE>")
     course_effort = _("<COURSE_EFFORT>")
-    course_price = _("<PRICE>")
+    course_price = _("<COURSE_PRICE>")
 
+    user_name = _("<STUDENT_NAME>")
+    user_email = _("<STUDENT_EMAIL>")
+    user_phone_number = _("<STUDENT_PHONE_NUMBER>")
     user_address = USER_FALLBACK_ADDRESS
+
+    contract_body = _("<CONTRACT_BODY>")
+    contract_title = _("<CONTRACT_TITLE>")
+    contract_description = _("<CONTRACT_DESCRIPTION>")
+
+    if contract_definition:
+        contract_body = contract_definition.get_body_in_html()
+        contract_title = contract_definition.title
+        contract_description = contract_definition.description
+
+    if user:
+        user_name = user.get_full_name() or user.username
+        user_email = user.email
+        user_phone_number = user.phone_number
 
     if order:
         organization_logo = image_to_base64(order.organization.logo)
@@ -118,14 +140,18 @@ def generate_document_context(contract_definition, user, order=None):
 
         user_address = order.main_invoice.recipient_address
 
-    address_organization = AddressSerializer(organization_address).data
-    address_user = AddressSerializer(user_address).data
+    if organization_address:
+        organization_address = AddressSerializer(organization_address).data
+
+    if user_address:
+        user_address = AddressSerializer(user_address).data
 
     return {
         "contract": {
-            "body": contract_definition.get_body_in_html(),
+            "title": contract_title,
+            "description": contract_description,
+            "body": contract_body,
             "terms_and_conditions": terms_and_conditions,
-            "title": contract_definition.title,
         },
         "course": {
             "name": course_name,
@@ -134,19 +160,16 @@ def generate_document_context(contract_definition, user, order=None):
             "end": course_end,
             "effort": course_effort,
             "price": course_price,
+            "currency": get_currency_symbol(settings.DEFAULT_CURRENCY),
         },
         "student": {
-            "address": address_user,
-            "name": user.get_full_name() or user.username,
-            "email": (user.email if user else _("<USER_EMAIL>")),
-            "phone_number": (
-                user.phone_number
-                if user and user.phone_number
-                else _("<USER_PHONE_NUMBER>")
-            ),
+            "address": user_address,
+            "name": user_name,
+            "email": user_email,
+            "phone_number": user_phone_number,
         },
         "organization": {
-            "address": address_organization,
+            "address": organization_address,
             "logo": organization_logo,
             "name": organization_name,
             "representative": organization_representative,

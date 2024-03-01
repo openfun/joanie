@@ -256,6 +256,7 @@ class CourseAdmin(DjangoObjectActions, TranslatableAdmin):
                     "code",
                     "title",
                     "cover",
+                    "effort",
                 )
             },
         ),
