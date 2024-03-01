@@ -27,6 +27,8 @@ def import_users(batch_size=1000, offset=0, limit=0, dry_run=False):
         batch_count += 1
         start = current_user_index + offset
         stop = current_user_index + batch_size
+        if limit:
+            stop = min(stop, limit)
         import_users_batch_task.delay(
             start=start, stop=stop, total=users_count, dry_run=dry_run
         )

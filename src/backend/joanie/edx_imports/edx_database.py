@@ -94,7 +94,7 @@ class OpenEdxDB:
                     self.University.logo,
                 )
             )
-            .slice(start, stop)
+            .slice(start, start + stop)
         )
         return self.session.scalars(query).all()
 
@@ -154,7 +154,7 @@ class OpenEdxDB:
                     self.Course.language,
                 ),
             )
-            .slice(start, stop)
+            .slice(start, start + stop)
         )
         return self.session.scalars(query).all()
 
@@ -221,7 +221,7 @@ class OpenEdxDB:
                     self.UserProfile.name,
                 ),
             )
-            .slice(start, stop)
+            .slice(start, start + stop)
         )
         return self.session.scalars(query).unique().all()
 
@@ -300,7 +300,7 @@ class OpenEdxDB:
                     self.User.username,
                 ),
             )
-            .slice(start, stop)
+            .slice(start, start + stop)
         )
         return self.session.scalars(query).all()
 
@@ -347,6 +347,6 @@ class OpenEdxDB:
                 )
             )
             .where(self.Certificate.status == "downloadable")
-            .slice(start, stop)
+            .slice(start, start + stop)
         )
         return self.session.scalars(query).all()

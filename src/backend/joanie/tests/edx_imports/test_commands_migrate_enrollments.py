@@ -162,3 +162,42 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             "3 import enrollments tasks launched",
         ]
         self.assertLogsContains(logger, expected)
+
+    @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_enrollments_count")
+    @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_enrollments")
+    def test_command_migrate_enrollments_create_dry_run_offset_limit(
+        self, mock_get_enrollments, mock_get_enrollments_count
+    ):
+        """
+        Test that enrollments are not created from the edx enrollments if dry-run is enabled
+        with offset and limit.
+        """
+        edx_enrollments = edx_factories.EdxEnrollmentFactory.create_batch(100)
+        for edx_enrollment in edx_enrollments:
+            factories.CourseRunFactory.create(
+                course__code=extract_course_number(edx_enrollment.course_id),
+                resource_link=f"http://openedx.test/courses/{edx_enrollment.course_id}/course/",
+            )
+            factories.UserFactory.create(username=edx_enrollment.user.username)
+        mock_get_enrollments.return_value = edx_enrollments[20:30]
+        mock_get_enrollments_count.return_value = 10
+
+        with self.assertLogs() as logger:
+            call_command(
+                "migrate_edx",
+                "--skip-check",
+                "--enrollments",
+                "--enrollments-offset=20",
+                "--enrollments-limit=10",
+                "--dry-run",
+            )
+
+        expected = [
+            "Importing data from Open edX database...",
+            "Importing enrollments...",
+            "Dry run: no enrollment will be imported",
+            "10 enrollments to import by batch of 1000",
+            "Dry run: 100% 10/10 : 10 enrollments created, 0 skipped, 0 errors",
+            "1 import enrollments tasks launched",
+        ]
+        self.assertLogsContains(logger, expected)
