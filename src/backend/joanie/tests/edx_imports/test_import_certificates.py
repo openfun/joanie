@@ -50,8 +50,8 @@ class EdxImportCertificatesTestCase(TestCase):
     def setUp(self):
         """Set up the test case."""
         self.hashids = Hashids(salt=settings.EDX_SECRET)
-        factories.CertificateDefinitionFactory.create(name=DEGREE)
-        factories.CertificateDefinitionFactory.create(name=CERTIFICATE)
+        factories.CertificateDefinitionFactory.create(template=DEGREE)
+        factories.CertificateDefinitionFactory.create(template=CERTIFICATE)
 
     def tearDown(self):
         """Tear down the test case."""
@@ -114,10 +114,12 @@ class EdxImportCertificatesTestCase(TestCase):
                     edx_certificate.course_id
                 ),
             )
-            certificate_name = (
+            certificate_template = (
                 DEGREE if edx_certificate.mode == OPENEDX_MODE_VERIFIED else CERTIFICATE
             )
-            self.assertEqual(certificate.certificate_definition.name, certificate_name)
+            self.assertEqual(
+                certificate.certificate_definition.template, certificate_template
+            )
             self.assertEqual(
                 certificate.organization.code,
                 mongo_enrollments[edx_certificate.id][0],
@@ -207,11 +209,11 @@ class EdxImportCertificatesTestCase(TestCase):
                 course_run=course_run,
                 was_created_by_order=False,
             )
-            certificate_name = (
+            certificate_template = (
                 DEGREE if edx_certificate.mode == OPENEDX_MODE_VERIFIED else CERTIFICATE
             )
             factories.EnrollmentCertificateFactory.create(
-                certificate_definition__name=certificate_name,
+                certificate_definition__template=certificate_template,
                 enrollment=enrollment,
                 issued_on=make_date_aware(edx_certificate.created_date),
             )
@@ -239,10 +241,12 @@ class EdxImportCertificatesTestCase(TestCase):
                     edx_certificate.course_id
                 ),
             )
-            certificate_name = (
+            certificate_template = (
                 DEGREE if edx_certificate.mode == OPENEDX_MODE_VERIFIED else CERTIFICATE
             )
-            self.assertEqual(certificate.certificate_definition.name, certificate_name)
+            self.assertEqual(
+                certificate.certificate_definition.template, certificate_template
+            )
             self.assertNotEqual(
                 certificate.organization.code,
                 mongo_enrollments[edx_certificate.id][0],
@@ -470,10 +474,12 @@ class EdxImportCertificatesTestCase(TestCase):
                     edx_certificate.course_id
                 ),
             )
-            certificate_name = (
+            certificate_template = (
                 DEGREE if edx_certificate.mode == OPENEDX_MODE_VERIFIED else CERTIFICATE
             )
-            self.assertEqual(certificate.certificate_definition.name, certificate_name)
+            self.assertEqual(
+                certificate.certificate_definition.template, certificate_template
+            )
             self.assertEqual(
                 certificate.organization.code,
                 mongo_enrollments[edx_certificate.id][0],
@@ -588,10 +594,12 @@ class EdxImportCertificatesTestCase(TestCase):
                 edx_certificate.course_id
             ),
         )
-        certificate_name = (
+        certificate_template = (
             DEGREE if edx_certificate.mode == OPENEDX_MODE_VERIFIED else CERTIFICATE
         )
-        self.assertEqual(certificate.certificate_definition.name, certificate_name)
+        self.assertEqual(
+            certificate.certificate_definition.template, certificate_template
+        )
         self.assertEqual(
             certificate.organization.code,
             mongo_enrollments[edx_certificate.id][0],

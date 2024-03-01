@@ -13,6 +13,7 @@ from django.test import override_settings
 import responses
 
 from joanie.core import factories, models
+from joanie.core.enums import CERTIFICATE, DEGREE
 from joanie.core.utils import image_to_base64
 from joanie.edx_imports import edx_factories
 from joanie.edx_imports.utils import extract_course_number, make_date_aware
@@ -44,8 +45,8 @@ class MigrateOpenEdxCertificatesTestCase(MigrateOpenEdxBaseTestCase):
 
     def setUp(self):
         super().setUp()
-        factories.CertificateDefinitionFactory.create(name="degree")
-        factories.CertificateDefinitionFactory.create(name="certificate")
+        factories.CertificateDefinitionFactory.create(template=DEGREE)
+        factories.CertificateDefinitionFactory.create(template=CERTIFICATE)
 
     @patch("joanie.edx_imports.edx_mongodb.get_enrollment")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates_count")
