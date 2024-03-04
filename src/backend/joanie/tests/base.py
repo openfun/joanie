@@ -88,57 +88,62 @@ class BaseLogMixinTestCase:
         If you don't pass the context, it will not be checked.
         """
         try:
-            self.assertEqual(len(records), len(expected_records))
-        except AssertionError:
-            if len(records) > len(expected_records):
-                real_records = "\n".join(
-                    [
-                        f"{record.levelname} log from {record.pathname[5:]}:{record.lineno}"
-                        for record in records
-                    ]
-                )
+            try:
+                self.assertEqual(len(records), len(expected_records))
+            except AssertionError:
+                if len(records) > len(expected_records):
+                    real_records = "\n".join(
+                        [
+                            f"{record.levelname} log from {record.pathname[5:]}:{record.lineno}"
+                            for record in records
+                        ]
+                    )
+                    raise AssertionError(
+                        f"Too many logs were recorded: {len(records)} > {len(expected_records)} "
+                        f"\n{real_records}"
+                    ) from None
                 raise AssertionError(
-                    f"Too many logs were recorded: {len(records)} > {len(expected_records)} "
-                    f"\n{real_records}"
+                    f"Too few logs were recorded: {len(records)} < {len(expected_records)}"
                 ) from None
-            raise AssertionError(
-                f"Too few logs were recorded: {len(records)} < {len(expected_records)}"
-            ) from None
 
-        for record, expected_record in zip(records, expected_records, strict=False):
-            assert_failed_message = (
-                f"{record.levelname}: {record.getMessage()} log from "
-                f"{record.pathname[5:]}:{record.lineno} has wrong"
-            )
-            self.assertEqual(
-                record.levelname, expected_record[0], f"{assert_failed_message} level"
-            )
-            self.assertEqual(
-                record.getMessage(),
-                expected_record[1],
-                f"{assert_failed_message} message",
-            )
-
-            context = getattr(record, "context", None)
-            try:
-                expected_context = expected_record[2]
-            except IndexError:
-                # if no context is expected, we don't want to check it
-                continue
-
-            try:
-                self.assertCountEqual(
-                    context.keys(),
-                    expected_context.keys(),
-                    f"{assert_failed_message} context keys",
+            for record, expected_record in zip(records, expected_records, strict=False):
+                assert_failed_message = (
+                    f"{record.levelname}: {record.getMessage()} log from "
+                    f"{record.pathname[5:]}:{record.lineno} has wrong"
                 )
-            except AttributeError as error:
-                raise AssertionError(
-                    f"{assert_failed_message} context : is not a dict"
-                ) from error
-            for key, _type in expected_context.items():
                 self.assertEqual(
-                    type(context[key]),
-                    _type,
-                    f"{assert_failed_message} context key {key}",
+                    record.levelname,
+                    expected_record[0],
+                    f"{assert_failed_message} level",
                 )
+                self.assertEqual(
+                    record.getMessage(),
+                    expected_record[1],
+                    f"{assert_failed_message} message",
+                )
+
+                context = getattr(record, "context", None)
+                try:
+                    expected_context = expected_record[2]
+                except IndexError:
+                    # if no context is expected, we don't want to check it
+                    continue
+
+                try:
+                    self.assertCountEqual(
+                        context.keys(),
+                        expected_context.keys(),
+                        f"{assert_failed_message} context keys",
+                    )
+                except AttributeError as error:
+                    raise AssertionError(
+                        f"{assert_failed_message} context : is not a dict"
+                    ) from error
+                for key, _type in expected_context.items():
+                    self.assertEqual(
+                        type(context[key]),
+                        _type,
+                        f"{assert_failed_message} context key {key}",
+                    )
+        except Exception as error:
+            raise error
