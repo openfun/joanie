@@ -1,6 +1,7 @@
 """
 Test suite for Organization update API endpoint.
 """
+
 import random
 from http import HTTPStatus
 

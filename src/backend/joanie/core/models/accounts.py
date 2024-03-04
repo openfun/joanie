@@ -1,6 +1,7 @@
 """
 Declare and configure the models for the customers part
 """
+
 import django.contrib.auth.models as auth_models
 from django.conf import settings
 from django.core.exceptions import ValidationError

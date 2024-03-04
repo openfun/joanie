@@ -1,4 +1,5 @@
 """Signature exceptions"""
+
 from http import HTTPStatus
 
 from django.utils.translation import gettext_lazy as _

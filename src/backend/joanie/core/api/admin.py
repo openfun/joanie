@@ -1,6 +1,7 @@
 """
 Admin API Endpoints
 """
+
 from http import HTTPStatus
 
 from django.core.exceptions import ValidationError

@@ -1,4 +1,5 @@
 """Pagination used by django rest framework."""
+
 from rest_framework.pagination import PageNumberPagination
 
 

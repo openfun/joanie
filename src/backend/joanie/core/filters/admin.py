@@ -1,6 +1,7 @@
 """
 Admin API Resource Filters
 """
+
 from typing import List
 
 from django.conf import settings

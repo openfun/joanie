@@ -1,4 +1,5 @@
 """Test suite of common methods for Base, to Dummy and Client Signature Backend."""
+
 import random
 from datetime import timedelta
 from unittest import mock

@@ -1,6 +1,7 @@
 """
 Test suite for User API.
 """
+
 from http import HTTPStatus
 
 from joanie.core import factories

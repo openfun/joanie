@@ -1,6 +1,7 @@
 """
 Backend to connect Joanie to OpenEdX LMS
 """
+
 import json
 import logging
 import re

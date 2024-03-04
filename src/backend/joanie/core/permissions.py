@@ -1,4 +1,5 @@
 """Permission handlers for joanie's core app."""
+
 from django.conf import settings
 
 from rest_framework import permissions

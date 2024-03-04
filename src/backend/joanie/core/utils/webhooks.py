@@ -1,6 +1,7 @@
 """
 Utils that can be useful throughout Joanie's core app to synchronize data with other services
 """
+
 import hashlib
 import hmac
 import json

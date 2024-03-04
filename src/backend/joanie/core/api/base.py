@@ -1,4 +1,5 @@
-"""Base API classes for the Joanie project. """
+"""Base API classes for the Joanie project."""
+
 from rest_framework import viewsets
 
 

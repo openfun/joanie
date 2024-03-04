@@ -1,6 +1,7 @@
 """
 Test suite for Course API endpoint.
 """
+
 import random
 from http import HTTPStatus
 from unittest import mock

@@ -1,4 +1,5 @@
 """Product model 'get_cache_key' test suite"""
+
 from datetime import datetime
 from unittest import mock
 

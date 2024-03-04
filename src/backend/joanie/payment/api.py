@@ -1,6 +1,7 @@
 """
 API endpoints
 """
+
 import logging
 from http import HTTPStatus
 

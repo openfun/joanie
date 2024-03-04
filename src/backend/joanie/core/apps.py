@@ -1,4 +1,5 @@
 """Joanie Core application"""
+
 from django.apps import AppConfig
 from django.db.models.signals import m2m_changed, post_save
 from django.utils.translation import gettext_lazy as _

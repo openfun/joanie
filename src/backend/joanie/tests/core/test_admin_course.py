@@ -1,6 +1,7 @@
 """
 Test suite for courses admin pages
 """
+
 from http import HTTPStatus
 
 from django.conf import settings

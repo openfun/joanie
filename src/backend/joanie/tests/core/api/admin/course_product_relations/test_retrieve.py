@@ -2,6 +2,7 @@
 """
 Test suite for CourseProductRelation retrieve Admin API.
 """
+
 from http import HTTPStatus
 from unittest import mock
 

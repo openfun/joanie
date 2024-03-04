@@ -1,4 +1,5 @@
 """Test suite for badge models."""
+
 from django.test import TestCase
 
 from joanie.badges import factories, models

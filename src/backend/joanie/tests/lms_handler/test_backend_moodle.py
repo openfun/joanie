@@ -1,4 +1,5 @@
 """Test suite for the Moodle LMS Backend."""
+
 import random
 from http import HTTPStatus
 from logging import ERROR
@@ -415,9 +416,12 @@ class MoodleLMSBackendTestCase(TestCase):
             status=HTTPStatus.INTERNAL_SERVER_ERROR,
         )
 
-        with self.assertLogs(
-            "joanie.lms_handler.backends.moodle", level=ERROR
-        ) as error_logs, self.assertRaises(MoodleUserCreateException):
+        with (
+            self.assertLogs(
+                "joanie.lms_handler.backends.moodle", level=ERROR
+            ) as error_logs,
+            self.assertRaises(MoodleUserCreateException),
+        ):
             self.backend.create_user(user)
 
         self.assertEqual(
@@ -582,9 +586,12 @@ class MoodleLMSBackendTestCase(TestCase):
             status=HTTPStatus.INTERNAL_SERVER_ERROR,
         )
 
-        with self.assertLogs(
-            "joanie.lms_handler.backends.moodle", level=ERROR
-        ) as error_logs, self.assertRaises(EnrollmentError):
+        with (
+            self.assertLogs(
+                "joanie.lms_handler.backends.moodle", level=ERROR
+            ) as error_logs,
+            self.assertRaises(EnrollmentError),
+        ):
             self.backend.set_enrollment(enrollment)
 
         self.assertEqual(
@@ -714,9 +721,12 @@ class MoodleLMSBackendTestCase(TestCase):
             },
         )
 
-        with self.assertLogs(
-            "joanie.lms_handler.backends.moodle", level=ERROR
-        ) as error_logs, self.assertRaises(EnrollmentError):
+        with (
+            self.assertLogs(
+                "joanie.lms_handler.backends.moodle", level=ERROR
+            ) as error_logs,
+            self.assertRaises(EnrollmentError),
+        ):
             self.backend.set_enrollment(enrollment)
 
         self.assertEqual(
@@ -749,9 +759,12 @@ class MoodleLMSBackendTestCase(TestCase):
             status=HTTPStatus.INTERNAL_SERVER_ERROR,
         )
 
-        with self.assertLogs(
-            "joanie.lms_handler.backends.moodle", level=ERROR
-        ) as error_logs, self.assertRaises(EnrollmentError):
+        with (
+            self.assertLogs(
+                "joanie.lms_handler.backends.moodle", level=ERROR
+            ) as error_logs,
+            self.assertRaises(EnrollmentError),
+        ):
             self.backend.set_enrollment(enrollment)
 
         self.assertEqual(
@@ -797,9 +810,12 @@ class MoodleLMSBackendTestCase(TestCase):
             ],
         )
 
-        with self.assertLogs(
-            "joanie.lms_handler.backends.moodle", level=ERROR
-        ) as error_logs, self.assertRaises(EnrollmentError):
+        with (
+            self.assertLogs(
+                "joanie.lms_handler.backends.moodle", level=ERROR
+            ) as error_logs,
+            self.assertRaises(EnrollmentError),
+        ):
             self.backend.set_enrollment(enrollment)
 
         self.assertEqual(
@@ -864,9 +880,12 @@ class MoodleLMSBackendTestCase(TestCase):
             body=RequestException("Something went wrong..."),
         )
 
-        with self.assertLogs(
-            "joanie.lms_handler.backends.moodle", level=ERROR
-        ) as error_logs, self.assertRaises(EnrollmentError):
+        with (
+            self.assertLogs(
+                "joanie.lms_handler.backends.moodle", level=ERROR
+            ) as error_logs,
+            self.assertRaises(EnrollmentError),
+        ):
             self.backend.set_enrollment(enrollment)
 
         self.assertEqual(
@@ -934,9 +953,12 @@ class MoodleLMSBackendTestCase(TestCase):
             body=RequestException("Something went wrong..."),
         )
 
-        with self.assertLogs(
-            "joanie.lms_handler.backends.moodle", level=ERROR
-        ) as error_logs, self.assertRaises(EnrollmentError):
+        with (
+            self.assertLogs(
+                "joanie.lms_handler.backends.moodle", level=ERROR
+            ) as error_logs,
+            self.assertRaises(EnrollmentError),
+        ):
             self.backend.set_enrollment(enrollment)
 
         self.assertEqual(
@@ -1052,9 +1074,12 @@ class MoodleLMSBackendTestCase(TestCase):
             status=HTTPStatus.INTERNAL_SERVER_ERROR,
         )
 
-        with self.assertLogs(
-            "joanie.lms_handler.backends.moodle", level=ERROR
-        ) as error_logs, self.assertRaises(GradeError):
+        with (
+            self.assertLogs(
+                "joanie.lms_handler.backends.moodle", level=ERROR
+            ) as error_logs,
+            self.assertRaises(GradeError),
+        ):
             self.backend.get_grades("student", resource_link)
 
         self.assertEqual(
@@ -1091,9 +1116,12 @@ class MoodleLMSBackendTestCase(TestCase):
             },
         )
 
-        with self.assertLogs(
-            "joanie.lms_handler.backends.moodle", level=ERROR
-        ) as error_logs, self.assertRaises(GradeError):
+        with (
+            self.assertLogs(
+                "joanie.lms_handler.backends.moodle", level=ERROR
+            ) as error_logs,
+            self.assertRaises(GradeError),
+        ):
             self.backend.get_grades("student", resource_link)
 
         self.assertEqual(
@@ -1141,9 +1169,12 @@ class MoodleLMSBackendTestCase(TestCase):
             body=RequestException("Something went wrong..."),
         )
 
-        with self.assertLogs(
-            "joanie.lms_handler.backends.moodle", level=ERROR
-        ) as error_logs, self.assertRaises(GradeError):
+        with (
+            self.assertLogs(
+                "joanie.lms_handler.backends.moodle", level=ERROR
+            ) as error_logs,
+            self.assertRaises(GradeError),
+        ):
             self.backend.get_grades("student", resource_link)
 
         self.assertEqual(

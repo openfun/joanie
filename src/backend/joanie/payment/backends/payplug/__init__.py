@@ -1,4 +1,5 @@
 """Payplug Payment Backend"""
+
 import logging
 from decimal import Decimal as D
 

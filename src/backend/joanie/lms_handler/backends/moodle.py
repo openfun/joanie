@@ -1,6 +1,7 @@
 """
 Backend to connect Joanie to Moodle LMS
 """
+
 import logging
 from urllib.parse import parse_qs, urlparse
 

@@ -1,4 +1,5 @@
 """Test suite for the management command `generate_zip_archive_of_contracts`"""
+
 import random
 from io import BytesIO, StringIO
 from uuid import uuid4

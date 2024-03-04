@@ -1,4 +1,5 @@
 """Test suite for the course access serializer"""
+
 import random
 
 from django.test import TestCase

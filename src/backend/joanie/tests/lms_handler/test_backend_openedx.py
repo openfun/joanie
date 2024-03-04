@@ -1,4 +1,5 @@
 """Test suite for the OpenEdX LMS Backend."""
+
 import json
 import random
 from datetime import timedelta

@@ -1,6 +1,7 @@
 """
 Test suite for order models
 """
+
 import random
 from datetime import datetime, timedelta, timezone
 from unittest import mock

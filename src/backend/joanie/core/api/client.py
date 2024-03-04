@@ -1,6 +1,7 @@
 """
 Client API endpoints
 """
+
 # pylint: disable=too-many-ancestors, too-many-lines
 import io
 import uuid
@@ -470,9 +471,9 @@ class OrderViewSet(
         response = HttpResponse(
             invoice_pdf_bytes, content_type="application/pdf", status=HTTPStatus.OK
         )
-        response[
-            "Content-Disposition"
-        ] = f"attachment; filename={invoice.reference}.pdf;"
+        response["Content-Disposition"] = (
+            f"attachment; filename={invoice.reference}.pdf;"
+        )
 
         return response
 

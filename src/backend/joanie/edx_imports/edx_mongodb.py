@@ -1,4 +1,5 @@
 """Module to connect to Open edX mongodb and extract data"""
+
 from django.conf import settings
 
 from pymongo import MongoClient

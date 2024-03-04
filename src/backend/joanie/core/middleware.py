@@ -1,4 +1,5 @@
 """Middleware for joanie project."""
+
 import time
 
 from dockerflow.django.middleware import DockerflowMiddleware

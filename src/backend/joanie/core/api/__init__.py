@@ -1,4 +1,5 @@
 """API for the joanie project."""
+
 from http import HTTPStatus
 
 from django.core.exceptions import ValidationError as DjangoValidationError

@@ -1,4 +1,5 @@
 """Lex Persona backend test for submit_for_signature."""
+
 from http import HTTPStatus
 
 from django.conf import settings

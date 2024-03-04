@@ -1,6 +1,7 @@
 """
 Test suite for wish API
 """
+
 from http import HTTPStatus
 
 import arrow

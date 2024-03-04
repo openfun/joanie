@@ -1,4 +1,5 @@
 """Test suite for the management command 'create_demo'"""
+
 from unittest import mock
 
 from django.core.management import call_command

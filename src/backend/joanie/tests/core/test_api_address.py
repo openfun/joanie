@@ -1,6 +1,7 @@
 """
 Test suite for addresses API
 """
+
 import json
 import uuid
 from http import HTTPStatus

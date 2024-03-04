@@ -1,6 +1,7 @@
 """
 Utility methods for Course Run on enrollments metrics and orders made.
 """
+
 import logging
 
 from django.core.exceptions import ValidationError

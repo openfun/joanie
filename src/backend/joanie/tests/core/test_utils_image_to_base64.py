@@ -1,6 +1,7 @@
 """
 Test suite for utils of the joanie core app
 """
+
 import io
 
 from django.test import TestCase, override_settings

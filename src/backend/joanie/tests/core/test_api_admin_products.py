@@ -1,6 +1,7 @@
 """
 Test suite for Product Admin API.
 """
+
 import random
 from http import HTTPStatus
 

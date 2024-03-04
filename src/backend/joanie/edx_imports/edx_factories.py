@@ -1,4 +1,5 @@
 """Factory classes for generating fake data for testing."""
+
 import random
 
 import factory

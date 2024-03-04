@@ -1,6 +1,7 @@
 """
 Test suite for Organization's CourseProductRelation API endpoint.
 """
+
 from http import HTTPStatus
 
 from joanie.core import factories, models

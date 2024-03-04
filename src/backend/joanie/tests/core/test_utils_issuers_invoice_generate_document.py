@@ -1,4 +1,5 @@
 """Test suite for utility method to generate an invoice in PDF bytes format."""
+
 from io import BytesIO
 
 from django.test import TestCase

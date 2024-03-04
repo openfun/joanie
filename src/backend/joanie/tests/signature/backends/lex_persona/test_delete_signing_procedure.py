@@ -1,4 +1,5 @@
 """Test suite for the Lex Persona Signature Backend delete_signing_procedure"""
+
 from http import HTTPStatus
 
 from django.test import TestCase

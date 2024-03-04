@@ -1,4 +1,5 @@
 """Import data from Open edX database to Joanie database"""
+
 import logging
 
 from django.core.management import BaseCommand

@@ -1,4 +1,5 @@
 """Tests for the Enrollment API."""
+
 # pylint: disable=too-many-lines
 import itertools
 import json

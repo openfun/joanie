@@ -1,5 +1,6 @@
 # pylint: disable=duplicate-code
 """Test suite for the Organizations Contract API"""
+
 from http import HTTPStatus
 from unittest import mock
 

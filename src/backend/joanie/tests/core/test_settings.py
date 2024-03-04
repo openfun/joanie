@@ -1,6 +1,7 @@
 """
 Test suite for Joanie's main module
 """
+
 from unittest import mock
 
 from django.test import TestCase

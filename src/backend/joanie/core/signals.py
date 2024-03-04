@@ -1,6 +1,7 @@
 """
 Helpers that can be useful throughout Joanie's core app
 """
+
 import logging
 
 from django.core.exceptions import ValidationError

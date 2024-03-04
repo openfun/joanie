@@ -1,6 +1,7 @@
 """
 Test suite for Contract Definition API.
 """
+
 from http import HTTPStatus
 from io import BytesIO
 

@@ -1,6 +1,7 @@
 """
 Test suite for accounts models for users and organizations.
 """
+
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.test import TestCase

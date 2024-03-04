@@ -1,4 +1,5 @@
 """Tests for the Order read detail API."""
+
 from http import HTTPStatus
 from unittest import mock
 

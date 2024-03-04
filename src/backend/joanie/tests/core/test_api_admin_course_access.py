@@ -1,6 +1,7 @@
 """
 Test suite for CourseAccess Admin API.
 """
+
 import uuid
 from http import HTTPStatus
 

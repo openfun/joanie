@@ -1,6 +1,7 @@
 """
 Test suite for order model: `get_or_generate_certificate` method for an enrollment product
 """
+
 from datetime import timedelta
 
 from django.test import TestCase

@@ -1,6 +1,7 @@
 """
 Test suite for Organization Contracts signature link API endpoint.
 """
+
 import random
 from http import HTTPStatus
 

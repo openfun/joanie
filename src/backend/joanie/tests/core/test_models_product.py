@@ -1,6 +1,7 @@
 """
 Test suite for products models
 """
+
 import random
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal as D

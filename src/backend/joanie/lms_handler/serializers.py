@@ -1,4 +1,5 @@
 """Serializers for Joanie's LMS handler."""
+
 from django.utils.functional import lazy
 
 from rest_framework import serializers

@@ -1,4 +1,5 @@
 """Management command to generate user JWT tokens"""
+
 import json
 from datetime import datetime, timedelta
 

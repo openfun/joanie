@@ -1,6 +1,7 @@
 """
 Declare and configure the models for the certifications part
 """
+
 import logging
 
 from django.conf import settings

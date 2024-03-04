@@ -2,6 +2,7 @@
 """
 Core application factories
 """
+
 import hashlib
 import json
 import random

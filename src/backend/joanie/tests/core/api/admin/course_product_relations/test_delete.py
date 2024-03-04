@@ -1,6 +1,7 @@
 """
 Test suite for CourseProductRelation delete Admin API.
 """
+
 from http import HTTPStatus
 from unittest import mock
 

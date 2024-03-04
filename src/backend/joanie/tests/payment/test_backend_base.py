@@ -1,4 +1,5 @@
 """Test suite of the Base Payment backend"""
+
 import smtplib
 from logging import Logger
 from unittest import mock

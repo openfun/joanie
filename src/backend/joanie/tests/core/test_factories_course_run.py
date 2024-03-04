@@ -1,4 +1,5 @@
 """Test suite for the CourseRunFactory."""
+
 import random
 from datetime import timedelta
 

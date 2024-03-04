@@ -1,6 +1,7 @@
 """
 Payment application factories
 """
+
 import string
 
 import factory.fuzzy

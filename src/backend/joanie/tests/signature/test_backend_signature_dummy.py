@@ -1,4 +1,5 @@
 """Test suite of the DummySignatureBackend"""
+
 import random
 from io import BytesIO
 

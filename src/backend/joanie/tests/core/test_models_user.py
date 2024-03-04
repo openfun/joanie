@@ -1,4 +1,5 @@
 """Test suite for badge models."""
+
 from django.core.exceptions import ValidationError
 from django.test.utils import override_settings
 

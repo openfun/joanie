@@ -1,6 +1,7 @@
 """
 Tests for CourseRun web hook.
 """
+
 import json
 from http import HTTPStatus
 

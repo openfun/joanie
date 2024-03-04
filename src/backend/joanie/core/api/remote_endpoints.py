@@ -1,6 +1,7 @@
 """
 Remote endpoints API for other servers.
 """
+
 from http import HTTPStatus
 
 from django.http import JsonResponse

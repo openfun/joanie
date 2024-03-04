@@ -1,6 +1,7 @@
 """
 Unit tests for the DelegatedJWTAuthentication backend.
 """
+
 from joanie.core import factories, models
 from joanie.core.authentication import DelegatedJWTAuthentication
 from joanie.tests.base import BaseAPITestCase

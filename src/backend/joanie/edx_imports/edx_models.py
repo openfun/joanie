@@ -1,4 +1,5 @@
 """Models for the Open edX database."""
+
 import datetime
 import decimal
 from typing import List, Optional
@@ -42,9 +43,9 @@ class User(Base):
     user_api_userpreference: Mapped[List["UserPreference"]] = relationship(
         "UserPreference", back_populates="user"
     )
-    certificates_generatedcertificate: Mapped[
-        List["GeneratedCertificate"]
-    ] = relationship("GeneratedCertificate", back_populates="user")
+    certificates_generatedcertificate: Mapped[List["GeneratedCertificate"]] = (
+        relationship("GeneratedCertificate", back_populates="user")
+    )
 
 
 class UserProfile(Base):
@@ -216,9 +217,9 @@ class Course(Base):
     course_overviews_courseoverview: Mapped["CourseOverview"] = relationship(
         "CourseOverview", back_populates="course"
     )
-    courses_courseuniversityrelation: Mapped[
-        List["CourseUniversityRelation"]
-    ] = relationship("CourseUniversityRelation", back_populates="course")
+    courses_courseuniversityrelation: Mapped[List["CourseUniversityRelation"]] = (
+        relationship("CourseUniversityRelation", back_populates="course")
+    )
 
 
 class University(Base):
@@ -250,9 +251,9 @@ class University(Base):
     banner: Mapped[Optional[str]] = mapped_column(String(100))
     certificate_logo: Mapped[Optional[str]] = mapped_column(String(100))
 
-    courses_courseuniversityrelation: Mapped[
-        List["CourseUniversityRelation"]
-    ] = relationship("CourseUniversityRelation", back_populates="university")
+    courses_courseuniversityrelation: Mapped[List["CourseUniversityRelation"]] = (
+        relationship("CourseUniversityRelation", back_populates="university")
+    )
 
 
 class CourseUniversityRelation(Base):

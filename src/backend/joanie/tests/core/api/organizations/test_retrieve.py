@@ -1,6 +1,7 @@
 """
 Test suite for Organization retrieve API endpoint.
 """
+
 from http import HTTPStatus
 from unittest import mock
 

@@ -1,6 +1,7 @@
 """
 API endpoint for Signature
 """
+
 import logging
 from http import HTTPStatus
 

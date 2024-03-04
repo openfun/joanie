@@ -1,4 +1,5 @@
 """Tests for the Certificate API"""
+
 import uuid
 from http import HTTPStatus
 from io import BytesIO

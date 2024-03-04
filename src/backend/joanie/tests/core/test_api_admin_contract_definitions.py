@@ -1,6 +1,7 @@
 """
 Test suite for Contract definition Admin API.
 """
+
 import random
 from http import HTTPStatus
 

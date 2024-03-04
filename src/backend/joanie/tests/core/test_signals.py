@@ -1,4 +1,5 @@
 """Joanie core helpers tests suite"""
+
 import random
 from datetime import datetime
 from unittest import mock

@@ -1,4 +1,5 @@
 """Custom template tags for the core application of Joanie."""
+
 import math
 
 from django import template

@@ -1,6 +1,7 @@
 """
 Test suite for organization models
 """
+
 import uuid
 
 from django.contrib.auth.models import AnonymousUser

@@ -1,4 +1,5 @@
 """Test suite for the SiteConfig model."""
+
 from django.test import TestCase
 
 from joanie.core.factories import SiteConfigFactory

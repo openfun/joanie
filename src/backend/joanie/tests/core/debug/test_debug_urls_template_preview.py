@@ -7,6 +7,7 @@ to ensure that the routes were updated when executing a specific test.
 If we don't create two distinct classes, the reload of urls configuration were not reflecting the
 DEBUG setting value, and some routes were available when they should not be.
 """
+
 from http import HTTPStatus
 
 from django.core.cache import cache

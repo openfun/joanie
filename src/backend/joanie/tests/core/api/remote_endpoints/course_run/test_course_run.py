@@ -1,4 +1,5 @@
 """Test suite for remote API endpoints on course run."""
+
 from datetime import timedelta
 from http import HTTPStatus
 

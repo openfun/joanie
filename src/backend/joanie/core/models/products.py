@@ -1,6 +1,7 @@
 """
 Declare and configure the models for the product / order part
 """
+
 import itertools
 import logging
 from collections import defaultdict

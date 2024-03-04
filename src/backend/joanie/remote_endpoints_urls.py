@@ -1,6 +1,7 @@
 """
 API routes exposed for server to server. Requires a specific token to request.
 """
+
 from django.conf import settings
 from django.urls import path
 

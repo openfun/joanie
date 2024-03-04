@@ -1,6 +1,7 @@
 """
 Core application enums declaration
 """
+
 from django.conf import global_settings, settings
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext_lazy

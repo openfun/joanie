@@ -1,4 +1,5 @@
 """Test suite of the Payplug backend"""
+
 import re
 from decimal import Decimal as D
 from unittest import mock

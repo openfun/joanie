@@ -2,6 +2,7 @@
 """
 Test suite for CourseProductRelation create Admin API.
 """
+
 import uuid
 from http import HTTPStatus
 from unittest import mock

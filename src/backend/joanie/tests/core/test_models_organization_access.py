@@ -1,6 +1,7 @@
 """
 Test suite for organization access models
 """
+
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
 

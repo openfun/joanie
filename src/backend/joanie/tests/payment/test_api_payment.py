@@ -1,4 +1,5 @@
 """Test suite for the payment api"""
+
 from http import HTTPStatus
 from unittest import mock
 

@@ -1,4 +1,5 @@
 """Common Base Payment backend test"""
+
 from django.core import mail
 from django.test import TestCase
 

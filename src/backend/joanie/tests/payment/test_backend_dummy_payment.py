@@ -1,4 +1,5 @@
 """Test suite of the Dummy Payment backend"""
+
 import json
 import re
 from logging import Logger

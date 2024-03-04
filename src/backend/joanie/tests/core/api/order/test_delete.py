@@ -1,4 +1,5 @@
 """Tests for the Order delete API."""
+
 import random
 from http import HTTPStatus
 

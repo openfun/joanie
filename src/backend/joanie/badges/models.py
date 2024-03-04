@@ -1,6 +1,7 @@
 """
 Declare and configure the models for the badges part
 """
+
 from functools import lru_cache
 
 from django.db import models
