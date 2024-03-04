@@ -4,6 +4,7 @@
 from os.path import dirname, join, realpath
 from unittest.mock import patch
 
+from django.conf import settings
 from django.test import TestCase, override_settings
 
 import factory
@@ -95,6 +96,10 @@ class EdxImportCourseRunsTestCase(TestCase):
                 course=course,
             )
             course_run.set_current_language(edx_course_overview.course.language)
+            self.assertEqual(
+                course_run.resource_link,
+                f"https://{settings.EDX_DOMAIN}/courses/{edx_course_overview.id}/info",
+            )
             self.assertEqual(course_run.title, edx_course_overview.display_name)
             self.assertEqual(
                 course_run.start, make_date_aware(edx_course_overview.start)
