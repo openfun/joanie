@@ -201,7 +201,7 @@ test.describe("Course form", async () => {
     await expect(
       page.getByRole("heading", { name: `Edit course: ${newCourseTitle}` }),
     ).toBeVisible();
-    await page.getByRole("link", { name: "List" }).click();
+    await page.getByRole("link", { name: "List", exact: true }).click();
     await expect(
       page.getByRole("cell", { name: oldCourseTitle, exact: true }),
     ).toHaveCount(0);

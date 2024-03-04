@@ -86,7 +86,9 @@ test.describe("Course product relation", () => {
     ).toBeVisible();
 
     await page
-      .getByRole("row", { name: `${courseRun.title} Click to copy` })
+      .getByRole("row", {
+        name: `${courseRun.course.code} ${courseRun.title} ${new Date(courseRun.start!).toLocaleDateString()}`,
+      })
       .getByRole("button")
       .click();
     await page.getByRole("menuitem", { name: "Copy url" }).click();

@@ -21,3 +21,25 @@ export async function expectHaveNotClasses(
   const isValid = await haveClasses(locator, className);
   expect(isValid).toBeFalsy();
 }
+
+export async function findWithClasses(
+  locator: Locator,
+  className: string,
+  numberOfElementToBeVisible: number = 1,
+) {
+  const elementsCount = await locator.count();
+  const array = [...Array(elementsCount).keys()];
+  const result: Locator[] = [];
+  await Promise.all(
+    array.map(async (number) => {
+      const element = locator.nth(number);
+      const isValid = await haveClasses(element, className);
+      if (isValid) {
+        await expect(element).toBeVisible();
+        result.push(element);
+      }
+    }),
+  );
+
+  expect(result.length).toEqual(numberOfElementToBeVisible);
+}
