@@ -1,19 +1,16 @@
 import { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import * as React from "react";
 import { defineMessages, IntlShape } from "react-intl";
-import Box from "@mui/material/Box";
-import Tooltip from "@mui/material/Tooltip";
-import { ProviderContext } from "notistack";
 import { CourseRun } from "@/services/api/models/CourseRun";
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { CustomLink } from "@/components/presentational/link/CustomLink";
 import { commonTranslations } from "@/translations/common/commonTranslations";
 
 const messages = defineMessages({
-  resourceLink: {
-    id: "components.templates.courseRuns.list.resourceLink",
-    defaultMessage: "Resource link",
-    description: "Label for the resourceLink header inside the table  ",
+  courseCode: {
+    id: "components.templates.courseRuns.list.courseCode",
+    defaultMessage: "Course code",
+    description: "Label for the course code header inside the table  ",
   },
   title: {
     id: "components.templates.courseRuns.list.title",
@@ -55,13 +52,19 @@ const messages = defineMessages({
 
 export const getCoursesRunsListColumns = (
   intl: IntlShape,
-  snackbar: ProviderContext,
 ): GridColDef<CourseRun>[] => {
   return [
     {
+      field: "course_code",
+      headerName: intl.formatMessage(messages.courseCode),
+      flex: 1,
+      valueGetter: (params) => params.row.course.code,
+    },
+    {
       field: "title",
       headerName: intl.formatMessage(messages.title),
-      minWidth: 300,
+      minWidth: 200,
+      flex: 1,
       renderCell: (cell) => {
         return (
           <CustomLink
@@ -74,46 +77,18 @@ export const getCoursesRunsListColumns = (
       },
     },
     {
-      field: "resource_link",
-      headerName: intl.formatMessage(messages.resourceLink),
-      minWidth: 400,
-      flex: 1,
-      renderCell: (params) => {
-        return (
-          <Tooltip arrow title={intl.formatMessage(messages.clickToCopy)}>
-            <Box
-              onClick={() => {
-                navigator.clipboard
-                  .writeText(params.row.resource_link)
-                  .then(() => {
-                    snackbar.enqueueSnackbar(
-                      intl.formatMessage(messages.successCopy),
-                      {
-                        variant: "success",
-                        preventDuplicate: true,
-                      },
-                    );
-                  });
-              }}
-              sx={{
-                cursor: "pointer",
-              }}
-            >
-              {params.row.resource_link}
-            </Box>
-          </Tooltip>
-        );
-      },
-    },
-    {
       field: "start",
       headerName: intl.formatMessage(messages.courseStart),
       flex: 1,
+      valueGetter: (params) =>
+        params.row.start ? new Date(params.row.start).toLocaleString() : "",
     },
     {
       field: "end",
       headerName: intl.formatMessage(messages.courseEnd),
       flex: 1,
+      valueGetter: (params) =>
+        params.row.end ? new Date(params.row.end).toLocaleString() : "",
     },
     {
       field: "state",
