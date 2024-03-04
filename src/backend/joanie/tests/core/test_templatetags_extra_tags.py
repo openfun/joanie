@@ -1,6 +1,7 @@
 """
 Test suite for extra template tags of the joanie core app
 """
+
 import random
 
 from django.test import TestCase

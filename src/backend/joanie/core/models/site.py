@@ -1,4 +1,5 @@
 """Site extension models for the Joanie project."""
+
 import textwrap
 
 from django.contrib.sites.models import Site

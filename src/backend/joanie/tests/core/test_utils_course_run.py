@@ -1,4 +1,5 @@
 """Test suite for course run utility methods."""
+
 from datetime import timedelta
 
 from django.core.exceptions import ValidationError

@@ -1,6 +1,7 @@
 """
 Declare and configure models for the payment part
 """
+
 import logging
 from decimal import Decimal as D
 

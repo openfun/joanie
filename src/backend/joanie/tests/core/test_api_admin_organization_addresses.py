@@ -1,6 +1,7 @@
 """
 Test suite for Organization Address Admin API endpoints.
 """
+
 import uuid
 from http import HTTPStatus
 

@@ -1,4 +1,5 @@
 """Base Payment Backend"""
+
 import smtplib
 from logging import getLogger
 

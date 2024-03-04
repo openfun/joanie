@@ -1,6 +1,7 @@
 """
 Core application forms declaration
 """
+
 from django import forms
 from django.contrib.admin import widgets
 

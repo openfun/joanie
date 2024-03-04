@@ -1,4 +1,5 @@
 """Test suite for transaction model"""
+
 from django.db.models import ProtectedError
 from django.test import TestCase
 

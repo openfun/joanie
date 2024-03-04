@@ -1,6 +1,7 @@
 """
 Test suite for Organization list API endpoint.
 """
+
 import uuid
 from http import HTTPStatus
 from unittest import mock

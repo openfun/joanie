@@ -1,4 +1,5 @@
 """Utils that can be useful throughout Joanie's core app for document issuers"""
+
 from pathlib import Path
 
 from django.template import Context

@@ -1,6 +1,7 @@
 """
 Test suite for the Credit Card API
 """
+
 from http import HTTPStatus
 from unittest import mock
 

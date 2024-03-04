@@ -1,6 +1,7 @@
 """
 Test suite for order models: `get_or_generate_certificate` method for a certificate product
 """
+
 from datetime import timedelta
 from unittest import mock
 

@@ -1,4 +1,5 @@
 """Tests for the CachedModelSerializer class."""
+
 from django.test import TestCase, override_settings
 
 from joanie.core import factories, models

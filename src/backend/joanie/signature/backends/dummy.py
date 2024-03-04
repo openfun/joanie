@@ -1,4 +1,5 @@
 """Dummy Signature Backend"""
+
 import smtplib
 from logging import getLogger
 from uuid import uuid4

@@ -1,4 +1,5 @@
 """Test suite for the CourseRun API"""
+
 from http import HTTPStatus
 from unittest import mock
 

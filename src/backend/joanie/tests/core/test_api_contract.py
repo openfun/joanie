@@ -1,4 +1,5 @@
 """Test suite for the Contract API"""
+
 import json
 import random
 from http import HTTPStatus

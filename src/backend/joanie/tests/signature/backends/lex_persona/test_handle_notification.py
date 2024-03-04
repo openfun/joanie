@@ -1,4 +1,5 @@
 """Test suite for the Lex Persona Signature Backend handle_notification"""
+
 import json
 from datetime import datetime, timedelta
 from http import HTTPStatus
@@ -77,9 +78,10 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase, BaseLogMixinTestCase
 
         backend = get_signature_backend()
 
-        with self.assertRaises(ValidationError) as context, self.assertLogs(
-            "joanie"
-        ) as logger:
+        with (
+            self.assertRaises(ValidationError) as context,
+            self.assertLogs("joanie") as logger,
+        ):
             backend.handle_notification(request)
 
         self.assertEqual(
@@ -153,9 +155,10 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase, BaseLogMixinTestCase
         )
         backend = get_signature_backend()
 
-        with self.assertRaises(ValidationError) as context, self.assertLogs(
-            "joanie"
-        ) as logger:
+        with (
+            self.assertRaises(ValidationError) as context,
+            self.assertLogs("joanie") as logger,
+        ):
             backend.handle_notification(request)
 
         self.assertEqual(
@@ -197,9 +200,10 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase, BaseLogMixinTestCase
         request.__dict__.update(request_data)
         backend = get_signature_backend()
 
-        with self.assertRaises(KeyError) as context, self.assertLogs(
-            "joanie"
-        ) as logger:
+        with (
+            self.assertRaises(KeyError) as context,
+            self.assertLogs("joanie") as logger,
+        ):
             backend.handle_notification(request)
 
         self.assertEqual(
@@ -237,9 +241,10 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase, BaseLogMixinTestCase
         request.__dict__.update(request_data)
         backend = get_signature_backend()
 
-        with self.assertRaises(KeyError) as context, self.assertLogs(
-            "joanie"
-        ) as logger:
+        with (
+            self.assertRaises(KeyError) as context,
+            self.assertLogs("joanie") as logger,
+        ):
             backend.handle_notification(request)
 
         self.assertEqual(
@@ -266,9 +271,10 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase, BaseLogMixinTestCase
         request.__dict__.update(request_data)
         backend = get_signature_backend()
 
-        with self.assertRaises(ValidationError) as context, self.assertLogs(
-            "joanie"
-        ) as logger:
+        with (
+            self.assertRaises(ValidationError) as context,
+            self.assertLogs("joanie") as logger,
+        ):
             backend.handle_notification(request)
 
         self.assertEqual(
@@ -324,9 +330,10 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase, BaseLogMixinTestCase
         )
         backend = get_signature_backend()
 
-        with self.assertRaises(ValidationError) as context, self.assertLogs(
-            "joanie"
-        ) as logger:
+        with (
+            self.assertRaises(ValidationError) as context,
+            self.assertLogs("joanie") as logger,
+        ):
             backend.handle_notification(request)
 
         self.assertEqual(
@@ -490,9 +497,10 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase, BaseLogMixinTestCase
 
         backend = get_signature_backend()
 
-        with self.assertRaises(ValidationError) as context, self.assertLogs(
-            "joanie"
-        ) as logger:
+        with (
+            self.assertRaises(ValidationError) as context,
+            self.assertLogs("joanie") as logger,
+        ):
             backend.handle_notification(request)
 
         self.assertEqual(

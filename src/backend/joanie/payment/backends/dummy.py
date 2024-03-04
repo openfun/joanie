@@ -1,4 +1,5 @@
 """Dummy Payment Backend"""
+
 import json
 import logging
 from decimal import Decimal as D

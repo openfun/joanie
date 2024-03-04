@@ -1,4 +1,5 @@
 """Base test case for the migrate command."""
+
 from django.test import TestCase, override_settings
 
 from joanie.edx_imports.edx_factories import session

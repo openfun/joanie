@@ -1,4 +1,5 @@
 """Celery tasks for importing Open edX universities to Joanie organizations."""
+
 from logging import getLogger
 
 from joanie.celery_app import app

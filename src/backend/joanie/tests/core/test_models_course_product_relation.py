@@ -1,6 +1,7 @@
 """
 Test suite for CourseProductRelation model
 """
+
 from django.test import TestCase
 
 from joanie.core import factories

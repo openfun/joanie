@@ -1,4 +1,5 @@
 """Client serializers for Joanie Core app."""
+
 # pylint: disable=too-many-lines
 from django.conf import settings
 from django.utils.translation import get_language
@@ -983,10 +984,10 @@ class GenerateSignedContractsZipSerializer(serializers.Serializer):
         errors = {}
         if course_product_relation_id:
             try:
-                attrs[
-                    "course_product_relation"
-                ] = models.CourseProductRelation.objects.get(
-                    pk=course_product_relation_id
+                attrs["course_product_relation"] = (
+                    models.CourseProductRelation.objects.get(
+                        pk=course_product_relation_id
+                    )
                 )
             except models.CourseProductRelation.DoesNotExist:
                 errors["course_product_relation_id"] = (

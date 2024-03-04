@@ -1,4 +1,5 @@
 """Test suite for `generate_document_context` utility"""
+
 from django.contrib.sites.models import Site
 from django.test import TestCase
 

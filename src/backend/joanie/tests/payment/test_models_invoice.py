@@ -1,4 +1,5 @@
 """Test suite for the Invoice model."""
+
 import re
 from decimal import Decimal as D
 

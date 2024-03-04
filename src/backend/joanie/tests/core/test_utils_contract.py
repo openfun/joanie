@@ -1,4 +1,5 @@
 """Test suite to generate a ZIP archive of signed contract PDF files in bytes utility"""
+
 import random
 from io import BytesIO
 from uuid import uuid4

@@ -1,4 +1,5 @@
 """Invoice admin test suite"""
+
 from http import HTTPStatus
 
 from django.test import TestCase

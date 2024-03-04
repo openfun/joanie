@@ -1,6 +1,7 @@
 """
 Test suite the `enroll_user_to_course_run` method on Order model
 """
+
 import random
 
 from django.test import RequestFactory, TestCase

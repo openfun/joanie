@@ -1,4 +1,5 @@
 """BackOfficeRedirectView test suite."""
+
 from http import HTTPStatus
 
 from django.test import TestCase, override_settings

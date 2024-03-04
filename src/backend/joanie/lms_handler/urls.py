@@ -1,6 +1,7 @@
 """
 API routes exposed by our LMS handler app.
 """
+
 from django.urls import re_path
 
 from rest_framework import routers

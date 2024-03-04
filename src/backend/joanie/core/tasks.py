@@ -1,4 +1,5 @@
 """Celery tasks for the `core` app of Joanie"""
+
 from logging import getLogger
 
 from django.core.management import call_command

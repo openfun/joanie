@@ -1,4 +1,5 @@
 """Test suite for the admin orders API endpoints."""
+
 import uuid
 from decimal import Decimal as D
 from http import HTTPStatus

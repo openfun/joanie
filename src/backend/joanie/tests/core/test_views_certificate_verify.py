@@ -1,4 +1,5 @@
 """CertificateVerificationView test suite."""
+
 import uuid
 from http import HTTPStatus
 

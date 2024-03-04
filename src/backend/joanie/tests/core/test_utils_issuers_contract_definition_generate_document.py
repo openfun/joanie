@@ -1,4 +1,5 @@
 """Test suite for utility method to generate document of Contract Definition in PDF bytes format"""
+
 from io import BytesIO
 
 from django.contrib.sites.models import Site

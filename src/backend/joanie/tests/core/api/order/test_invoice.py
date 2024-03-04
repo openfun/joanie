@@ -1,4 +1,5 @@
 """Tests for the Order invoice API."""
+
 from http import HTTPStatus
 from io import BytesIO
 

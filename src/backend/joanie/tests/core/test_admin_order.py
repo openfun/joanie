@@ -1,6 +1,7 @@
 """
 Test suite for orders admin pages
 """
+
 from http import HTTPStatus
 from unittest import mock
 

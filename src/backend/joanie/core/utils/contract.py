@@ -1,4 +1,5 @@
 """Utility to generate a ZIP archive of PDF bytes files for contracts that are signed"""
+
 import io
 import zipfile
 from logging import getLogger

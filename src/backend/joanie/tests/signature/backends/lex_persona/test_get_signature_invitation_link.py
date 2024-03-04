@@ -1,4 +1,5 @@
 """Test suite for the Lex Persona Signature Backend get_signature_invitation_link"""
+
 from http import HTTPStatus
 
 from django.test import TestCase

@@ -1,6 +1,7 @@
 """
 Declare and configure the models for the courses part
 """
+
 import itertools
 import logging
 from collections.abc import Mapping

@@ -1,4 +1,5 @@
 """Management command to synchronize course runs or equivalent course runs."""
+
 import logging
 from uuid import UUID
 

@@ -1,6 +1,7 @@
 """
 Test suite for the "synchronize_course_runs" utility
 """
+
 import json
 import random
 import re
@@ -40,11 +41,14 @@ class SynchronizeCourseRunsUtilsTestCase(TestCase):
 
     def test_utils_synchronize_course_runs_no_course_runs(self):
         """If no course runs are passed as arguments, the method should not make any request."""
-        with override_settings(
-            COURSE_WEB_HOOKS=[
-                {"url": "http://richie.education/webhook", "secret": "abc"},
-            ]
-        ), responses.RequestsMock():
+        with (
+            override_settings(
+                COURSE_WEB_HOOKS=[
+                    {"url": "http://richie.education/webhook", "secret": "abc"},
+                ]
+            ),
+            responses.RequestsMock(),
+        ):
             webhooks.synchronize_course_runs([])
 
         self.assertEqual(len(responses.calls), 0)
@@ -52,12 +56,15 @@ class SynchronizeCourseRunsUtilsTestCase(TestCase):
     @mock.patch.object(Logger, "info")
     def test_utils_synchronize_course_runs_success(self, mock_info):
         """Course runs passed to the function should get synchronized."""
-        with override_settings(
-            COURSE_WEB_HOOKS=[
-                {"url": "http://richie.education/webhook1", "secret": "abc"},
-                {"url": "http://richie.education/webhook2", "secret": "abc"},
-            ]
-        ), responses.RequestsMock() as rsps:
+        with (
+            override_settings(
+                COURSE_WEB_HOOKS=[
+                    {"url": "http://richie.education/webhook1", "secret": "abc"},
+                    {"url": "http://richie.education/webhook2", "secret": "abc"},
+                ]
+            ),
+            responses.RequestsMock() as rsps,
+        ):
             # Ensure successful response by webhook using "responses":
             rsp = rsps.post(
                 re.compile("http://richie.education/webhook{1}"),
@@ -137,11 +144,14 @@ class SynchronizeCourseRunsUtilsTestCase(TestCase):
     @mock.patch.object(Logger, "error")
     def test_utils_synchronize_course_runs_failure(self, mock_error):
         """The logger should be called on webhook call failure."""
-        with override_settings(
-            COURSE_WEB_HOOKS=[
-                {"url": "http://richie.education/webhook", "secret": "abc"},
-            ]
-        ), responses.RequestsMock() as rsps:
+        with (
+            override_settings(
+                COURSE_WEB_HOOKS=[
+                    {"url": "http://richie.education/webhook", "secret": "abc"},
+                ]
+            ),
+            responses.RequestsMock() as rsps,
+        ):
             # Simulate webhook failure using "responses":
             rsp = rsps.post(
                 re.compile("http://richie.education/webhook"),
@@ -213,13 +223,16 @@ class SynchronizeCourseRunsUtilsTestCase(TestCase):
                 "course": "1",
             },
         ]
-        with override_settings(
-            COURSE_WEB_HOOKS=[
-                {"url": "http://richie.education/webhook", "secret": "abc"},
-            ]
-        ), responses.RequestsMock(
-            registry=responses.registries.OrderedRegistry
-        ) as rsps:
+        with (
+            override_settings(
+                COURSE_WEB_HOOKS=[
+                    {"url": "http://richie.education/webhook", "secret": "abc"},
+                ]
+            ),
+            responses.RequestsMock(
+                registry=responses.registries.OrderedRegistry
+            ) as rsps,
+        ):
             # Make webhook fail 3 times before succeeding using "responses"
             url = "http://richie.education/webhook"
             all_rsps = [
@@ -253,11 +266,14 @@ class SynchronizeCourseRunsUtilsTestCase(TestCase):
     @mock.patch.object(Logger, "error")
     def test_utils_synchronize_course_runs_max_retries_exceeded(self, mock_error):
         """Course runs synchronization supports retries has exceeded max retries."""
-        with override_settings(
-            COURSE_WEB_HOOKS=[
-                {"url": "http://richie.education/webhook", "secret": "abc"},
-            ]
-        ), responses.RequestsMock() as rsps:
+        with (
+            override_settings(
+                COURSE_WEB_HOOKS=[
+                    {"url": "http://richie.education/webhook", "secret": "abc"},
+                ]
+            ),
+            responses.RequestsMock() as rsps,
+        ):
             # Simulate webhook failure using "responses":
             rsp = rsps.post(
                 re.compile("http://richie.education/webhook"),

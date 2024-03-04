@@ -1,4 +1,5 @@
 """Management command to generate all pending certificates."""
+
 import logging
 
 from django.core.management import BaseCommand

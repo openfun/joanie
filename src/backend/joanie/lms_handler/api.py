@@ -1,6 +1,7 @@
 """
 API endpoints
 """
+
 import hashlib
 import hmac
 from http import HTTPStatus

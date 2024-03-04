@@ -1,4 +1,5 @@
 """Custom serializer fields."""
+
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from easy_thumbnails.alias import aliases

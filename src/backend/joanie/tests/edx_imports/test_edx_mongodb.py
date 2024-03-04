@@ -1,4 +1,5 @@
 """Module for testing the edx_mongodb module."""
+
 from unittest.mock import MagicMock, patch
 
 from django.test import TestCase

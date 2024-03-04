@@ -1,6 +1,7 @@
 """
 Test suite for BaseTest class
 """
+
 from datetime import datetime, timedelta
 
 from joanie.core import factories

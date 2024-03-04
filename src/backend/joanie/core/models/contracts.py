@@ -1,6 +1,7 @@
 """
 Declare and configure the models for Joanie's contracts
 """
+
 import logging
 import textwrap
 from datetime import timedelta

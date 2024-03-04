@@ -1,6 +1,7 @@
 """
 Test suite for order models
 """
+
 # pylint: disable=too-many-lines,too-many-public-methods
 import json
 import random
@@ -1253,9 +1254,10 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             product=factories.ProductFactory(contract_definition=None),
         )
 
-        with self.assertRaises(ValidationError) as context, self.assertLogs(
-            "joanie"
-        ) as logger:
+        with (
+            self.assertRaises(ValidationError) as context,
+            self.assertLogs("joanie") as logger,
+        ):
             order.submit_for_signature(user=user)
 
         self.assertEqual(
@@ -1296,9 +1298,10 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
 
-        with self.assertRaises(ValidationError) as context, self.assertLogs(
-            "joanie"
-        ) as logger:
+        with (
+            self.assertRaises(ValidationError) as context,
+            self.assertLogs("joanie") as logger,
+        ):
             order.submit_for_signature(user=user)
 
         self.assertEqual(
@@ -1530,9 +1533,10 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             organization_signed_on=now,
         )
 
-        with self.assertRaises(PermissionDenied) as context, self.assertLogs(
-            "joanie"
-        ) as logger:
+        with (
+            self.assertRaises(PermissionDenied) as context,
+            self.assertLogs("joanie") as logger,
+        ):
             order.submit_for_signature(user=user)
 
         self.assertEqual(

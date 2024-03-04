@@ -1,4 +1,5 @@
 """Test suite for `generate_document` utility"""
+
 import textwrap
 from io import BytesIO
 

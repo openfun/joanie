@@ -1,6 +1,7 @@
 """
 Test suite for enrollment models
 """
+
 from datetime import timedelta
 from unittest import mock
 

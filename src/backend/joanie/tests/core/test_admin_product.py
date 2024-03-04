@@ -1,6 +1,7 @@
 """
 Test suite for products admin pages
 """
+
 import random
 import uuid
 from http import HTTPStatus

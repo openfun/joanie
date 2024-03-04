@@ -1,4 +1,5 @@
 """Payplug objects factories"""
+
 import string
 
 import factory

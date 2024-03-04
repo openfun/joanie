@@ -1,5 +1,6 @@
 # pylint: disable=too-many-lines
 """Test suite for the Course Product Relation API."""
+
 import random
 import uuid
 from http import HTTPStatus

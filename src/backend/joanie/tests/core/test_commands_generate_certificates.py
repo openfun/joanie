@@ -1,4 +1,5 @@
 """Test suite for the management command 'generate_certificates'"""
+
 import uuid
 
 from django.core.management import call_command

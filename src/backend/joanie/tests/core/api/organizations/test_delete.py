@@ -1,6 +1,7 @@
 """
 Test suite for Organization delete API endpoint.
 """
+
 import random
 from http import HTTPStatus
 

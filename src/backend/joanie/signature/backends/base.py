@@ -1,4 +1,5 @@
 """Base Signature Backend"""
+
 import re
 from logging import getLogger
 

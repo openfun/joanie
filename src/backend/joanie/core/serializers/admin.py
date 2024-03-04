@@ -1,5 +1,6 @@
 # pylint: disable=too-many-lines
 """Admin serializers for Joanie Core app."""
+
 from django.conf import settings
 
 from drf_spectacular.utils import extend_schema_serializer

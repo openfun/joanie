@@ -1,4 +1,5 @@
 """Certificate views for the Joanie core app."""
+
 import base64
 
 from django.contrib.sites.models import Site

@@ -1,6 +1,7 @@
 """
 Test suite for Certificate definition Admin API.
 """
+
 import random
 from http import HTTPStatus
 

@@ -1,4 +1,5 @@
 """Joanie core helpers tests suite"""
+
 from unittest import mock
 
 from django.test.testcases import TestCase

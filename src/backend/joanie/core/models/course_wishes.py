@@ -1,6 +1,7 @@
 """
 Declare and configure models for course wishes
 """
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 

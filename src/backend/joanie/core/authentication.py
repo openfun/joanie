@@ -1,4 +1,5 @@
 """Authentication for joanie's core app."""
+
 from django.conf import settings
 from django.utils.functional import SimpleLazyObject
 from django.utils.translation import get_supported_language_variant

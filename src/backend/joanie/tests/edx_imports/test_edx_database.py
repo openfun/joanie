@@ -1,4 +1,5 @@
 """Module for testing the Open edX database class."""
+
 from django.test import TestCase
 
 from joanie.edx_imports.edx_database import OpenEdxDB

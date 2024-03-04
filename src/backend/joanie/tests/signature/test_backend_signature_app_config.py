@@ -1,4 +1,5 @@
 """Test suite of the method ready() for Signature AppConfig"""
+
 import random
 
 from django.apps import apps

@@ -1,4 +1,5 @@
 """Tests for the Contract Definition Model"""
+
 from django.test import TestCase
 
 from joanie.core import factories

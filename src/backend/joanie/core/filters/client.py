@@ -1,6 +1,7 @@
 """
 Client API Resource Filters
 """
+
 from typing import List
 
 from django.db.models import Q

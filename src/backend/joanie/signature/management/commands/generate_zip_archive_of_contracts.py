@@ -1,4 +1,5 @@
 """Management command to generate a ZIP archive of signed contracts into file system storage"""
+
 import logging
 import uuid
 

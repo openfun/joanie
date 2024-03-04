@@ -1,4 +1,5 @@
 """Test suite for the management command `synchronize_course_runs`."""
+
 import random
 import uuid
 from unittest import mock

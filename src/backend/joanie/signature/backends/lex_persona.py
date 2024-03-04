@@ -1,4 +1,5 @@
 """Signature Backend for Lex Persona Provider"""
+
 import io
 import json
 import re

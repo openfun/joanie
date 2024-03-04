@@ -1,4 +1,5 @@
 """Test suite for the Lex Persona Signature Backend get_signed_file"""
+
 from http import HTTPStatus
 
 from django.core.exceptions import ValidationError

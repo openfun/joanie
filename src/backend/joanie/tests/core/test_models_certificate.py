@@ -1,4 +1,5 @@
 """Test suite for Certificate Model"""
+
 from django.conf import settings
 from django.test import TestCase
 

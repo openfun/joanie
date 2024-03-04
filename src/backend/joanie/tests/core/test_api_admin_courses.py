@@ -1,6 +1,7 @@
 """
 Test suite for Course Admin API.
 """
+
 import datetime
 import random
 import uuid

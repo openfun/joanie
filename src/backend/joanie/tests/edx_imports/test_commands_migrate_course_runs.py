@@ -1,4 +1,5 @@
 """Tests for the migrate_edx command to import course runs from Open edX."""
+
 from unittest.mock import patch
 
 from django.core.management import call_command

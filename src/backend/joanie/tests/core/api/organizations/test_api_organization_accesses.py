@@ -1,6 +1,7 @@
 """
 Tests organization access API endpoints in Joanie's core app.
 """
+
 import random
 from http import HTTPStatus
 from unittest import mock
