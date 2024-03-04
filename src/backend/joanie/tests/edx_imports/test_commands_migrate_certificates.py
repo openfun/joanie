@@ -1,6 +1,6 @@
 """Tests for the migrate_edx command to import certificates from Open edX."""
 
-# pylint: disable=unexpected-keyword-arg,no-value-for-parameter
+# pylint: disable=unexpected-keyword-arg,no-value-for-parameter,too-many-locals
 
 import os
 from os.path import dirname, join, realpath
@@ -17,6 +17,7 @@ from joanie.core.enums import CERTIFICATE, DEGREE
 from joanie.core.utils import image_to_base64
 from joanie.edx_imports import edx_factories
 from joanie.edx_imports.utils import extract_course_number, make_date_aware
+from joanie.tests.base import BaseLogMixinTestCase
 from joanie.tests.edx_imports.base_test_commands_migrate import (
     MigrateOpenEdxBaseTestCase,
 )
@@ -40,7 +41,9 @@ with open(
         }
     },
 )
-class MigrateOpenEdxCertificatesTestCase(MigrateOpenEdxBaseTestCase):
+class MigrateOpenEdxCertificatesTestCase(
+    MigrateOpenEdxBaseTestCase, BaseLogMixinTestCase
+):
     """Tests for the migrate_edx command to import certificates from Open edX."""
 
     def setUp(self):
@@ -305,17 +308,41 @@ class MigrateOpenEdxCertificatesTestCase(MigrateOpenEdxBaseTestCase):
             for edx_certificate in edx_certificates
         ]
 
-        with self.assertLogs() as logger:
+        with self.assertLogs("joanie") as logs:
             call_command("migrate_edx", "--skip-check", "--certificates")
 
-        expected = [
-            "Importing data from Open edX database...",
-            "Importing certificates...",
-            "10 certificates to import by batch of 1000",
-            "100% 10/10 : 5 certificates created, 0 skipped, 5 errors",
-            "1 import certificates tasks launched",
-        ] + [
-            f"No organization found in mongodb for {edx_certificate.course_id}"
-            for edx_certificate in edx_certificates_fail
+        before_import_logs = [
+            ("INFO", "Importing data from Open edX database..."),
+            ("INFO", "Importing certificates..."),
+            ("INFO", "10 certificates to import by batch of 1000"),
         ]
-        self.assertLogsContains(logger, expected)
+
+        import_logs = []
+        for edx_certificate in edx_certificates:
+            if edx_certificate in edx_certificates_fail:
+                import_logs.append(
+                    (
+                        "ERROR",
+                        "No organization found in mongodb "
+                        f"for {extract_course_number(edx_certificate.course_id)}",
+                        {
+                            "edx_certificate": dict,
+                            "enrollment": dict,
+                            "course_run": dict,
+                            "course": dict,
+                        },
+                    )
+                )
+            else:
+                signature_image_path = mongo_enrollments[edx_certificate.id][1].get(
+                    "signature_image_path"
+                )[1:]
+                import_logs.append(("INFO", f"Download {signature_image_path}"))
+
+        after_import_logs = [
+            ("INFO", "100% 10/10 : 5 certificates created, 0 skipped, 5 errors"),
+            ("INFO", "1 import certificates tasks launched"),
+        ]
+        self.assertLogsEquals(
+            logs.records, before_import_logs + import_logs + after_import_logs
+        )

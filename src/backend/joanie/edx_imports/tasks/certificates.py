@@ -98,7 +98,16 @@ def import_certificates_batch(start, stop, total, dry_run=False):
         if not organization_code:
             report["certificates"]["errors"] += 1
             logger.error(
-                "No organization found in mongodb for %s", edx_certificate.course_id
+                "No organization found in mongodb for %s",
+                enrollment.course_run.course.code,
+                extra={
+                    "context": {
+                        "edx_certificate": vars(edx_certificate),
+                        "enrollment": enrollment.to_dict(),
+                        "course_run": enrollment.course_run.to_dict(),
+                        "course": enrollment.course_run.course.to_dict(),
+                    }
+                },
             )
             continue
 
@@ -108,7 +117,17 @@ def import_certificates_batch(start, stop, total, dry_run=False):
             )
         except models.Organization.DoesNotExist:
             report["certificates"]["errors"] += 1
-            logger.error("No organization found for %s", organization_code)
+            logger.error(
+                "No organization found for %s",
+                organization_code,
+                extra={
+                    "context": {
+                        "edx_certificate": vars(edx_certificate),
+                        "enrollment": enrollment.to_dict(),
+                        "course_run": enrollment.course_run.to_dict(),
+                    }
+                },
+            )
             continue
 
         verification_hash = hashids.encode(edx_certificate.id)
