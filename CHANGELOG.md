@@ -104,6 +104,7 @@ and this project adheres to
 - Add admin endpoint to manage course product relations
 - Add organization contract signature
 - Add moodle LMS backend
+- Make the target course card title clickable
 - Add contract details inside order view
 - Add playwright component stack
 
@@ -169,6 +170,11 @@ and this project adheres to
   - AdminCourseAccessSerializer
   - AdminCourseSerializer
   - AdminCourseRunSerializer
+- Update the course runs list
+  - delete the resource link column and move it to the options
+  - format start and end date
+  - add course code colum
+
 
 ### Removed
 
