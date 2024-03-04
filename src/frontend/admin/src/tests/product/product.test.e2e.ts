@@ -275,7 +275,9 @@ test.describe("Product form", () => {
       .click();
 
     await page
-      .getByRole("row", { name: `Select row ${courseRuns[0].title} Click` })
+      .getByRole("row", {
+        name: `Select row ${courseRuns[0].course.code} ${courseRuns[0].title}`,
+      })
       .getByLabel("Select row")
       .check();
     await page.getByTestId("submit-button-product-target-course-form").click();
@@ -303,7 +305,7 @@ test.describe("Product form", () => {
     ).toBeVisible();
 
     await page
-      .getByRole("row", { name: `Unselect row ${courseRuns[0].title}` })
+      .getByRole("row", { name: `Unselect row` })
       .getByLabel("Unselect row")
       .uncheck();
     await page.getByTestId("submit-button-product-target-course-form").click();
