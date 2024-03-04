@@ -79,7 +79,7 @@ def import_course_runs_batch(start, stop, total, dry_run=False):
     for edx_course_overview in edx_course_overviews:
         # Select LMS from resource link
         resource_link = (
-            f"https://{settings.EDX_DOMAIN}/courses/{edx_course_overview.id}/course"
+            f"https://{settings.EDX_DOMAIN}/courses/{edx_course_overview.id}/info"
         )
 
         try:
