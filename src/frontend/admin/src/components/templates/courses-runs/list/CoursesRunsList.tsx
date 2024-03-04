@@ -1,9 +1,8 @@
 import * as React from "react";
 import { useMemo } from "react";
-import { useIntl } from "react-intl";
+import { defineMessages, useIntl } from "react-intl";
 import { useRouter } from "next/router";
 import { GridColDef } from "@mui/x-data-grid";
-import { useSnackbar } from "notistack";
 import CopyAllIcon from "@mui/icons-material/CopyAll";
 import {
   DefaultTableProps,
@@ -21,13 +20,21 @@ import { commonTranslations } from "@/translations/common/commonTranslations";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { CourseRunFilters } from "@/components/templates/courses-runs/filters/CourseRunFilters";
 
+const messages = defineMessages({
+  copyResourceLink: {
+    id: "components.templates.courseRuns.list.copyResourceLink",
+    defaultMessage: "Copy the resource link",
+    description:
+      "Label for the copy the resource link option inside the more button",
+  },
+});
+
 type Props = DefaultTableProps<CourseRun> & {
   courseId?: string;
 };
 
 export function CoursesRunsList({ courseId, ...props }: Props) {
   const intl = useIntl();
-  const snackbar = useSnackbar();
   const copyToClipboard = useCopyToClipboard();
   const { push } = useRouter();
 
@@ -41,7 +48,7 @@ export function CoursesRunsList({ courseId, ...props }: Props) {
   });
 
   const columns: GridColDef[] = useMemo(
-    () => getCoursesRunsListColumns(intl, snackbar),
+    () => getCoursesRunsListColumns(intl),
     [intl],
   );
 
@@ -60,7 +67,7 @@ export function CoursesRunsList({ courseId, ...props }: Props) {
       columns={columns}
       columnBuffer={6}
       getOptions={(courseRun) => {
-        const { uri } = courseRun;
+        const { uri, resource_link: resourceLink } = courseRun;
 
         if (uri === undefined) {
           return [];
@@ -71,6 +78,11 @@ export function CoursesRunsList({ courseId, ...props }: Props) {
             title: intl.formatMessage(commonTranslations.copyUrl),
             icon: <CopyAllIcon fontSize="small" />,
             onClick: () => copyToClipboard(uri),
+          },
+          {
+            title: intl.formatMessage(messages.copyResourceLink),
+            icon: <CopyAllIcon fontSize="small" />,
+            onClick: () => copyToClipboard(resourceLink),
           },
         ];
       }}
