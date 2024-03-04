@@ -9,6 +9,7 @@ from django.conf import settings
 from django.core.files.storage import default_storage
 from django.test import TestCase, override_settings
 
+import factory
 import responses
 from hashids import Hashids
 
@@ -69,10 +70,14 @@ class EdxImportCertificatesTestCase(TestCase):
         """
         edx_certificates = edx_factories.EdxGeneratedCertificateFactory.create_batch(10)
         mongo_enrollments = {}
-        for edx_certificate in edx_certificates:
+        for i, edx_certificate in enumerate(edx_certificates):
             course = factories.CourseFactory.create(
                 code=extract_course_number(edx_certificate.course_id),
-                organizations=[factories.OrganizationFactory.create()],
+                organizations=[
+                    factories.OrganizationFactory.create(
+                        code=factory.Sequence(lambda n: f"orga{n}")
+                    )
+                ],
             )
             course_run = factories.CourseRunFactory.create(
                 course=course,
@@ -88,7 +93,9 @@ class EdxImportCertificatesTestCase(TestCase):
 
             edx_mongo_signatory = edx_factories.EdxMongoSignatoryFactory()
             mongo_enrollments[edx_certificate.id] = (
-                course.organizations.first().code,
+                course.organizations.first().code.lower()
+                if i % 2 == 0
+                else course.organizations.first().code.upper(),
                 edx_mongo_signatory,
             )
             responses.add(
@@ -121,8 +128,8 @@ class EdxImportCertificatesTestCase(TestCase):
                 certificate.certificate_definition.template, certificate_template
             )
             self.assertEqual(
-                certificate.organization.code,
-                mongo_enrollments[edx_certificate.id][0],
+                certificate.organization.code.upper(),
+                mongo_enrollments[edx_certificate.id][0].upper(),
             )
             self.assertEqual(
                 certificate.issued_on, make_date_aware(edx_certificate.created_date)

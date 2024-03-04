@@ -103,7 +103,9 @@ def import_certificates_batch(start, stop, total, dry_run=False):
             continue
 
         try:
-            organization = models.Organization.objects.get(code=organization_code)
+            organization = models.Organization.objects.get(
+                code__iexact=organization_code
+            )
         except models.Organization.DoesNotExist:
             report["certificates"]["errors"] += 1
             logger.error("No organization found for %s", organization_code)
