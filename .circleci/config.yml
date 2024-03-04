@@ -46,7 +46,7 @@ jobs:
   # Check that the CHANGELOG has been updated in the current branch
   check-changelog:
     docker:
-      - image: cimg/base:2022.06
+      - image: cimg/base:current
     working_directory: ~/joanie
     steps:
       - checkout:
@@ -74,7 +74,7 @@ jobs:
   # Build the Docker image ready for production
   build-docker:
     docker:
-      - image: cimg/base:2022.06
+      - image: cimg/base:current
     working_directory: ~/joanie
     steps:
       # Checkout repository sources
@@ -95,7 +95,7 @@ jobs:
 
   build-docker-admin:
     docker:
-      - image: cimg/base:2023.12
+      - image: cimg/base:current
     working_directory: ~/joanie
     steps:
       # Checkout repository sources
@@ -539,7 +539,7 @@ jobs:
   # ---- DockerHub publication job ----
   hub:
     docker:
-      - image: cimg/base:2023.10
+      - image: cimg/base:current
     working_directory: ~/joanie
     steps:
       # Checkout repository sources
@@ -609,7 +609,7 @@ jobs:
 
   hub-admin:
     docker:
-      - image: cimg/base:2023.12
+      - image: cimg/base:current
     working_directory: ~/joanie
     steps:
       # Checkout repository sources
