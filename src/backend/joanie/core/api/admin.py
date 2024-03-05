@@ -5,6 +5,7 @@ Admin API Endpoints
 from http import HTTPStatus
 
 from django.core.exceptions import ValidationError
+from django.http import JsonResponse
 
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -444,6 +445,36 @@ class OrderViewSet(
         order = self.get_object()
         order.cancel()
         return Response(status=HTTPStatus.NO_CONTENT)
+
+    @extend_schema(
+        request=None,
+        responses={
+            (200, "application/json"): serializers.AdminCertificateSerializer,
+            (201, "application/json"): serializers.AdminCertificateSerializer,
+            404: serializers.ErrorResponseSerializer,
+            422: serializers.ErrorResponseSerializer,
+        },
+    )
+    @action(methods=["POST"], detail=True)
+    def generate_certificate(self, request, pk=None):  # pylint:disable=unused-argument
+        """
+        Generate the certificate for an order when it is eligible.
+        """
+        order = self.get_object()
+
+        certificate, created = order.get_or_generate_certificate()
+
+        if not certificate:
+            return JsonResponse(
+                {"details": f"Cannot issue certificate for order {order.id}"},
+                status=HTTPStatus.UNPROCESSABLE_ENTITY,
+            )
+
+        certificate = serializers.AdminCertificateSerializer(certificate).data
+        if not created:
+            return Response(certificate, status=HTTPStatus.OK)
+
+        return Response(certificate, status=HTTPStatus.CREATED)
 
 
 class OrganizationAddressViewSet(
