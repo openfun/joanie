@@ -145,13 +145,12 @@ sections = { joanie=["joanie"], django=["django"] }
 [tool.ruff.lint.per-file-ignores]
 "joanie/**/tests/*" = ["S", "SLF"]
 
+
 [tool.pytest.ini_options]
 addopts = [
     "-v",
     "--cov-report",
     "term-missing",
-    # Allow test files to have the same name in different directories.
-    "--import-mode=importlib",
     "--pdbcls=IPython.terminal.debugger:Pdb",
 ]
 python_files = [
