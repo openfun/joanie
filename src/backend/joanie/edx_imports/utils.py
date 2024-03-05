@@ -58,6 +58,11 @@ def extract_course_number(course_overview_id):
     return utils.normalize_code(split_course_key(course_overview_id)[1])
 
 
+def extract_organization_code(course_overview_id):
+    """Extract the organization code from a course overview id"""
+    return utils.normalize_code(split_course_key(course_overview_id)[0])
+
+
 def check_language_code(language_code):
     """Return the language code"""
     if language_code not in [language[0] for language in enums.ALL_LANGUAGES]:

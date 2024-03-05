@@ -16,7 +16,11 @@ from joanie.core import factories, models
 from joanie.core.enums import CERTIFICATE, DEGREE
 from joanie.core.utils import image_to_base64
 from joanie.edx_imports import edx_factories
-from joanie.edx_imports.utils import extract_course_number, make_date_aware
+from joanie.edx_imports.utils import (
+    extract_course_number,
+    extract_organization_code,
+    make_date_aware,
+)
 from joanie.tests.base import BaseLogMixinTestCase
 from joanie.tests.edx_imports.base_test_commands_migrate import (
     MigrateOpenEdxBaseTestCase,
@@ -51,12 +55,15 @@ class MigrateOpenEdxCertificatesTestCase(
         factories.CertificateDefinitionFactory.create(template=DEGREE)
         factories.CertificateDefinitionFactory.create(template=CERTIFICATE)
 
-    @patch("joanie.edx_imports.edx_mongodb.get_enrollment")
+    @patch("joanie.edx_imports.edx_mongodb.get_signature_from_enrollment")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates_count")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates")
     @responses.activate(assert_all_requests_are_fired=True)
     def test_command_migrate_certificates_create(
-        self, mock_get_certificates, mock_get_certificates_count, mock_get_enrollment
+        self,
+        mock_get_certificates,
+        mock_get_certificates_count,
+        mock_get_signature_from_enrollment,
     ):
         """
         Test that certificates are created from the edx certificates.
@@ -66,7 +73,11 @@ class MigrateOpenEdxCertificatesTestCase(
         for edx_certificate in edx_certificates:
             course = factories.CourseFactory.create(
                 code=extract_course_number(edx_certificate.course_id),
-                organizations=[factories.OrganizationFactory.create()],
+                organizations=[
+                    factories.OrganizationFactory.create(
+                        code=extract_organization_code(edx_certificate.course_id)
+                    )
+                ],
             )
             course_run = factories.CourseRunFactory.create(
                 course=course,
@@ -79,16 +90,12 @@ class MigrateOpenEdxCertificatesTestCase(
                 course_run=course_run,
                 was_created_by_order=False,
             )
-            mongo_enrollments[edx_certificate.id] = (
-                course.organizations.first().code,
-                edx_factories.EdxMongoSignatoryFactory(),
-            )
+            mongo_enrollments[
+                edx_certificate.id
+            ] = edx_factories.EdxMongoSignatoryFactory()
 
             edx_mongo_signatory = edx_factories.EdxMongoSignatoryFactory()
-            mongo_enrollments[edx_certificate.id] = (
-                course.organizations.first().code,
-                edx_mongo_signatory,
-            )
+            mongo_enrollments[edx_certificate.id] = edx_mongo_signatory
             responses.add(
                 responses.GET,
                 f"https://{settings.EDX_DOMAIN}{edx_mongo_signatory.get('signature_image_path')}",
@@ -97,7 +104,7 @@ class MigrateOpenEdxCertificatesTestCase(
 
         mock_get_certificates.return_value = edx_certificates
         mock_get_certificates_count.return_value = len(edx_certificates)
-        mock_get_enrollment.side_effect = [
+        mock_get_signature_from_enrollment.side_effect = [
             mongo_enrollments[edx_certificate.id]
             for edx_certificate in edx_certificates
         ]
@@ -114,11 +121,14 @@ class MigrateOpenEdxCertificatesTestCase(
         ]
         self.assertLogsContains(logger, expected)
 
-    @patch("joanie.edx_imports.edx_mongodb.get_enrollment")
+    @patch("joanie.edx_imports.edx_mongodb.get_signature_from_enrollment")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates_count")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates")
     def test_command_migrate_certificates_update(
-        self, mock_get_certificates, mock_get_certificates_count, mock_get_enrollment
+        self,
+        mock_get_certificates,
+        mock_get_certificates_count,
+        mock_get_signature_from_enrollment,
     ):
         """
         Test that certificates are updated from the edx certificates.
@@ -128,7 +138,11 @@ class MigrateOpenEdxCertificatesTestCase(
         for edx_certificate in edx_certificates:
             course = factories.CourseFactory.create(
                 code=extract_course_number(edx_certificate.course_id),
-                organizations=[factories.OrganizationFactory.create()],
+                organizations=[
+                    factories.OrganizationFactory.create(
+                        code=extract_organization_code(edx_certificate.course_id)
+                    )
+                ],
             )
             course_run = factories.CourseRunFactory.create(
                 course=course,
@@ -148,14 +162,11 @@ class MigrateOpenEdxCertificatesTestCase(
             )
 
             edx_mongo_signatory = edx_factories.EdxMongoSignatoryFactory()
-            mongo_enrollments[edx_certificate.id] = (
-                course.organizations.first().code,
-                edx_mongo_signatory,
-            )
+            mongo_enrollments[edx_certificate.id] = edx_mongo_signatory
 
         mock_get_certificates.return_value = edx_certificates
         mock_get_certificates_count.return_value = len(edx_certificates)
-        mock_get_enrollment.side_effect = [
+        mock_get_signature_from_enrollment.side_effect = [
             mongo_enrollments[edx_certificate.id]
             for edx_certificate in edx_certificates
         ]
@@ -172,12 +183,15 @@ class MigrateOpenEdxCertificatesTestCase(
         ]
         self.assertLogsContains(logger, expected)
 
-    @patch("joanie.edx_imports.edx_mongodb.get_enrollment")
+    @patch("joanie.edx_imports.edx_mongodb.get_signature_from_enrollment")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates_count")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates")
     @responses.activate(assert_all_requests_are_fired=True)
     def test_command_migrate_certificates_create_missing_joanie_enrollments(
-        self, mock_get_certificates, mock_get_certificates_count, mock_get_enrollment
+        self,
+        mock_get_certificates,
+        mock_get_certificates_count,
+        mock_get_signature_from_enrollment,
     ):
         """
         Test that certificates are not created from the edx certificates if the enrollment
@@ -191,7 +205,11 @@ class MigrateOpenEdxCertificatesTestCase(
         for edx_certificate in edx_certificates:
             course = factories.CourseFactory.create(
                 code=extract_course_number(edx_certificate.course_id),
-                organizations=[factories.OrganizationFactory.create()],
+                organizations=[
+                    factories.OrganizationFactory.create(
+                        code=extract_organization_code(edx_certificate.course_id)
+                    )
+                ],
             )
 
             edx_mongo_signatory = edx_factories.EdxMongoSignatoryFactory()
@@ -219,15 +237,12 @@ class MigrateOpenEdxCertificatesTestCase(
                 )
             else:
                 edx_certificates_fail.append(edx_certificate)
-            mongo_enrollments[edx_certificate.id] = (
-                course.organizations.first().code,
-                edx_mongo_signatory,
-            )
+            mongo_enrollments[edx_certificate.id] = edx_mongo_signatory
             i += 1
 
         mock_get_certificates.return_value = edx_certificates
         mock_get_certificates_count.return_value = len(edx_certificates)
-        mock_get_enrollment.side_effect = [
+        mock_get_signature_from_enrollment.side_effect = [
             mongo_enrollments[edx_certificate.id]
             for edx_certificate in edx_certificates_with_joanie_enrollments
         ]
@@ -246,103 +261,3 @@ class MigrateOpenEdxCertificatesTestCase(
             for edx_certificate in edx_certificates_fail
         ]
         self.assertLogsContains(logger, expected)
-
-    @patch("joanie.edx_imports.edx_mongodb.get_enrollment")
-    @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates_count")
-    @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates")
-    @responses.activate(assert_all_requests_are_fired=True)
-    def test_command_migrate_certificates_create_missing_mongodb_orga(
-        self, mock_get_certificates, mock_get_certificates_count, mock_get_enrollment
-    ):
-        """
-        Test that certificates are not created from the edx certificates if the organization
-        is missing in mongodb.
-        """
-        edx_certificates = edx_factories.EdxGeneratedCertificateFactory.create_batch(10)
-        mongo_enrollments = {}
-        edx_certificates_with_mongodb_enrollments = []
-        edx_certificates_fail = []
-        i = 0
-        for edx_certificate in edx_certificates:
-            course = factories.CourseFactory.create(
-                code=extract_course_number(edx_certificate.course_id),
-                organizations=[factories.OrganizationFactory.create()],
-            )
-            course_run = factories.CourseRunFactory.create(
-                course=course,
-                state=models.CourseState.ONGOING_OPEN,
-                resource_link=f"http://openedx.test/courses/{edx_certificate.course_id}/course/",
-                is_listed=True,
-            )
-            factories.EnrollmentFactory.create(
-                user__username=edx_certificate.user.username,
-                course_run=course_run,
-                was_created_by_order=False,
-            )
-
-            edx_mongo_signatory = edx_factories.EdxMongoSignatoryFactory()
-            if i % 2 == 0:
-                edx_certificates_with_mongodb_enrollments.append(edx_certificate)
-                mongo_enrollments[edx_certificate.id] = (
-                    course.organizations.first().code,
-                    edx_mongo_signatory,
-                )
-                responses.add(
-                    responses.GET,
-                    f"https://{settings.EDX_DOMAIN}"
-                    f"{edx_mongo_signatory.get('signature_image_path')}",
-                    body=SIGNATURE_CONTENT,
-                )
-            else:
-                edx_certificates_fail.append(edx_certificate)
-                mongo_enrollments[edx_certificate.id] = (
-                    None,
-                    edx_mongo_signatory,
-                )
-            i += 1
-
-        mock_get_certificates.return_value = edx_certificates
-        mock_get_certificates_count.return_value = len(edx_certificates)
-        mock_get_enrollment.side_effect = [
-            mongo_enrollments[edx_certificate.id]
-            for edx_certificate in edx_certificates
-        ]
-
-        with self.assertLogs("joanie") as logs:
-            call_command("migrate_edx", "--skip-check", "--certificates")
-
-        before_import_logs = [
-            ("INFO", "Importing data from Open edX database..."),
-            ("INFO", "Importing certificates..."),
-            ("INFO", "10 certificates to import by batch of 1000"),
-        ]
-
-        import_logs = []
-        for edx_certificate in edx_certificates:
-            if edx_certificate in edx_certificates_fail:
-                import_logs.append(
-                    (
-                        "ERROR",
-                        "No organization found in mongodb "
-                        f"for {extract_course_number(edx_certificate.course_id)}",
-                        {
-                            "edx_certificate": dict,
-                            "enrollment": dict,
-                            "course_run": dict,
-                            "course": dict,
-                        },
-                    )
-                )
-            else:
-                signature_image_path = mongo_enrollments[edx_certificate.id][1].get(
-                    "signature_image_path"
-                )[1:]
-                import_logs.append(("INFO", f"Download {signature_image_path}"))
-
-        after_import_logs = [
-            ("INFO", "100% 10/10 : 5 certificates created, 0 skipped, 5 errors"),
-            ("INFO", "1 import certificates tasks launched"),
-        ]
-        self.assertLogsEquals(
-            logs.records, before_import_logs + import_logs + after_import_logs
-        )

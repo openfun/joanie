@@ -16,7 +16,12 @@ from joanie.core.enums import CERTIFICATE, DEGREE
 from joanie.core.utils import image_to_base64
 from joanie.edx_imports import edx_mongodb
 from joanie.edx_imports.edx_database import OpenEdxDB
-from joanie.edx_imports.utils import download_and_store, format_percent, make_date_aware
+from joanie.edx_imports.utils import (
+    download_and_store,
+    extract_organization_code,
+    format_percent,
+    make_date_aware,
+)
 from joanie.lms_handler.backends.openedx import OPENEDX_MODE_VERIFIED
 
 logger = getLogger(__name__)
@@ -97,9 +102,10 @@ def import_certificates_batch(start, stop, total, course_id, dry_run=False):
             report["certificates"]["skipped"] += 1
             continue
 
-        organization_code, signatory = edx_mongodb.get_enrollment(
+        signatory = edx_mongodb.get_signature_from_enrollment(
             enrollment.course_run.course.code
         )
+        organization_code = extract_organization_code(edx_certificate.course_id)
 
         if not organization_code:
             report["certificates"]["errors"] += 1
