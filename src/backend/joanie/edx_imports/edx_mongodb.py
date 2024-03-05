@@ -5,8 +5,8 @@ from django.conf import settings
 from pymongo import MongoClient
 
 
-def get_enrollment(course_id):
-    """Get enrollment from mongodb"""
+def get_signature_from_enrollment(course_id):
+    """Get signature from mongodb enrollment"""
     client = MongoClient(
         host=settings.EDX_MONGODB_HOST,
         port=settings.EDX_MONGODB_PORT,
@@ -23,11 +23,6 @@ def get_enrollment(course_id):
     )
 
     try:
-        organization_code = mongo_enrollment.get("_id").get("org") or None
-    except AttributeError:
-        organization_code = None
-
-    try:
         signatory = (
             mongo_enrollment.get("metadata")
             .get("certificates")
@@ -37,4 +32,4 @@ def get_enrollment(course_id):
     except (AttributeError, IndexError):
         signatory = None
 
-    return organization_code, signatory
+    return signatory
