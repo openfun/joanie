@@ -13,10 +13,12 @@ from joanie.edx_imports.utils import format_percent, make_date_aware
 logger = getLogger(__name__)
 
 
-def import_enrollments(batch_size=1000, offset=0, limit=0, dry_run=False):
+def import_enrollments(
+    batch_size=1000, offset=0, limit=0, course_id=None, dry_run=False
+):
     """Import enrollments from Open edX student_course_enrollment"""
     db = OpenEdxDB()
-    enrollments_count = db.get_enrollments_count(offset, limit)
+    enrollments_count = db.get_enrollments_count(offset, limit, course_id=course_id)
     if dry_run:
         logger.info("Dry run: no enrollment will be imported")
     logger.info(
@@ -31,7 +33,11 @@ def import_enrollments(batch_size=1000, offset=0, limit=0, dry_run=False):
         if limit:
             stop = min(stop, limit)
         import_enrollments_batch_task.delay(
-            start=start, stop=stop, total=enrollments_count, dry_run=dry_run
+            start=start,
+            stop=stop,
+            total=enrollments_count,
+            course_id=course_id,
+            dry_run=dry_run,
         )
     logger.info("%s import enrollments tasks launched", batch_count)
 
@@ -49,7 +55,7 @@ def import_enrollments_batch_task(self, **kwargs):
     return report
 
 
-def import_enrollments_batch(start, stop, total, dry_run=False):
+def import_enrollments_batch(start, stop, total, course_id, dry_run=False):
     """Batch import enrollments from Open edX student_course_enrollment"""
     db = OpenEdxDB()
     report = {
@@ -59,7 +65,7 @@ def import_enrollments_batch(start, stop, total, dry_run=False):
             "errors": 0,
         }
     }
-    enrollments = db.get_enrollments(start, stop)
+    enrollments = db.get_enrollments(start, stop, course_id=course_id)
     enrollments_to_create = []
 
     for edx_enrollment in enrollments:

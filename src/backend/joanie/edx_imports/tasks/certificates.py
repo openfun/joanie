@@ -22,10 +22,12 @@ from joanie.lms_handler.backends.openedx import OPENEDX_MODE_VERIFIED
 logger = getLogger(__name__)
 
 
-def import_certificates(batch_size=1000, offset=0, limit=0, dry_run=False):
+def import_certificates(
+    batch_size=1000, offset=0, limit=0, course_id=None, dry_run=False
+):
     """Import organizations from Open edX certificates"""
     db = OpenEdxDB()
-    certificates_count = db.get_certificates_count(offset, limit)
+    certificates_count = db.get_certificates_count(offset, limit, course_id=course_id)
     if dry_run:
         logger.info("Dry run: no certificate will be imported")
     logger.info(
@@ -40,7 +42,11 @@ def import_certificates(batch_size=1000, offset=0, limit=0, dry_run=False):
         if limit:
             stop = min(stop, limit)
         import_certificates_batch_task.delay(
-            start=start, stop=stop, total=certificates_count, dry_run=dry_run
+            start=start,
+            stop=stop,
+            total=certificates_count,
+            course_id=course_id,
+            dry_run=dry_run,
         )
     logger.info("%s import certificates tasks launched", batch_count)
 
@@ -58,7 +64,7 @@ def import_certificates_batch_task(self, **kwargs):
     return report
 
 
-def import_certificates_batch(start, stop, total, dry_run=False):
+def import_certificates_batch(start, stop, total, course_id, dry_run=False):
     """Batch import certificates from Open edX certificates_generatedcertificate"""
     db = OpenEdxDB()
     report = {
@@ -69,7 +75,7 @@ def import_certificates_batch(start, stop, total, dry_run=False):
         }
     }
     hashids = Hashids(salt=settings.EDX_SECRET)
-    certificates = db.get_certificates(start, stop)
+    certificates = db.get_certificates(start, stop, course_id=course_id)
     certificates_to_create = []
 
     for edx_certificate in certificates:

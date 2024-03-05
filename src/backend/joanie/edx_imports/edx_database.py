@@ -226,7 +226,7 @@ class OpenEdxDB:
         )
         return self.session.scalars(query).unique().all()
 
-    def get_enrollments_count(self, offset=0, limit=0):
+    def get_enrollments_count(self, offset=0, limit=0, course_id=None):
         """
         Get enrollments count from Open edX database
 
@@ -246,13 +246,17 @@ class OpenEdxDB:
             )
             .join(self.User, self.StudentCourseEnrollment.user_id == self.User.id)
         )
+        if course_id:
+            query_count = query_count.where(
+                self.StudentCourseEnrollment.course_id == course_id
+            )
         enrollments_count = self.session.execute(query_count).scalar()
         enrollments_count -= offset
         if limit:
             return min(enrollments_count, limit)
         return enrollments_count
 
-    def get_enrollments(self, start, stop):
+    def get_enrollments(self, start, stop, course_id=None):
         """
         Get enrollments from Open edX database by slicing
 
@@ -304,9 +308,11 @@ class OpenEdxDB:
             .order_by(self.StudentCourseEnrollment.course_id)
             .slice(start, start + stop)
         )
+        if course_id:
+            query = query.where(self.StudentCourseEnrollment.course_id == course_id)
         return self.session.scalars(query).all()
 
-    def get_certificates_count(self, offset=0, limit=0):
+    def get_certificates_count(self, offset=0, limit=0, course_id=None):
         """
         Get downloadable certificates count from Open edX database
 
@@ -317,13 +323,15 @@ class OpenEdxDB:
         query_count = select(count(self.Certificate.id)).where(
             self.Certificate.status == "downloadable"
         )
+        if course_id:
+            query_count = query_count.where(self.Certificate.course_id == course_id)
         certificates_count = self.session.execute(query_count).scalar()
         certificates_count -= offset
         if limit:
             return min(certificates_count, limit)
         return certificates_count
 
-    def get_certificates(self, start, stop):
+    def get_certificates(self, start, stop, course_id=None):
         """
         Get downloadable certificates from Open edX database by slicing
 
@@ -352,4 +360,6 @@ class OpenEdxDB:
             .order_by(self.Certificate.course_id)
             .slice(start, start + stop)
         )
+        if course_id:
+            query = query.where(self.Certificate.course_id == course_id)
         return self.session.scalars(query).all()

@@ -102,6 +102,11 @@ class Command(BaseCommand):
             help="Limit of certificates to import",
             default=0,
         )
+        parser.add_argument(
+            "--course-id",
+            type=str,
+            help="Course id to import enrollments and certificates",
+        )
         parser.add_argument("--all", action="store_true", help="Import all")
         parser.add_argument(
             "--batch-size",
@@ -136,6 +141,7 @@ class Command(BaseCommand):
         certificates_import = options["certificates"] or import_all
         certificates_import_offset = options["certificates_offset"]
         certificates_import_limit = options["certificates_limit"]
+        course_id = options["course_id"]
         batch_size = options["batch_size"]
         dry_run = options["dry_run"]
 
@@ -200,6 +206,7 @@ class Command(BaseCommand):
                 batch_size=batch_size,
                 offset=enrollments_import_offset,
                 limit=enrollments_import_limit,
+                course_id=course_id,
                 dry_run=dry_run,
             )
 
@@ -209,5 +216,6 @@ class Command(BaseCommand):
                 batch_size=batch_size,
                 offset=certificates_import_offset,
                 limit=certificates_import_limit,
+                course_id=course_id,
                 dry_run=dry_run,
             )
