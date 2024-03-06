@@ -1605,3 +1605,33 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         }
 
         self.assertEqual(order.get_equivalent_course_run_dates(), expected_result)
+
+    def test_models_order_target_course_runs_property_distinct(self):
+        """
+        In any case, target course runs should be distinct.
+        """
+        # - Create two products with one target course and three course runs
+        target_course = factories.CourseFactory()
+        course_runs = factories.CourseRunFactory.create_batch(
+            3, course=target_course, state=CourseState.ONGOING_OPEN
+        )
+        [p0, p1] = factories.ProductFactory.create_batch(
+            2, target_courses=[target_course]
+        )
+        # The first product only use a course run subset
+        p0.target_course_relations.first().course_runs.add(course_runs[0])
+
+        # - Create orders on each products
+        [o0, *_] = factories.OrderFactory.create_batch(
+            5,
+            product=p0,
+            state=enums.ORDER_STATE_VALIDATED,
+        )
+        [o1, *_] = factories.OrderFactory.create_batch(
+            5,
+            product=p1,
+            state=enums.ORDER_STATE_VALIDATED,
+        )
+
+        self.assertEqual(o0.target_course_runs.count(), 1)
+        self.assertEqual(o1.target_course_runs.count(), 3)

@@ -614,15 +614,14 @@ class Order(BaseModel):
         course_relations_with_course_runs = self.course_relations.filter(
             course_runs__isnull=False
         ).only("pk")
+        target_courses_without_course_runs_subset = self.target_courses.exclude(
+            order_relations__in=course_relations_with_course_runs
+        )
 
         return CourseRun.objects.filter(
             models.Q(order_relations__in=course_relations_with_course_runs)
-            | models.Q(
-                course__in=self.target_courses.exclude(
-                    order_relations__in=course_relations_with_course_runs
-                )
-            )
-        )
+            | models.Q(course__in=target_courses_without_course_runs_subset)
+        ).distinct()
 
     @cached_property
     def main_invoice(self) -> dict | None:
