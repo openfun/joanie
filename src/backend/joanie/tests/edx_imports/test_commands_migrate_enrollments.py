@@ -139,7 +139,11 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
                 resource_link=f"http://openedx.test/courses/{edx_enrollment.course_id}/course/",
             )
             factories.UserFactory.create(username=edx_enrollment.user.username)
-        mock_get_enrollments.return_value = edx_enrollments
+
+        def get_edx_enrollments(*args, **kwargs):
+            return edx_enrollments[args[0] : args[1]]
+
+        mock_get_enrollments.side_effect = get_edx_enrollments
         mock_get_enrollments_count.return_value = len(edx_enrollments)
 
         with self.assertLogs() as logger:
@@ -156,9 +160,9 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             "Importing enrollments...",
             "Dry run: no enrollment will be imported",
             "37 enrollments to import by batch of 17",
-            "Dry run: 45.946% 17/37 : 37 enrollments created, 0 skipped, 0 errors",
-            "Dry run: 91.892% 34/37 : 37 enrollments created, 0 skipped, 0 errors",
-            "Dry run: 100% 37/37 : 37 enrollments created, 0 skipped, 0 errors",
+            "Dry run: 45.946% 17/37 : 17 enrollments created, 0 skipped, 0 errors",
+            "Dry run: 91.892% 34/37 : 17 enrollments created, 0 skipped, 0 errors",
+            "Dry run: 100% 37/37 : 3 enrollments created, 0 skipped, 0 errors",
             "3 import enrollments tasks launched",
         ]
         self.assertLogsContains(logger, expected)
@@ -179,7 +183,13 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
                 resource_link=f"http://openedx.test/courses/{edx_enrollment.course_id}/course/",
             )
             factories.UserFactory.create(username=edx_enrollment.user.username)
-        mock_get_enrollments.return_value = edx_enrollments[20:30]
+
+        def get_edx_enrollments(*args, **kwargs):
+            start = args[0]
+            stop = start + args[1]
+            return edx_enrollments[start:stop]
+
+        mock_get_enrollments.side_effect = get_edx_enrollments
         mock_get_enrollments_count.return_value = 10
 
         with self.assertLogs() as logger:
@@ -191,6 +201,8 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
                 "--enrollments-limit=10",
                 "--dry-run",
             )
+
+        mock_get_enrollments.assert_called_with(20, 10, course_id=None)
 
         expected = [
             "Importing data from Open edX database...",

@@ -94,7 +94,8 @@ class OpenEdxDB:
                     self.University.logo,
                 )
             )
-            .slice(start, start + stop)
+            .offset(start)
+            .limit(stop)
         )
         return self.session.scalars(query).all()
 
@@ -155,7 +156,8 @@ class OpenEdxDB:
                 ),
             )
             .order_by(self.CourseOverview.id)
-            .slice(start, start + stop)
+            .offset(start)
+            .limit(stop)
         )
         return self.session.scalars(query).all()
 
@@ -222,7 +224,8 @@ class OpenEdxDB:
                     self.UserProfile.name,
                 ),
             )
-            .slice(start, start + stop)
+            .offset(start)
+            .limit(stop)
         )
         return self.session.scalars(query).unique().all()
 
@@ -306,7 +309,8 @@ class OpenEdxDB:
                 ),
             )
             .order_by(self.StudentCourseEnrollment.course_id)
-            .slice(start, start + stop)
+            .offset(start)
+            .limit(stop)
         )
         if course_id:
             query = query.where(self.StudentCourseEnrollment.course_id == course_id)
@@ -358,7 +362,8 @@ class OpenEdxDB:
             )
             .where(self.Certificate.status == "downloadable")
             .order_by(self.Certificate.course_id)
-            .slice(start, start + stop)
+            .offset(start)
+            .limit(stop)
         )
         if course_id:
             query = query.where(self.Certificate.course_id == course_id)
