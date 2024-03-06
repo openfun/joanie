@@ -392,10 +392,17 @@ class CertificateSerializer(serializers.ModelSerializer):
     id = serializers.CharField(read_only=True, required=False)
     certificate_definition = CertificationDefinitionSerializer(read_only=True)
     order = NestedOrderSerializer(read_only=True)
+    enrollment = EnrollmentLightSerializer(read_only=True)
 
     class Meta:
         model = models.Certificate
-        fields = ["id", "certificate_definition", "issued_on", "order"]
+        fields = [
+            "id",
+            "certificate_definition",
+            "issued_on",
+            "order",
+            "enrollment",
+        ]
         read_only_fields = fields
 
     def get_context(self, certificate) -> dict:
@@ -550,17 +557,17 @@ class EnrollmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Enrollment
         fields = [
-            "id",
             "certificate_id",
             "course_run",
             "created_on",
+            "id",
             "is_active",
             "orders",
             "product_relations",
             "state",
             "was_created_by_order",
         ]
-        read_only_fields = ["id", "course_run", "created_on", "state"]
+        read_only_fields = ["course_run", "created_on", "id", "state"]
 
     def create(self, validated_data, **kwargs):
         """

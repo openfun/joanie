@@ -600,6 +600,7 @@ class CertificateViewSet(
         "order__organization",
         "order__owner",
         "order__product",
+        "enrollment__course_run__course",
     )
 
     def get_queryset(self):
