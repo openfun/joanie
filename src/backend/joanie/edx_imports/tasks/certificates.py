@@ -1,6 +1,6 @@
 """Celery tasks for importing Open edX certificates to Joanie organizations."""
 
-# pylint: disable=too-many-locals,too-many-statements
+# pylint: disable=too-many-locals,too-many-statements,too-many-branches
 # ruff: noqa: SLF001,PLR0915,PLR0912
 
 from logging import getLogger
@@ -102,27 +102,16 @@ def import_certificates_batch(start, stop, total, course_id, dry_run=False):
             report["certificates"]["skipped"] += 1
             continue
 
-        signatory = edx_mongodb.get_signature_from_enrollment(
-            enrollment.course_run.course.code
-        )
+        verification_hash = hashids.encode(edx_certificate.id)
+
+        certificate_context = {
+            "verification_hash": verification_hash,
+            "signatory": None,
+        }
+
+        title_object = enrollment.course_run.course
+
         organization_code = extract_organization_code(edx_certificate.course_id)
-
-        if not organization_code:
-            report["certificates"]["errors"] += 1
-            logger.error(
-                "No organization found in mongodb for %s",
-                enrollment.course_run.course.code,
-                extra={
-                    "context": {
-                        "edx_certificate": vars(edx_certificate),
-                        "enrollment": enrollment.to_dict(),
-                        "course_run": enrollment.course_run.to_dict(),
-                        "course": enrollment.course_run.course.to_dict(),
-                    }
-                },
-            )
-            continue
-
         try:
             organization = models.Organization.objects.get(
                 code__iexact=organization_code
@@ -142,29 +131,6 @@ def import_certificates_batch(start, stop, total, course_id, dry_run=False):
             )
             continue
 
-        verification_hash = hashids.encode(edx_certificate.id)
-
-        signature = None
-        signatory_name = None
-        if signatory:
-            signature_image_path = signatory.get("signature_image_path")
-            if signature_image_path.startswith("/"):
-                signature_image_path = signature_image_path[1:]
-            signature_path = download_and_store(signature_image_path)
-            signature = (
-                image_to_base64(default_storage.open(signature_path))
-                if signature_path
-                else None
-            )
-            signatory_name = signatory.get("name")
-
-        certificate_context = {
-            "signatory": signatory,
-            "verification_hash": verification_hash,
-        }
-
-        title_object = enrollment.course_run.course
-
         for language, _ in settings.LANGUAGES:
             certificate_context[language] = {
                 "course": {
@@ -177,18 +143,48 @@ def import_certificates_batch(start, stop, total, course_id, dry_run=False):
                         "name": organization.safe_translation_getter(
                             "title", language_code=language
                         ),
-                        "representative": signatory_name,
-                        "signature": signature,
                         "logo": image_to_base64(organization.logo)
                         if organization.logo
                         else None,
+                        "representative": None,
+                        "signature": None,
                     }
                 ],
             }
 
-        certificate_template = (
-            DEGREE if edx_certificate.mode == OPENEDX_MODE_VERIFIED else CERTIFICATE
-        )
+        certificate_template = CERTIFICATE
+
+        if edx_certificate.mode == OPENEDX_MODE_VERIFIED:
+            certificate_template = DEGREE
+            signatory = edx_mongodb.get_signature_from_enrollment(
+                enrollment.course_run.course.code
+            )
+
+            signature = None
+            signatory_name = None
+            if signatory:
+                signature_image_path = signatory.get("signature_image_path")
+                if signature_image_path.startswith("/"):
+                    signature_image_path = signature_image_path[1:]
+                signature_path = download_and_store(signature_image_path)
+                signature = (
+                    image_to_base64(default_storage.open(signature_path))
+                    if signature_path
+                    else None
+                )
+                signatory_name = signatory.get("name")
+
+                certificate_context["signatory"] = signatory
+
+            for language, _ in settings.LANGUAGES:
+                if signatory_name:
+                    certificate_context[language]["organizations"][0][
+                        "representative"
+                    ] = signatory_name
+                if signature:
+                    certificate_context[language]["organizations"][0]["signature"] = (
+                        signature
+                    )
 
         certificates_to_create.append(
             models.Certificate(

@@ -21,6 +21,7 @@ from joanie.edx_imports.utils import (
     extract_organization_code,
     make_date_aware,
 )
+from joanie.lms_handler.backends.openedx import OPENEDX_MODE_VERIFIED
 from joanie.tests.base import BaseLogMixinTestCase
 from joanie.tests.edx_imports.base_test_commands_migrate import (
     MigrateOpenEdxBaseTestCase,
@@ -90,17 +91,18 @@ class MigrateOpenEdxCertificatesTestCase(
                 course_run=course_run,
                 was_created_by_order=False,
             )
-            mongo_enrollments[
-                edx_certificate.id
-            ] = edx_factories.EdxMongoSignatoryFactory()
 
-            edx_mongo_signatory = edx_factories.EdxMongoSignatoryFactory()
-            mongo_enrollments[edx_certificate.id] = edx_mongo_signatory
-            responses.add(
-                responses.GET,
-                f"https://{settings.EDX_DOMAIN}{edx_mongo_signatory.get('signature_image_path')}",
-                body=SIGNATURE_CONTENT,
-            )
+            if edx_certificate.mode == OPENEDX_MODE_VERIFIED:
+                edx_mongo_signatory = edx_factories.EdxMongoSignatoryFactory()
+                mongo_enrollments[edx_certificate.id] = edx_mongo_signatory
+                responses.add(
+                    responses.GET,
+                    f"https://{settings.EDX_DOMAIN}"
+                    + edx_mongo_signatory.get("signature_image_path"),
+                    body=SIGNATURE_CONTENT,
+                )
+            else:
+                mongo_enrollments[edx_certificate.id] = None
 
         mock_get_certificates.return_value = edx_certificates
         mock_get_certificates_count.return_value = len(edx_certificates)
@@ -197,7 +199,9 @@ class MigrateOpenEdxCertificatesTestCase(
         Test that certificates are not created from the edx certificates if the enrollment
         is missing in Joanie.
         """
-        edx_certificates = edx_factories.EdxGeneratedCertificateFactory.create_batch(10)
+        edx_certificates = edx_factories.EdxGeneratedCertificateFactory.create_batch(
+            10, mode=OPENEDX_MODE_VERIFIED
+        )
         mongo_enrollments = {}
         edx_certificates_with_joanie_enrollments = []
         edx_certificates_fail = []

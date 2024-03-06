@@ -97,13 +97,18 @@ class EdxImportCertificatesTestCase(TestCase):
                 was_created_by_order=False,
             )
 
-            edx_mongo_signatory = edx_factories.EdxMongoSignatoryFactory()
-            mongo_enrollments[edx_certificate.id] = edx_mongo_signatory
-            responses.add(
-                responses.GET,
-                f"https://{settings.EDX_DOMAIN}{edx_mongo_signatory.get('signature_image_path')}",
-                body=SIGNATURE_CONTENT,
-            )
+            if edx_certificate.mode == OPENEDX_MODE_VERIFIED:
+                edx_mongo_signatory = edx_factories.EdxMongoSignatoryFactory()
+                mongo_enrollments[edx_certificate.id] = edx_mongo_signatory
+
+                responses.add(
+                    responses.GET,
+                    f"https://{settings.EDX_DOMAIN}"
+                    + edx_mongo_signatory.get("signature_image_path"),
+                    body=SIGNATURE_CONTENT,
+                )
+            else:
+                mongo_enrollments[edx_certificate.id] = None
 
         mock_get_certificates.return_value = edx_certificates
         mock_get_certificates_count.return_value = len(edx_certificates)
@@ -122,9 +127,16 @@ class EdxImportCertificatesTestCase(TestCase):
                     edx_certificate.course_id
                 ),
             )
-            certificate_template = (
-                DEGREE if edx_certificate.mode == OPENEDX_MODE_VERIFIED else CERTIFICATE
-            )
+            has_signatory = edx_certificate.mode == OPENEDX_MODE_VERIFIED
+            certificate_template = CERTIFICATE
+            mongo_signatory = None
+            signature = None
+            representative = None
+            if has_signatory:
+                certificate_template = DEGREE
+                mongo_signatory = mongo_enrollments[edx_certificate.id]
+                signature = SIGNATURE_CONTENT_BASE64
+                representative = mongo_signatory.get("name")
             self.assertEqual(
                 certificate.certificate_definition.template, certificate_template
             )
@@ -132,7 +144,6 @@ class EdxImportCertificatesTestCase(TestCase):
                 certificate.issued_on, make_date_aware(edx_certificate.created_date)
             )
 
-            mongo_signatory = mongo_enrollments[edx_certificate.id]
             self.assertEqual(
                 certificate.localized_context,
                 {
@@ -151,8 +162,8 @@ class EdxImportCertificatesTestCase(TestCase):
                                 "name": certificate.organization.safe_translation_getter(
                                     "title", language_code="en"
                                 ),
-                                "representative": mongo_signatory.get("name"),
-                                "signature": SIGNATURE_CONTENT_BASE64,
+                                "representative": representative,
+                                "signature": signature,
                                 "logo": image_to_base64(certificate.organization.logo),
                             }
                         ],
@@ -170,21 +181,22 @@ class EdxImportCertificatesTestCase(TestCase):
                                 "name": certificate.organization.safe_translation_getter(
                                     "title", language_code="fr"
                                 ),
-                                "representative": mongo_signatory.get("name"),
-                                "signature": SIGNATURE_CONTENT_BASE64,
+                                "representative": representative,
+                                "signature": signature,
                                 "logo": image_to_base64(certificate.organization.logo),
                             }
                         ],
                     },
                 },
             )
-            self.assertTrue(
-                default_storage.exists(
-                    certificate.localized_context.get("signatory").get(
-                        "signature_image_path"
-                    )[1:]
+            if has_signatory:
+                self.assertTrue(
+                    default_storage.exists(
+                        certificate.localized_context.get("signatory").get(
+                            "signature_image_path"
+                        )[1:]
+                    )
                 )
-            )
 
     @patch("joanie.edx_imports.edx_mongodb.get_signature_from_enrollment")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates_count")
@@ -277,7 +289,9 @@ class EdxImportCertificatesTestCase(TestCase):
         Test that certificates are not created from the edx certificates if the enrollment
         is missing in Joanie.
         """
-        edx_certificates = edx_factories.EdxGeneratedCertificateFactory.create_batch(10)
+        edx_certificates = edx_factories.EdxGeneratedCertificateFactory.create_batch(
+            10, mode=OPENEDX_MODE_VERIFIED
+        )
         mongo_enrollments = {}
         edx_certificates_with_joanie_enrollments = []
         i = 0
@@ -491,7 +505,9 @@ class EdxImportCertificatesTestCase(TestCase):
         """
         Test that signatures are not stored if the signature is not found.
         """
-        edx_certificate = edx_factories.EdxGeneratedCertificateFactory()
+        edx_certificate = edx_factories.EdxGeneratedCertificateFactory(
+            mode=OPENEDX_MODE_VERIFIED
+        )
         mongo_enrollments = {}
         course = factories.CourseFactory.create(
             code=extract_course_number(edx_certificate.course_id),
