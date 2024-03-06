@@ -4233,10 +4233,19 @@
                             }
                         ],
                         "readOnly": true
+                    },
+                    "enrollment": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/EnrollmentLight"
+                            }
+                        ],
+                        "readOnly": true
                     }
                 },
                 "required": [
                     "certificate_definition",
+                    "enrollment",
                     "id",
                     "issued_on",
                     "order"
@@ -5079,10 +5088,6 @@
                 "type": "object",
                 "description": "Enrollment model serializer",
                 "properties": {
-                    "id": {
-                        "type": "string",
-                        "readOnly": true
-                    },
                     "certificate_id": {
                         "type": "string",
                         "format": "uuid",
@@ -5102,6 +5107,10 @@
                         "format": "date-time",
                         "readOnly": true,
                         "description": "date and time at which a record was created"
+                    },
+                    "id": {
+                        "type": "string",
+                        "readOnly": true
                     },
                     "is_active": {
                         "type": "boolean",
