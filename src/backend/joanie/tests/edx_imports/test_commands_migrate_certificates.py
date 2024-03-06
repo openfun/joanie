@@ -265,3 +265,85 @@ class MigrateOpenEdxCertificatesTestCase(
             for edx_certificate in edx_certificates_fail
         ]
         self.assertLogsContains(logger, expected)
+
+    @patch("joanie.edx_imports.edx_mongodb.get_signature_from_enrollment")
+    @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates_count")
+    @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates")
+    @responses.activate(assert_all_requests_are_fired=False)
+    def test_command_migrate_certificates_create_dry_run_offset_limit(
+        self,
+        mock_get_certificates,
+        mock_get_certificates_count,
+        mock_get_signature_from_enrollment,
+    ):
+        """
+        Test that certificates are created from the edx certificates.
+        """
+        edx_certificates = edx_factories.EdxGeneratedCertificateFactory.create_batch(
+            100
+        )
+        mongo_enrollments = {}
+        for edx_certificate in edx_certificates:
+            course = factories.CourseFactory.create(
+                code=extract_course_number(edx_certificate.course_id),
+                organizations=[
+                    factories.OrganizationFactory.create(
+                        code=extract_organization_code(edx_certificate.course_id)
+                    )
+                ],
+            )
+            course_run = factories.CourseRunFactory.create(
+                course=course,
+                state=models.CourseState.ONGOING_OPEN,
+                resource_link=f"http://openedx.test/courses/{edx_certificate.course_id}/course/",
+                is_listed=True,
+            )
+            factories.EnrollmentFactory.create(
+                user__username=edx_certificate.user.username,
+                course_run=course_run,
+                was_created_by_order=False,
+            )
+
+            if edx_certificate.mode == OPENEDX_MODE_VERIFIED:
+                edx_mongo_signatory = edx_factories.EdxMongoSignatoryFactory()
+                mongo_enrollments[edx_certificate.id] = edx_mongo_signatory
+                responses.add(
+                    responses.GET,
+                    f"https://{settings.EDX_DOMAIN}"
+                    + edx_mongo_signatory.get("signature_image_path"),
+                    body=SIGNATURE_CONTENT,
+                )
+            else:
+                mongo_enrollments[edx_certificate.id] = None
+
+        def get_edx_certificates(*args, **kwargs):
+            start = args[0]
+            stop = start + args[1]
+            return edx_certificates[start:stop]
+
+        mock_get_certificates.side_effect = get_edx_certificates
+        mock_get_certificates_count.return_value = 10
+
+        mock_get_signature_from_enrollment.side_effect = [
+            mongo_enrollments[edx_certificate.id]
+            for edx_certificate in edx_certificates
+        ]
+
+        with self.assertLogs() as logger:
+            call_command(
+                "migrate_edx",
+                "--skip-check",
+                "--certificates",
+                "--certificates-offset=20",
+                "--certificates-limit=10",
+                "--dry-run",
+            )
+
+        expected = [
+            "Importing data from Open edX database...",
+            "Importing certificates...",
+            "10 certificates to import by batch of 1000",
+            "100% 10/10 : 10 certificates created, 0 skipped, 0 errors",
+            "1 import certificates tasks launched",
+        ]
+        self.assertLogsContains(logger, expected)
