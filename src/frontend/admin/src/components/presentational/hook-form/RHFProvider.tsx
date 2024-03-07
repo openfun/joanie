@@ -57,7 +57,7 @@ export function RHFProvider<T extends FieldValues>({
 
   useEffect(() => {
     const beforeUnload = (event: BeforeUnloadEvent) => {
-      if (!methods.formState.isDirty) {
+      if (!checkBeforeUnload || !methods.formState.isDirty) {
         return;
       }
 

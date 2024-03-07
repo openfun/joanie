@@ -10,6 +10,7 @@ import {
   SearchFilterComponentProps,
   useSearchFilterContext,
 } from "@/components/presentational/filters/SearchFilters";
+import { InitializeInputFilters } from "@/components/presentational/filters/InitializeInputFilters";
 
 type Props = RadioGroupProps &
   SearchFilterComponentProps & {
@@ -27,6 +28,8 @@ export default function RHFRadioGroup({
   options,
   helperText,
   isFilterContext,
+  findFilterValue,
+  filterQueryName,
   getValueLabel,
   ...other
 }: Props) {
@@ -58,44 +61,55 @@ export default function RHFRadioGroup({
   };
 
   return (
-    <Controller
+    <InitializeInputFilters
       name={name}
-      control={control}
-      render={({ field, fieldState: { error } }) => (
-        <FormControl>
-          {label && (
-            <FormLabel component="legend" id={labelledby}>
-              {label}
-            </FormLabel>
-          )}
+      isFilterContext={isFilterContext}
+      filterQueryName={filterQueryName ?? name}
+      findFilterValue={async (values) => {
+        const value = values[0];
+        afterChange(value);
+        return value;
+      }}
+    >
+      <Controller
+        name={name}
+        control={control}
+        render={({ field, fieldState: { error } }) => (
+          <FormControl>
+            {label && (
+              <FormLabel component="legend" id={labelledby}>
+                {label}
+              </FormLabel>
+            )}
 
-          <RadioGroup
-            {...field}
-            onChange={(e, v) => {
-              field.onChange(e, v);
-              afterChange(v);
-            }}
-            aria-labelledby={labelledby}
-            row={row}
-            {...other}
-          >
-            {options.map((option) => (
-              <FormControlLabel
-                key={option.value}
-                value={option.value}
-                control={<Radio />}
-                label={option.label}
-              />
-            ))}
-          </RadioGroup>
+            <RadioGroup
+              {...field}
+              onChange={(e, v) => {
+                field.onChange(e, v);
+                afterChange(v);
+              }}
+              aria-labelledby={labelledby}
+              row={row}
+              {...other}
+            >
+              {options.map((option) => (
+                <FormControlLabel
+                  key={option.value}
+                  value={option.value}
+                  control={<Radio />}
+                  label={option.label}
+                />
+              ))}
+            </RadioGroup>
 
-          {(!!error || helperText) && (
-            <FormHelperText error={!!error}>
-              {error ? error?.message : helperText}
-            </FormHelperText>
-          )}
-        </FormControl>
-      )}
-    />
+            {(!!error || helperText) && (
+              <FormHelperText error={!!error}>
+                {error ? error?.message : helperText}
+              </FormHelperText>
+            )}
+          </FormControl>
+        )}
+      />
+    </InitializeInputFilters>
   );
 }

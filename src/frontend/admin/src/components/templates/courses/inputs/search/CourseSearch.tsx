@@ -11,6 +11,7 @@ import { Course } from "@/services/api/models/Course";
 import { useCourses } from "@/hooks/useCourses/useCourses";
 import { CreateOrEditCourseModal } from "@/components/templates/courses/modals/CreateOrEditCourseModal";
 import { useModal } from "@/components/presentational/modal/useModal";
+import { CourseRepository } from "@/services/repositories/courses/CoursesRepository";
 
 const messages = defineMessages({
   searchLabel: {
@@ -33,6 +34,10 @@ export function CourseSearch(props: RHFAutocompleteSearchProps<Course>) {
       <RHFSearch
         {...props}
         data-testid="course-runs-search"
+        findFilterValue={async (values) => {
+          const request = await CourseRepository.getAll({ ids: values });
+          return request.results;
+        }}
         items={courses.items}
         label={props.label ?? intl.formatMessage(messages.searchLabel)}
         loading={courses.states.fetching}

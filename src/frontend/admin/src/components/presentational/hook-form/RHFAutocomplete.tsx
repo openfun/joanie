@@ -10,22 +10,7 @@ import {
   SearchFilterComponentProps,
   useSearchFilterContext,
 } from "@/components/presentational/filters/SearchFilters";
-
-export interface RHFAutocompleteProps2<
-  T,
-  Multiple extends boolean | undefined,
-  DisableClearable extends boolean | undefined = false,
-  FreeSolo extends boolean | undefined = false,
-> extends Omit<
-    AutocompleteProps<T, Multiple, DisableClearable, FreeSolo>,
-    "renderInput"
-  > {
-  name: string;
-  label?: string;
-  helperText?: React.ReactNode;
-  leftIcons?: React.ReactNode;
-  placeholder?: string;
-}
+import { InitializeInputFilters } from "@/components/presentational/filters/InitializeInputFilters";
 
 export type RHFAutocompleteProps<
   T,
@@ -56,6 +41,8 @@ export default function RHFAutocomplete<
   leftIcons,
   placeholder,
   isFilterContext,
+  filterQueryName,
+  findFilterValue,
   ...other
 }: Omit<
   RHFAutocompleteProps<T, Multiple, DisableClearable, FreeSolo>,
@@ -95,6 +82,7 @@ export default function RHFAutocomplete<
       searchFilterContext.addChip({
         name,
         label: label ?? "",
+        filterUrlName: filterQueryName ?? name,
         value: values.join(","),
         onDelete: () => setValue(name, []),
       });
@@ -112,37 +100,57 @@ export default function RHFAutocomplete<
     }
   };
 
+  const getObject = async (values: string[]) => {
+    if (!findFilterValue) {
+      return undefined;
+    }
+
+    const result = await findFilterValue(values);
+    afterChange(result);
+    return result;
+  };
+
   return (
-    <Controller
+    <InitializeInputFilters
       name={name}
-      control={control}
-      render={({ field, fieldState: { error } }) => (
-        <Autocomplete
-          {...field}
-          renderInput={(params) => (
-            <TextField
-              label={label}
-              error={!!error}
-              placeholder={placeholder}
-              helperText={error ? error?.message : helperText}
-              {...params}
-              InputProps={{
-                ...params.InputProps,
-                startAdornment: getLeftIcons(params.InputProps.startAdornment),
-              }}
-            />
-          )}
-          {...other}
-          onChange={(event, newValue, reason, details) => {
-            other.onChange?.(event, newValue, reason, details);
-            afterChange(newValue as T | T[]);
-            setValue(name, newValue, {
-              shouldValidate: true,
-              shouldDirty: true,
-            });
-          }}
-        />
-      )}
-    />
+      isFilterContext={isFilterContext}
+      filterQueryName={filterQueryName ?? name}
+      findFilterValue={getObject}
+    >
+      <Controller
+        name={name}
+        control={control}
+        render={({ field, fieldState: { error } }) => (
+          <Autocomplete
+            {...field}
+            renderInput={(params) => (
+              <TextField
+                label={label}
+                error={!!error}
+                placeholder={placeholder}
+                helperText={error ? error?.message : helperText}
+                {...params}
+                InputProps={{
+                  ...params.InputProps,
+                  startAdornment: getLeftIcons(
+                    params.InputProps.startAdornment,
+                  ),
+                }}
+              />
+            )}
+            {...other}
+            onChange={(event, newValue, reason, details) => {
+              other.onChange?.(event, newValue, reason, details);
+              afterChange(newValue as T | T[]);
+              setValue(name, newValue, {
+                shouldValidate: true,
+                shouldDirty: true,
+                shouldTouch: true,
+              });
+            }}
+          />
+        )}
+      />
+    </InitializeInputFilters>
   );
 }
