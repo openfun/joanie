@@ -53,6 +53,7 @@ export function ProductFilers({ onFilter, ...searchFilterProps }: Props) {
         >
           <RHFValuesChange
             debounceTime={200}
+            updateUrl={true}
             useAnotherValueReference={true}
             onSubmit={onFilter}
           >

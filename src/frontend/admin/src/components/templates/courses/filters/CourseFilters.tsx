@@ -48,11 +48,16 @@ export function CourseFilters({ onFilter, ...searchFilterProps }: Props) {
     defaultValues: getDefaultValues() as any, // To not trigger type validation for default value
   });
 
-  const onSubmit = (values: FormValues) => {
+  const formValuesToFilters = (values: FormValues) => {
     const filters: CourseResourceQuery = {
       organization_ids: values.organizations?.map((org) => org.id),
     };
-    onFilter(filters);
+
+    return filters;
+  };
+
+  const onSubmit = (values: FormValues) => {
+    onFilter(formValuesToFilters(values));
   };
 
   return (
@@ -67,6 +72,8 @@ export function CourseFilters({ onFilter, ...searchFilterProps }: Props) {
         >
           <RHFValuesChange
             debounceTime={200}
+            updateUrl={true}
+            formValuesToFilterValues={formValuesToFilters}
             useAnotherValueReference={true}
             onSubmit={onSubmit}
           >
@@ -75,6 +82,7 @@ export function CourseFilters({ onFilter, ...searchFilterProps }: Props) {
                 <OrganizationSearch
                   enableAdd={false}
                   multiple={true}
+                  filterQueryName="organization_ids"
                   isFilterContext={true}
                   name="organizations"
                   label={intl.formatMessage(

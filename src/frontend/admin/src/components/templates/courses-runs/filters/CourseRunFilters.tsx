@@ -87,9 +87,10 @@ export function CourseRunFilters({ onFilter, ...searchFilterProps }: Props) {
     defaultValues: getDefaultValues() as any, // To not trigger type validation for default value
   });
 
-  const onSubmit = (values: FormValues) => {
-    const filters: CourseRunResourcesQuery = {
-      // courseId: values.course?.id,
+  const formValuesToFilterValues = (
+    values: FormValues,
+  ): CourseRunResourcesQuery => {
+    return {
       course_ids: values.courses.map((course) => course.id),
       organization_ids: values.organizations.map(
         (organization) => organization.id,
@@ -99,7 +100,10 @@ export function CourseRunFilters({ onFilter, ...searchFilterProps }: Props) {
       is_gradable:
         values.is_gradable !== "none" ? values.is_gradable : undefined,
     };
-    onFilter(filters);
+  };
+
+  const onSubmit = (values: FormValues) => {
+    onFilter(formValuesToFilterValues(values));
   };
 
   return (
@@ -112,13 +116,19 @@ export function CourseRunFilters({ onFilter, ...searchFilterProps }: Props) {
           showSubmit={false}
           methods={methods}
         >
-          <RHFValuesChange debounceTime={200} onSubmit={onSubmit}>
+          <RHFValuesChange
+            updateUrl={true}
+            formValuesToFilterValues={formValuesToFilterValues}
+            debounceTime={200}
+            onSubmit={onSubmit}
+          >
             <Grid container mt={2} spacing={2}>
               <Grid xs={12} sm={6}>
                 <CourseSearch
                   isFilterContext={true}
                   multiple={true}
                   fullWidth={true}
+                  filterQueryName="course_ids"
                   label={intl.formatMessage(entitiesInputLabel.course)}
                   name="courses"
                 />
@@ -128,6 +138,7 @@ export function CourseRunFilters({ onFilter, ...searchFilterProps }: Props) {
                   enableAdd={false}
                   multiple={true}
                   isFilterContext={true}
+                  filterQueryName="organization_ids"
                   name="organizations"
                   label={intl.formatMessage(
                     courseFormMessages.organizationsLabel,
