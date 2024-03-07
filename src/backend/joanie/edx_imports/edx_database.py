@@ -178,7 +178,7 @@ class OpenEdxDB:
             return min(users_count, limit)
         return users_count
 
-    def get_users(self, start, stop):
+    def get_users(self, offset, limit):
         """
         Get users from Open edX database by slicing
 
@@ -224,8 +224,8 @@ class OpenEdxDB:
                     self.UserProfile.name,
                 ),
             )
-            .offset(start)
-            .limit(stop)
+            .offset(offset)
+            .limit(limit)
         )
         return self.session.scalars(query).unique().all()
 
