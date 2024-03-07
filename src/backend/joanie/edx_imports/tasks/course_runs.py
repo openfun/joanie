@@ -22,27 +22,27 @@ from joanie.edx_imports.utils import (
 logger = getLogger(__name__)
 
 
-def import_course_runs(batch_size=1000, offset=0, limit=0, dry_run=False):
+def import_course_runs(batch_size=1000, global_offset=0, import_size=0, dry_run=False):
     """Import course runs and courses from Open edX course_overviews"""
     db = OpenEdxDB()
-    course_overviews_count = db.get_course_overviews_count(offset, limit)
+    total = db.get_course_overviews_count(global_offset, import_size)
+    # total = batch_size * round(total / batch_size)
     if dry_run:
         logger.info("Dry run: no course run will be imported")
     logger.info(
         "%s course_overviews to import by batch of %s",
-        course_overviews_count,
+        total,
         batch_size,
     )
 
     batch_count = 0
-    for current_course_overview_index in range(0, course_overviews_count, batch_size):
+    for batch_offset in range(global_offset, global_offset + total, batch_size):
         batch_count += 1
-        start = current_course_overview_index + offset
-        stop = current_course_overview_index + batch_size
-        if limit:
-            stop = min(stop, limit)
         import_course_runs_batch_task.delay(
-            start=start, stop=stop, total=course_overviews_count, dry_run=dry_run
+            batch_offset=batch_offset,
+            batch_size=batch_size,
+            total=total,
+            dry_run=dry_run,
         )
     logger.info("%s import course runs tasks launched", batch_count)
 
@@ -60,7 +60,7 @@ def import_course_runs_batch_task(self, **kwargs):
     return report
 
 
-def import_course_runs_batch(start, stop, total, dry_run=False):
+def import_course_runs_batch(batch_offset, batch_size, total, dry_run=False):
     """Batch import course runs and courses from Open edX course_overviews"""
     db = OpenEdxDB()
     report = {
@@ -75,7 +75,7 @@ def import_course_runs_batch(start, stop, total, dry_run=False):
             "errors": 0,
         },
     }
-    edx_course_overviews = db.get_course_overviews(start, stop)
+    edx_course_overviews = db.get_course_overviews(batch_offset, batch_size)
     for edx_course_overview in edx_course_overviews:
         # Select LMS from resource link
         resource_link = (
@@ -156,8 +156,13 @@ def import_course_runs_batch(start, stop, total, dry_run=False):
         courses_import_string = "Dry run: " + courses_import_string
         course_runs_import_string = "Dry run: " + course_runs_import_string
 
-    stop = min(stop, total)
-    percent = format_percent(stop, total)
+    total_processed = (
+        batch_offset
+        + report["course_runs"]["created"]
+        + report["course_runs"]["skipped"]
+        + report["course_runs"]["errors"]
+    )
+    percent = format_percent(total_processed, total)
     logger.info(
         courses_import_string,
         report["courses"]["created"],
@@ -167,7 +172,7 @@ def import_course_runs_batch(start, stop, total, dry_run=False):
     logger.info(
         course_runs_import_string,
         percent,
-        stop,
+        total_processed,
         total,
         report["course_runs"]["created"],
         report["course_runs"]["skipped"],
@@ -185,7 +190,7 @@ def import_course_runs_batch(start, stop, total, dry_run=False):
         + course_runs_import_string
         % (
             percent,
-            stop,
+            total_processed,
             total,
             report["course_runs"]["created"],
             report["course_runs"]["skipped"],

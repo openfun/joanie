@@ -11,7 +11,7 @@ from joanie.core import enums
 from joanie.edx_imports import edx_models
 
 faker = Faker()
-engine = create_engine("sqlite+pysqlite:///:memory:", echo=True)
+engine = create_engine("sqlite+pysqlite:///:memory:", echo=False)
 session = Session(engine)
 registry().metadata.create_all(engine)
 

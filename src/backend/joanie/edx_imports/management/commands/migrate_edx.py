@@ -57,9 +57,9 @@ class Command(BaseCommand):
             default=0,
         )
         parser.add_argument(
-            "--course-runs-limit",
+            "--course-runs-size",
             type=int,
-            help="Limit of course runs to import",
+            help="Size of course runs to import",
             default=0,
         )
         parser.add_argument("--users", action="store_true", help="Import users")
@@ -131,7 +131,7 @@ class Command(BaseCommand):
         universities_import_limit = options["universities_limit"]
         course_runs_import = options["course_runs"] or import_all
         course_runs_import_offset = options["course_runs_offset"]
-        course_runs_import_limit = options["course_runs_limit"]
+        course_runs_import_size = options["course_runs_size"]
         users_import = options["users"] or import_all
         users_import_offset = options["users_offset"]
         users_import_limit = options["users_limit"]
@@ -186,8 +186,9 @@ class Command(BaseCommand):
         if course_runs_import:
             logger.info("Importing course runs...")
             import_course_runs(
-                offset=course_runs_import_offset,
-                limit=course_runs_import_limit,
+                batch_size=batch_size,
+                global_offset=course_runs_import_offset,
+                import_size=course_runs_import_size,
                 dry_run=dry_run,
             )
 

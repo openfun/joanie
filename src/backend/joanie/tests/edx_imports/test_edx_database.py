@@ -46,11 +46,27 @@ class OpenEdxDBTestCase(TestCase):
 
         self.assertEqual(universities, [])
 
+    def test_edx_database_get_course_overviews_count(self):
+        """Test the get_course_overviews method."""
+        EdxCourseOverviewFactory.create_batch(3)
+
+        course_overviews_count = self.db.get_course_overviews_count()
+
+        self.assertEqual(course_overviews_count, 3)
+
+    def test_edx_database_get_course_overviews_count_offset_limit(self):
+        """Test the get_course_overviews method."""
+        EdxCourseOverviewFactory.create_batch(100)
+
+        course_overviews_count = self.db.get_course_overviews_count(offset=10, limit=30)
+
+        self.assertEqual(course_overviews_count, 30)
+
     def test_edx_database_get_course_overviews(self):
         """Test the get_course_overviews method."""
         edx_course_overviews = EdxCourseOverviewFactory.create_batch(3)
 
-        course_overviews = self.db.get_course_overviews(start=0, stop=9)
+        course_overviews = self.db.get_course_overviews(offset=0, limit=9)
 
         self.assertEqual(len(course_overviews), 3)
         self.assertEqual(len(edx_course_overviews), 3)
@@ -58,9 +74,22 @@ class OpenEdxDBTestCase(TestCase):
 
     def test_edx_database_get_course_overviews_empty(self):
         """Test the get_course_overviews method when there are no course_overviews."""
-        course_overviews = self.db.get_course_overviews(start=0, stop=9)
+        course_overviews = self.db.get_course_overviews(offset=0, limit=9)
 
         self.assertEqual(course_overviews, [])
+
+    def test_edx_database_get_course_overviews_offset_limit(self):
+        """Test the get_course_overviews method."""
+        edx_course_overviews = EdxCourseOverviewFactory.create_batch(100)
+
+        course_overviews = self.db.get_course_overviews(offset=10, limit=3)
+
+        self.assertEqual(len(course_overviews), 3)
+        self.assertEqual(len(edx_course_overviews), 100)
+        self.assertCountEqual(
+            course_overviews,
+            sorted(edx_course_overviews, key=lambda course: course.id)[10:13],
+        )
 
     def test_edx_database_get_users_count(self):
         """Test the get_users_count method."""
