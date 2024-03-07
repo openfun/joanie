@@ -335,7 +335,7 @@ class OpenEdxDB:
             return min(certificates_count, limit)
         return certificates_count
 
-    def get_certificates(self, start, stop, course_id=None):
+    def get_certificates(self, offset, limit, course_id=None):
         """
         Get downloadable certificates from Open edX database by slicing
 
@@ -362,8 +362,8 @@ class OpenEdxDB:
             )
             .where(self.Certificate.status == "downloadable")
             .order_by(self.Certificate.course_id)
-            .offset(start)
-            .limit(stop)
+            .offset(offset)
+            .limit(limit)
         )
         if course_id:
             query = query.where(self.Certificate.course_id == course_id)

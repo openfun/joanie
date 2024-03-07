@@ -242,7 +242,7 @@ class OpenEdxDBTestCase(TestCase):
         )
         EdxGeneratedCertificateFactory.create_batch(3, status="unavailable")
 
-        certificates = self.db.get_certificates(start=0, stop=9)
+        certificates = self.db.get_certificates(offset=0, limit=9)
 
         self.assertEqual(len(certificates), 3)
         self.assertEqual(len(edx_certificates_downloadable), 3)
