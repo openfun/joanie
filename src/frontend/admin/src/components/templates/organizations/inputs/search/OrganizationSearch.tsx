@@ -10,10 +10,11 @@ import { Organization } from "@/services/api/models/Organization";
 import { Maybe } from "@/types/utils";
 import { useModal } from "@/components/presentational/modal/useModal";
 import { CreateOrEditOrganizationModal } from "@/components/templates/organizations/modals/CreateOrEditOrganizationModal";
+import { OrganizationRepository } from "@/services/repositories/organization/OrganizationRepository";
 
-export function OrganizationSearch(
-  props: RHFAutocompleteSearchProps<Organization>,
-) {
+export function OrganizationSearch({
+  ...props
+}: RHFAutocompleteSearchProps<Organization>) {
   const { setValue, getValues } = useFormContext();
   const [query, setQuery] = useState("");
   const organizations = useOrganizations({ query });
@@ -30,6 +31,10 @@ export function OrganizationSearch(
     <>
       <RHFSearch
         {...props}
+        findFilterValue={async (values) => {
+          const request = await OrganizationRepository.getAll({ ids: values });
+          return request.results;
+        }}
         items={organizations.items}
         onAddClick={modal.handleOpen}
         loading={organizations.states.fetching}

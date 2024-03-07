@@ -29,7 +29,7 @@ export function RHFSelectCourseRunState(props: RHFSelectProps) {
       if (v && typeof v === "number") {
         result.push({
           label: intl.formatMessage(courseRunStateMessages[v as Priority]),
-          value: v,
+          value: v + "",
         });
       }
     });

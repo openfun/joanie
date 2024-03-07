@@ -7,6 +7,7 @@ import {
 import { Maybe } from "@/types/utils";
 import { useProducts } from "@/hooks/useProducts/useProducts";
 import { Product } from "@/services/api/models/Product";
+import { ProductRepository } from "@/services/repositories/products/ProductRepository";
 
 export function ProductSearch(props: RHFAutocompleteSearchProps<Product>) {
   const [query, setQuery] = useState("");
@@ -15,6 +16,10 @@ export function ProductSearch(props: RHFAutocompleteSearchProps<Product>) {
   return (
     <RHFSearch
       {...props}
+      findFilterValue={async (values) => {
+        const request = await ProductRepository.getAll({ ids: values });
+        return request.results;
+      }}
       items={productQuery.items}
       loading={productQuery.states.fetching}
       onFilter={setQuery}

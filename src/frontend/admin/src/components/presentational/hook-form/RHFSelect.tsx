@@ -15,6 +15,7 @@ import {
   SearchFilterComponentProps,
   useSearchFilterContext,
 } from "@/components/presentational/filters/SearchFilters";
+import { InitializeInputFilters } from "@/components/presentational/filters/InitializeInputFilters";
 
 export interface SelectOption<OptionValue = any> {
   label: string;
@@ -44,6 +45,8 @@ export function RHFSelect({
   leftIcons,
   getOptionLabel,
   isFilterContext,
+  findFilterValue,
+  filterQueryName,
   afterChange,
   ...other
 }: RHFSelectProps) {
@@ -91,67 +94,79 @@ export function RHFSelect({
   };
 
   return (
-    <Controller
+    <InitializeInputFilters
       name={name}
-      control={control}
-      render={({ field, fieldState: { error } }) => (
-        <TextField
-          {...field}
-          onChange={(e) => {
-            field.onChange(e);
-            addOrRemoveChip?.(e.target.value);
-          }}
-          sx={{
-            "&:hover": {
-              ".clear-select-button": {
-                opacity: 1,
+      isFilterContext={isFilterContext}
+      filterQueryName={filterQueryName ?? name}
+      findFilterValue={async (values) => {
+        const value = values[0];
+        addOrRemoveChip(value);
+        return value;
+      }}
+    >
+      <Controller
+        name={name}
+        control={control}
+        render={({ field, fieldState: { error } }) => (
+          <TextField
+            {...field}
+            onChange={(e) => {
+              field.onChange(e);
+              setValue(name, e.target.value, { shouldTouch: true });
+              addOrRemoveChip?.(e.target.value);
+            }}
+            sx={{
+              "&:hover": {
+                ".clear-select-button": {
+                  opacity: 1,
+                },
               },
-            },
-          }}
-          select
-          InputProps={{
-            startAdornment: leftIconsElement,
-            endAdornment: (
-              <IconButton
-                size="small"
-                className="clear-select-button"
-                sx={{
-                  mr: 2,
-                  opacity: 0,
-                }}
-                onClick={() => {
-                  field.onChange({ target: { value: "" } });
-                  clickOnDelete();
-                }}
-              >
-                <ClearIcon fontSize="small" />
-              </IconButton>
-            ),
-            inputProps: {
-              "data-testid": "select-value",
-            },
-          }}
-          fullWidth
-          error={!!error}
-          helperText={error ? error?.message : helperText}
-          {...other}
-        >
-          {noneOption && (
-            <MenuItem value="">
-              <em>
-                <FormattedMessage {...commonTranslations.none} />
-              </em>
-            </MenuItem>
-          )}
-          {options?.map((option) => {
-            return (
-              <MenuItem key={option.label} value={option.value}>
-                {option.label}
+            }}
+            select
+            InputProps={{
+              startAdornment: leftIconsElement,
+              endAdornment: (
+                <IconButton
+                  size="small"
+                  className="clear-select-button"
+                  sx={{
+                    mr: 2,
+                    opacity: 0,
+                  }}
+                  onClick={() => {
+                    field.onChange({ target: { value: "" } });
+                    clickOnDelete();
+                  }}
+                >
+                  <ClearIcon fontSize="small" />
+                </IconButton>
+              ),
+              inputProps: {
+                "data-testid": "select-value",
+              },
+            }}
+            fullWidth
+            error={!!error}
+            helperText={error ? error?.message : helperText}
+            {...other}
+          >
+            {noneOption && (
+              <MenuItem value="">
+                <em>
+                  <FormattedMessage {...commonTranslations.none} />
+                </em>
               </MenuItem>
-            );
-          })}
-        </TextField>
-      )}
-    />
+            )}
+            {options?.map((option) => {
+              return (
+                <MenuItem key={option.label} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              );
+            })}
+          </TextField>
+        )}
+      />
+    </InitializeInputFilters>
   );
 }
