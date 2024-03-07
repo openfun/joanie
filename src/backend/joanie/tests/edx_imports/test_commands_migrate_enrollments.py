@@ -141,7 +141,9 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
             factories.UserFactory.create(username=edx_enrollment.user.username)
 
         def get_edx_enrollments(*args, **kwargs):
-            return edx_enrollments[args[0] : args[1]]
+            start = args[0]
+            stop = start + args[1]
+            return edx_enrollments[start:stop]
 
         mock_get_enrollments.side_effect = get_edx_enrollments
         mock_get_enrollments_count.return_value = len(edx_enrollments)
@@ -169,12 +171,12 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
 
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_enrollments_count")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_enrollments")
-    def test_command_migrate_enrollments_create_dry_run_offset_limit(
+    def test_command_migrate_enrollments_create_dry_run_offset_size(
         self, mock_get_enrollments, mock_get_enrollments_count
     ):
         """
         Test that enrollments are not created from the edx enrollments if dry-run is enabled
-        with offset and limit.
+        with offset and size.
         """
         edx_enrollments = edx_factories.EdxEnrollmentFactory.create_batch(100)
         for edx_enrollment in edx_enrollments:
@@ -198,18 +200,19 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
                 "--skip-check",
                 "--enrollments",
                 "--enrollments-offset=20",
-                "--enrollments-limit=10",
+                "--enrollments-size=10",
+                "--batch-size=20",
                 "--dry-run",
             )
 
-        mock_get_enrollments.assert_called_with(20, 10, course_id=None)
+        mock_get_enrollments.assert_called_with(20, 20, course_id=None)
 
         expected = [
             "Importing data from Open edX database...",
             "Importing enrollments...",
             "Dry run: no enrollment will be imported",
-            "10 enrollments to import by batch of 1000",
-            "Dry run: 100% 10/10 : 10 enrollments created, 0 skipped, 0 errors",
+            "10 enrollments to import by batch of 20",
+            "Dry run: 100% 40/10 : 20 enrollments created, 0 skipped, 0 errors",
             "1 import enrollments tasks launched",
         ]
         self.assertLogsContains(logger, expected)

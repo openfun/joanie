@@ -14,28 +14,22 @@ logger = getLogger(__name__)
 
 
 def import_enrollments(
-    batch_size=1000, offset=0, limit=0, course_id=None, dry_run=False
+    batch_size=1000, global_offset=0, import_size=0, course_id=None, dry_run=False
 ):
     """Import enrollments from Open edX student_course_enrollment"""
     db = OpenEdxDB()
-    enrollments_count = db.get_enrollments_count(offset, limit, course_id=course_id)
+    total = db.get_enrollments_count(global_offset, import_size, course_id=course_id)
     if dry_run:
         logger.info("Dry run: no enrollment will be imported")
-    logger.info(
-        "%s enrollments to import by batch of %s", enrollments_count, batch_size
-    )
+    logger.info("%s enrollments to import by batch of %s", total, batch_size)
 
     batch_count = 0
-    for current_enrollment_index in range(0, enrollments_count, batch_size):
+    for batch_offset in range(global_offset, global_offset + total, batch_size):
         batch_count += 1
-        start = current_enrollment_index + offset
-        stop = current_enrollment_index + batch_size
-        if limit:
-            stop = min(stop, limit)
         import_enrollments_batch_task.delay(
-            start=start,
-            stop=stop,
-            total=enrollments_count,
+            batch_offset=batch_offset,
+            batch_size=batch_size,
+            total=total,
             course_id=course_id,
             dry_run=dry_run,
         )
@@ -55,7 +49,7 @@ def import_enrollments_batch_task(self, **kwargs):
     return report
 
 
-def import_enrollments_batch(start, stop, total, course_id, dry_run=False):
+def import_enrollments_batch(batch_offset, batch_size, total, course_id, dry_run=False):
     """Batch import enrollments from Open edX student_course_enrollment"""
     db = OpenEdxDB()
     report = {
@@ -65,7 +59,7 @@ def import_enrollments_batch(start, stop, total, course_id, dry_run=False):
             "errors": 0,
         }
     }
-    enrollments = db.get_enrollments(start, stop, course_id=course_id)
+    enrollments = db.get_enrollments(batch_offset, batch_size, course_id=course_id)
     enrollments_to_create = []
 
     for edx_enrollment in enrollments:
@@ -126,12 +120,17 @@ def import_enrollments_batch(start, stop, total, course_id, dry_run=False):
         import_string = "Dry run: " + import_string
         report["enrollments"]["created"] += len(enrollments_to_create)
 
-    stop = min(stop, total)
-    percent = format_percent(stop, total)
+    total_processed = (
+        batch_offset
+        + report["enrollments"]["created"]
+        + report["enrollments"]["skipped"]
+        + report["enrollments"]["errors"]
+    )
+    percent = format_percent(total_processed, total)
     logger.info(
         import_string,
         percent,
-        stop,
+        total_processed,
         total,
         report["enrollments"]["created"],
         report["enrollments"]["skipped"],
@@ -140,7 +139,7 @@ def import_enrollments_batch(start, stop, total, course_id, dry_run=False):
 
     return import_string % (
         percent,
-        stop,
+        total_processed,
         total,
         report["enrollments"]["created"],
         report["enrollments"]["skipped"],

@@ -259,7 +259,7 @@ class OpenEdxDB:
             return min(enrollments_count, limit)
         return enrollments_count
 
-    def get_enrollments(self, start, stop, course_id=None):
+    def get_enrollments(self, offset, limit, course_id=None):
         """
         Get enrollments from Open edX database by slicing
 
@@ -309,8 +309,8 @@ class OpenEdxDB:
                 ),
             )
             .order_by(self.StudentCourseEnrollment.course_id)
-            .offset(start)
-            .limit(stop)
+            .offset(offset)
+            .limit(limit)
         )
         if course_id:
             query = query.where(self.StudentCourseEnrollment.course_id == course_id)

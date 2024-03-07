@@ -207,7 +207,7 @@ class OpenEdxDBTestCase(TestCase):
                 EdxEnrollmentFactory(
                     course_id=edx_course_overview.id, user_id=edx_user.id, user=edx_user
                 )
-        enrollments = self.db.get_enrollments(start=0, stop=9)
+        enrollments = self.db.get_enrollments(offset=0, limit=9)
 
         self.assertEqual(len(enrollments), 9)
 
@@ -220,7 +220,7 @@ class OpenEdxDBTestCase(TestCase):
                 EdxEnrollmentFactory(
                     course_id=edx_course_overview.id, user_id=edx_user.id, user=edx_user
                 )
-        enrollments = self.db.get_enrollments(start=20, stop=10)
+        enrollments = self.db.get_enrollments(offset=20, limit=10)
 
         self.assertEqual(len(enrollments), len(edx_course_overviews[20:30]))
 
