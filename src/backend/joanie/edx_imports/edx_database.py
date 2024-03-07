@@ -75,7 +75,7 @@ class OpenEdxDB:
             return min(universities_count, limit)
         return universities_count
 
-    def get_universities(self, start, stop):
+    def get_universities(self, offset, limit):
         """
         Get universities from Open edX database
 
@@ -94,8 +94,8 @@ class OpenEdxDB:
                     self.University.logo,
                 )
             )
-            .offset(start)
-            .limit(stop)
+            .offset(offset)
+            .limit(limit)
         )
         return self.session.scalars(query).all()
 

@@ -10,25 +10,22 @@ from joanie.edx_imports.utils import download_and_store, format_percent
 logger = getLogger(__name__)
 
 
-def import_universities(batch_size=1000, offset=0, limit=0, dry_run=False):
+def import_universities(batch_size=1000, global_offset=0, import_size=0, dry_run=False):
     """Import organizations from Open edX universities"""
     db = OpenEdxDB()
-    universities_count = db.get_universities_count(offset, limit)
+    total = db.get_universities_count(global_offset, import_size)
     if dry_run:
         logger.info("Dry run: no university will be imported")
-    logger.info(
-        "%s universities to import by batch of %s", universities_count, batch_size
-    )
+    logger.info("%s universities to import by batch of %s", total, batch_size)
 
     batch_count = 0
-    for current_university_index in range(0, universities_count, batch_size):
+    for batch_offset in range(global_offset, global_offset + total, batch_size):
         batch_count += 1
-        start = current_university_index + offset
-        stop = current_university_index + batch_size
-        if limit:
-            stop = min(stop, limit)
         import_universities_batch_task.delay(
-            start=start, stop=stop, total=universities_count, dry_run=dry_run
+            batch_offset=batch_offset,
+            batch_size=batch_size,
+            total=total,
+            dry_run=dry_run,
         )
     logger.info("%s import universities tasks launched", batch_count)
 
@@ -46,10 +43,10 @@ def import_universities_batch_task(self, **kwargs):
     return report
 
 
-def import_universities_batch(start, stop, total, dry_run=False):
+def import_universities_batch(batch_offset, batch_size, total, dry_run=False):
     """Batch import universities from Open edX universities"""
     db = OpenEdxDB()
-    universities = db.get_universities(start, stop)
+    universities = db.get_universities(batch_offset, batch_size)
     report = {
         "universities": {
             "created": 0,
@@ -84,12 +81,17 @@ def import_universities_batch(start, stop, total, dry_run=False):
     if dry_run:
         import_string = "Dry run: " + import_string
 
-    stop = min(stop, total)
-    percent = format_percent(stop, total)
+    total_processed = (
+        batch_offset
+        + report["universities"]["created"]
+        + report["universities"]["skipped"]
+        + report["universities"]["errors"]
+    )
+    percent = format_percent(total_processed, total)
     logger.info(
         import_string,
         percent,
-        stop,
+        total_processed,
         total,
         report["universities"]["created"],
         report["universities"]["skipped"],
@@ -98,7 +100,7 @@ def import_universities_batch(start, stop, total, dry_run=False):
 
     return import_string % (
         percent,
-        stop,
+        total_processed,
         total,
         report["universities"]["created"],
         report["universities"]["skipped"],

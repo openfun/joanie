@@ -42,9 +42,9 @@ class Command(BaseCommand):
             default=0,
         )
         parser.add_argument(
-            "--universities-limit",
+            "--universities-size",
             type=int,
-            help="Limit of universities to import",
+            help="Size of universities to import",
             default=0,
         )
         parser.add_argument(
@@ -128,7 +128,7 @@ class Command(BaseCommand):
         import_all = options["all"]
         universities_import = options["universities"] or import_all
         universities_import_offset = options["universities_offset"]
-        universities_import_limit = options["universities_limit"]
+        universities_import_size = options["universities_size"]
         course_runs_import = options["course_runs"] or import_all
         course_runs_import_offset = options["course_runs_offset"]
         course_runs_import_size = options["course_runs_size"]
@@ -178,8 +178,8 @@ class Command(BaseCommand):
         if universities_import:
             logger.info("Importing universities...")
             import_universities(
-                offset=universities_import_offset,
-                limit=universities_import_limit,
+                global_offset=universities_import_offset,
+                import_size=universities_import_size,
                 dry_run=dry_run,
             )
 
