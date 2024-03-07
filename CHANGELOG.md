@@ -177,6 +177,8 @@ and this project adheres to
   - format start and end date
   - add course code colum
 - Add an order cancellation action in the order detail view
+- Preserve query params filters on page refresh
+
 
 ### Removed
 
