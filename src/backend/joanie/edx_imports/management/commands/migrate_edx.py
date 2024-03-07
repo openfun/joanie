@@ -82,9 +82,9 @@ class Command(BaseCommand):
             default=0,
         )
         parser.add_argument(
-            "--enrollments-limit",
+            "--enrollments-size",
             type=int,
-            help="Limit of enrollments to import",
+            help="Size of enrollments to import",
             default=0,
         )
         parser.add_argument(
@@ -137,7 +137,7 @@ class Command(BaseCommand):
         users_import_size = options["users_size"]
         enrollments_import = options["enrollments"] or import_all
         enrollments_import_offset = options["enrollments_offset"]
-        enrollments_import_limit = options["enrollments_limit"]
+        enrollments_import_size = options["enrollments_size"]
         certificates_import = options["certificates"] or import_all
         certificates_import_offset = options["certificates_offset"]
         certificates_import_limit = options["certificates_limit"]
@@ -205,8 +205,8 @@ class Command(BaseCommand):
             logger.info("Importing enrollments...")
             import_enrollments(
                 batch_size=batch_size,
-                offset=enrollments_import_offset,
-                limit=enrollments_import_limit,
+                global_offset=enrollments_import_offset,
+                import_size=enrollments_import_size,
                 course_id=course_id,
                 dry_run=dry_run,
             )

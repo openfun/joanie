@@ -105,9 +105,9 @@ class EdxImportEnrollmentsTestCase(TestCase):
         mock_get_enrollments.return_value = edx_enrollments[20:30]
         mock_get_enrollments_count.return_value = 10
 
-        import_enrollments(offset=20, limit=10)
+        import_enrollments(global_offset=20, import_size=10)
 
-        mock_get_enrollments.assert_called_once_with(20, 10, course_id=None)
+        mock_get_enrollments.assert_called_once_with(20, 1000, course_id=None)
 
         self.assertEqual(models.Enrollment.objects.count(), 10)
         for edx_enrollment in edx_enrollments[20:30]:
