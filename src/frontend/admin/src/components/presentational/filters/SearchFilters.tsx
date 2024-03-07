@@ -3,6 +3,7 @@ import {
   PropsWithChildren,
   ReactNode,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -19,9 +20,11 @@ import Button from "@mui/material/Button";
 import CloseIcon from "@mui/icons-material/Close";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 import Alert from "@mui/material/Alert";
+import { useRouter } from "next/router";
 import { useModal } from "@/components/presentational/modal/useModal";
 import { CustomModal } from "@/components/presentational/modal/Modal";
 import { Maybe } from "@/types/utils";
+import { getAvailableFilters } from "@/utils/filters";
 
 const messages = defineMessages({
   filtersLabelButton: {
@@ -54,6 +57,7 @@ const messages = defineMessages({
 
 type FilterChip = {
   name: string;
+  filterUrlName?: string;
   label: string;
   value: string;
   onDelete: (name: string) => void;
@@ -71,9 +75,14 @@ export type SearchFilterProps = MandatorySearchFilterProps & {
     removeChip: (chipName: string) => void,
   ) => ReactNode;
 };
+
 export function SearchFilters(props: PropsWithChildren<SearchFilterProps>) {
+  const router = useRouter();
   const intl = useIntl();
   const modal = useModal();
+  const [filtersLoading, setFiltersLoading] = useState(
+    getAvailableFilters(router.query).length > 0,
+  );
   const [chips, setChips] = useState<FilterChip[]>([]);
 
   const onChangeSearchInput = useDebouncedCallback((term: string) => {
@@ -81,16 +90,18 @@ export function SearchFilters(props: PropsWithChildren<SearchFilterProps>) {
   });
 
   const addChip = (newChip: FilterChip) => {
-    const newChips = [...chips];
-    const index = newChips.findIndex((chip) => {
-      return chip.name === newChip.name;
+    setChips((oldValue) => {
+      const newChips = [...oldValue];
+      const index = newChips.findIndex((chip) => {
+        return chip.name === newChip.name;
+      });
+      if (index < 0) {
+        newChips.push(newChip);
+      } else {
+        newChips[index] = newChip;
+      }
+      return newChips;
     });
-    if (index < 0) {
-      newChips.push(newChip);
-    } else {
-      newChips[index] = newChip;
-    }
-    setChips(newChips);
   };
 
   const deleteChip = (chip: FilterChip, index: number): void => {
@@ -112,16 +123,28 @@ export function SearchFilters(props: PropsWithChildren<SearchFilterProps>) {
     setChips(newChips);
   };
 
-  const providerValue = useMemo(() => {
-    return { addChip, removeChip: onRemoveChip };
-  }, [chips, addChip, onRemoveChip]);
-
   const clearAll = () => {
     chips.forEach((chip) => {
       chip.onDelete(chip.name);
     });
     setChips([]);
+    setFiltersLoading(false);
   };
+
+  const providerValue = useMemo(() => {
+    return { addChip, removeChip: onRemoveChip, clearAll };
+  }, [chips, addChip, onRemoveChip, clearAll]);
+
+  useEffect(() => {
+    if (!filtersLoading) {
+      return;
+    }
+
+    const filters = getAvailableFilters(router.query);
+    const allChipsName = chips.map((el) => el.filterUrlName ?? el.name);
+    const diff = filters.filter((el) => !allChipsName.includes(el));
+    setFiltersLoading(diff.length > 0);
+  }, [chips]);
 
   return (
     <SearchFilterContext.Provider value={providerValue}>
@@ -175,31 +198,39 @@ export function SearchFilters(props: PropsWithChildren<SearchFilterProps>) {
                 <Box>{props.renderContent(addChip, onRemoveChip)}</Box>
               </Stack>
             </CustomModal>
-            {chips.length > 0 && (
+            {(filtersLoading || chips.length > 0) && (
               <Stack
-                sx={{ p: "8px 16px 0 16px" }}
+                sx={{ p: "8px 16px 0 16px", width: "100%" }}
                 direction="row"
                 alignItems="center"
                 spacing={1}
                 flexWrap="wrap"
               >
-                {chips.map((chip, index) => (
-                  <Chip
-                    key={chip.name}
-                    label={`${chip.label}: ${chip.value}`}
-                    color="secondary"
-                    variant="outlined"
+                {filtersLoading && (
+                  <Box padding={0.5}>
+                    <CircularProgress size={22} />
+                  </Box>
+                )}
+                {!filtersLoading &&
+                  chips.map((chip, index) => (
+                    <Chip
+                      key={chip.name}
+                      label={`${chip.label}: ${chip.value}`}
+                      color="secondary"
+                      variant="outlined"
+                      size="small"
+                      onDelete={() => deleteChip(chip, index)}
+                    />
+                  ))}
+                {!filtersLoading && (
+                  <Button
                     size="small"
-                    onDelete={() => deleteChip(chip, index)}
-                  />
-                ))}
-                <Button
-                  size="small"
-                  endIcon={<CloseIcon fontSize="small" />}
-                  onClick={clearAll}
-                >
-                  <FormattedMessage {...messages.clear} />
-                </Button>
+                    endIcon={<CloseIcon fontSize="small" />}
+                    onClick={clearAll}
+                  >
+                    <FormattedMessage {...messages.clear} />
+                  </Button>
+                )}
               </Stack>
             )}
           </Box>
@@ -210,10 +241,14 @@ export function SearchFilters(props: PropsWithChildren<SearchFilterProps>) {
 }
 
 export type SearchFilterComponentProps = {
+  name: string;
   isFilterContext?: boolean;
+  filterQueryName?: string;
+  findFilterValue?: (values: string[]) => Promise<any | any[]>;
 };
 
 export interface SearchFilterContextInterface {
+  clearAll: () => void;
   removeChip: (name: string) => void;
   addChip: (chip: FilterChip) => void;
 }
