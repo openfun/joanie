@@ -116,7 +116,7 @@ class OpenEdxDB:
             return min(course_overviews_count, limit)
         return course_overviews_count
 
-    def get_course_overviews(self, start, stop):
+    def get_course_overviews(self, offset, limit):
         """
         Get course_overviews from Open edX database
 
@@ -156,8 +156,8 @@ class OpenEdxDB:
                 ),
             )
             .order_by(self.CourseOverview.id)
-            .offset(start)
-            .limit(stop)
+            .offset(offset)
+            .limit(limit)
         )
         return self.session.scalars(query).all()
 
