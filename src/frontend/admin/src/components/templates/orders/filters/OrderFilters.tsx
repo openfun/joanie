@@ -76,7 +76,7 @@ export function OrderFilters({ onFilter, ...searchFilterProps }: Props) {
     defaultValues: getDefaultValues() as any, // To not trigger type validation for default value
   });
 
-  const onSubmit = (values: FormValues) => {
+  const formValuesToFilterValues = (values: FormValues) => {
     const filters: OrderListQuery = {
       product_ids: values.products?.map((product) => product.id),
       course_ids: values.courses?.map((course) => course.id),
@@ -86,7 +86,11 @@ export function OrderFilters({ onFilter, ...searchFilterProps }: Props) {
       owner_ids: values.owners?.map((owner) => owner.id),
       state: values.state,
     };
-    onFilter(filters);
+    return filters;
+  };
+
+  const onSubmit = (values: FormValues) => {
+    onFilter(formValuesToFilterValues(values));
   };
 
   return (
@@ -99,7 +103,12 @@ export function OrderFilters({ onFilter, ...searchFilterProps }: Props) {
           showSubmit={false}
           methods={methods}
         >
-          <RHFValuesChange debounceTime={200} onSubmit={onSubmit}>
+          <RHFValuesChange
+            debounceTime={200}
+            updateUrl={true}
+            formValuesToFilterValues={formValuesToFilterValues}
+            onSubmit={onSubmit}
+          >
             <Grid container mt={2} spacing={2}>
               <Grid xs={12}>
                 <RHFOrderState
@@ -114,6 +123,7 @@ export function OrderFilters({ onFilter, ...searchFilterProps }: Props) {
                   isFilterContext={true}
                   multiple={true}
                   fullWidth={true}
+                  filterQueryName="product_ids"
                   label={intl.formatMessage(entitiesInputLabel.product)}
                   name="products"
                 />
@@ -123,6 +133,7 @@ export function OrderFilters({ onFilter, ...searchFilterProps }: Props) {
                   isFilterContext={true}
                   fullWidth={true}
                   multiple={true}
+                  filterQueryName="course_ids"
                   label={intl.formatMessage(entitiesInputLabel.course)}
                   name="courses"
                 />
@@ -132,6 +143,7 @@ export function OrderFilters({ onFilter, ...searchFilterProps }: Props) {
                   isFilterContext={true}
                   fullWidth={true}
                   multiple={true}
+                  filterQueryName="organization_ids"
                   label={intl.formatMessage(entitiesInputLabel.organization)}
                   name="organizations"
                 />
@@ -142,6 +154,7 @@ export function OrderFilters({ onFilter, ...searchFilterProps }: Props) {
                   fullWidth={true}
                   multiple={true}
                   label={intl.formatMessage(entitiesInputLabel.owner)}
+                  filterQueryName="owner_ids"
                   name="owners"
                 />
               </Grid>

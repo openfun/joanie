@@ -44,6 +44,7 @@ export function CoursesList(props: Props) {
     CourseResourceQuery
   >({
     useResource: useCourses,
+    changeUrlOnPageChange: props.changeUrlOnPageChange,
   });
 
   const columns: GridColDef<Course>[] = [

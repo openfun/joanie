@@ -56,6 +56,7 @@ export function ContractDefinitionFilters({
           <RHFValuesChange
             debounceTime={200}
             useAnotherValueReference={true}
+            updateUrl={true}
             onSubmit={onFilter}
           >
             <Grid container mt={2} spacing={2}>

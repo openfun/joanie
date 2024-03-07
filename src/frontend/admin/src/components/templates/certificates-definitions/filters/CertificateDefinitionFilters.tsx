@@ -56,6 +56,7 @@ export function CertificateDefinitionFilters({
         >
           <RHFValuesChange
             debounceTime={200}
+            updateUrl={true}
             useAnotherValueReference={true}
             onSubmit={onFilter}
           >
