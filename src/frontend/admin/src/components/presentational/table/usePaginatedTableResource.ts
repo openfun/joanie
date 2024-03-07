@@ -6,6 +6,7 @@ import { useRouter } from "next/router";
 import { Resource, ResourcesQuery, useResources } from "@/hooks/useResources";
 import { Maybe } from "@/types/utils";
 import { DEFAULT_PAGE_SIZE, DEFAULT_SEARCH_DEBOUNCE } from "@/utils/constants";
+import { deleteUnusedFilters, getAvailableFilters } from "@/utils/filters";
 
 interface Props<T extends Resource, TFilters extends ResourcesQuery> {
   initialItemsPerPage?: number;
@@ -32,16 +33,30 @@ export const usePaginatedTableResource = <
   const [query, setQuery] = useState<Maybe<string>>();
   const [currentPage, setCurrentPage] = useState<number>(initialQueryPage);
   const [pageSize, setPageSize] = useState(initialItemsPerPage);
-  const [listFilters, setListFilters] = useState<Maybe<TFilters>>(filters);
+  const [listFilters, setListFilters] = useState<Maybe<TFilters>>(
+    deleteUnusedFilters({
+      ...filters,
+      ...(router.query as unknown as TFilters),
+    }),
+  );
 
   const resource = useResource(
     {
       query,
-      page: currentPage + 1,
       ...listFilters,
+      page: currentPage + 1,
     },
     { placeholderData: keepPreviousData },
   );
+
+  useEffect(() => {
+    const availableFilters = getAvailableFilters({ ...listFilters });
+    if (resource.states.error == null || availableFilters.length === 0) {
+      return;
+    }
+
+    setListFilters(undefined);
+  }, [resource.states.error]);
 
   const debouncedSetQuery = useDebouncedCallback((term: string) => {
     setQuery(term);
@@ -50,16 +65,23 @@ export const usePaginatedTableResource = <
 
   const onFilter = (newFilters: TFilters) => {
     setCurrentPage(0);
-    setListFilters({ ...listFilters, ...newFilters });
+    setListFilters((oldFilter) => {
+      const oldResult = oldFilter ?? {};
+      return deleteUnusedFilters({ ...oldResult, ...newFilters });
+    });
   };
 
   useEffect(() => {
     if (!changeUrlOnPageChange) {
       return;
     }
-    router.push({ query: { page: currentPage + 1 } }, undefined, {
-      shallow: true,
-    });
+    router.push(
+      { query: { ...router.query, page: currentPage + 1 } },
+      undefined,
+      {
+        shallow: true,
+      },
+    );
   }, [currentPage]);
 
   return {
