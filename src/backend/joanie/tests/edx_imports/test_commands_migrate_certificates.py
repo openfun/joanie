@@ -270,7 +270,7 @@ class MigrateOpenEdxCertificatesTestCase(
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates_count")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates")
     @responses.activate(assert_all_requests_are_fired=False)
-    def test_command_migrate_certificates_create_dry_run_offset_limit(
+    def test_command_migrate_certificates_create_dry_run_offset_size(
         self,
         mock_get_certificates,
         mock_get_certificates_count,
@@ -335,7 +335,7 @@ class MigrateOpenEdxCertificatesTestCase(
                 "--skip-check",
                 "--certificates",
                 "--certificates-offset=20",
-                "--certificates-limit=10",
+                "--certificates-size=10",
                 "--dry-run",
             )
 
@@ -343,7 +343,7 @@ class MigrateOpenEdxCertificatesTestCase(
             "Importing data from Open edX database...",
             "Importing certificates...",
             "10 certificates to import by batch of 1000",
-            "100% 10/10 : 10 certificates created, 0 skipped, 0 errors",
+            "100% 100/10 : 80 certificates created, 0 skipped, 0 errors",
             "1 import certificates tasks launched",
         ]
         self.assertLogsContains(logger, expected)

@@ -28,28 +28,22 @@ logger = getLogger(__name__)
 
 
 def import_certificates(
-    batch_size=1000, offset=0, limit=0, course_id=None, dry_run=False
+    batch_size=1000, global_offset=0, import_size=0, course_id=None, dry_run=False
 ):
     """Import organizations from Open edX certificates"""
     db = OpenEdxDB()
-    certificates_count = db.get_certificates_count(offset, limit, course_id=course_id)
+    total = db.get_certificates_count(global_offset, import_size, course_id=course_id)
     if dry_run:
         logger.info("Dry run: no certificate will be imported")
-    logger.info(
-        "%s certificates to import by batch of %s", certificates_count, batch_size
-    )
+    logger.info("%s certificates to import by batch of %s", total, batch_size)
 
     batch_count = 0
-    for current_certificate_index in range(0, certificates_count, batch_size):
+    for batch_offset in range(global_offset, global_offset + total, batch_size):
         batch_count += 1
-        start = current_certificate_index + offset
-        stop = current_certificate_index + batch_size
-        if limit:
-            stop = min(stop, limit)
         import_certificates_batch_task.delay(
-            start=start,
-            stop=stop,
-            total=certificates_count,
+            batch_offset=batch_offset,
+            batch_size=batch_size,
+            total=total,
             course_id=course_id,
             dry_run=dry_run,
         )
@@ -69,7 +63,9 @@ def import_certificates_batch_task(self, **kwargs):
     return report
 
 
-def import_certificates_batch(start, stop, total, course_id, dry_run=False):
+def import_certificates_batch(
+    batch_offset, batch_size, total, course_id, dry_run=False
+):
     """Batch import certificates from Open edX certificates_generatedcertificate"""
     db = OpenEdxDB()
     report = {
@@ -80,7 +76,7 @@ def import_certificates_batch(start, stop, total, course_id, dry_run=False):
         }
     }
     hashids = Hashids(salt=settings.EDX_SECRET)
-    certificates = db.get_certificates(start, stop, course_id=course_id)
+    certificates = db.get_certificates(batch_offset, batch_size, course_id=course_id)
     certificates_to_create = []
 
     for edx_certificate in certificates:
@@ -217,12 +213,17 @@ def import_certificates_batch(start, stop, total, course_id, dry_run=False):
         import_string = "Dry run: " + import_string
         report["certificates"]["created"] += len(certificates_to_create)
 
-    stop = min(stop, total)
-    percent = format_percent(stop, total)
+    total_processed = (
+        batch_offset
+        + report["certificates"]["created"]
+        + report["certificates"]["skipped"]
+        + report["certificates"]["errors"]
+    )
+    percent = format_percent(total_processed, total)
     logger.info(
         import_string,
         percent,
-        stop,
+        total_processed,
         total,
         report["certificates"]["created"],
         report["certificates"]["skipped"],
@@ -231,7 +232,7 @@ def import_certificates_batch(start, stop, total, course_id, dry_run=False):
 
     return import_string % (
         percent,
-        stop,
+        total_processed,
         total,
         report["certificates"]["created"],
         report["certificates"]["skipped"],
