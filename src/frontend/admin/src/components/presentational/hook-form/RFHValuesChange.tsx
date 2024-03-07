@@ -3,14 +3,20 @@ import { PropsWithChildren, useEffect, useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
 import { FieldValues } from "react-hook-form/dist/types/fields";
+import { useRouter } from "next/router";
+import { deleteUnusedFilters } from "@/utils/filters";
 
 type Props<T extends FieldValues> = {
   onSubmit: (values: T) => void;
   debounceTime?: number;
   useAnotherValueReference?: boolean;
+  formValuesToFilterValues?: (values: T) => any;
+  updateUrl?: boolean;
 };
 export function RHFValuesChange<T extends FieldValues>({
   debounceTime = 800,
+  updateUrl = false,
+  formValuesToFilterValues,
   useAnotherValueReference = false,
   ...props
 }: PropsWithChildren<Props<T>>) {
@@ -20,7 +26,19 @@ export function RHFValuesChange<T extends FieldValues>({
     formState: { isValid },
   } = useFormContext<T>();
   const values = watch();
+  const router = useRouter();
   const [oldValues, setOldValues] = useState<T>();
+
+  const onUpdateUrl = (newValues: T) => {
+    if (!updateUrl) {
+      return;
+    }
+    let filterValues = formValuesToFilterValues?.(newValues) ?? newValues;
+    filterValues = { ...deleteUnusedFilters(router.query), ...filterValues };
+    router.push({ query: deleteUnusedFilters(filterValues) }, undefined, {
+      shallow: true,
+    });
+  };
 
   const onValuesChange = useDebouncedCallback(() => {
     if (!isValid) {
@@ -35,6 +53,10 @@ export function RHFValuesChange<T extends FieldValues>({
       handleSubmit(() => props.onSubmit({ ...values }))();
     } else {
       handleSubmit(props.onSubmit)();
+    }
+
+    if (updateUrl) {
+      onUpdateUrl({ ...values });
     }
   }, debounceTime);
 
