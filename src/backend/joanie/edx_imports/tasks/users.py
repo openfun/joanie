@@ -14,23 +14,22 @@ from joanie.edx_imports.utils import extract_language_code, format_date, format_
 logger = getLogger(__name__)
 
 
-def import_users(batch_size=1000, offset=0, limit=0, dry_run=False):
+def import_users(batch_size=1000, global_offset=0, import_size=0, dry_run=False):
     """Import users from Open edX auth_user"""
     db = OpenEdxDB()
-    users_count = db.get_users_count(offset, limit)
+    total = db.get_users_count(global_offset, import_size)
     if dry_run:
         logger.info("Dry run: no user will be imported")
-    logger.info("%s users to import by batch of %s", users_count, batch_size)
+    logger.info("%s users to import by batch of %s", total, batch_size)
 
     batch_count = 0
-    for current_user_index in range(0, users_count, batch_size):
+    for batch_offset in range(global_offset, global_offset + total, batch_size):
         batch_count += 1
-        start = current_user_index + offset
-        stop = current_user_index + batch_size
-        if limit:
-            stop = min(stop, limit)
         import_users_batch_task.delay(
-            start=start, stop=stop, total=users_count, dry_run=dry_run
+            batch_offset=batch_offset,
+            batch_size=batch_size,
+            total=total,
+            dry_run=dry_run,
         )
     logger.info("%s import users tasks launched", batch_count)
 
@@ -48,11 +47,11 @@ def import_users_batch_task(self, **kwargs):
     return report
 
 
-def import_users_batch(start, stop, total, dry_run=False):
+def import_users_batch(batch_offset, batch_size, total, dry_run=False):
     """Batch import users from Open edX auth_user"""
     db = OpenEdxDB()
     report = {"users": {"created": 0, "skipped": 0, "errors": 0}}
-    users = db.get_users(start, stop)
+    users = db.get_users(batch_offset, batch_size)
     users_to_create = []
 
     for edx_user in users:
@@ -101,12 +100,17 @@ def import_users_batch(start, stop, total, dry_run=False):
         users_created = models.User.objects.bulk_create(users_to_create)
         report["users"]["created"] += len(users_created)
 
-    stop = min(stop, total)
-    percent = format_percent(stop, total)
+    total_processed = (
+        batch_offset
+        + report["users"]["created"]
+        + report["users"]["skipped"]
+        + report["users"]["errors"]
+    )
+    percent = format_percent(total_processed, total)
     logger.info(
         import_string,
         percent,
-        stop,
+        total_processed,
         total,
         report["users"]["created"],
         report["users"]["skipped"],
@@ -115,7 +119,7 @@ def import_users_batch(start, stop, total, dry_run=False):
 
     return import_string % (
         percent,
-        stop,
+        total_processed,
         total,
         report["users"]["created"],
         report["users"]["skipped"],

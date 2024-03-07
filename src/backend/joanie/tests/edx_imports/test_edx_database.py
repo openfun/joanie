@@ -142,7 +142,7 @@ class OpenEdxDBTestCase(TestCase):
         edx_user_no_preference = EdxUserFactory(user_api_userpreference=None)
         edx_users.append(edx_user_no_preference)
 
-        users = self.db.get_users(start=0, stop=9)
+        users = self.db.get_users(offset=0, limit=9)
 
         self.assertEqual(len(edx_users), 4, "Expected 4 edx_users")
         self.assertEqual(len(users), 4, "Expected 4 users")
@@ -150,7 +150,7 @@ class OpenEdxDBTestCase(TestCase):
 
     def test_edx_database_get_users_empty(self):
         """Test the get_users method when there are no users."""
-        users = self.db.get_users(start=0, stop=9)
+        users = self.db.get_users(offset=0, limit=9)
 
         self.assertEqual(users, [])
 
@@ -158,7 +158,7 @@ class OpenEdxDBTestCase(TestCase):
         """Test the get_users method with a slice."""
         edx_users = EdxUserFactory.create_batch(3)
 
-        users = self.db.get_users(start=0, stop=2)
+        users = self.db.get_users(offset=0, limit=2)
 
         self.assertEqual(len(users), 2)
         self.assertEqual(len(edx_users), 3)
@@ -168,7 +168,7 @@ class OpenEdxDBTestCase(TestCase):
         """Test the get_users method with a slice when there are no users."""
         EdxUserFactory.create_batch(3)
 
-        users = self.db.get_users(start=3, stop=9)
+        users = self.db.get_users(offset=3, limit=9)
 
         self.assertEqual(users, [])
 

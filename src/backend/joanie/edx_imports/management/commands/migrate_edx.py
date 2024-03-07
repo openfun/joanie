@@ -70,7 +70,7 @@ class Command(BaseCommand):
             default=0,
         )
         parser.add_argument(
-            "--users-limit", type=int, help="Limit of users to import", default=0
+            "--users-size", type=int, help="Size of users to import", default=0
         )
         parser.add_argument(
             "--enrollments", action="store_true", help="Import enrollments"
@@ -134,7 +134,7 @@ class Command(BaseCommand):
         course_runs_import_size = options["course_runs_size"]
         users_import = options["users"] or import_all
         users_import_offset = options["users_offset"]
-        users_import_limit = options["users_limit"]
+        users_import_size = options["users_size"]
         enrollments_import = options["enrollments"] or import_all
         enrollments_import_offset = options["enrollments_offset"]
         enrollments_import_limit = options["enrollments_limit"]
@@ -196,8 +196,8 @@ class Command(BaseCommand):
             logger.info("Importing users...")
             import_users(
                 batch_size=batch_size,
-                offset=users_import_offset,
-                limit=users_import_limit,
+                global_offset=users_import_offset,
+                import_size=users_import_size,
                 dry_run=dry_run,
             )
 
