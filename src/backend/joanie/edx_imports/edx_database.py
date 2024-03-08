@@ -46,7 +46,9 @@ class OpenEdxDB:
                 port=settings.EDX_DATABASE_PORT,
                 database=settings.EDX_DATABASE_NAME,
             )
-            self.engine = create_engine(url, echo=settings.EDX_DATABASE_DEBUG)
+            self.engine = create_engine(
+                url, echo=settings.EDX_DATABASE_DEBUG, pool_pre_ping=True
+            )
         if session is not None:
             self.session = session
         else:
