@@ -355,6 +355,31 @@ jobs:
           at: ~/joanie
       - restore_cache:
           keys:
+            - v4-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
+            - v4-frontend-admin-dependencies-
+      - run:
+          name: Install Playwright dependencies (platform deps + browser)
+          command: yarn playwright install --with-deps chromium
+      - run:
+          name: Run test command
+          command: SHARD="$((${CIRCLE_NODE_INDEX}+1))"; yarn test:e2e --shard=${SHARD}/${CIRCLE_NODE_TOTAL}
+
+  test-playwright-ct-front-admin:
+    docker:
+      - image: cimg/node:18.18
+        auth:
+          username: $DOCKER_HUB_USER
+          password: $DOCKER_HUB_PASSWORD
+    working_directory: ~/joanie/src/frontend/admin
+    resource_class: large
+    parallelism: 4
+    steps:
+      - checkout:
+          path: ~/joanie
+      - attach_workspace:
+          at: ~/joanie
+      - restore_cache:
+          keys:
             - v5-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
             - v5-frontend-admin-dependencies-
       - run:
@@ -362,7 +387,7 @@ jobs:
           command: yarn playwright install --with-deps chromium
       - run:
           name: Run test command
-          command: SHARD="$((${CIRCLE_NODE_INDEX}+1))"; yarn test:e2e --shard=${SHARD}/${CIRCLE_NODE_TOTAL}
+          command: SHARD="$((${CIRCLE_NODE_INDEX}+1))"; yarn test-ct --shard=${SHARD}/${CIRCLE_NODE_TOTAL}
 
   # ---- Internationalization jobs ----
   build-back-i18n:
@@ -777,6 +802,12 @@ workflows:
           requires:
             - build-test-front-admin
       - test-e2e-front-admin:
+          filters:
+            tags:
+              only: /.*/
+          requires:
+            - build-test-front-admin
+      - test-playwright-ct-front-admin:
           filters:
             tags:
               only: /.*/
