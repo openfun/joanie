@@ -13,6 +13,7 @@ from django.db import IntegrityError, transaction
 from django.db.models import Count, OuterRef, Prefetch, Q, Subquery
 from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.urls import reverse
+from django.utils import timezone
 
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -30,6 +31,7 @@ from joanie.core.exceptions import NoContractToSignError
 from joanie.core.tasks import generate_zip_archive_task
 from joanie.core.utils import contract as contract_utility
 from joanie.core.utils import contract_definition, issuers
+from joanie.core.utils.payment_schedule import generate as generate_payment_schedule
 from joanie.core.utils.signature import check_signature
 from joanie.payment import enums as payment_enums
 from joanie.payment.models import Invoice
@@ -174,12 +176,38 @@ class CourseProductRelationViewSet(
 
     def get_permissions(self):
         """Anonymous user should be able to retrieve a course product relation."""
-        if self.action == "retrieve" and self.kwargs.get("course_id"):
+        if (
+            self.action == "retrieve"
+            and self.kwargs.get("course_id")
+            or self.action == "payment_schedule"
+        ):
             permission_classes = [drf_permissions.AllowAny]
         else:
             return super().get_permissions()
 
         return [permission() for permission in permission_classes]
+
+    def get_serializer_class(self):
+        """Return the serializer class to use."""
+        if self.action == "payment_schedule":
+            return serializers.OrderPaymentScheduleSerializer
+        return self.serializer_class
+
+    @action(detail=True, methods=["GET"], url_path="payment-schedule")
+    def payment_schedule(self, *args, **kwargs):
+        """
+        Return the payment schedule for a course product relation.
+        """
+        course_product_relation = self.get_object()
+        payment_schedule = generate_payment_schedule(
+            course_product_relation.product.price,
+            timezone.now(),
+            course_product_relation.product.get_equivalent_course_run_dates()["end"],
+        )
+
+        serializer = self.get_serializer(data={"payment_schedule": payment_schedule})
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
 
 
 class EnrollmentViewSet(
