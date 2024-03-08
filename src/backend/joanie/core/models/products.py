@@ -5,9 +5,7 @@ Declare and configure the models for the product / order part
 import itertools
 import logging
 from collections import defaultdict
-from datetime import timedelta
 
-from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -17,13 +15,10 @@ from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
 import requests
-from dateutil.relativedelta import relativedelta
 from django_fsm import FSMField, transition
 from django_fsm.signals import post_transition
 from parler import models as parler_models
-from stockholm import Money, Number
 from urllib3.util import Retry
-from workalendar.europe import France
 
 from joanie.core import enums
 from joanie.core.exceptions import CertificateGenerationError
@@ -42,6 +37,7 @@ from joanie.core.models.courses import (
 )
 from joanie.core.utils import contract_definition as contract_definition_utility
 from joanie.core.utils import issuers, webhooks
+from joanie.core.utils.payment_schedule import generate as generate_payment_schedule
 from joanie.payment import get_payment_backend
 from joanie.payment.models import CreditCard
 from joanie.signature.backends import get_signature_backend
@@ -1078,32 +1074,18 @@ class Order(BaseModel):
             for key, value in aggregate.items()
         }
 
-    def _retraction_date(self):
+    def _get_schedule_dates(self):
         """
-        Return the retraction date for the order.
+        Return the schedule dates for the order.
         """
         try:
-            retraction_date = self.contract.student_signed_on.replace(  # pylint: disable=unexpected-keyword-arg
-                hour=0, minute=0, second=0, microsecond=0
-            ) + timedelta(days=16)
+            start_date = self.contract.student_signed_on
         except Order.contract.RelatedObjectDoesNotExist as e:
             logger.error(
                 "Contract does not exist, cannot retrieve withdrawal date",
                 extra={"context": {"order": self.to_dict()}},
             )
             raise ObjectDoesNotExist("Order has no contract") from e
-        calendar = France()
-        if not calendar.is_working_day(retraction_date):
-            retraction_date = calendar.add_working_days(
-                retraction_date, 1, keep_datetime=True
-            )
-        return retraction_date
-
-    def _get_schedule_dates(self):
-        """
-        Return the schedule date for the order.
-        """
-        start_date = self._retraction_date()
         end_date = self.get_equivalent_course_run_dates()["end"]
         if not end_date:
             logger.error(
@@ -1113,62 +1095,12 @@ class Order(BaseModel):
             raise ValidationError("Cannot retrieve end date for order")
         return start_date, end_date
 
-    def _get_installments_percentages(self):
-        """
-        Return the payment installments percentages for the order.
-        """
-        percentages = None
-        for limit, percentages in settings.PAYMENT_SCHEDULE_LIMITS.items():
-            if self.total <= limit:
-                return percentages
-        return percentages
-
-    def _calculate_due_dates(self, percentages_count):
-        """
-        Calculate the due dates for the order.
-        """
-        start_date, end_date = self._get_schedule_dates()
-        due_dates = []
-        for i in range(percentages_count):
-            due_date = start_date + relativedelta(months=i)
-            if due_date > end_date:
-                # If due date is after end date, we should stop the loop, and add the end
-                # date as the last due date
-                due_dates.append(end_date)
-                break
-            due_dates.append(min(due_date, end_date))
-        return due_dates
-
-    def _calculate_installments(self, due_dates, percentages):
-        """
-        Calculate the installments for the order.
-        """
-        total_amount = Money(self.total, settings.DEFAULT_CURRENCY)
-        installments = []
-        for i, due_date in enumerate(due_dates):
-            if i < len(due_dates) - 1:
-                # All installments are using the setting percentages except the last one
-                amount = round(total_amount * Number(percentages[i] / 100), 2)
-            else:
-                # Last installment is the remaining amount
-                amount_sum = sum(installment["amount"] for installment in installments)
-                amount = total_amount - amount_sum
-            installments.append(
-                {
-                    "due_date": due_date,
-                    "amount": amount,
-                    "state": enums.PAYMENT_STATE_PENDING,
-                }
-            )
-        return installments
-
     def generate_schedule(self):
         """
         Generate payment schedule for the order.
         """
-        percentages = self._get_installments_percentages()
-        due_dates = self._calculate_due_dates(len(percentages))
-        installments = self._calculate_installments(due_dates, percentages)
+        start_date, end_date = self._get_schedule_dates()
+        installments = generate_payment_schedule(self.total, start_date, end_date)
 
         self.payment_schedule = installments
         self.save()
