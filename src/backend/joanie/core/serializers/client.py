@@ -1143,3 +1143,52 @@ class ActivityLogSerializer(serializers.ModelSerializer):
             "context",
         ]
         read_only_fields = ["id", "created_on"]
+
+
+class OrderPaymentSerializer(serializers.Serializer):
+    """
+    Serializer for the order payment
+    """
+
+    amount = serializers.DecimalField(
+        coerce_to_string=False,
+        decimal_places=2,
+        max_digits=9,
+        min_value=0,
+        required=True,
+    )
+    due_date = serializers.DateTimeField(required=True)
+    state = serializers.ChoiceField(
+        choices=enums.PAYMENT_STATE_CHOICES,
+        required=True,
+    )
+
+    def to_internal_value(self, data):
+        """Used to format the amount and the due_date before validation."""
+        return super().to_internal_value(
+            {
+                "amount": data.get("amount").amount_as_string(),
+                "due_date": data.get("due_date").isoformat(),
+                "state": data.get("state"),
+            }
+        )
+
+    def create(self, validated_data):
+        """Only there to avoid a NotImplementedError"""
+
+    def update(self, instance, validated_data):
+        """Only there to avoid a NotImplementedError"""
+
+
+class OrderPaymentScheduleSerializer(serializers.Serializer):
+    """
+    Serializer for the order payment schedule
+    """
+
+    payment_schedule = OrderPaymentSerializer(many=True, required=True)
+
+    def create(self, validated_data):
+        """Only there to avoid a NotImplementedError"""
+
+    def update(self, instance, validated_data):
+        """Only there to avoid a NotImplementedError"""
