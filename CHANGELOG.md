@@ -105,6 +105,7 @@ and this project adheres to
 - Add organization contract signature
 - Add moodle LMS backend
 - Add contract details inside order view
+- Add playwright component stack
 
 ### Changed
 
