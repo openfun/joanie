@@ -17,7 +17,7 @@ const messages = defineMessages({
   },
 });
 
-interface Props extends Omit<SelectProps, "onSelect"> {
+interface Props extends Omit<SelectProps, "onSelect" | "variant"> {
   options?: SelectOption[];
   value: any;
   onSelect: (newValue: any) => void;
