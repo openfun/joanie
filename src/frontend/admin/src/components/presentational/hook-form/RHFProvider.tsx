@@ -28,7 +28,7 @@ const messages = defineMessages({
   },
 });
 
-interface Props<T extends FieldValues> {
+export interface RHFProviderProps<T extends FieldValues> {
   children: React.ReactNode;
   id?: string;
   methods: UseFormReturn<T>;
@@ -49,7 +49,7 @@ export function RHFProvider<T extends FieldValues>({
   isSubmitting = false,
   checkBeforeUnload = false,
   id,
-}: Props<T>) {
+}: RHFProviderProps<T>) {
   const intl = useIntl();
   const router = useRouter();
   const [nextUrl, setNextUrl] = useState<string>();
@@ -137,6 +137,7 @@ export function RHFProvider<T extends FieldValues>({
         )}
       </form>
       <AlertModal
+        data-testid="unsaved-form-modal"
         open={dirtyModal.open}
         closeOnAccept={false}
         maxWidth="md"
