@@ -102,7 +102,9 @@ export default function RHFAutocomplete<
       searchFilterContext.addChip({
         name,
         label: label ?? "",
-        value: other.getOptionLabel?.(newValue) ?? "",
+        value:
+          other.getOptionLabel?.(newValue) ??
+          (typeof newValue === "string" ? newValue : ""),
         onDelete: () => setValue(name, null),
       });
     } else {

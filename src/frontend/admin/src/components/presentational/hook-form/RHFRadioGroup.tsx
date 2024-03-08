@@ -11,7 +11,7 @@ import {
   useSearchFilterContext,
 } from "@/components/presentational/filters/SearchFilters";
 
-type Props<> = RadioGroupProps &
+type Props = RadioGroupProps &
   SearchFilterComponentProps & {
     name: string;
     options: SelectOption[];
@@ -45,7 +45,7 @@ export default function RHFRadioGroup({
       searchFilterContext.addChip({
         name,
         label: label ?? "",
-        value: getValueLabel ? getValueLabel(newValue) : "",
+        value: getValueLabel?.(newValue) ?? newValue,
         onDelete: () =>
           setValue(name, hasNoneOption ? "none" : "", {
             shouldValidate: true,
