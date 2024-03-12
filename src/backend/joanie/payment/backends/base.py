@@ -13,7 +13,7 @@ from django.utils.translation import override
 
 from joanie.core.models import Address
 from joanie.payment.enums import INVOICE_STATE_REFUNDED
-from joanie.payment.models import Invoice, Transaction
+from joanie.payment.models import CreditCard, Invoice, Transaction
 
 logger = getLogger(__name__)
 
@@ -188,3 +188,33 @@ class BasePaymentBackend:
         raise NotImplementedError(
             "subclasses of BasePaymentBackend must provide a abort_payment() method."
         )
+
+    def save_credit_card(self, request, order, billing_address):
+        """
+        Save a credit card without doing a real payment from the payment provider.
+        """
+        raise NotImplementedError(
+            "subclasses of BasePaymentBackend must provide a save_credit_card() method."
+        )
+
+    def _save_card_for_user(self, order, payment_response):
+        """
+        Update or create the credit card for the order's owner.
+        """
+        credit_card, _ = CreditCard.objects.update_or_create(
+            owner_id=str(order.owner.id),
+            token=payment_response.get("card").get("id"),
+            defaults={
+                "token": payment_response.get("card").get("id"),
+                "brand": payment_response.get("card").get("brand"),
+                "expiration_month": payment_response.get("card").get("exp_month"),
+                "expiration_year": payment_response.get("card").get("exp_year"),
+                "last_numbers": payment_response.get("card").get("last4"),
+                "owner_id": str(order.owner.id),
+                "is_main": True,
+            },
+        )
+
+        credit_card.save()
+
+        return credit_card

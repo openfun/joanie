@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Save a credit card without doing a real payment for payment backends
 - Allow backoffice to generate certificate if order is eligible
 - Allow backoffice admin user to cancel an order
 - Add filter tag `iso8601_to_date`
