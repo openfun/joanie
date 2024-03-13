@@ -12,6 +12,15 @@
                 "description": "Admin Certificate ViewSet",
                 "parameters": [
                     {
+                        "in": "query",
+                        "name": "ids",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "primary key for the record as UUID"
+                    },
+                    {
                         "name": "page",
                         "required": false,
                         "in": "query",
@@ -285,6 +294,15 @@
                 "operationId": "contract_definitions_list",
                 "description": "Admin Contract Definition ViewSet",
                 "parameters": [
+                    {
+                        "in": "query",
+                        "name": "ids",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "primary key for the record as UUID"
+                    },
                     {
                         "in": "query",
                         "name": "language",
@@ -1174,6 +1192,15 @@
                     },
                     {
                         "in": "query",
+                        "name": "ids",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "primary key for the record as UUID"
+                    },
+                    {
+                        "in": "query",
                         "name": "is_gradable",
                         "schema": {
                             "type": "boolean"
@@ -1475,6 +1502,15 @@
                 "operationId": "courses_list",
                 "description": "Admin Course ViewSet",
                 "parameters": [
+                    {
+                        "in": "query",
+                        "name": "ids",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "primary key for the record as UUID"
+                    },
                     {
                         "in": "query",
                         "name": "organization_ids",
@@ -1812,6 +1848,15 @@
                         "description": "primary key for the record as UUID",
                         "explode": true,
                         "style": "form"
+                    },
+                    {
+                        "in": "query",
+                        "name": "ids",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "primary key for the record as UUID"
                     },
                     {
                         "in": "query",
@@ -2347,6 +2392,15 @@
                     },
                     {
                         "in": "query",
+                        "name": "ids",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "primary key for the record as UUID"
+                    },
+                    {
+                        "in": "query",
                         "name": "organization_ids",
                         "schema": {
                             "type": "array",
@@ -2591,6 +2645,15 @@
                 "operationId": "organizations_list",
                 "description": "Admin Organization ViewSet",
                 "parameters": [
+                    {
+                        "in": "query",
+                        "name": "ids",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "primary key for the record as UUID"
+                    },
                     {
                         "name": "page",
                         "required": false,
@@ -3272,6 +3335,15 @@
                 "description": "Admin Product ViewSet",
                 "parameters": [
                     {
+                        "in": "query",
+                        "name": "ids",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "primary key for the record as UUID"
+                    },
+                    {
                         "name": "page",
                         "required": false,
                         "in": "query",
@@ -3807,6 +3879,15 @@
                 "operationId": "users_list",
                 "description": "Admin User ViewSet",
                 "parameters": [
+                    {
+                        "in": "query",
+                        "name": "ids",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "primary key for the record as UUID"
+                    },
                     {
                         "name": "page",
                         "required": false,

@@ -138,9 +138,9 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         """
         Only return users if a query is provided to filter them.
         """
-        query = self.request.query_params.get("query", None)
-
-        if not query:
+        if not self.request.query_params.get(
+            "query", None
+        ) and not self.request.query_params.get("ids", None):
             return models.User.objects.none()
 
         return super().get_queryset()
