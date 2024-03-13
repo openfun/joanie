@@ -157,7 +157,6 @@ class OpenEdxDB:
                     self.Course.language,
                 ),
             )
-            .order_by(self.CourseOverview.id)
             .offset(offset)
             .limit(limit)
         )
@@ -310,7 +309,6 @@ class OpenEdxDB:
                     self.User.username,
                 ),
             )
-            .order_by(self.StudentCourseEnrollment.course_id)
             .offset(offset)
             .limit(limit)
         )
@@ -363,7 +361,6 @@ class OpenEdxDB:
                 )
             )
             .where(self.Certificate.status == "downloadable")
-            .order_by(self.Certificate.course_id)
             .offset(offset)
             .limit(limit)
         )
