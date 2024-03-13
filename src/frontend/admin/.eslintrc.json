@@ -39,6 +39,7 @@
       {
         "devDependencies": [
           "./src/tests/*",
+          "./src/components/testing/*",
           "**/*.?(test|spec).e2e.[jt]s?(x)",
           "**/*.?(spec|test).[jt]s?(x)"
         ]
