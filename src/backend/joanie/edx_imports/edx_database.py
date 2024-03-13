@@ -70,7 +70,9 @@ class OpenEdxDB:
         SELECT count(universities_university.id) AS count_1
         FROM universities_university
         """
-        query_count = select(count(self.University.id))
+        query_count = select(count(self.University.id)).prefix_with(
+            "SQL_NO_CACHE", dialect="mysql"
+        )
         universities_count = self.session.execute(query_count).scalar()
         universities_count -= offset
         if limit:
@@ -89,6 +91,7 @@ class OpenEdxDB:
         """
         query = (
             select(self.University)
+            .prefix_with("SQL_NO_CACHE", dialect="mysql")
             .options(
                 load_only(
                     self.University.code,
@@ -108,9 +111,13 @@ class OpenEdxDB:
         SELECT count(course_overviews_courseoverview.id) AS count_1
         FROM course_overviews_courseoverview
         """
-        query_count = select(count(self.CourseOverview.id)).join(
-            self.Course,
-            self.CourseOverview.id == self.Course.key,
+        query_count = (
+            select(count(self.CourseOverview.id))
+            .prefix_with("SQL_NO_CACHE", dialect="mysql")
+            .join(
+                self.Course,
+                self.CourseOverview.id == self.Course.key,
+            )
         )
         course_overviews_count = self.session.execute(query_count).scalar()
         course_overviews_count -= offset
@@ -139,6 +146,7 @@ class OpenEdxDB:
         """
         query = (
             select(self.CourseOverview, self.Course.language)
+            .prefix_with("SQL_NO_CACHE", dialect="mysql")
             .join(
                 self.Course,
                 self.CourseOverview.id == self.Course.key,
@@ -170,8 +178,10 @@ class OpenEdxDB:
         FROM auth_user
                  JOIN auth_userprofile ON auth_user.id = auth_userprofile.user_id
         """
-        query_count = select(count(distinct(self.User.id))).join(
-            self.UserProfile, self.User.id == self.UserProfile.user_id
+        query_count = (
+            select(count(distinct(self.User.id)))
+            .prefix_with("SQL_NO_CACHE", dialect="mysql")
+            .join(self.UserProfile, self.User.id == self.UserProfile.user_id)
         )
         users_count = self.session.execute(query_count).scalar()
         users_count -= offset
@@ -206,6 +216,7 @@ class OpenEdxDB:
         """
         query = (
             select(self.User, self.UserProfile.name)
+            .prefix_with("SQL_NO_CACHE", dialect="mysql")
             .join(self.UserProfile, self.User.id == self.UserProfile.user_id)
             .options(
                 load_only(
@@ -244,6 +255,7 @@ class OpenEdxDB:
         """
         query_count = (
             select(count(self.StudentCourseEnrollment.id))
+            .prefix_with("SQL_NO_CACHE", dialect="mysql")
             .join(
                 self.CourseOverview,
                 self.StudentCourseEnrollment.course_id == self.CourseOverview.id,
@@ -293,6 +305,7 @@ class OpenEdxDB:
         """
         query = (
             select(self.StudentCourseEnrollment, self.User)
+            .prefix_with("SQL_NO_CACHE", dialect="mysql")
             .join(
                 self.CourseOverview,
                 self.StudentCourseEnrollment.course_id == self.CourseOverview.id,
@@ -324,8 +337,10 @@ class OpenEdxDB:
         FROM generated_certificate
         WHERE generated_certificate.status = "downloadable"
         """
-        query_count = select(count(self.Certificate.id)).where(
-            self.Certificate.status == "downloadable"
+        query_count = (
+            select(count(self.Certificate.id))
+            .prefix_with("SQL_NO_CACHE", dialect="mysql")
+            .where(self.Certificate.status == "downloadable")
         )
         if course_id:
             query_count = query_count.where(self.Certificate.course_id == course_id)
@@ -351,6 +366,7 @@ class OpenEdxDB:
         """
         query = (
             select(self.Certificate)
+            .prefix_with("SQL_NO_CACHE", dialect="mysql")
             .options(
                 load_only(
                     self.Certificate.id,
