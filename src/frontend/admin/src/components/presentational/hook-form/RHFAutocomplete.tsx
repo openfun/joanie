@@ -78,7 +78,12 @@ export default function RHFAutocomplete<
 
     const isArray = Array.isArray(newValue);
     if (newValue && isArray && newValue.length > 0) {
-      const values = newValue.map((val) => other.getOptionLabel?.(val)) ?? "";
+      const values = newValue.map((val) => {
+        return (
+          other.getOptionLabel?.(val) ??
+          (typeof val === "string" ? newValue : "")
+        );
+      });
       searchFilterContext.addChip({
         name,
         label: label ?? "",
