@@ -211,6 +211,41 @@ class CourseAdminApiTest(TestCase):
             status_code=HTTPStatus.BAD_REQUEST,
         )
 
+    def test_admin_api_course_filter_query_by_course_id(self):
+        """
+        Authenticated users should be able to filter courses by their id.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        courses = factories.CourseFactory.create_batch(3)
+
+        response = self.client.get(
+            "/api/v1.0/admin/courses/",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 3)
+
+        response = self.client.get(
+            f"/api/v1.0/admin/courses/?ids={courses[0].id}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+        self.assertEqual(content["results"][0]["id"], str(courses[0].id))
+
+        response = self.client.get(
+            f"/api/v1.0/admin/courses/?ids={courses[0].id}&ids={courses[1].id}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 2)
+        self.assertEqual(content["results"][0]["id"], str(courses[1].id))
+        self.assertEqual(content["results"][1]["id"], str(courses[0].id))
+
     def test_admin_api_course_get(self):
         """
         Staff user should be able to get a course through its id

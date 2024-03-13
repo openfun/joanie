@@ -95,6 +95,36 @@ class ProductAdminApiTest(TestCase):
             status_code=HTTPStatus.BAD_REQUEST,
         )
 
+    def test_admin_api_product_list_filter_by_id(self):
+        """
+        Staff user should be able to get paginated list of products filtered by
+        id
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        products = factories.ProductFactory.create_batch(3)
+
+        response = self.client.get("/api/v1.0/admin/products/")
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 3)
+
+        response = self.client.get(f"/api/v1.0/admin/products/?ids={products[0].id}")
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+        self.assertEqual(content["results"][0]["id"], str(products[0].id))
+
+        response = self.client.get(
+            f"/api/v1.0/admin/products/?ids={products[0].id}&ids={products[1].id}"
+        )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 2)
+        self.assertEqual(content["results"][0]["id"], str(products[1].id))
+        self.assertEqual(content["results"][1]["id"], str(products[0].id))
+
     def test_admin_api_product_get(self):
         """
         Staff user should be able to get a product through its id.

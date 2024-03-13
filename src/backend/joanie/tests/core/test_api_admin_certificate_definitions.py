@@ -195,6 +195,37 @@ class CertificateDefinitionAdminApiTest(TestCase):
             },
         )
 
+    def test_admin_api_certificate_definition_list_filter_by_id(self):
+        """
+        Staff user should be able to get a paginated list of certificates definitions filtered
+        through an id
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        items = factories.CertificateDefinitionFactory.create_batch(3)
+
+        response = self.client.get("/api/v1.0/admin/certificate-definitions/")
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 3)
+
+        response = self.client.get(
+            f"/api/v1.0/admin/certificate-definitions/?ids={items[0].id}"
+        )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+        self.assertEqual(content["results"][0]["id"], str(items[0].id))
+
+        response = self.client.get(
+            f"/api/v1.0/admin/certificate-definitions/?ids={items[0].id}&ids={items[1].id}"
+        )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 2)
+        self.assertEqual(content["results"][0]["id"], str(items[1].id))
+        self.assertEqual(content["results"][1]["id"], str(items[0].id))
+
     def test_admin_api_certificate_definition_get(self):
         """
         Staff user should be able to get a certificate definition through its id.
