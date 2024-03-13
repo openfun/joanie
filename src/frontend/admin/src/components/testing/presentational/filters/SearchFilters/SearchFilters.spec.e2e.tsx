@@ -1,6 +1,9 @@
 import { expect, test } from "@playwright/experimental-ct-react";
 import { Page } from "@playwright/test";
+import mockRouter from "next-router-mock";
+import { HooksConfig } from "../../../../../../playwright";
 import { SearchFiltersWrapperTest } from "@/components/testing/presentational/filters/SearchFilters/SearchFiltersWrapperTest";
+import { PlaywrightCustomRouter } from "@/components/testing/PlaywrightCustomRouter";
 
 const selectInputs = async (page: Page) => {
   await page.getByLabel("Yes").check();
@@ -8,7 +11,7 @@ const selectInputs = async (page: Page) => {
   await page.getByRole("option", { name: "French" }).click();
   await page.getByLabel("User").click();
   await page.getByTestId("custom-modal").getByLabel("User").fill("jo");
-  await page.getByRole("option", { name: "John Doe" }).click();
+  await page.getByRole("option", { name: "JohnDoe" }).click();
 };
 
 test.describe("<SearchFilters/>", () => {
@@ -42,7 +45,7 @@ test.describe("<SearchFilters/>", () => {
       component.getByRole("button", { name: "Language: fr" }),
     ).toBeVisible();
     await expect(
-      component.getByRole("button", { name: "User: John Doe" }),
+      component.getByRole("button", { name: "User: JohnDoe" }),
     ).toBeVisible();
     await expect(
       component.getByRole("button", { name: "Clear" }),
@@ -64,7 +67,7 @@ test.describe("<SearchFilters/>", () => {
         .getByTestId("autocomplete-test")
         .getByRole("combobox")
         .inputValue(),
-    ).toEqual("John Doe");
+    ).toEqual("JohnDoe");
     await page.getByLabel("close").click();
 
     // Checkbox
@@ -81,7 +84,7 @@ test.describe("<SearchFilters/>", () => {
 
     // Autocomplete
     await component
-      .getByRole("button", { name: "User: John Doe" })
+      .getByRole("button", { name: "User: JohnDoe" })
       .getByTestId("CancelIcon")
       .click();
 
@@ -113,7 +116,7 @@ test.describe("<SearchFilters/>", () => {
         .getByTestId("autocomplete-test")
         .getByRole("combobox")
         .inputValue(),
-    ).toEqual("John Doe");
+    ).toEqual("JohnDoe");
     await page.getByLabel("close").click();
     await page.getByRole("button", { name: "Clear" }).click();
 
@@ -128,5 +131,58 @@ test.describe("<SearchFilters/>", () => {
         .getByRole("combobox")
         .inputValue(),
     ).toEqual("");
+  });
+
+  test("Initialize inputs with url params and check pills values", async ({
+    mount,
+  }) => {
+    const router = mockRouter;
+    const component = await mount<HooksConfig>(
+      <PlaywrightCustomRouter
+        initialUrl="/?language=fr&user=JohnDoe&enable=no"
+        router={router}
+      >
+        <SearchFiltersWrapperTest />
+      </PlaywrightCustomRouter>,
+      { hooksConfig: { customRouting: true } },
+    );
+    await expect(
+      component.getByRole("button", { name: "User: JohnDoe" }),
+    ).toBeVisible();
+    await expect(
+      component.getByRole("button", { name: "Language: fr" }),
+    ).toBeVisible();
+    await expect(
+      component.getByRole("button", { name: "Enable: no" }),
+    ).toBeVisible();
+  });
+
+  test("Initialize inputs with url params and check filters inputs values", async ({
+    mount,
+    page,
+  }) => {
+    const router = mockRouter;
+    const component = await mount<HooksConfig>(
+      <PlaywrightCustomRouter
+        initialUrl="/?language=fr&user=JohnDoe&enable=no"
+        router={router}
+      >
+        <SearchFiltersWrapperTest />
+      </PlaywrightCustomRouter>,
+      { hooksConfig: { customRouting: true } },
+    );
+    await component.getByRole("button", { name: "Filters" }).click();
+    expect(await page.getByTestId("select-value").inputValue()).toEqual("fr");
+    expect(await page.getByLabel("No", { exact: true }).isChecked()).toEqual(
+      true,
+    );
+    expect(await page.getByLabel("Yes").isChecked()).toEqual(false);
+    expect(await page.getByLabel("None").isChecked()).toEqual(false);
+    expect(
+      await page
+        .getByTestId("autocomplete-test")
+        .getByRole("combobox")
+        .inputValue(),
+    ).toEqual("JohnDoe");
   });
 });

@@ -60,10 +60,11 @@ export function SearchFiltersWrapperTest(props: Props) {
               <Grid xs={12}>
                 <RHFAutocomplete
                   data-testid="autocomplete-test"
+                  findFilterValue={async (values) => values}
                   isFilterContext={true}
                   name="user"
                   label="User"
-                  options={["John Doe", "Sacha Smith"]}
+                  options={["JohnDoe", "SachaSmith"]}
                 />
               </Grid>
             </Grid>

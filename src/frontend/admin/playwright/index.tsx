@@ -11,6 +11,10 @@ import { MemoryRouterProvider } from "next-router-mock/MemoryRouterProvider/next
 import { JoanieThemeProvider } from "@/theme/JoanieThemeProvider";
 import createEmotionCache from "@/utils/createEmotionCache";
 
+export type HooksConfig = {
+  customRouting?: boolean;
+};
+
 const clientSideEmotionCache = createEmotionCache();
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,23 +28,28 @@ const queryClient = new QueryClient({
   },
 });
 
-beforeMount(async ({ App }) => {
+beforeMount<HooksConfig>(async ({ hooksConfig, App }) => {
+  const customRouting = hooksConfig?.customRouting ?? false;
   return (
-    <MemoryRouterProvider url="/">
-      <QueryClientProvider client={queryClient}>
-        <CacheProvider value={clientSideEmotionCache}>
-          <JoanieThemeProvider>
-            <SnackbarProvider
-              maxSnack={3}
-              anchorOrigin={{ horizontal: "right", vertical: "top" }}
-            >
-              <IntlProvider locale="en-us" defaultLocale="en-us">
+    <QueryClientProvider client={queryClient}>
+      <CacheProvider value={clientSideEmotionCache}>
+        <JoanieThemeProvider>
+          <SnackbarProvider
+            maxSnack={3}
+            anchorOrigin={{ horizontal: "right", vertical: "top" }}
+          >
+            <IntlProvider locale="en-us" defaultLocale="en-us">
+              {customRouting ? (
                 <App />
-              </IntlProvider>
-            </SnackbarProvider>
-          </JoanieThemeProvider>
-        </CacheProvider>
-      </QueryClientProvider>
-    </MemoryRouterProvider>
+              ) : (
+                <MemoryRouterProvider url="/">
+                  <App />
+                </MemoryRouterProvider>
+              )}
+            </IntlProvider>
+          </SnackbarProvider>
+        </JoanieThemeProvider>
+      </CacheProvider>
+    </QueryClientProvider>
   );
 });

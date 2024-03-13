@@ -6,7 +6,7 @@ import { FieldValues } from "react-hook-form/dist/types/fields";
 import { useRouter } from "next/router";
 import { deleteUnusedFilters } from "@/utils/filters";
 
-type Props<T extends FieldValues> = {
+export type RHFValuesChangeProps<T extends FieldValues> = {
   onSubmit: (values: T) => void;
   debounceTime?: number;
   useAnotherValueReference?: boolean;
@@ -19,7 +19,7 @@ export function RHFValuesChange<T extends FieldValues>({
   formValuesToFilterValues,
   useAnotherValueReference = false,
   ...props
-}: PropsWithChildren<Props<T>>) {
+}: PropsWithChildren<RHFValuesChangeProps<T>>) {
   const {
     handleSubmit,
     watch,
@@ -27,24 +27,21 @@ export function RHFValuesChange<T extends FieldValues>({
   } = useFormContext<T>();
   const values = watch();
   const router = useRouter();
-  const [oldValues, setOldValues] = useState<T>();
+  const [oldValues, setOldValues] = useState<T>(values);
 
-  const onUpdateUrl = (newValues: T) => {
+  const onUpdateUrl = async (newValues: T) => {
     if (!updateUrl) {
       return;
     }
     let filterValues = formValuesToFilterValues?.(newValues) ?? newValues;
     filterValues = { ...deleteUnusedFilters(router.query), ...filterValues };
-    router.push({ query: deleteUnusedFilters(filterValues) }, undefined, {
-      shallow: true,
-    });
+    await router.push({ query: deleteUnusedFilters(filterValues) });
   };
 
   const onValuesChange = useDebouncedCallback(() => {
     if (!isValid) {
       return;
     }
-
     /**
      * Because with the react hook form, the reference does not change, so if we want to perform a particular behavior
      * with a setState for example, the setState does not trigger a rerender, because the reference has not changed.
