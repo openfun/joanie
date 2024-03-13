@@ -86,10 +86,7 @@ class OpenEdxDBTestCase(TestCase):
 
         self.assertEqual(len(course_overviews), 3)
         self.assertEqual(len(edx_course_overviews), 100)
-        self.assertCountEqual(
-            course_overviews,
-            sorted(edx_course_overviews, key=lambda course: course.id)[10:13],
-        )
+        self.assertCountEqual(course_overviews, edx_course_overviews[10:13])
 
     def test_edx_database_get_users_count(self):
         """Test the get_users_count method."""
