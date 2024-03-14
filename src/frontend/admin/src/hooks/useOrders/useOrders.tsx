@@ -76,6 +76,9 @@ const orderProps: UseResourcesProps<Order, OrderQuery> = {
         return OrderRepository.get(id, otherFilters);
       }
     },
+    delete: async (id: string) => {
+      return OrderRepository.delete(id);
+    },
   }),
   session: true,
   messages: useOrdersMessages,
