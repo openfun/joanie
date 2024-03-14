@@ -8,10 +8,16 @@ import {
 import {
   OrderInvoiceTypesEnum,
   OrderListItem,
+  OrderStatesEnum,
   transformOrdersToOrderListItems,
 } from "@/services/api/models/Order";
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { getOrderListItemsScenarioStore } from "@/tests/orders/OrderListItemTestScenario";
+import {
+  DTOOrganization,
+  Organization,
+} from "@/services/api/models/Organization";
+import { ORGANIZATION_OPTIONS_REQUEST_RESULT } from "@/tests/mocks/organizations/organization-mock";
 
 const url = "http://localhost:8071/api/v1.0/admin/orders/";
 const catchIdRegex = getUrlCatchIdRegex(url);
@@ -36,6 +42,13 @@ test.describe("Order view", () => {
       if (methods === "GET") {
         await route.fulfill({ json: list });
       }
+    });
+
+    await mockPlaywrightCrud<Organization, DTOOrganization>({
+      data: store.organizations,
+      routeUrl: "http://localhost:8071/api/v1.0/admin/organizations/",
+      page,
+      optionsResult: ORGANIZATION_OPTIONS_REQUEST_RESULT,
     });
   });
 
@@ -209,6 +222,50 @@ test.describe("Order view", () => {
       "order-view-contract-organization-signed-on",
     );
     await expect(organization.getByTestId("HighlightOffIcon")).toBeVisible();
+  });
+
+  test("Cancel order", async ({ page }) => {
+    const order = store.list[0];
+    order.state = OrderStatesEnum.ORDER_STATE_DRAFT;
+
+    await page.unroute(catchIdRegex);
+    await page.route(catchIdRegex, async (route, request) => {
+      const methods = request.method();
+      if (methods === "GET") {
+        await route.fulfill({ json: order });
+      }
+
+      if (methods === "DELETE") {
+        order.state = OrderStatesEnum.ORDER_STATE_CANCELED;
+        await route.fulfill({ json: order });
+      }
+    });
+    await page.goto(PATH_ADMIN.orders.list);
+    await page.getByRole("heading", { name: "Orders" }).click();
+    await page.getByRole("link", { name: order.product.title }).click();
+    await expect(
+      page.getByRole("heading", { name: "Order informations" }),
+    ).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "State" })).toHaveValue(
+      "Draft",
+    );
+
+    // Check and click on the action button
+    await expect(page.getByRole("button", { name: "Actions" })).toBeVisible();
+    await page.getByRole("button", { name: "Actions" }).click();
+
+    // Cancel order
+
+    await expect(
+      page.getByRole("menuitem", { name: "Cancel this order" }),
+    ).toBeVisible();
+    await page.getByRole("menuitem", { name: "Cancel this order" }).click();
+
+    // Check after operation
+    await expect(page.getByText("Operation completed")).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "State" })).toHaveValue(
+      "Canceled",
+    );
   });
 });
 
