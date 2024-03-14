@@ -6,6 +6,7 @@ import { ordersBreadcrumbsTranslation } from "@/translations/pages/orders/breadc
 import { OrderView } from "@/components/templates/orders/view/OrderView";
 import { useOrder } from "@/hooks/useOrders/useOrders";
 import { LoadingContent } from "@/components/presentational/loading/LoadingContent";
+import OrderActionsButton from "@/components/templates/orders/buttons/OrderActions";
 
 const messages = defineMessages({
   pageTitle: {
@@ -24,6 +25,9 @@ export default function OrderViewPage() {
   return (
     <DashboardLayoutPage
       title={intl.formatMessage(messages.pageTitle)}
+      actions={
+        orderQuery.item && <OrderActionsButton order={orderQuery.item} />
+      }
       breadcrumbs={[
         {
           name: intl.formatMessage(ordersBreadcrumbsTranslation.rootBreadcrumb),
