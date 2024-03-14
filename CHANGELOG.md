@@ -175,7 +175,7 @@ and this project adheres to
   - delete the resource link column and move it to the options
   - format start and end date
   - add course code colum
-
+- Add an order cancellation action in the order detail view
 
 ### Removed
 
