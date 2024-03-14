@@ -7,6 +7,7 @@ import { checkStatus, fetchApi } from "@/services/http/HttpService";
 export const orderRoutes = {
   get: (id: string, params: string = "") => `/orders/${id}/${params}`,
   getAll: (params: string = "") => `/orders/${params}`,
+  delete: (id: string) => `/orders/${id}/`,
 };
 
 export class OrderRepository {
@@ -23,5 +24,10 @@ export class OrderRepository {
       filters ? `?${queryString.stringify(filters)}` : "",
     );
     return fetchApi(url, { method: "GET" }).then(checkStatus);
+  }
+
+  static delete(id: string): Promise<void> {
+    const url = orderRoutes.delete(id);
+    return fetchApi(url, { method: "DELETE" }).then(checkStatus);
   }
 }
