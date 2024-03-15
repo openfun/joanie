@@ -243,8 +243,8 @@ class CourseAdminApiTest(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 2)
-        self.assertEqual(content["results"][0]["id"], str(courses[1].id))
-        self.assertEqual(content["results"][1]["id"], str(courses[0].id))
+        self.assertEqual(content["results"][0]["id"], str(courses[0].id))
+        self.assertEqual(content["results"][1]["id"], str(courses[1].id))
 
     def test_admin_api_course_get(self):
         """

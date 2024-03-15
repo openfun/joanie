@@ -21,6 +21,15 @@
                         "description": "primary key for the record as UUID"
                     },
                     {
+                        "name": "ordering",
+                        "required": false,
+                        "in": "query",
+                        "description": "Which field to use when ordering the results.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "page",
                         "required": false,
                         "in": "query",
@@ -314,6 +323,15 @@
                             ]
                         },
                         "description": "Language of the contract definition\n\n* `en-us` - English\n* `fr-fr` - French"
+                    },
+                    {
+                        "name": "ordering",
+                        "required": false,
+                        "in": "query",
+                        "description": "Which field to use when ordering the results.",
+                        "schema": {
+                            "type": "string"
+                        }
                     },
                     {
                         "name": "page",
@@ -1214,6 +1232,15 @@
                         }
                     },
                     {
+                        "name": "ordering",
+                        "required": false,
+                        "in": "query",
+                        "description": "Which field to use when ordering the results.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "in": "query",
                         "name": "organization_ids",
                         "schema": {
@@ -1873,6 +1900,15 @@
                         }
                     },
                     {
+                        "name": "ordering",
+                        "required": false,
+                        "in": "query",
+                        "description": "Which field to use when ordering the results.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "in": "query",
                         "name": "organization_ids",
                         "schema": {
@@ -2400,6 +2436,15 @@
                         "description": "primary key for the record as UUID"
                     },
                     {
+                        "name": "ordering",
+                        "required": false,
+                        "in": "query",
+                        "description": "Which field to use when ordering the results.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "in": "query",
                         "name": "organization_ids",
                         "schema": {
@@ -2653,6 +2698,15 @@
                             "format": "uuid"
                         },
                         "description": "primary key for the record as UUID"
+                    },
+                    {
+                        "name": "ordering",
+                        "required": false,
+                        "in": "query",
+                        "description": "Which field to use when ordering the results.",
+                        "schema": {
+                            "type": "string"
+                        }
                     },
                     {
                         "name": "page",
@@ -3344,6 +3398,15 @@
                         "description": "primary key for the record as UUID"
                     },
                     {
+                        "name": "ordering",
+                        "required": false,
+                        "in": "query",
+                        "description": "Which field to use when ordering the results.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "page",
                         "required": false,
                         "in": "query",
@@ -3887,6 +3950,15 @@
                             "format": "uuid"
                         },
                         "description": "primary key for the record as UUID"
+                    },
+                    {
+                        "name": "ordering",
+                        "required": false,
+                        "in": "query",
+                        "description": "Which field to use when ordering the results.",
+                        "schema": {
+                            "type": "string"
+                        }
                     },
                     {
                         "name": "page",
