@@ -2,9 +2,11 @@
 
 from logging import getLogger
 
+from django.core.cache import cache
 from django.core.management import call_command
 
 from joanie.celery_app import app
+from joanie.core import helpers
 
 logger = getLogger(__name__)
 
@@ -19,3 +21,16 @@ def generate_zip_archive_task(options):
     logger.info("Starting Celery task, generating a ZIP Archive...")
     call_command("generate_zip_archive_of_contracts", **options)
     logger.info("Done executing Celery generating a ZIP Archive task...")
+
+
+@app.task
+def generate_certificates_task(order_ids, cache_key):
+    """
+    Task to generate certificates from orders if they are eligible.
+    It calls the helper command to generate many certificates
+    from an Order queryset.
+    """
+    logger.info("Starting Celery task, generating certificates...")
+    helpers.generate_certificates_for_orders(orders=order_ids)
+    cache.delete(cache_key)  # clear the cache when successful
+    logger.info("Done executing Celery generating certificates task...")
