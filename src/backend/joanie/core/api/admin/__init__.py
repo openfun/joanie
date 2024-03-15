@@ -4,6 +4,7 @@ Admin API Endpoints
 
 from http import HTTPStatus
 
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.http import JsonResponse
 
@@ -18,11 +19,17 @@ from rest_framework import (
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
 from rest_framework.response import Response
+from sentry_sdk import capture_exception
 
 from joanie.core import filters, models, serializers
 from joanie.core.api.base import NestedGenericViewSet, SerializerPerActionMixin
 from joanie.core.authentication import SessionAuthenticationWithAuthenticateHeader
 from joanie.core.exceptions import CertificateGenerationError
+from joanie.core.tasks import generate_certificates_task
+from joanie.core.utils.course_product_relation import (
+    get_generated_certificates,
+    get_orders,
+)
 
 from .enrollment import EnrollmentViewSet
 
@@ -398,6 +405,71 @@ class CourseProductRelationViewSet(viewsets.ModelViewSet):
                 {"detail": str(error)},
                 status=HTTPStatus.FORBIDDEN,
             )
+
+    @extend_schema(
+        request=None,
+        responses={
+            (200, "application/json"): OpenApiTypes.OBJECT,
+            404: serializers.ErrorResponseSerializer,
+        },
+    )
+    @action(methods=["GET"], detail=True)
+    def check_certificates_generation_process(self, request, pk=None):  # pylint:disable=unused-argument
+        """
+        Checks whether the Celery task for generating certificates is in progress or completed.
+        If cached data is found, it indicates that the generation process is ongoing. Otherwise,
+        it signifies that the task has been completed or has not been requested.
+        """
+        course_product_relation = self.get_object()
+
+        if cache_data := cache.get(
+            f"celery_certificate_generation_{course_product_relation.id}"
+        ):
+            return JsonResponse(cache_data, status=HTTPStatus.OK)
+
+        return JsonResponse(
+            {"details": "No cache data found."}, status=HTTPStatus.NOT_FOUND
+        )
+
+    @extend_schema(
+        request=None,
+        responses={
+            (201, "application/json"): OpenApiTypes.OBJECT,
+            (202, "application/json"): OpenApiTypes.OBJECT,
+            400: serializers.ErrorResponseSerializer,
+        },
+    )
+    @action(methods=["POST"], detail=True)
+    def generate_certificates(self, request, pk=None):  # pylint:disable=unused-argument
+        """
+        Generate the certificates for a course product relation when it is eligible.
+        """
+        course_product_relation = self.get_object()
+        cache_key = f"celery_certificate_generation_{course_product_relation.id}"
+
+        if cache_data := cache.get(cache_key):
+            return JsonResponse(cache_data, status=HTTPStatus.ACCEPTED)
+
+        # Prepare cache data before trigger celery's task.
+        orders_ids = get_orders(course_product_relation)
+        certificates_published = get_generated_certificates(course_product_relation)
+        cache_data = {
+            "course_product_relation_id": str(course_product_relation.id),
+            "count_certificate_to_generate": len(orders_ids),
+            "count_exist_before_generation": certificates_published.count(),
+        }
+        cache.set(cache_key, cache_data)
+
+        try:
+            # ruff : noqa: BLE001
+            # pylint: disable=broad-exception-caught
+            generate_certificates_task.delay(order_ids=orders_ids, cache_key=cache_key)
+        except Exception as error:
+            cache.delete(cache_key)
+            capture_exception(error)
+            return JsonResponse({"details": str(error)}, status=HTTPStatus.BAD_REQUEST)
+
+        return JsonResponse(cache_data, status=HTTPStatus.CREATED)
 
 
 class NestedCourseProductRelationOrderGroupViewSet(
