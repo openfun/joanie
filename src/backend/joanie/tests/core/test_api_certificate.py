@@ -446,7 +446,9 @@ class CertificateApiTest(BaseAPITestCase):
         )
 
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
-        self.assertDictEqual(response.json(), {"detail": "Not found."})
+        self.assertDictEqual(
+            response.json(), {"detail": "No Certificate matches the given query."}
+        )
 
         # - Try to retrieve an owned certificate should return the certificate id
         response = self.client.get(
@@ -535,7 +537,9 @@ class CertificateApiTest(BaseAPITestCase):
         )
 
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
-        self.assertDictEqual(response.json(), {"detail": "Not found."})
+        self.assertDictEqual(
+            response.json(), {"detail": "No Certificate matches the given query."}
+        )
 
         # - Try to retrieve an owned certificate should return the certificate id
         response = self.client.get(

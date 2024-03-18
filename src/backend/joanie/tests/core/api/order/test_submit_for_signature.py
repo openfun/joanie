@@ -71,7 +71,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
         content = response.json()
-        self.assertEqual(content["detail"], "Not found.")
+        self.assertEqual(content["detail"], "No Order matches the given query.")
 
     def test_api_order_submit_for_signature_authenticated_but_order_is_not_validate(
         self,

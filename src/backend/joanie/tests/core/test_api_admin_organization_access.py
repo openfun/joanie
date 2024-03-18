@@ -161,7 +161,11 @@ class OrganizationAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertContains(response, "Not found.", status_code=HTTPStatus.NOT_FOUND)
+        self.assertContains(
+            response,
+            "No Organization matches the given query.",
+            status_code=HTTPStatus.NOT_FOUND,
+        )
 
     def test_admin_api_organization_accesses_request_create_with_invalid_role(self):
         """
@@ -243,7 +247,11 @@ class OrganizationAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertContains(response, "Not found.", status_code=HTTPStatus.NOT_FOUND)
+        self.assertContains(
+            response,
+            "No OrganizationAccess matches the given query.",
+            status_code=HTTPStatus.NOT_FOUND,
+        )
 
     def test_admin_api_organization_accesses_request_update_with_partial_payload(self):
         """

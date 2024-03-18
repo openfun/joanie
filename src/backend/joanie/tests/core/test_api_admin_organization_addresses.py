@@ -233,7 +233,11 @@ class OrganizationAddressAdminAPITest(TestCase):
             },
         )
 
-        self.assertContains(response, "Not found.", status_code=HTTPStatus.NOT_FOUND)
+        self.assertContains(
+            response,
+            "No Address matches the given query.",
+            status_code=HTTPStatus.NOT_FOUND,
+        )
 
     def test_admin_api_organization_addresses_request_update_with_partial_payload(self):
         """
@@ -255,7 +259,10 @@ class OrganizationAddressAdminAPITest(TestCase):
         )
 
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
-        self.assertEqual(response.json(), {"detail": "Not found."})
+        self.assertEqual(
+            response.json(),
+            {"detail": "No OrganizationAccess matches the given query."},
+        )
 
     def test_admin_api_organization_addresses_request_update_with_fake_organization_id(
         self,

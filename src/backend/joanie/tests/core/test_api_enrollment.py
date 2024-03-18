@@ -796,7 +796,9 @@ class EnrollmentApiTest(BaseAPITestCase):
         )
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
-        self.assertDictEqual(response.json(), {"detail": "Not found."})
+        self.assertDictEqual(
+            response.json(), {"detail": "No Enrollment matches the given query."}
+        )
 
     def test_api_enrollment_create_anonymous(self):
         """Anonymous users should not be able to create an enrollment."""
@@ -1581,7 +1583,9 @@ class EnrollmentApiTest(BaseAPITestCase):
             )
             self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
-            self.assertDictEqual(response.json(), {"detail": "Not found."})
+            self.assertDictEqual(
+                response.json(), {"detail": "No Enrollment matches the given query."}
+            )
 
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment", return_value=True)
     @mock.patch.object(

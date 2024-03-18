@@ -151,7 +151,11 @@ class CourseAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertContains(response, "Not found.", status_code=HTTPStatus.NOT_FOUND)
+        self.assertContains(
+            response,
+            "No Course matches the given query.",
+            status_code=HTTPStatus.NOT_FOUND,
+        )
 
     def test_admin_api_course_accesses_request_create_with_invalid_role(self):
         """
@@ -231,7 +235,11 @@ class CourseAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertContains(response, "Not found.", status_code=HTTPStatus.NOT_FOUND)
+        self.assertContains(
+            response,
+            "No CourseAccess matches the given query.",
+            status_code=HTTPStatus.NOT_FOUND,
+        )
 
     def test_admin_api_course_accesses_request_update_with_partial_payload(self):
         """

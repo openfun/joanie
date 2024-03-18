@@ -259,7 +259,9 @@ class CourseApiTest(BaseAPITestCase):
         )
 
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
-        self.assertDictEqual(response.json(), {"detail": "Not found."})
+        self.assertDictEqual(
+            response.json(), {"detail": "No Course matches the given query."}
+        )
 
     @mock.patch.object(
         fields.ThumbnailDetailField,

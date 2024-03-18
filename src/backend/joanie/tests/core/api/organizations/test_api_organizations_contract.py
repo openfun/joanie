@@ -621,7 +621,11 @@ class OrganizationContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertContains(response, "Not found.", status_code=HTTPStatus.NOT_FOUND)
+        self.assertContains(
+            response,
+            "No Contract matches the given query.",
+            status_code=HTTPStatus.NOT_FOUND,
+        )
 
     def test_api_organizations_contracts_retrieve_with_accesses_and_organization_code(
         self,
