@@ -1,6 +1,6 @@
 """Celery tasks for importing data from the Open edX database to the Joanie database."""
-# pylint: disable=too-many-locals
-# ruff: noqa: SLF001
+# pylint: disable=too-many-locals, too-many-branches, broad-exception-caught
+# ruff: noqa: SLF001,PLR0912,BLE001
 
 from logging import getLogger
 
@@ -64,44 +64,74 @@ def import_enrollments_batch(batch_offset, batch_size, total, course_id, dry_run
 
     for edx_enrollment in enrollments:
         try:
-            course_run = models.CourseRun.objects.only("pk").get(
-                resource_link__icontains=edx_enrollment.course_id
-            )
-        except models.CourseRun.DoesNotExist:
-            report["enrollments"]["errors"] += 1
-            logger.error("No CourseRun found for %s", edx_enrollment.course_id)
-            continue
-        except models.CourseRun.MultipleObjectsReturned:
             try:
                 course_run = models.CourseRun.objects.only("pk").get(
-                    resource_link__icontains=f"{edx_enrollment.course_id}/info"
+                    resource_link__icontains=edx_enrollment.course_id
                 )
             except models.CourseRun.DoesNotExist:
                 report["enrollments"]["errors"] += 1
-                logger.error("No CourseRun found for %s", edx_enrollment.course_id)
+                logger.error(
+                    "No CourseRun found for %s",
+                    edx_enrollment.course_id,
+                    extra={"context": {"edx_enrollment": vars(edx_enrollment)}},
+                )
+                continue
+            except models.CourseRun.MultipleObjectsReturned:
+                try:
+                    course_run = models.CourseRun.objects.only("pk").get(
+                        resource_link__icontains=f"{edx_enrollment.course_id}/info"
+                    )
+                except models.CourseRun.DoesNotExist:
+                    report["enrollments"]["errors"] += 1
+                    logger.error(
+                        "No CourseRun found for %s",
+                        edx_enrollment.course_id,
+                        extra={"context": {"edx_enrollment": vars(edx_enrollment)}},
+                    )
+                    continue
+
+            user_name = edx_enrollment.user.username
+            try:
+                user = models.User.objects.only("pk").get(username=user_name)
+            except models.User.DoesNotExist:
+                report["enrollments"]["errors"] += 1
+                logger.error(
+                    "No User found for %s",
+                    user_name,
+                    extra={
+                        "context": {
+                            "edx_enrollment": vars(edx_enrollment),
+                            "edx_user": vars(edx_enrollment.user),
+                        }
+                    },
+                )
                 continue
 
-        user_name = edx_enrollment.user.username
-        try:
-            user = models.User.objects.only("pk").get(username=user_name)
-        except models.User.DoesNotExist:
-            report["enrollments"]["errors"] += 1
-            logger.error("No User found for %s", user_name)
-            continue
+            if models.Enrollment.objects.filter(
+                course_run=course_run, user=user
+            ).exists():
+                report["enrollments"]["skipped"] += 1
+                continue
 
-        if models.Enrollment.objects.filter(course_run=course_run, user=user).exists():
-            report["enrollments"]["skipped"] += 1
-            continue
-
-        enrollments_to_create.append(
-            models.Enrollment(
-                course_run=course_run,
-                user=user,
-                is_active=edx_enrollment.is_active,
-                created_on=make_date_aware(edx_enrollment.created),
-                state=ENROLLMENT_STATE_SET,
+            enrollments_to_create.append(
+                models.Enrollment(
+                    course_run=course_run,
+                    user=user,
+                    is_active=edx_enrollment.is_active,
+                    created_on=make_date_aware(edx_enrollment.created),
+                    state=ENROLLMENT_STATE_SET,
+                )
             )
-        )
+        except Exception as e:
+            report["enrollments"]["errors"] += 1
+            logger.error(
+                "Error creating Enrollment: %s",
+                e,
+                extra={
+                    "context": {"exception": e, "edx_enrollment": vars(edx_enrollment)}
+                },
+            )
+            continue
 
     import_string = "%s %s/%s : %s enrollments created, %s skipped, %s errors"
     if not dry_run:

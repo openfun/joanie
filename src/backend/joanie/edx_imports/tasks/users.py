@@ -1,6 +1,6 @@
 """Celery tasks for importing data from the Open edX database to the Joanie database."""
-# ruff: noqa: SLF001
-# pylint: disable=too-many-locals
+# ruff: noqa: SLF001,BLE001
+# pylint: disable=too-many-locals,broad-exception-caught
 
 from logging import getLogger
 
@@ -55,42 +55,68 @@ def import_users_batch(batch_offset, batch_size, total, dry_run=False):
     users_to_create = []
 
     for edx_user in users:
-        if models.User.objects.filter(username=edx_user.username).exists():
-            report["users"]["skipped"] += 1
-            continue
+        try:
+            if models.User.objects.filter(username=edx_user.username).exists():
+                report["users"]["skipped"] += 1
+                continue
 
-        username = edx_user.username.strip()
-        email = edx_user.email.strip()
-        first_name = edx_user.auth_userprofile.name.strip()
-        if len(username) > models.User._meta.get_field("username").max_length:
-            report["users"]["errors"] += 1
-            logger.error("Username too long: %s", username)
-            continue
+            username = edx_user.username.strip()
+            email = edx_user.email.strip()
+            first_name = edx_user.auth_userprofile.name.strip()
+            if len(username) > models.User._meta.get_field("username").max_length:
+                report["users"]["errors"] += 1
+                logger.error(
+                    "Username too long: %s",
+                    username,
+                    extra={"context": {"edx_user": vars(edx_user)}},
+                )
+                continue
 
-        if len(email) > models.User._meta.get_field("email").max_length:
-            report["users"]["errors"] += 1
-            logger.error("Email too long: %s", email)
-            continue
+            if len(email) > models.User._meta.get_field("email").max_length:
+                report["users"]["errors"] += 1
+                logger.error(
+                    "Email too long: %s",
+                    email,
+                    extra={"context": {"edx_user": vars(edx_user)}},
+                )
+                continue
 
-        if len(first_name) > models.User._meta.get_field("first_name").max_length:
-            report["users"]["errors"] += 1
-            logger.error("First name too long: %s", first_name)
-            continue
+            if len(first_name) > models.User._meta.get_field("first_name").max_length:
+                report["users"]["errors"] += 1
+                logger.error(
+                    "First name too long: %s",
+                    first_name,
+                    extra={"context": {"edx_user": vars(edx_user)}},
+                )
+                continue
 
-        users_to_create.append(
-            models.User(
-                username=username,
-                email=email,
-                password=make_password(None),
-                first_name=first_name,
-                is_active=edx_user.is_active,
-                is_staff=edx_user.is_staff,
-                is_superuser=edx_user.is_superuser,
-                date_joined=format_date(edx_user.date_joined),
-                last_login=format_date(edx_user.last_login),
-                language=extract_language_code(edx_user),
+            users_to_create.append(
+                models.User(
+                    username=username,
+                    email=email,
+                    password=make_password(None),
+                    first_name=first_name,
+                    is_active=edx_user.is_active,
+                    is_staff=edx_user.is_staff,
+                    is_superuser=edx_user.is_superuser,
+                    date_joined=format_date(edx_user.date_joined),
+                    last_login=format_date(edx_user.last_login),
+                    language=extract_language_code(edx_user),
+                )
             )
-        )
+        except Exception as e:
+            report["certificates"]["errors"] += 1
+            logger.error(
+                "Error creating User: %s",
+                e,
+                extra={
+                    "context": {
+                        "exception": e,
+                        "edx_user": vars(edx_user),
+                    }
+                },
+            )
+            continue
 
     import_string = "%s %s/%s : %s users created, %s skipped, %s errors"
     if dry_run:

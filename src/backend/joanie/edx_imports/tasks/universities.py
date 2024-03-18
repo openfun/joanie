@@ -73,7 +73,11 @@ def import_universities_batch(batch_offset, batch_size, total, dry_run=False):
             )
             report["universities"]["created"] += 1
         except Exception as exc:  # pylint: disable=broad-except
-            logger.error("Unable to import university %s", university.code)
+            logger.error(
+                "Unable to import university %s",
+                university.code,
+                extra={"context": {"university": vars(university)}},
+            )
             logger.exception(exc)
             report["universities"]["errors"] += 1
 

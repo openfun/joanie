@@ -1,7 +1,7 @@
 """Celery tasks for importing Open edX certificates to Joanie organizations."""
 
-# pylint: disable=too-many-locals,too-many-statements,too-many-branches
-# ruff: noqa: SLF001,PLR0915,PLR0912
+# pylint: disable=too-many-locals,too-many-statements,too-many-branches,broad-exception-caught
+# ruff: noqa: SLF001,PLR0915,PLR0912,BLE001
 
 from logging import getLogger
 
@@ -81,120 +81,140 @@ def import_certificates_batch(
 
     for edx_certificate in certificates:
         try:
-            enrollment = models.Enrollment.objects.get(
-                user__username=edx_certificate.user.username,
-                course_run__resource_link__icontains=edx_certificate.course_id,
-            )
-        except models.Enrollment.DoesNotExist:
-            report["certificates"]["errors"] += 1
-            logger.error(
-                "No Enrollment found for %s %s",
-                edx_certificate.user.username,
-                edx_certificate.course_id,
-            )
-            continue
+            try:
+                enrollment = models.Enrollment.objects.get(
+                    user__username=edx_certificate.user.username,
+                    course_run__resource_link__icontains=edx_certificate.course_id,
+                )
+            except models.Enrollment.DoesNotExist:
+                report["certificates"]["errors"] += 1
+                logger.error(
+                    "No Enrollment found for %s %s",
+                    edx_certificate.user.username,
+                    edx_certificate.course_id,
+                    extra={
+                        "context": {
+                            "edx_certificate": vars(edx_certificate),
+                            "edx_user": vars(edx_certificate.user),
+                        }
+                    },
+                )
+                continue
 
-        if models.Certificate.objects.filter(enrollment=enrollment).exists():
-            report["certificates"]["skipped"] += 1
-            continue
+            if models.Certificate.objects.filter(enrollment=enrollment).exists():
+                report["certificates"]["skipped"] += 1
+                continue
 
-        verification_hash = hashids.encode(edx_certificate.id)
+            verification_hash = hashids.encode(edx_certificate.id)
 
-        certificate_context = {
-            "verification_hash": verification_hash,
-            "signatory": None,
-        }
-
-        title_object = enrollment.course_run.course
-
-        organization_code = extract_organization_code(edx_certificate.course_id)
-        try:
-            organization = models.Organization.objects.get(
-                code__iexact=organization_code
-            )
-        except models.Organization.DoesNotExist:
-            report["certificates"]["errors"] += 1
-            logger.error(
-                "No organization found for %s",
-                organization_code,
-                extra={
-                    "context": {
-                        "edx_certificate": vars(edx_certificate),
-                        "enrollment": enrollment.to_dict(),
-                        "course_run": enrollment.course_run.to_dict(),
-                    }
-                },
-            )
-            continue
-
-        for language, _ in settings.LANGUAGES:
-            certificate_context[language] = {
-                "course": {
-                    "name": title_object.safe_translation_getter(
-                        "title", language_code=language
-                    ),
-                },
-                "organizations": [
-                    {
-                        "name": organization.safe_translation_getter(
-                            "title", language_code=language
-                        ),
-                        "logo": image_to_base64(organization.logo)
-                        if organization.logo
-                        else None,
-                        "representative": None,
-                        "signature": None,
-                    }
-                ],
+            certificate_context = {
+                "verification_hash": verification_hash,
+                "signatory": None,
             }
 
-        certificate_template = CERTIFICATE
+            title_object = enrollment.course_run.course
 
-        if edx_certificate.mode == OPENEDX_MODE_VERIFIED:
-            certificate_template = DEGREE
-            signatory = edx_mongodb.get_signature_from_enrollment(
-                enrollment.course_run.course.code
-            )
-
-            signature = None
-            signatory_name = None
-            if signatory:
-                signature_image_path = signatory.get("signature_image_path")
-                if signature_image_path.startswith("/"):
-                    signature_image_path = signature_image_path[1:]
-                signature_path = download_and_store(signature_image_path)
-                signature = (
-                    image_to_base64(default_storage.open(signature_path))
-                    if signature_path
-                    else None
+            organization_code = extract_organization_code(edx_certificate.course_id)
+            try:
+                organization = models.Organization.objects.get(
+                    code__iexact=organization_code
                 )
-                signatory_name = signatory.get("name")
-
-                certificate_context["signatory"] = signatory
+            except models.Organization.DoesNotExist:
+                report["certificates"]["errors"] += 1
+                logger.error(
+                    "No organization found for %s",
+                    organization_code,
+                    extra={
+                        "context": {
+                            "edx_certificate": vars(edx_certificate),
+                            "enrollment": enrollment.to_dict(),
+                            "course_run": enrollment.course_run.to_dict(),
+                        }
+                    },
+                )
+                continue
 
             for language, _ in settings.LANGUAGES:
-                if signatory_name:
-                    certificate_context[language]["organizations"][0][
-                        "representative"
-                    ] = signatory_name
-                if signature:
-                    certificate_context[language]["organizations"][0]["signature"] = (
-                        signature
-                    )
+                certificate_context[language] = {
+                    "course": {
+                        "name": title_object.safe_translation_getter(
+                            "title", language_code=language
+                        ),
+                    },
+                    "organizations": [
+                        {
+                            "name": organization.safe_translation_getter(
+                                "title", language_code=language
+                            ),
+                            "logo": image_to_base64(organization.logo)
+                            if organization.logo
+                            else None,
+                            "representative": None,
+                            "signature": None,
+                        }
+                    ],
+                }
 
-        certificates_to_create.append(
-            models.Certificate(
-                certificate_definition=models.CertificateDefinition.objects.filter(
-                    template=certificate_template
+            certificate_template = CERTIFICATE
+
+            if edx_certificate.mode == OPENEDX_MODE_VERIFIED:
+                certificate_template = DEGREE
+                signatory = edx_mongodb.get_signature_from_enrollment(
+                    enrollment.course_run.course.code
                 )
-                .order_by("created_on")
-                .first(),
-                organization=organization,
-                enrollment=enrollment,
-                issued_on=make_date_aware(edx_certificate.created_date),
-                localized_context=certificate_context,
+
+                signature = None
+                signatory_name = None
+                if signatory:
+                    signature_image_path = signatory.get("signature_image_path")
+                    if signature_image_path.startswith("/"):
+                        signature_image_path = signature_image_path[1:]
+                    signature_path = download_and_store(signature_image_path)
+                    signature = (
+                        image_to_base64(default_storage.open(signature_path))
+                        if signature_path
+                        else None
+                    )
+                    signatory_name = signatory.get("name")
+
+                    certificate_context["signatory"] = signatory
+
+                for language, _ in settings.LANGUAGES:
+                    if signatory_name:
+                        certificate_context[language]["organizations"][0][
+                            "representative"
+                        ] = signatory_name
+                    if signature:
+                        certificate_context[language]["organizations"][0][
+                            "signature"
+                        ] = signature
+
+            certificates_to_create.append(
+                models.Certificate(
+                    certificate_definition=models.CertificateDefinition.objects.filter(
+                        template=certificate_template
+                    )
+                    .order_by("created_on")
+                    .first(),
+                    organization=organization,
+                    enrollment=enrollment,
+                    issued_on=make_date_aware(edx_certificate.created_date),
+                    localized_context=certificate_context,
+                )
             )
-        )
+        except Exception as e:
+            report["certificates"]["errors"] += 1
+            logger.error(
+                "Error creating Certificate: %s",
+                e,
+                extra={
+                    "context": {
+                        "exception": e,
+                        "edx_certificate": vars(edx_certificate),
+                    }
+                },
+            )
+            continue
 
     import_string = "%s %s/%s : %s certificates created, %s skipped, %s errors"
     if not dry_run:
