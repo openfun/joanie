@@ -1,6 +1,7 @@
 """Serializers for api."""
 
 from rest_framework import serializers
+from rest_framework.fields import empty
 
 from joanie.payment import models
 
@@ -30,3 +31,12 @@ class CreditCardSerializer(serializers.ModelSerializer):
             "expiration_year",
             "last_numbers",
         ]
+
+    def run_validation(self, data=empty):
+        """
+        Ignore is_main if not present in the data
+        """
+        validated_data = super().run_validation(data)
+        if "is_main" not in data:
+            del validated_data["is_main"]
+        return validated_data
