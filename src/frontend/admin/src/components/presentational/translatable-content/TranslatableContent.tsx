@@ -67,7 +67,7 @@ export function TranslatableContent({ ...props }: PropsWithChildren<Props>) {
           <Tab label="French" value={LocalesEnum.FRENCH} {...a11yProps(1)} />
         </Tabs>
       </Box>
-      {props.children}
+      <Box p={3}>{props.children}</Box>
     </TabContext>
   );
 }

@@ -1,7 +1,6 @@
 import * as React from "react";
 import { useMemo, useState } from "react";
-import Box from "@mui/material/Box";
-import { useIntl } from "react-intl";
+import { defineMessages, useIntl } from "react-intl";
 import { Product, ProductType } from "@/services/api/models/Product";
 import { Maybe } from "@/types/utils";
 import { ProductFormMain } from "@/components/templates/products/form/sections/main/ProductFormMain";
@@ -10,7 +9,35 @@ import { ProductFormTypeSection } from "@/components/templates/products/form/sec
 import { ProductFormTargetCoursesSection } from "@/components/templates/products/form/sections/target-courses/ProductFormTargetCoursesSection";
 import { productFormMessages } from "@/components/templates/products/form/translations";
 import { Wizard, WizardStep } from "@/components/presentational/wizard/Wizard";
+import {
+  TabsComponent,
+  TabValue,
+} from "@/components/presentational/tabs/TabsComponent";
 import { ProductFormCourseProductRelations } from "@/components/templates/products/form/sections/course-product-relations/ProductFormCourseProductRelations";
+
+const messages = defineMessages({
+  syllabusTabTitle: {
+    id: "components.templates.products.form.translations.syllabusTabTitle",
+    defaultMessage: "Syllabus",
+    description: "Title for the syllabus tab",
+  },
+  linkedCourseTabInfo: {
+    id: "components.templates.products.form.translations.linkedCourseTabInfo",
+    defaultMessage:
+      "In this section, you have access to all courses to which this product is attached. Click on the course title to navigate to its detail.",
+    description: "Text for the linked course info tab",
+  },
+  generalTabTitle: {
+    id: "components.templates.products.form.translations.generalTabTitle",
+    defaultMessage: "General",
+    description: "Title for the linked course tab",
+  },
+  generalTabInfo: {
+    id: "components.templates.products.form.translations.generalTabInfo",
+    defaultMessage: "In this section you can create or modify a product.",
+    description: "Text for the linked course info tab",
+  },
+});
 
 type Props = {
   product?: Product;
@@ -61,6 +88,31 @@ export function ProductForm({ product, fromProduct, afterSubmit }: Props) {
     return result;
   }, [product, productType]);
 
+  const tabs = useMemo(() => {
+    const result: TabValue[] = [
+      {
+        label: intl.formatMessage(messages.generalTabTitle),
+        tabInfo: intl.formatMessage(messages.generalTabInfo),
+        component: (
+          <SimpleCard>
+            <Wizard steps={formSteps} />
+          </SimpleCard>
+        ),
+      },
+      {
+        label: intl.formatMessage(messages.syllabusTabTitle),
+        show: !!product,
+        tabInfo: intl.formatMessage(messages.linkedCourseTabInfo),
+        component: (
+          <ProductFormCourseProductRelations
+            relations={product?.course_relations ?? []}
+          />
+        ),
+      },
+    ];
+    return result;
+  }, [product, productType, formSteps]);
+
   if (!productType) {
     return (
       <ProductFormTypeSection
@@ -70,20 +122,5 @@ export function ProductForm({ product, fromProduct, afterSubmit }: Props) {
     );
   }
 
-  return (
-    <>
-      <SimpleCard>
-        <Box padding={4}>
-          <Wizard steps={formSteps} />
-        </Box>
-      </SimpleCard>
-      {product && (
-        <Box mt={6}>
-          <ProductFormCourseProductRelations
-            relations={product.course_relations}
-          />
-        </Box>
-      )}
-    </>
-  );
+  return <TabsComponent id="product-form-tabs" tabs={tabs} />;
 }
