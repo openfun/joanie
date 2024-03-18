@@ -308,3 +308,29 @@ test.describe("Course list", async () => {
     );
   });
 });
+
+test.describe("Course form page", () => {
+  let store = getCourseScenarioStore();
+  test.beforeEach(async ({ page }) => {
+    store = getCourseScenarioStore();
+    await mockPlaywrightCrud<Course, DTOCourse>({
+      data: store.list,
+      routeUrl: coursesApiUrl,
+      page,
+      createCallback: store.postUpdate,
+      updateCallback: store.postUpdate,
+      searchResult: store.list[1],
+      optionsResult: COURSE_OPTIONS_REQUEST_RESULT,
+    });
+  });
+  test("Check all form tabs", async ({ page }) => {
+    const course = store.list[0];
+    await page.goto(PATH_ADMIN.courses.list);
+    await expect(page.getByRole("heading", { name: "Courses" })).toBeVisible();
+    await page.getByRole("link", { name: course.title }).click();
+    await page.getByRole("tab", { name: "General" }).click();
+    await page.getByRole("tab", { name: "Members" }).click();
+    await page.getByRole("tab", { name: "Course runs" }).click();
+    await page.getByRole("tab", { name: "Products" }).click();
+  });
+});

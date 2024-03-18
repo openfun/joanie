@@ -60,6 +60,7 @@ test.describe("Course product relation", () => {
     await page.goto(PATH_ADMIN.courses.list);
     await store.mockCourseRunsFromCourse(page, []);
     await page.getByRole("link", { name: course.title }).click();
+    await page.getByRole("tab", { name: "Course runs" }).click();
 
     await page.getByRole("button", { name: "Add a course run" }).click();
     const modalLocator = page.getByTestId("target-course-runs-modal");
@@ -84,6 +85,7 @@ test.describe("Course product relation", () => {
     await expect(
       page.getByRole("heading", { name: `Edit course: ${course.title}` }),
     ).toBeVisible();
+    await page.getByRole("tab", { name: "Course runs" }).click();
 
     await page
       .getByRole("row", {
