@@ -5,6 +5,7 @@ from unittest import mock
 from django.test.testcases import TestCase
 
 from joanie.core import enums, factories, helpers, models
+from joanie.core.exceptions import CertificateGenerationError
 from joanie.lms_handler.backends.dummy import DummyLMSBackend
 
 
@@ -33,9 +34,13 @@ class HelpersTestCase(TestCase):
         certificate_qs = models.Certificate.objects.filter(order=order)
         self.assertEqual(certificate_qs.count(), 0)
 
-        new_certificate, created = order.get_or_generate_certificate()
-        self.assertFalse(created)
-        self.assertIsNone(new_certificate)
+        with self.assertRaises(CertificateGenerationError) as context:
+            order.get_or_generate_certificate()
+
+        self.assertEqual(
+            str(context.exception),
+            "No graded courses found.",
+        )
         self.assertEqual(certificate_qs.count(), 0)
 
     def test_helpers_get_or_generate_certificate_needs_gradable_course_runs(self):
@@ -59,9 +64,13 @@ class HelpersTestCase(TestCase):
         certificate_qs = models.Certificate.objects.filter(order=order)
         self.assertEqual(certificate_qs.count(), 0)
 
-        new_certificate, created = order.get_or_generate_certificate()
-        self.assertFalse(created)
-        self.assertIsNone(new_certificate)
+        with self.assertRaises(CertificateGenerationError) as context:
+            order.get_or_generate_certificate()
+
+        self.assertEqual(
+            str(context.exception),
+            "This order is not ready for gradation.",
+        )
         self.assertEqual(certificate_qs.count(), 0)
 
         # - Now flag the course run as gradable
@@ -69,6 +78,7 @@ class HelpersTestCase(TestCase):
         course_run.save()
 
         new_certificate, created = order.get_or_generate_certificate()
+
         self.assertTrue(created)
         self.assertEqual(certificate_qs.count(), 1)
         self.assertEqual(certificate_qs.first(), new_certificate)
@@ -93,14 +103,21 @@ class HelpersTestCase(TestCase):
         order = factories.OrderFactory(product=product, course=course)
         order.submit()
         certificate_qs = models.Certificate.objects.filter(order=order)
+        enrollment = models.Enrollment.objects.get(course_run_id=course_run.id)
         self.assertEqual(certificate_qs.count(), 0)
 
         # Simulate that all enrollments are not passed
         with mock.patch.object(DummyLMSBackend, "get_grades") as mock_get_grades:
             mock_get_grades.return_value = {"passed": False}
-            new_certificate, created = order.get_or_generate_certificate()
-        self.assertFalse(created)
-        self.assertIsNone(new_certificate)
+
+            with self.assertRaises(CertificateGenerationError) as context:
+                order.get_or_generate_certificate()
+
+        self.assertEqual(
+            str(context.exception),
+            f"Course run {enrollment.course_run.course.title}"
+            f"-{enrollment.course_run.title} has not been passed.",
+        )
         self.assertEqual(certificate_qs.count(), 0)
 
         # Simulate that all enrollments are passed

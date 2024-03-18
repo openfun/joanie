@@ -3,6 +3,7 @@ Helpers that can be useful throughout Joanie's core app
 """
 
 from joanie.core import enums
+from joanie.core.exceptions import CertificateGenerationError
 
 
 def generate_certificates_for_orders(orders):
@@ -22,7 +23,11 @@ def generate_certificates_for_orders(orders):
     )
 
     for order in orders_filtered:
-        _certificate, created = order.get_or_generate_certificate()
+        try:
+            _certificate, created = order.get_or_generate_certificate()
+        except CertificateGenerationError:
+            created = False
+
         if created is True:
             total += 1
 

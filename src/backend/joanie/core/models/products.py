@@ -21,6 +21,7 @@ from parler import models as parler_models
 from urllib3.util import Retry
 
 from joanie.core import enums
+from joanie.core.exceptions import CertificateGenerationError
 from joanie.core.models.accounts import User
 from joanie.core.models.base import BaseModel
 from joanie.core.models.certifications import Certificate
@@ -876,7 +877,8 @@ class Order(BaseModel):
         Return:
             instance[Certificate], False: if a certificate pre-existed for the current order
             instance[Certificate], True: if a certificate has been generated for the current order
-            None, False: if the order is not eligible for certification
+            CertificateGenerationError: if the order is not eligible to get a certificate generated
+            with the reason why.
         """
         try:
             return Certificate.objects.get(order=self), False
@@ -887,7 +889,12 @@ class Order(BaseModel):
             not self.product.certificate_definition
             or self.product.type not in enums.PRODUCT_TYPE_CERTIFICATE_ALLOWED
         ):
-            return None, False
+            # pylint:disable=no-member
+            raise CertificateGenerationError(
+                _(
+                    f"Product {self.product.title} does not allow to generate a certificate."
+                ),
+            )
 
         if self.product.type == enums.PRODUCT_TYPE_CERTIFICATE:
             graded_courses = [self.enrollment.course_run.course_id]
@@ -900,7 +907,7 @@ class Order(BaseModel):
         graded_courses_count = len(graded_courses)
 
         if graded_courses_count == 0:
-            return None, False
+            raise CertificateGenerationError(_("No graded courses found."))
 
         # Retrieve all enrollments in one query. Since these enrollments rely on
         # order course runs, the count will always be pretty small.
@@ -915,14 +922,22 @@ class Order(BaseModel):
         # If we do not have one enrollment per graded course, there is no need to
         # continue, we are sure that order is not eligible for certification.
         if len(course_enrollments) != graded_courses_count:
-            return None, False
+            raise CertificateGenerationError(
+                _("This order is not ready for gradation.")
+            )
 
         # Otherwise, we now need to know if each enrollment has been passed
         for enrollment in course_enrollments:
             if enrollment.is_passed is False:
                 # If one enrollment has not been passed, no need to continue,
                 # We are sure that order is not eligible for certification.
-                return None, False
+                raise CertificateGenerationError(
+                    _(
+                        "Course run "
+                        f"{enrollment.course_run.course.title}-{enrollment.course_run.title}"
+                        " has not been passed."
+                    ),
+                )
 
         return (
             Certificate.objects.create(

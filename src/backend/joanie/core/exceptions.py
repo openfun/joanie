@@ -22,3 +22,10 @@ class NoContractToSignError(Exception):
     """
     Exception raised when trying to bulk sign organization contracts but no contract is available.
     """
+
+
+class CertificateGenerationError(Exception):
+    """
+    Exception raised when the certificate generation process fails due to the order not meeting
+    all specified conditions.
+    """

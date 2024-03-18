@@ -14,7 +14,7 @@ from django.utils import timezone
 from joanie.core import enums, factories
 from joanie.core.models import Order
 from joanie.core.models.certifications import Certificate
-from joanie.core.models.courses import CourseState
+from joanie.core.models.courses import CourseState, Enrollment
 from joanie.lms_handler.backends.dummy import DummyLMSBackend
 from joanie.payment.factories import InvoiceFactory
 from joanie.tests import format_date
@@ -935,6 +935,19 @@ class OrdersAdminApiTestCase(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
         self.assertEqual(order_is_validated.state, enums.ORDER_STATE_CANCELED)
 
+    def test_api_admin_orders_generate_certificate_anonymous_user(self):
+        """
+        Anonymous user should not be able to generate a certificate.
+        """
+        order = factories.OrderFactory()
+
+        response = self.client.post(
+            f"/api/v1.0/admin/orders/{order.id}/generate_certificate/",
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+
     def test_api_admin_orders_generate_certificate_lambda_user(self):
         """
         Lambda user should not be able to generate a certificate.
@@ -1059,9 +1072,12 @@ class OrdersAdminApiTestCase(TestCase):
 
         self.assertFalse(Certificate.objects.exists())
         self.assertEqual(response.status_code, HTTPStatus.UNPROCESSABLE_ENTITY)
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
-            {"details": f"Cannot issue certificate for order {order.id}"},
+            {
+                "details": f"Product {order.product.title} "
+                "does not allow to generate a certificate."
+            },
         )
 
     def test_api_admin_orders_generate_certificate_authenticated_when_product_type_is_enrollment(
@@ -1096,9 +1112,14 @@ class OrdersAdminApiTestCase(TestCase):
 
         self.assertFalse(Certificate.objects.exists())
         self.assertEqual(response.status_code, HTTPStatus.UNPROCESSABLE_ENTITY)
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
-            {"details": f"Cannot issue certificate for order {order.id}"},
+            {
+                "details": (
+                    f"Product {order.product.title} does not "
+                    "allow to generate a certificate."
+                )
+            },
         )
 
     def test_api_admin_orders_generate_certificate_authenticated_for_certificate_product(
@@ -1150,8 +1171,17 @@ class OrdersAdminApiTestCase(TestCase):
                 content_type="application/json",
             )
 
-            self.assertFalse(Certificate.objects.exists())
             self.assertEqual(response.status_code, HTTPStatus.UNPROCESSABLE_ENTITY)
+            self.assertDictEqual(
+                response.json(),
+                {
+                    "details": (
+                        f"Course run {enrollment.course_run.course.title}"
+                        f"-{enrollment.course_run.title} has not been passed."
+                    )
+                },
+            )
+            self.assertFalse(Certificate.objects.exists())
 
         # Simulate that enrollment is passed
         with mock.patch.object(DummyLMSBackend, "get_grades") as mock_get_grades:
@@ -1223,6 +1253,7 @@ class OrdersAdminApiTestCase(TestCase):
             product=product,
         )
         order.submit()
+        enrollment = Enrollment.objects.get(course_run=course_run_1)
 
         # Simulate that all enrollments for graded courses made by the order are not passed
         with mock.patch.object(DummyLMSBackend, "get_grades") as mock_get_grades:
@@ -1233,8 +1264,17 @@ class OrdersAdminApiTestCase(TestCase):
                 content_type="application/json",
             )
 
-            self.assertFalse(Certificate.objects.exists())
             self.assertEqual(response.status_code, HTTPStatus.UNPROCESSABLE_ENTITY)
+            self.assertDictEqual(
+                response.json(),
+                {
+                    "details": (
+                        f"Course run {enrollment.course_run.course.title}"
+                        f"-{enrollment.course_run.title} has not been passed."
+                    )
+                },
+            )
+            self.assertFalse(Certificate.objects.exists())
 
         # Simulate that all enrollments for graded courses made by the order are passed
         with mock.patch.object(DummyLMSBackend, "get_grades") as mock_get_grades:
@@ -1349,7 +1389,6 @@ class OrdersAdminApiTestCase(TestCase):
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
-
         course_run = factories.CourseRunFactory(
             state=CourseState.ONGOING_OPEN,
             is_gradable=True,
@@ -1411,3 +1450,73 @@ class OrdersAdminApiTestCase(TestCase):
                 },
             )
             self.assertEqual(Certificate.objects.filter(order=order).count(), 1)
+
+    def test_api_admin_orders_generate_certificate_when_no_graded_courses_from_order(
+        self,
+    ):
+        """
+        Admin user should not be able to get the certificate when they are no graded courses.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        course_run = factories.CourseRunFactory(
+            state=CourseState.ONGOING_OPEN,
+            is_gradable=True,
+        )
+        product = factories.ProductFactory(
+            price="0.00",
+            type=enums.PRODUCT_TYPE_CREDENTIAL,
+            certificate_definition=factories.CertificateDefinitionFactory(),
+        )
+        factories.ProductTargetCourseRelationFactory(
+            product=product,
+            course=course_run.course,
+            is_graded=False,  # grades are not yet enabled on this course
+        )
+        order = factories.OrderFactory(product=product)
+        order.submit()
+
+        response = self.client.post(
+            f"/api/v1.0/admin/orders/{order.id}/generate_certificate/",
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.UNPROCESSABLE_ENTITY)
+        self.assertDictEqual(response.json(), {"details": "No graded courses found."})
+
+    def test_api_admin_orders_generate_certificate_when_order_is_not_ready_for_grading(
+        self,
+    ):
+        """
+        Admin user should not be able to generate a certificate when the course run attached
+        to the order is not ready for grading.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        course_run = factories.CourseRunFactory(
+            enrollment_end=timezone.now() + timedelta(hours=1),
+            enrollment_start=timezone.now() - timedelta(hours=1),
+            is_gradable=False,  # course run is not gradable
+            is_listed=True,
+            start=timezone.now() - timedelta(hours=1),
+        )
+        product = factories.ProductFactory(
+            price="0.00",
+            type="certificate",
+            certificate_definition=factories.CertificateDefinitionFactory(),
+            courses=[course_run.course],
+        )
+        enrollment = factories.EnrollmentFactory(course_run=course_run, is_active=True)
+        order = factories.OrderFactory(
+            product=product, course=None, enrollment=enrollment
+        )
+
+        response = self.client.post(
+            f"/api/v1.0/admin/orders/{order.id}/generate_certificate/",
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.UNPROCESSABLE_ENTITY)
+        self.assertDictEqual(
+            response.json(), {"details": "This order is not ready for gradation."}
+        )
