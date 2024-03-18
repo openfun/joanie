@@ -2537,6 +2537,7 @@
                             "type": "array",
                             "items": {
                                 "type": "string",
+                                "default": "draft",
                                 "enum": [
                                     "canceled",
                                     "draft",
@@ -2557,6 +2558,7 @@
                             "type": "array",
                             "items": {
                                 "type": "string",
+                                "default": "draft",
                                 "enum": [
                                     "canceled",
                                     "draft",
@@ -4130,6 +4132,7 @@
                     },
                     "is_main": {
                         "type": "boolean",
+                        "default": false,
                         "title": "Main"
                     },
                     "postcode": {
@@ -4181,6 +4184,7 @@
                     },
                     "is_main": {
                         "type": "boolean",
+                        "default": false,
                         "title": "Main"
                     },
                     "postcode": {
@@ -4735,7 +4739,12 @@
                         "description": "primary key for the record as UUID"
                     },
                     "role": {
-                        "$ref": "#/components/schemas/CourseAccessRoleChoiceEnum"
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/CourseAccessRoleChoiceEnum"
+                            }
+                        ],
+                        "default": "instructor"
                     },
                     "user_id": {
                         "type": "string",
@@ -4753,7 +4762,12 @@
                 "description": "Serialize course accesses for the API.",
                 "properties": {
                     "role": {
-                        "$ref": "#/components/schemas/CourseAccessRoleChoiceEnum"
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/CourseAccessRoleChoiceEnum"
+                            }
+                        ],
+                        "default": "instructor"
                     },
                     "user_id": {
                         "type": "string",
@@ -5029,6 +5043,7 @@
                     },
                     "is_main": {
                         "type": "boolean",
+                        "default": false,
                         "title": "Main"
                     }
                 },
@@ -5051,6 +5066,7 @@
                     },
                     "is_main": {
                         "type": "boolean",
+                        "default": false,
                         "title": "Main"
                     }
                 }
@@ -5818,7 +5834,12 @@
                         "description": "primary key for the record as UUID"
                     },
                     "role": {
-                        "$ref": "#/components/schemas/OrganizationAccessRoleChoiceEnum"
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/OrganizationAccessRoleChoiceEnum"
+                            }
+                        ],
+                        "default": "member"
                     },
                     "user_id": {
                         "type": "string",
@@ -5836,7 +5857,12 @@
                 "description": "Serialize Organization accesses for the API.",
                 "properties": {
                     "role": {
-                        "$ref": "#/components/schemas/OrganizationAccessRoleChoiceEnum"
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/OrganizationAccessRoleChoiceEnum"
+                            }
+                        ],
+                        "default": "member"
                     },
                     "user_id": {
                         "type": "string",
@@ -5873,6 +5899,10 @@
             },
             "PaginatedAddressList": {
                 "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
                 "properties": {
                     "count": {
                         "type": "integer",
@@ -5900,6 +5930,10 @@
             },
             "PaginatedCertificateList": {
                 "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
                 "properties": {
                     "count": {
                         "type": "integer",
@@ -5927,6 +5961,10 @@
             },
             "PaginatedContractList": {
                 "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
                 "properties": {
                     "count": {
                         "type": "integer",
@@ -5954,6 +5992,10 @@
             },
             "PaginatedCourseAccessList": {
                 "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
                 "properties": {
                     "count": {
                         "type": "integer",
@@ -5981,6 +6023,10 @@
             },
             "PaginatedCourseList": {
                 "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
                 "properties": {
                     "count": {
                         "type": "integer",
@@ -6008,6 +6054,10 @@
             },
             "PaginatedCourseProductRelationList": {
                 "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
                 "properties": {
                     "count": {
                         "type": "integer",
@@ -6035,6 +6085,10 @@
             },
             "PaginatedCourseRunList": {
                 "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
                 "properties": {
                     "count": {
                         "type": "integer",
@@ -6062,6 +6116,10 @@
             },
             "PaginatedCreditCardList": {
                 "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
                 "properties": {
                     "count": {
                         "type": "integer",
@@ -6089,6 +6147,10 @@
             },
             "PaginatedEnrollmentList": {
                 "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
                 "properties": {
                     "count": {
                         "type": "integer",
@@ -6116,6 +6178,10 @@
             },
             "PaginatedNestedOrderCourseList": {
                 "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
                 "properties": {
                     "count": {
                         "type": "integer",
@@ -6143,6 +6209,10 @@
             },
             "PaginatedOrderList": {
                 "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
                 "properties": {
                     "count": {
                         "type": "integer",
@@ -6170,6 +6240,10 @@
             },
             "PaginatedOrganizationAccessList": {
                 "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
                 "properties": {
                     "count": {
                         "type": "integer",
@@ -6197,6 +6271,10 @@
             },
             "PaginatedOrganizationList": {
                 "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
                 "properties": {
                     "count": {
                         "type": "integer",
@@ -6251,6 +6329,7 @@
                     },
                     "is_main": {
                         "type": "boolean",
+                        "default": false,
                         "title": "Main"
                     },
                     "postcode": {
@@ -6270,7 +6349,12 @@
                 "description": "Serialize course accesses for the API.",
                 "properties": {
                     "role": {
-                        "$ref": "#/components/schemas/CourseAccessRoleChoiceEnum"
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/CourseAccessRoleChoiceEnum"
+                            }
+                        ],
+                        "default": "instructor"
                     },
                     "user_id": {
                         "type": "string",
@@ -6290,6 +6374,7 @@
                     },
                     "is_main": {
                         "type": "boolean",
+                        "default": false,
                         "title": "Main"
                     }
                 }
@@ -6332,7 +6417,12 @@
                 "description": "Serialize Organization accesses for the API.",
                 "properties": {
                     "role": {
-                        "$ref": "#/components/schemas/OrganizationAccessRoleChoiceEnum"
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/OrganizationAccessRoleChoiceEnum"
+                            }
+                        ],
+                        "default": "member"
                     },
                     "user_id": {
                         "type": "string",

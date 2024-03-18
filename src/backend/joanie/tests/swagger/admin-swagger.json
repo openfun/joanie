@@ -2417,6 +2417,7 @@
                         "name": "state",
                         "schema": {
                             "type": "string",
+                            "default": "draft",
                             "enum": [
                                 "canceled",
                                 "draft",
@@ -4067,6 +4068,7 @@
                                 "$ref": "#/components/schemas/NameEnum"
                             }
                         ],
+                        "default": "contract_definition",
                         "title": "Template name"
                     }
                 },
@@ -4104,6 +4106,7 @@
                                 "$ref": "#/components/schemas/NameEnum"
                             }
                         ],
+                        "default": "contract_definition",
                         "title": "Template name"
                     }
                 },
@@ -4202,7 +4205,12 @@
                         "readOnly": true
                     },
                     "role": {
-                        "$ref": "#/components/schemas/CourseAccessRoleChoiceEnum"
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/CourseAccessRoleChoiceEnum"
+                            }
+                        ],
+                        "default": "instructor"
                     }
                 },
                 "required": [
@@ -4215,7 +4223,12 @@
                 "description": "Serializer for CourseAccess model.",
                 "properties": {
                     "role": {
-                        "$ref": "#/components/schemas/CourseAccessRoleChoiceEnum"
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/CourseAccessRoleChoiceEnum"
+                            }
+                        ],
+                        "default": "instructor"
                     }
                 }
             },
@@ -4428,10 +4441,12 @@
                         "type": "string"
                     },
                     "is_gradable": {
-                        "type": "boolean"
+                        "type": "boolean",
+                        "default": false
                     },
                     "is_listed": {
                         "type": "boolean",
+                        "default": false,
                         "description": "If checked the course run will be included in the list of course runs available for enrollment on the related course page."
                     },
                     "languages": {
@@ -4524,10 +4539,12 @@
                         "type": "string"
                     },
                     "is_gradable": {
-                        "type": "boolean"
+                        "type": "boolean",
+                        "default": false
                     },
                     "is_listed": {
                         "type": "boolean",
+                        "default": false,
                         "description": "If checked the course run will be included in the list of course runs available for enrollment on the related course page."
                     },
                     "languages": {
@@ -4615,10 +4632,12 @@
                         "minLength": 1
                     },
                     "is_gradable": {
-                        "type": "boolean"
+                        "type": "boolean",
+                        "default": false
                     },
                     "is_listed": {
                         "type": "boolean",
+                        "default": false,
                         "description": "If checked the course run will be included in the list of course runs available for enrollment on the related course page."
                     },
                     "languages": {
@@ -4671,10 +4690,12 @@
                         "minLength": 1
                     },
                     "is_gradable": {
-                        "type": "boolean"
+                        "type": "boolean",
+                        "default": false
                     },
                     "is_listed": {
                         "type": "boolean",
+                        "default": false,
                         "description": "If checked the course run will be included in the list of course runs available for enrollment on the related course page."
                     },
                     "languages": {
@@ -4991,11 +5012,13 @@
                         "type": "integer",
                         "maximum": 32767,
                         "minimum": 0,
+                        "default": 0,
                         "title": "Number of seats",
                         "description": "The maximum number of orders that can be validated for a given order group"
                     },
                     "is_active": {
-                        "type": "boolean"
+                        "type": "boolean",
+                        "default": true
                     },
                     "nb_available_seats": {
                         "type": "integer",
@@ -5034,11 +5057,13 @@
                         "type": "integer",
                         "maximum": 32767,
                         "minimum": 0,
+                        "default": 0,
                         "title": "Number of seats",
                         "description": "The maximum number of orders that can be validated for a given order group"
                     },
                     "is_active": {
-                        "type": "boolean"
+                        "type": "boolean",
+                        "default": true
                     },
                     "nb_available_seats": {
                         "type": "integer",
@@ -5071,11 +5096,13 @@
                         "type": "integer",
                         "maximum": 32767,
                         "minimum": 0,
+                        "default": 0,
                         "title": "Number of seats",
                         "description": "The maximum number of orders that can be validated for a given order group"
                     },
                     "is_active": {
-                        "type": "boolean"
+                        "type": "boolean",
+                        "default": true
                     }
                 }
             },
@@ -5087,11 +5114,13 @@
                         "type": "integer",
                         "maximum": 32767,
                         "minimum": 0,
+                        "default": 0,
                         "title": "Number of seats",
                         "description": "The maximum number of orders that can be validated for a given order group"
                     },
                     "is_active": {
-                        "type": "boolean"
+                        "type": "boolean",
+                        "default": true
                     }
                 }
             },
@@ -5189,6 +5218,7 @@
                                 "$ref": "#/components/schemas/CountryEnum"
                             }
                         ],
+                        "default": "FR",
                         "description": "Country field will be deprecated soon in order to be replaced by address relation.\n\n* `AF` - Afghanistan\n* `AX` - Åland Islands\n* `AL` - Albania\n* `DZ` - Algeria\n* `AS` - American Samoa\n* `AD` - Andorra\n* `AO` - Angola\n* `AI` - Anguilla\n* `AQ` - Antarctica\n* `AG` - Antigua and Barbuda\n* `AR` - Argentina\n* `AM` - Armenia\n* `AW` - Aruba\n* `AU` - Australia\n* `AT` - Austria\n* `AZ` - Azerbaijan\n* `BS` - Bahamas\n* `BH` - Bahrain\n* `BD` - Bangladesh\n* `BB` - Barbados\n* `BY` - Belarus\n* `BE` - Belgium\n* `BZ` - Belize\n* `BJ` - Benin\n* `BM` - Bermuda\n* `BT` - Bhutan\n* `BO` - Bolivia\n* `BQ` - Bonaire, Sint Eustatius and Saba\n* `BA` - Bosnia and Herzegovina\n* `BW` - Botswana\n* `BV` - Bouvet Island\n* `BR` - Brazil\n* `IO` - British Indian Ocean Territory\n* `BN` - Brunei\n* `BG` - Bulgaria\n* `BF` - Burkina Faso\n* `BI` - Burundi\n* `CV` - Cabo Verde\n* `KH` - Cambodia\n* `CM` - Cameroon\n* `CA` - Canada\n* `KY` - Cayman Islands\n* `CF` - Central African Republic\n* `TD` - Chad\n* `CL` - Chile\n* `CN` - China\n* `CX` - Christmas Island\n* `CC` - Cocos (Keeling) Islands\n* `CO` - Colombia\n* `KM` - Comoros\n* `CG` - Congo\n* `CD` - Congo (the Democratic Republic of the)\n* `CK` - Cook Islands\n* `CR` - Costa Rica\n* `CI` - Côte d'Ivoire\n* `HR` - Croatia\n* `CU` - Cuba\n* `CW` - Curaçao\n* `CY` - Cyprus\n* `CZ` - Czechia\n* `DK` - Denmark\n* `DJ` - Djibouti\n* `DM` - Dominica\n* `DO` - Dominican Republic\n* `EC` - Ecuador\n* `EG` - Egypt\n* `SV` - El Salvador\n* `GQ` - Equatorial Guinea\n* `ER` - Eritrea\n* `EE` - Estonia\n* `SZ` - Eswatini\n* `ET` - Ethiopia\n* `FK` - Falkland Islands (Malvinas)\n* `FO` - Faroe Islands\n* `FJ` - Fiji\n* `FI` - Finland\n* `FR` - France\n* `GF` - French Guiana\n* `PF` - French Polynesia\n* `TF` - French Southern Territories\n* `GA` - Gabon\n* `GM` - Gambia\n* `GE` - Georgia\n* `DE` - Germany\n* `GH` - Ghana\n* `GI` - Gibraltar\n* `GR` - Greece\n* `GL` - Greenland\n* `GD` - Grenada\n* `GP` - Guadeloupe\n* `GU` - Guam\n* `GT` - Guatemala\n* `GG` - Guernsey\n* `GN` - Guinea\n* `GW` - Guinea-Bissau\n* `GY` - Guyana\n* `HT` - Haiti\n* `HM` - Heard Island and McDonald Islands\n* `VA` - Holy See\n* `HN` - Honduras\n* `HK` - Hong Kong\n* `HU` - Hungary\n* `IS` - Iceland\n* `IN` - India\n* `ID` - Indonesia\n* `IR` - Iran\n* `IQ` - Iraq\n* `IE` - Ireland\n* `IM` - Isle of Man\n* `IL` - Israel\n* `IT` - Italy\n* `JM` - Jamaica\n* `JP` - Japan\n* `JE` - Jersey\n* `JO` - Jordan\n* `KZ` - Kazakhstan\n* `KE` - Kenya\n* `KI` - Kiribati\n* `KW` - Kuwait\n* `KG` - Kyrgyzstan\n* `LA` - Laos\n* `LV` - Latvia\n* `LB` - Lebanon\n* `LS` - Lesotho\n* `LR` - Liberia\n* `LY` - Libya\n* `LI` - Liechtenstein\n* `LT` - Lithuania\n* `LU` - Luxembourg\n* `MO` - Macao\n* `MG` - Madagascar\n* `MW` - Malawi\n* `MY` - Malaysia\n* `MV` - Maldives\n* `ML` - Mali\n* `MT` - Malta\n* `MH` - Marshall Islands\n* `MQ` - Martinique\n* `MR` - Mauritania\n* `MU` - Mauritius\n* `YT` - Mayotte\n* `MX` - Mexico\n* `FM` - Micronesia (Federated States of)\n* `MD` - Moldova\n* `MC` - Monaco\n* `MN` - Mongolia\n* `ME` - Montenegro\n* `MS` - Montserrat\n* `MA` - Morocco\n* `MZ` - Mozambique\n* `MM` - Myanmar\n* `NA` - Namibia\n* `NR` - Nauru\n* `NP` - Nepal\n* `NL` - Netherlands\n* `NC` - New Caledonia\n* `NZ` - New Zealand\n* `NI` - Nicaragua\n* `NE` - Niger\n* `NG` - Nigeria\n* `NU` - Niue\n* `NF` - Norfolk Island\n* `KP` - North Korea\n* `MK` - North Macedonia\n* `MP` - Northern Mariana Islands\n* `NO` - Norway\n* `OM` - Oman\n* `PK` - Pakistan\n* `PW` - Palau\n* `PS` - Palestine, State of\n* `PA` - Panama\n* `PG` - Papua New Guinea\n* `PY` - Paraguay\n* `PE` - Peru\n* `PH` - Philippines\n* `PN` - Pitcairn\n* `PL` - Poland\n* `PT` - Portugal\n* `PR` - Puerto Rico\n* `QA` - Qatar\n* `RE` - Réunion\n* `RO` - Romania\n* `RU` - Russia\n* `RW` - Rwanda\n* `BL` - Saint Barthélemy\n* `SH` - Saint Helena, Ascension and Tristan da Cunha\n* `KN` - Saint Kitts and Nevis\n* `LC` - Saint Lucia\n* `MF` - Saint Martin (French part)\n* `PM` - Saint Pierre and Miquelon\n* `VC` - Saint Vincent and the Grenadines\n* `WS` - Samoa\n* `SM` - San Marino\n* `ST` - Sao Tome and Principe\n* `SA` - Saudi Arabia\n* `SN` - Senegal\n* `RS` - Serbia\n* `SC` - Seychelles\n* `SL` - Sierra Leone\n* `SG` - Singapore\n* `SX` - Sint Maarten (Dutch part)\n* `SK` - Slovakia\n* `SI` - Slovenia\n* `SB` - Solomon Islands\n* `SO` - Somalia\n* `ZA` - South Africa\n* `GS` - South Georgia and the South Sandwich Islands\n* `KR` - South Korea\n* `SS` - South Sudan\n* `ES` - Spain\n* `LK` - Sri Lanka\n* `SD` - Sudan\n* `SR` - Suriname\n* `SJ` - Svalbard and Jan Mayen\n* `SE` - Sweden\n* `CH` - Switzerland\n* `SY` - Syria\n* `TW` - Taiwan\n* `TJ` - Tajikistan\n* `TZ` - Tanzania\n* `TH` - Thailand\n* `TL` - Timor-Leste\n* `TG` - Togo\n* `TK` - Tokelau\n* `TO` - Tonga\n* `TT` - Trinidad and Tobago\n* `TN` - Tunisia\n* `TR` - Türkiye\n* `TM` - Turkmenistan\n* `TC` - Turks and Caicos Islands\n* `TV` - Tuvalu\n* `UG` - Uganda\n* `UA` - Ukraine\n* `AE` - United Arab Emirates\n* `GB` - United Kingdom\n* `UM` - United States Minor Outlying Islands\n* `US` - United States of America\n* `UY` - Uruguay\n* `UZ` - Uzbekistan\n* `VU` - Vanuatu\n* `VE` - Venezuela\n* `VN` - Vietnam\n* `VG` - Virgin Islands (British)\n* `VI` - Virgin Islands (U.S.)\n* `WF` - Wallis and Futuna\n* `EH` - Western Sahara\n* `YE` - Yemen\n* `ZM` - Zambia\n* `ZW` - Zimbabwe"
                     },
                     "id": {
@@ -5291,7 +5321,12 @@
                         "readOnly": true
                     },
                     "role": {
-                        "$ref": "#/components/schemas/OrganizationAccessRoleChoiceEnum"
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/OrganizationAccessRoleChoiceEnum"
+                            }
+                        ],
+                        "default": "member"
                     }
                 },
                 "required": [
@@ -5304,7 +5339,12 @@
                 "description": "Serializer for OrganizationAccess model.",
                 "properties": {
                     "role": {
-                        "$ref": "#/components/schemas/OrganizationAccessRoleChoiceEnum"
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/OrganizationAccessRoleChoiceEnum"
+                            }
+                        ],
+                        "default": "member"
                     }
                 }
             },
@@ -5347,10 +5387,12 @@
                     },
                     "is_main": {
                         "type": "boolean",
+                        "default": false,
                         "title": "Main"
                     },
                     "is_reusable": {
                         "type": "boolean",
+                        "default": false,
                         "title": "Reusable"
                     }
                 },
@@ -5404,10 +5446,12 @@
                     },
                     "is_main": {
                         "type": "boolean",
+                        "default": false,
                         "title": "Main"
                     },
                     "is_reusable": {
                         "type": "boolean",
+                        "default": false,
                         "title": "Reusable"
                     }
                 },
@@ -5461,6 +5505,7 @@
                                 "$ref": "#/components/schemas/CountryEnum"
                             }
                         ],
+                        "default": "FR",
                         "description": "Country field will be deprecated soon in order to be replaced by address relation.\n\n* `AF` - Afghanistan\n* `AX` - Åland Islands\n* `AL` - Albania\n* `DZ` - Algeria\n* `AS` - American Samoa\n* `AD` - Andorra\n* `AO` - Angola\n* `AI` - Anguilla\n* `AQ` - Antarctica\n* `AG` - Antigua and Barbuda\n* `AR` - Argentina\n* `AM` - Armenia\n* `AW` - Aruba\n* `AU` - Australia\n* `AT` - Austria\n* `AZ` - Azerbaijan\n* `BS` - Bahamas\n* `BH` - Bahrain\n* `BD` - Bangladesh\n* `BB` - Barbados\n* `BY` - Belarus\n* `BE` - Belgium\n* `BZ` - Belize\n* `BJ` - Benin\n* `BM` - Bermuda\n* `BT` - Bhutan\n* `BO` - Bolivia\n* `BQ` - Bonaire, Sint Eustatius and Saba\n* `BA` - Bosnia and Herzegovina\n* `BW` - Botswana\n* `BV` - Bouvet Island\n* `BR` - Brazil\n* `IO` - British Indian Ocean Territory\n* `BN` - Brunei\n* `BG` - Bulgaria\n* `BF` - Burkina Faso\n* `BI` - Burundi\n* `CV` - Cabo Verde\n* `KH` - Cambodia\n* `CM` - Cameroon\n* `CA` - Canada\n* `KY` - Cayman Islands\n* `CF` - Central African Republic\n* `TD` - Chad\n* `CL` - Chile\n* `CN` - China\n* `CX` - Christmas Island\n* `CC` - Cocos (Keeling) Islands\n* `CO` - Colombia\n* `KM` - Comoros\n* `CG` - Congo\n* `CD` - Congo (the Democratic Republic of the)\n* `CK` - Cook Islands\n* `CR` - Costa Rica\n* `CI` - Côte d'Ivoire\n* `HR` - Croatia\n* `CU` - Cuba\n* `CW` - Curaçao\n* `CY` - Cyprus\n* `CZ` - Czechia\n* `DK` - Denmark\n* `DJ` - Djibouti\n* `DM` - Dominica\n* `DO` - Dominican Republic\n* `EC` - Ecuador\n* `EG` - Egypt\n* `SV` - El Salvador\n* `GQ` - Equatorial Guinea\n* `ER` - Eritrea\n* `EE` - Estonia\n* `SZ` - Eswatini\n* `ET` - Ethiopia\n* `FK` - Falkland Islands (Malvinas)\n* `FO` - Faroe Islands\n* `FJ` - Fiji\n* `FI` - Finland\n* `FR` - France\n* `GF` - French Guiana\n* `PF` - French Polynesia\n* `TF` - French Southern Territories\n* `GA` - Gabon\n* `GM` - Gambia\n* `GE` - Georgia\n* `DE` - Germany\n* `GH` - Ghana\n* `GI` - Gibraltar\n* `GR` - Greece\n* `GL` - Greenland\n* `GD` - Grenada\n* `GP` - Guadeloupe\n* `GU` - Guam\n* `GT` - Guatemala\n* `GG` - Guernsey\n* `GN` - Guinea\n* `GW` - Guinea-Bissau\n* `GY` - Guyana\n* `HT` - Haiti\n* `HM` - Heard Island and McDonald Islands\n* `VA` - Holy See\n* `HN` - Honduras\n* `HK` - Hong Kong\n* `HU` - Hungary\n* `IS` - Iceland\n* `IN` - India\n* `ID` - Indonesia\n* `IR` - Iran\n* `IQ` - Iraq\n* `IE` - Ireland\n* `IM` - Isle of Man\n* `IL` - Israel\n* `IT` - Italy\n* `JM` - Jamaica\n* `JP` - Japan\n* `JE` - Jersey\n* `JO` - Jordan\n* `KZ` - Kazakhstan\n* `KE` - Kenya\n* `KI` - Kiribati\n* `KW` - Kuwait\n* `KG` - Kyrgyzstan\n* `LA` - Laos\n* `LV` - Latvia\n* `LB` - Lebanon\n* `LS` - Lesotho\n* `LR` - Liberia\n* `LY` - Libya\n* `LI` - Liechtenstein\n* `LT` - Lithuania\n* `LU` - Luxembourg\n* `MO` - Macao\n* `MG` - Madagascar\n* `MW` - Malawi\n* `MY` - Malaysia\n* `MV` - Maldives\n* `ML` - Mali\n* `MT` - Malta\n* `MH` - Marshall Islands\n* `MQ` - Martinique\n* `MR` - Mauritania\n* `MU` - Mauritius\n* `YT` - Mayotte\n* `MX` - Mexico\n* `FM` - Micronesia (Federated States of)\n* `MD` - Moldova\n* `MC` - Monaco\n* `MN` - Mongolia\n* `ME` - Montenegro\n* `MS` - Montserrat\n* `MA` - Morocco\n* `MZ` - Mozambique\n* `MM` - Myanmar\n* `NA` - Namibia\n* `NR` - Nauru\n* `NP` - Nepal\n* `NL` - Netherlands\n* `NC` - New Caledonia\n* `NZ` - New Zealand\n* `NI` - Nicaragua\n* `NE` - Niger\n* `NG` - Nigeria\n* `NU` - Niue\n* `NF` - Norfolk Island\n* `KP` - North Korea\n* `MK` - North Macedonia\n* `MP` - Northern Mariana Islands\n* `NO` - Norway\n* `OM` - Oman\n* `PK` - Pakistan\n* `PW` - Palau\n* `PS` - Palestine, State of\n* `PA` - Panama\n* `PG` - Papua New Guinea\n* `PY` - Paraguay\n* `PE` - Peru\n* `PH` - Philippines\n* `PN` - Pitcairn\n* `PL` - Poland\n* `PT` - Portugal\n* `PR` - Puerto Rico\n* `QA` - Qatar\n* `RE` - Réunion\n* `RO` - Romania\n* `RU` - Russia\n* `RW` - Rwanda\n* `BL` - Saint Barthélemy\n* `SH` - Saint Helena, Ascension and Tristan da Cunha\n* `KN` - Saint Kitts and Nevis\n* `LC` - Saint Lucia\n* `MF` - Saint Martin (French part)\n* `PM` - Saint Pierre and Miquelon\n* `VC` - Saint Vincent and the Grenadines\n* `WS` - Samoa\n* `SM` - San Marino\n* `ST` - Sao Tome and Principe\n* `SA` - Saudi Arabia\n* `SN` - Senegal\n* `RS` - Serbia\n* `SC` - Seychelles\n* `SL` - Sierra Leone\n* `SG` - Singapore\n* `SX` - Sint Maarten (Dutch part)\n* `SK` - Slovakia\n* `SI` - Slovenia\n* `SB` - Solomon Islands\n* `SO` - Somalia\n* `ZA` - South Africa\n* `GS` - South Georgia and the South Sandwich Islands\n* `KR` - South Korea\n* `SS` - South Sudan\n* `ES` - Spain\n* `LK` - Sri Lanka\n* `SD` - Sudan\n* `SR` - Suriname\n* `SJ` - Svalbard and Jan Mayen\n* `SE` - Sweden\n* `CH` - Switzerland\n* `SY` - Syria\n* `TW` - Taiwan\n* `TJ` - Tajikistan\n* `TZ` - Tanzania\n* `TH` - Thailand\n* `TL` - Timor-Leste\n* `TG` - Togo\n* `TK` - Tokelau\n* `TO` - Tonga\n* `TT` - Trinidad and Tobago\n* `TN` - Tunisia\n* `TR` - Türkiye\n* `TM` - Turkmenistan\n* `TC` - Turks and Caicos Islands\n* `TV` - Tuvalu\n* `UG` - Uganda\n* `UA` - Ukraine\n* `AE` - United Arab Emirates\n* `GB` - United Kingdom\n* `UM` - United States Minor Outlying Islands\n* `US` - United States of America\n* `UY` - Uruguay\n* `UZ` - Uzbekistan\n* `VU` - Vanuatu\n* `VE` - Venezuela\n* `VN` - Vietnam\n* `VG` - Virgin Islands (British)\n* `VI` - Virgin Islands (U.S.)\n* `WF` - Wallis and Futuna\n* `EH` - Western Sahara\n* `YE` - Yemen\n* `ZM` - Zambia\n* `ZW` - Zimbabwe"
                     },
                     "logo": {
@@ -5798,6 +5843,7 @@
                     },
                     "is_graded": {
                         "type": "boolean",
+                        "default": true,
                         "title": "Take into account for certification",
                         "description": "Take into account the course grade for certification."
                     },
@@ -5805,6 +5851,7 @@
                         "type": "integer",
                         "maximum": 32767,
                         "minimum": 0,
+                        "default": 0,
                         "title": "Position in product"
                     },
                     "course_runs": {
@@ -5838,6 +5885,7 @@
                     },
                     "is_graded": {
                         "type": "boolean",
+                        "default": true,
                         "title": "Take into account for certification",
                         "description": "Take into account the course grade for certification."
                     },
@@ -5845,6 +5893,7 @@
                         "type": "integer",
                         "maximum": 32767,
                         "minimum": 0,
+                        "default": 0,
                         "title": "Position in product"
                     },
                     "course_runs": {
@@ -6342,6 +6391,10 @@
             },
             "PaginatedAdminCertificateDefinitionList": {
                 "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
                 "properties": {
                     "count": {
                         "type": "integer",
@@ -6369,6 +6422,10 @@
             },
             "PaginatedAdminContractDefinitionList": {
                 "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
                 "properties": {
                     "count": {
                         "type": "integer",
@@ -6396,6 +6453,10 @@
             },
             "PaginatedAdminCourseLightList": {
                 "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
                 "properties": {
                     "count": {
                         "type": "integer",
@@ -6423,6 +6484,10 @@
             },
             "PaginatedAdminCourseProductRelationsList": {
                 "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
                 "properties": {
                     "count": {
                         "type": "integer",
@@ -6450,6 +6515,10 @@
             },
             "PaginatedAdminCourseRunList": {
                 "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
                 "properties": {
                     "count": {
                         "type": "integer",
@@ -6477,6 +6546,10 @@
             },
             "PaginatedAdminOrderGroupList": {
                 "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
                 "properties": {
                     "count": {
                         "type": "integer",
@@ -6504,6 +6577,10 @@
             },
             "PaginatedAdminOrderLightList": {
                 "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
                 "properties": {
                     "count": {
                         "type": "integer",
@@ -6531,6 +6608,10 @@
             },
             "PaginatedAdminOrganizationLightList": {
                 "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
                 "properties": {
                     "count": {
                         "type": "integer",
@@ -6558,6 +6639,10 @@
             },
             "PaginatedAdminProductLightList": {
                 "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
                 "properties": {
                     "count": {
                         "type": "integer",
@@ -6585,6 +6670,10 @@
             },
             "PaginatedAdminUserList": {
                 "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
                 "properties": {
                     "count": {
                         "type": "integer",
@@ -6672,6 +6761,7 @@
                                 "$ref": "#/components/schemas/NameEnum"
                             }
                         ],
+                        "default": "contract_definition",
                         "title": "Template name"
                     }
                 }
@@ -6681,7 +6771,12 @@
                 "description": "Serializer for CourseAccess model.",
                 "properties": {
                     "role": {
-                        "$ref": "#/components/schemas/CourseAccessRoleChoiceEnum"
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/CourseAccessRoleChoiceEnum"
+                            }
+                        ],
+                        "default": "instructor"
                     }
                 }
             },
@@ -6723,10 +6818,12 @@
                         "minLength": 1
                     },
                     "is_gradable": {
-                        "type": "boolean"
+                        "type": "boolean",
+                        "default": false
                     },
                     "is_listed": {
                         "type": "boolean",
+                        "default": false,
                         "description": "If checked the course run will be included in the list of course runs available for enrollment on the related course page."
                     },
                     "languages": {
@@ -6768,11 +6865,13 @@
                         "type": "integer",
                         "maximum": 32767,
                         "minimum": 0,
+                        "default": 0,
                         "title": "Number of seats",
                         "description": "The maximum number of orders that can be validated for a given order group"
                     },
                     "is_active": {
-                        "type": "boolean"
+                        "type": "boolean",
+                        "default": true
                     }
                 }
             },
@@ -6781,7 +6880,12 @@
                 "description": "Serializer for OrganizationAccess model.",
                 "properties": {
                     "role": {
-                        "$ref": "#/components/schemas/OrganizationAccessRoleChoiceEnum"
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/OrganizationAccessRoleChoiceEnum"
+                            }
+                        ],
+                        "default": "member"
                     }
                 }
             },
@@ -6824,10 +6928,12 @@
                     },
                     "is_main": {
                         "type": "boolean",
+                        "default": false,
                         "title": "Main"
                     },
                     "is_reusable": {
                         "type": "boolean",
+                        "default": false,
                         "title": "Reusable"
                     }
                 }
@@ -6847,6 +6953,7 @@
                                 "$ref": "#/components/schemas/CountryEnum"
                             }
                         ],
+                        "default": "FR",
                         "description": "Country field will be deprecated soon in order to be replaced by address relation.\n\n* `AF` - Afghanistan\n* `AX` - Åland Islands\n* `AL` - Albania\n* `DZ` - Algeria\n* `AS` - American Samoa\n* `AD` - Andorra\n* `AO` - Angola\n* `AI` - Anguilla\n* `AQ` - Antarctica\n* `AG` - Antigua and Barbuda\n* `AR` - Argentina\n* `AM` - Armenia\n* `AW` - Aruba\n* `AU` - Australia\n* `AT` - Austria\n* `AZ` - Azerbaijan\n* `BS` - Bahamas\n* `BH` - Bahrain\n* `BD` - Bangladesh\n* `BB` - Barbados\n* `BY` - Belarus\n* `BE` - Belgium\n* `BZ` - Belize\n* `BJ` - Benin\n* `BM` - Bermuda\n* `BT` - Bhutan\n* `BO` - Bolivia\n* `BQ` - Bonaire, Sint Eustatius and Saba\n* `BA` - Bosnia and Herzegovina\n* `BW` - Botswana\n* `BV` - Bouvet Island\n* `BR` - Brazil\n* `IO` - British Indian Ocean Territory\n* `BN` - Brunei\n* `BG` - Bulgaria\n* `BF` - Burkina Faso\n* `BI` - Burundi\n* `CV` - Cabo Verde\n* `KH` - Cambodia\n* `CM` - Cameroon\n* `CA` - Canada\n* `KY` - Cayman Islands\n* `CF` - Central African Republic\n* `TD` - Chad\n* `CL` - Chile\n* `CN` - China\n* `CX` - Christmas Island\n* `CC` - Cocos (Keeling) Islands\n* `CO` - Colombia\n* `KM` - Comoros\n* `CG` - Congo\n* `CD` - Congo (the Democratic Republic of the)\n* `CK` - Cook Islands\n* `CR` - Costa Rica\n* `CI` - Côte d'Ivoire\n* `HR` - Croatia\n* `CU` - Cuba\n* `CW` - Curaçao\n* `CY` - Cyprus\n* `CZ` - Czechia\n* `DK` - Denmark\n* `DJ` - Djibouti\n* `DM` - Dominica\n* `DO` - Dominican Republic\n* `EC` - Ecuador\n* `EG` - Egypt\n* `SV` - El Salvador\n* `GQ` - Equatorial Guinea\n* `ER` - Eritrea\n* `EE` - Estonia\n* `SZ` - Eswatini\n* `ET` - Ethiopia\n* `FK` - Falkland Islands (Malvinas)\n* `FO` - Faroe Islands\n* `FJ` - Fiji\n* `FI` - Finland\n* `FR` - France\n* `GF` - French Guiana\n* `PF` - French Polynesia\n* `TF` - French Southern Territories\n* `GA` - Gabon\n* `GM` - Gambia\n* `GE` - Georgia\n* `DE` - Germany\n* `GH` - Ghana\n* `GI` - Gibraltar\n* `GR` - Greece\n* `GL` - Greenland\n* `GD` - Grenada\n* `GP` - Guadeloupe\n* `GU` - Guam\n* `GT` - Guatemala\n* `GG` - Guernsey\n* `GN` - Guinea\n* `GW` - Guinea-Bissau\n* `GY` - Guyana\n* `HT` - Haiti\n* `HM` - Heard Island and McDonald Islands\n* `VA` - Holy See\n* `HN` - Honduras\n* `HK` - Hong Kong\n* `HU` - Hungary\n* `IS` - Iceland\n* `IN` - India\n* `ID` - Indonesia\n* `IR` - Iran\n* `IQ` - Iraq\n* `IE` - Ireland\n* `IM` - Isle of Man\n* `IL` - Israel\n* `IT` - Italy\n* `JM` - Jamaica\n* `JP` - Japan\n* `JE` - Jersey\n* `JO` - Jordan\n* `KZ` - Kazakhstan\n* `KE` - Kenya\n* `KI` - Kiribati\n* `KW` - Kuwait\n* `KG` - Kyrgyzstan\n* `LA` - Laos\n* `LV` - Latvia\n* `LB` - Lebanon\n* `LS` - Lesotho\n* `LR` - Liberia\n* `LY` - Libya\n* `LI` - Liechtenstein\n* `LT` - Lithuania\n* `LU` - Luxembourg\n* `MO` - Macao\n* `MG` - Madagascar\n* `MW` - Malawi\n* `MY` - Malaysia\n* `MV` - Maldives\n* `ML` - Mali\n* `MT` - Malta\n* `MH` - Marshall Islands\n* `MQ` - Martinique\n* `MR` - Mauritania\n* `MU` - Mauritius\n* `YT` - Mayotte\n* `MX` - Mexico\n* `FM` - Micronesia (Federated States of)\n* `MD` - Moldova\n* `MC` - Monaco\n* `MN` - Mongolia\n* `ME` - Montenegro\n* `MS` - Montserrat\n* `MA` - Morocco\n* `MZ` - Mozambique\n* `MM` - Myanmar\n* `NA` - Namibia\n* `NR` - Nauru\n* `NP` - Nepal\n* `NL` - Netherlands\n* `NC` - New Caledonia\n* `NZ` - New Zealand\n* `NI` - Nicaragua\n* `NE` - Niger\n* `NG` - Nigeria\n* `NU` - Niue\n* `NF` - Norfolk Island\n* `KP` - North Korea\n* `MK` - North Macedonia\n* `MP` - Northern Mariana Islands\n* `NO` - Norway\n* `OM` - Oman\n* `PK` - Pakistan\n* `PW` - Palau\n* `PS` - Palestine, State of\n* `PA` - Panama\n* `PG` - Papua New Guinea\n* `PY` - Paraguay\n* `PE` - Peru\n* `PH` - Philippines\n* `PN` - Pitcairn\n* `PL` - Poland\n* `PT` - Portugal\n* `PR` - Puerto Rico\n* `QA` - Qatar\n* `RE` - Réunion\n* `RO` - Romania\n* `RU` - Russia\n* `RW` - Rwanda\n* `BL` - Saint Barthélemy\n* `SH` - Saint Helena, Ascension and Tristan da Cunha\n* `KN` - Saint Kitts and Nevis\n* `LC` - Saint Lucia\n* `MF` - Saint Martin (French part)\n* `PM` - Saint Pierre and Miquelon\n* `VC` - Saint Vincent and the Grenadines\n* `WS` - Samoa\n* `SM` - San Marino\n* `ST` - Sao Tome and Principe\n* `SA` - Saudi Arabia\n* `SN` - Senegal\n* `RS` - Serbia\n* `SC` - Seychelles\n* `SL` - Sierra Leone\n* `SG` - Singapore\n* `SX` - Sint Maarten (Dutch part)\n* `SK` - Slovakia\n* `SI` - Slovenia\n* `SB` - Solomon Islands\n* `SO` - Somalia\n* `ZA` - South Africa\n* `GS` - South Georgia and the South Sandwich Islands\n* `KR` - South Korea\n* `SS` - South Sudan\n* `ES` - Spain\n* `LK` - Sri Lanka\n* `SD` - Sudan\n* `SR` - Suriname\n* `SJ` - Svalbard and Jan Mayen\n* `SE` - Sweden\n* `CH` - Switzerland\n* `SY` - Syria\n* `TW` - Taiwan\n* `TJ` - Tajikistan\n* `TZ` - Tanzania\n* `TH` - Thailand\n* `TL` - Timor-Leste\n* `TG` - Togo\n* `TK` - Tokelau\n* `TO` - Tonga\n* `TT` - Trinidad and Tobago\n* `TN` - Tunisia\n* `TR` - Türkiye\n* `TM` - Turkmenistan\n* `TC` - Turks and Caicos Islands\n* `TV` - Tuvalu\n* `UG` - Uganda\n* `UA` - Ukraine\n* `AE` - United Arab Emirates\n* `GB` - United Kingdom\n* `UM` - United States Minor Outlying Islands\n* `US` - United States of America\n* `UY` - Uruguay\n* `UZ` - Uzbekistan\n* `VU` - Vanuatu\n* `VE` - Venezuela\n* `VN` - Vietnam\n* `VG` - Virgin Islands (British)\n* `VI` - Virgin Islands (U.S.)\n* `WF` - Wallis and Futuna\n* `EH` - Western Sahara\n* `YE` - Yemen\n* `ZM` - Zambia\n* `ZW` - Zimbabwe"
                     },
                     "logo": {
@@ -6969,6 +7076,7 @@
                     },
                     "is_graded": {
                         "type": "boolean",
+                        "default": true,
                         "title": "Take into account for certification",
                         "description": "Take into account the course grade for certification."
                     },
@@ -6976,6 +7084,7 @@
                         "type": "integer",
                         "maximum": 32767,
                         "minimum": 0,
+                        "default": 0,
                         "title": "Position in product"
                     },
                     "course_runs": {
