@@ -30,6 +30,14 @@ class OrganizationViewSet(viewsets.ModelViewSet):
     queryset = models.Organization.objects.all()
     filterset_class = filters.OrganizationAdminFilterSet
 
+    def get_permissions(self):
+        """
+        Instantiates and returns the list of permissions that this view requires.
+        """
+        if self.action in ["list", "retrieve"]:
+            return [permissions.IsAdminUser()]
+        return super().get_permissions()
+
     def get_serializer_class(self):
         """
         Return the serializer class to use depending on the action.
