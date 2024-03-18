@@ -2,7 +2,6 @@ import * as React from "react";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
-import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import CopyAllIcon from "@mui/icons-material/CopyAll";
 import { ProductRelationToCourse } from "@/services/api/models/Relations";
@@ -20,12 +19,6 @@ const messages = defineMessages({
     defaultMessage: "List of courses to which this product is linked",
     description: "Product course relation section title",
   },
-  sectionAlertMessage: {
-    id: "components.templates.products.form.translations.courseProductRelations.sectionAlertMessage",
-    defaultMessage:
-      "In this section, you have access to all courses to which this product is attached. Click on the course title to navigate to its detail.",
-    description: "Product course relation section alert message",
-  },
 });
 
 type Props = {
@@ -41,9 +34,6 @@ export function ProductFormCourseProductRelations({ relations = [] }: Props) {
           <Typography variant="subtitle2">
             <FormattedMessage {...messages.sectionTitle} />
           </Typography>
-          <Alert data-testid="product-course-relation-alert" severity="info">
-            <FormattedMessage {...messages.sectionAlertMessage} />
-          </Alert>
         </Stack>
         <Stack spacing={1} mt={3}>
           {relations.map((relation) => (

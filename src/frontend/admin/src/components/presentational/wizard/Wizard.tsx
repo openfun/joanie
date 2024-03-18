@@ -163,22 +163,25 @@ export function Wizard({ steps, ...props }: Props) {
   return (
     <WizardContext.Provider value={contextValue}>
       <Box width="100%">
-        <Stepper nonLinear activeStep={activeStep} alternativeLabel>
+        <Stepper
+          sx={{ p: 3 }}
+          nonLinear
+          activeStep={activeStep}
+          alternativeLabel
+        >
           {steps.map((step, index) => (
             <Step key={step.label}>
               <StepButton onClick={handleStep(index)}>{step.label}</StepButton>
             </Step>
           ))}
         </Stepper>
-        <Box p={2} key={activeStep}>
-          {component}
-        </Box>
+        <Box key={activeStep}>{component}</Box>
         <Box
           sx={{
             display: "flex",
             flexDirection: "row",
             justifyContent: "space-between",
-            pt: 2,
+            p: 3,
           }}
         >
           {steps.length > 1 && (
