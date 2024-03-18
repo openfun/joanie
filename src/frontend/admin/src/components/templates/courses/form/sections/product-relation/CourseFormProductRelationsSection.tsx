@@ -5,7 +5,6 @@ import Stack from "@mui/material/Stack";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
-import Alert from "@mui/material/Alert";
 import { SimpleCard } from "@/components/presentational/card/SimpleCard";
 import { Course } from "@/services/api/models/Course";
 import { useModal } from "@/components/presentational/modal/useModal";
@@ -26,12 +25,6 @@ import { AlertModal } from "@/components/presentational/modal/AlertModal";
 import { CustomList } from "@/components/presentational/list/CustomList";
 
 const messages = defineMessages({
-  sectionHelp: {
-    id: "components.templates.courses.form.productRelation.CourseFormProductRelationsSection.sectionHelp",
-    description: "Help text to explain what this section is about",
-    defaultMessage:
-      "In this section, you can choose the products that will be displayed on this course.",
-  },
   deleteRelationModalTitle: {
     id: "components.templates.courses.form.productRelation.CourseFormProductRelationsSection.deleteRelationModalTitle",
     description: "Title for the delete relation modal",
@@ -172,9 +165,6 @@ export function CourseFormProductRelationsSection({
       <SimpleCard>
         <Box padding={3}>
           <Stack padding={3} gap={2}>
-            <Alert severity="info">
-              {intl.formatMessage(messages.sectionHelp)}
-            </Alert>
             <Box
               sx={{
                 display: "flex",
