@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Add tabs layout on back offices forms
 - Filter admin resources list through their pk
 - Allow backoffice to generate certificate if order is eligible
 - Allow backoffice admin user to cancel an order
