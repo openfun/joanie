@@ -8,6 +8,7 @@ from django.utils.translation import gettext_lazy as _
 import markdown
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import exceptions, serializers
+from rest_framework.fields import empty
 from rest_framework.generics import get_object_or_404
 
 from joanie.core import enums, models
@@ -84,6 +85,15 @@ class AddressSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "id",
         ]
+
+    def run_validation(self, data=empty):
+        """
+        Ignore is_main if not present in the data
+        """
+        validated_data = super().run_validation(data)
+        if "is_main" not in data:
+            del validated_data["is_main"]
+        return validated_data
 
 
 class CourseLightSerializer(AbilitiesModelSerializer):

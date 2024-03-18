@@ -17,6 +17,7 @@ ORGANIZATION_FALLBACK_ADDRESS = {
     "first_name": _("<ORGANIZATION_FIRST_NAME>"),
     "postcode": _("<ORGANIZATION_ADDRESS_POSTCODE>"),
     "title": _("<ORGANIZATION_ADDRESS_TITLE>"),
+    "is_main": True,
 }
 
 # Student section for generating contract definition
@@ -28,6 +29,7 @@ USER_FALLBACK_ADDRESS = {
     "first_name": _("<STUDENT_FIRST_NAME>"),
     "postcode": _("<STUDENT_ADDRESS_POSTCODE>"),
     "title": _("<STUDENT_ADDRESS_TITLE>"),
+    "is_main": True,
 }
 
 
