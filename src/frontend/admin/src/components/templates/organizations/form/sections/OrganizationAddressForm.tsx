@@ -20,6 +20,7 @@ import { RHFSelect } from "@/components/presentational/hook-form/RHFSelect";
 type Props = {
   organization: Organization;
 };
+
 export function OrganizationAddressForm({ organization }: Props) {
   const intl = useIntl();
   const organizationQuery = useOrganizations({}, { enabled: false });
