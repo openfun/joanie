@@ -94,8 +94,8 @@ def import_certificates_batch(
                     edx_certificate.course_id,
                     extra={
                         "context": {
-                            "edx_certificate": vars(edx_certificate),
-                            "edx_user": vars(edx_certificate.user),
+                            "edx_certificate": edx_certificate.safe_dict(),
+                            "edx_user": edx_certificate.user.safe_dict(),
                         }
                     },
                 )
@@ -126,7 +126,7 @@ def import_certificates_batch(
                     organization_code,
                     extra={
                         "context": {
-                            "edx_certificate": vars(edx_certificate),
+                            "edx_certificate": edx_certificate.safe_dict(),
                             "enrollment": enrollment.to_dict(),
                             "course_run": enrollment.course_run.to_dict(),
                         }
@@ -210,7 +210,7 @@ def import_certificates_batch(
                 extra={
                     "context": {
                         "exception": e,
-                        "edx_certificate": vars(edx_certificate),
+                        "edx_certificate": edx_certificate.safe_dict(),
                     }
                 },
             )
