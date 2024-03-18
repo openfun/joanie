@@ -328,6 +328,7 @@ test.describe("Product form", () => {
     await page.goto(PATH_ADMIN.products.list);
     await expect(page.getByRole("heading", { name: "Products" })).toBeVisible();
     await page.getByRole("link", { name: product.title }).click();
+    await page.getByRole("tab", { name: "Syllabus" }).click();
     await page
       .getByRole("heading", {
         name: "List of courses to which this product is linked",
@@ -335,7 +336,7 @@ test.describe("Product form", () => {
       .click();
     await expect(
       page
-        .getByTestId("product-course-relation-alert")
+        .getByRole("alert")
         .getByText(
           "In this section, you have access to all courses to which this product is attached. Click on the course title to navigate to its detail.",
         ),
@@ -391,6 +392,7 @@ test.describe("Product form", () => {
     await page.goto(PATH_ADMIN.products.list);
     await expect(page.getByRole("heading", { name: "Products" })).toBeVisible();
     await page.getByRole("link", { name: product.title }).click();
+    await page.getByRole("tab", { name: "Syllabus" }).click();
 
     await page
       .getByTestId(`course-product-relation-actions-${relations[0].id}`)
@@ -405,5 +407,47 @@ test.describe("Product form", () => {
     );
     const clipboardContent = await handle.jsonValue();
     expect(clipboardContent).toEqual(relations[0].uri);
+  });
+});
+
+test.describe("Product form page", () => {
+  let store = getProductScenarioStore();
+  test.beforeEach(async ({ page }) => {
+    store = getProductScenarioStore();
+    await mockPlaywrightCrud<Course, DTOCourse>({
+      data: store.courses,
+      optionsResult: COURSE_OPTIONS_REQUEST_RESULT,
+      routeUrl: "http://localhost:8071/api/v1.0/admin/courses/",
+      page,
+    });
+
+    await mockPlaywrightCrud<ContractDefinition, DTOContractDefinition>({
+      data: store.contractsDefinitions,
+      routeUrl: "http://localhost:8071/api/v1.0/admin/contract-definitions/",
+      page,
+      searchResult: store.contractsDefinitions[1],
+    });
+
+    await mockPlaywrightCrud<CertificateDefinition, DTOCertificateDefinition>({
+      data: store.certificateDefinitions,
+      routeUrl: "http://localhost:8071/api/v1.0/admin/certificate-definitions/",
+      page,
+      searchResult: store.certificateDefinitions[1],
+    });
+
+    await mockPlaywrightCrud<Product, DTOProduct>({
+      data: store.products,
+      routeUrl: "http://localhost:8071/api/v1.0/admin/products/",
+      page,
+      createCallback: store.postUpdate,
+    });
+  });
+  test("Check all form tabs", async ({ page }) => {
+    const product = store.products[0];
+    await page.goto(PATH_ADMIN.products.list);
+    await expect(page.getByRole("heading", { name: "Products" })).toBeVisible();
+    await page.getByRole("link", { name: product.title }).click();
+    await page.getByRole("tab", { name: "General" }).click();
+    await page.getByRole("tab", { name: "Syllabus" }).click();
   });
 });

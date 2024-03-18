@@ -79,6 +79,7 @@ test.describe("Course product relation", () => {
     await page.goto(PATH_ADMIN.courses.list);
     await store.mockCourseRunsFromCourse(page, []);
     await page.getByRole("link", { name: course.title }).click();
+    await page.getByRole("tab", { name: "Products" }).click();
 
     await expect(
       page.locator('[id="__next"]').getByRole("alert"),
@@ -133,6 +134,7 @@ test.describe("Course product relation", () => {
     await page.goto(PATH_ADMIN.courses.list);
     await store.mockCourseRunsFromCourse(page, []);
     await page.getByRole("link", { name: course.title }).click();
+    await page.getByRole("tab", { name: "Products" }).click();
     await expect(
       page.getByText(
         "No product relationships have been created for this course",
@@ -146,6 +148,7 @@ test.describe("Course product relation", () => {
     await page.goto(PATH_ADMIN.courses.list);
     await store.mockCourseRunsFromCourse(page, []);
     await page.getByRole("link", { name: course.title }).click();
+    await page.getByRole("tab", { name: "Products" }).click();
 
     await page.getByRole("button", { name: "Add relation" }).click();
     await page.getByLabel("Choose your product").click();
@@ -170,9 +173,7 @@ test.describe("Course product relation", () => {
     await expect(
       page.getByRole("heading", { name: store.products[0].title }),
     ).toBeVisible();
-    await expect(
-      page.getByText(store.organizations[0].title).nth(1),
-    ).toBeVisible();
+    await expect(page.getByText(store.organizations[0].title)).toBeVisible();
   });
 
   test("Copy url inside the clipboard", async ({ page, context }) => {
@@ -182,6 +183,7 @@ test.describe("Course product relation", () => {
     await page.goto(PATH_ADMIN.courses.list);
     await store.mockCourseRunsFromCourse(page, []);
     await page.getByRole("link", { name: course.title }).click();
+    await page.getByRole("tab", { name: "Products" }).click();
     await page
       .getByTestId(`course-product-relation-actions-${relation.id}`)
       .click();
@@ -203,6 +205,7 @@ test.describe("Course product relation", () => {
     course.product_relations = course.product_relations ?? [];
     await store.mockCourseRunsFromCourse(page, []);
     await page.getByRole("link", { name: course.title }).click();
+    await page.getByRole("tab", { name: "Products" }).click();
     await Promise.all(
       course.product_relations.map(async (relation) => {
         await expect(
@@ -237,6 +240,7 @@ test.describe("Course product relation", () => {
     await store.mockOrderGroup(page, store.productRelations, store.orderGroups);
     await page.goto(PATH_ADMIN.courses.list);
     await page.getByRole("link", { name: course.title }).click();
+    await page.getByRole("tab", { name: "Products" }).click();
     await expect(
       page.getByRole("heading", { name: `Edit course: ${course.title}` }),
     ).toBeVisible();
@@ -259,6 +263,7 @@ test.describe("Course product relation", () => {
     await store.mockOrderGroup(page, store.productRelations, store.orderGroups);
     await page.goto(PATH_ADMIN.courses.list);
     await page.getByRole("link", { name: course.title }).click();
+    await page.getByRole("tab", { name: "Products" }).click();
     await expect(
       page.getByRole("heading", { name: `Edit course: ${course.title}` }),
     ).toBeVisible();
@@ -294,6 +299,7 @@ test.describe("Course product relation", () => {
     orderGroup.can_edit = true;
     await page.goto(PATH_ADMIN.courses.list);
     await page.getByRole("link", { name: course.title }).click();
+    await page.getByRole("tab", { name: "Products" }).click();
     await expect(
       page.getByRole("heading", { name: `Edit course: ${course.title}` }),
     ).toBeVisible();

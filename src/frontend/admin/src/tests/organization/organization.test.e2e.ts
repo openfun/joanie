@@ -13,7 +13,7 @@ import { expectHaveClasses } from "@/tests/utils";
 
 const searchPlaceholder = "Search by title, code";
 
-test.describe("Organization Form", () => {
+test.describe("Organization General Form", () => {
   let store = getOrganizationScenarioStore();
   test.beforeEach(async ({ page }) => {
     store = getOrganizationScenarioStore();
@@ -104,8 +104,6 @@ test.describe("Organization Form", () => {
       }),
     ).toHaveCount(1);
 
-    await expect(page.getByText("Organization members")).toBeVisible();
-
     // Go to the list, and check that the new certificate definition is present in the list
     await page.getByRole("link", { name: "List" }).click();
 
@@ -117,6 +115,35 @@ test.describe("Organization Form", () => {
         name: `Organization code Organization title`,
       }),
     ).toHaveCount(1);
+  });
+});
+
+test.describe("Organization form page", () => {
+  let store = getOrganizationScenarioStore();
+  test.beforeEach(async ({ page }) => {
+    store = getOrganizationScenarioStore();
+    store.list[0].addresses = undefined;
+    await mockPlaywrightCrud<Organization, DTOOrganization>({
+      data: store.list,
+      routeUrl: "http://localhost:8071/api/v1.0/admin/organizations/",
+      page,
+      searchResult: store.list[0],
+      optionsResult: ORGANIZATION_OPTIONS_REQUEST_RESULT,
+    });
+
+    await mockPlaywrightCrud<User, any>({
+      data: store.userList,
+      routeUrl: "http://localhost:8071/api/v1.0/admin/users/",
+      page,
+    });
+  });
+  test("Check all form tabs", async ({ page }) => {
+    const org = store.list[0];
+    await page.goto(PATH_ADMIN.organizations.list);
+    await page.getByRole("link", { name: org.title }).click();
+    await expect(page.getByRole("tab", { name: "General" })).toBeVisible();
+    await expect(page.getByRole("tab", { name: "Address" })).toBeVisible();
+    await expect(page.getByRole("tab", { name: "Members" })).toBeVisible();
   });
 });
 
@@ -139,6 +166,7 @@ test.describe("Organization address form", () => {
       page,
     });
   });
+
   test("Create a new organization address", async ({ page }) => {
     const org = store.list[0];
     await page.route(
@@ -157,6 +185,7 @@ test.describe("Organization address form", () => {
     await expect(
       page.getByRole("heading", { name: `Edit organization: ${org.title}` }),
     ).toBeVisible();
+    await page.getByRole("tab", { name: "Address" }).click();
     await expect(
       page.getByRole("heading", { name: "Organization address" }),
     ).toBeVisible();
@@ -193,6 +222,7 @@ test.describe("Organization address form", () => {
     await expect(
       page.getByRole("heading", { name: `Edit organization: ${org.title}` }),
     ).toBeVisible();
+    await page.getByRole("tab", { name: "Address" }).click();
     await expect(
       page.getByRole("heading", { name: "Organization address" }),
     ).toBeVisible();
