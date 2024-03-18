@@ -9,6 +9,7 @@ from django.test import TestCase
 from django.utils import timezone
 
 from joanie.core import factories, models
+from joanie.core.exceptions import CertificateGenerationError
 from joanie.core.models import Certificate, Enrollment
 
 
@@ -105,11 +106,14 @@ class CertificateProductGetOrGenerateCertificateOrderModelsTestCase(TestCase):
             product=product, course=None, enrollment=enrollment
         )
 
-        new_certificate, created = order.get_or_generate_certificate()
+        with self.assertRaises(CertificateGenerationError) as context:
+            order.get_or_generate_certificate()
 
-        self.assertFalse(created)
+        self.assertEqual(
+            str(context.exception),
+            f"Product {order.product.title} does not allow to generate a certificate.",
+        )
         self.assertFalse(Certificate.objects.exists())
-        self.assertIsNone(new_certificate)
 
     def test_models_order_get_or_generate_certificate_for_certificate_product_run_is_not_gradable(
         self,
@@ -133,11 +137,14 @@ class CertificateProductGetOrGenerateCertificateOrderModelsTestCase(TestCase):
             product=product, course=None, enrollment=enrollment
         )
 
-        new_certificate, created = order.get_or_generate_certificate()
+        with self.assertRaises(CertificateGenerationError) as context:
+            order.get_or_generate_certificate()
 
-        self.assertFalse(created)
+        self.assertEqual(
+            str(context.exception),
+            "This order is not ready for gradation.",
+        )
         self.assertFalse(Certificate.objects.exists())
-        self.assertIsNone(new_certificate)
 
     def test_models_order_get_or_generate_certificate_for_certificate_product_run_in_the_future(
         self,
@@ -162,11 +169,14 @@ class CertificateProductGetOrGenerateCertificateOrderModelsTestCase(TestCase):
             product=product, course=None, enrollment=enrollment
         )
 
-        new_certificate, created = order.get_or_generate_certificate()
+        with self.assertRaises(CertificateGenerationError) as context:
+            order.get_or_generate_certificate()
 
-        self.assertFalse(created)
+        self.assertEqual(
+            str(context.exception),
+            "This order is not ready for gradation.",
+        )
         self.assertFalse(Certificate.objects.exists())
-        self.assertIsNone(new_certificate)
 
     def test_models_order_get_or_generate_certificate_for_certificate_product_enrollment_inactive(
         self,
@@ -190,11 +200,14 @@ class CertificateProductGetOrGenerateCertificateOrderModelsTestCase(TestCase):
             product=product, course=None, enrollment=enrollment
         )
 
-        new_certificate, created = order.get_or_generate_certificate()
+        with self.assertRaises(CertificateGenerationError) as context:
+            order.get_or_generate_certificate()
 
-        self.assertFalse(created)
+        self.assertEqual(
+            str(context.exception),
+            "This order is not ready for gradation.",
+        )
         self.assertFalse(Certificate.objects.exists())
-        self.assertIsNone(new_certificate)
 
     def test_models_order_get_or_generate_certificate_for_certificate_product_not_passed(
         self,
@@ -219,8 +232,13 @@ class CertificateProductGetOrGenerateCertificateOrderModelsTestCase(TestCase):
         )
 
         with mock.patch.object(Enrollment, "get_grade", return_value={"passed": False}):
-            new_certificate, created = order.get_or_generate_certificate()
+            with self.assertRaises(CertificateGenerationError) as context:
+                order.get_or_generate_certificate()
 
-        self.assertFalse(created)
+        self.assertEqual(
+            str(context.exception),
+            "Course run "
+            f"{enrollment.course_run.course.title}-{enrollment.course_run.title} "
+            "has not been passed.",
+        )
         self.assertFalse(Certificate.objects.exists())
-        self.assertIsNone(new_certificate)

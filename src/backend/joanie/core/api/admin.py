@@ -22,6 +22,7 @@ from rest_framework.response import Response
 from joanie.core import filters, models, serializers
 from joanie.core.api.base import NestedGenericViewSet, SerializerPerActionMixin
 from joanie.core.authentication import SessionAuthenticationWithAuthenticateHeader
+from joanie.core.exceptions import CertificateGenerationError
 
 
 # pylint: disable=too-many-ancestors
@@ -492,12 +493,11 @@ class OrderViewSet(
         Generate the certificate for an order when it is eligible.
         """
         order = self.get_object()
-
-        certificate, created = order.get_or_generate_certificate()
-
-        if not certificate:
+        try:
+            certificate, created = order.get_or_generate_certificate()
+        except CertificateGenerationError as error:
             return JsonResponse(
-                {"details": f"Cannot issue certificate for order {order.id}"},
+                {"details": str(error)},
                 status=HTTPStatus.UNPROCESSABLE_ENTITY,
             )
 
