@@ -12,6 +12,7 @@ from joanie.edx_imports import edx_factories
 from joanie.edx_imports.tasks.enrollments import import_enrollments
 from joanie.edx_imports.utils import extract_course_number, make_date_aware
 from joanie.lms_handler.api import detect_lms_from_resource_link
+from joanie.tests.base import BaseLogMixinTestCase
 
 LOGO_NAME = "creative_common.jpeg"
 with open(join(dirname(realpath(__file__)), f"images/{LOGO_NAME}"), "rb") as logo:
@@ -39,7 +40,7 @@ with open(join(dirname(realpath(__file__)), f"images/{LOGO_NAME}"), "rb") as log
     EDX_TIME_ZONE="UTC",
     TIME_ZONE="UTC",
 )
-class EdxImportEnrollmentsTestCase(TestCase):
+class EdxImportEnrollmentsTestCase(TestCase, BaseLogMixinTestCase):
     """Tests for the import_enrollments task."""
 
     maxDiff = None
@@ -277,3 +278,54 @@ class EdxImportEnrollmentsTestCase(TestCase):
                 extract_course_number(edx_enrollment.course_id),
             )
             self.assertEqual(enrollment.state, ENROLLMENT_STATE_SET)
+
+    @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_enrollments_count")
+    @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_enrollments")
+    def test_import_enrollments_create_multiple_resource_links(
+        self, mock_get_enrollments, mock_get_enrollments_count
+    ):
+        """
+        Test that exception is catch with context.
+        """
+        edx_enrollments = edx_factories.EdxEnrollmentFactory.create_batch(10)
+        for edx_enrollment in edx_enrollments:
+            factories.CourseRunFactory.create(
+                course__code=extract_course_number(edx_enrollment.course_id),
+                resource_link=f"http://openedx.test/courses/{edx_enrollment.course_id}/infos/",
+            )
+            factories.CourseRunFactory.create(
+                course__code=extract_course_number(edx_enrollment.course_id),
+                resource_link=(
+                    f"http://openedx.test/courses/{edx_enrollment.course_id.upper()}/infos/"
+                ),
+            )
+            factories.UserFactory.create(username=edx_enrollment.user.username)
+        mock_get_enrollments.return_value = edx_enrollments
+        mock_get_enrollments_count.return_value = len(edx_enrollments)
+
+        with self.assertLogs("joanie") as logger:
+            import_enrollments()
+
+        self.assertEqual(models.Enrollment.objects.count(), 0)
+
+        expected_logs = [
+            ("INFO", "10 enrollments to import by batch of 1000"),
+        ]
+
+        expected_logs += [
+            (
+                "ERROR",
+                "Error creating Enrollment: "
+                "get() returned more than one CourseRun -- it returned 2!",
+                {
+                    "exception": models.courses.CourseRun.MultipleObjectsReturned,
+                    "edx_enrollment": dict,
+                },
+            ),
+        ] * len(edx_enrollments)
+
+        expected_logs += [
+            ("INFO", "100% 10/10 : 0 enrollments created, 0 skipped, 10 errors"),
+            ("INFO", "1 import enrollments tasks launched"),
+        ]
+        self.assertLogsEquals(logger.records, expected_logs)

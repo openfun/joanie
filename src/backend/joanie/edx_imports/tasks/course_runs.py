@@ -1,5 +1,6 @@
 """Celery tasks for importing data from the Open edX database to the Joanie database."""
-# pylint: disable=too-many-locals
+# pylint: disable=too-many-locals,too-many-branches,broad-exception-caught
+# ruff: noqa: SLF001,PLR0912,BLE001
 
 from logging import getLogger
 
@@ -77,76 +78,90 @@ def import_course_runs_batch(batch_offset, batch_size, total, dry_run=False):
     }
     edx_course_overviews = db.get_course_overviews(batch_offset, batch_size)
     for edx_course_overview in edx_course_overviews:
-        # Select LMS from resource link
-        resource_link = (
-            f"https://{settings.EDX_DOMAIN}/courses/{edx_course_overview.id}/info"
-        )
-
         try:
-            target_course_run = models.CourseRun.objects.only("pk").get(
-                resource_link=resource_link
+            # Select LMS from resource link
+            resource_link = (
+                f"https://{settings.EDX_DOMAIN}/courses/{edx_course_overview.id}/info"
             )
-        except models.CourseRun.DoesNotExist:
-            target_course_run = None
 
-        language_code = check_language_code(edx_course_overview.course.language)
-
-        edx_course_run_dict = {
-            "resource_link": resource_link,
-            "start": format_date(edx_course_overview.start),
-            "end": format_date(edx_course_overview.end),
-            "enrollment_start": format_date(edx_course_overview.enrollment_start),
-            "enrollment_end": format_date(edx_course_overview.enrollment_end),
-            "languages": [language_code],
-            "is_listed": True,
-        }
-
-        if target_course_run:
-            course_run = models.CourseRun.objects.get(pk=target_course_run.pk)
-        else:
-            course_number = extract_course_number(edx_course_overview.id)
             try:
-                course = models.Course.objects.get(code=course_number)
-            except models.Course.DoesNotExist:
-                if not dry_run:
-                    course = models.Course.objects.create(
-                        created_on=format_date(edx_course_overview.created),
-                        code=course_number,
-                        title=edx_course_overview.display_name or course_number,
-                    )
-                    relations = (
-                        edx_course_overview.course.courses_courseuniversityrelation
-                    )
-                    course.organizations.set(
-                        models.Organization.objects.filter(
-                            code__in=[
-                                normalize_code(relation.university.code)
-                                for relation in relations
-                            ]
+                target_course_run = models.CourseRun.objects.only("pk").get(
+                    resource_link=resource_link
+                )
+            except models.CourseRun.DoesNotExist:
+                target_course_run = None
+
+            language_code = check_language_code(edx_course_overview.course.language)
+
+            edx_course_run_dict = {
+                "resource_link": resource_link,
+                "start": format_date(edx_course_overview.start),
+                "end": format_date(edx_course_overview.end),
+                "enrollment_start": format_date(edx_course_overview.enrollment_start),
+                "enrollment_end": format_date(edx_course_overview.enrollment_end),
+                "languages": [language_code],
+                "is_listed": True,
+            }
+
+            if target_course_run:
+                course_run = models.CourseRun.objects.get(pk=target_course_run.pk)
+            else:
+                course_number = extract_course_number(edx_course_overview.id)
+                try:
+                    course = models.Course.objects.get(code=course_number)
+                except models.Course.DoesNotExist:
+                    if not dry_run:
+                        course = models.Course.objects.create(
+                            created_on=format_date(edx_course_overview.created),
+                            code=course_number,
+                            title=edx_course_overview.display_name or course_number,
                         )
+                        relations = (
+                            edx_course_overview.course.courses_courseuniversityrelation
+                        )
+                        course.organizations.set(
+                            models.Organization.objects.filter(
+                                code__in=[
+                                    normalize_code(relation.university.code)
+                                    for relation in relations
+                                ]
+                            )
+                        )
+                        course.created_on = make_date_aware(edx_course_overview.created)
+                        course.save()
+                    report["courses"]["created"] += 1
+
+                if not dry_run:
+                    # Instantiate a new course run
+                    course_run = models.CourseRun.objects.create(
+                        **edx_course_run_dict,
+                        course=course,
                     )
-                    course.created_on = make_date_aware(edx_course_overview.created)
-                    course.save()
-                report["courses"]["created"] += 1
+                    course_run.created_on = make_date_aware(edx_course_overview.created)
+                    course_run.save()
+                report["course_runs"]["created"] += 1
 
             if not dry_run:
-                # Instantiate a new course run
-                course_run = models.CourseRun.objects.create(
-                    **edx_course_run_dict,
-                    course=course,
-                )
+                if title := edx_course_overview.display_name:
+                    course_run.set_current_language(
+                        get_language_settings(language_code).get("code")
+                    )
+                    course_run.title = title
                 course_run.created_on = make_date_aware(edx_course_overview.created)
                 course_run.save()
-            report["course_runs"]["created"] += 1
-
-        if not dry_run:
-            if title := edx_course_overview.display_name:
-                course_run.set_current_language(
-                    get_language_settings(language_code).get("code")
-                )
-                course_run.title = title
-            course_run.created_on = make_date_aware(edx_course_overview.created)
-            course_run.save()
+        except Exception as e:
+            report["course_runs"]["errors"] += 1
+            logger.error(
+                "Error creating Course run: %s",
+                e,
+                extra={
+                    "context": {
+                        "exception": e,
+                        "edx_course_overview": vars(edx_course_overview),
+                    }
+                },
+            )
+            continue
 
     courses_import_string = "%s courses created, %s skipped, %s errors"
     course_runs_import_string = (
