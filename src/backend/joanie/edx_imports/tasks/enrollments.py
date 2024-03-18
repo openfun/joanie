@@ -73,7 +73,7 @@ def import_enrollments_batch(batch_offset, batch_size, total, course_id, dry_run
                 logger.error(
                     "No CourseRun found for %s",
                     edx_enrollment.course_id,
-                    extra={"context": {"edx_enrollment": vars(edx_enrollment)}},
+                    extra={"context": {"edx_enrollment": edx_enrollment.safe_dict()}},
                 )
                 continue
             except models.CourseRun.MultipleObjectsReturned:
@@ -86,7 +86,9 @@ def import_enrollments_batch(batch_offset, batch_size, total, course_id, dry_run
                     logger.error(
                         "No CourseRun found for %s",
                         edx_enrollment.course_id,
-                        extra={"context": {"edx_enrollment": vars(edx_enrollment)}},
+                        extra={
+                            "context": {"edx_enrollment": edx_enrollment.safe_dict()}
+                        },
                     )
                     continue
 
@@ -100,8 +102,8 @@ def import_enrollments_batch(batch_offset, batch_size, total, course_id, dry_run
                     user_name,
                     extra={
                         "context": {
-                            "edx_enrollment": vars(edx_enrollment),
-                            "edx_user": vars(edx_enrollment.user),
+                            "edx_enrollment": edx_enrollment.safe_dict(),
+                            "edx_user": edx_enrollment.user.safe_dict(),
                         }
                     },
                 )
@@ -128,7 +130,10 @@ def import_enrollments_batch(batch_offset, batch_size, total, course_id, dry_run
                 "Error creating Enrollment: %s",
                 e,
                 extra={
-                    "context": {"exception": e, "edx_enrollment": vars(edx_enrollment)}
+                    "context": {
+                        "exception": e,
+                        "edx_enrollment": edx_enrollment.safe_dict(),
+                    }
                 },
             )
             continue

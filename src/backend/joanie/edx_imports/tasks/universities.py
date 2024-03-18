@@ -76,7 +76,7 @@ def import_universities_batch(batch_offset, batch_size, total, dry_run=False):
             logger.error(
                 "Unable to import university %s",
                 university.code,
-                extra={"context": {"university": vars(university)}},
+                extra={"context": {"university": university.safe_dict()}},
             )
             logger.exception(exc)
             report["universities"]["errors"] += 1

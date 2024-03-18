@@ -12,6 +12,16 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 class Base(DeclarativeBase):
     """Base class for all models in the database."""
 
+    filtered_attrs = []
+
+    def safe_dict(self):
+        """Return a dictionary representation of the model."""
+        return {
+            c.name: getattr(self, c.name)
+            for c in self.__table__.columns
+            if c.name not in self.filtered_attrs
+        }
+
 
 class User(Base):
     """Model for the `auth_user` table."""
@@ -21,6 +31,8 @@ class User(Base):
         Index("email", "email", unique=True),
         Index("username", "username", unique=True),
     )
+
+    filtered_attrs = ["password", "username", "email"]
 
     id: Mapped[int] = mapped_column(INTEGER(11), primary_key=True)
     username: Mapped[str] = mapped_column(String(30))
@@ -64,6 +76,20 @@ class UserProfile(Base):
         Index("auth_userprofile_fca3d292", "gender"),
         Index("user_id", "user_id", unique=True),
     )
+
+    filtered_attrs = [
+        "mailing_address",
+        "name",
+        "gender",
+        "year_of_birth",
+        "bio",
+        "country",
+        "goals",
+        "city",
+        "level_of_education",
+        "location",
+        "language",
+    ]
 
     id: Mapped[int] = mapped_column(INTEGER(11), primary_key=True)
     user_id: Mapped[int] = mapped_column(INTEGER(11))

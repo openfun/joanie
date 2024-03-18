@@ -68,7 +68,7 @@ def import_users_batch(batch_offset, batch_size, total, dry_run=False):
                 logger.error(
                     "Username too long: %s",
                     username,
-                    extra={"context": {"edx_user": vars(edx_user)}},
+                    extra={"context": {"edx_user": edx_user.safe_dict()}},
                 )
                 continue
 
@@ -77,7 +77,7 @@ def import_users_batch(batch_offset, batch_size, total, dry_run=False):
                 logger.error(
                     "Email too long: %s",
                     email,
-                    extra={"context": {"edx_user": vars(edx_user)}},
+                    extra={"context": {"edx_user": edx_user.safe_dict()}},
                 )
                 continue
 
@@ -86,7 +86,7 @@ def import_users_batch(batch_offset, batch_size, total, dry_run=False):
                 logger.error(
                     "First name too long: %s",
                     first_name,
-                    extra={"context": {"edx_user": vars(edx_user)}},
+                    extra={"context": {"edx_user": edx_user.safe_dict()}},
                 )
                 continue
 
@@ -112,7 +112,7 @@ def import_users_batch(batch_offset, batch_size, total, dry_run=False):
                 extra={
                     "context": {
                         "exception": e,
-                        "edx_user": vars(edx_user),
+                        "edx_user": edx_user.safe_dict(),
                     }
                 },
             )

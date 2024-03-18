@@ -157,7 +157,7 @@ def import_course_runs_batch(batch_offset, batch_size, total, dry_run=False):
                 extra={
                     "context": {
                         "exception": e,
-                        "edx_course_overview": vars(edx_course_overview),
+                        "edx_course_overview": edx_course_overview.safe_dict(),
                     }
                 },
             )
