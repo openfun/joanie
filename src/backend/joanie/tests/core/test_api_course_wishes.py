@@ -85,7 +85,7 @@ class CourseWishAPITestCase(BaseAPITestCase):
 
         self.assertContains(
             response,
-            "Not found.",
+            "No Course matches the given query.",
             status_code=HTTPStatus.NOT_FOUND,
         )
 

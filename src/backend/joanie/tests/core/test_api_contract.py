@@ -815,7 +815,11 @@ class ContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertContains(response, "Not found.", status_code=HTTPStatus.NOT_FOUND)
+        self.assertContains(
+            response,
+            "No Contract matches the given query.",
+            status_code=HTTPStatus.NOT_FOUND,
+        )
 
     def test_api_contracts_create_anonymous(self):
         """Anonymous user cannot create a contract."""
@@ -1015,7 +1019,11 @@ class ContractApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertContains(response, "Not found.", status_code=HTTPStatus.NOT_FOUND)
+        self.assertContains(
+            response,
+            "No Contract matches the given query.",
+            status_code=HTTPStatus.NOT_FOUND,
+        )
 
     def test_api_contract_download_authenticated_cannot_create(self):
         """
@@ -1128,7 +1136,11 @@ class ContractApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertContains(response, "Not found.", status_code=HTTPStatus.NOT_FOUND)
+        self.assertContains(
+            response,
+            "No Contract matches the given query.",
+            status_code=HTTPStatus.NOT_FOUND,
+        )
 
     def test_api_contract_download_authenticated_should_fail_if_contract_is_not_signed(
         self,

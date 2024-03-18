@@ -542,10 +542,9 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         response = self.client.get(
             f"/api/v1.0/courses/{relation.course.id}/products/{relation.product.id}/",
         )
-
         self.assertContains(
             response,
-            "Not found.",
+            "No CourseProductRelation matches the given query.",
             status_code=HTTPStatus.NOT_FOUND,
         )
 
@@ -565,7 +564,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
 
         self.assertContains(
             response,
-            "Not found.",
+            "No CourseProductRelation matches the given query.",
             status_code=HTTPStatus.NOT_FOUND,
         )
 
@@ -576,7 +575,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
 
         self.assertContains(
             response,
-            "Not found.",
+            "No CourseProductRelation matches the given query.",
             status_code=HTTPStatus.NOT_FOUND,
         )
 
