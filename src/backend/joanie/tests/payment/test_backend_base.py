@@ -13,7 +13,7 @@ from joanie.core.factories import OrderFactory, UserAddressFactory, UserFactory
 from joanie.core.models import Address
 from joanie.payment.backends.base import BasePaymentBackend
 from joanie.payment.factories import BillingAddressDictFactory
-from joanie.payment.models import Invoice, Transaction
+from joanie.payment.models import CreditCard, Invoice, Transaction
 from joanie.tests.payment.base_payment import BasePaymentTestCase
 
 
@@ -49,6 +49,9 @@ class TestBasePaymentBackend(BasePaymentBackend):
         pass
 
     def handle_notification(self, request):
+        pass
+
+    def save_credit_card(self, request, order, billing_address):
         pass
 
 
@@ -425,3 +428,48 @@ class BasePaymentBackendTestCase(BasePaymentTestCase):
 
         # - Check it's the right object
         self.assertEqual(mail.outbox[0].subject, "Commande confirmée !")
+
+    def test_payment_backend_base_save_credit_card_not_implemented(self):
+        """Save credit card method should raise a Not ImplementedError"""
+        backend = BasePaymentBackend()
+
+        with self.assertRaises(NotImplementedError) as context:
+            backend.save_credit_card(request=None, order=None, billing_address=None)
+
+        self.assertEqual(
+            str(context.exception),
+            "subclasses of BasePaymentBackend must provide a save_credit_card() method.",
+        )
+
+    def test_payment_backend_base_save_card_for_user(self):
+        """
+        Check that the credit card is being created if the order's owner does not have one
+        yet registered.
+        """
+        backend = TestBasePaymentBackend()
+        owner = UserFactory(
+            email="johndoe@fun-test.fr",
+            username="johndoe",
+            first_name="John",
+            last_name="Doe",
+            language="en-us",
+        )
+        order = OrderFactory(owner=owner, state=enums.ORDER_STATE_SUBMITTED)
+        # Mocking a response from a payment backend on the card section
+        mocked_payment_response = {
+            "card": {
+                "id": f"card_{order.id}",
+                "brand": "JOANIE",
+                "exp_year": 2025,
+                "exp_month": 12,
+                "last4": "0000",
+            },
+        }
+        self.assertFalse(CreditCard.objects.exists())
+        # pylint: disable=protected-access
+        credit_card = backend._save_card_for_user(order, mocked_payment_response)
+
+        self.assertTrue(CreditCard.objects.exists())
+        self.assertEqual(credit_card.brand, "JOANIE")
+        self.assertEqual(credit_card.last_numbers, "0000")
+        self.assertEqual(credit_card.token, f"card_{order.id}")

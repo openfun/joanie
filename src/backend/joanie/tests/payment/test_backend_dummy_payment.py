@@ -7,6 +7,7 @@ from unittest import mock
 
 from django.core.cache import cache
 from django.urls import reverse
+from django.utils import timezone
 
 from rest_framework.test import APIRequestFactory
 
@@ -26,6 +27,8 @@ from joanie.tests.payment.base_payment import BasePaymentTestCase
 
 class DummyPaymentBackendTestCase(BasePaymentTestCase):
     """Test case for the Dummy Payment Backend"""
+
+    maxDiff = None
 
     def setUp(self):
         """Clears the cache before each test"""
@@ -495,3 +498,53 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
         # Abort payment
         backend.abort_payment(payment_id)
         self.assertIsNone(cache.get(payment_id))
+
+    def test_payment_backend_dummy_save_credit_card(self):
+        """
+        Save the credit card of the order's owner without a real payment
+        """
+        backend = DummyPaymentBackend()
+        user = UserFactory(
+            email="johndoe@fun-test.fr",
+            username="johndoe",
+            first_name="John",
+            last_name="Doe",
+            language="en-us",
+        )
+        order = OrderFactory(owner=user)
+        request = APIRequestFactory().post(path="/")
+        billing_address = BillingAddressDictFactory()
+
+        payment_data = backend.save_credit_card(request, order, billing_address)
+
+        self.assertEqual(
+            payment_data,
+            {
+                "payment_id": f"pay_{order.id}",
+                "provider_name": backend.name,
+                "url": "http://testserver/api/v1.0/payments/notifications",
+                "card": {
+                    "id": f"card_{order.id}",
+                    "brand": "JOANIE",
+                    "exp_year": int(timezone.now().year + 1),
+                    "exp_month": 12,
+                    "last4": "0000",
+                },
+            },
+        )
+
+        dummy_payment_ressource = cache.get(payment_data["payment_id"])
+
+        self.assertEqual(
+            dummy_payment_ressource,
+            {
+                "id": payment_data["payment_id"],
+                "authorized_amount": 100,
+                "billing_address": billing_address,
+                "notification_url": "http://testserver/api/v1.0/payments/notifications",
+                "metadata": {"order_id": str(order.id)},
+                "save_card": True,
+                "force_3ds": True,
+                "auto_capture": False,
+            },
+        )

@@ -220,3 +220,51 @@ class DummyPaymentBackend(BasePaymentBackend):
             )
 
         cache.delete(payment_id)
+
+    def save_credit_card(self, request, order, billing_address):
+        """
+        Save a credit card without doing a real payment.
+        We create or update the credit card if it's the order's owner first time.
+        """
+        dummy_payment_data = self.create_payment(request, order, billing_address)
+        # Update the cache for a context of an imprint for a credit card
+        dummy_payment_id = self.get_payment_id(str(order.id))
+        dummy_payment_info = cache.get(dummy_payment_id)
+        del dummy_payment_info["amount"]
+        dummy_payment_info["authorized_amount"] = 100
+        dummy_payment_info["auto_capture"] = False
+        dummy_payment_info["force_3ds"] = True
+        dummy_payment_info["save_card"] = True
+        cache.set(dummy_payment_id, dummy_payment_info)
+
+        dummy_payment_data.update(
+            {
+                "card": {
+                    "id": f"card_{order.id}",
+                    "brand": "JOANIE",
+                    "exp_year": int(timezone.now().year + 1),
+                    "exp_month": 12,
+                    "last4": "0000",
+                },
+            }
+        )
+
+        self._save_card_for_user(order, dummy_payment_data)
+
+        return dummy_payment_data
+
+        # notification_url = self.get_notification_url(request)
+        # payment_info = {
+        #     "id": payment_id,
+        #     "amount": int(order.total * 100),
+        #     "billing_address": billing_address,
+        #     "notification_url": notification_url,
+        #     "metadata": {"order_id": order_id},
+        # }
+        # cache.set(payment_id, payment_info)
+
+        # return {
+        #     "payment_id": payment_id,
+        #     "provider_name": self.name,
+        #     "url": notification_url,
+        # }
