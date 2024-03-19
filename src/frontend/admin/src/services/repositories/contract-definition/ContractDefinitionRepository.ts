@@ -1,6 +1,9 @@
 import queryString from "query-string";
 import { BaseEntityRoutesPaths } from "@/types/routes";
-import { AbstractRepository } from "@/services/repositories/AbstractRepository";
+import {
+  AbstractRepository,
+  PaginatedResponse,
+} from "@/services/repositories/AbstractRepository";
 
 import { Maybe } from "@/types/utils";
 import { checkStatus, fetchApi } from "@/services/http/HttpService";
@@ -42,7 +45,9 @@ export const ContractDefinitionRepository: Repository = class ContractDefinition
     return fetchApi(url, { method: "GET" }).then(checkStatus);
   }
 
-  static getAll(filters: Maybe<ResourcesQuery>): Promise<ContractDefinition[]> {
+  static getAll(
+    filters: Maybe<ResourcesQuery>,
+  ): Promise<PaginatedResponse<ContractDefinition>> {
     const url = contractDefinitionRoutes.getAll(
       filters ? `?${queryString.stringify(filters)}` : "",
     );

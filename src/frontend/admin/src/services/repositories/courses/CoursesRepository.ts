@@ -1,6 +1,9 @@
 import queryString from "query-string";
 import { BaseEntityRoutesPaths } from "@/types/routes";
-import { AbstractRepository } from "@/services/repositories/AbstractRepository";
+import {
+  AbstractRepository,
+  PaginatedResponse,
+} from "@/services/repositories/AbstractRepository";
 import { Maybe } from "@/types/utils";
 import { checkStatus, fetchApi } from "@/services/http/HttpService";
 import { Course, DTOCourse } from "@/services/api/models/Course";
@@ -69,7 +72,9 @@ export const CourseRepository: Repository = class CourseRepository {
     return fetchApi(url, { method: "GET" }).then(checkStatus);
   }
 
-  static getAll(filters: Maybe<CourseResourceQuery>): Promise<Course[]> {
+  static getAll(
+    filters: Maybe<CourseResourceQuery>,
+  ): Promise<PaginatedResponse<Course>> {
     const url = coursesRoute.getAll(
       filters ? `?${queryString.stringify(filters)}` : "",
     );

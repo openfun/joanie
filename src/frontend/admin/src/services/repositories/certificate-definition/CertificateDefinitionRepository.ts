@@ -1,6 +1,9 @@
 import queryString from "query-string";
 import { BaseEntityRoutesPaths } from "@/types/routes";
-import { AbstractRepository } from "@/services/repositories/AbstractRepository";
+import {
+  AbstractRepository,
+  PaginatedResponse,
+} from "@/services/repositories/AbstractRepository";
 
 import { Maybe } from "@/types/utils";
 import { checkStatus, fetchApi } from "@/services/http/HttpService";
@@ -44,7 +47,7 @@ export const CertificateDefinitionRepository: Repository = class CertificateDefi
 
   static getAll(
     filters: Maybe<ResourcesQuery>,
-  ): Promise<CertificateDefinition[]> {
+  ): Promise<PaginatedResponse<CertificateDefinition>> {
     const url = certificateDefinitionRoutes.getAll(
       filters ? `?${queryString.stringify(filters)}` : "",
     );
