@@ -583,7 +583,11 @@ class CourseContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertContains(response, "Not found.", status_code=HTTPStatus.NOT_FOUND)
+        self.assertContains(
+            response,
+            "No Contract matches the given query.",
+            status_code=HTTPStatus.NOT_FOUND,
+        )
 
     def test_api_courses_contracts_retrieve_with_accesses_and_course_code(self):
         """

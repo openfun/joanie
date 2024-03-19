@@ -439,6 +439,7 @@ class AddressAPITestCase(BaseAPITestCase):
         address = models.Address.objects.get()
         self.assertEqual(address.owner, owner)
         self.assertEqual(address.city, payload["city"])
+        self.assertTrue(address.is_main)
 
         # finally update address
         payload["title"] = "Office"
@@ -454,6 +455,7 @@ class AddressAPITestCase(BaseAPITestCase):
         self.assertEqual(address.title, payload["title"])
         self.assertEqual(address.owner, owner)
         self.assertEqual(address.city, payload["city"])
+        self.assertTrue(address.is_main)
 
     def test_api_address_create_update_read_only_fields(self):
         """

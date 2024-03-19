@@ -137,6 +137,79 @@ class UserAdminApiTest(TestCase):
             [character.get_full_name() for character in [joanie, richie]],
         )
 
+    def test_admin_api_user_list_filter_by_id(self):
+        """
+        Staff user should be able to list users filtering through their id
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        fonzie = factories.UserFactory(
+            username="fnz",
+            first_name="Fonzie",
+            last_name="Fonzarelli",
+            email="fonz@example.fr",
+        )
+        joanie = factories.UserFactory(
+            username="jn",
+            first_name="Joanie",
+            last_name="Cunningham",
+            email="joan@example.fr",
+        )
+        factories.UserFactory(
+            username="rch",
+            first_name="Richie",
+            last_name="Cunningham",
+            email="rich@example.fr",
+        )
+
+        # An empty search should return no results
+        response = self.client.get("/api/v1.0/admin/users/")
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+
+        self.assertEqual(content["count"], 0)
+
+        response = self.client.get(f"/api/v1.0/admin/users/?ids={fonzie.id}")
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+        self.assertEqual(
+            content["results"][0],
+            {
+                "id": str(fonzie.id),
+                "username": fonzie.username,
+                "full_name": fonzie.get_full_name(),
+                "email": fonzie.email,
+            },
+        )
+
+        response = self.client.get(
+            f"/api/v1.0/admin/users/?ids={fonzie.id}&ids={joanie.id}"
+        )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 2)
+        self.assertEqual(
+            content["results"][0],
+            {
+                "id": str(fonzie.id),
+                "username": fonzie.username,
+                "full_name": fonzie.get_full_name(),
+                "email": fonzie.email,
+            },
+        )
+
+        self.assertEqual(
+            content["results"][1],
+            {
+                "id": str(joanie.id),
+                "username": joanie.username,
+                "full_name": joanie.get_full_name(),
+                "email": joanie.email,
+            },
+        )
+
     def test_admin_api_user_get(self):
         """
         Staff user should not be able to retrieve a user through its id.

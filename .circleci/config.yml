@@ -355,8 +355,8 @@ jobs:
           at: ~/joanie
       - restore_cache:
           keys:
-            - v4-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
-            - v4-frontend-admin-dependencies-
+            - v6-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
+            - v6-frontend-admin-dependencies-
       - run:
           name: Install Playwright dependencies (platform deps + browser)
           command: yarn playwright install --with-deps chromium

@@ -6,11 +6,13 @@ from typing import List
 
 from django.conf import settings
 from django.db.models import Q
+from django.forms import fields
 from django.utils import timezone as django_timezone
 
 from django_filters import rest_framework as filters
 
 from joanie.core import enums, models
+from joanie.core.filters.base import MultipleValueFilter
 
 
 class OrganizationAdminFilterSet(filters.FilterSet):
@@ -23,6 +25,7 @@ class OrganizationAdminFilterSet(filters.FilterSet):
         fields: List[str] = ["query"]
 
     query = filters.CharFilter(method="filter_by_query")
+    ids = MultipleValueFilter(field_class=fields.UUIDField, field_name="id")
 
     def filter_by_query(self, queryset, _name, value):
         """
@@ -44,6 +47,7 @@ class ProductAdminFilterSet(filters.FilterSet):
 
     query = filters.CharFilter(method="filter_by_query")
     type = filters.ChoiceFilter(choices=enums.PRODUCT_TYPE_CHOICES)
+    ids = MultipleValueFilter(field_class=fields.UUIDField, field_name="id")
 
     def filter_by_query(self, queryset, _name, value):
         """
@@ -77,6 +81,7 @@ class CourseRunAdminFilterSet(filters.FilterSet):
     )
     is_gradable = filters.BooleanFilter()
     is_listed = filters.BooleanFilter()
+    ids = MultipleValueFilter(field_class=fields.UUIDField, field_name="id")
 
     def filter_by_query(self, queryset, _name, value):
         """
@@ -152,6 +157,7 @@ class CourseAdminFilterSet(filters.FilterSet):
         field_name="organizations",
         distinct=True,
     )
+    ids = MultipleValueFilter(field_class=fields.UUIDField, field_name="id")
 
     def filter_by_query(self, queryset, _name, value):
         """
@@ -175,6 +181,7 @@ class CertificateDefinitionAdminFilterSet(filters.FilterSet):
 
     query = filters.CharFilter(method="filter_by_query")
     template = filters.ChoiceFilter(choices=enums.CERTIFICATE_NAME_CHOICES)
+    ids = MultipleValueFilter(field_class=fields.UUIDField, field_name="id")
 
     def filter_by_query(self, queryset, _name, value):
         """
@@ -199,6 +206,7 @@ class ContractDefinitionAdminFilterSet(filters.FilterSet):
 
     query = filters.CharFilter(method="filter_by_query")
     language = filters.ChoiceFilter(choices=settings.LANGUAGES)
+    ids = MultipleValueFilter(field_class=fields.UUIDField, field_name="id")
 
     def filter_by_query(self, queryset, _name, value):
         """
@@ -216,6 +224,7 @@ class UserAdminFilterSet(filters.FilterSet):
     """
 
     query = filters.CharFilter(method="filter_by_query")
+    ids = MultipleValueFilter(field_class=fields.UUIDField, field_name="id")
 
     def filter_by_query(self, queryset, _name, value):
         """
@@ -262,6 +271,7 @@ class OrderAdminFilterSet(filters.FilterSet):
         distinct=True,
     )
     state = filters.ChoiceFilter(choices=enums.ORDER_STATE_CHOICES)
+    ids = MultipleValueFilter(field_class=fields.UUIDField, field_name="id")
 
     def filter_by_query(self, queryset, _name, value):
         """

@@ -31,7 +31,7 @@ admin_router.register(
 admin_router.register(
     "course-product-relations",
     api_admin.CourseProductRelationViewSet,
-    basename="admin_products",
+    basename="admin_course_product_relations",
 )
 admin_router.register("products", api_admin.ProductViewSet, basename="admin_products")
 admin_router.register("courses", api_admin.CourseViewSet, basename="admin_courses")

@@ -44,7 +44,9 @@ class OrganizationApiRetrieveTest(BaseAPITestCase):
         )
 
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
-        self.assertEqual(response.json(), {"detail": "Not found."})
+        self.assertEqual(
+            response.json(), {"detail": "No Organization matches the given query."}
+        )
 
     @mock.patch.object(
         fields.ThumbnailDetailField,

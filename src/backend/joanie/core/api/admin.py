@@ -7,10 +7,16 @@ from http import HTTPStatus
 from django.core.exceptions import ValidationError
 from django.http import JsonResponse
 
+from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
-from rest_framework import mixins, permissions, viewsets
+from rest_framework import (
+    mixins,
+    permissions,
+    viewsets,
+)
 from rest_framework.decorators import action
+from rest_framework.filters import OrderingFilter
 from rest_framework.response import Response
 
 from joanie.core import filters, models, serializers
@@ -28,7 +34,17 @@ class OrganizationViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_class = serializers.AdminOrganizationSerializer
     queryset = models.Organization.objects.all()
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_class = filters.OrganizationAdminFilterSet
+    ordering_fields = ["created_on"]
+
+    def get_permissions(self):
+        """
+        Instantiates and returns the list of permissions that this view requires.
+        """
+        if self.action in ["list", "retrieve"]:
+            return [permissions.IsAdminUser()]
+        return super().get_permissions()
 
     def get_serializer_class(self):
         """
@@ -50,6 +66,8 @@ class ProductViewSet(viewsets.ModelViewSet):
     serializer_action_classes = {"list": serializers.AdminProductLightSerializer}
     queryset = models.Product.objects.all()
     filterset_class = filters.ProductAdminFilterSet
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    ordering_fields = ["created_on"]
 
     def get_serializer_class(self):
         if self.action in self.serializer_action_classes:
@@ -87,6 +105,8 @@ class CourseRunViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.AdminCourseRunSerializer
     queryset = models.CourseRun.objects.all().select_related("course")
     filterset_class = filters.CourseRunAdminFilterSet
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    ordering_fields = ["created_on"]
 
     def get_queryset(self):
         """
@@ -112,6 +132,8 @@ class CertificateDefinitionViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.AdminCertificateDefinitionSerializer
     queryset = models.CertificateDefinition.objects.all()
     filterset_class = filters.CertificateDefinitionAdminFilterSet
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    ordering_fields = ["created_on"]
 
 
 class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -123,16 +145,18 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_class = serializers.AdminUserSerializer
     me_serializer_class = serializers.AdminUserCompleteSerializer
-    queryset = models.User.objects.all().order_by("username")
+    queryset = models.User.objects.all()
     filterset_class = filters.UserAdminFilterSet
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    ordering_fields = ["created_on"]
 
     def get_queryset(self):
         """
         Only return users if a query is provided to filter them.
         """
-        query = self.request.query_params.get("query", None)
-
-        if not query:
+        if not self.request.query_params.get(
+            "query", None
+        ) and not self.request.query_params.get("ids", None):
             return models.User.objects.none()
 
         return super().get_queryset()
@@ -168,6 +192,8 @@ class CourseAccessViewSet(
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_class = serializers.AdminCourseAccessSerializer
     queryset = models.CourseAccess.objects.all().select_related("user")
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    ordering_fields = ["created_on"]
 
     def get_serializer_context(self):
         """
@@ -192,6 +218,8 @@ class OrganizationAccessViewSet(
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_class = serializers.AdminOrganizationAccessSerializer
     queryset = models.OrganizationAccess.objects.all().select_related("user")
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    ordering_fields = ["created_on"]
 
     def get_serializer_context(self):
         """
@@ -310,6 +338,8 @@ class ContractDefinitionViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.AdminContractDefinitionSerializer
     queryset = models.ContractDefinition.objects.all()
     filterset_class = filters.ContractDefinitionAdminFilterSet
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    ordering_fields = ["created_on"]
 
 
 class CourseProductRelationViewSet(viewsets.ModelViewSet):
@@ -438,7 +468,8 @@ class OrderViewSet(
         "certificate__certificate_definition",
         "order_group",
     )
-    ordering = "created_on"
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    ordering_fields = ["created_on"]
 
     def destroy(self, request, *args, **kwargs):
         """Cancels an order."""
@@ -493,7 +524,8 @@ class OrganizationAddressViewSet(
     queryset = models.Address.objects.filter(owner__isnull=True).select_related(
         "organization"
     )
-    ordering = "created_on"
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    ordering_fields = ["created_on"]
 
     def get_serializer_context(self):
         """

@@ -220,7 +220,7 @@ class CourseRunApiTest(BaseAPITestCase):
 
         self.assertContains(
             response,
-            "Not found.",
+            "No CourseRun matches the given query.",
             status_code=HTTPStatus.NOT_FOUND,
         )
 
@@ -239,7 +239,7 @@ class CourseRunApiTest(BaseAPITestCase):
 
         self.assertContains(
             response,
-            "Not found.",
+            "No CourseRun matches the given query.",
             status_code=HTTPStatus.NOT_FOUND,
         )
 
