@@ -1,5 +1,8 @@
 import queryString from "query-string";
-import { AbstractRepository } from "@/services/repositories/AbstractRepository";
+import {
+  AbstractRepository,
+  PaginatedResponse,
+} from "@/services/repositories/AbstractRepository";
 import { ResourcesQuery } from "@/hooks/useResources";
 import { Maybe } from "@/types/utils";
 import {
@@ -33,7 +36,9 @@ export const CoursesRunsRepository: Repository = class CoursesRunsRepository {
     return fetchApi(url, { method: "GET" }).then(checkStatus);
   }
 
-  static getAll(filters: Maybe<ResourcesQuery>): Promise<CourseRun[]> {
+  static getAll(
+    filters: Maybe<ResourcesQuery>,
+  ): Promise<PaginatedResponse<CourseRun>> {
     const url = coursesRunsRoute.getAll(
       filters ? `?${queryString.stringify(filters)}` : "",
     );

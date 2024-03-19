@@ -3,6 +3,7 @@ import { Order, OrderQuery } from "@/services/api/models/Order";
 import { Maybe } from "@/types/utils";
 import { ResourcesQuery } from "@/hooks/useResources/types";
 import { checkStatus, fetchApi } from "@/services/http/HttpService";
+import { PaginatedResponse } from "@/services/repositories/AbstractRepository";
 
 export const orderRoutes = {
   get: (id: string, params: string = "") => `/orders/${id}/${params}`,
@@ -11,7 +12,9 @@ export const orderRoutes = {
 };
 
 export class OrderRepository {
-  static getAll(filters: Maybe<ResourcesQuery>): Promise<Order[]> {
+  static getAll(
+    filters: Maybe<ResourcesQuery>,
+  ): Promise<PaginatedResponse<Order>> {
     const url = orderRoutes.getAll(
       filters ? `?${queryString.stringify(filters)}` : "",
     );

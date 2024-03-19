@@ -12,6 +12,7 @@ import {
 } from "@/services/api/models/Relations";
 import { DTOOrderGroup, OrderGroup } from "@/services/api/models/OrderGroup";
 import { exportToFormData } from "@/utils/forms";
+import { PaginatedResponse } from "@/services/repositories/AbstractRepository";
 
 export const courseProductRelationsRoutes = {
   getAll: (params: string = "") => `/course-product-relations/${params}`,
@@ -42,7 +43,7 @@ export const CourseProductRelationRepository = class CourseProductRelationReposi
 
   static getAll(
     filters: Maybe<ResourcesQuery>,
-  ): Promise<CourseRelationToProduct[]> {
+  ): Promise<PaginatedResponse<CourseRelationToProduct>> {
     const url = courseProductRelationsRoutes.getAll(
       filters ? `?${queryString.stringify(filters)}` : "",
     );

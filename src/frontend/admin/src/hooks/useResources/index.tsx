@@ -7,6 +7,7 @@ import { ApiResourceInterface } from "@/hooks/useResources/types";
 import { HttpError } from "@/services/http/HttpError";
 
 export interface ResourcesQuery {
+  ids?: string[];
   id?: string;
   query?: string;
   page?: number;
