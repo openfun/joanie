@@ -43,9 +43,8 @@ class OrderReadApiTest(BaseAPITestCase):
         owner = factories.UserFactory()
         *target_courses, _other_course = factories.CourseFactory.create_batch(3)
         product = factories.ProductFactory(target_courses=target_courses)
-        order = factories.OrderFactory(
-            product=product, owner=owner, contract=factories.ContractFactory()
-        )
+        order = factories.OrderFactory(product=product, owner=owner)
+        order.contract = factories.ContractFactory()
         organization_address = order.organization.addresses.filter(is_main=True).first()
         token = self.generate_token_from_user(owner)
 
