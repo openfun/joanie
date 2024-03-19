@@ -274,7 +274,7 @@ class CourseAdmin(DjangoObjectActions, TranslatableAdmin):
     change_form_template = "joanie/admin/translatable_change_form_with_actions.html"
     list_display = ("code", "title", "state")
     readonly_fields = ("course_runs",)
-    filter_horizontal = ("products",)
+    # filter_horizontal = ("products",)
     inlines = (CourseCourseRunsInline, CourseProductRelationInline)
     fieldsets = (
         (

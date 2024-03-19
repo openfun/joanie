@@ -1,6 +1,7 @@
 """
 Declare and configure the models for the badges part
 """
+# pylint: disable=too-many-function-args
 
 from functools import lru_cache
 
