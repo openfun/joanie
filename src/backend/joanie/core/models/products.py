@@ -21,6 +21,7 @@ from parler import models as parler_models
 from urllib3.util import Retry
 
 from joanie.core import enums
+from joanie.core.fields.schedule import OrderPaymentScheduleEncoder
 from joanie.core.models.accounts import User
 from joanie.core.models.base import BaseModel
 from joanie.core.models.certifications import Certificate
@@ -35,6 +36,7 @@ from joanie.core.models.courses import (
 )
 from joanie.core.utils import contract_definition as contract_definition_utility
 from joanie.core.utils import issuers, webhooks
+from joanie.core.utils.payment_schedule import generate as generate_payment_schedule
 from joanie.payment import get_payment_backend
 from joanie.payment.models import CreditCard
 from joanie.signature.backends import get_signature_backend
@@ -364,11 +366,25 @@ class OrderGroup(BaseModel):
         return not self.orders.exists()
 
 
+class OrderManager(models.Manager):
+    """Custom manager for the Order model."""
+
+    def find_installments(self, due_date):
+        """Retrieve orders with a payment schedule containing a due date."""
+        return (
+            super()
+            .get_queryset()
+            .filter(payment_schedule__contains=[{"due_date": due_date.isoformat()}])
+        )
+
+
 class Order(BaseModel):
     """
     Order model represents and records details user's order (for free or not) to a course product
     All course runs to enroll selected are defined here.
     """
+
+    objects = OrderManager()
 
     organization = models.ForeignKey(
         to=Organization,
@@ -444,6 +460,14 @@ class Order(BaseModel):
         default=enums.ORDER_STATE_DRAFT,
         choices=enums.ORDER_STATE_CHOICES,
         db_index=True,
+    )
+    payment_schedule = models.JSONField(
+        _("payment schedule"),
+        help_text=_("Payment schedule for the order."),
+        editable=False,
+        blank=True,
+        null=True,
+        encoder=OrderPaymentScheduleEncoder,
     )
 
     class Meta:
@@ -1034,6 +1058,67 @@ class Order(BaseModel):
             key.split("__")[0]: value if value else None
             for key, value in aggregate.items()
         }
+
+    def _get_schedule_dates(self):
+        """
+        Return the schedule date for the order.
+        """
+        try:
+            start_date = self.contract.student_signed_on
+        except Order.contract.RelatedObjectDoesNotExist as e:
+            logger.error(
+                "Contract does not exist, cannot retrieve retraction date",
+                extra={"context": {"order": self.to_dict()}},
+            )
+            raise ObjectDoesNotExist("Order has no contract") from e
+        end_date = self.get_equivalent_course_run_dates()["end"]
+        if not end_date:
+            logger.error(
+                "Cannot retrieve end date for order",
+                extra={"context": {"order": self.to_dict()}},
+            )
+            raise ValidationError("Cannot retrieve end date for order")
+        return start_date, end_date
+
+    def generate_schedule(self):
+        """
+        Generate payment schedule for the order.
+        """
+        start_date, end_date = self._get_schedule_dates()
+        installments = generate_payment_schedule(self.total, start_date, end_date)
+
+        self.payment_schedule = installments
+        self.save()
+
+        return installments
+
+    def _set_installment_state(self, due_date, state):
+        """
+        Set the state of an installment in the payment schedule.
+        """
+        installment_found = False
+        for installment in self.payment_schedule:
+            if installment["due_date"] == due_date.isoformat():
+                installment_found = True
+                installment["state"] = state
+                break
+
+        if not installment_found:
+            raise ValueError(f"Installment with due date {due_date} not found")
+
+        self.save()
+
+    def set_installment_payed(self, due_date):
+        """
+        Set the state of an installment to payed in the payment schedule.
+        """
+        self._set_installment_state(due_date, enums.PAYMENT_STATE_PAYED)
+
+    def set_installment_refused(self, due_date):
+        """
+        Set the state of an installment to refused in the payment schedule.
+        """
+        self._set_installment_state(due_date, enums.PAYMENT_STATE_REFUSED)
 
 
 @receiver(post_transition, sender=Order)

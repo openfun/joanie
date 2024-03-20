@@ -3,10 +3,13 @@
 
 import random
 import uuid
+from datetime import datetime
 from http import HTTPStatus
 from unittest import mock
+from zoneinfo import ZoneInfo
 
 from django.conf import settings
+from django.test import override_settings
 
 from joanie.core import enums, factories, models
 from joanie.core.serializers import fields
@@ -15,6 +18,8 @@ from joanie.tests.base import BaseAPITestCase
 
 class CourseProductRelationApiTest(BaseAPITestCase):
     """Test the API of the CourseProductRelation resource."""
+
+    maxDiff = None
 
     def test_api_course_product_relation_read_list_anonymous(self):
         """
@@ -1426,3 +1431,63 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 0)
+
+    @override_settings(
+        PAYMENT_SCHEDULE_LIMITS={5: (30, 70), 10: (30, 45, 45), 100: (20, 30, 30, 20)},
+        DEFAULT_CURRENCY="EUR",
+    )
+    def test_api_course_product_relation_payment_schedule_with_product_id_anonymous(
+        self,
+    ):
+        """
+        Anonymous users should be able to retrieve a payment schedule for
+        a single course product relation if a product id is provided.
+        """
+        course_run = factories.CourseRunFactory(
+            enrollment_start=datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            end=datetime(2024, 5, 1, 14, tzinfo=ZoneInfo("UTC")),
+        )
+        product = factories.ProductFactory(
+            price=3,
+            type=enums.PRODUCT_TYPE_CREDENTIAL,
+            target_courses=[course_run.course],
+        )
+        relation = factories.CourseProductRelationFactory(
+            course=course_run.course,
+            product=product,
+            organizations=factories.OrganizationFactory.create_batch(2),
+        )
+
+        with mock.patch(
+            "django.utils.timezone.now",
+            return_value=datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+        ):
+            response = self.client.get(
+                f"/api/v1.0/courses/{course_run.course.code}/"
+                f"products/{product.id}/payment-schedule/"
+            )
+            response_relation_path = self.client.get(
+                f"/api/v1.0/course-product-relations/{relation.id}/payment-schedule/"
+            )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(
+            response.json(),
+            {
+                "payment_schedule": [
+                    {
+                        "amount": 0.90,
+                        "due_date": "2024-01-17T00:00:00Z",
+                        "state": enums.PAYMENT_STATE_PENDING,
+                    },
+                    {
+                        "amount": 2.10,
+                        "due_date": "2024-02-17T00:00:00Z",
+                        "state": enums.PAYMENT_STATE_PENDING,
+                    },
+                ]
+            },
+        )
+
+        self.assertEqual(response_relation_path.status_code, HTTPStatus.OK)
+        self.assertEqual(response_relation_path.json(), response.json())

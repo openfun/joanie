@@ -122,3 +122,13 @@ CERTIFICATE_NAME_CHOICES = (
     (CERTIFICATE, _("Certificate")),
     (DEGREE, _("Degree")),
 )
+
+PAYMENT_STATE_PENDING = "pending"
+PAYMENT_STATE_PAYED = "paid"
+PAYMENT_STATE_REFUSED = "refused"
+
+PAYMENT_STATE_CHOICES = (
+    (PAYMENT_STATE_PENDING, _("Pending")),
+    (PAYMENT_STATE_PAYED, _("Paid")),
+    (PAYMENT_STATE_REFUSED, _("Refused")),
+)
