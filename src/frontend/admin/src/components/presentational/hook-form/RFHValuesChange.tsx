@@ -5,6 +5,7 @@ import { useDebouncedCallback } from "use-debounce";
 import { FieldValues } from "react-hook-form/dist/types/fields";
 import { useRouter } from "next/router";
 import { deleteUnusedFilters } from "@/utils/filters";
+import { useTranslatableFormContext } from "@/components/presentational/translatable-content/TranslatableForm";
 
 export type RHFValuesChangeProps<T extends FieldValues> = {
   onSubmit: (values: T) => void;
@@ -23,8 +24,9 @@ export function RHFValuesChange<T extends FieldValues>({
   const {
     handleSubmit,
     watch,
-    formState: { isValid },
+    formState: { isValid, errors },
   } = useFormContext<T>();
+  const translatableFormContext = useTranslatableFormContext();
   const values = watch();
   const router = useRouter();
   const [oldValues, setOldValues] = useState<T>(values);
@@ -39,6 +41,7 @@ export function RHFValuesChange<T extends FieldValues>({
   };
 
   const onValuesChange = useDebouncedCallback(() => {
+    console.log(isValid, errors);
     if (!isValid) {
       return;
     }
@@ -47,8 +50,10 @@ export function RHFValuesChange<T extends FieldValues>({
      * with a setState for example, the setState does not trigger a rerender, because the reference has not changed.
      */
     if (useAnotherValueReference) {
+      console.log("AA");
       handleSubmit(() => props.onSubmit({ ...values }))();
     } else {
+      console.log("BB");
       handleSubmit(props.onSubmit)();
     }
 
@@ -60,6 +65,11 @@ export function RHFValuesChange<T extends FieldValues>({
   useEffect(() => {
     if (JSON.stringify(values) !== JSON.stringify(oldValues)) {
       setOldValues(values);
+
+      if (translatableFormContext?.formHasBeenReset) {
+        translatableFormContext.setFormHasBeenRest(false);
+        return;
+      }
       onValuesChange();
     }
   }, [values]);

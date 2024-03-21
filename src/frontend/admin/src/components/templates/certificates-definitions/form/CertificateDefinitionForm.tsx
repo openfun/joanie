@@ -11,13 +11,14 @@ import { RHFTextField } from "@/components/presentational/hook-form/RHFTextField
 import { useCertificateDefinitions } from "@/hooks/useCertificateDefinitions/useCertificateDefinitions";
 import { ServerSideErrorForm } from "@/types/utils";
 import { genericUpdateFormError } from "@/utils/forms";
-import { TranslatableContent } from "@/components/presentational/translatable-content/TranslatableContent";
+import { TranslatableForm } from "@/components/presentational/translatable-content/TranslatableForm";
 import {
   CertificateDefinition,
   CertificationDefinitionTemplate,
   DTOCertificateDefinition,
 } from "@/services/api/models/CertificateDefinition";
 import { RHFCertificateDefinitionTemplates } from "@/components/templates/certificates-definitions/inputs/RHFCertificateDefinitionTemplate";
+import { RHFValuesChange } from "@/components/presentational/hook-form/RFHValuesChange";
 
 const messages = defineMessages({
   titleLabel: {
@@ -102,49 +103,56 @@ export function CertificateDefinitionForm({ definition, ...props }: Props) {
   };
 
   useEffect(() => {
-    methods.reset(getDefaultValues());
+    // methods.reset(getDefaultValues());
   }, [definition]);
 
   return (
-    <TranslatableContent
-      onSelectLang={() => {
-        if (definition) certificateDefinitions.methods.invalidate();
+    <TranslatableForm
+      resetForm={() => methods.reset(getDefaultValues)}
+      entitiesDeps={[definition]}
+      onSelectLang={async () => {
+        if (definition) {
+          await certificateDefinitions.methods.invalidate();
+        }
       }}
     >
       <Box padding={4}>
         <RHFProvider
           checkBeforeUnload={true}
+          showSubmit={false}
           methods={methods}
           id="certificate-definition-form"
           onSubmit={methods.handleSubmit(onSubmit)}
         >
-          <Grid container spacing={2}>
-            <Grid xs={12} md={6}>
-              <RHFTextField
-                name="title"
-                label={intl.formatMessage(messages.titleLabel)}
-              />
+          <RHFValuesChange onSubmit={onSubmit}>
+            <Grid container spacing={2}>
+              <Grid xs={12} md={6}>
+                <RHFTextField
+                  name="title"
+                  label={intl.formatMessage(messages.titleLabel)}
+                />
+              </Grid>
+              <Grid xs={12} md={6}>
+                <RHFTextField
+                  name="name"
+                  label={intl.formatMessage(messages.nameLabel)}
+                />
+              </Grid>
+              <Grid xs={12}>
+                <RHFCertificateDefinitionTemplates name="template" />
+              </Grid>
+              <Grid xs={12}>
+                <RHFTextField
+                  name="description"
+                  multiline
+                  minRows={5}
+                  label={intl.formatMessage(messages.descriptionLabel)}
+                />
+              </Grid>
             </Grid>
-            <Grid xs={12} md={6}>
-              <RHFTextField
-                name="name"
-                label={intl.formatMessage(messages.nameLabel)}
-              />
-            </Grid>
-            <Grid xs={12}>
-              <RHFCertificateDefinitionTemplates name="template" />
-            </Grid>
-            <Grid xs={12}>
-              <RHFTextField
-                name="description"
-                multiline
-                minRows={5}
-                label={intl.formatMessage(messages.descriptionLabel)}
-              />
-            </Grid>
-          </Grid>
+          </RHFValuesChange>
         </RHFProvider>
       </Box>
-    </TranslatableContent>
+    </TranslatableForm>
   );
 }

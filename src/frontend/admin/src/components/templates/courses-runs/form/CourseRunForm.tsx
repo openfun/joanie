@@ -23,7 +23,7 @@ import {
   useSelectLanguageUtils,
 } from "@/components/presentational/hook-form/RHFSelectLanguage";
 import { genericUpdateFormError } from "@/utils/forms";
-import { TranslatableContent } from "@/components/presentational/translatable-content/TranslatableContent";
+import { TranslatableForm } from "@/components/presentational/translatable-content/TranslatableForm";
 import { RHFCheckbox } from "@/components/presentational/hook-form/RHFCheckbox";
 
 interface FormValues
@@ -116,7 +116,7 @@ export function CourseRunForm({ courseRun, addToCourse, ...props }: Props) {
   };
 
   return (
-    <TranslatableContent
+    <TranslatableForm
       onSelectLang={() => {
         if (courseRun) courseRunsQuery.methods.invalidate();
       }}
@@ -232,6 +232,6 @@ export function CourseRunForm({ courseRun, addToCourse, ...props }: Props) {
           </Grid>
         </RHFProvider>
       </Box>
-    </TranslatableContent>
+    </TranslatableForm>
   );
 }

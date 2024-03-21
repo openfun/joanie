@@ -23,11 +23,12 @@ import { OrganizationSearch } from "@/components/templates/organizations/inputs/
 import { ServerSideErrorForm } from "@/types/utils";
 import { useCourses } from "@/hooks/useCourses/useCourses";
 import { genericUpdateFormError } from "@/utils/forms";
-import { TranslatableContent } from "@/components/presentational/translatable-content/TranslatableContent";
+import { TranslatableForm } from "@/components/presentational/translatable-content/TranslatableForm";
 import { Organization } from "@/services/api/models/Organization";
 import { SimpleCard } from "@/components/presentational/card/SimpleCard";
 import { RHFUploadImage } from "@/components/presentational/hook-form/RHFUploadImage";
 import { ThumbnailDetailField } from "@/services/api/models/Image";
+import { RHFValuesChange } from "@/components/presentational/hook-form/RFHValuesChange";
 
 interface Props {
   afterSubmit?: (course: Course) => void;
@@ -53,8 +54,8 @@ export function CourseGeneralForm({ course, ...props }: Props) {
     cover: Yup.mixed(),
     effort: lazy((value) => {
       return value === ""
-        ? Yup.string().nullable()
-        : Yup.number().positive().nullable();
+        ? Yup.string().nullable().optional()
+        : Yup.number().min(0).nullable().optional();
     }),
   });
 
@@ -105,7 +106,9 @@ export function CourseGeneralForm({ course, ...props }: Props) {
 
   return (
     <SimpleCard>
-      <TranslatableContent
+      <TranslatableForm
+        entitiesDeps={[course]}
+        resetForm={() => methods.reset(getDefaultValues())}
         onSelectLang={() => {
           if (course) coursesQuery.methods.invalidate();
         }}
@@ -113,64 +116,67 @@ export function CourseGeneralForm({ course, ...props }: Props) {
         <Box padding={4}>
           <RHFProvider
             checkBeforeUnload={true}
+            showSubmit={false}
             methods={methods}
             id="course-form"
             onSubmit={methods.handleSubmit(onSubmit)}
           >
-            <Grid container spacing={2}>
-              <Grid xs={12}>
-                <Typography variant="subtitle2">
-                  {intl.formatMessage(courseFormMessages.generalSubtitle)}
-                </Typography>
-              </Grid>
-              <Grid xs={12}>
-                <RHFTextField
-                  name="title"
-                  label={intl.formatMessage(commonTranslations.title)}
-                />
-              </Grid>
-              <Grid xs={12} md={6}>
-                <RHFTextField
-                  name="code"
-                  label={intl.formatMessage(courseFormMessages.codeLabel)}
-                />
-              </Grid>
-              <Grid xs={12} md={6}>
-                <RHFTextField
-                  type="number"
-                  name="effort"
-                  helperText={intl.formatMessage(
-                    courseFormMessages.effortHelperText,
-                  )}
-                  label={intl.formatMessage(courseFormMessages.effortLabel)}
-                />
-              </Grid>
+            <RHFValuesChange onSubmit={onSubmit}>
+              <Grid container spacing={2}>
+                <Grid xs={12}>
+                  <Typography variant="subtitle2">
+                    {intl.formatMessage(courseFormMessages.generalSubtitle)}
+                  </Typography>
+                </Grid>
+                <Grid xs={12}>
+                  <RHFTextField
+                    name="title"
+                    label={intl.formatMessage(commonTranslations.title)}
+                  />
+                </Grid>
+                <Grid xs={12} md={6}>
+                  <RHFTextField
+                    name="code"
+                    label={intl.formatMessage(courseFormMessages.codeLabel)}
+                  />
+                </Grid>
+                <Grid xs={12} md={6}>
+                  <RHFTextField
+                    type="number"
+                    name="effort"
+                    helperText={intl.formatMessage(
+                      courseFormMessages.effortHelperText,
+                    )}
+                    label={intl.formatMessage(courseFormMessages.effortLabel)}
+                  />
+                </Grid>
 
-              <Grid xs={12}>
-                <OrganizationSearch
-                  enableAdd={true}
-                  multiple={true}
-                  name="organizations"
-                  label={intl.formatMessage(
-                    courseFormMessages.organizationsLabel,
-                  )}
-                />
+                <Grid xs={12}>
+                  <OrganizationSearch
+                    enableAdd={true}
+                    multiple={true}
+                    name="organizations"
+                    label={intl.formatMessage(
+                      courseFormMessages.organizationsLabel,
+                    )}
+                  />
+                </Grid>
+                <Grid xs={12}>
+                  <RHFUploadImage
+                    thumbnailFiles={getUploadedCover()}
+                    name="cover"
+                    buttonLabel={intl.formatMessage(
+                      courseFormMessages.uploadCoverButtonLabel,
+                    )}
+                    accept="image/*"
+                    label={intl.formatMessage(courseFormMessages.coverLabel)}
+                  />
+                </Grid>
               </Grid>
-              <Grid xs={12}>
-                <RHFUploadImage
-                  thumbnailFiles={getUploadedCover()}
-                  name="cover"
-                  buttonLabel={intl.formatMessage(
-                    courseFormMessages.uploadCoverButtonLabel,
-                  )}
-                  accept="image/*"
-                  label={intl.formatMessage(courseFormMessages.coverLabel)}
-                />
-              </Grid>
-            </Grid>
+            </RHFValuesChange>
           </RHFProvider>
         </Box>
-      </TranslatableContent>
+      </TranslatableForm>
     </SimpleCard>
   );
 }

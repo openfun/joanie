@@ -31,7 +31,7 @@ import { ProductFormInstructions } from "@/components/templates/products/form/se
 import { removeEOL } from "@/utils/string";
 import { ContractDefinition } from "@/services/api/models/ContractDefinition";
 import { ContractDefinitionSearch } from "@/components/templates/contract-definition/inputs/ContractDefinitionSearch";
-import { TranslatableContent } from "@/components/presentational/translatable-content/TranslatableContent";
+import { TranslatableForm } from "@/components/presentational/translatable-content/TranslatableForm";
 
 type Props = WizardStepProps & {
   product?: Product;
@@ -123,7 +123,7 @@ export function ProductFormMain({
   };
 
   return (
-    <TranslatableContent
+    <TranslatableForm
       onSelectLang={() => {
         if (productRepository) productRepository.methods.invalidate();
       }}
@@ -218,6 +218,6 @@ export function ProductFormMain({
         <ProductFormFinancial />
         <ProductFormInstructions />
       </RHFProvider>
-    </TranslatableContent>
+    </TranslatableForm>
   );
 }
