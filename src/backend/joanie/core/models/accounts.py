@@ -41,6 +41,11 @@ class User(BaseModel, auth_models.AbstractUser):
         null=True,
     )
 
+    has_subscribed_to_commercial_newsletter = models.BooleanField(
+        verbose_name=_("has subscribed to commercial newsletter"),
+        default=False,
+    )
+
     class Meta:
         db_table = "joanie_user"
         verbose_name = _("User")

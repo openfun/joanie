@@ -20,6 +20,7 @@ class DelegatedJWTAuthenticationTestCase(BaseAPITestCase):
                 "full_name": "David",
                 "email": "david.bowman@hal.com",
                 "language": "fr-fr",
+                "has_subscribed_to_commercial_newsletter": True,
             }
         )
 
@@ -38,6 +39,7 @@ class DelegatedJWTAuthenticationTestCase(BaseAPITestCase):
         self.assertEqual(user.first_name, "David")
         self.assertFalse(user.is_staff)
         self.assertFalse(user.is_superuser)
+        self.assertTrue(user.has_subscribed_to_commercial_newsletter)
 
     def test_authentication_delegated_user_existing(self):
         """
