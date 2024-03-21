@@ -152,6 +152,8 @@ export function OrganizationGeneralSection(props: Props) {
   return (
     <SimpleCard>
       <TranslatableForm
+        entitiesDeps={[props.organization]}
+        resetForm={() => methods.reset(getDefaultValues())}
         onSelectLang={() => {
           if (props.organization) organizationQuery.methods.invalidate();
         }}
@@ -159,7 +161,7 @@ export function OrganizationGeneralSection(props: Props) {
         <Box padding={4}>
           <RHFProvider
             checkBeforeUnload={true}
-            showSubmit={false}
+            showSubmit={true}
             methods={methods}
             isSubmitting={organizationQuery.states.updating}
             id="organization-form"

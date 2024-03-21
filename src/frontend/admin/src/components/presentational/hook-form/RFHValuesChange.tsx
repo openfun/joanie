@@ -24,6 +24,7 @@ export function RHFValuesChange<T extends FieldValues>({
   const {
     handleSubmit,
     watch,
+    trigger,
     formState: { isValid, errors },
   } = useFormContext<T>();
   const translatableFormContext = useTranslatableFormContext();
@@ -43,6 +44,7 @@ export function RHFValuesChange<T extends FieldValues>({
   const onValuesChange = useDebouncedCallback(() => {
     console.log(isValid, errors);
     if (!isValid) {
+      trigger();
       return;
     }
     /**
@@ -63,6 +65,13 @@ export function RHFValuesChange<T extends FieldValues>({
   }, debounceTime);
 
   useEffect(() => {
+    console.log(
+      "WEEESSSHHH",
+      values,
+      "\n\n\n",
+      oldValues,
+      JSON.stringify(values) !== JSON.stringify(oldValues),
+    );
     if (JSON.stringify(values) !== JSON.stringify(oldValues)) {
       setOldValues(values);
 

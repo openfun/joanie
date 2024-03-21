@@ -38,6 +38,7 @@ export interface RHFProviderProps<T extends FieldValues> {
   isSubmitting?: boolean;
   showSubmit?: boolean;
   checkBeforeUnload?: boolean;
+  autoSave?: boolean;
 }
 
 export function RHFProvider<T extends FieldValues>({
@@ -46,6 +47,7 @@ export function RHFProvider<T extends FieldValues>({
   methods,
   actionButtons,
   showSubmit = true,
+  autoSave = false,
   isSubmitting = false,
   checkBeforeUnload = false,
   id,
@@ -114,7 +116,7 @@ export function RHFProvider<T extends FieldValues>({
         }}
       >
         {children}
-        {(showSubmit || actionButtons) && (
+        {(showSubmit || actionButtons) && !autoSave && (
           <Box
             gap={2}
             mt={2}

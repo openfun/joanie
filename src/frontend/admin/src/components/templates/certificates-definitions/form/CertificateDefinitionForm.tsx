@@ -1,5 +1,4 @@
 import * as React from "react";
-import { useEffect } from "react";
 import * as Yup from "yup";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -86,25 +85,24 @@ export function CertificateDefinitionForm({ definition, ...props }: Props) {
   };
 
   const onSubmit = (values: DTOCertificateDefinition) => {
+    const newValues: DTOCertificateDefinition = {
+      ...values,
+    };
     if (definition) {
-      values.id = definition.id;
-      certificateDefinitions.methods.update(values, {
+      newValues.id = definition.id;
+      certificateDefinitions.methods.update(newValues, {
         onError: (error) => updateFormError(error.data),
         onSuccess: (updatedCertificate) =>
           props.afterSubmit?.(updatedCertificate),
       });
     } else {
-      certificateDefinitions.methods.create(values, {
+      certificateDefinitions.methods.create(newValues, {
         onError: (error) => updateFormError(error.data),
         onSuccess: (updatedCertificate) =>
           props.afterSubmit?.(updatedCertificate),
       });
     }
   };
-
-  useEffect(() => {
-    // methods.reset(getDefaultValues());
-  }, [definition]);
 
   return (
     <TranslatableForm
