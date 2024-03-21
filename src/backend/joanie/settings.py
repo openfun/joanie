@@ -359,6 +359,7 @@ class Base(Configuration):
             "email": "email",
             "first_name": "full_name",
             "language": "language",
+            "has_subscribed_to_commercial_newsletter": "has_subscribed_to_commercial_newsletter",
         },
         environ_name="JOANIE_JWT_USER_FIELDS_SYNC",
         environ_prefix=None,
