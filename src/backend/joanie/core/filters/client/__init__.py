@@ -10,6 +10,8 @@ from django_filters import rest_framework as filters
 
 from joanie.core import enums, models
 
+from .certificate import CertificateViewSetFilter
+
 
 class OrderViewSetFilter(filters.FilterSet):
     """
