@@ -13,6 +13,8 @@ from joanie.core.serializers import fields
 from joanie.tests import format_date
 from joanie.tests.base import BaseAPITestCase
 
+# pylint: disable=too-many-lines
+
 
 class CertificateApiTest(BaseAPITestCase):
     """Certificate API test case."""
@@ -41,6 +43,8 @@ class CertificateApiTest(BaseAPITestCase):
         it should return only his/hers. In this context, we create for the user:
         - 2 certificates linked to 2 distinct orders.
         - 3 certificates linked to 2 distinct enrollments.
+
+        By default only the certificates linked to the orders are returned.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -51,14 +55,10 @@ class CertificateApiTest(BaseAPITestCase):
         certificate = factories.OrderCertificateFactory(order=order)
         # 2nd certificate linked to an enrollment
         enrollment_1 = factories.EnrollmentFactory(user=user)
-        certificate_enrollment_1 = factories.EnrollmentCertificateFactory(
-            enrollment=enrollment_1
-        )
+        factories.EnrollmentCertificateFactory(enrollment=enrollment_1)
         # 3rd certificate linked to an enrollment
         enrollment_2 = factories.EnrollmentFactory(user=user)
-        certificate_enrollment_2 = factories.EnrollmentCertificateFactory(
-            enrollment=enrollment_2
-        )
+        factories.EnrollmentCertificateFactory(enrollment=enrollment_2)
         # 4th certificate linked to an order
         other_enrollment = factories.EnrollmentFactory(user=user)
         other_order = factories.OrderFactory(
@@ -73,9 +73,7 @@ class CertificateApiTest(BaseAPITestCase):
         other_certificate = factories.OrderCertificateFactory(order=other_order)
         # 5th certificate linked to an enrollment
         enrollment_3 = factories.EnrollmentFactory(user=user)
-        certificate_enrollment_3 = factories.EnrollmentCertificateFactory(
-            enrollment=enrollment_3
-        )
+        factories.EnrollmentCertificateFactory(enrollment=enrollment_3)
 
         with self.assertNumQueries(4):
             response = self.client.get(
@@ -87,59 +85,10 @@ class CertificateApiTest(BaseAPITestCase):
         self.assertDictEqual(
             response.json(),
             {
-                "count": 5,
+                "count": 2,
                 "next": None,
                 "previous": None,
                 "results": [
-                    {
-                        "id": str(certificate_enrollment_3.id),
-                        "certificate_definition": {
-                            "description": "",
-                            "name": certificate_enrollment_3.certificate_definition.name,
-                            "title": certificate_enrollment_3.certificate_definition.title,
-                        },
-                        "issued_on": format_date(certificate_enrollment_3.issued_on),
-                        "order": None,
-                        "enrollment": {
-                            "course_run": {
-                                "course": {
-                                    "code": enrollment_3.course_run.course.code,
-                                    "cover": "_this_field_is_mocked",
-                                    "id": str(enrollment_3.course_run.course.id),
-                                    "title": enrollment_3.course_run.course.title,
-                                },
-                                "end": format_date(enrollment_3.course_run.end),
-                                "enrollment_end": format_date(
-                                    enrollment_3.course_run.enrollment_end
-                                ),
-                                "enrollment_start": format_date(
-                                    enrollment_3.course_run.enrollment_start
-                                ),
-                                "id": str(enrollment_3.course_run.id),
-                                "languages": enrollment_3.course_run.languages,
-                                "resource_link": enrollment_3.course_run.resource_link,
-                                "start": format_date(enrollment_3.course_run.start),
-                                "state": {
-                                    "call_to_action": enrollment_3.course_run.state.get(
-                                        "call_to_action"
-                                    ),
-                                    "datetime": format_date(
-                                        enrollment_3.course_run.state.get("datetime")
-                                    ),
-                                    "priority": enrollment_3.course_run.state.get(
-                                        "priority"
-                                    ),
-                                    "text": enrollment_3.course_run.state.get("text"),
-                                },
-                                "title": enrollment_3.course_run.title,
-                            },
-                            "created_on": format_date(enrollment_3.created_on),
-                            "id": str(enrollment_3.id),
-                            "is_active": enrollment_3.is_active,
-                            "state": enrollment_3.state,
-                            "was_created_by_order": enrollment_3.was_created_by_order,
-                        },
-                    },
                     {
                         "id": str(other_certificate.id),
                         "certificate_definition": {
@@ -215,6 +164,334 @@ class CertificateApiTest(BaseAPITestCase):
                             },
                             "owner_name": other_certificate.order.owner.username,
                             "product_title": other_certificate.order.product.title,
+                        },
+                    },
+                    {
+                        "id": str(certificate.id),
+                        "certificate_definition": {
+                            "description": certificate.certificate_definition.description,
+                            "name": certificate.certificate_definition.name,
+                            "title": certificate.certificate_definition.title,
+                        },
+                        "issued_on": format_date(certificate.issued_on),
+                        "enrollment": None,
+                        "order": {
+                            "id": str(order.id),
+                            "course": {
+                                "id": str(order.course.id),
+                                "code": order.course.code,
+                                "title": order.course.title,
+                                "cover": "_this_field_is_mocked",
+                            },
+                            "enrollment": None,
+                            "organization": {
+                                "id": str(order.organization.id),
+                                "code": order.organization.code,
+                                "logo": "_this_field_is_mocked",
+                                "title": order.organization.title,
+                                "address": None,
+                                "enterprise_code": order.organization.enterprise_code,
+                                "activity_category_code": (
+                                    order.organization.activity_category_code
+                                ),
+                                "contact_email": order.organization.contact_email,
+                                "contact_phone": order.organization.contact_phone,
+                                "dpo_email": order.organization.dpo_email,
+                            },
+                            "owner_name": certificate.order.owner.username,
+                            "product_title": certificate.order.product.title,
+                        },
+                    },
+                ],
+            },
+        )
+
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_certificate_read_list_filtered_by_order_type(self, _mock_thumbnail):
+        """
+        When an authenticated user retrieves the list of certificates,
+        it should return only his/hers. In this context, we create for the user:
+        - 2 certificates linked to 2 distinct orders.
+        - 3 certificates linked to 2 distinct enrollments.
+
+        filtered by order type, only the certificates linked to the orders are returned.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        # Creates 5 random orders that has certificates not owned by the user
+        factories.OrderCertificateFactory.create_batch(5)
+        # 1st certificate linked to an order
+        order = factories.OrderFactory(owner=user, product=factories.ProductFactory())
+        certificate = factories.OrderCertificateFactory(order=order)
+        # 2nd certificate linked to an enrollment
+        enrollment_1 = factories.EnrollmentFactory(user=user)
+        factories.EnrollmentCertificateFactory(enrollment=enrollment_1)
+        # 3rd certificate linked to an enrollment
+        enrollment_2 = factories.EnrollmentFactory(user=user)
+        factories.EnrollmentCertificateFactory(enrollment=enrollment_2)
+        # 4th certificate linked to an order
+        other_enrollment = factories.EnrollmentFactory(user=user)
+        other_order = factories.OrderFactory(
+            owner=user,
+            product=factories.ProductFactory(
+                type=enums.PRODUCT_TYPE_CERTIFICATE,
+                courses=[other_enrollment.course_run.course],
+            ),
+            course=None,
+            enrollment=other_enrollment,
+        )
+        other_certificate = factories.OrderCertificateFactory(order=other_order)
+        # 5th certificate linked to an enrollment
+        enrollment_3 = factories.EnrollmentFactory(user=user)
+        factories.EnrollmentCertificateFactory(enrollment=enrollment_3)
+
+        with self.assertNumQueries(4):
+            response = self.client.get(
+                "/api/v1.0/certificates/?type=order",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+
+        self.assertDictEqual(
+            response.json(),
+            {
+                "count": 2,
+                "next": None,
+                "previous": None,
+                "results": [
+                    {
+                        "id": str(other_certificate.id),
+                        "certificate_definition": {
+                            "description": other_certificate.certificate_definition.description,
+                            "name": other_certificate.certificate_definition.name,
+                            "title": other_certificate.certificate_definition.title,
+                        },
+                        "issued_on": format_date(other_certificate.issued_on),
+                        "enrollment": None,
+                        "order": {
+                            "id": str(other_order.id),
+                            "course": None,
+                            "enrollment": {
+                                "course_run": {
+                                    "course": {
+                                        "code": other_enrollment.course_run.course.code,
+                                        "cover": "_this_field_is_mocked",
+                                        "id": str(
+                                            other_enrollment.course_run.course.id
+                                        ),
+                                        "title": other_enrollment.course_run.course.title,
+                                    },
+                                    "end": format_date(other_enrollment.course_run.end),
+                                    "enrollment_end": format_date(
+                                        other_enrollment.course_run.enrollment_end
+                                    ),
+                                    "enrollment_start": format_date(
+                                        other_enrollment.course_run.enrollment_start
+                                    ),
+                                    "id": str(other_enrollment.course_run.id),
+                                    "languages": other_enrollment.course_run.languages,
+                                    "resource_link": other_enrollment.course_run.resource_link,
+                                    "start": format_date(
+                                        other_enrollment.course_run.start
+                                    ),
+                                    "state": {
+                                        "call_to_action": other_enrollment.course_run.state.get(
+                                            "call_to_action"
+                                        ),
+                                        "datetime": format_date(
+                                            other_enrollment.course_run.state.get(
+                                                "datetime"
+                                            )
+                                        ),
+                                        "priority": other_enrollment.course_run.state.get(
+                                            "priority"
+                                        ),
+                                        "text": other_enrollment.course_run.state.get(
+                                            "text"
+                                        ),
+                                    },
+                                    "title": other_enrollment.course_run.title,
+                                },
+                                "created_on": format_date(other_enrollment.created_on),
+                                "id": str(other_enrollment.id),
+                                "is_active": other_enrollment.is_active,
+                                "state": other_enrollment.state,
+                                "was_created_by_order": other_enrollment.was_created_by_order,
+                            },
+                            "organization": {
+                                "id": str(other_order.organization.id),
+                                "code": other_order.organization.code,
+                                "logo": "_this_field_is_mocked",
+                                "title": other_order.organization.title,
+                                "address": None,
+                                "enterprise_code": other_order.organization.enterprise_code,
+                                "activity_category_code": (
+                                    other_order.organization.activity_category_code
+                                ),
+                                "contact_email": other_order.organization.contact_email,
+                                "contact_phone": other_order.organization.contact_phone,
+                                "dpo_email": other_order.organization.dpo_email,
+                            },
+                            "owner_name": other_certificate.order.owner.username,
+                            "product_title": other_certificate.order.product.title,
+                        },
+                    },
+                    {
+                        "id": str(certificate.id),
+                        "certificate_definition": {
+                            "description": certificate.certificate_definition.description,
+                            "name": certificate.certificate_definition.name,
+                            "title": certificate.certificate_definition.title,
+                        },
+                        "issued_on": format_date(certificate.issued_on),
+                        "enrollment": None,
+                        "order": {
+                            "id": str(order.id),
+                            "course": {
+                                "id": str(order.course.id),
+                                "code": order.course.code,
+                                "title": order.course.title,
+                                "cover": "_this_field_is_mocked",
+                            },
+                            "enrollment": None,
+                            "organization": {
+                                "id": str(order.organization.id),
+                                "code": order.organization.code,
+                                "logo": "_this_field_is_mocked",
+                                "title": order.organization.title,
+                                "address": None,
+                                "enterprise_code": order.organization.enterprise_code,
+                                "activity_category_code": (
+                                    order.organization.activity_category_code
+                                ),
+                                "contact_email": order.organization.contact_email,
+                                "contact_phone": order.organization.contact_phone,
+                                "dpo_email": order.organization.dpo_email,
+                            },
+                            "owner_name": certificate.order.owner.username,
+                            "product_title": certificate.order.product.title,
+                        },
+                    },
+                ],
+            },
+        )
+
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_certificate_read_list_filter_by_enrollment_type(self, _mock_thumbnail):
+        """
+        When an authenticated user retrieves the list of certificates,
+        it should return only his/hers. In this context, we create for the user:
+        - 2 certificates linked to 2 distinct orders.
+        - 3 certificates linked to 2 distinct enrollments.
+
+        Filtered by enrollment type, only the certificates linked to the enrollments are returned.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        # Creates 5 random orders that has certificates not owned by the user
+        factories.OrderCertificateFactory.create_batch(5)
+        # 1st certificate linked to an order
+        order = factories.OrderFactory(owner=user, product=factories.ProductFactory())
+        factories.OrderCertificateFactory(order=order)
+        # 2nd certificate linked to an enrollment
+        enrollment_1 = factories.EnrollmentFactory(user=user)
+        certificate_enrollment_1 = factories.EnrollmentCertificateFactory(
+            enrollment=enrollment_1
+        )
+        # 3rd certificate linked to an enrollment
+        enrollment_2 = factories.EnrollmentFactory(user=user)
+        certificate_enrollment_2 = factories.EnrollmentCertificateFactory(
+            enrollment=enrollment_2
+        )
+        # 4th certificate linked to an order
+        other_enrollment = factories.EnrollmentFactory(user=user)
+        other_order = factories.OrderFactory(
+            owner=user,
+            product=factories.ProductFactory(
+                type=enums.PRODUCT_TYPE_CERTIFICATE,
+                courses=[other_enrollment.course_run.course],
+            ),
+            course=None,
+            enrollment=other_enrollment,
+        )
+        factories.OrderCertificateFactory(order=other_order)
+        # 5th certificate linked to an enrollment
+        enrollment_3 = factories.EnrollmentFactory(user=user)
+        certificate_enrollment_3 = factories.EnrollmentCertificateFactory(
+            enrollment=enrollment_3
+        )
+
+        with self.assertNumQueries(2):
+            response = self.client.get(
+                "/api/v1.0/certificates/?type=enrollment",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+
+        self.assertDictEqual(
+            response.json(),
+            {
+                "count": 3,
+                "next": None,
+                "previous": None,
+                "results": [
+                    {
+                        "id": str(certificate_enrollment_3.id),
+                        "certificate_definition": {
+                            "description": "",
+                            "name": certificate_enrollment_3.certificate_definition.name,
+                            "title": certificate_enrollment_3.certificate_definition.title,
+                        },
+                        "issued_on": format_date(certificate_enrollment_3.issued_on),
+                        "order": None,
+                        "enrollment": {
+                            "course_run": {
+                                "course": {
+                                    "code": enrollment_3.course_run.course.code,
+                                    "cover": "_this_field_is_mocked",
+                                    "id": str(enrollment_3.course_run.course.id),
+                                    "title": enrollment_3.course_run.course.title,
+                                },
+                                "end": format_date(enrollment_3.course_run.end),
+                                "enrollment_end": format_date(
+                                    enrollment_3.course_run.enrollment_end
+                                ),
+                                "enrollment_start": format_date(
+                                    enrollment_3.course_run.enrollment_start
+                                ),
+                                "id": str(enrollment_3.course_run.id),
+                                "languages": enrollment_3.course_run.languages,
+                                "resource_link": enrollment_3.course_run.resource_link,
+                                "start": format_date(enrollment_3.course_run.start),
+                                "state": {
+                                    "call_to_action": enrollment_3.course_run.state.get(
+                                        "call_to_action"
+                                    ),
+                                    "datetime": format_date(
+                                        enrollment_3.course_run.state.get("datetime")
+                                    ),
+                                    "priority": enrollment_3.course_run.state.get(
+                                        "priority"
+                                    ),
+                                    "text": enrollment_3.course_run.state.get("text"),
+                                },
+                                "title": enrollment_3.course_run.title,
+                            },
+                            "created_on": format_date(enrollment_3.created_on),
+                            "id": str(enrollment_3.id),
+                            "is_active": enrollment_3.is_active,
+                            "state": enrollment_3.state,
+                            "was_created_by_order": enrollment_3.was_created_by_order,
                         },
                     },
                     {
@@ -317,45 +594,54 @@ class CertificateApiTest(BaseAPITestCase):
                             "was_created_by_order": enrollment_1.was_created_by_order,
                         },
                     },
-                    {
-                        "id": str(certificate.id),
-                        "certificate_definition": {
-                            "description": certificate.certificate_definition.description,
-                            "name": certificate.certificate_definition.name,
-                            "title": certificate.certificate_definition.title,
-                        },
-                        "issued_on": format_date(certificate.issued_on),
-                        "enrollment": None,
-                        "order": {
-                            "id": str(order.id),
-                            "course": {
-                                "id": str(order.course.id),
-                                "code": order.course.code,
-                                "title": order.course.title,
-                                "cover": "_this_field_is_mocked",
-                            },
-                            "enrollment": None,
-                            "organization": {
-                                "id": str(order.organization.id),
-                                "code": order.organization.code,
-                                "logo": "_this_field_is_mocked",
-                                "title": order.organization.title,
-                                "address": None,
-                                "enterprise_code": order.organization.enterprise_code,
-                                "activity_category_code": (
-                                    order.organization.activity_category_code
-                                ),
-                                "contact_email": order.organization.contact_email,
-                                "contact_phone": order.organization.contact_phone,
-                                "dpo_email": order.organization.dpo_email,
-                            },
-                            "owner_name": certificate.order.owner.username,
-                            "product_title": certificate.order.product.title,
-                        },
-                    },
                 ],
             },
         )
+
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_certificate_read_list_unknown_filter_type(self, _mock_thumbnail):
+        """
+        Using an unknown type should return an empty list.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        # Creates 5 random orders that has certificates not owned by the user
+        factories.OrderCertificateFactory.create_batch(5)
+        # 1st certificate linked to an order
+        order = factories.OrderFactory(owner=user, product=factories.ProductFactory())
+        factories.OrderCertificateFactory(order=order)
+        # 2nd certificate linked to an enrollment
+        enrollment_1 = factories.EnrollmentFactory(user=user)
+        factories.EnrollmentCertificateFactory(enrollment=enrollment_1)
+        # 3rd certificate linked to an enrollment
+        enrollment_2 = factories.EnrollmentFactory(user=user)
+        factories.EnrollmentCertificateFactory(enrollment=enrollment_2)
+        # 4th certificate linked to an order
+        other_enrollment = factories.EnrollmentFactory(user=user)
+        other_order = factories.OrderFactory(
+            owner=user,
+            product=factories.ProductFactory(
+                type=enums.PRODUCT_TYPE_CERTIFICATE,
+                courses=[other_enrollment.course_run.course],
+            ),
+            course=None,
+            enrollment=other_enrollment,
+        )
+        factories.OrderCertificateFactory(order=other_order)
+        # 5th certificate linked to an enrollment
+        enrollment_3 = factories.EnrollmentFactory(user=user)
+        factories.EnrollmentCertificateFactory(enrollment=enrollment_3)
+
+        with self.assertNumQueries(0):
+            response = self.client.get(
+                "/api/v1.0/certificates/?type=foo", HTTP_AUTHORIZATION=f"Bearer {token}"
+            )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
 
     @mock.patch.object(PageNumberPagination, "get_page_size", return_value=2)
     def test_api_certificate_read_list_pagination(self, _mock_page_size):
@@ -645,7 +931,7 @@ class CertificateApiTest(BaseAPITestCase):
 
         self.assertDictEqual(
             response.json(),
-            {"detail": f"No certificate found with id {not_owned_certificate.id}."},
+            {"detail": "No Certificate matches the given query."},
         )
 
         # - Try to retrieve an owned certificate should return the certificate id
@@ -688,7 +974,7 @@ class CertificateApiTest(BaseAPITestCase):
 
         self.assertDictEqual(
             response.json(),
-            {"detail": f"No certificate found with id {not_owned_certificate.id}."},
+            {"detail": "No Certificate matches the given query."},
         )
 
         # - Try to retrieve an owned certificate should return the certificate id

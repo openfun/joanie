@@ -281,6 +281,18 @@
                         "schema": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "in": "query",
+                        "name": "type",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "enrollment",
+                                "order"
+                            ]
+                        },
+                        "description": "* `order` - Order\n* `enrollment` - Enrollment"
                     }
                 ],
                 "tags": [
