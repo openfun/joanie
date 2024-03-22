@@ -11,7 +11,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.storage import storages
 from django.db import IntegrityError, transaction
 from django.db.models import Count, OuterRef, Prefetch, Q, Subquery
-from django.http import FileResponse, HttpResponse, JsonResponse
+from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.urls import reverse
 
 from drf_spectacular.types import OpenApiTypes
@@ -593,6 +593,7 @@ class CertificateViewSet(
     lookup_field = "pk"
     serializer_class = serializers.CertificateSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filterset_class = filters.CertificateViewSetFilter
     queryset = models.Certificate.objects.all().select_related(
         "certificate_definition",
         "order__course",
@@ -603,19 +604,37 @@ class CertificateViewSet(
         "enrollment__course_run__course",
     )
 
-    def get_queryset(self):
-        """
-        Custom queryset to get user certificates
-        """
-        queryset = super().get_queryset()
-        username = (
+    def get_username(self):
+        """Get the authenticated username from the request."""
+        return (
             self.request.auth["username"]
             if self.request.auth
             else self.request.user.username
         )
-        return queryset.filter(
-            Q(order__owner__username=username) | Q(enrollment__user__username=username),
-        ).distinct()
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        if self.action == "list":
+            queryset = queryset.distinct()
+
+        return queryset
+
+    def get_object(self):
+        """Allow getting a certificate by its pk."""
+        queryset = self.get_queryset()
+        certificate = get_object_or_404(queryset, pk=self.kwargs["pk"])
+        username = self.get_username()
+
+        if certificate.order and certificate.order.owner.username != username:
+            raise Http404("No Certificate matches the given query.")
+
+        if certificate.enrollment and certificate.enrollment.user.username != username:
+            raise Http404("No Certificate matches the given query.")
+        # May raise a permission denied
+        self.check_object_permissions(self.request, certificate)
+
+        return certificate
 
     @extend_schema(
         responses={
@@ -629,18 +648,7 @@ class CertificateViewSet(
         """
         Retrieve a certificate through its id if it is owned by the authenticated user.
         """
-        username = request.auth["username"] if request.auth else request.user.username
-        try:
-            certificate = models.Certificate.objects.get(
-                Q(order__owner__username=username)
-                | Q(enrollment__user__username=username),
-                pk=pk,
-            )
-        except models.Certificate.DoesNotExist:
-            return Response(
-                {"detail": f"No certificate found with id {pk}."},
-                status=HTTPStatus.NOT_FOUND,
-            )
+        certificate = self.get_object()
 
         try:
             context = certificate.get_document_context()
