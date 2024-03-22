@@ -122,3 +122,11 @@ CERTIFICATE_NAME_CHOICES = (
     (CERTIFICATE, _("Certificate")),
     (DEGREE, _("Degree")),
 )
+
+# For filtering certificates by type
+CERTIFICATE_ORDER_TYPE = "order"
+CERTIFICATE_ENROLLMENT_TYPE = "enrollment"
+CERTIFICATE_TYPE_CHOICES = (
+    (CERTIFICATE_ORDER_TYPE, _("Order")),
+    (CERTIFICATE_ENROLLMENT_TYPE, _("Enrollment")),
+)
