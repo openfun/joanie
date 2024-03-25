@@ -1,3 +1,4 @@
+# ruff: noqa: SLF001
 # pylint: disable=too-many-lines
 """Admin serializers for Joanie Core app."""
 
@@ -8,7 +9,6 @@ from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
 
 from joanie.core import models
-from joanie.core.enums import ALL_LANGUAGES
 from joanie.core.serializers.fields import (
     ImageDetailField,
     ISO8601DurationField,
@@ -21,6 +21,12 @@ class AdminContractDefinitionSerializer(serializers.ModelSerializer):
     """Serializer for ContractDefinition model."""
 
     title = serializers.CharField()
+    name = serializers.ChoiceField(
+        required=False,
+        choices=models.ContractDefinition._meta.get_field("name").choices,
+        default=models.ContractDefinition._meta.get_field("name").default,
+        label=models.ContractDefinition._meta.get_field("name").verbose_name,
+    )
 
     class Meta:
         model = models.ContractDefinition
@@ -53,7 +59,22 @@ class AdminCourseRunLightSerializer(serializers.ModelSerializer):
     """Serializer for CourseRun model."""
 
     title = serializers.CharField()
-    languages = serializers.MultipleChoiceField(choices=ALL_LANGUAGES)
+    languages = serializers.MultipleChoiceField(
+        choices=models.CourseRun._meta.get_field("languages").choices
+    )
+    is_gradable = serializers.BooleanField(
+        required=False,
+        # default=False,
+        # label=_("Is gradable")
+        default=models.CourseRun._meta.get_field("is_gradable").default,
+        label=models.CourseRun._meta.get_field("is_gradable").verbose_name,
+    )
+    is_listed = serializers.BooleanField(
+        required=False,
+        default=models.CourseRun._meta.get_field("is_listed").default,
+        label=models.CourseRun._meta.get_field("is_listed").verbose_name,
+        help_text=models.CourseRun._meta.get_field("is_listed").help_text,
+    )
 
     class Meta:
         model = models.CourseRun
@@ -125,6 +146,11 @@ class AdminOrganizationAccessSerializer(serializers.ModelSerializer):
     """Serializer for OrganizationAccess model."""
 
     user = AdminUserSerializer(read_only=True)
+    role = serializers.ChoiceField(
+        required=False,
+        choices=models.OrganizationAccess._meta.get_field("role").choices,
+        default=models.OrganizationAccess._meta.get_field("role").default,
+    )
 
     class Meta:
         model = models.OrganizationAccess
@@ -168,6 +194,17 @@ class AdminOrganizationAccessSerializer(serializers.ModelSerializer):
 
 class AdminOrganizationAddressSerializer(serializers.ModelSerializer):
     """Serializer for the Address model for an organization"""
+
+    is_main = serializers.BooleanField(
+        required=False,
+        default=models.Address._meta.get_field("is_main").default,
+        label=models.Address._meta.get_field("is_main").verbose_name,
+    )
+    is_reusable = serializers.BooleanField(
+        required=False,
+        default=models.Address._meta.get_field("is_reusable").default,
+        label=models.Address._meta.get_field("is_reusable").verbose_name,
+    )
 
     class Meta:
         model = models.Address
@@ -246,6 +283,12 @@ class AdminOrganizationSerializer(serializers.ModelSerializer):
     signature = ImageDetailField(required=False)
     accesses = AdminOrganizationAccessSerializer(many=True, read_only=True)
     addresses = AdminOrganizationAddressSerializer(many=True, read_only=True)
+    country = serializers.ChoiceField(
+        required=False,
+        choices=models.Organization._meta.get_field("country").choices,
+        default=models.Organization._meta.get_field("country").default,
+        help_text=models.Organization._meta.get_field("country").help_text,
+    )
 
     class Meta:
         model = models.Organization
@@ -355,6 +398,22 @@ class AdminOrderGroupSerializer(serializers.ModelSerializer):
     Admin Serializer for OrderGroup model
     """
 
+    nb_seats = serializers.IntegerField(
+        required=False,
+        label=models.OrderGroup._meta.get_field("nb_seats").verbose_name,
+        help_text=models.OrderGroup._meta.get_field("nb_seats").help_text,
+        default=models.OrderGroup._meta.get_field("nb_seats").default,
+        min_value=models.OrderGroup._meta.get_field("nb_seats")
+        .validators[0]
+        .limit_value,
+        max_value=models.OrderGroup._meta.get_field("nb_seats")
+        .validators[1]
+        .limit_value,
+    )
+    is_active = serializers.BooleanField(
+        required=False,
+        default=models.OrderGroup._meta.get_field("is_active").default,
+    )
     nb_available_seats = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
@@ -522,6 +581,13 @@ class AdminCourseAccessSerializer(serializers.ModelSerializer):
     """Serializer for CourseAccess model."""
 
     user = AdminUserSerializer(read_only=True)
+    role = serializers.ChoiceField(
+        required=False,
+        # choices=models.CourseAccess.ROLE_CHOICES,
+        # default=enums.INSTRUCTOR,
+        choices=models.CourseAccess._meta.get_field("role").choices,
+        default=models.CourseAccess._meta.get_field("role").default,
+    )
 
     class Meta:
         model = models.CourseAccess
@@ -665,31 +731,14 @@ class AdminCourseSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
-class AdminCourseRunSerializer(serializers.ModelSerializer):
+class AdminCourseRunSerializer(AdminCourseRunLightSerializer):
     """Serializer for CourseRun model."""
 
-    title = serializers.CharField()
     course = AdminCourseLightSerializer(read_only=True)
-    languages = serializers.MultipleChoiceField(choices=ALL_LANGUAGES)
 
     class Meta:
-        model = models.CourseRun
-        fields = [
-            "id",
-            "course",
-            "resource_link",
-            "title",
-            "is_gradable",
-            "is_listed",
-            "languages",
-            "start",
-            "end",
-            "enrollment_start",
-            "enrollment_end",
-            "uri",
-            "state",
-        ]
-        read_only_fields = ["id", "uri", "state"]
+        model = AdminCourseRunLightSerializer.Meta.model
+        fields = AdminCourseRunLightSerializer.Meta.fields + ["course"]
 
     def validate(self, attrs):
         """
@@ -826,6 +875,30 @@ class AdminProductTargetCourseRelationSerializer(serializers.ModelSerializer):
     """
     Serializer for ProductTargetCourseRelation model
     """
+
+    is_graded = serializers.BooleanField(
+        required=False,
+        default=models.ProductTargetCourseRelation._meta.get_field("is_graded").default,
+        label=models.ProductTargetCourseRelation._meta.get_field(
+            "is_graded"
+        ).verbose_name,
+        help_text=models.ProductTargetCourseRelation._meta.get_field(
+            "is_graded"
+        ).help_text,
+    )
+    position = serializers.IntegerField(
+        required=False,
+        default=models.ProductTargetCourseRelation._meta.get_field("position").default,
+        label=models.ProductTargetCourseRelation._meta.get_field(
+            "position"
+        ).verbose_name,
+        min_value=models.ProductTargetCourseRelation._meta.get_field("position")
+        .validators[0]
+        .limit_value,
+        max_value=models.ProductTargetCourseRelation._meta.get_field("position")
+        .validators[1]
+        .limit_value,
+    )
 
     class Meta:
         model = models.ProductTargetCourseRelation

@@ -1,3 +1,4 @@
+# ruff: noqa: SLF001
 """Serializers for api."""
 
 from rest_framework import serializers
@@ -11,6 +12,10 @@ class CreditCardSerializer(serializers.ModelSerializer):
     """
 
     id = serializers.CharField(read_only=True, required=False)
+    is_main = serializers.BooleanField(
+        required=False,
+        label=models.CreditCard._meta.get_field("is_main").verbose_name,
+    )
 
     class Meta:
         model = models.CreditCard

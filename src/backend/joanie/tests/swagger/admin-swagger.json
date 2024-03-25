@@ -2773,7 +2773,6 @@
                         "name": "state",
                         "schema": {
                             "type": "string",
-                            "default": "draft",
                             "enum": [
                                 "canceled",
                                 "draft",
@@ -4479,7 +4478,7 @@
                             }
                         ],
                         "default": "contract_definition",
-                        "title": "Template name"
+                        "title": "template name"
                     }
                 },
                 "required": [
@@ -4517,7 +4516,7 @@
                             }
                         ],
                         "default": "contract_definition",
-                        "title": "Template name"
+                        "title": "template name"
                     }
                 },
                 "required": [
@@ -4835,14 +4834,6 @@
                         "readOnly": true,
                         "description": "primary key for the record as UUID"
                     },
-                    "course": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/AdminCourseLight"
-                            }
-                        ],
-                        "readOnly": true
-                    },
                     "resource_link": {
                         "type": "string",
                         "maxLength": 200
@@ -4917,6 +4908,14 @@
                             "datetime",
                             "priority",
                             "text"
+                        ],
+                        "readOnly": true
+                    },
+                    "course": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AdminCourseLight"
+                            }
                         ],
                         "readOnly": true
                     }
@@ -5932,12 +5931,12 @@
                     "is_main": {
                         "type": "boolean",
                         "default": false,
-                        "title": "Main"
+                        "title": "main"
                     },
                     "is_reusable": {
                         "type": "boolean",
                         "default": false,
-                        "title": "Reusable"
+                        "title": "reusable"
                     }
                 },
                 "required": [
@@ -5991,12 +5990,12 @@
                     "is_main": {
                         "type": "boolean",
                         "default": false,
-                        "title": "Main"
+                        "title": "main"
                     },
                     "is_reusable": {
                         "type": "boolean",
                         "default": false,
-                        "title": "Reusable"
+                        "title": "reusable"
                     }
                 },
                 "required": [
@@ -6388,7 +6387,7 @@
                     "is_graded": {
                         "type": "boolean",
                         "default": true,
-                        "title": "Take into account for certification",
+                        "title": "take into account for certification",
                         "description": "Take into account the course grade for certification."
                     },
                     "position": {
@@ -6396,7 +6395,7 @@
                         "maximum": 32767,
                         "minimum": 0,
                         "default": 0,
-                        "title": "Position in product"
+                        "title": "position in product"
                     },
                     "course_runs": {
                         "type": "array",
@@ -6430,7 +6429,7 @@
                     "is_graded": {
                         "type": "boolean",
                         "default": true,
-                        "title": "Take into account for certification",
+                        "title": "take into account for certification",
                         "description": "Take into account the course grade for certification."
                     },
                     "position": {
@@ -6438,7 +6437,7 @@
                         "maximum": 32767,
                         "minimum": 0,
                         "default": 0,
-                        "title": "Position in product"
+                        "title": "position in product"
                     },
                     "course_runs": {
                         "type": "array",
@@ -7337,7 +7336,7 @@
                             }
                         ],
                         "default": "contract_definition",
-                        "title": "Template name"
+                        "title": "template name"
                     }
                 }
             },
@@ -7514,12 +7513,12 @@
                     "is_main": {
                         "type": "boolean",
                         "default": false,
-                        "title": "Main"
+                        "title": "main"
                     },
                     "is_reusable": {
                         "type": "boolean",
                         "default": false,
-                        "title": "Reusable"
+                        "title": "reusable"
                     }
                 }
             },
@@ -7662,7 +7661,7 @@
                     "is_graded": {
                         "type": "boolean",
                         "default": true,
-                        "title": "Take into account for certification",
+                        "title": "take into account for certification",
                         "description": "Take into account the course grade for certification."
                     },
                     "position": {
@@ -7670,7 +7669,7 @@
                         "maximum": 32767,
                         "minimum": 0,
                         "default": 0,
-                        "title": "Position in product"
+                        "title": "position in product"
                     },
                     "course_runs": {
                         "type": "array",
