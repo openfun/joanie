@@ -23,6 +23,7 @@ import { TranslationsProvider } from "@/contexts/i18n/TranslationsProvider/Trans
 import { REACT_QUERY_SETTINGS } from "@/utils/settings";
 import { JoanieThemeProvider } from "@/theme/JoanieThemeProvider";
 import { AuthProvider } from "@/contexts/auth/AuthProvider";
+import { CloseNotificationButton } from "@/components/presentational/button/CloseNotificationButton";
 
 type NextPageWithLayout = NextPage & {
   getLayout?: (page: React.ReactElement) => React.ReactNode;
@@ -93,6 +94,7 @@ export default function App({ Component, pageProps }: MyAppProps) {
           <CacheProvider value={clientSideEmotionCache}>
             <JoanieThemeProvider>
               <SnackbarProvider
+                action={CloseNotificationButton}
                 style={{
                   fontFamily: theme.typography.fontFamily,
                 }}
