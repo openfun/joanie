@@ -23,6 +23,11 @@ class EnrollmentAdminFilterSet(filters.FilterSet):
         fields: List[str] = ["query"]
 
     query = filters.CharFilter(method="filter_by_query")
+    course_run_ids = filters.ModelMultipleChoiceFilter(
+        queryset=models.CourseRun.objects.all().only("pk"),
+        field_name="course_run",
+        distinct=True,
+    )
 
     def filter_by_query(self, queryset, _name, value):
         """
