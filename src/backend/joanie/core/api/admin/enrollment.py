@@ -36,5 +36,6 @@ class EnrollmentViewSet(
     queryset = models.Enrollment.objects.all().select_related(
         "course_run", "course_run__course", "user", "certificate"
     )
+    filterset_class = filters.EnrollmentAdminFilterSet
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     ordering_fields = ["created_on"]

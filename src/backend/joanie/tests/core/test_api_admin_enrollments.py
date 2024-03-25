@@ -163,6 +163,53 @@ class OrdersAdminApiTestCase(TestCase):
             },
         )
 
+    def test_api_admin_enrollments_filter_by_query(self):
+        """
+        Authenticated admin user should be able to filter all existing enrollments by
+        a query. This query should allow to search enrollment on course_run title,
+        resource_link and course code.
+        """
+        # Create an admin user
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        # - Create random enrollments
+        factories.EnrollmentFactory.create_batch(2)
+
+        # - Create an enrollment to test the query filter
+        course_run = factories.CourseRunFactory(
+            state=CourseState.ONGOING_OPEN,
+            is_listed=True,
+            title="Python for beginners",
+            resource_link="https://example.com/python-for-beginners",
+            course__code="PY101",
+        )
+        course_run.translations.create(
+            language_code="fr-fr", title="Python pour les débutants"
+        )
+        enrollment = factories.EnrollmentFactory(course_run=course_run)
+
+        response = self.client.get("/api/v1.0/admin/enrollments/")
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(response.json()["count"], 3)
+
+        # Prepare queries to test
+        queries = [
+            "PY101",
+            "101",
+            "beginners",
+            "débutant",
+            "https://example.com/python-for-beginners",
+            "python-for-beginners",
+        ]
+
+        for query in queries:
+            response = self.client.get(f"/api/v1.0/admin/enrollments/?query={query}")
+            self.assertEqual(response.status_code, HTTPStatus.OK)
+            content = response.json()
+            self.assertEqual(content["count"], 1)
+            self.assertEqual(content["results"][0]["id"], str(enrollment.id))
+
     def test_api_admin_enrollments_create(self):
         """Create an enrollment should be not allowed."""
         # Create an admin user
