@@ -28,7 +28,11 @@ class EnrollmentAdminFilterSet(filters.FilterSet):
         field_name="course_run",
         distinct=True,
     )
-
+    user_ids = filters.ModelMultipleChoiceFilter(
+        queryset=models.User.objects.all().only("pk"),
+        field_name="user",
+        distinct=True,
+    )
     def filter_by_query(self, queryset, _name, value):
         """
         Filter resource by looking for title which contains provided value in
