@@ -24,6 +24,8 @@ from joanie.core.api.base import NestedGenericViewSet, SerializerPerActionMixin
 from joanie.core.authentication import SessionAuthenticationWithAuthenticateHeader
 from joanie.core.exceptions import CertificateGenerationError
 
+from .enrollment import EnrollmentViewSet
+
 
 # pylint: disable=too-many-ancestors
 class OrganizationViewSet(viewsets.ModelViewSet):

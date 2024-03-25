@@ -2407,6 +2407,99 @@
                 }
             }
         },
+        "/api/v1.0/admin/enrollments/": {
+            "get": {
+                "operationId": "enrollments_list",
+                "description": "Admin Enrollment ViewSet",
+                "parameters": [
+                    {
+                        "name": "ordering",
+                        "required": false,
+                        "in": "query",
+                        "description": "Which field to use when ordering the results.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "A page number within the paginated result set.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page_size",
+                        "required": false,
+                        "in": "query",
+                        "description": "Number of results to return per page.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "tags": [
+                    "enrollments"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedAdminEnrollmentLightList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/admin/enrollments/{id}/": {
+            "get": {
+                "operationId": "enrollments_retrieve",
+                "description": "Admin Enrollment ViewSet",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "enrollments"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminEnrollment"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1.0/admin/orders/": {
             "get": {
                 "operationId": "orders_list",
@@ -4887,6 +4980,127 @@
                     "title"
                 ]
             },
+            "AdminEnrollment": {
+                "type": "object",
+                "description": "Serializer for Enrollment model",
+                "properties": {
+                    "course_run": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AdminCourseRunLight"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "created_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "date and time at which a record was created"
+                    },
+                    "certificate": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AdminCertificate"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "description": "primary key for the record as UUID"
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "description": "Ticked if the user is enrolled to the course run."
+                    },
+                    "state": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/EnrollmentStateEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "updated_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "date and time at which a record was last updated"
+                    },
+                    "user": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AdminUser"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "was_created_by_order": {
+                        "type": "boolean",
+                        "readOnly": true,
+                        "description": "Ticked if the enrollment has been initially created in the scope of an order."
+                    }
+                },
+                "required": [
+                    "certificate",
+                    "course_run",
+                    "created_on",
+                    "id",
+                    "is_active",
+                    "state",
+                    "updated_on",
+                    "user",
+                    "was_created_by_order"
+                ]
+            },
+            "AdminEnrollmentLight": {
+                "type": "object",
+                "description": "Light Serializer for Enrollment model",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "description": "primary key for the record as UUID"
+                    },
+                    "course_run": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AdminCourseRunLight"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "user_name": {
+                        "type": "string",
+                        "description": "Return the full name of the enrollment's user if available,\notherwise fallback to the username",
+                        "readOnly": true
+                    },
+                    "state": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/EnrollmentStateEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "readOnly": true,
+                        "description": "Ticked if the user is enrolled to the course run."
+                    }
+                },
+                "required": [
+                    "course_run",
+                    "id",
+                    "is_active",
+                    "state",
+                    "user_name"
+                ]
+            },
             "AdminInvoice": {
                 "type": "object",
                 "description": "Read only serializer for Invoice model.",
@@ -6693,6 +6907,37 @@
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/AdminCourseRun"
+                        }
+                    }
+                }
+            },
+            "PaginatedAdminEnrollmentLightList": {
+                "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
+                "properties": {
+                    "count": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "next": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=4"
+                    },
+                    "previous": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=2"
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AdminEnrollmentLight"
                         }
                     }
                 }

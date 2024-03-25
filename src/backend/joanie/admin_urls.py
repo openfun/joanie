@@ -50,6 +50,9 @@ admin_router.register(
 )
 admin_router.register("users", api_admin.UserViewSet, basename="admin_user")
 admin_router.register("orders", api_admin.OrderViewSet, basename="admin_orders")
+admin_router.register(
+    "enrollments", api_admin.EnrollmentViewSet, basename="admin_enrollments"
+)
 
 # Admin API routes nested under a course
 admin_course_related_router = DefaultRouter()
