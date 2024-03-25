@@ -1094,3 +1094,64 @@ class AdminOrderLightSerializer(serializers.ModelSerializer):
         otherwise fallback to the username
         """
         return instance.owner.get_full_name() or instance.owner.username
+
+
+class AdminEnrollmentLightSerializer(serializers.ModelSerializer):
+    """
+    Light Serializer for Enrollment model
+    """
+
+    course_run = AdminCourseRunLightSerializer(read_only=True)
+    user_name = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = models.Enrollment
+        fields = [
+            "id",
+            "course_run",
+            "user_name",
+            "state",
+            "is_active",
+        ]
+        read_only_fields = fields
+
+    def get_user_name(self, instance) -> str:
+        """
+        Return the full name of the enrollment's user if available,
+        otherwise fallback to the username
+        """
+        return instance.user.get_full_name() or instance.user.username
+
+
+class AdminEnrollmentSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Enrollment model
+    """
+
+    course_run = AdminCourseRunLightSerializer(read_only=True)
+    user = AdminUserSerializer(read_only=True)
+    certificate = AdminCertificateSerializer(read_only=True)
+
+    class Meta:
+        model = models.Enrollment
+        fields = [
+            "course_run",
+            "created_on",
+            "certificate",
+            "id",
+            "is_active",
+            "state",
+            "updated_on",
+            "user",
+            "was_created_by_order",
+        ]
+        read_only_fields = [
+            "course_run",
+            "created_on",
+            "certificate",
+            "id",
+            "state",
+            "updated_on",
+            "user",
+            "was_created_by_order",
+        ]
