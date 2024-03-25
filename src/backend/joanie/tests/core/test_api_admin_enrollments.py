@@ -340,6 +340,38 @@ class OrdersAdminApiTestCase(TestCase):
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["id"], str(active_enrollment.id))
 
+    def test_api_admin_enrollments_filter_by_state(self):
+        """
+        Authenticated admin user should be able to filter all existing enrollments by
+        their state.
+        """
+
+        set_enrollment = factories.EnrollmentFactory.create(
+            state=enums.ENROLLMENT_STATE_SET
+        )
+        failed_enrollment = factories.EnrollmentFactory.create(
+            state=enums.ENROLLMENT_STATE_FAILED
+        )
+
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        response = self.client.get("/api/v1.0/admin/enrollments/")
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(response.json()["count"], 2)
+
+        response = self.client.get("/api/v1.0/admin/enrollments/?state=set")
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+        self.assertEqual(content["results"][0]["id"], str(set_enrollment.id))
+
+        response = self.client.get("/api/v1.0/admin/enrollments/?state=failed")
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+        self.assertEqual(content["results"][0]["id"], str(failed_enrollment.id))
+
     def test_api_admin_enrollments_create(self):
         """Create an enrollment should be not allowed."""
         # Create an admin user
