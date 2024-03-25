@@ -16,8 +16,8 @@ export type AbstractOrder = {
 };
 
 export type OrderListItem = AbstractOrder & {
-  course_code?: string;
-  enrollment_id?: string;
+  course_code: Nullable<string>;
+  enrollment_id: Nullable<string>;
   organization_title: string;
   owner_name: string;
   product_title: string;
@@ -28,13 +28,13 @@ export type Order = AbstractOrder & {
   product: Product;
   organization: Organization;
   order_group?: OrderGroup;
-  course?: Course;
-  enrollment?: Enrollment;
-  certificate: {
+  course: Nullable<Course>;
+  enrollment: Nullable<Enrollment>;
+  certificate: Nullable<{
     id: string;
     definition_title: string;
     issued_on: string;
-  };
+  }>;
   main_invoice: OrderMainInvoice;
   has_consent_to_terms: boolean;
   contract: Nullable<OrderContractDetails>;
@@ -101,9 +101,9 @@ export enum OrderStatesEnum {
 export const transformOrderToOrderListItem = (order: Order): OrderListItem => {
   return {
     id: order.id,
-    course_code: order.course?.code,
+    course_code: order.course?.code ?? null,
     created_on: order.created_on,
-    enrollment_id: order.enrollment?.id,
+    enrollment_id: order.enrollment?.id ?? null,
     organization_title: order.organization.title,
     owner_name: order.owner.full_name ?? order.owner.username,
     product_title: order.product.title,
