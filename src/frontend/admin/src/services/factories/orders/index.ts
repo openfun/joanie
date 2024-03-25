@@ -6,7 +6,10 @@ import {
   OrderListItem,
   OrderStatesEnum,
 } from "@/services/api/models/Order";
-import { ProductFactoryLight } from "@/services/factories/product";
+import {
+  ProductFactoryLight,
+  ProductSimpleFactory,
+} from "@/services/factories/product";
 import { OrganizationFactory } from "@/services/factories/organizations";
 import { OrderGroupFactory } from "@/services/factories/order-group";
 import { CourseFactory } from "@/services/factories/courses";
@@ -19,9 +22,10 @@ const build = (): Order => {
     created_on: faker.date.anytime().toString(),
     state: faker.helpers.arrayElement(Object.values(OrderStatesEnum)),
     owner: UsersFactory(),
-    product: ProductFactoryLight(),
+    product: ProductSimpleFactory(),
     organization: OrganizationFactory(),
     order_group: OrderGroupFactory(),
+    enrollment: null,
     total: totalOrder,
     total_currency: "EUR",
     course: CourseFactory(),

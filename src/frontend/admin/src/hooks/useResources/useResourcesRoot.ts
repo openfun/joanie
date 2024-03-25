@@ -128,6 +128,14 @@ export const useResourcesRoot = <
     [api, filters],
   );
 
+  const showSuccessMessage = (message: string) => {
+    snackbar.enqueueSnackbar(message, {
+      variant: "success",
+      preventDuplicate: true,
+    });
+    updateError(undefined);
+  };
+
   const updateError = (newError: Maybe<string>) => {
     setError(newError);
     if (newError) {
@@ -270,6 +278,7 @@ export const useResourcesRoot = <
         ? writeHandlers.delete.mutate
         : noop) as unknown as MutateFunc<TApiResource["delete"]>,
       setError: updateError,
+      showSuccessMessage,
       onSuccess,
     },
     states: {

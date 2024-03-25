@@ -1,12 +1,15 @@
-import { defineMessages } from "react-intl";
+import { defineMessages, useIntl } from "react-intl";
+import { useMutation } from "@tanstack/react-query";
 import {
+  QueryOptions,
   ResourcesQuery,
   useResource,
-  useResources,
+  useResourcesCustom,
   UseResourcesProps,
 } from "@/hooks/useResources";
 import { Order, OrderListItem, OrderQuery } from "@/services/api/models/Order";
 import { OrderRepository } from "@/services/repositories/orders/OrderRepository";
+import { HttpError } from "@/services/http/HttpError";
 
 export const useOrdersMessages = defineMessages({
   errorUpdate: {
@@ -15,6 +18,12 @@ export const useOrdersMessages = defineMessages({
       "Error message shown to the user when order update request fails.",
     defaultMessage:
       "An error occurred while updating the order. Please retry later.",
+  },
+  successCertificateGenerate: {
+    id: "hooks.useOrders.successCertificateGenerate",
+    description:
+      "Success message shown to the user when the certificate has been generated.",
+    defaultMessage: "Certificate successfully generated.",
   },
   errorGet: {
     id: "hooks.useOrders.errorGet",
@@ -85,6 +94,36 @@ const orderProps: UseResourcesProps<Order, OrderQuery> = {
 };
 
 // eslint-disable-next-line react-hooks/rules-of-hooks
-export const useOrders = useResources(listProps);
+export const useOrders = (
+  filters?: OrderQuery,
+  queryOptions?: QueryOptions<OrderListItem>,
+) => {
+  const intl = useIntl();
+  const custom = useResourcesCustom({ ...listProps, filters, queryOptions });
+  const mutation = useMutation;
+  return {
+    ...custom,
+    methods: {
+      ...custom.methods,
+      generateCertificate: mutation({
+        mutationFn: async (data: { orderId: string }) => {
+          return OrderRepository.generateCertificate(data.orderId);
+        },
+        onSuccess: () => {
+          custom.methods.invalidate();
+          custom.methods.showSuccessMessage(
+            intl.formatMessage(useOrdersMessages.successCertificateGenerate),
+          );
+        },
+        onError: (error: HttpError) => {
+          custom.methods.setError(
+            error.data?.details ??
+              intl.formatMessage(useOrdersMessages.errorUpdate),
+          );
+        },
+      }).mutate,
+    },
+  };
+};
 // eslint-disable-next-line react-hooks/rules-of-hooks
 export const useOrder = useResource(orderProps);
