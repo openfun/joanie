@@ -10,7 +10,7 @@ and this project adheres to
 
 ## Added
 
-- Add admin Enrollment read only endpoint
+- Add admin Enrollment endpoint
 - Add tabs layout on back offices forms
 - Filter admin resources list through their pk
 - Allow backoffice to generate certificate if order is eligible

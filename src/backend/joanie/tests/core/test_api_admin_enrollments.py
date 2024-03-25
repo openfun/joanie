@@ -173,6 +173,148 @@ class OrdersAdminApiTestCase(TestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
 
+    def test_api_admin_enrollments_update(self):
+        """
+        Update an enrollment should be allowed but only is_active should be writable.
+        """
+
+        # Create an admin user
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        user = factories.UserFactory()
+        course_run = factories.CourseRunFactory(
+            state=CourseState.ONGOING_OPEN, is_listed=True
+        )
+        enrollment = factories.EnrollmentFactory(
+            user=user, course_run=course_run, is_active=True, was_created_by_order=False
+        )
+
+        enrollment_id = enrollment.id
+        enrollment_created_on = enrollment.created_on
+        enrollment_state = enrollment.state
+
+        response = self.client.put(
+            f"/api/v1.0/admin/enrollments/{enrollment.id}/",
+            content_type="application/json",
+            data={
+                "id": uuid.uuid4(),
+                "is_active": False,
+                "was_created_by_order": True,
+                "user": uuid.uuid4(),
+                "course_run": uuid.uuid4(),
+                "certificate": uuid.uuid4(),
+                "created_on": format_date(timezone.now()),
+                "updated_on": format_date(timezone.now()),
+                "state": None,
+            },
+        )
+
+        # We have to refresh enrollment as updated_on should have been updated
+        enrollment.refresh_from_db()
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(
+            response.json(),
+            {
+                "id": str(enrollment_id),
+                "created_on": format_date(enrollment_created_on),
+                "updated_on": format_date(enrollment.updated_on),
+                "state": enrollment_state,
+                "is_active": False,
+                "was_created_by_order": False,
+                "user": {
+                    "id": str(user.id),
+                    "username": user.username,
+                    "full_name": user.get_full_name(),
+                    "email": user.email,
+                },
+                "course_run": {
+                    "id": str(course_run.id),
+                    "resource_link": course_run.resource_link,
+                    "title": course_run.title,
+                    "is_gradable": course_run.is_gradable,
+                    "is_listed": course_run.is_listed,
+                    "languages": course_run.languages,
+                    "start": format_date(course_run.start),
+                    "end": format_date(course_run.end),
+                    "enrollment_start": format_date(course_run.enrollment_start),
+                    "enrollment_end": format_date(course_run.enrollment_end),
+                    "uri": course_run.uri,
+                    "state": {
+                        "call_to_action": course_run.state.get("call_to_action"),
+                        "datetime": format_date(course_run.state.get("datetime")),
+                        "priority": course_run.state.get("priority"),
+                        "text": course_run.state.get("text"),
+                    },
+                },
+                "certificate": None,
+            },
+        )
+
+    def test_api_admin_enrollments_partial_update(self):
+        """
+        Update partially an enrollment should be allowed
+        for the field `is_active` exclusively.
+        """
+        # Create an admin user
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        enrollment = factories.EnrollmentFactory(is_active=True)
+
+        response = self.client.patch(
+            f"/api/v1.0/admin/enrollments/{enrollment.id}/",
+            content_type="application/json",
+            data={"is_active": False},
+        )
+
+        enrollment.refresh_from_db()
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(
+            response.json(),
+            {
+                "id": str(enrollment.id),
+                "created_on": format_date(enrollment.created_on),
+                "updated_on": format_date(enrollment.updated_on),
+                "state": enrollment.state,
+                "is_active": False,
+                "was_created_by_order": enrollment.was_created_by_order,
+                "user": {
+                    "id": str(enrollment.user.id),
+                    "username": enrollment.user.username,
+                    "full_name": enrollment.user.get_full_name(),
+                    "email": enrollment.user.email,
+                },
+                "course_run": {
+                    "id": str(enrollment.course_run.id),
+                    "resource_link": enrollment.course_run.resource_link,
+                    "title": enrollment.course_run.title,
+                    "is_gradable": enrollment.course_run.is_gradable,
+                    "is_listed": enrollment.course_run.is_listed,
+                    "languages": enrollment.course_run.languages,
+                    "start": format_date(enrollment.course_run.start),
+                    "end": format_date(enrollment.course_run.end),
+                    "enrollment_start": format_date(
+                        enrollment.course_run.enrollment_start
+                    ),
+                    "enrollment_end": format_date(enrollment.course_run.enrollment_end),
+                    "uri": enrollment.course_run.uri,
+                    "state": {
+                        "call_to_action": enrollment.course_run.state.get(
+                            "call_to_action"
+                        ),
+                        "datetime": format_date(
+                            enrollment.course_run.state.get("datetime")
+                        ),
+                        "priority": enrollment.course_run.state.get("priority"),
+                        "text": enrollment.course_run.state.get("text"),
+                    },
+                },
+                "certificate": None,
+            },
+        )
+
     def test_api_admin_enrollments_delete(self):
         """An admin user should not be able to delete an enrollment."""
         # Create an admin user
