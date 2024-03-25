@@ -36,6 +36,7 @@ class EnrollmentAdminFilterSet(filters.FilterSet):
         distinct=True,
     )
     ids = MultipleValueFilter(field_class=fields.UUIDField, field_name="id")
+    is_active = filters.BooleanFilter()
 
     def filter_by_query(self, queryset, _name, value):
         """
