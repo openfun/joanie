@@ -244,6 +244,39 @@ class OrdersAdminApiTestCase(TestCase):
         self.assertEqual(content["results"][0]["id"], str(enrollments[2].id))
         self.assertEqual(content["results"][1]["id"], str(enrollments[0].id))
 
+    def test_api_admin_enrollments_filter_by_user_ids(self):
+        """
+        Authenticated admin user should be able to filter all existing enrollments by
+        user ids.
+        """
+
+        enrollments = factories.EnrollmentFactory.create_batch(3)
+
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        response = self.client.get("/api/v1.0/admin/enrollments/")
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(response.json()["count"], 3)
+
+        response = self.client.get(
+            f"/api/v1.0/admin/enrollments/?user_ids={enrollments[0].user.id}"
+        )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+        self.assertEqual(content["results"][0]["id"], str(enrollments[0].id))
+
+        response = self.client.get(
+            f"/api/v1.0/admin/enrollments/"
+            f"?user_ids={enrollments[0].user.id}"
+            f"&user_ids={enrollments[2].user.id}"
+        )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 2)
+        self.assertEqual(content["results"][0]["id"], str(enrollments[2].id))
+        self.assertEqual(content["results"][1]["id"], str(enrollments[0].id))
 
     def test_api_admin_enrollments_create(self):
         """Create an enrollment should be not allowed."""
