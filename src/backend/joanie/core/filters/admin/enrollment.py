@@ -5,10 +5,12 @@ Admin Enrollment API Resource Filters
 from typing import List
 
 from django.db.models import Q
+from django.forms import fields
 
 from django_filters import rest_framework as filters
 
 from joanie.core import enums, models
+from joanie.core.filters.base import MultipleValueFilter
 
 
 class EnrollmentAdminFilterSet(filters.FilterSet):
@@ -33,6 +35,8 @@ class EnrollmentAdminFilterSet(filters.FilterSet):
         field_name="user",
         distinct=True,
     )
+    ids = MultipleValueFilter(field_class=fields.UUIDField, field_name="id")
+
     def filter_by_query(self, queryset, _name, value):
         """
         Filter resource by looking for title which contains provided value in
