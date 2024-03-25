@@ -144,11 +144,25 @@ export const orderViewMessages = defineMessages({
     defaultMessage: "Order informations",
     description: "Title for the order section",
   },
-
   contractDetailsSectionTitle: {
     id: "components.templates.orders.view.contractDetailsSectionTitle",
     defaultMessage: "Contract details",
     description: "Title for the contract section",
+  },
+  certificateDetailsSectionTitle: {
+    id: "components.templates.orders.view.certificateDetailsSectionTitle",
+    defaultMessage: "Certificate details",
+    description: "Title for the certificate section",
+  },
+  certificateDefinitionTemplate: {
+    id: "components.templates.orders.view.certificateDefinitionTemplate",
+    defaultMessage: "Certificate template",
+    description: "Certificate field",
+  },
+  certificateDefinitionDate: {
+    id: "components.templates.orders.view.certificateDefinitionDate",
+    defaultMessage: "Issuance date",
+    description: "Issuance date field",
   },
   orderDetailsSectionAlert: {
     id: "components.templates.orders.view.orderDetailsSectionAlert",

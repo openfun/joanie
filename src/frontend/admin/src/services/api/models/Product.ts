@@ -8,19 +8,29 @@ import { Nullable, Optional, ToFormValues } from "@/types/utils";
 import { ProductFormMainValues } from "@/components/templates/products/form/sections/main/ProductFormMain";
 import { ContractDefinition } from "@/services/api/models/ContractDefinition";
 
-export type Product = {
+export type BaseProduct = {
   id: string;
   type: ProductType;
   title: string;
   description?: string;
   call_to_action: string;
-  target_courses?: ProductTargetCourseRelation[];
   price?: number;
   price_currency?: string;
   instructions?: string;
+};
+
+export type Product = BaseProduct & {
+  target_courses?: ProductTargetCourseRelation[];
   certificate_definition?: CertificateDefinition;
   course_relations?: ProductRelationToCourse[];
   contract_definition?: ContractDefinition;
+};
+
+export type ProductSimple = BaseProduct & {
+  target_courses?: string[];
+  certificate_definition?: string;
+  course_relations?: string[];
+  contract_definition?: string;
 };
 
 export enum ProductType {

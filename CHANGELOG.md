@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Add generate certificate button in Back Office
 - Add admin Enrollment endpoint
 - Add tabs layout on back offices forms
 - Filter admin resources list through their pk

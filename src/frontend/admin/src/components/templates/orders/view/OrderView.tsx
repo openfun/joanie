@@ -25,6 +25,7 @@ import { commonTranslations } from "@/translations/common/commonTranslations";
 import { OrderViewInvoiceSection } from "@/components/templates/orders/view/sections/OrderViewInvoiceSection";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { OrderViewContractSection } from "@/components/templates/orders/view/sections/OrderViewContractSection";
+import { OrderViewCertificateSection } from "@/components/templates/orders/view/sections/OrderViewCertificateSection";
 
 type Props = {
   order: Order;
@@ -204,6 +205,10 @@ export function OrderView({ order }: Props) {
             order={order}
             getViewIcon={getViewIcon}
             getSignedIcon={getSignedIcon}
+          />
+          <OrderViewCertificateSection
+            getViewIcon={getViewIcon}
+            order={order}
           />
           <OrderViewInvoiceSection order={order} />
         </Stack>
