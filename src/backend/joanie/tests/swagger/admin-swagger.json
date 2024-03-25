@@ -2478,6 +2478,18 @@
                     },
                     {
                         "in": "query",
+                        "name": "state",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "failed",
+                                "set"
+                            ]
+                        },
+                        "description": "* `set` - Set\n* `failed` - Failed"
+                    },
+                    {
+                        "in": "query",
                         "name": "user_ids",
                         "schema": {
                             "type": "array",

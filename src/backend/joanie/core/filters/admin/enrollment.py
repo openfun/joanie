@@ -37,6 +37,7 @@ class EnrollmentAdminFilterSet(filters.FilterSet):
     )
     ids = MultipleValueFilter(field_class=fields.UUIDField, field_name="id")
     is_active = filters.BooleanFilter()
+    state = filters.ChoiceFilter(choices=enums.ENROLLMENT_STATE_CHOICES)
 
     def filter_by_query(self, queryset, _name, value):
         """
