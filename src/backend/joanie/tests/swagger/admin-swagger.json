@@ -2436,6 +2436,13 @@
                         "description": "primary key for the record as UUID"
                     },
                     {
+                        "in": "query",
+                        "name": "is_active",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
                         "name": "ordering",
                         "required": false,
                         "in": "query",
