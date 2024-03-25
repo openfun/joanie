@@ -132,4 +132,54 @@ test.describe("<ButtonMenu/>", () => {
     await page.getByRole("menuitem", { name: "Cancel" }).click();
     expect(cancelClicked).toEqual(true);
   });
+
+  test("Check when an option is not disabled, its message is not displayed on hover", async ({
+    mount,
+    page,
+  }) => {
+    const cancelClicked = false;
+    const options: MenuOption[] = [
+      {
+        mainLabel: "Cancel",
+        isDisable: false,
+        disableMessage: "John doe",
+      },
+      { mainLabel: "Account" },
+    ];
+    const component = await mount(
+      <div>
+        <ButtonMenu label="Actions" id="test-button-menu" options={options} />
+      </div>,
+    );
+
+    expect(cancelClicked).toEqual(false);
+    await component.getByRole("button", { name: "Actions" }).click();
+    await page.getByTestId("Cancel").hover();
+    await expect(page.getByText("John Doe")).not.toBeVisible();
+  });
+
+  test("Check when an option is disabled, its message is displayed on hover", async ({
+    mount,
+    page,
+  }) => {
+    const cancelClicked = false;
+    const options: MenuOption[] = [
+      {
+        mainLabel: "Cancel",
+        isDisable: true,
+        disableMessage: "John doe",
+      },
+      { mainLabel: "Account" },
+    ];
+    const component = await mount(
+      <div>
+        <ButtonMenu label="Actions" id="test-button-menu" options={options} />
+      </div>,
+    );
+
+    expect(cancelClicked).toEqual(false);
+    await component.getByRole("button", { name: "Actions" }).click();
+    await page.getByTestId("Cancel").hover();
+    await expect(page.getByText("John Doe")).toBeVisible();
+  });
 });
