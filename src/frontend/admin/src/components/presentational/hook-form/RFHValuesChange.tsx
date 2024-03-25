@@ -42,7 +42,7 @@ export function RHFValuesChange<T extends FieldValues>({
   };
 
   const onValuesChange = useDebouncedCallback(() => {
-    console.log(isValid, errors);
+    console.log("IS VALID", isValid, errors);
     if (!isValid) {
       trigger();
       return;
@@ -67,18 +67,17 @@ export function RHFValuesChange<T extends FieldValues>({
   useEffect(() => {
     console.log(
       "WEEESSSHHH",
-      values,
-      "\n\n\n",
-      oldValues,
       JSON.stringify(values) !== JSON.stringify(oldValues),
     );
     if (JSON.stringify(values) !== JSON.stringify(oldValues)) {
       setOldValues(values);
-
+      console.log("A", translatableFormContext?.formHasBeenReset);
       if (translatableFormContext?.formHasBeenReset) {
+        console.log("A.1");
         translatableFormContext.setFormHasBeenRest(false);
         return;
       }
+      console.log("A.2");
       onValuesChange();
     }
   }, [values]);

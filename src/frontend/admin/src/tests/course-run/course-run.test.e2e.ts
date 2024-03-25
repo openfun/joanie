@@ -9,6 +9,7 @@ import { CourseRun, DTOCourseRun } from "@/services/api/models/CourseRun";
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { getCourseRunTestScenario } from "@/tests/course-run/CourseRunTestScenario";
 import { expectHaveClasses } from "@/tests/utils";
+import { delay } from "@/components/testing/utils";
 
 const coursesApiUrl = "http://localhost:8071/api/v1.0/admin/courses/";
 test.describe("Course run form", () => {
@@ -105,7 +106,14 @@ test.describe("Course run form", () => {
   test("Submit empty form and check error messages", async ({ page }) => {
     await page.goto(PATH_ADMIN.courses_run.list);
     await page.getByRole("button", { name: "Add" }).click();
-    await page.getByTestId("submit-button-course-run-form").click();
+    await expect(
+      page.getByRole("heading", { name: "Add a course run" }),
+    ).toBeVisible();
+
+    await page.getByLabel("Title").click();
+    await page.getByLabel("Title").fill("Test");
+    await delay(10);
+    await page.getByLabel("Title").fill("");
     await expectHaveClasses(
       page.getByText("course is a required field"),
       "Mui-error",
@@ -149,7 +157,6 @@ test.describe("Course run form", () => {
       }
     });
 
-    await page.getByTestId("submit-button-course-run-form").click();
     await expect(
       page.getByText(
         "An error occurred while creating the course-run. Please retry later.",

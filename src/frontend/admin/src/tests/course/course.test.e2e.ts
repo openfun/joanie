@@ -13,6 +13,7 @@ import { DTOProduct, Product } from "@/services/api/models/Product";
 import { expectHaveClasses } from "@/tests/utils";
 import { User } from "@/services/api/models/User";
 import { CourseRun, DTOCourseRun } from "@/services/api/models/CourseRun";
+import { delay } from "@/components/testing/utils";
 
 const coursesApiUrl = "http://localhost:8071/api/v1.0/admin/courses/";
 test.describe("Course form", async () => {
@@ -134,7 +135,6 @@ test.describe("Course form", async () => {
       page.getByRole("button", { name: store.organizations[0].title }),
     ).toBeVisible();
 
-    await page.getByRole("button", { name: "Submit" }).click();
     await expect(
       page.getByText("Operation completed successfully."),
     ).toBeVisible();
@@ -149,7 +149,13 @@ test.describe("Course form", async () => {
   test("Validate an empty form and check error messages", async ({ page }) => {
     await page.goto(PATH_ADMIN.courses.list);
     await page.getByRole("button", { name: "Add" }).click();
-    await page.getByRole("button", { name: "Submit" }).click();
+    await expect(
+      page.getByRole("heading", { name: "Add a course" }),
+    ).toBeVisible();
+    await page.getByLabel("Title").click();
+    await page.getByLabel("Title").fill("Test course");
+    await delay(10);
+    await page.getByLabel("Title").fill("");
 
     await expectHaveClasses(
       page.getByText("title is a required field"),
@@ -196,7 +202,6 @@ test.describe("Course form", async () => {
     await page
       .getByRole("textbox", { name: "Title", exact: true })
       .fill(newCourseTitle);
-    await page.getByRole("button", { name: "Submit" }).click();
     await page.getByText("Operation completed successfully.").click();
     await expect(
       page.getByRole("heading", { name: `Edit course: ${newCourseTitle}` }),

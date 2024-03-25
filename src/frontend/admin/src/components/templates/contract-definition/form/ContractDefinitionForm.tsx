@@ -174,6 +174,7 @@ export function ContractDefinitionForm({
                 onChange={(markdown) => {
                   methods.setValue("body", markdown ?? "", {
                     shouldDirty: true,
+                    shouldValidate: true,
                   });
                 }}
               />

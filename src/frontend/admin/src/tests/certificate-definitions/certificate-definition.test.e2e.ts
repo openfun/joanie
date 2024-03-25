@@ -10,6 +10,7 @@ import {
 } from "@/services/api/models/CertificateDefinition";
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { expectHaveClasses } from "@/tests/utils";
+import { delay } from "@/components/testing/utils";
 
 const certificateDefinitionApiUrl =
   "http://localhost:8071/api/v1.0/admin/certificate-definitions/";
@@ -59,7 +60,6 @@ test.describe("Certificate definition form", () => {
     await page.getByLabel("Name").fill("Test name");
     await page.getByLabel("Description").click();
     await page.getByLabel("Description").fill("Test description");
-    await page.getByRole("button", { name: "Submit" }).click();
 
     // Get the successfully notification
     await expect(
@@ -90,10 +90,6 @@ test.describe("Certificate definition form", () => {
     await page.getByLabel("Name").click();
     await page.getByLabel("Name").fill(certificateDefinition.name);
     await page.getByLabel("Description").click();
-    await page
-      .getByLabel("Description")
-      .fill(certificateDefinition.description ?? "");
-
     const urlRegex = getUrlCatchSearchParamsRegex(certificateDefinitionApiUrl);
     await page.unroute(urlRegex);
     await page.route(urlRegex, async (route, request) => {
@@ -108,8 +104,9 @@ test.describe("Certificate definition form", () => {
         });
       }
     });
-
-    await page.getByRole("button", { name: "Submit" }).click();
+    await page
+      .getByLabel("Description")
+      .fill(certificateDefinition.description ?? "");
 
     // Get the successfully notification
     await expect(
@@ -148,7 +145,6 @@ test.describe("Certificate definition form", () => {
     await page.getByLabel("Title").click();
     await page.getByLabel("Title").fill(newTitle);
 
-    await page.getByRole("button", { name: "Submit" }).click();
     // Get the successfully notification
     await expect(
       page.getByText("Operation completed successfully."),
@@ -168,7 +164,10 @@ test.describe("Certificate definition form", () => {
   }) => {
     await page.goto(PATH_ADMIN.certificates.list);
     await page.getByRole("button", { name: "Add" }).click();
-    await page.getByRole("button", { name: "Submit" }).click();
+    await page.getByLabel("Title").click();
+    await page.getByLabel("Title").fill("Title");
+    await delay(100);
+    await page.getByLabel("Title").fill("");
 
     // Title and name are mandatory
     await expectHaveClasses(

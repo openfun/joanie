@@ -8,6 +8,7 @@ import {
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { expectHaveClasses } from "@/tests/utils";
 import { CONTRACT_DEFINITION_OPTIONS_REQUEST_RESULT } from "@/tests/mocks/contract-definitions/contract-definition-mocks";
+import { delay } from "@/components/testing/utils";
 
 const contractDefinitionApiUrl =
   "http://localhost:8071/api/v1.0/admin/contract-definitions/";
@@ -71,14 +72,14 @@ test.describe("Contract definition form", () => {
     await page.getByLabel("Title", { exact: true }).fill("Contract title");
     await page.getByLabel("Language").click();
     await page.getByRole("option", { name: "English" }).click();
-    await page.getByLabel("Description").dblclick();
+    await page.getByLabel("Description").click();
     await page.getByLabel("Description").fill("Contract description");
     await page.getByTestId("md-editor").getByRole("textbox").click();
     await page
       .getByTestId("md-editor")
       .getByRole("textbox")
       .fill("### Body\n\n> Info");
-    await page.getByRole("button", { name: "Submit" }).click();
+    await delay(850);
 
     await expect(
       page.getByText("Operation completed successfully."),
@@ -98,7 +99,11 @@ test.describe("Contract definition form", () => {
   test("Validate an empty form and check error messages", async ({ page }) => {
     await page.goto(PATH_ADMIN.contract_definition.list);
     await page.getByRole("button", { name: "Add" }).click();
-    await page.getByRole("button", { name: "Submit" }).click();
+    await page.getByLabel("Title", { exact: true }).click();
+    await page.getByLabel("Title", { exact: true }).fill("Contract title");
+    await delay(100);
+    await page.getByLabel("Title", { exact: true }).fill("");
+    await delay(100);
 
     await expectHaveClasses(
       page.getByText("title is a required field"),
@@ -135,7 +140,6 @@ test.describe("Contract definition form", () => {
     await page.getByLabel("Title", { exact: true }).fill(newTitle);
     await page.getByLabel("Language").click();
     await page.getByRole("option", { name: "English" }).click();
-    await page.getByRole("button", { name: "Submit" }).click();
     await expect(
       page.getByText("Operation completed successfully."),
     ).toBeVisible();

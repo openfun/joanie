@@ -35,6 +35,9 @@ export function TranslatableForm({
   };
 
   const handleChange = (event: React.SyntheticEvent, newValue: string) => {
+    if (value === newValue) {
+      return;
+    }
     setValue(newValue);
     localStorage.setItem(TRANSLATE_CONTENT_LANGUAGE, newValue);
     langHasChanged.current = true;
@@ -42,7 +45,7 @@ export function TranslatableForm({
   };
 
   useEffect(() => {
-    if (langHasChanged) {
+    if (langHasChanged.current) {
       langHasChanged.current = false;
       if (resetForm) {
         resetForm();
