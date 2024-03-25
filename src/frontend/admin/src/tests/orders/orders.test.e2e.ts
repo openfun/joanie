@@ -18,6 +18,7 @@ import {
   Organization,
 } from "@/services/api/models/Organization";
 import { ORGANIZATION_OPTIONS_REQUEST_RESULT } from "@/tests/mocks/organizations/organization-mock";
+import { closeAllNotification, delay } from "@/components/testing/utils";
 
 const url = "http://localhost:8071/api/v1.0/admin/orders/";
 const catchIdRegex = getUrlCatchIdRegex(url);
@@ -97,7 +98,7 @@ test.describe("Order view", () => {
     );
 
     if (order.certificate) {
-      await expect(page.getByLabel("Certificate")).toHaveValue(
+      await expect(page.getByLabel("Certificate", { exact: true })).toHaveValue(
         order.certificate.definition_title,
       );
     }
@@ -149,7 +150,9 @@ test.describe("Order view", () => {
     await expect(page.getByLabel("Updated on")).toBeVisible();
     await expect(page.getByLabel("Balance")).toBeVisible();
     if (order.certificate) {
-      await expect(page.getByLabel("Certificate")).toBeVisible();
+      await expect(
+        page.getByLabel("Certificate", { exact: true }),
+      ).toBeVisible();
     }
   });
   test("Check all contract fields field are in this view", async ({ page }) => {
@@ -266,6 +269,102 @@ test.describe("Order view", () => {
     await expect(page.getByRole("textbox", { name: "State" })).toHaveValue(
       "Canceled",
     );
+  });
+
+  test("Generate certificate", async ({ page }) => {
+    const order = store.list[0];
+    order.certificate = null;
+
+    await page.unroute(catchIdRegex);
+    await page.route(catchIdRegex, async (route, request) => {
+      const methods = request.method();
+      if (methods === "GET") {
+        await route.fulfill({ json: order });
+      }
+
+      if (methods === "DELETE") {
+        order.state = OrderStatesEnum.ORDER_STATE_CANCELED;
+        await route.fulfill({ json: order });
+      }
+    });
+    await page.goto(PATH_ADMIN.orders.list);
+    await page.getByRole("heading", { name: "Orders" }).click();
+    await page.getByRole("link", { name: order.product.title }).click();
+    await expect(
+      page.getByRole("heading", { name: "Order informations" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Certificate details" }),
+    ).not.toBeVisible();
+
+    // Check and click on the action button
+    const actionsMenuButton = page.getByRole("button", { name: "Actions" });
+    await expect(actionsMenuButton).toBeVisible();
+    await actionsMenuButton.click();
+
+    await page.route(
+      `http://localhost:8071/api/v1.0/admin/orders/${order.id}/generate_certificate/`,
+      async (route, request) => {
+        const methods = request.method();
+        if (methods === "POST") {
+          await route.fulfill({
+            json: {
+              definition_title: "Certificate definition",
+              id: "e4c5c271-5695-4e29-a381-09e3c1635e74",
+              issued_on: "2024-03-25T14:00:58.034185Z",
+            },
+          });
+        }
+      },
+    );
+
+    order.certificate = {
+      definition_title: "Certificate definition",
+      id: "e4c5c271-5695-4e29-a381-09e3c1635e74",
+      issued_on: "2024-03-25T14:00:58.034185Z",
+    };
+    await page.unroute(catchIdRegex);
+    await page.route(catchIdRegex, async (route, request) => {
+      const methods = request.method();
+      if (methods === "GET") {
+        await route.fulfill({ json: order });
+      }
+    });
+
+    // // Cancel order
+    //
+    const generateCertificateAction = page.getByRole("menuitem", {
+      name: "Generate certificate",
+    });
+    await expect(generateCertificateAction).toBeVisible();
+    await generateCertificateAction.click();
+    //
+    // // Check after operation
+    await expect(
+      page.getByText("Certificate successfully generated"),
+    ).toBeVisible();
+
+    // Check the certificate details sections
+    await expect(
+      page.getByRole("heading", { name: "Certificate details" }),
+    ).toBeVisible();
+
+    const certificateName = page.getByLabel("Certificate template");
+    await expect(certificateName).toBeVisible();
+    await expect(certificateName).toHaveValue("Certificate definition");
+
+    const generatedDate = page.getByLabel("Issuance date");
+    await expect(generatedDate).toBeVisible();
+    await expect(generatedDate).toHaveValue("3/25/2024");
+
+    await closeAllNotification(page);
+    await actionsMenuButton.click();
+    await page.getByTestId("Generate certificate").hover();
+    await delay(200);
+
+    await expect(
+      page.getByText("The certificate has already been generated"),
+    ).toBeVisible();
   });
 });
 
