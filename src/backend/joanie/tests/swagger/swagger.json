@@ -2537,7 +2537,6 @@
                             "type": "array",
                             "items": {
                                 "type": "string",
-                                "default": "draft",
                                 "enum": [
                                     "canceled",
                                     "draft",
@@ -2558,7 +2557,6 @@
                             "type": "array",
                             "items": {
                                 "type": "string",
-                                "default": "draft",
                                 "enum": [
                                     "canceled",
                                     "draft",
@@ -4132,8 +4130,7 @@
                     },
                     "is_main": {
                         "type": "boolean",
-                        "default": false,
-                        "title": "Main"
+                        "title": "main"
                     },
                     "postcode": {
                         "type": "string",
@@ -4184,8 +4181,7 @@
                     },
                     "is_main": {
                         "type": "boolean",
-                        "default": false,
-                        "title": "Main"
+                        "title": "main"
                     },
                     "postcode": {
                         "type": "string",
@@ -5043,8 +5039,7 @@
                     },
                     "is_main": {
                         "type": "boolean",
-                        "default": false,
-                        "title": "Main"
+                        "title": "main"
                     }
                 },
                 "required": [
@@ -5066,8 +5061,7 @@
                     },
                     "is_main": {
                         "type": "boolean",
-                        "default": false,
-                        "title": "Main"
+                        "title": "main"
                     }
                 }
             },
@@ -6329,8 +6323,7 @@
                     },
                     "is_main": {
                         "type": "boolean",
-                        "default": false,
-                        "title": "Main"
+                        "title": "main"
                     },
                     "postcode": {
                         "type": "string",
@@ -6374,8 +6367,7 @@
                     },
                     "is_main": {
                         "type": "boolean",
-                        "default": false,
-                        "title": "Main"
+                        "title": "main"
                     }
                 }
             },

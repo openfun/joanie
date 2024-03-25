@@ -1,6 +1,7 @@
+# ruff: noqa: SLF001
+# pylint: disable=too-many-lines
 """Client serializers for Joanie Core app."""
 
-# pylint: disable=too-many-lines
 from django.conf import settings
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
@@ -67,6 +68,10 @@ class AddressSerializer(serializers.ModelSerializer):
     """
 
     id = serializers.CharField(read_only=True, required=False)
+    is_main = serializers.BooleanField(
+        required=False,
+        label=models.Address._meta.get_field("is_main").verbose_name,
+    )
 
     class Meta:
         model = models.Address
@@ -111,6 +116,12 @@ class CourseAccessSerializer(AbilitiesModelSerializer):
         queryset=models.User.objects.all(),
         slug_field="id",
         source="user",
+    )
+
+    role = serializers.ChoiceField(
+        required=False,
+        choices=models.CourseAccess._meta.get_field("role").choices,
+        default=models.CourseAccess._meta.get_field("role").default,
     )
 
     class Meta:
@@ -220,6 +231,12 @@ class OrganizationAccessSerializer(AbilitiesModelSerializer):
         queryset=models.User.objects.all(),
         slug_field="id",
         source="user",
+    )
+
+    role = serializers.ChoiceField(
+        required=False,
+        choices=models.OrganizationAccess._meta.get_field("role").choices,
+        default=models.OrganizationAccess._meta.get_field("role").default,
     )
 
     class Meta:
