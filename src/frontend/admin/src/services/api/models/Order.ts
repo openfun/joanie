@@ -3,7 +3,7 @@ import { Course } from "@/services/api/models/Course";
 import { Organization } from "@/services/api/models/Organization";
 import { OrderGroup } from "@/services/api/models/OrderGroup";
 import { User } from "@/services/api/models/User";
-import { Product } from "@/services/api/models/Product";
+import { ProductSimple } from "@/services/api/models/Product";
 import { Enrollment } from "@/services/api/models/Enrollment";
 import { Nullable } from "@/types/utils";
 
@@ -25,7 +25,7 @@ export type OrderListItem = AbstractOrder & {
 
 export type Order = AbstractOrder & {
   owner: User;
-  product: Product;
+  product: ProductSimple;
   organization: Organization;
   order_group?: OrderGroup;
   course: Nullable<Course>;
