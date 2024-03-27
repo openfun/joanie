@@ -4,6 +4,7 @@ Admin API Endpoints
 
 from http import HTTPStatus
 
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.http import JsonResponse
 
@@ -19,10 +20,14 @@ from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
 from rest_framework.response import Response
 
-from joanie.core import filters, models, serializers
+from joanie.celery_app import app
+from joanie.core import enums, filters, models, serializers
 from joanie.core.api.base import NestedGenericViewSet, SerializerPerActionMixin
 from joanie.core.authentication import SessionAuthenticationWithAuthenticateHeader
 from joanie.core.exceptions import CertificateGenerationError
+from joanie.core.helpers import generate_certificates_for_orders
+from joanie.core.tasks import generate_certificates_task
+from joanie.core.utils.course_product_relation import get_orders
 
 from .enrollment import EnrollmentViewSet
 
@@ -397,6 +402,44 @@ class CourseProductRelationViewSet(viewsets.ModelViewSet):
                 {"detail": str(error)},
                 status=HTTPStatus.FORBIDDEN,
             )
+
+    @extend_schema(request=None, responses=None)
+    @action(
+        methods=["POST"],
+        detail=True,
+        url_name="generate_certificates",
+    )
+    def generate_certificates(self, request, pk=None):  # pylint:disable=unused-argument
+        """
+        Generate the certificates for a course product relation when it is eligible.
+        """
+        course_product_relation = self.get_object()
+        cache_key = f"celery_certificate_generation_{course_product_relation.id}"
+
+        if cache_data := cache.get(cache_key):
+            return JsonResponse(cache_data, safe=False, status=HTTPStatus.ACCEPTED)
+
+        # Prepare cache data before trigger celery's task.
+        order_ids = get_orders(course_product_relation=course_product_relation)
+        cache_data = (
+            {
+                "in progress": True,
+                "course_product_relation_id": str(course_product_relation.id),
+                "count_certificate_to_generate": len(order_ids),
+                "count_exist_before_generation": models.Certificate.objects.filter(
+                    order__in=order_ids
+                ).count(),
+            }
+        )
+        cache.set(cache_key, cache_data)
+
+        try:
+            generate_certificates_task.delay(order_ids=order_ids, cache_key=cache_key)
+        except Exception as error:
+            cache.delete(cache_key)
+            raise Response(error, safe=False, status=BAD_REQUEST)
+
+        return JsonResponse(cache_data, safe=False, status=HTTPStatus.CREATED)
 
 
 class NestedCourseProductRelationOrderGroupViewSet(
