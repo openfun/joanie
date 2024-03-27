@@ -2,6 +2,8 @@
 Declare and configure the models for the customers part
 """
 
+import logging
+
 import django.contrib.auth.models as auth_models
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -15,6 +17,11 @@ from rest_framework_simplejwt.settings import api_settings
 from joanie.core.authentication import get_user_dict
 from joanie.core.models.base import BaseModel
 from joanie.core.utils import normalize_phone_number
+from joanie.core.utils.newsletter.subscription import (
+    set_commercial_newsletter_subscription,
+)
+
+logger = logging.getLogger(__name__)
 
 
 class User(BaseModel, auth_models.AbstractUser):
@@ -51,6 +58,12 @@ class User(BaseModel, auth_models.AbstractUser):
         verbose_name = _("User")
         verbose_name_plural = _("Users")
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.last_has_subscribed_to_commercial_newsletter = (
+            self.has_subscribed_to_commercial_newsletter
+        )
+
     def __str__(self):
         return self.username
 
@@ -65,6 +78,29 @@ class User(BaseModel, auth_models.AbstractUser):
     def save(self, *args, **kwargs):
         """Enforce validation each time an instance is saved."""
         self.full_clean()
+        if self.created_on is None and self.has_subscribed_to_commercial_newsletter:
+            # The user is being created and has subscribed to the newsletter
+            logger.info(
+                "New user %s has subscribed to the commercial newsletter", self.id
+            )
+            set_commercial_newsletter_subscription(self)
+        if (
+            self.has_subscribed_to_commercial_newsletter
+            != self.last_has_subscribed_to_commercial_newsletter
+        ):
+            # The user has changed their subscription status
+            logger.info(
+                "User %s has changed their subscription status to %s",
+                self.id,
+                self.has_subscribed_to_commercial_newsletter,
+            )
+            self.last_has_subscribed_to_commercial_newsletter = (
+                self.has_subscribed_to_commercial_newsletter
+            )
+            set_commercial_newsletter_subscription(self)
+        else:
+            logger.info("User %s has not changed their subscription status", self.id)
+
         super().save(*args, **kwargs)
 
     def update_from_token(self, token):

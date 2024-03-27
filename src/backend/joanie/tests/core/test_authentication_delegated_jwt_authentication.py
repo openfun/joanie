@@ -2,6 +2,8 @@
 Unit tests for the DelegatedJWTAuthentication backend.
 """
 
+from unittest.mock import patch
+
 from joanie.core import factories, models
 from joanie.core.authentication import DelegatedJWTAuthentication
 from joanie.tests.base import BaseAPITestCase
@@ -12,7 +14,8 @@ class DelegatedJWTAuthenticationTestCase(BaseAPITestCase):
     Unit test suite to validate the behavior of the DelegatedJWTAuthentication backend.
     """
 
-    def test_authentication_delegated_user_unknown(self):
+    @patch("joanie.core.utils.newsletter.subscription.Brevo")
+    def test_authentication_delegated_user_unknown(self, mock_brevo):
         """If the user is unknown, it should be created on the fly."""
         token = self.get_user_token("dave")
         token.payload.update(
@@ -40,6 +43,7 @@ class DelegatedJWTAuthenticationTestCase(BaseAPITestCase):
         self.assertFalse(user.is_staff)
         self.assertFalse(user.is_superuser)
         self.assertTrue(user.has_subscribed_to_commercial_newsletter)
+        mock_brevo().subscribe_to_commercial_list.assert_called_once()
 
     def test_authentication_delegated_user_existing(self):
         """
