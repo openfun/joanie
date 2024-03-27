@@ -15,6 +15,9 @@ from rest_framework_simplejwt.settings import api_settings
 from joanie.core.authentication import get_user_dict
 from joanie.core.models.base import BaseModel
 from joanie.core.utils import normalize_phone_number
+from joanie.core.utils.newsletter.subscription import (
+    set_commercial_newsletter_subscription,
+)
 
 
 class User(BaseModel, auth_models.AbstractUser):
@@ -51,6 +54,12 @@ class User(BaseModel, auth_models.AbstractUser):
         verbose_name = _("User")
         verbose_name_plural = _("Users")
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.last_has_subscribed_to_commercial_newsletter = (
+            self.has_subscribed_to_commercial_newsletter
+        )
+
     def __str__(self):
         return self.username
 
@@ -65,6 +74,18 @@ class User(BaseModel, auth_models.AbstractUser):
     def save(self, *args, **kwargs):
         """Enforce validation each time an instance is saved."""
         self.full_clean()
+        if self.created_on is None and self.has_subscribed_to_commercial_newsletter:
+            # The user is created and has subscribed to the newsletter
+            set_commercial_newsletter_subscription(self)
+        if (
+            self.has_subscribed_to_commercial_newsletter
+            != self.last_has_subscribed_to_commercial_newsletter
+        ):
+            # The user has changed their subscription status
+            self.last_has_subscribed_to_commercial_newsletter = (
+                self.has_subscribed_to_commercial_newsletter
+            )
+            set_commercial_newsletter_subscription(self)
         super().save(*args, **kwargs)
 
     def update_from_token(self, token):

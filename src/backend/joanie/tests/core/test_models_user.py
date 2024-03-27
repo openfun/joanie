@@ -1,5 +1,7 @@
 """Test suite for badge models."""
 
+from unittest.mock import patch
+
 from django.core.exceptions import ValidationError
 from django.test.utils import override_settings
 
@@ -279,3 +281,68 @@ class UserModelTestCase(BaseAPITestCase):
         user.save()
 
         self.assertEqual(user.phone_number, "")
+
+    @patch("joanie.core.models.accounts.set_commercial_newsletter_subscription")
+    def test_models_user_create_no_newsletter_subscription(
+        self, mock_set_commercial_newsletter_subscription
+    ):
+        """New user with no subscription should not trigger the subscription"""
+        factories.UserFactory(has_subscribed_to_commercial_newsletter=False)
+        self.assertFalse(mock_set_commercial_newsletter_subscription.called)
+
+    @patch("joanie.core.models.accounts.set_commercial_newsletter_subscription")
+    def test_models_user_create_newsletter_subscription(
+        self, mock_set_commercial_newsletter_subscription
+    ):
+        """New user with subscription should trigger the subscription"""
+        factories.UserFactory(has_subscribed_to_commercial_newsletter=True)
+        self.assertTrue(mock_set_commercial_newsletter_subscription.called)
+
+    @patch("joanie.core.models.accounts.set_commercial_newsletter_subscription")
+    def test_models_user_update_newsletter_subscription(
+        self, mock_set_commercial_newsletter_subscription
+    ):
+        """User adding subscription should trigger the subscription."""
+        unsubscribed_user = factories.UserFactory(
+            has_subscribed_to_commercial_newsletter=False
+        )
+        self.assertFalse(mock_set_commercial_newsletter_subscription.called)
+        unsubscribed_user.has_subscribed_to_commercial_newsletter = True
+        unsubscribed_user.save()
+        self.assertTrue(mock_set_commercial_newsletter_subscription.called)
+
+    @patch("joanie.core.models.accounts.set_commercial_newsletter_subscription")
+    def test_models_user_update_remove_newsletter_subscription(
+        self, mock_set_commercial_newsletter_subscription
+    ):
+        """User removing subscription should trigger the subscription."""
+        subscribed_user = factories.UserFactory(
+            has_subscribed_to_commercial_newsletter=True
+        )
+        self.assertTrue(mock_set_commercial_newsletter_subscription.called)
+        mock_set_commercial_newsletter_subscription.reset_mock()
+
+        subscribed_user.has_subscribed_to_commercial_newsletter = False
+        subscribed_user.save()
+        self.assertTrue(mock_set_commercial_newsletter_subscription.called)
+
+    @patch("joanie.core.models.accounts.set_commercial_newsletter_subscription")
+    def test_models_user_field_has_subscribed_to_commercial_newsletter(
+        self, mock_set_commercial_newsletter_subscription
+    ):
+        """User not changing subscription should not trigger the subscription."""
+        unsubscribed_user = factories.UserFactory(
+            has_subscribed_to_commercial_newsletter=False
+        )
+        unsubscribed_user.has_subscribed_to_commercial_newsletter = False
+        unsubscribed_user.save()
+        self.assertFalse(mock_set_commercial_newsletter_subscription.called)
+
+        subscribed_user = factories.UserFactory(
+            has_subscribed_to_commercial_newsletter=True
+        )
+        self.assertTrue(mock_set_commercial_newsletter_subscription.called)
+        mock_set_commercial_newsletter_subscription.reset_mock()
+        subscribed_user.has_subscribed_to_commercial_newsletter = True
+        subscribed_user.save()
+        self.assertFalse(mock_set_commercial_newsletter_subscription.called)
