@@ -57,6 +57,10 @@ class BrevoTestCase(TestCase):
                 responses.matchers.json_params_matcher(
                     {
                         "email": user.email,
+                        "attributes": {
+                            "NOM": user.last_name,
+                            "PRENOM": user.first_name,
+                        },
                         "listIds": [settings.BREVO_COMMERCIAL_NEWSLETTER_LIST_ID],
                     }
                 ),
@@ -65,7 +69,7 @@ class BrevoTestCase(TestCase):
             json=json_response,
         )
 
-        brevo_user = Brevo(user)
+        brevo_user = Brevo(user.to_dict())
         response = brevo_user.create_contact_to_commercial_list()
 
         self.assertEqual(json_response, response)
@@ -105,7 +109,7 @@ class BrevoTestCase(TestCase):
             json=json_response,
         )
 
-        brevo_user = Brevo(user)
+        brevo_user = Brevo(user.to_dict())
         response = brevo_user.subscribe_to_commercial_list()
 
         self.assertEqual(json_response, response)
@@ -162,6 +166,10 @@ class BrevoTestCase(TestCase):
                 responses.matchers.json_params_matcher(
                     {
                         "email": user.email,
+                        "attributes": {
+                            "NOM": user.last_name,
+                            "PRENOM": user.first_name,
+                        },
                         "listIds": [settings.BREVO_COMMERCIAL_NEWSLETTER_LIST_ID],
                     }
                 ),
@@ -170,7 +178,7 @@ class BrevoTestCase(TestCase):
             json=json_response,
         )
 
-        brevo_user = Brevo(user)
+        brevo_user = Brevo(user.to_dict())
         response = brevo_user.subscribe_to_commercial_list()
 
         self.assertEqual(json_response, response)
@@ -210,7 +218,7 @@ class BrevoTestCase(TestCase):
             json=json_response,
         )
 
-        brevo_user = Brevo(user)
+        brevo_user = Brevo(user.to_dict())
         response = brevo_user.unsubscribe_from_commercial_list()
 
         self.assertEqual(json_response, response)
