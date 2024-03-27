@@ -57,6 +57,10 @@ class BrevoTestCase(TestCase):
                 responses.matchers.json_params_matcher(
                     {
                         "email": user.email,
+                        "attributes": {
+                            "NOM": user.last_name,
+                            "PRENOM": user.first_name,
+                        },
                         "listIds": [settings.BREVO_COMMERCIAL_NEWSLETTER_LIST_ID],
                     }
                 ),
@@ -164,6 +168,10 @@ class BrevoTestCase(TestCase):
                 responses.matchers.json_params_matcher(
                     {
                         "email": user.email,
+                        "attributes": {
+                            "NOM": user.last_name,
+                            "PRENOM": user.first_name,
+                        },
                         "listIds": [settings.BREVO_COMMERCIAL_NEWSLETTER_LIST_ID],
                     }
                 ),
