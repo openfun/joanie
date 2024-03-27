@@ -76,7 +76,7 @@ class User(BaseModel, auth_models.AbstractUser):
         self.full_clean()
         if self.created_on is None and self.has_subscribed_to_commercial_newsletter:
             # The user is created and has subscribed to the newsletter
-            set_commercial_newsletter_subscription(self)
+            set_commercial_newsletter_subscription.delay(self.to_dict())
         if (
             self.has_subscribed_to_commercial_newsletter
             != self.last_has_subscribed_to_commercial_newsletter
@@ -85,7 +85,7 @@ class User(BaseModel, auth_models.AbstractUser):
             self.last_has_subscribed_to_commercial_newsletter = (
                 self.has_subscribed_to_commercial_newsletter
             )
-            set_commercial_newsletter_subscription(self)
+            set_commercial_newsletter_subscription.delay(self.to_dict())
         super().save(*args, **kwargs)
 
     def update_from_token(self, token):

@@ -65,7 +65,7 @@ class BrevoTestCase(TestCase):
             json=json_response,
         )
 
-        brevo_user = Brevo(user)
+        brevo_user = Brevo(user.to_dict())
         response = brevo_user.create_contact_to_commercial_list()
 
         self.assertEqual(json_response, response)
@@ -107,7 +107,7 @@ class BrevoTestCase(TestCase):
             json=json_response,
         )
 
-        brevo_user = Brevo(user)
+        brevo_user = Brevo(user.to_dict())
         response = brevo_user.subscribe_to_commercial_list()
 
         self.assertEqual(json_response, response)
@@ -172,7 +172,7 @@ class BrevoTestCase(TestCase):
             json=json_response,
         )
 
-        brevo_user = Brevo(user)
+        brevo_user = Brevo(user.to_dict())
         response = brevo_user.subscribe_to_commercial_list()
 
         self.assertEqual(json_response, response)
@@ -214,7 +214,7 @@ class BrevoTestCase(TestCase):
             json=json_response,
         )
 
-        brevo_user = Brevo(user)
+        brevo_user = Brevo(user.to_dict())
         response = brevo_user.unsubscribe_from_commercial_list()
 
         self.assertEqual(json_response, response)

@@ -25,7 +25,7 @@ class UtilsNewsletterSubscriptionTestCase(TestCase):
             email="ncl_test@example.com",
         )
 
-        set_commercial_newsletter_subscription(user)
+        set_commercial_newsletter_subscription.run(user)
 
         mock_brevo().subscribe_to_commercial_list.assert_called_once()
 
@@ -39,6 +39,6 @@ class UtilsNewsletterSubscriptionTestCase(TestCase):
             email="ncl_test@example.com",
         )
 
-        set_commercial_newsletter_subscription(user)
+        set_commercial_newsletter_subscription.run(user)
 
         mock_brevo().unsubscribe_from_commercial_list.assert_called_once()
