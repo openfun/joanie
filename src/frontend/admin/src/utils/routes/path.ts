@@ -46,6 +46,11 @@ export const PATH_ADMIN = {
     list: path("/orders/list"),
     view: (id: string) => path(`/orders/${id}/view`),
   },
+  enrollments: {
+    root: path("/enrollments"),
+    list: path("/enrollments/list"),
+    view: (id: string) => path(`/enrollments/${id}/view`),
+  },
   auth: {
     login: (redirectUrl?: string) => {
       // eslint-disable-next-line compat/compat
