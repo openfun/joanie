@@ -345,6 +345,7 @@ class Base(Configuration):
             "email": "email",
             "first_name": "full_name",
             "language": "language",
+            "has_subscribed_to_commercial_newsletter": "has_subscribed_to_commercial_newsletter",
         },
         environ_name="JOANIE_JWT_USER_FIELDS_SYNC",
         environ_prefix=None,
@@ -476,6 +477,17 @@ class Base(Configuration):
     CELERY_BROKER_URL = values.Value("redis://redis:6379/0")
     CELERY_BROKER_TRANSPORT_OPTIONS = values.DictValue({})
     CELERY_DEFAULT_QUEUE = values.Value("celery")
+
+    # Newsletters
+    BREVO_API_URL = values.Value(
+        "https://api.brevo.com/v3/", environ_name="BREVO_API_URL", environ_prefix=None
+    )
+    BREVO_API_KEY = values.Value(
+        None, environ_name="BREVO_API_KEY", environ_prefix=None
+    )
+    BREVO_COMMERCIAL_NEWSLETTER_LIST_ID = values.IntegerValue(
+        None, environ_name="BREVO_COMMERCIAL_NEWSLETTER_LIST_ID", environ_prefix=None
+    )
 
     # Open edX database import
     EDX_DOMAIN = values.Value(None, environ_name="EDX_DOMAIN", environ_prefix=None)
