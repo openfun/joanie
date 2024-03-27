@@ -31,6 +31,8 @@ def generate_certificates_task(order_ids, cache_key):
     from an Order queryset.
     """
     logger.info("Starting Celery task, generating certificates...")
-    helpers.generate_certificates_for_orders(orders=order_ids)
-    cache.delete(cache_key)  # clear the cache when successful
+    try:
+        helpers.generate_certificates_for_orders(orders=order_ids)
+    finally:
+        cache.delete(cache_key)  # clear the cache when task is successful
     logger.info("Done executing Celery generating certificates task...")

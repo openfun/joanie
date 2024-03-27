@@ -417,12 +417,11 @@ class CourseProductRelationViewSet(viewsets.ModelViewSet):
         cache_key = f"celery_certificate_generation_{course_product_relation.id}"
 
         if cache_data := cache.get(cache_key):
-            return JsonResponse({"details": cache_data}, status=HTTPStatus.ACCEPTED)
+            return JsonResponse(cache_data, safe=False, status=HTTPStatus.ACCEPTED)
 
         # Prepare cache data before trigger celery's task.
         order_ids = get_orders(course_product_relation=course_product_relation)
-        cache_data = cache.set(
-            cache_key,
+        cache_data = (
             {
                 "in progress": True,
                 "course_product_relation_id": str(course_product_relation.id),
@@ -430,15 +429,17 @@ class CourseProductRelationViewSet(viewsets.ModelViewSet):
                 "count_exist_before_generation": models.Certificate.objects.filter(
                     order__in=order_ids
                 ).count(),
-            },
+            }
         )
-        # Triggering celery's task.
-        generate_certificates_task.delay(order_ids=order_ids, cache_key=cache_key)
+        cache.set(cache_key, cache_data)
 
-        if cache_data := cache.get(cache_key):
-            return JsonResponse({"details": cache_data}, status=HTTPStatus.ACCEPTED)
+        try:
+            generate_certificates_task.delay(order_ids=order_ids, cache_key=cache_key)
+        except Exception as error:
+            cache.delete(cache_key)
+            raise Response(error, safe=False, status=BAD_REQUEST)
 
-        return Response(status=HTTPStatus.CREATED)
+        return JsonResponse(cache_data, safe=False, status=HTTPStatus.CREATED)
 
 
 class NestedCourseProductRelationOrderGroupViewSet(
