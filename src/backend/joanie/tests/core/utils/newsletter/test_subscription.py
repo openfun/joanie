@@ -27,7 +27,7 @@ class UtilsNewsletterSubscriptionTestCase(TestCase):
 
         set_commercial_newsletter_subscription(user)
 
-        mock_brevo().add_contact_to_commercial_list.assert_called_once_with(user)
+        mock_brevo().subscribe_to_commercial_list.assert_called_once()
 
     @patch("joanie.core.utils.newsletter.subscription.Brevo")
     def test_set_commercial_newsletter_subscription_false(self, mock_brevo):
@@ -41,4 +41,4 @@ class UtilsNewsletterSubscriptionTestCase(TestCase):
 
         set_commercial_newsletter_subscription(user)
 
-        mock_brevo().remove_contact_from_commercial_list.assert_called_once_with(user)
+        mock_brevo().unsubscribe_from_commercial_list.assert_called_once()

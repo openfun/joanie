@@ -3,11 +3,11 @@ Brevo API client.
 """
 
 import logging
+from http.client import BAD_REQUEST
 
 from django.conf import settings
 
-import sib_api_v3_sdk
-from sib_api_v3_sdk.rest import ApiException
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -17,81 +17,85 @@ class Brevo:
     Brevo API client.
     """
 
-    def __init__(self):
-        configuration = sib_api_v3_sdk.Configuration()
-        configuration.api_key["api-key"] = settings.BREVO_API_KEY
-        self.api_instance = sib_api_v3_sdk.ContactsApi(
-            sib_api_v3_sdk.ApiClient(configuration)
-        )
-        self.contact_emails = sib_api_v3_sdk.AddContactToList()
-        self.list_id = settings.BREVO_COMMERCIAL_NEWSLETTER_LIST_ID
+    def __init__(self, user):
+        self.headers = {
+            "accept": "application/json",
+            "content-type": "application/json",
+            "api-key": settings.BREVO_API_KEY,
+        }
 
-    def create_contact_to_commercial_list(self, user):
+        self.list_id = settings.BREVO_COMMERCIAL_NEWSLETTER_LIST_ID
+        self.user = user
+
+        api_url = settings.BREVO_API_URL
+        self.create_contact_url = f"{api_url}contacts"
+        list_contacts_url = f"{api_url}contacts/lists/{self.list_id}/contacts"
+        self.subscribe_to_list_url = f"{list_contacts_url}/add"
+        self.unsubscribe_from_list_url = f"{list_contacts_url}/remove"
+
+    def _log_info(self, message):
+        """Log an info message."""
+        logger.info(message, self.user.id, self.list_id)
+
+    def _call_api(self, url, payload):
+        """
+        Call the Brevo API with the given payload.
+        """
+        response = requests.post(url, json=payload, headers=self.headers, timeout=5)
+        if not response.ok:
+            logger.error(
+                "Error calling Brevo API %s %s",
+                url,
+                response,
+                extra={
+                    "context": {
+                        "user_id": self.user.id,
+                        "list_id": self.list_id,
+                        "url": url,
+                        "response": response.text,
+                    }
+                },
+            )
+        return response
+
+    def create_contact_to_commercial_list(self):
         """
         Create a contact with the given email, and add it to the commercial newsletter list.
         """
-        logger.info(
-            "Creating contact with email for user %s in list %s",
-            user.id,
-            self.list_id,
-        )
-        try:
-            create_contact = sib_api_v3_sdk.CreateContact(
-                email=user.email, list_ids=[self.list_id]
-            )
-            return self.api_instance.create_contact(create_contact)
-        except ApiException as e:
-            logger.exception(
-                "Error creating contact with email for user %s in list %s",
-                user.id,
-                self.list_id,
-                extra={
-                    "context": {"user_id": user.id, "list_id": self.list_id, "error": e}
-                },
-            )
+        self._log_info("Creating contact with email for user %s in list %s")
+
+        payload = {"email": self.user.email, "listIds": [self.list_id]}
+        response = self._call_api(self.create_contact_url, payload)
+        if response.ok:
+            return response.json()
         return None
 
-    def add_contact_to_commercial_list(self, user):
+    def subscribe_to_commercial_list(self):
         """
         Add a contact to the commercial newsletter list.
         """
-        logger.info("Adding email for user %s to list %s", user.id, self.list_id)
-        self.contact_emails.emails = [user.email]
-        try:
-            return self.api_instance.add_contact_to_list(
-                list_id=self.list_id,
-                contact_emails=self.contact_emails,
-            )
-        except ApiException as e:
-            logger.exception(
-                "Error adding email for user %s to list %s",
-                user.id,
-                self.list_id,
-                extra={
-                    "context": {"user_id": user.id, "list_id": self.list_id, "error": e}
-                },
-            )
-            # return self.create_contact_to_commercial_list(user)
-            return None
+        self._log_info("Adding email for user %s to list %s")
 
-    def remove_contact_from_commercial_list(self, user):
+        payload = {"emails": [self.user.email]}
+        response = self._call_api(self.subscribe_to_list_url, payload)
+        if response.ok:
+            return response.json()
+
+        if (
+            response.status_code == BAD_REQUEST
+            and response.json().get("code") == "invalid_parameter"
+        ):
+            return self.create_contact_to_commercial_list()
+        return None
+
+    def unsubscribe_from_commercial_list(self):
         """
         Remove a contact from the commercial newsletter list.
         """
-        logger.info("Removing email for user %s from list %s", user.id, self.list_id)
-        self.contact_emails.emails = [user.email]
-        try:
-            return self.api_instance.remove_contact_from_list(
-                list_id=self.list_id,
-                contact_emails=self.contact_emails,
-            )
-        except ApiException as e:
-            logger.exception(
-                "Error removing email for user %s from list %s",
-                user.id,
-                self.list_id,
-                extra={
-                    "context": {"user_id": user.id, "list_id": self.list_id, "error": e}
-                },
-            )
+        self._log_info("Removing email for user %s from list %s")
+
+        payload = {"emails": [self.user.email]}
+        response = self._call_api(self.unsubscribe_from_list_url, payload)
+        if response.ok:
+            return response.json()
         return None

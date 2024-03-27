@@ -7,7 +7,8 @@ def set_commercial_newsletter_subscription(user):
     """
     Set the newsletter subscription for the user.
     """
+    brevo_user = Brevo(user)
     if user.has_subscribed_to_commercial_newsletter:
-        return Brevo().add_contact_to_commercial_list(user)
+        return brevo_user.subscribe_to_commercial_list()
 
-    return Brevo().remove_contact_from_commercial_list(user)
+    return brevo_user.unsubscribe_from_commercial_list()

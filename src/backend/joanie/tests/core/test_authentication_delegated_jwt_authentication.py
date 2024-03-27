@@ -43,7 +43,7 @@ class DelegatedJWTAuthenticationTestCase(BaseAPITestCase):
         self.assertFalse(user.is_staff)
         self.assertFalse(user.is_superuser)
         self.assertTrue(user.has_subscribed_to_commercial_newsletter)
-        mock_brevo().add_contact_to_commercial_list.assert_called_once_with(user)
+        mock_brevo().subscribe_to_commercial_list.assert_called_once()
 
     def test_authentication_delegated_user_existing(self):
         """
