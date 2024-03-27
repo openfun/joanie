@@ -336,12 +336,12 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
     @override_settings(
         JOANIE_DOCUMENT_ISSUER_CONTEXT_PROCESSORS={
             "contract_definition": [
-                "joanie.tests.core.test_utils_contract_definition_generate_document_context._processor_for_test_suite"  # pylint: disable=line-too-long
+                "joanie.tests.core.utils.test_contract_definition_generate_document_context._processor_for_test_suite"  # pylint: disable=line-too-long
             ]
         }
     )
     @mock.patch(
-        "joanie.tests.core.test_utils_contract_definition_generate_document_context._processor_for_test_suite",  # pylint: disable=line-too-long
+        "joanie.tests.core.utils.test_contract_definition_generate_document_context._processor_for_test_suite",  # pylint: disable=line-too-long
         side_effect=_processor_for_test_suite,
     )
     def test_utils_contract_definition_generate_document_context_processors(
