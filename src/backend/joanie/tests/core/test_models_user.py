@@ -296,7 +296,7 @@ class UserModelTestCase(BaseAPITestCase):
     ):
         """New user with subscription should trigger the subscription"""
         factories.UserFactory(has_subscribed_to_commercial_newsletter=True)
-        self.assertTrue(mock_set_commercial_newsletter_subscription.called)
+        self.assertTrue(mock_set_commercial_newsletter_subscription.delay.called)
 
     @patch("joanie.core.models.accounts.set_commercial_newsletter_subscription")
     def test_models_user_update_newsletter_subscription(
@@ -309,7 +309,7 @@ class UserModelTestCase(BaseAPITestCase):
         self.assertFalse(mock_set_commercial_newsletter_subscription.called)
         unsubscribed_user.has_subscribed_to_commercial_newsletter = True
         unsubscribed_user.save()
-        self.assertTrue(mock_set_commercial_newsletter_subscription.called)
+        self.assertTrue(mock_set_commercial_newsletter_subscription.delay.called)
 
     @patch("joanie.core.models.accounts.set_commercial_newsletter_subscription")
     def test_models_user_update_remove_newsletter_subscription(
@@ -319,12 +319,12 @@ class UserModelTestCase(BaseAPITestCase):
         subscribed_user = factories.UserFactory(
             has_subscribed_to_commercial_newsletter=True
         )
-        self.assertTrue(mock_set_commercial_newsletter_subscription.called)
+        self.assertTrue(mock_set_commercial_newsletter_subscription.delay.called)
         mock_set_commercial_newsletter_subscription.reset_mock()
 
         subscribed_user.has_subscribed_to_commercial_newsletter = False
         subscribed_user.save()
-        self.assertTrue(mock_set_commercial_newsletter_subscription.called)
+        self.assertTrue(mock_set_commercial_newsletter_subscription.delay.called)
 
     @patch("joanie.core.models.accounts.set_commercial_newsletter_subscription")
     def test_models_user_field_has_subscribed_to_commercial_newsletter(
@@ -336,13 +336,13 @@ class UserModelTestCase(BaseAPITestCase):
         )
         unsubscribed_user.has_subscribed_to_commercial_newsletter = False
         unsubscribed_user.save()
-        self.assertFalse(mock_set_commercial_newsletter_subscription.called)
+        self.assertFalse(mock_set_commercial_newsletter_subscription.delay.called)
 
         subscribed_user = factories.UserFactory(
             has_subscribed_to_commercial_newsletter=True
         )
-        self.assertTrue(mock_set_commercial_newsletter_subscription.called)
+        self.assertTrue(mock_set_commercial_newsletter_subscription.delay.called)
         mock_set_commercial_newsletter_subscription.reset_mock()
         subscribed_user.has_subscribed_to_commercial_newsletter = True
         subscribed_user.save()
-        self.assertFalse(mock_set_commercial_newsletter_subscription.called)
+        self.assertFalse(mock_set_commercial_newsletter_subscription.delay.called)

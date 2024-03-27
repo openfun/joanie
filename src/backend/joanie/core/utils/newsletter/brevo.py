@@ -35,7 +35,7 @@ class Brevo:
 
     def _log_info(self, message):
         """Log an info message."""
-        logger.info(message, self.user.id, self.list_id)
+        logger.info(message, self.user.get("id"), self.list_id)
 
     def _call_api(self, url, payload):
         """
@@ -49,7 +49,7 @@ class Brevo:
                 response,
                 extra={
                     "context": {
-                        "user_id": self.user.id,
+                        "user_id": self.user.get("id"),
                         "list_id": self.list_id,
                         "url": url,
                         "response": response.text,
@@ -64,7 +64,14 @@ class Brevo:
         """
         self._log_info("Creating contact with email for user %s in list %s")
 
-        payload = {"email": self.user.email, "listIds": [self.list_id]}
+        payload = {
+            "email": self.user.get("email"),
+            "attributes": {
+                "NOM": self.user.get("last_name"),
+                "PRENOM": self.user.get("first_name"),
+            },
+            "listIds": [self.list_id],
+        }
         response = self._call_api(self.contact_url, payload)
         if not response.ok:
             return None
@@ -77,7 +84,7 @@ class Brevo:
         """
         self._log_info("Adding email for user %s to list %s")
 
-        payload = {"emails": [self.user.email]}
+        payload = {"emails": [self.user.get("email")]}
         response = self._call_api(self.subscribe_to_list_url, payload)
         if not response.ok:
             if (
@@ -95,7 +102,7 @@ class Brevo:
         """
         self._log_info("Removing email for user %s from list %s")
 
-        payload = {"emails": [self.user.email]}
+        payload = {"emails": [self.user.get("email")]}
         response = self._call_api(self.unsubscribe_from_list_url, payload)
         if response.ok:
             return response.json()

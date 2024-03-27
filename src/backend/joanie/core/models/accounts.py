@@ -83,7 +83,7 @@ class User(BaseModel, auth_models.AbstractUser):
             logger.info(
                 "New user %s has subscribed to the commercial newsletter", self.id
             )
-            set_commercial_newsletter_subscription(self)
+            set_commercial_newsletter_subscription.delay(self.to_dict())
         if (
             self.has_subscribed_to_commercial_newsletter
             != self.last_has_subscribed_to_commercial_newsletter
@@ -97,7 +97,7 @@ class User(BaseModel, auth_models.AbstractUser):
             self.last_has_subscribed_to_commercial_newsletter = (
                 self.has_subscribed_to_commercial_newsletter
             )
-            set_commercial_newsletter_subscription(self)
+            set_commercial_newsletter_subscription.delay(self.to_dict())
         else:
             logger.info("User %s has not changed their subscription status", self.id)
 
