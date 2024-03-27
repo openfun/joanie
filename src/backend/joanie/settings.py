@@ -498,6 +498,17 @@ class Base(Configuration):
     CELERY_BROKER_TRANSPORT_OPTIONS = values.DictValue({})
     CELERY_DEFAULT_QUEUE = values.Value("celery")
 
+    # Newsletters
+    BREVO_API_URL = values.Value(
+        "https://api.brevo.com/v3/", environ_name="BREVO_API_URL", environ_prefix=None
+    )
+    BREVO_API_KEY = values.Value(
+        None, environ_name="BREVO_API_KEY", environ_prefix=None
+    )
+    BREVO_COMMERCIAL_NEWSLETTER_LIST_ID = values.IntegerValue(
+        None, environ_name="BREVO_COMMERCIAL_NEWSLETTER_LIST_ID", environ_prefix=None
+    )
+
     # Open edX database import
     EDX_DOMAIN = values.Value(None, environ_name="EDX_DOMAIN", environ_prefix=None)
     EDX_DATABASE_HOST = values.Value(
