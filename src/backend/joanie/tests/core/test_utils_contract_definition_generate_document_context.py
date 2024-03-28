@@ -1,11 +1,27 @@
 """Test suite for `generate_document_context` utility"""
 
+from unittest import mock
+
 from django.contrib.sites.models import Site
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from joanie.core import enums, factories
 from joanie.core.utils import contract_definition, image_to_base64
 from joanie.payment.factories import InvoiceFactory
+
+
+def _processor_for_test_suite(context):
+    """A processor for the test of the document context generation."""
+    course_code = context["course"]["code"]
+    contract_language = context["contract"]["language"]
+
+    return {
+        "extra": {
+            "course_code": course_code,
+            "language_code": contract_language,
+            "is_for_test": True,
+        }
+    }
 
 
 class UtilsGenerateDocumentContextTestCase(TestCase):
@@ -60,6 +76,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                 title="CONTRACT DEFINITION 1",
                 description="Contract definition description",
                 body="Articles de la convention",
+                language="en-us",
             ),
             course=factories.CourseFactory(organizations=[organization]),
         )
@@ -80,6 +97,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                 "terms_and_conditions": "<h2>Terms and conditions</h2>",
                 "description": "Contract definition description",
                 "title": "CONTRACT DEFINITION 1",
+                "language": "en-us",
             },
             "course": {
                 "name": order.product.title,
@@ -169,6 +187,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             title="CONTRACT DEFINITION 2",
             body="Articles de la convention",
             description="Contract definition description",
+            language="fr-fr",
         )
         expected_context = {
             "contract": {
@@ -176,6 +195,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                 "terms_and_conditions": "",
                 "description": "Contract definition description",
                 "title": "CONTRACT DEFINITION 2",
+                "language": "fr-fr",
             },
             "course": {
                 "name": "<COURSE_NAME>",
@@ -248,6 +268,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             title="CONTRACT DEFINITION 3",
             description="Contract definition description",
             body="Articles de la convention",
+            language="fr-fr",
         )
         expected_context = {
             "contract": {
@@ -255,6 +276,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                 "terms_and_conditions": "",
                 "description": "Contract definition description",
                 "title": "CONTRACT DEFINITION 3",
+                "language": "fr-fr",
             },
             "course": {
                 "name": "<COURSE_NAME>",
@@ -310,3 +332,67 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         )
 
         self.assertDictEqual(context, expected_context)
+
+    @override_settings(
+        JOANIE_DOCUMENT_ISSUER_CONTEXT_PROCESSORS={
+            "contract_definition": [
+                "joanie.tests.core.test_utils_contract_definition_generate_document_context._processor_for_test_suite"  # pylint: disable=line-too-long
+            ]
+        }
+    )
+    @mock.patch(
+        "joanie.tests.core.test_utils_contract_definition_generate_document_context._processor_for_test_suite",  # pylint: disable=line-too-long
+        side_effect=_processor_for_test_suite,
+    )
+    def test_utils_contract_definition_generate_document_context_processors(
+        self, _mock_processor_for_test
+    ):
+        """
+        If contract definition context processors are defined through settings, those should be
+        called and their results should be merged into the final context.
+        """
+        definition = factories.ContractDefinitionFactory(
+            title="CONTRACT DEFINITION 3",
+            description="Contract definition description",
+            body="Articles de la convention",
+            language="fr-fr",
+        )
+
+        context = contract_definition.generate_document_context(
+            contract_definition=definition
+        )
+        _mock_processor_for_test.assert_called_once_with(context)
+        self.assertEqual(
+            context["extra"],
+            {
+                "course_code": "<COURSE_CODE>",
+                "language_code": "fr-fr",
+                "is_for_test": True,
+            },
+        )
+
+    @override_settings(
+        JOANIE_DOCUMENT_ISSUER_CONTEXT_PROCESSORS={
+            "contract_definition": [
+                "joanie.tests.core.test_utils_contract_definition_generate_document_context.unknown_processor"  # pylint: disable=line-too-long
+            ]
+        }
+    )
+    def test_utils_contract_definition_generate_document_context_processor_mis_configured(
+        self,
+    ):
+        """
+        If contract definition context processors
+        are misconfigured, an ImportError should be raised.
+        """
+        definition = factories.ContractDefinitionFactory(
+            title="CONTRACT DEFINITION 3",
+            description="Contract definition description",
+            body="Articles de la convention",
+            language="fr-fr",
+        )
+
+        with self.assertRaises(ImportError):
+            contract_definition.generate_document_context(
+                contract_definition=definition
+            )

@@ -275,6 +275,15 @@ class Base(Configuration):
         environ_prefix=None,
     )
 
+    # Context processors for document issuers
+    JOANIE_DOCUMENT_ISSUER_CONTEXT_PROCESSORS = {
+        "contract_definition": values.ListValue(
+            [],
+            environ_name="JOANIE_CONTRACT_CONTEXT_PROCESSORS",
+            environ_prefix=None,
+        ),
+    }
+
     # Cache
     CACHES = {
         "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
@@ -679,6 +688,7 @@ class Test(Base):
     JOANIE_SIGNATURE_BACKEND = "joanie.signature.backends.dummy.DummySignatureBackend"
 
     JOANIE_ENROLLMENT_GRADE_CACHE_TTL = 0
+    JOANIE_DOCUMENT_ISSUER_CONTEXT_PROCESSORS = {"contract_definition": []}
 
     LOGGING = values.DictValue(
         {
