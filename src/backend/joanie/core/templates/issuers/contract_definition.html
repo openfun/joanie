@@ -3,7 +3,7 @@
 {% load extra_tags %}
 
 {% comment %}
-This template aims to be used as a contract definition for training built by Unicamp© brand.
+This template aims to be used as a contract for training built by Unicamp© brand.
 Surely you will need to create a new contract template for your training, feel free to use
 this template as a base.
 {% endcomment %}
@@ -123,10 +123,16 @@ this template as a base.
               {% if contract %}
                   {{ contract.body|safe }}
               {% endif %}
+              {% if contract.terms_and_conditions or syllabus %}
+                <h2>{% translate "Appendices" %}</h2>
+              {% endif %}
               {% if contract.terms_and_conditions %}
-                  <h2>{% translate "Appendices" %}</h2>
                   <h3>{% translate "Terms and conditions" %}</h3>
                   {{ contract.terms_and_conditions|safe }}
+              {% endif %}
+              {% if syllabus %}
+                <h3>{% translate "Catalog syllabus" %}</h3>
+                {% include "contract_definition/fragment_appendice_syllabus.html" with syllabus=syllabus %}
               {% endif %}
           </section>
           <footer class="content-signatures">

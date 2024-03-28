@@ -1,0 +1,116 @@
+{% load i18n extra_tags %}
+<section class="contract--syllabus">
+    <header class="syllabus--header">
+            <img class="syllabus--header-illustration" src="{{syllabus.cover}}" />
+            <div class="syllabus--header-content">
+                <h4>{{syllabus.title}}</h4>
+                <p>{% trans "Ref." %} {{ syllabus.reference }}</p>
+                <p>{{syllabus.abstract }}</p>
+                <dl>
+                    <dt>{% translate "Total duration of the course: " %}&nbsp;</dt>
+                    <dd>
+                        {% with duration=syllabus.effort|iso8601_to_duration:"hours" %}
+                        {% if duration %}
+                        {% blocktranslate with duration=duration count duration=duration trimmed%}
+                        {{ duration }} hour
+                        {% plural %}
+                        {{ duration }} hours
+                        {% endblocktranslate %}
+                        {% else %}
+                        {{ syllabus.effort|default:"-" }}
+                        {% endif %}
+                        {% endwith %}
+                    </dd>
+                    <dt>{% trans "Available languages:" %}&nbsp;</dt>
+                    <dd>{{ syllabus.languages|default:"-" }}</dd>
+                    <dt>{% trans "Categories:" %}&nbsp;</dt>
+                    <dd>{{ syllabus.categories|join:", "|default:"-" }}</dd>
+                </dl>
+            </div>
+    </header>
+    <section class="syllabus--content">
+        <h5>{% trans "Description" %}</h5>
+        <div>{{ syllabus.description|default:"N/A"|safe|linebreaks }}</div>
+    </section>
+    {% for about in syllabus.abouts %}
+    <section class="syllabus--content">
+        <h5>{{ about.name }}</h5>
+        <div>{{ about.description|default:"N/A"|safe|linebreaks }}</div>
+    </section>
+    {% endfor %}
+    <section class="syllabus--content">
+        <h5>{% trans "Prerequisites" %}</h5>
+        <div>{{ syllabus.prerequisites|default:"N/A"|safe|linebreaks }}</div>
+    </section>
+    <section class="syllabus--content">
+        <h5>{% trans "Assessment and certification" %}</h5>
+        <div>{{ syllabus.assessments|default:"N/A"|safe|linebreaks }}</div>
+    </section>
+    <section class="syllabus--content syllabus--organizations">
+        <h5>{% trans "Organizations" %}</h5>
+        {% if syllabus.organizations %}
+        {% for organization in syllabus.organizations %}
+        <div class="syllabus--organization">
+            <img src="{{ organization.logo }}" />
+            <a href="{{ organization.url }}"><strong>{{ organization.name }}</strong></a>
+        </div>
+        {% endfor %}
+        {% else %}
+            <p>N/A</p>
+        {% endif %}
+    </section>
+    <section class="syllabus--content syllabus--team">
+        <h5>{% trans "Course team" %}</h5>
+        {% if syllabus.team %}
+        {% for contributor in syllabus.team %}
+        <div class="syllabus--contributor">
+            <img src="{{ contributor.avatar }}" />
+            <div>
+                <p>
+                    <a href="{{ contributor.url }}">
+                        <strong>{{ contributor.name }}</strong>
+                    </a>
+                </p>
+                <p>{{ contributor.description }}</p>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+            <p>N/A</p>
+        {% endif %}
+    </section>
+    <section class="syllabus--content syllabus--course-plan">
+    <h5>Course plan</h5>
+    {% if syllabus.plan %}
+    {% for plan in syllabus.plan %}
+        {% if plan.name %}
+        <p>{{ plan.name|linebreaks }}</p>
+        {% endif %}
+        {% if plan.parts %}
+            <ul>
+                {% for part in plan.parts|dictsort:"position" %}
+                {% include "contract_definition/fragment_course_plan.html" with plan=part %}
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endfor %}
+    {% else %}
+    <p>N/A</p>
+    {% endif %}
+    </section>
+    <section class="syllabus--content syllabus--licenses">
+    <h5>{% trans "Licenses" %}</h5>
+    {% if syllabus.licenses %}
+        {% for license in syllabus.licenses %}
+            <div>
+                <img src="{{ license.logo }}" height="50" />
+                <h6>{{ license.name }}</h6>
+                <p><a href="{{ license.url }}">{{ license.url }}</a></p>
+                <div>{{ license.description|safe}}</div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>N/A</p>
+    {% endif %}
+    </section>
+</section>

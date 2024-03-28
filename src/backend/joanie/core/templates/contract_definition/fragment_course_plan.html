@@ -1,0 +1,10 @@
+<li>
+    <p>{{ plan.name }}</p>
+    {% if plan.children %}
+        <ul>
+        {% for child in plan.children|dictsort:"position" %}
+            {% include "contract_definition/fragment_course_plan.html" with plan=child %}
+        {% endfor %}
+        </ul>
+    {% endif %}
+</li>
