@@ -40,6 +40,9 @@ JOANIE_PAYMENT_BACKEND=joanie.payment.backends.dummy.DummyPaymentBackend
 DJANGO_EMAIL_HOST="mailcatcher"
 DJANGO_EMAIL_PORT=1025
 
+# Document issuer customization
+JOANIE_CONTRACT_CONTEXT_PROCESSORS =
+
 # Backoffice
 JOANIE_BACKOFFICE_BASE_URL="http://localhost:8072"
 

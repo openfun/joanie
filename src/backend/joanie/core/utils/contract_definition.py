@@ -2,6 +2,7 @@
 
 from django.conf import settings
 from django.contrib.sites.models import Site
+from django.utils.module_loading import import_string
 from django.utils.translation import gettext as _
 
 from babel.numbers import get_currency_symbol
@@ -33,6 +34,24 @@ USER_FALLBACK_ADDRESS = {
 }
 
 
+def apply_contract_definition_context_processors(context):
+    """
+    Apply all the context processors for contract definition.
+
+    This method will apply all the context processors for contract definition
+    and return the updated context.
+    """
+    context = context.copy()
+
+    for path in settings.JOANIE_DOCUMENT_ISSUER_CONTEXT_PROCESSORS[
+        "contract_definition"
+    ]:
+        processor = import_string(path)
+        context.update(processor(context))
+
+    return context
+
+
 # ruff: noqa: PLR0915
 # pylint: disable=import-outside-toplevel, too-many-locals, too-many-statements
 def generate_document_context(contract_definition=None, user=None, order=None):
@@ -54,15 +73,17 @@ def generate_document_context(contract_definition=None, user=None, order=None):
         "42mO8cPX6fwAIdgN9pHTGJwAAAABJRU5ErkJggg=="
     )
 
+    contract_language = (
+        contract_definition.language if contract_definition else settings.LANGUAGE_CODE
+    )
+
     try:
         site_config = Site.objects.get_current().site_config
     except Site.site_config.RelatedObjectDoesNotExist:  # pylint: disable=no-member
         terms_and_conditions = ""
     else:
         terms_and_conditions = site_config.get_terms_and_conditions_in_html(
-            contract_definition.language
-            if contract_definition
-            else settings.LANGUAGE_CODE
+            contract_language
         )
 
     organization_logo = organization_fallback_logo
@@ -107,7 +128,7 @@ def generate_document_context(contract_definition=None, user=None, order=None):
     if order:
         organization_logo = image_to_base64(order.organization.logo)
         organization_name = order.organization.safe_translation_getter(
-            "title", language_code=contract_definition.language
+            "title", language_code=contract_language
         )
         organization_representative = order.organization.representative
         organization_representative_profession = (
@@ -133,7 +154,7 @@ def generate_document_context(contract_definition=None, user=None, order=None):
         # Course
         course_code = order.course.code
         course_name = order.product.safe_translation_getter(
-            "title", language_code=contract_definition.language
+            "title", language_code=contract_language
         )
         course_dates = order.get_equivalent_course_run_dates()
         course_start = course_dates["start"]
@@ -149,12 +170,13 @@ def generate_document_context(contract_definition=None, user=None, order=None):
     if user_address:
         user_address = AddressSerializer(user_address).data
 
-    return {
+    context = {
         "contract": {
             "title": contract_title,
             "description": contract_description,
             "body": contract_body,
             "terms_and_conditions": terms_and_conditions,
+            "language": contract_language,
         },
         "course": {
             "name": course_name,
@@ -186,3 +208,6 @@ def generate_document_context(contract_definition=None, user=None, order=None):
             "dpo_email": organization_dpo_email,
         },
     }
+
+    # Apply context processors
+    return apply_contract_definition_context_processors(context)
