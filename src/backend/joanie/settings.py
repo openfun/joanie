@@ -275,6 +275,11 @@ class Base(Configuration):
         environ_prefix=None,
     )
 
+    JOANIE_CATALOG_BASE_URL = values.Value(
+        environ_name="JOANIE_CATALOG_BASE_URL",
+        environ_prefix=None,
+    )
+
     # Context processors for document issuers
     JOANIE_DOCUMENT_ISSUER_CONTEXT_PROCESSORS = {
         "contract_definition": values.ListValue(
