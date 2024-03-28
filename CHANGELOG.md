@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Bind remote catalog syllabus to contract template
 - Add redis backend to cache configuration
 - Add generate certificate button in Back Office
 - Add admin Enrollment endpoint
