@@ -282,6 +282,65 @@ class MoodleLMSBackendTestCase(TestCase):
         )
 
     @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_get_enrollments_network_exception(self):
+        """
+        If there is a network exception while retrieving course run's enrollments,
+        it should return None.
+        """
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_enrol_get_enrolled_users"),
+            match=[responses.matchers.urlencoded_params_matcher({"courseid": "2"})],
+            body=RequestException(),
+        )
+
+        with self.assertLogs(
+            "joanie.lms_handler.backends.moodle", level=ERROR
+        ) as error_logs:
+            enrollments = self.backend.get_enrollments(self.resource_link)
+
+        self.assertIsNone(enrollments)
+        self.assertEqual(
+            error_logs.output,
+            [
+                "ERROR:joanie.lms_handler.backends.moodle:"
+                "Moodle error while retrieving enrollments: A Network error occurred"
+            ],
+        )
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_get_enrollments_moodle_error(self):
+        """
+        If Moodle returns an error in the body while retrieving course run's enrollments,
+        it should return None.
+        """
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_enrol_get_enrolled_users"),
+            match=[responses.matchers.urlencoded_params_matcher({"courseid": "2"})],
+            json={
+                "exception": "Yes Moodle is able to return a 200 while there is an error."
+            },
+            status=200,
+        )
+
+        with self.assertLogs(
+            "joanie.lms_handler.backends.moodle", level=ERROR
+        ) as error_logs:
+            enrollments = self.backend.get_enrollments(self.resource_link)
+
+        self.assertIsNone(enrollments)
+        self.assertEqual(
+            error_logs.output,
+            [
+                "ERROR:joanie.lms_handler.backends.moodle:"
+                "Moodle error while retrieving enrollments: Error Code: \n"
+                "Exception: Yes Moodle is able to return a 200 while there is an error.\n"
+                "Message: \nDebug Info: "
+            ],
+        )
+
+    @responses.activate(assert_all_requests_are_fired=True)
     def test_backend_moodle_get_enrollment(self):
         """
         Retrieving an enrollment for a course run should filter enrollments.
@@ -424,7 +483,7 @@ class MoodleLMSBackendTestCase(TestCase):
     @responses.activate(assert_all_requests_are_fired=True)
     def test_backend_moodle_create_user_error(self):
         """
-        Creating a user should return a dict containing the user's id and username.
+        An error when creating a user should raise a MoodleUserCreateException.
         """
         user = factories.UserFactory(
             first_name="John Doe",
@@ -460,7 +519,78 @@ class MoodleLMSBackendTestCase(TestCase):
             [
                 "ERROR:joanie.lms_handler.backends.moodle:"
                 f"Moodle error while creating user {user.username}: "
-                f"Empty response from server!"
+                "Empty response from server!"
+            ],
+        )
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_create_user_network_error(self):
+        """
+        If there is a network error while creating a user, it should raise a
+        MoodleUserCreateException.
+        """
+        user = factories.UserFactory(
+            first_name="John Doe",
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_user_create_users"),
+            body=RequestException(),
+        )
+
+        with (
+            self.assertLogs(
+                "joanie.lms_handler.backends.moodle", level=ERROR
+            ) as error_logs,
+            self.assertRaises(MoodleUserCreateException),
+        ):
+            self.backend.create_user(user)
+
+        self.assertEqual(
+            error_logs.output,
+            [
+                "ERROR:joanie.lms_handler.backends.moodle:"
+                f"Moodle error while creating user {user.username}: "
+                "A Network error occurred"
+            ],
+        )
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_create_user_moodle_error(self):
+        """
+        If there is a network error while creating a user, it should raise a
+        MoodleUserCreateException.
+        """
+        user = factories.UserFactory(
+            first_name="John Doe",
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_user_create_users"),
+            json={
+                "exception": "Yes Moodle is able to return a 200 while there is an error."
+            },
+            status=200,
+        )
+
+        with (
+            self.assertLogs(
+                "joanie.lms_handler.backends.moodle", level=ERROR
+            ) as error_logs,
+            self.assertRaises(MoodleUserCreateException),
+        ):
+            self.backend.create_user(user)
+
+        self.assertEqual(
+            error_logs.output,
+            [
+                "ERROR:joanie.lms_handler.backends.moodle:"
+                f"Moodle error while creating user {user.username}: "
+                "Error Code: \n"
+                "Exception: Yes Moodle is able to return a 200 while there is an error.\n"
+                "Message: \nDebug Info: "
             ],
         )
 
@@ -1003,6 +1133,264 @@ class MoodleLMSBackendTestCase(TestCase):
         )
 
     @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_set_enrollment_enroll_network_error(self):
+        """
+        When enrolling, if there is a network error, it should raise an EnrollmentError.
+        """
+        course_run = factories.CourseRunMoodleFactory(
+            is_listed=True,
+            state=models.CourseState.ONGOING_OPEN,
+        )
+        course_id = course_run.resource_link.split("=")[-1]
+        user = factories.UserFactory(
+            username="student",
+        )
+        enrollment = models.Enrollment(course_run=course_run, user=user, is_active=True)
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_user_get_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "criteria[0][key]": "username",
+                        "criteria[0][value]": "student",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            json=MOODLE_RESPONSE_USERS,
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("local_wsgetroles_get_roles"),
+            status=HTTPStatus.OK,
+            json=MOODLE_RESPONSE_ROLES,
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("enrol_manual_enrol_users"),
+            body=RequestException(),
+        )
+
+        with (
+            self.assertLogs(
+                "joanie.lms_handler.backends.moodle", level=ERROR
+            ) as error_logs,
+            self.assertRaises(EnrollmentError),
+        ):
+            self.backend.set_enrollment(enrollment)
+
+        self.assertEqual(
+            error_logs.output,
+            [
+                "ERROR:joanie.lms_handler.backends.moodle:"
+                "Moodle error while enrolling user student "
+                f"(userid: 5, roleid 5, courseid {course_id}): "
+                "A Network error occurred: "
+            ],
+        )
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_set_enrollment_unenroll_network_error(self):
+        """
+        When unenrolling, if there is a network error, it should raise an EnrollmentError.
+        """
+        course_run = factories.CourseRunMoodleFactory(
+            is_listed=True,
+            state=models.CourseState.ONGOING_OPEN,
+        )
+        course_id = course_run.resource_link.split("=")[-1]
+        user = factories.UserFactory(
+            username="student",
+        )
+        enrollment = models.Enrollment(
+            course_run=course_run, user=user, is_active=False
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_user_get_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "criteria[0][key]": "username",
+                        "criteria[0][value]": "student",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            json=MOODLE_RESPONSE_USERS,
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("local_wsgetroles_get_roles"),
+            status=HTTPStatus.OK,
+            json=MOODLE_RESPONSE_ROLES,
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("enrol_manual_unenrol_users"),
+            body=RequestException(),
+        )
+
+        with (
+            self.assertLogs(
+                "joanie.lms_handler.backends.moodle", level=ERROR
+            ) as error_logs,
+            self.assertRaises(EnrollmentError),
+        ):
+            self.backend.set_enrollment(enrollment)
+
+        self.assertEqual(
+            error_logs.output,
+            [
+                "ERROR:joanie.lms_handler.backends.moodle:"
+                "Moodle error while unenrolling user student "
+                f"(userid: 5, roleid 5, courseid {course_id}): "
+                "A Network error occurred: "
+            ],
+        )
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_set_enrollment_enroll_moodle_error(self):
+        """
+        When enrolling, if there is a moodle error, it should raise an EnrollmentError.
+        """
+        course_run = factories.CourseRunMoodleFactory(
+            is_listed=True,
+            state=models.CourseState.ONGOING_OPEN,
+        )
+        course_id = course_run.resource_link.split("=")[-1]
+        user = factories.UserFactory(
+            username="student",
+        )
+        enrollment = models.Enrollment(course_run=course_run, user=user, is_active=True)
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_user_get_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "criteria[0][key]": "username",
+                        "criteria[0][value]": "student",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            json=MOODLE_RESPONSE_USERS,
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("local_wsgetroles_get_roles"),
+            status=HTTPStatus.OK,
+            json=MOODLE_RESPONSE_ROLES,
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("enrol_manual_enrol_users"),
+            json={
+                "exception": "Yes Moodle is able to return a 200 while there is an error."
+            },
+            status=200,
+        )
+
+        with (
+            self.assertLogs(
+                "joanie.lms_handler.backends.moodle", level=ERROR
+            ) as error_logs,
+            self.assertRaises(EnrollmentError),
+        ):
+            self.backend.set_enrollment(enrollment)
+
+        self.assertEqual(
+            error_logs.output,
+            [
+                "ERROR:joanie.lms_handler.backends.moodle:"
+                "Moodle error while enrolling user student "
+                f"(userid: 5, roleid 5, courseid {course_id}): Error Code: \n"
+                "Exception: Yes Moodle is able to return a 200 while there is an error.\n"
+                "Message: \n"
+                "Debug Info: : Yes Moodle is able to return a 200 while there is an error."
+            ],
+        )
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_set_enrollment_unenroll_moodle_error(self):
+        """
+        When unenrolling, if there is a moodle error, it should raise an EnrollmentError.
+        """
+        course_run = factories.CourseRunMoodleFactory(
+            is_listed=True,
+            state=models.CourseState.ONGOING_OPEN,
+        )
+        course_id = course_run.resource_link.split("=")[-1]
+        user = factories.UserFactory(
+            username="student",
+        )
+        enrollment = models.Enrollment(
+            course_run=course_run, user=user, is_active=False
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_user_get_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "criteria[0][key]": "username",
+                        "criteria[0][value]": "student",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            json=MOODLE_RESPONSE_USERS,
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("local_wsgetroles_get_roles"),
+            status=HTTPStatus.OK,
+            json=MOODLE_RESPONSE_ROLES,
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("enrol_manual_unenrol_users"),
+            json={
+                "exception": "Yes Moodle is able to return a 200 while there is an error."
+            },
+            status=200,
+        )
+
+        with (
+            self.assertLogs(
+                "joanie.lms_handler.backends.moodle", level=ERROR
+            ) as error_logs,
+            self.assertRaises(EnrollmentError),
+        ):
+            self.backend.set_enrollment(enrollment)
+
+        self.assertEqual(
+            error_logs.output,
+            [
+                "ERROR:joanie.lms_handler.backends.moodle:"
+                "Moodle error while unenrolling user student "
+                f"(userid: 5, roleid 5, courseid {course_id}): Error Code: \n"
+                "Exception: Yes Moodle is able to return a 200 while there is an error.\n"
+                "Message: \n"
+                "Debug Info: : Yes Moodle is able to return a 200 while there is an error."
+            ],
+        )
+
+    @responses.activate(assert_all_requests_are_fired=True)
     def test_backend_moodle_get_grades(self):
         """
         When get user's grades for a course run, it should return grade details without
@@ -1214,5 +1602,101 @@ class MoodleLMSBackendTestCase(TestCase):
                 "ERROR:joanie.lms_handler.backends.moodle:"
                 "Moodle error while retrieving completion status for user student: "
                 "A Network error occurred: Something went wrong..."
+            ],
+        )
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_get_grades_network_error(self):
+        """
+        if there is a network error while getting grades, it should raise a GradeError.
+        """
+        resource_link = "http://moodle.test/course/view.php?id=2"
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_user_get_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "criteria[0][key]": "username",
+                        "criteria[0][value]": "student",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            json=MOODLE_RESPONSE_USERS,
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_completion_get_course_completion_status"),
+            body=RequestException(),
+        )
+
+        with (
+            self.assertLogs(
+                "joanie.lms_handler.backends.moodle", level=ERROR
+            ) as error_logs,
+            self.assertRaises(GradeError),
+        ):
+            self.backend.get_grades("student", resource_link)
+
+        self.assertEqual(
+            error_logs.output,
+            [
+                "ERROR:joanie.lms_handler.backends.moodle:"
+                "Moodle error while retrieving completion status for user student: "
+                "A Network error occurred: "
+            ],
+        )
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_get_grades_moodle_error(self):
+        """
+        if there is a moodle error while getting grades, it should raise a GradeError.
+        """
+        resource_link = "http://moodle.test/course/view.php?id=2"
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_user_get_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "criteria[0][key]": "username",
+                        "criteria[0][value]": "student",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            json=MOODLE_RESPONSE_USERS,
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_completion_get_course_completion_status"),
+            json={
+                "exception": "Yes Moodle is able to return a 200 while there is an error."
+            },
+            status=200,
+        )
+
+        with (
+            self.assertLogs(
+                "joanie.lms_handler.backends.moodle", level=ERROR
+            ) as error_logs,
+            self.assertRaises(GradeError),
+        ):
+            self.backend.get_grades("student", resource_link)
+
+        self.assertEqual(
+            error_logs.output,
+            [
+                "ERROR:joanie.lms_handler.backends.moodle:"
+                "Moodle error while retrieving completion status for user student: "
+                "Error Code: \n"
+                "Exception: Yes Moodle is able to return a 200 while there is an error.\n"
+                "Message: \n"
+                "Debug Info: : Yes Moodle is able to return a 200 while there is an error."
             ],
         )
