@@ -269,3 +269,47 @@ class BrevoTestCase(TestCase):
         response = brevo_user.has_unsubscribed_from_commercial_newsletter()
 
         self.assertTrue(response)
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_create_webhook(self):
+        """
+        Test the creation of a webhook.
+        """
+        base_url = "https://testserver.com"
+        description = "Test webhook"
+
+        json_response = {"id": "webhook-id"}
+        responses.add(
+            responses.POST,
+            f"{settings.BREVO_API_URL}webhooks",
+            headers={
+                "Content-Type": "application/json",
+            },
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        "accept": "application/json",
+                        "content-type": "application/json",
+                        "api-key": settings.BREVO_API_KEY,
+                    }
+                ),
+                responses.matchers.json_params_matcher(
+                    {
+                        "type": "marketing",
+                        "auth": {
+                            "type": "bearer",
+                            "token": settings.BREVO_WEBHOOK_TOKEN,
+                        },
+                        "events": ["unsubscribed"],
+                        "url": "https://testserver.com/api/v1.0/newsletter-webhook/",
+                        "description": description,
+                        "batched": True,
+                    }
+                ),
+            ],
+            status=200,
+            json=json_response,
+        )
+
+        brevo = Brevo()
+        brevo.create_webhook(base_url, description)
