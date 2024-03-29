@@ -6,6 +6,7 @@ import { User } from "@/services/api/models/User";
 import { ProductSimple } from "@/services/api/models/Product";
 import { Enrollment } from "@/services/api/models/Enrollment";
 import { Nullable } from "@/types/utils";
+import { GeneratedCertificate } from "@/services/api/models/GeneratedCertificate";
 
 export type AbstractOrder = {
   id: string;
@@ -30,11 +31,7 @@ export type Order = AbstractOrder & {
   order_group?: OrderGroup;
   course: Nullable<Course>;
   enrollment: Nullable<Enrollment>;
-  certificate: Nullable<{
-    id: string;
-    definition_title: string;
-    issued_on: string;
-  }>;
+  certificate: Nullable<GeneratedCertificate>;
   main_invoice: OrderMainInvoice;
   has_consent_to_terms: boolean;
   contract: Nullable<OrderContractDetails>;
