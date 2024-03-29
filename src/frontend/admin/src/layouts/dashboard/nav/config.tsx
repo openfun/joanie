@@ -7,6 +7,7 @@ import TaskRoundedIcon from "@mui/icons-material/TaskRounded";
 import ProductionQuantityLimitsRoundedIcon from "@mui/icons-material/ProductionQuantityLimitsRounded";
 import GavelIcon from "@mui/icons-material/Gavel";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import GradingIcon from "@mui/icons-material/Grading";
 import { PATH_ADMIN } from "@/utils/routes/path";
 
 const navTranslations = defineMessages({
@@ -49,6 +50,11 @@ const navTranslations = defineMessages({
     id: "layouts.dashboard.nav.config.ordersNavTitle",
     defaultMessage: "Orders",
     description: "Title for the Order nav item",
+  },
+  enrollmentsNavTitle: {
+    id: "layouts.dashboard.nav.config.enrollmentsNavTitle",
+    defaultMessage: "Enrollments",
+    description: "Title for the Enrollment nav item",
   },
 });
 
@@ -107,6 +113,12 @@ export const navConfig: NavConfig[] = [
         path: PATH_ADMIN.orders.list,
         prefix: PATH_ADMIN.orders.root,
         icon: <ShoppingCartIcon />,
+      },
+      {
+        title: navTranslations.enrollmentsNavTitle,
+        path: PATH_ADMIN.enrollments.list,
+        prefix: PATH_ADMIN.enrollments.root,
+        icon: <GradingIcon />,
       },
     ],
   },
