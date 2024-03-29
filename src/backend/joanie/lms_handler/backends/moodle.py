@@ -8,7 +8,11 @@ from urllib.parse import parse_qs, urlparse
 from django.conf import settings
 
 from moodle import Moodle
-from moodle.exception import EmptyResponseException, NetworkMoodleException
+from moodle.exception import (
+    EmptyResponseException,
+    MoodleException,
+    NetworkMoodleException,
+)
 
 from joanie.core.exceptions import EnrollmentError, GradeError
 
@@ -77,7 +81,7 @@ class MoodleLMSBackend(BaseLMSBackend):
             return self.moodle(
                 "core_enrol_get_enrolled_users", courseid=course_id, options=None
             )
-        except EmptyResponseException as e:
+        except (MoodleException, NetworkMoodleException, EmptyResponseException) as e:
             logger.error("Moodle error while retrieving enrollments: %s", e)
             return None
 
@@ -85,7 +89,7 @@ class MoodleLMSBackend(BaseLMSBackend):
         """Retrieve roles."""
         try:
             return self.moodle("local_wsgetroles_get_roles")
-        except EmptyResponseException as e:
+        except (MoodleException, NetworkMoodleException, EmptyResponseException) as e:
             logger.error(e)
             return []
 
@@ -104,7 +108,7 @@ class MoodleLMSBackend(BaseLMSBackend):
         criteria = {"key": "username", "value": username}
         try:
             res = self.moodle("core_user_get_users", criteria=[criteria])
-        except EmptyResponseException as e:
+        except (MoodleException, NetworkMoodleException, EmptyResponseException) as e:
             logger.error("Moodle error while retrieving user %s: %s", username, e)
             raise MoodleUserException() from e
         try:
@@ -127,7 +131,7 @@ class MoodleLMSBackend(BaseLMSBackend):
         }
         try:
             return self.moodle("core_user_create_users", users=[user_data])[0]
-        except EmptyResponseException as e:
+        except (MoodleException, NetworkMoodleException, EmptyResponseException) as e:
             logger.error("Moodle error while creating user %s: %s", user.username, e)
             raise MoodleUserCreateException() from e
 
@@ -158,7 +162,7 @@ class MoodleLMSBackend(BaseLMSBackend):
                 self.moodle.enrol.manual.enrol_users([moodle_enrollment])
             else:
                 self.moodle.enrol.manual.unenrol_users([moodle_enrollment])
-        except NetworkMoodleException as e:
+        except (MoodleException, NetworkMoodleException) as e:
             logger.error(
                 "Moodle error while %s user %s (userid: %s, roleid %s, courseid %s): %s: %s",
                 "enrolling" if enrollment.is_active else "unenrolling",
@@ -189,7 +193,7 @@ class MoodleLMSBackend(BaseLMSBackend):
             )
             return {"passed": completion.completionstatus.completed}
 
-        except (EmptyResponseException, NetworkMoodleException) as e:
+        except (MoodleException, EmptyResponseException, NetworkMoodleException) as e:
             logger.error(
                 "Moodle error while retrieving completion status for user %s: %s: %s",
                 username,
