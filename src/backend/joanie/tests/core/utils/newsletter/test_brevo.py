@@ -1,8 +1,9 @@
+# pylint: disable=unexpected-keyword-arg,no-value-for-parameter
 """
 Brevo API client test module.
 """
 
-# pylint: disable=unexpected-keyword-arg,no-value-for-parameter
+from urllib.parse import quote_plus
 
 from django.conf import settings
 from django.test import TestCase, override_settings
@@ -222,3 +223,49 @@ class BrevoTestCase(TestCase):
         response = brevo_user.unsubscribe_from_commercial_list()
 
         self.assertEqual(json_response, response)
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_has_unsubscribed_from_commercial_newsletter(self):
+        """
+        Test the unsubscription status of a contact from the commercial newsletter list.
+        """
+        user = UserFactory.build(
+            has_subscribed_to_commercial_newsletter=True,
+            email="user@example.com",
+        )
+
+        json_response = {
+            "email": "user@example.com",
+            "id": 53960180,
+            "emailBlacklisted": False,
+            "smsBlacklisted": False,
+            "createdAt": "2024-03-29T09:21:32.970+01:00",
+            "modifiedAt": "2024-03-29T10:45:20.910+01:00",
+            "attributes": {},
+            "listIds": [],
+            "listUnsubscribed": [settings.BREVO_COMMERCIAL_NEWSLETTER_LIST_ID],
+            "statistics": {},
+        }
+        responses.add(
+            responses.GET,
+            f"{self.create_contact_url}/{quote_plus(user.email)}",
+            headers={
+                "Content-Type": "application/json",
+            },
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        "accept": "application/json",
+                        "content-type": "application/json",
+                        "api-key": settings.BREVO_API_KEY,
+                    }
+                ),
+            ],
+            status=200,
+            json=json_response,
+        )
+
+        brevo_user = Brevo(user.to_dict())
+        response = brevo_user.has_unsubscribed_from_commercial_newsletter()
+
+        self.assertTrue(response)

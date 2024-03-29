@@ -4,6 +4,7 @@ Brevo API client.
 
 import logging
 from http.client import BAD_REQUEST
+from urllib.parse import quote_plus
 
 from django.conf import settings
 
@@ -37,11 +38,14 @@ class Brevo:
         """Log an info message."""
         logger.info(message, self.user.get("id"), self.list_id)
 
-    def _call_api(self, url, payload):
+    def _call_api(self, url, payload=None):
         """
         Call the Brevo API with the given payload.
         """
-        response = requests.post(url, json=payload, headers=self.headers, timeout=5)
+        if payload:
+            response = requests.post(url, json=payload, headers=self.headers, timeout=5)
+        else:
+            response = requests.get(url, headers=self.headers, timeout=5)
         if not response.ok:
             logger.error(
                 "Error calling Brevo API %s %s",
@@ -104,6 +108,20 @@ class Brevo:
 
         payload = {"emails": [self.user.get("email")]}
         response = self._call_api(self.unsubscribe_from_list_url, payload)
+        if not response.ok:
+            return None
+
+        return response.json()
+
+    def has_unsubscribed_from_commercial_newsletter(self):
+        """
+        Check if a contact has unsubscribed from the commercial newsletter list.
+        """
+        self._log_info("Checking if user %s has unsubscribed from list %s")
+
+        email_url_encoded = quote_plus(self.user.get("email"))
+        response = self._call_api(f"{self.contact_url}/{email_url_encoded}")
         if response.ok:
-            return response.json()
-        return None
+            list_unsubscribed = response.json().get("listUnsubscribed")
+            return settings.BREVO_COMMERCIAL_NEWSLETTER_LIST_ID in list_unsubscribed
+        return False

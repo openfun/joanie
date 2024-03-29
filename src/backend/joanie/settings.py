@@ -508,6 +508,9 @@ class Base(Configuration):
     BREVO_COMMERCIAL_NEWSLETTER_LIST_ID = values.IntegerValue(
         None, environ_name="BREVO_COMMERCIAL_NEWSLETTER_LIST_ID", environ_prefix=None
     )
+    BREVO_WEBHOOK_TOKEN = values.Value(
+        None, environ_name="BREVO_WEBHOOK_TOKEN", environ_prefix=None
+    )
 
     # Open edX database import
     EDX_DOMAIN = values.Value(None, environ_name="EDX_DOMAIN", environ_prefix=None)
@@ -607,6 +610,9 @@ class Base(Configuration):
             )
             with sentry_sdk.configure_scope() as scope:
                 scope.set_extra("application", "backend")
+
+        if cls.BREVO_WEBHOOK_TOKEN is not None:
+            cls.JOANIE_AUTHORIZED_API_TOKENS.append(cls.BREVO_WEBHOOK_TOKEN)  # pylint: disable=no-member
 
 
 class Build(Base):
