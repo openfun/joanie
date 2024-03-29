@@ -1,5 +1,6 @@
 import * as React from "react";
-import Button from "@mui/material/Button";
+import { ReactNode } from "react";
+import Button, { ButtonOwnProps } from "@mui/material/Button";
 import DialogContentText from "@mui/material/DialogContentText";
 import { defineMessages, useIntl } from "react-intl";
 import {
@@ -21,15 +22,17 @@ const messages = defineMessages({
 });
 
 export interface AlertModalProps extends CustomModalProps {
-  message: string;
+  message: string | ReactNode;
   handleAccept: () => void;
   validateLabel?: string;
   closeOnAccept?: boolean;
+  validateColorButton?: ButtonOwnProps["color"];
 }
 
 export function AlertModal({
   handleAccept,
   validateLabel,
+  validateColorButton,
   message,
   closeOnAccept = true,
   ...modalProps
@@ -50,7 +53,11 @@ export function AlertModal({
           <Button onClick={modalProps.handleClose}>
             {intl.formatMessage(messages.cancel)}
           </Button>
-          <Button onClick={onHandleAccept} autoFocus>
+          <Button
+            onClick={onHandleAccept}
+            color={validateColorButton}
+            autoFocus
+          >
             {validateLabel ?? intl.formatMessage(messages.validate)}
           </Button>
         </>
