@@ -7,6 +7,7 @@ from http.client import BAD_REQUEST
 from urllib.parse import quote_plus
 
 from django.conf import settings
+from django.urls import reverse
 
 import requests
 
@@ -18,7 +19,7 @@ class Brevo:
     Brevo API client.
     """
 
-    def __init__(self, user):
+    def __init__(self, user=None):
         self.headers = {
             "accept": "application/json",
             "content-type": "application/json",
@@ -26,11 +27,11 @@ class Brevo:
         }
 
         self.list_id = settings.BREVO_COMMERCIAL_NEWSLETTER_LIST_ID
-        self.user = user
+        self.user = user or {}
 
-        api_url = settings.BREVO_API_URL
-        self.contact_url = f"{api_url}contacts"
-        list_contacts_url = f"{api_url}contacts/lists/{self.list_id}/contacts"
+        self.api_url = settings.BREVO_API_URL
+        self.contact_url = f"{self.api_url}contacts"
+        list_contacts_url = f"{self.api_url}contacts/lists/{self.list_id}/contacts"
         self.subscribe_to_list_url = f"{list_contacts_url}/add"
         self.unsubscribe_from_list_url = f"{list_contacts_url}/remove"
 
@@ -48,9 +49,10 @@ class Brevo:
             response = requests.get(url, headers=self.headers, timeout=5)
         if not response.ok:
             logger.error(
-                "Error calling Brevo API %s %s",
+                "Error calling Brevo API %s | %s: %s",
                 url,
-                response,
+                response.status_code,
+                response.text,
                 extra={
                     "context": {
                         "user_id": self.user.get("id"),
@@ -121,7 +123,39 @@ class Brevo:
 
         email_url_encoded = quote_plus(self.user.get("email"))
         response = self._call_api(f"{self.contact_url}/{email_url_encoded}")
+        if not response.ok:
+            return False
+
+        list_unsubscribed = response.json().get("listUnsubscribed")
+        return settings.BREVO_COMMERCIAL_NEWSLETTER_LIST_ID in list_unsubscribed
+
+    def create_webhook(
+        self, base_url, description="Webhook triggered on unsubscription"
+    ):
+        """
+        Create a webhook for the Brevo API.
+        """
+        webook_url = base_url + reverse("commercial_newsletter_subscription_webhook")
+        logger.info("Webhook endpoint %s", webook_url)
+
+        url = f"{self.api_url}webhooks"
+
+        payload = {
+            "type": "marketing",
+            "auth": {
+                "type": "bearer",
+                "token": settings.BREVO_WEBHOOK_TOKEN,
+            },
+            "events": ["unsubscribed"],
+            "url": webook_url,
+            "description": description,
+            "batched": True,
+        }
+
+        response = self._call_api(url, payload)
+
         if response.ok:
-            list_unsubscribed = response.json().get("listUnsubscribed")
-            return settings.BREVO_COMMERCIAL_NEWSLETTER_LIST_ID in list_unsubscribed
-        return False
+            webhook_id = response.json().get("id")
+            logger.info("Webhook created %s", webhook_id)
+            return webhook_id
+        return None
