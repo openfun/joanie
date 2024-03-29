@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added 
+
+- Add enrollments pages
+
 ### Changed
 
 - Use generic AdminCourseProductRelationSerializer
