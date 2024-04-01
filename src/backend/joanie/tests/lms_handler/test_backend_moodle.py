@@ -391,6 +391,37 @@ class MoodleLMSBackendTestCase(TestCase):
 
     @override_settings(MOODLE_AUTH_METHOD="moodle_auth_method")
     @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_create_user_username_uppercase(self):
+        """
+        Creating a user with a username with uppercase should work by sending to moodle
+        a username in lowercase
+        """
+        user = factories.UserFactory(first_name="John Doe", username="JohnDoe")
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_user_create_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "users[0][username]": "johndoe",
+                        "users[0][firstname]": user.first_name,
+                        "users[0][lastname]": user.last_name or ".",
+                        "users[0][email]": user.email,
+                        "users[0][auth]": "moodle_auth_method",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            json=[{"id": 5, "username": "johndoe"}],
+        )
+
+        result = self.backend.create_user(user)
+
+        self.assertEqual(result, {"id": 5, "username": user.username})
+
+    @override_settings(MOODLE_AUTH_METHOD="moodle_auth_method")
+    @responses.activate(assert_all_requests_are_fired=True)
     def test_backend_moodle_create_user_error(self):
         """
         Creating a user should return a dict containing the user's id and username.
