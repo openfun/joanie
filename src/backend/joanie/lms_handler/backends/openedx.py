@@ -10,6 +10,7 @@ from django.db.models import Q
 
 import requests
 from requests.auth import AuthBase
+from requests.exceptions import RequestException
 
 from joanie.core import enums
 from joanie.core.exceptions import EnrollmentError, GradeError
@@ -90,10 +91,14 @@ class OpenEdXLMSBackend(BaseLMSBackend):
         """Get enrollment status for a user on a course run given its url"""
         base_url = self.configuration["BASE_URL"]
         course_id = self.extract_course_id(resource_link)
-        response = self.api_client.request(
-            "GET",
-            f"{base_url}/api/enrollment/v1/enrollment/{username},{course_id}",
-        )
+        try:
+            response = self.api_client.request(
+                "GET",
+                f"{base_url}/api/enrollment/v1/enrollment/{username},{course_id}",
+            )
+        except RequestException as exc:
+            logger.error(exc)
+            return None
 
         if response.ok:
             return json.loads(response.content) if response.content else {}
@@ -122,7 +127,11 @@ class OpenEdXLMSBackend(BaseLMSBackend):
             "course_details": {"course_id": course_id},
         }
         url = f"{base_url}/api/enrollment/v1/enrollment"
-        response = self.api_client.request("POST", url, json=payload)
+        try:
+            response = self.api_client.request("POST", url, json=payload)
+        except RequestException as exc:
+            logger.error(exc)
+            raise EnrollmentError() from exc
 
         if response.ok:
             data = json.loads(response.content)
@@ -137,7 +146,11 @@ class OpenEdXLMSBackend(BaseLMSBackend):
         base_url = self.configuration["BASE_URL"]
         course_id = self.extract_course_id(resource_link)
         url = f"{base_url}/fun/api/grades/{course_id}/{username}"
-        response = self.api_client.request("GET", url)
+        try:
+            response = self.api_client.request("GET", url)
+        except RequestException as exc:
+            logger.error(exc)
+            raise GradeError() from exc
 
         if response.ok:
             return json.loads(response.content)
