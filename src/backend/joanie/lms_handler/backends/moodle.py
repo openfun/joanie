@@ -100,6 +100,7 @@ class MoodleLMSBackend(BaseLMSBackend):
     # pylint: disable=invalid-name
     def get_user_id(self, username):
         """Retrieve user id."""
+        username = username.lower()
         criteria = {"key": "username", "value": username}
         try:
             res = self.moodle("core_user_get_users", criteria=[criteria])
@@ -116,6 +117,7 @@ class MoodleLMSBackend(BaseLMSBackend):
 
     def create_user(self, user):
         """Create a user."""
+        user.username = user.username.lower()
         user_data = {
             "username": user.username,
             "firstname": user.first_name,
