@@ -10,6 +10,7 @@ from django.test.utils import override_settings
 from django.utils import timezone
 
 import responses
+from requests import RequestException
 
 from joanie.core import factories, models
 from joanie.core.exceptions import EnrollmentError, GradeError
@@ -103,6 +104,38 @@ class OpenEdXLMSBackendTestCase(TestCase):
             url,
             status=HTTPStatus.INTERNAL_SERVER_ERROR,
             json={"error": "Something went wrong..."},
+        )
+
+        backend = LMSHandler.select_lms(resource_link)
+        self.assertIsInstance(backend, OpenEdXLMSBackend)
+
+        enrollment = backend.get_enrollment(username, resource_link)
+        self.assertEqual(len(responses.calls), 1)
+        self.assertEqual(responses.calls[0].request.url, url)
+        self.assertEqual(
+            responses.calls[0].request.headers["X-Edx-Api-Key"], "a_secure_api_token"
+        )
+        self.assertIsNone(responses.calls[0].request.body)
+        self.assertIsNone(enrollment)
+
+    @responses.activate
+    def test_backend_openedx_get_enrollment_network_fails(self):
+        """
+        If a network error occurs when fetching an enrollment, it should return None.
+        """
+        username = "joanie"
+        resource_link = (
+            "http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course"
+        )
+        url = (
+            "http://openedx.test/api/enrollment/v1/enrollment/"
+            f"{username},course-v1:edx+000001+Demo_Course"
+        )
+
+        responses.add(
+            responses.GET,
+            url,
+            body=RequestException(),
         )
 
         backend = LMSHandler.select_lms(resource_link)
@@ -411,6 +444,52 @@ class OpenEdXLMSBackendTestCase(TestCase):
         )
 
     @responses.activate
+    def test_backend_openedx_set_enrollment_network_fails(self):
+        """
+        In case updating a user's enrollment to a course a network error occurs,
+        it should raise an EnrollmentError.
+        """
+        course_run = factories.CourseRunFactory(
+            start=self.now - timedelta(hours=1),
+            end=self.now + timedelta(hours=2),
+            enrollment_end=self.now + timedelta(hours=1),
+            is_listed=True,
+        )
+        resource_link = course_run.resource_link
+        user = factories.UserFactory()
+        is_active = random.choice([True, False])
+        enrollment = models.Enrollment(
+            course_run=course_run, user=user, is_active=is_active
+        )
+        url = "http://openedx.test/api/enrollment/v1/enrollment"
+
+        responses.add(responses.POST, url, body=RequestException())
+
+        backend = LMSHandler.select_lms(resource_link)
+        self.assertIsInstance(backend, OpenEdXLMSBackend)
+
+        course_id = backend.extract_course_id(resource_link)
+
+        with self.assertRaises(EnrollmentError):
+            backend.set_enrollment(enrollment)
+
+        self.assertEqual(len(responses.calls), 1)
+        self.assertEqual(responses.calls[0].request.url, url)
+        self.assertEqual(
+            responses.calls[0].request.headers["X-Edx-Api-Key"], "a_secure_api_token"
+        )
+
+        self.assertEqual(
+            json.loads(responses.calls[0].request.body),
+            {
+                "is_active": is_active,
+                "mode": "honor",
+                "user": user.username,
+                "course_details": {"course_id": course_id},
+            },
+        )
+
+    @responses.activate
     def test_backend_openedx_get_grades_successfully(self):
         """
         When get user's grades for a course run, it should return grade details without
@@ -454,6 +533,31 @@ class OpenEdXLMSBackendTestCase(TestCase):
         url = f"http://openedx.test/fun/api/grades/{course_id}/{username}"
 
         responses.add(responses.GET, url, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+        backend = LMSHandler.select_lms(resource_link)
+        self.assertIsInstance(backend, OpenEdXLMSBackend)
+
+        with self.assertRaises(GradeError):
+            backend.get_grades(username, resource_link)
+
+        self.assertEqual(len(responses.calls), 1)
+        self.assertEqual(responses.calls[0].request.url, url)
+        self.assertEqual(
+            responses.calls[0].request.headers["X-Edx-Api-Key"], "a_secure_api_token"
+        )
+
+    @responses.activate
+    def test_backend_openedx_get_grades_network_fails(self):
+        """
+        When a network error occurs when fetching grades,
+        it should raise a GradeError
+        """
+        username = "joanie"
+        course_id = "course-v1:edx+000001+Demo_Course"
+        resource_link = f"http://openedx.test/courses/{course_id}/course"
+        url = f"http://openedx.test/fun/api/grades/{course_id}/{username}"
+
+        responses.add(responses.GET, url, body=RequestException())
 
         backend = LMSHandler.select_lms(resource_link)
         self.assertIsInstance(backend, OpenEdXLMSBackend)
