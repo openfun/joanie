@@ -40,7 +40,7 @@ DB_PORT            = 5432
 DOCKER_UID          = $(shell id -u)
 DOCKER_GID          = $(shell id -g)
 DOCKER_USER         = $(DOCKER_UID):$(DOCKER_GID)
-COMPOSE             = DOCKER_USER=$(DOCKER_USER) docker-compose
+COMPOSE             = DOCKER_USER=$(DOCKER_USER) docker compose
 COMPOSE_EXEC        = $(COMPOSE) exec
 COMPOSE_EXEC_APP    = $(COMPOSE_EXEC) app-dev
 COMPOSE_RUN         = $(COMPOSE) run --rm
@@ -127,7 +127,7 @@ run: ## start the wsgi (production) and development server
 	@$(WAIT_DB)
 .PHONY: run
 
-status: ## an alias for "docker-compose ps"
+status: ## an alias for "docker compose ps"
 	@$(COMPOSE) ps
 .PHONY: status
 
@@ -230,7 +230,7 @@ shell: ## connect to database shell
 # -- Database
 
 dbshell: ## connect to database shell
-	docker-compose exec app-dev python manage.py dbshell
+	${COMPOSE_EXEC_APP} python manage.py dbshell
 .PHONY: dbshell
 
 resetdb: ## flush database and create a superuser "admin"
