@@ -39,6 +39,7 @@ dependencies = [
     "django-money==3.4.1",
     "django-object-actions==4.2.0",
     "django-parler==2.3",
+    "django-redis==5.4.0",
     "django-storages==1.14.2",
     "Django<5",
     "djangorestframework-simplejwt==5.3.1",

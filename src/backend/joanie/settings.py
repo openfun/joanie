@@ -801,6 +801,32 @@ class Production(Base):
         },
     }
 
+    # Cache
+    # Enable the alternate connection factory.
+    DJANGO_REDIS_CONNECTION_FACTORY = values.Value(
+        "django_redis.pool.ConnectionFactory",
+        environ_prefix=None,
+        environ_name="DJANGO_REDIS_CONNECTION_FACTORY",
+    )
+
+    CACHES = {
+        "default": {
+            "BACKEND": values.Value(
+                "django_redis.cache.RedisCache", environ_name="CACHE_DEFAULT_BACKEND"
+            ),
+            # The hostname in LOCATION
+            "LOCATION": values.Value(
+                "redis://redis/0", environ_name="CACHE_DEFAULT_LOCATION"
+            ),
+            "OPTIONS": values.DictValue(
+                {
+                    "CLIENT_CLASS": "django_redis.client.DefaultClient",
+                },
+                environ_name="CACHE_DEFAULT_OPTIONS",
+            ),
+        },
+    }
+
     THUMBNAIL_DEFAULT_STORAGE = values.Value(
         "joanie.core.storages.JoanieEasyThumbnailS3Storage"
     )
