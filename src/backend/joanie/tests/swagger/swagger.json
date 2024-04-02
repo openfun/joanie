@@ -764,7 +764,7 @@
         "/api/v1.0/contracts/zip-archive/": {
             "post": {
                 "operationId": "contracts_zip_archive_create",
-                "description": "This endpoint is exclusive to users that have access rights on a specific organization.\n\nIt triggers the generation of a ZIP archive if the requesting has the correct access rights\non the organization. If a course product relation UUID is given from key word arguments,\nthe user requires to have access to the organization that is attached to the specific\ncourse product relation object.\nWe return in the response the URL for polling the ZIP archive once it has been generated.\n\nNotes on possible `kwargs` as input parameters :\n    - string of an Organization UUID\n    OR\n    - string of an CourseProductRelation UUID",
+                "description": "This endpoint is exclusive to users that have access rights on a specific organization.\n\nIt triggers the generation of a ZIP archive if the requesting has the correct access rights\non the organization. If a course product relation UUID is given from key word arguments,\nthe user requires to have access to the organization that is attached to the specific\ncourse product relation object.\nWe return in the response the URL for polling the ZIP archive once it has been generated.\n\nNotes on possible `kwargs` as input parameters :\n    - string of an Organization UUID alone\n    - string of an CourseProductRelation UUID alone\n    - string of both Organization UUID & CourseProductRelation UUID",
                 "tags": [
                     "contracts"
                 ],

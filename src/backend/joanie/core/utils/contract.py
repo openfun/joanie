@@ -18,8 +18,10 @@ def _get_base_signature_backend_references(
     course_product_relation=None, organization=None, extra_filters=None
 ):
     """
-    Build the base query to get signature backend references from either a Course Product Relation
-    object or an Organization object when the contract is signed.
+    Build the base query to get signature backend references from a Course Product Relation
+    object or an Organization object when the contract is signed. You can pass both parameters if
+    you need to filter out by organization when the course product relation is shared between
+    many organizations.
 
     You may use an additional parameter `extra_filters` if you need to filter out even more the
     base queryset of the Contract (check if the user has access to the organization for example).
