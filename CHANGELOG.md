@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Add redis backend to cache configuration
 - Add generate certificate button in Back Office
 - Add admin Enrollment endpoint
 - Add tabs layout on back offices forms
