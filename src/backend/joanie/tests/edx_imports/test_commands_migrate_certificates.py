@@ -22,7 +22,6 @@ from joanie.edx_imports.utils import (
     make_date_aware,
 )
 from joanie.lms_handler.backends.openedx import OPENEDX_MODE_VERIFIED
-from joanie.tests.base import BaseLogMixinTestCase
 from joanie.tests.edx_imports.base_test_commands_migrate import (
     MigrateOpenEdxBaseTestCase,
 )
@@ -46,9 +45,7 @@ with open(
         }
     },
 )
-class MigrateOpenEdxCertificatesTestCase(
-    MigrateOpenEdxBaseTestCase, BaseLogMixinTestCase
-):
+class MigrateOpenEdxCertificatesTestCase(MigrateOpenEdxBaseTestCase):
     """Tests for the migrate_edx command to import certificates from Open edX."""
 
     def setUp(self):
