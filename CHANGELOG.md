@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Manage commercial newsletter subscriptions
 - Allow backoffice to generate certificates from a course and product relation
 - Bind remote catalog syllabus to contract template
 - Add redis backend to cache configuration
