@@ -993,11 +993,6 @@ class GenerateSignedContractsZipSerializer(serializers.Serializer):
         """
         course_product_relation_id = attrs.get("course_product_relation_id")
         organization_id = attrs.get("organization_id")
-        if course_product_relation_id and organization_id:
-            raise serializers.ValidationError(
-                "You must set exactly one parameter for the method. It cannot be both. "
-                "You must choose between an Organization UUID or a Course Product Relation UUID."
-            )
 
         if not course_product_relation_id and not organization_id:
             raise serializers.ValidationError(

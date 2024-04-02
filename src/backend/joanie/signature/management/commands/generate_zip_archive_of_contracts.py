@@ -100,8 +100,10 @@ class Command(BaseCommand):
             raise CommandError(error_message)
 
         signature_references = contract_utility.get_signature_backend_references(
-            course_product_relation=serializer.data.get("course_product_relation"),
-            organization=serializer.data.get("organization"),
+            course_product_relation=serializer.validated_data.get(
+                "course_product_relation"
+            ),
+            organization=serializer.validated_data.get("organization"),
             extra_filters={"order__organization__accesses__user_id": user_id},
         )  # extra filter to check the access of a user on an organization.
 

@@ -1199,17 +1199,18 @@ class ContractViewSet(GenericContractViewSet):
         We return in the response the URL for polling the ZIP archive once it has been generated.
 
         Notes on possible `kwargs` as input parameters :
-            - string of an Organization UUID
-            OR
-            - string of an CourseProductRelation UUID
+            - string of an Organization UUID alone
+            - string of an CourseProductRelation UUID alone
+            - string of both Organization UUID & CourseProductRelation UUID
         """
         serializer = serializers.GenerateSignedContractsZipSerializer(data=request.data)
-
         serializer.is_valid(raise_exception=True)
 
         if not contract_utility.get_signature_backend_references_exists(
-            course_product_relation=serializer.data.get("course_product_relation"),
-            organization=serializer.data.get("organization"),
+            course_product_relation=serializer.validated_data.get(
+                "course_product_relation"
+            ),
+            organization=serializer.validated_data.get("organization"),
             extra_filters={"order__organization__accesses__user_id": request.user.id},
         ):
             raise ValidationError("No zip to generate")

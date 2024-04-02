@@ -6,13 +6,14 @@ from http import HTTPStatus
 from io import BytesIO
 from unittest import mock
 from uuid import uuid4
+from zipfile import ZipFile
 
 from django.core.files.storage import storages
 from django.utils import timezone
 
 from pdfminer.high_level import extract_text as pdf_extract_text
 
-from joanie.core import enums, factories
+from joanie.core import enums, factories, models
 from joanie.core.serializers import fields
 from joanie.core.utils import contract as contract_utility
 from joanie.core.utils import contract_definition
@@ -1311,49 +1312,12 @@ class ContractApiTest(BaseAPITestCase):
             },
         )
 
-    def test_api_contract_generate_zip_archive_authenticated_post_parsing_both_parameters(
-        self,
-    ):
-        """
-        Authenticated user should be able to use POST method on the viewset to generate ZIP
-        archive but it will raise an error if both parsing arguments are set. You must choose
-        one out of the two parameters to parse.
-        """
-        user = factories.UserFactory()
-        organization = factories.OrganizationFactory()
-        factories.UserOrganizationAccessFactory(organization=organization, user=user)
-        token = self.get_user_token(user.username)
-
-        response = self.client.post(
-            "/api/v1.0/contracts/zip-archive/",
-            data={
-                "organization_id": organization.id,
-                "course_product_relation_id": uuid4(),
-            },
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
-
-        self.assertEqual(
-            response.json(),
-            {
-                "non_field_errors": [
-                    (
-                        "You must set exactly one parameter for the method. It cannot be both."
-                        " You must choose between an Organization UUID or a Course Product"
-                        " Relation UUID."
-                    ),
-                ]
-            },
-        )
-
     def test_api_contract_generate_zip_archive_authenticated_post_with_no_signed_contracts(
         self,
     ):
         """
         Authenticated user should be able to use POST method on the viewset to generate ZIP
-        archive when parsing an existing Organization UUID where the user has the rights to access,
+        archive when passing an existing Organization UUID where the user has the rights to access,
         but it won't generate a ZIP archive because there are no signed contracts.
         """
         user = factories.UserFactory()
@@ -1370,6 +1334,97 @@ class ContractApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
 
         self.assertEqual(response.json(), ["No zip to generate"])
+
+    # pylint: disable=too-many-locals
+    def test_api_contract_generate_zip_archive_authenticated_post_passing_organization_and_cpr(
+        self,
+    ):
+        """
+        If the user has access to two organizations and he wants to create an archive of contracts
+        for the first organization only, he should be able to do it by passing both parameters of
+        Course Product Relation UUID and the Organization UUID.
+        """
+        storage = storages["contracts"]
+        # Create user
+        user = factories.UserFactory()
+        # Create 2 organizations
+        organizations = factories.OrganizationFactory.create_batch(2)
+        # Create accesses for organization accessors
+        factories.UserOrganizationAccessFactory(
+            user=user, organization=organizations[0]
+        )
+        factories.UserOrganizationAccessFactory(
+            user=user, organization=organizations[1]
+        )
+        # Create our Course Product Relation shared by the 2 organizations above
+        relation = factories.CourseProductRelationFactory(
+            product__contract_definition=factories.ContractDefinitionFactory(),
+            organizations=[organizations[0], organizations[1]],
+        )
+        # Create learners who sign the contract definition
+        learners = factories.UserFactory.create_batch(2)
+        signature_reference_choices = ["wfl_fake_dummy_1", "wfl_fake_dummy_2"]
+        for index, reference in enumerate(signature_reference_choices):
+            order = factories.OrderFactory(
+                owner=learners[index],
+                product=relation.product,
+                course=relation.course,
+                state=enums.ORDER_STATE_VALIDATED,
+                organization=organizations[index],
+            )
+            context = contract_definition.generate_document_context(
+                order.product.contract_definition, learners[index], order
+            )
+            factories.ContractFactory(
+                order=order,
+                signature_backend_reference=reference,
+                definition_checksum="1234",
+                context=context,
+                student_signed_on=timezone.now(),
+                organization_signed_on=timezone.now(),
+            )
+
+        # Create token for only one organization accessor
+        token = self.get_user_token(user.username)
+        # Passing both ids (organization and course product relation) in the payload of the request
+        response = self.client.post(
+            "/api/v1.0/contracts/zip-archive/",
+            data={
+                "organization_id": str(organizations[0].id),
+                "course_product_relation_id": str(relation.id),
+            },
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.ACCEPTED)
+        self.assertEqual(
+            models.Contract.objects.filter(
+                order__organization=organizations[0]
+            ).count(),
+            1,
+        )
+
+        expected_endpoint_polling = "/api/v1.0/contracts/zip-archive/"
+        content = response.content.decode("utf-8")
+        content_json = json.loads(content)
+        polling_url = content_json["url"]
+        generated_zip_uuid = polling_url[-37:-1]
+
+        self.assertEqual(
+            content_json["url"], f"{expected_endpoint_polling}{generated_zip_uuid}/"
+        )
+        self.assertEqual(len(generated_zip_uuid), 36)
+        self.assertTrue(storage.exists(f"{user.id}_{generated_zip_uuid}.zip"))
+
+        generated_zip_filename = f"{user.id}_{generated_zip_uuid}.zip"
+        # Verify that only 1 contract has been archived in ZIP
+        with storage.open(generated_zip_filename) as storage_zip_archive:
+            with ZipFile(storage_zip_archive, "r") as zip_archive_elements:
+                file_names = zip_archive_elements.namelist()
+                # Check the amount of files inside the ZIP archive
+                self.assertEqual(len(file_names), 1)
+        # Clear file zip archive in storages
+        storage.delete(generated_zip_filename)
 
     # pylint: disable=too-many-locals
     def test_api_contract_generate_zip_archive_authenticated_post_method_allowed(self):

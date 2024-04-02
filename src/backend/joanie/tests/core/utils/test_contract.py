@@ -597,3 +597,48 @@ class UtilsContractTestCase(TestCase):
                         )
         # Clear file zip archive in storages
         storage.delete(generated_zip_archive_name)
+
+    def test_utils_contract_get_signature_backend_references_with_course_product_relation_and_org(
+        self,
+    ):
+        """
+        If the course product relation is shared accross 2 organizations, when passing the course
+        product relation UUID and the organization UUID, we should be able to retrieve only the
+        contract that is attached to the organization parsed in parameters.
+        """
+        learners = factories.UserFactory.create_batch(2)
+        organizations = factories.OrganizationFactory.create_batch(2)
+        relation = factories.CourseProductRelationFactory(
+            product__contract_definition=factories.ContractDefinitionFactory(),
+            organizations=organizations,
+        )
+        signature_reference_choices = [
+            "wfl_fake_dummy_1",
+            "wfl_fake_dummy_2",
+        ]
+        for index, signature_reference in enumerate(signature_reference_choices):
+            factories.ContractFactory(
+                order__organization=organizations[index],
+                order__owner=learners[index],
+                order__product=relation.product,
+                order__course=relation.course,
+                order__state=enums.ORDER_STATE_VALIDATED,
+                signature_backend_reference=signature_reference,
+                definition_checksum="1234",
+                context={"foo": "bar"},
+                student_signed_on=timezone.now(),
+                organization_signed_on=timezone.now(),
+            )
+
+        signature_backend_references_generator = (
+            contract_utility.get_signature_backend_references(
+                course_product_relation=relation, organization=organizations[0]
+            )
+        )
+        signature_backend_references_list = list(signature_backend_references_generator)
+
+        self.assertEqual(len(signature_backend_references_list), 1)
+        self.assertEqual(
+            signature_backend_references_list,
+            ["wfl_fake_dummy_1"],
+        )
