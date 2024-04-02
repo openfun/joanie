@@ -152,6 +152,23 @@ class BaseLogMixinTestCase:
         except Exception as error:
             raise error
 
+    def assertLogsContains(self, logger, expected_records):
+        """
+        Assert that the logger contains the expected messages and levels.
+        """
+        records = [record.getMessage() for record in logger.records]
+        for expected_record in expected_records:
+            is_found = False
+            for record in records:
+                try:
+                    self.assertIn(expected_record, record)
+                    is_found = True
+                    break
+                except AssertionError:
+                    pass
+            if not is_found:
+                self.fail(f"Expected record {expected_record} not found in {records}")
+
 
 class ActivityLogMixingTestCase:
     """Mixin for activity log testing"""
