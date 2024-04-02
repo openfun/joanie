@@ -1,3 +1,4 @@
+# pylint: disable=too-many-instance-attributes
 """
 Brevo API client.
 """
@@ -31,22 +32,24 @@ class Brevo:
 
         self.api_url = settings.BREVO_API_URL
         self.contact_url = f"{self.api_url}contacts"
-        list_contacts_url = f"{self.api_url}contacts/lists/{self.list_id}/contacts"
-        self.subscribe_to_list_url = f"{list_contacts_url}/add"
-        self.unsubscribe_from_list_url = f"{list_contacts_url}/remove"
+        self.list_contacts_url = f"{self.api_url}contacts/lists/{self.list_id}/contacts"
+        self.subscribe_to_list_url = f"{self.list_contacts_url}/add"
+        self.unsubscribe_from_list_url = f"{self.list_contacts_url}/remove"
 
     def _log_info(self, message):
         """Log an info message."""
         logger.info(message, self.user.get("id"), self.list_id)
 
-    def _call_api(self, url, payload=None):
+    def _call_api(self, url, payload=None, query_params=None):
         """
         Call the Brevo API with the given payload.
         """
         if payload:
             response = requests.post(url, json=payload, headers=self.headers, timeout=5)
         else:
-            response = requests.get(url, headers=self.headers, timeout=5)
+            response = requests.get(
+                url, params=query_params, headers=self.headers, timeout=5
+            )
         if not response.ok:
             logger.error(
                 "Error calling Brevo API %s | %s: %s",
@@ -154,8 +157,33 @@ class Brevo:
 
         response = self._call_api(url, payload)
 
-        if response.ok:
-            webhook_id = response.json().get("id")
-            logger.info("Webhook created %s", webhook_id)
-            return webhook_id
-        return None
+        if not response.ok:
+            return None
+
+        webhook_id = response.json().get("id")
+        logger.info("Webhook created %s", webhook_id)
+        return webhook_id
+
+    def get_contacts_count(self):
+        """
+        Get the count of contacts in the commercial newsletter list.
+        """
+        return self.get_contacts(limit=1)
+
+    def get_contacts(self, limit=500, offset=0):
+        """
+        Get contacts from the commercial newsletter list.
+
+        If limit is 1, return the count of contacts.
+        """
+        response = self._call_api(
+            self.list_contacts_url,
+            query_params={"limit": limit, "offset": offset, "sort": "desc"},
+        )
+
+        if not response.ok:
+            return None
+
+        if limit == 1:
+            return response.json().get("count")
+        return response.json().get("contacts")
