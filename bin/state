@@ -12,7 +12,7 @@ source "${TERRAFORM_DIRECTORY}/${project}/openrc.sh"
 # shellcheck disable=SC2068
 DOCKER_USER="$(id -u):$(id -g)" \
     PROJECT="${project}" \
-    docker-compose run --rm \
+    docker compose run --rm \
     -e OS_AUTH_URL \
     -e OS_IDENTITY_API_VERSION \
     -e OS_USER_DOMAIN_NAME \
