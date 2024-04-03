@@ -20,6 +20,7 @@ export default function EditCoursePage() {
   const intl = useIntl();
   const { query } = useRouter();
   const course = useCourse(query.id as string);
+
   return (
     <DashboardLayoutPage
       actions={
@@ -47,7 +48,9 @@ export default function EditCoursePage() {
       stretch={false}
     >
       <LoadingContent loading={course.states.isLoading}>
-        {course.item && <CourseForm course={course.item} />}
+        {course.item && (
+          <CourseForm isLoading={course.states.fetching} course={course.item} />
+        )}
       </LoadingContent>
     </DashboardLayoutPage>
   );

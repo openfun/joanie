@@ -16,6 +16,7 @@ import {
 interface Props {
   afterSubmit?: (course: Course) => void;
   course?: Course;
+  isLoading?: boolean;
   shortcutMode?: boolean;
   fromCourse?: Course;
 }
@@ -32,6 +33,7 @@ export function CourseForm({ course, shortcutMode = false, ...props }: Props) {
         tabInfo: intl.formatMessage(courseFormMessages.generalSectionInfo),
         component: (
           <CourseGeneralForm
+            isLoading={props.isLoading}
             course={defaultCourse}
             afterSubmit={props.afterSubmit}
           />
@@ -69,7 +71,7 @@ export function CourseForm({ course, shortcutMode = false, ...props }: Props) {
       ];
     }
     return result;
-  }, [course, intl]);
+  }, [course, props.isLoading, intl]);
 
   return <TabsComponent id="course-form-tabs" tabs={tabs} />;
 }

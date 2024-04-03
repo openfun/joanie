@@ -31,6 +31,7 @@ import { ThumbnailDetailField } from "@/services/api/models/Image";
 
 interface Props {
   afterSubmit?: (course: Course) => void;
+  isLoading?: boolean;
   course?: Course;
 }
 
@@ -106,6 +107,7 @@ export function CourseGeneralForm({ course, ...props }: Props) {
   return (
     <SimpleCard>
       <TranslatableContent
+        isLoading={props.isLoading}
         onSelectLang={() => {
           if (course) coursesQuery.methods.invalidate();
         }}
