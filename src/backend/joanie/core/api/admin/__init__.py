@@ -144,6 +144,7 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     filterset_class = filters.UserAdminFilterSet
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     ordering_fields = ["created_on"]
+    ordering = "created_on"
 
     def get_queryset(self):
         """
