@@ -28,9 +28,9 @@ this template as a base.
               <p>{{contract.description|linebreaks}}</p>
           </header>
           <section class="content--context">
-              <p>The current contract is formed between the University and the Learner, as identified below:</p>
+              <p>{% translate "The current contract is formed between the University and the Learner, as identified below:" %}</p>
               <dl>
-                  <dt>{% translate "University (hereinafter \"the University\"): "%}</dt>
+                  <dt>{% translate 'University (hereinafter "the University"): '%}</dt>
                   <dd>
                       <ul>
                           <li>{% translate "Name of the University: "%}{{ organization.name }}</li>
@@ -57,7 +57,7 @@ this template as a base.
                           <li>{% translate "Data Protection Officer contact: "%}{{ organization.dpo_email|default:"-" }}</li>
                       </ul>
                   </dd>
-                  <dt>{% translate "Learner (hereinafter \"the Learner\"):" %}</dt>
+                  <dt>{% translate 'Learner (hereinafter "the Learner"):' %}</dt>
                   <dd>
                       <ul>
                           <li>{% translate "Full name: " %}{{ student.name }}</li>
@@ -68,7 +68,7 @@ this template as a base.
                           <li>{% translate "Telephone number: " %}{{ student.phone_number|default:"-" }}</li>
                       </ul>
                   </dd>
-                  <dt>{% translate "Course (hereinafter \"the Course\"):" %}</dt>
+                  <dt>{% translate 'Course (hereinafter "the Course"):' %}</dt>
                   <dd>
                       <ul>
                           <li>{% translate "Course number: " %}{{ course.code }}</li>
