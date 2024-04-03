@@ -18,9 +18,9 @@
       </div>
       <h1 class="header-title light">
         {% if metadata.type == "invoice" %}
-          {% trans "Invoice" %}
+          {% translate "Invoice" %}
         {% else %}
-          {% trans "Credit note" %}
+          {% translate "Credit note" %}
         {% endif %}
       </h1>
     </header>
@@ -29,9 +29,9 @@
         <li class="invoice-stakeholders__item">
           <h5 class="invoice-stakeholders__item-label">
             {% if metadata.type == "invoice" %}
-              {% trans "Sold by" %}
+              {% translate "Sold by" %}
             {% else %}
-              {% trans "Refunded by" %}
+              {% translate "Refunded by" %}
             {% endif %}
           </h5>
           <address class="invoice-stakeholders__item-address">
@@ -41,9 +41,9 @@
         <li class="invoice-stakeholders__item">
           <h5 class="invoice-stakeholders__item-label">
             {% if metadata.type == "invoice" %}
-              {% trans "Billed to" %}
+              {% translate "Billed to" %}
             {% else %}
-              {% trans "Refunded to" %}
+              {% translate "Refunded to" %}
             {% endif %}
           </h5>
           <address class="invoice-stakeholders__item-address">
@@ -56,17 +56,17 @@
       <section class="invoice-metadata">
         <h5 class="invoice-metadata__title">
           {% if metadata.type == "invoice" %}
-            {% trans "Invoice information" %}
+            {% translate "Invoice information" %}
           {% else %}
-            {% trans "Credit note information" %}
+            {% translate "Credit note information" %}
           {% endif %}
         </h5>
         <ul class="invoice-list">
           <li class="invoice-list__item">
-            <strong>{% trans "Reference" %}</strong>&nbsp;{{ metadata.reference }}
+            <strong>{% translate "Reference" %}</strong>&nbsp;{{ metadata.reference }}
           </li>
           <li class="invoice-list__item">
-            <strong>{% trans "Issue date" %}</strong>&nbsp;{{ metadata.issued_on|date:"d/m/Y"}}
+            <strong>{% translate "Issue date" %}</strong>&nbsp;{{ metadata.issued_on|date:"d/m/Y"}}
           </li>
         </ul>
       </section>
@@ -75,7 +75,7 @@
         <thead class="product-table__head">
           <tr class="product-table__row">
             <th class="product-table__cell product-table__cell--head">
-              {% trans "Product" %}
+              {% translate "Product" %}
             </th>
             <th
               class="
@@ -84,7 +84,7 @@
                 product-table__cell--right
               "
             >
-              {% trans "Price" %}
+              {% translate "Price" %}
             </th>
             <th
               class="
@@ -93,7 +93,7 @@
                 product-table__cell--right
               "
             >
-              {% trans "VAT" %}&nbsp;({{ order.amount.vat }}%)
+              {% translate "VAT" %}&nbsp;({{ order.amount.vat }}%)
             </th>
             <th
               class="
@@ -102,7 +102,7 @@
                 product-table__cell--right
               "
             >
-              {% trans "Total" %}
+              {% translate "Total" %}
             </th>
           </tr>
         </thead>
@@ -127,15 +127,15 @@
       <div class="invoice_detail_container">
         <table class="invoice_detail_table">
           <tr>
-            <td class="invoice_category_item"><strong>{% trans "Subtotal" %}</strong></td>
+            <td class="invoice_category_item"><strong>{% translate "Subtotal" %}</strong></td>
             <td class="invoice_item_value">{{ order.amount.subtotal|floatformat:2 }}&nbsp;{{ currency }}</td>
           </tr>
           <tr>
-            <td class="invoice_category_item"><strong>{% trans "Sales Tax VAT" %} {{ order.amount.vat }}%</strong></td>
+            <td class="invoice_category_item"><strong>{% translate "Sales Tax VAT" %} {{ order.amount.vat }}%</strong></td>
             <td class="invoice_item_value">{{ order.amount.vat_amount|floatformat:2 }}&nbsp;{{ currency }}</td>
           </tr>
           <tr>
-            <td class="invoice_category_item"><strong>{% trans "Total" %}</strong></td>
+            <td class="invoice_category_item"><strong>{% translate "Total" %}</strong></td>
             <td class="invoice_item_value">{{ order.amount.total|floatformat:2 }}&nbsp;{{ currency }}</td>
           </tr>
         </table>

@@ -10,11 +10,11 @@
         </header>
         <main class="content">
             <section class="content__information">
-                <h1>{% trans "This certificate is genuine!" %}</h1>
+                <h1>{% translate "This certificate is genuine!" %}</h1>
                 <p>{%blocktranslate trimmed with creation_date=certificate_context.creation_date|date:"SHORT_DATE_FORMAT" learner_name=certificate_context.student.name organization_name=certificate_context.organizations.0.name%}
                     This certificate has been issued on {{ creation_date }} to {{ learner_name }} by {{ organization_name }}.
                     {% endblocktranslate %}</p>
-                <p>{% trans "Please compare information displayed on the certificate below with yours." %}</p>
+                <p>{% translate "Please compare information displayed on the certificate below with yours." %}</p>
             </section>
             <section class="content__document">
                 <iframe id="pdf-viewer" src="data:application/pdf;base64,{{base64_pdf}}" type="application/pdf"></iframe>
