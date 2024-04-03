@@ -8,6 +8,16 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+### Changed
+
+### Removed
+
+### Fixed
+
+- Fix translation content logic
+
 ## [2.0.0] - 2024-04-10
 
 ### Added
@@ -208,6 +218,7 @@ and this project adheres to
 - Fix auto enrollment with closed and specific course runs
 - Fix demo-dev command synchronization error.
 - Add missing django dockerflow middleware
+- Fix translation content logic
 
 ## [1.2.0] - 2023-08-28
 
