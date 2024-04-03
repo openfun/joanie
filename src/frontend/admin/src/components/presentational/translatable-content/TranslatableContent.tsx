@@ -5,16 +5,26 @@ import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import { TabContext } from "@mui/lab";
 import { useTheme } from "@mui/material/styles";
+import CircularProgress from "@mui/material/CircularProgress";
 import { TRANSLATE_CONTENT_LANGUAGE } from "@/utils/constants";
 import { LocalesEnum } from "@/types/i18n/LocalesEnum";
 import { getAcceptLanguage } from "@/services/http/HttpService";
-import { getLocaleFromDjangoLang } from "@/utils/lang";
+import {
+  deleteDjangoLang,
+  getLocaleFromDjangoLang,
+  getSavedDjangoLanguage,
+  setDjangoLang,
+} from "@/utils/lang";
 
 interface Props {
   onSelectLang: (lang?: string) => void;
+  isLoading?: boolean;
 }
 
-export function TranslatableContent({ ...props }: PropsWithChildren<Props>) {
+export function TranslatableContent({
+  isLoading = false,
+  ...props
+}: PropsWithChildren<Props>) {
   const [value, setValue] = useState(getAcceptLanguage());
   const theme = useTheme();
 
@@ -31,7 +41,8 @@ export function TranslatableContent({ ...props }: PropsWithChildren<Props>) {
     props.onSelectLang(newValue);
   };
   useEffect(() => {
-    localStorage.setItem(TRANSLATE_CONTENT_LANGUAGE, getLocaleFromDjangoLang());
+    const old = deleteDjangoLang();
+    localStorage.setItem(TRANSLATE_CONTENT_LANGUAGE, old);
     const oldOnbeforeunload = window.onbeforeunload;
     /*
       The translation of content and the retrieval of an object according to a given language are done via the same
@@ -41,11 +52,15 @@ export function TranslatableContent({ ...props }: PropsWithChildren<Props>) {
       in the current language and not in the current language forced. by the TranslatableContent component
      */
     window.onbeforeunload = () => {
+      const oldDjangoLanguage = getSavedDjangoLanguage();
       localStorage.removeItem(TRANSLATE_CONTENT_LANGUAGE);
+      setDjangoLang(oldDjangoLanguage);
     };
     return () => {
-      window.onbeforeunload = oldOnbeforeunload;
+      const oldDjangoLanguage = getSavedDjangoLanguage();
       localStorage.removeItem(TRANSLATE_CONTENT_LANGUAGE);
+      setDjangoLang(oldDjangoLanguage);
+      window.onbeforeunload = oldOnbeforeunload;
       props.onSelectLang(getLocaleFromDjangoLang());
     };
   }, []);
@@ -67,7 +82,25 @@ export function TranslatableContent({ ...props }: PropsWithChildren<Props>) {
           <Tab label="French" value={LocalesEnum.FRENCH} {...a11yProps(1)} />
         </Tabs>
       </Box>
-      <Box p={3}>{props.children}</Box>
+      <Box p={3} position="relative">
+        {isLoading && (
+          <Box
+            sx={{
+              zIndex: 9,
+              backgroundColor: "white",
+              opacity: 0.5,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              position: "absolute",
+              inset: 0,
+            }}
+          >
+            <CircularProgress />
+          </Box>
+        )}
+        {props.children}
+      </Box>
     </TabContext>
   );
 }
