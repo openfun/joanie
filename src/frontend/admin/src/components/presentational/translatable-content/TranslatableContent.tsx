@@ -85,6 +85,7 @@ export function TranslatableContent({
       <Box p={3} position="relative">
         {isLoading && (
           <Box
+            data-testid="translatable-content-loader-container"
             sx={{
               zIndex: 9,
               backgroundColor: "white",
