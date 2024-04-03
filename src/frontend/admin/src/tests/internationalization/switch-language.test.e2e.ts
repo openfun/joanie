@@ -20,7 +20,7 @@ test.describe("Internationalization", () => {
     expect(cookies.length).toEqual(1);
     let djangoLanguage = cookies[0];
     expect(djangoLanguage.name).toEqual("django_language");
-    expect(djangoLanguage.value).toEqual("fr");
+    expect(djangoLanguage.value).toEqual("fr-fr");
 
     // French
     await expect(
@@ -34,7 +34,7 @@ test.describe("Internationalization", () => {
     // eslint-disable-next-line prefer-destructuring
     djangoLanguage = cookies[0];
     expect(djangoLanguage.name).toEqual("django_language");
-    expect(djangoLanguage.value).toEqual("en");
+    expect(djangoLanguage.value).toEqual("en-us");
 
     // English
     await expect(
