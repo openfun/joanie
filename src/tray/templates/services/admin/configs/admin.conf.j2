@@ -7,6 +7,16 @@ server {
   location / {
       try_files $uri $uri.html $uri/ =404;
   }
+
+    location ~ ^(?<base_uri>.*)/[0-9a-f-]*/(?<view>[a-z-]*)$ {
+        # Our next application is a static one and we are not able to generate at build time
+        # all the possible routes. As we deal with a static application, we can't take apart
+        # of the `fallback` feature of getStaticPaths method.
+        # So, as a workaround, we need to try to find the right html file for dynamic routes
+        # Try to find the right html file for dynamic routes containing an id parameter
+        # e.g /admin/courses/123/edit -> /admin/courses/[id]/edit.html
+        try_files $base_uri/[id]/$view.html =404;
+    }
  
   error_page 404 /404.html;
   location = /404.html {
