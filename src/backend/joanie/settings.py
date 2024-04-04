@@ -239,6 +239,7 @@ class Base(Configuration):
             "COURSE_REGEX": values.Value(
                 r".*", environ_name="EDX_COURSE_REGEX", environ_prefix=None
             ),
+            "COURSE_RUN_SYNC_NO_UPDATE_FIELDS": ["languages"],
         },
         {
             "API_TOKEN": values.Value(
@@ -254,8 +255,10 @@ class Base(Configuration):
             "COURSE_REGEX": values.Value(
                 r"^disabled$", environ_name="MOODLE_COURSE_REGEX", environ_prefix=None
             ),
+            "COURSE_RUN_SYNC_NO_UPDATE_FIELDS": [],
         },
     ]
+    JOANIE_COURSE_RUN_SYNC_SECRETS = values.ListValue([], environ_prefix=None)
     MOODLE_AUTH_METHOD = values.Value(
         "oauth2", environ_name="MOODLE_AUTH_METHOD", environ_prefix=None
     )
