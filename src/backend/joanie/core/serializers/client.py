@@ -2,6 +2,8 @@
 # pylint: disable=too-many-lines
 """Client serializers for Joanie Core app."""
 
+from decimal import Decimal
+
 from django.conf import settings
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
@@ -687,7 +689,7 @@ class OrderSerializer(serializers.ModelSerializer):
         coerce_to_string=False,
         decimal_places=2,
         max_digits=9,
-        min_value=0,
+        min_value=Decimal(0),
         read_only=True,
         required=False,
     )
@@ -861,7 +863,7 @@ class ProductSerializer(serializers.ModelSerializer):
         coerce_to_string=False,
         decimal_places=2,
         max_digits=9,
-        min_value=0,
+        min_value=Decimal(0),
         read_only=True,
     )
     price_currency = serializers.SerializerMethodField(read_only=True)
@@ -1154,7 +1156,7 @@ class OrderPaymentSerializer(serializers.Serializer):
         coerce_to_string=False,
         decimal_places=2,
         max_digits=9,
-        min_value=0,
+        min_value=Decimal(0),
         required=True,
     )
     due_date = serializers.DateTimeField(required=True)
