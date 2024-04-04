@@ -12,6 +12,7 @@ import requests
 from rest_framework.request import Request
 
 from joanie.core import enums, models
+from joanie.core.utils.contract import order_has_organization_owner
 from joanie.signature import exceptions
 from joanie.signature.backends.base import BaseSignatureBackend
 
@@ -395,6 +396,14 @@ class LexPersonaBackend(BaseSignatureBackend):
         It returns the signature backend reference and the hash of the file from the signature
         provider.
         """
+        if not order_has_organization_owner(order=order):
+            error_msg = (
+                "No organization owner found to initiate "
+                f"the signature process for order {order.id}."
+            )
+            logger.warning(error_msg)
+            raise ValidationError(error_msg)
+
         student_recipient_data = self._prepare_recipient_data_for_student_signer(order)
         organization_recipient_data = (
             self._prepare_recipient_data_for_organization_signer(order)

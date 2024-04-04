@@ -8,7 +8,8 @@ from uuid import uuid4
 from django.core.files.storage import storages
 from django.db.models import Q
 
-from joanie.core import enums, models
+from joanie.core import enums
+from joanie.core.models import Contract, OrganizationAccess
 from joanie.signature.backends import get_signature_backend
 
 logger = getLogger(__name__)
@@ -29,7 +30,7 @@ def _get_base_signature_backend_references(
     if not extra_filters:
         extra_filters = {}
 
-    base_query = models.Contract.objects.filter(
+    base_query = Contract.objects.filter(
         order__state=enums.ORDER_STATE_VALIDATED,
         student_signed_on__isnull=False,
         organization_signed_on__isnull=False,
@@ -151,3 +152,13 @@ def generate_zip_archive(pdf_bytes_list: list, user_uuid: str, zip_uuid=None) ->
     storage.save(name=zip_archive_name, content=zip_buffer)
 
     return zip_archive_name
+
+
+def order_has_organization_owner(order) -> bool:
+    """
+    Returns True whether we can find at least one organization owner
+    with the appropriate access rights, otherwise we return False.
+    """
+    return OrganizationAccess.objects.filter(
+        organization=order.organization, role=enums.OWNER
+    ).exists()
