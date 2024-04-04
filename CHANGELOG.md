@@ -119,6 +119,8 @@ and this project adheres to
 
 ### Changed
 
+- Update network name in docker-compose file in order  to fit richie 
+  and openedx-docker naming.
 - Update the certificate viewset for the API client to return
   certificates from orders and from enrollments owned by a user.
 - Update demo-dev command to add a second product purchase with learner

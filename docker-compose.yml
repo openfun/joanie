@@ -179,4 +179,4 @@ services:
 networks:
   lms_outside:
     driver: bridge
-    name: "${JOANIE_LMS_NETWORK:-edx_outside}"
+    name: "${JOANIE_LMS_NETWORK:-edx-lms-outside}"
