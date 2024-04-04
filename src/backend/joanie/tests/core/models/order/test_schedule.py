@@ -216,6 +216,64 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         self.assertEqual(len(found_orders), 1)
         self.assertIn(order, found_orders)
 
+    def test_models_order_schedule_find_today_installments(self):
+        """Check that matching orders are found"""
+        order = factories.OrderFactory(
+            payment_schedule=[
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-03-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "199.99",
+                    "due_date": "2024-04-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ]
+        )
+        factories.OrderFactory(
+            payment_schedule=[
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-18T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-02-18T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-03-18T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "199.99",
+                    "due_date": "2024-04-18T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ]
+        )
+
+        mocked_now = datetime(2024, 2, 17, 0, 0, tzinfo=ZoneInfo("UTC"))
+        with mock.patch("django.utils.timezone.now", return_value=mocked_now):
+            found_orders = Order.objects.find_today_installments()
+
+        self.assertEqual(len(found_orders), 1)
+        self.assertIn(order, found_orders)
+
     def test_models_order_schedule_set_installment_state(self):
         """Check that the state of an installment can be set"""
         order = factories.OrderFactory(

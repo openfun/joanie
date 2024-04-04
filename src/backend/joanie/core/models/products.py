@@ -378,6 +378,16 @@ class OrderManager(models.Manager):
             .filter(payment_schedule__contains=[{"due_date": due_date.isoformat()}])
         )
 
+    def find_today_installments(self):
+        """Retrieve orders with a payment due today."""
+        return (
+            super()
+            .get_queryset()
+            .filter(
+                payment_schedule__contains=[{"due_date": timezone.now().isoformat()}]
+            )
+        )
+
 
 class Order(BaseModel):
     """
