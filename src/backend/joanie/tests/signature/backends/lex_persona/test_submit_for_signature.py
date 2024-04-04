@@ -3,6 +3,7 @@
 from http import HTTPStatus
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.test.utils import override_settings
 
@@ -171,7 +172,6 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
         )
 
         ## upload file to workflow
-
         upload_file_api_url = (
             f"https://lex_persona.test01.com/api/workflows/{workflow_id}"
             "/parts?createDocuments=true&ignoreAttachments=false"
@@ -276,6 +276,9 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
 
         user = factories.UserFactory(email="johnnydo@example.fr")
         order = factories.OrderFactory(owner=user, state=enums.ORDER_STATE_VALIDATED)
+        factories.UserOrganizationAccessFactory.create_batch(
+            3, organization=order.organization, role="owner"
+        )
         file_bytes = b"Some fake content"
 
         ## Create workflow
@@ -323,6 +326,9 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
         """
         user = factories.UserFactory(email="johnnydo@example.fr")
         order = factories.OrderFactory(owner=user, state=enums.ORDER_STATE_VALIDATED)
+        factories.UserOrganizationAccessFactory.create_batch(
+            3, organization=order.organization, role="owner"
+        )
         file_bytes = b"Some fake content"
         workflow_id = "wfl_id_fake"
 
@@ -449,6 +455,9 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
         """
         user = factories.UserFactory(email="johnnydo@example.fr")
         order = factories.OrderFactory(owner=user, state=enums.ORDER_STATE_VALIDATED)
+        factories.UserOrganizationAccessFactory.create_batch(
+            3, organization=order.organization, role="owner"
+        )
         file_bytes = b"Some fake content"
         workflow_id = "wfl_id_fake"
         lex_persona_backend = get_signature_backend()
@@ -611,3 +620,27 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
             responses.calls[2].request.headers["Authorization"], "Bearer token_id_fake"
         )
         self.assertEqual(responses.calls[2].request.method, "PATCH")
+
+    def test_submit_for_signature_create_worklow_failed_because_no_organization_owners_set(
+        self,
+    ):
+        """
+        When attempting to create a signature procedure and the organization does not have any
+        members with the 'owner' role, the signature procedure creation should be prevented,
+        and an error must be raised.
+        """
+        user = factories.UserFactory(email="johnnydo@example.fr")
+        order = factories.OrderFactory(owner=user, state=enums.ORDER_STATE_VALIDATED)
+        file_bytes = b"Some fake content"
+        title = "Contract Definition"
+        lex_persona_backend = get_signature_backend()
+
+        with self.assertRaises(ValidationError) as context:
+            lex_persona_backend.submit_for_signature(
+                title=title, file_bytes=file_bytes, order=order
+            )
+
+        self.assertEqual(
+            str(context.exception.message),
+            f"No organization owner found to initiate the signature process for order {order.id}.",
+        )

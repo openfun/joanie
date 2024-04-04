@@ -642,3 +642,47 @@ class UtilsContractTestCase(TestCase):
             signature_backend_references_list,
             ["wfl_fake_dummy_1"],
         )
+
+    def test_utils_contract_organization_has_owner_without_owners_returns_false(
+        self,
+    ):
+        """
+        When calling the method `order_has_organization_owner` with a order uuid but
+        the organization has not set any owner members yet with organization access,
+        it should return False.
+        """
+        user = factories.UserFactory()
+        order = factories.OrderFactory(
+            owner=user,
+            product__contract_definition=factories.ContractDefinitionFactory(),
+            state=enums.ORDER_STATE_VALIDATED,
+        )
+        factories.ContractFactory(
+            order=order, definition=order.product.contract_definition
+        )
+
+        self.assertFalse(contract_utility.order_has_organization_owner(order=order))
+
+    def test_utils_contract_organization_has_owner_returns_true(
+        self,
+    ):
+        """
+        When calling the method `order_has_organization_owner` with a order uuid and
+        the organization has set owner members with organizationa access, it should return True.
+        """
+        user = factories.UserFactory()
+        order = factories.OrderFactory(
+            owner=user,
+            product__contract_definition=factories.ContractDefinitionFactory(),
+            state=enums.ORDER_STATE_VALIDATED,
+        )
+        factories.ContractFactory(
+            order=order, definition=order.product.contract_definition
+        )
+
+        # When the organization has set some owners with access rights of "owner"
+        factories.UserOrganizationAccessFactory.create_batch(
+            3, organization=order.organization, role="owner"
+        )
+
+        self.assertTrue(contract_utility.order_has_organization_owner(order=order))
