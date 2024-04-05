@@ -848,3 +848,340 @@ headers = {
 }
 ```
 You will see that your workflow has been "stopped". It has been refused successfully.
+
+#### 6- Update signatories for signature procedures :
+
+When you need to add new signatories into existing signature procedures, the API allows you to
+update the signatories. For our case, we have two steps for the signature of a file. The first
+step is the student and the second step are all the organization's owners. When the student has
+already signed, you just need to update the organization signatories recipients (**example 1**),
+otherwise, you need to update both steps. (**example 2**)
+
+#### Example 1 - Update organization signatories
+
+**Endpoint** : /api/workflows/{workflow_id}/
+
+**Method** : PATCH
+
+**Payload** :
+```json
+{
+    "steps": [
+        {
+            "stepType": "signature",
+            "recipients": [
+                {
+                    "email": "richie@example.fr",
+                    "firstName": "Richie B",
+                    "lastName": ".",
+                    "country": "FR",
+                    "preferred_locale": "fr-fr",
+                    "consentPageId": "cop_id_fake",
+                },
+                {
+                    "email": "marsha@example.fr",
+                    "firstName": "Marsha C",
+                    "lastName": ".",
+                    "country": "FR",
+                    "preferred_locale": "fr-fr",
+                    "consentPageId": "cop_id_fake",
+                },
+            ],
+            "requiredRecipients": 1,
+            "validityPeriod": 1296000000,
+            "invitePeriod": null,
+            "maxInvites": 0,
+            "sendDownloadLink": true,
+            "allowComments": false,
+            "hideAttachments": false,
+            "hideWorkflowRecipients": false,
+        },
+    ],
+}
+```
+
+**Response** :
+```json
+{
+    "allowedCoManagerUsers": [],
+    "coManagerNotifiedEvents": [],
+    "created": 1713365328204,
+    "currentRecipientEmails": [
+        "marsha@example.fr",
+        "richie@example.fr"
+    ],
+    "currentRecipientUsers": [],
+    "description": "1 rue de l'exemple, 75000 Paris",
+    "email": "user@example.fr",
+    "firstName": "Fontzie",
+    "groupId": "grp_fake_id",
+    "id": "wfl_fake_id",
+    "jobOperation": "processWorkflow",
+    "lastName": "W",
+    "name": "Some title of signature procedure",
+    "notifiedEvents": [
+        "recipientFinished",
+        "workflowStopped",
+        "workflowFinished"
+    ],
+    "progress": 50,
+    "started": 1713365343105,
+    "steps": [
+        {
+            "allowComments": false,
+            "hideAttachments": false,
+            "hideWorkflowRecipients": false,
+            "id": "stp_fake_id_1",
+            "invitePeriod": 1296000000,
+            "isFinished": true,
+            "isStarted": true,
+            "logs": [
+                {
+                    "created": 1713365343105,
+                    "operation": "start"
+                },
+                {
+                    "created": 1713365343105,
+                    "operation": "notifyWorkflowStarted"
+                },
+                {
+                    "created": 1713365388165,
+                    "evidenceId": "evi_fake_id",
+                    "operation": "sign",
+                    "recipientEmail": "johndoe@example.fr"
+                },
+                {
+                    "created": 1713365388165,
+                    "operation": "notifyRecipientFinished",
+                    "recipientEmail": "johndoe@example.fr"
+                }
+            ],
+            "maxInvites": 0,
+            "recipients": [
+                {
+                    "consentPageId": "cop_fake_id",
+                    "country": "FR",
+                    "email": "johndoe@example.fr",
+                    "firstName": "John Doe",
+                    "lastName": ".",
+                    "phoneNumber": "",
+                    "preferredLocale": "fr"
+                }
+            ],
+            "requiredRecipients": 1,
+            "sendDownloadLink": true,
+            "stepType": "signature",
+            "validityPeriod": 1296000000
+        },
+        {
+            "allowComments": false,
+            "hideAttachments": false,
+            "hideWorkflowRecipients": false,
+            "id": "stp_fake_id_2",
+            "invitePeriod": 1296000000,
+            "isFinished": false,
+            "isStarted": false,
+            "logs": [],
+            "maxInvites": 0,
+            "recipients": [
+                {
+                    "email": "richie@example.fr",
+                    "firstName": "Richie B",
+                    "lastName": ".",
+                    "country": "FR",
+                    "preferred_locale": "fr-fr",
+                    "consentPageId": "cop_id_fake",
+                },
+                {
+                    "email": "marsha@example.fr",
+                    "firstName": "Marsha C",
+                    "lastName": ".",
+                    "country": "FR",
+                    "preferred_locale": "fr-fr",
+                    "consentPageId": "cop_id_fake",
+                },
+            ],
+            "requiredRecipients": 1,
+            "sendDownloadLink": true,
+            "stepType": "signature",
+            "validityPeriod": 1296000000
+        }
+    ],
+    "tenantId": "ten_fake_id",
+    "updated": 1713362137571,
+    "userId": "usr_fake_id",
+    "viewAuthorizedGroups": [
+        "grp_fake_id"
+    ],
+    "viewAuthorizedUsers": [],
+    "watchers": [],
+    "workflowStatus": "started"
+}
+```
+
+#### Example 2 - Update all signatories because no signature yet
+
+**Endpoint** : /api/workflows/{workflow_id}/
+
+**Method** : PATCH
+
+**Payload** :
+```json
+{
+    "steps": [
+        {
+            "allowComments": false,
+            "hideAttachments": false,
+            "hideWorkflowRecipients": false,
+            "invitePeriod": null,
+            "maxInvites": 0,
+            "recipients": [
+                {
+                    "consentPageId": "cop_id_fake",
+                    "email": "johndoe@example.fr",
+                    "firstName": "John Doe",
+                    "lastName": ".",
+                    "country": "FR",
+                    "preferred_locale": "fr-fr",
+                }
+            ],
+            "requiredRecipients": 1,
+            "sendDownloadLink": true,
+            "stepType": "signature",
+            "validityPeriod": 1296000000,
+        },
+        {
+            "steps": [
+                {
+                    "allowComments": false,
+                    "hideAttachments": false,
+                    "hideWorkflowRecipients": false,
+                    "invitePeriod": null,
+                    "maxInvites": 0,
+                    "recipients": [
+                        {
+                            "email": "richie@example.fr",
+                            "firstName": "Richie B",
+                            "lastName": ".",
+                            "country": "FR",
+                            "preferred_locale": "fr-fr",
+                            "consentPageId": "cop_id_fake",
+                        },
+                        {
+                            "email": "marsha@example.fr",
+                            "firstName": "Marsha C",
+                            "lastName": ".",
+                            "country": "FR",
+                            "preferred_locale": "fr-fr",
+                            "consentPageId": "cop_id_fake",
+                        },
+                    ],
+                    "requiredRecipients": 1,
+                    "sendDownloadLink": true,
+                    "stepType": "signature",
+                    "validityPeriod": 1296000000,
+                }
+            ]
+        },
+    ]
+    }
+```
+
+**Response** :
+```json
+{
+    "allowedCoManagerUsers": [],
+    "coManagerNotifiedEvents": [],
+    "created": 1713361998357,
+    "currentRecipientEmails": [
+        "johndoe@example.fr"
+    ],
+    "currentRecipientUsers": [],
+    "description": "1 rue de l'exemple, 75000 Paris",
+    "email": "user@example.fr",
+    "firstName": "Fontzie",
+    "groupId": "grp_fake_id",
+    "id": "wfl_fake_id",
+    "jobOperation": "processWorkflow",
+    "lastName": "W",
+    "logs": [],
+    "name": "Title of the signature procedure",
+    "notifiedEvents": [
+        "recipientFinished",
+        "workflowStopped",
+        "workflowFinished"
+    ],
+    "progress": 0,
+    "started": 1713362011673,
+    "steps": [
+        {
+            "allowComments": false,
+            "hideAttachments": false,
+            "hideWorkflowRecipients": false,
+            "id": "stp_fake_id_1",
+            "invitePeriod": 1296000000,
+            "isFinished": false,
+            "isStarted": false,
+            "logs": [],
+            "maxInvites": 0,
+            "recipients": [
+                {
+                    "consentPageId": "cop_fake_id",
+                    "country": "FR",
+                    "email": "johndoe@example.fr",
+                    "firstName": "Jon",
+                    "lastName": ".",
+                    "phoneNumber": "",
+                    "preferredLocale": "fr"
+                }
+            ],
+            "requiredRecipients": 1,
+            "sendDownloadLink": true,
+            "stepType": "signature",
+            "validityPeriod": 1296000000
+        },
+        {
+            "allowComments": false,
+            "hideAttachments": false,
+            "hideWorkflowRecipients": false,
+            "id": "stp_fake_id_2",
+            "invitePeriod": 1296000000,
+            "isFinished": false,
+            "isStarted": false,
+            "logs": [],
+            "maxInvites": 0,
+            "recipients": [
+                {
+                    "email": "richie@example.fr",
+                    "firstName": "Richie B",
+                    "lastName": ".",
+                    "country": "FR",
+                    "preferred_locale": "fr-fr",
+                    "consentPageId": "cop_id_fake",
+                },
+                {
+                    "email": "marsha@example.fr",
+                    "firstName": "Marsha C",
+                    "lastName": ".",
+                    "country": "FR",
+                    "preferred_locale": "fr-fr",
+                    "consentPageId": "cop_id_fake",
+                },
+            ],
+            "requiredRecipients": 1,
+            "sendDownloadLink": true,
+            "stepType": "signature",
+            "validityPeriod": 1296000000
+        }
+    ],
+    "tenantId": "ten_fake_id",
+    "updated": 1713362137571,
+    "userId": "usr_fake_id",
+    "viewAuthorizedGroups": [
+        "grp_fake_id"
+    ],
+    "viewAuthorizedUsers": [],
+    "watchers": [],
+    "workflowStatus": "started"
+}
+```

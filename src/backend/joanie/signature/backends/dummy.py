@@ -132,3 +132,19 @@ class DummySignatureBackend(BaseSignatureBackend):
         )
 
         return file_bytes
+
+    def update_signatories(self, reference_id: str, all_signatories: bool) -> str:
+        """
+        Dummy method that verifies if the order is not fully signed yet, else it returns the
+        signature backend reference that has been updated.
+        """
+        if not reference_id.startswith(self.prefix_workflow):
+            raise ValidationError(f"The reference {reference_id} does not exist.")
+
+        contract = models.Contract.objects.get(
+            signature_backend_reference=reference_id,
+        )
+        if contract.is_fully_signed:
+            raise ValidationError(f"The contract {contract.id} is already fully signed")
+
+        return contract.signature_backend_reference

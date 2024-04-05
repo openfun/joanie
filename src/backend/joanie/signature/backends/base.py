@@ -144,3 +144,12 @@ class BaseSignatureBackend:
         raise NotImplementedError(
             "subclasses of BaseSignatureBackend must provide a get_signed_file() method."
         )
+
+    def update_signatories(self, reference_id: str, all_signatories: bool):
+        """
+        Update the signatories on ongoing signature procedures.
+        """
+        raise NotImplementedError(
+            "subclasses of BaseSignatureBackend must provide a "
+            "update_signatories() method."
+        )

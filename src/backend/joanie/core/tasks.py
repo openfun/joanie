@@ -7,6 +7,7 @@ from django.core.management import call_command
 
 from joanie.celery_app import app
 from joanie.core import helpers
+from joanie.core.utils.contract import update_signatories_for_contracts
 
 logger = getLogger(__name__)
 
@@ -35,3 +36,12 @@ def generate_certificates_task(order_ids, cache_key):
     finally:
         cache.delete(cache_key)
     logger.info("Done executing Celery generating certificates task...")
+
+
+@app.task
+def update_organization_signatories_contracts_task(organization_id: str):
+    """
+    Task to update the signatories for every signature procedures that are ongoing
+    for the given organization.
+    """
+    update_signatories_for_contracts(organization_id=organization_id)

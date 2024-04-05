@@ -571,3 +571,91 @@ class LexPersonaBackend(BaseSignatureBackend):
             )
 
         return response.content
+
+    def _prepare_payload_signatories(
+        self, reference_id: str, with_payload_student: bool
+    ):
+        """
+        Prepare the payload to update an ongoing signature procedure.
+        If the parameter `with_payload_student` is set to `True`, the student and organization
+        signatories steps are prepared, else, only the organization's step is prepared.
+        """
+        order = models.Order.objects.get(
+            contract__signature_backend_reference=reference_id
+        )
+        payload_organization_signatories = {
+            "steps": [
+                {
+                    "stepType": "signature",
+                    "recipients": self._prepare_recipient_data_for_organization_signer(
+                        order
+                    ),
+                    "requiredRecipients": 1,
+                    "validityPeriod": settings.JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS * 1000,
+                    "invitePeriod": None,
+                    "maxInvites": 0,
+                    "sendDownloadLink": True,
+                    "allowComments": False,
+                    "hideAttachments": False,
+                    "hideWorkflowRecipients": False,
+                },
+            ]
+        }
+        if not with_payload_student:
+            return payload_organization_signatories
+        return {
+            "steps": [
+                {
+                    "stepType": "signature",
+                    "recipients": self._prepare_recipient_data_for_student_signer(
+                        order
+                    ),
+                    "requiredRecipients": 1,
+                    "validityPeriod": settings.JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS * 1000,
+                    "invitePeriod": None,
+                    "maxInvites": 0,
+                    "sendDownloadLink": True,
+                    "allowComments": False,
+                    "hideAttachments": False,
+                    "hideWorkflowRecipients": False,
+                },
+                payload_organization_signatories,
+            ],
+        }
+
+    def update_signatories(self, reference_id: str, all_signatories: bool) -> str:
+        """
+        Update signatories on a signature procedure.
+        When `all_signatories` is set to `True`, we prepare the payload of the student and
+        the organization signatories. Otherwise, when set to `False`, we prepare the payload
+        for the organization signatories.
+        """
+        timeout = settings.JOANIE_SIGNATURE_TIMEOUT
+        base_url = self.get_setting("BASE_URL")
+        token = self.get_setting("TOKEN")
+        url = f"{base_url}/api/workflows/{reference_id}/"
+        headers = {"Authorization": f"Bearer {token}"}
+
+        payload = self._prepare_payload_signatories(
+            reference_id=reference_id, with_payload_student=all_signatories
+        )
+
+        response = requests.patch(url, json=payload, headers=headers, timeout=timeout)
+
+        if not response.ok:
+            logger.error(
+                "Lex Persona: Unable to update the signatories for signature procedure  %s,"
+                " reason: %s",
+                reference_id,
+                response.json(),
+                extra={
+                    "url": url,
+                    "response": response.json(),
+                },
+            )
+            raise ValidationError(
+                "Lex Persona: Unable to update the signatories for signature procedure with "
+                f"the reference {reference_id}"
+            )
+
+        return response.json()["id"]

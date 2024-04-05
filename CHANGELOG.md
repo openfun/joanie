@@ -8,8 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
-### Added 
+### Added
 
+- Update signatories for organization owners and student on ongoing
+  signature procedures
 - Add enrollments pages
 - Addition of clickable columns value in the different lists
 - Add admin page to decrypt additional data sent to Sentry
