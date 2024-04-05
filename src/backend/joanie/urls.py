@@ -33,6 +33,7 @@ from joanie.core.views import (
     CertificateVerificationView,
 )
 from joanie.debug import urls as debug_urls
+from joanie.edx_imports import urls as edx_imports_urls
 
 API_VERSION = settings.API_VERSION
 
@@ -48,6 +49,7 @@ urlpatterns = (
     + admin_urls.urlpatterns
     + client_urls.urlpatterns
     + remote_endpoints_urls.urlpatterns
+    + edx_imports_urls.urlpatterns
 )
 
 urlpatterns += i18n_patterns(

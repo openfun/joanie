@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Endpoint to retrieve the first course_run related to a course_link
 - Add order payment schedule
 - Manage commercial newsletter subscriptions
 - Allow backoffice to generate certificates from a course and product relation
