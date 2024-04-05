@@ -3,6 +3,7 @@
 import io
 import zipfile
 from logging import getLogger
+from typing import List
 from uuid import uuid4
 
 from django.core.files.storage import storages
@@ -162,3 +163,72 @@ def order_has_organization_owner(order) -> bool:
     return OrganizationAccess.objects.filter(
         organization=order.organization, role=enums.OWNER
     ).exists()
+
+
+def get_signature_references(organization_id: str, student_has_not_signed: bool):
+    """
+    Get all contracts that are not fully signed and attached to the organization.
+    The parameter `student_has_not_signed` when set to `True` means the contracts
+    are not yet signed at all, otherwise, it means that there is already a student's
+    signature.
+    """
+    return (
+        Contract.objects.filter(
+            submitted_for_signature_on__isnull=False,
+            order__state=enums.ORDER_STATE_VALIDATED,
+            order__organization_id=organization_id,
+            organization_signed_on__isnull=True,
+            student_signed_on__isnull=student_has_not_signed,
+        )
+        .values_list("signature_backend_reference", flat=True)
+        .distinct()
+        .iterator()
+    )
+
+
+def _update_signatories(
+    signature_backend, reference_ids: List[str], all_signatories: bool
+):
+    """
+    Update signatories on signature procedures from a list of contract references ids
+    with the signature provider. It returns the references that were udpated.
+    """
+    return [
+        signature_backend.update_signatories(
+            reference_id=reference_id, all_signatories=all_signatories
+        )
+        for reference_id in reference_ids
+    ]
+
+
+def update_signatories_for_contracts(organization_id: str):
+    """
+    Updates ongoing signature procedures attached to the organization by adding new
+    signatories. It returns the signature backend references that were successfully updated in
+    each category (update all signatories and update organization signatories).
+    """
+    organization_signatories_references = get_signature_references(
+        organization_id=organization_id, student_has_not_signed=False
+    )
+    all_signatories_references = get_signature_references(
+        organization_id=organization_id, student_has_not_signed=True
+    )
+
+    signature_backend = get_signature_backend()
+
+    organization_signatories_references_updated = _update_signatories(
+        signature_backend=signature_backend,
+        reference_ids=organization_signatories_references,
+        all_signatories=False,
+    )
+
+    all_signatories_references_updated = _update_signatories(
+        signature_backend=signature_backend,
+        reference_ids=all_signatories_references,
+        all_signatories=True,
+    )
+
+    return {
+        "organization_signatories_updated": organization_signatories_references_updated,
+        "all_signatories_updated": all_signatories_references_updated,
+    }

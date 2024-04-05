@@ -40,6 +40,8 @@ On the other hand, your signature backend has to implement 4 methods :
 
 - **`handle_notification(self, request)`**
 
+- **`update_signatories(self, reference_id: str, all_signatories: bool)`**
+
 ## Supported providers
 
 You can find all signature backends at `src/backend/joanie/signature/backends`.

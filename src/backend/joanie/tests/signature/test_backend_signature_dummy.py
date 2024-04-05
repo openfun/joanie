@@ -10,7 +10,7 @@ from django.utils import timezone as django_timezone
 
 from pdfminer.high_level import extract_text as pdf_extract_text
 
-from joanie.core import factories
+from joanie.core import enums, factories
 from joanie.payment.factories import InvoiceFactory
 from joanie.signature.backends.base import BaseSignatureBackend
 from joanie.signature.backends.dummy import DummySignatureBackend
@@ -379,3 +379,77 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
         )
         self.assertIn("1 Rue de L'Exemple, 75000 Paris (FR)", document_text)
         self.assertIn(contract.definition.title, document_text)
+
+    def test_backend_dummy_update_organization_signatories_already_fully_signed(self):
+        """
+        Dummy backend instance should not update a signature procedure if the contract is
+        fully signed.
+        """
+        backend = DummySignatureBackend()
+        order = factories.OrderFactory(
+            state=enums.ORDER_STATE_VALIDATED,
+            product__contract_definition=factories.ContractDefinitionFactory(),
+        )
+        contract = factories.ContractFactory(
+            order=order,
+            definition=order.product.contract_definition,
+            signature_backend_reference="wfl_fake_dummy_id",
+            definition_checksum="1234",
+            context="context",
+            submitted_for_signature_on=None,
+            student_signed_on=django_timezone.now(),
+            organization_signed_on=django_timezone.now(),
+        )
+        with self.assertRaises(ValidationError) as context:
+            backend.update_signatories(
+                reference_id=contract.signature_backend_reference, all_signatories=False
+            )
+
+        self.assertEqual(
+            str(context.exception.message),
+            f"The contract {contract.id} is already fully signed",
+        )
+
+    def test_backend_dummy_update_organization_signatories(self):
+        """
+        It should return the contract 'reference_id' if only the organization's signature
+        remains pending.
+        """
+        backend = DummySignatureBackend()
+        order = factories.OrderFactory(
+            state=enums.ORDER_STATE_VALIDATED,
+            product__contract_definition=factories.ContractDefinitionFactory(),
+        )
+        contract = factories.ContractFactory(
+            order=order,
+            definition=order.product.contract_definition,
+            signature_backend_reference="wfl_fake_dummy_id",
+            definition_checksum="1234",
+            context="context",
+            submitted_for_signature_on=django_timezone.now(),
+            student_signed_on=django_timezone.now(),
+            organization_signed_on=None,
+        )
+
+        response = backend.update_signatories(
+            reference_id=contract.signature_backend_reference, all_signatories=False
+        )
+
+        self.assertEqual(response, "wfl_fake_dummy_id")
+
+    def test_backend_dummy_update_organization_signatories_order_without_contract(self):
+        """
+        Dummy backend instance should not update a signature procedure if the contract is
+        fully signed.
+        """
+        backend = DummySignatureBackend()
+
+        with self.assertRaises(ValidationError) as context:
+            backend.update_signatories(
+                reference_id="fake_signature_reference", all_signatories=False
+            )
+
+        self.assertEqual(
+            str(context.exception.message),
+            "The reference fake_signature_reference does not exist.",
+        )

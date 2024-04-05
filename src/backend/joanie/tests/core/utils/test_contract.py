@@ -19,6 +19,7 @@ from joanie.core.utils import issuers
 from joanie.payment.factories import InvoiceFactory
 
 
+# pylint:disable=too-many-public-methods
 class UtilsContractTestCase(TestCase):
     """Test suite to generate a ZIP archive of signed contract PDF files in bytes utility"""
 
@@ -686,3 +687,234 @@ class UtilsContractTestCase(TestCase):
         )
 
         self.assertTrue(contract_utility.order_has_organization_owner(order=order))
+
+    def test_utils_contract_get_signature_references_student_has_signed(self):
+        """
+        Should return the signature backend references of orders that are owned
+        by an organization and where it still awaits the organization's signature.
+        """
+        user = factories.UserFactory()
+        order = factories.OrderFactory(
+            owner=user,
+            product__contract_definition=factories.ContractDefinitionFactory(),
+            state=enums.ORDER_STATE_VALIDATED,
+        )
+        factories.ContractFactory(
+            order=order,
+            definition=order.product.contract_definition,
+            signature_backend_reference="wfl_fake_dummy_id",
+            definition_checksum="1234",
+            context="context",
+            submitted_for_signature_on=timezone.now(),
+            student_signed_on=timezone.now(),
+            organization_signed_on=None,
+        )
+        order_found = contract_utility.get_signature_references(
+            organization_id=order.organization.id, student_has_not_signed=False
+        )
+
+        self.assertEqual(list(order_found), ["wfl_fake_dummy_id"])
+
+    def test_utils_contract_get_signature_references_student_has_not_signed(self):
+        """
+        Should return the signature backend references that are owned by an organization
+        and where there is no signature yet but has been submitted for signature.
+        """
+        user = factories.UserFactory()
+        order = factories.OrderFactory(
+            owner=user,
+            product__contract_definition=factories.ContractDefinitionFactory(),
+            state=enums.ORDER_STATE_VALIDATED,
+        )
+        factories.ContractFactory(
+            order=order,
+            definition=order.product.contract_definition,
+            signature_backend_reference="wfl_fake_dummy_id",
+            definition_checksum="1234",
+            context="context",
+            submitted_for_signature_on=timezone.now(),
+            student_signed_on=None,
+            organization_signed_on=None,
+        )
+        order_found = contract_utility.get_signature_references(
+            organization_id=order.organization.id, student_has_not_signed=True
+        )
+
+        self.assertEqual(list(order_found), ["wfl_fake_dummy_id"])
+
+    def test_utils_contract_get_signature_references_should_not_find_order(self):
+        """
+        Should return an empty queryset because the only order of the organization was
+        fully signed already.
+        """
+        user = factories.UserFactory()
+        order = factories.OrderFactory(
+            owner=user,
+            product__contract_definition=factories.ContractDefinitionFactory(),
+            state=enums.ORDER_STATE_VALIDATED,
+        )
+        contract = factories.ContractFactory(
+            order=order,
+            definition=order.product.contract_definition,
+            signature_backend_reference="wfl_fake_dummy_id",
+            definition_checksum="1234",
+            context="context",
+            submitted_for_signature_on=None,
+            student_signed_on=timezone.now(),
+            organization_signed_on=timezone.now(),
+        )
+
+        order_found = contract_utility.get_signature_references(
+            organization_id=order.organization.id, student_has_not_signed=False
+        )
+
+        self.assertEqual(list(order_found), [])
+        self.assertTrue(contract.is_fully_signed)
+
+    def test_utils_contract_get_signature_references_returns_generator_empty(self):
+        """
+        Should return the generator object with no result because there is no order
+        for the given organization.
+        """
+        organization = factories.OrganizationFactory()
+
+        order_found = contract_utility.get_signature_references(
+            organization_id=organization.id, student_has_not_signed=True
+        )
+        order_found_list = list(order_found)
+
+        self.assertEqual(order_found_list, [])
+
+    def test_utils_contract_update_signatories_for_contracts_but_no_awaiting_contract_to_sign(
+        self,
+    ):
+        """
+        Should return an empty list because there is no contract to sign for the organization.
+        """
+        organization = factories.OrganizationFactory()
+        relation = factories.CourseProductRelationFactory(
+            product__contract_definition=factories.ContractDefinitionFactory(),
+            organizations=[organization],
+        )
+        order = factories.OrderFactory(
+            product=relation.product,
+            course=relation.course,
+            state=enums.ORDER_STATE_VALIDATED,
+            organization=organization,
+        )
+        factories.ContractFactory(
+            order=order,
+            signature_backend_reference="wfl_fake_dummy_0",
+            definition_checksum="1234",
+            context="context",
+            submitted_for_signature_on=None,
+            student_signed_on=timezone.now(),
+            organization_signed_on=timezone.now(),
+        )
+
+        contract_updated = contract_utility.update_signatories_for_contracts(
+            organization_id=order.organization.id
+        )
+
+        self.assertEqual(contract_updated["organization_signatories_updated"], [])
+        self.assertEqual(
+            models.Contract.objects.filter(
+                submitted_for_signature_on__isnull=False,
+                order__state=enums.ORDER_STATE_VALIDATED,
+                order__organization_id=organization.id,
+                organization_signed_on__isnull=False,
+                student_signed_on__isnull=False,
+            ).count(),
+            0,
+        )
+
+    def test_utils_contract_update_signatories_for_contracts(self):
+        """
+        Should return a list of all signature backend references that are attached to the
+        organization only and got updated successfully.
+        """
+        organization = factories.OrganizationFactory()
+        relation = factories.CourseProductRelationFactory(
+            product__contract_definition=factories.ContractDefinitionFactory(),
+            organizations=[organization],
+        )
+        learners = factories.UserFactory.create_batch(3)
+        signature_reference_choices = ["wfl_fake_dummy_0", "wfl_fake_dummy_1"]
+        for index, reference in enumerate(signature_reference_choices):
+            order = factories.OrderFactory(
+                owner=learners[index],
+                product=relation.product,
+                course=relation.course,
+                state=enums.ORDER_STATE_VALIDATED,
+                organization=organization,
+            )
+            factories.ContractFactory(
+                order=order,
+                signature_backend_reference=reference,
+                definition_checksum="1234",
+                context="context",
+                submitted_for_signature_on=timezone.now(),
+                student_signed_on=timezone.now(),
+                organization_signed_on=None,
+            )
+        order = factories.OrderFactory(
+            owner=learners[2],
+            product=relation.product,
+            course=relation.course,
+            state=enums.ORDER_STATE_VALIDATED,
+            organization=organization,
+        )
+        # This contract will need a full update for student and organization
+        factories.ContractFactory(
+            order=order,
+            signature_backend_reference="wfl_fake_dummy_2",
+            definition_checksum="1234",
+            context="context",
+            submitted_for_signature_on=timezone.now(),
+            student_signed_on=None,
+            organization_signed_on=None,
+        )
+        # Contract for another organization that should not be returned in updated results
+        factories.ContractFactory(
+            signature_backend_reference="wfl_fake_dummy_3",
+            definition_checksum="5678",
+            submitted_for_signature_on=timezone.now(),
+            student_signed_on=timezone.now(),
+            organization_signed_on=None,
+            context="a small context content 2",
+        )
+
+        contracts_updated = contract_utility.update_signatories_for_contracts(
+            organization_id=order.organization.id
+        )
+
+        self.assertEqual(
+            contracts_updated,
+            {
+                "organization_signatories_updated": [
+                    "wfl_fake_dummy_1",
+                    "wfl_fake_dummy_0",
+                ],
+                "all_signatories_updated": ["wfl_fake_dummy_2"],
+            },
+        )
+        self.assertEqual(
+            models.Contract.objects.filter(
+                submitted_for_signature_on__isnull=False,
+                order__state=enums.ORDER_STATE_VALIDATED,
+                order__organization_id=organization.id,
+                organization_signed_on__isnull=True,
+                student_signed_on__isnull=True,
+            ).count(),
+            1,
+        )
+        self.assertEqual(
+            models.Contract.objects.filter(
+                submitted_for_signature_on__isnull=False,
+                order__state=enums.ORDER_STATE_VALIDATED,
+                order__organization_id=organization.id,
+                organization_signed_on__isnull=True,
+                student_signed_on__isnull=False,
+            ).count(),
+            2,
+        )
