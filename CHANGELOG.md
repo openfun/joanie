@@ -10,6 +10,7 @@ and this project adheres to
 
 ## Added
 
+- Add a new endpoint to withdraw an order
 - Endpoint to retrieve the first course_run related to a course_link
 - Add order payment schedule
 - Manage commercial newsletter subscriptions

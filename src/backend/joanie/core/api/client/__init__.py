@@ -528,6 +528,27 @@ class OrderViewSet(
 
         return JsonResponse({"invitation_link": invitation_link}, status=HTTPStatus.OK)
 
+    @extend_schema(
+        request=None,
+        responses={
+            204: OpenApiTypes.NONE,
+            422: serializers.ErrorResponseSerializer,
+        },
+    )
+    @action(detail=True, methods=["POST"])
+    def withdraw(self, request, pk=None):  # pylint: disable=no-self-use, invalid-name, unused-argument
+        """Withdraw an order"""
+        order = self.get_object()
+
+        try:
+            order.withdraw()
+        except ValidationError as error:
+            return Response(
+                {"detail": f"{error}"}, status=HTTPStatus.UNPROCESSABLE_ENTITY
+            )
+
+        return Response(status=HTTPStatus.NO_CONTENT)
+
 
 class AddressViewSet(
     mixins.ListModelMixin,

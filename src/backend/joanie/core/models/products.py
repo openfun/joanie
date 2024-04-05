@@ -1135,6 +1135,21 @@ class Order(BaseModel):
         """
         self._set_installment_state(due_date, enums.PAYMENT_STATE_REFUSED)
 
+    def withdraw(self):
+        """
+        Withdraw the order.
+        """
+        if not self.payment_schedule:
+            raise ValidationError("No payment schedule found for this order")
+
+        # check if current date is greater than the first installment due date
+        if timezone.now().isoformat() >= self.payment_schedule[0]["due_date"]:
+            raise ValidationError(
+                "Cannot withdraw order after the first installment due date"
+            )
+
+        self.cancel()
+
 
 @receiver(post_transition, sender=Order)
 def order_post_transition_callback(sender, instance, **kwargs):  # pylint: disable=unused-argument

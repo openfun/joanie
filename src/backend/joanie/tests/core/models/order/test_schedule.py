@@ -4,6 +4,7 @@ Test suite for order payment schedule models
 """
 
 from datetime import datetime
+from unittest import mock
 from zoneinfo import ZoneInfo
 
 from django.conf import settings
@@ -427,3 +428,61 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
                 },
             ],
         )
+
+    def test_models_order_schedule_withdraw(self):
+        """Check that the order can be withdrawn"""
+        order = factories.OrderFactory(
+            payment_schedule=[
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ]
+        )
+
+        mocked_now = datetime(2024, 1, 12, 8, 8)
+        with mock.patch("django.utils.timezone.now", return_value=mocked_now):
+            order.withdraw()
+
+        order.refresh_from_db()
+        self.assertEqual(order.state, "canceled")
+
+    def test_models_order_schedule_withdraw_no_schedule(self):
+        """If no payment schedule is found, withdraw should raise an error"""
+        order = factories.OrderFactory()
+
+        with self.assertRaisesMessage(
+            ValidationError, "No payment schedule found for this order"
+        ):
+            order.withdraw()
+
+    def test_models_order_schedule_withdraw_passed_due_date(self):
+        """If the due date has passed, withdraw should raise an error"""
+        order = factories.OrderFactory(
+            payment_schedule=[
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ]
+        )
+
+        mocked_now = datetime(2024, 2, 18, 8, 8)
+        with mock.patch("django.utils.timezone.now", return_value=mocked_now):
+            with self.assertRaisesMessage(
+                ValidationError,
+                "Cannot withdraw order after the first installment due date",
+            ):
+                order.withdraw()
