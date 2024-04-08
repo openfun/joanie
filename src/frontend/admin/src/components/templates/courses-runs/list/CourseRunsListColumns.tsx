@@ -58,7 +58,7 @@ export const getCoursesRunsListColumns = (
       field: "course_code",
       headerName: intl.formatMessage(messages.courseCode),
       flex: 1,
-      valueGetter: (params) => params.row.course.code,
+      valueGetter: (value, row) => row.course.code,
     },
     {
       field: "title",
@@ -80,15 +80,15 @@ export const getCoursesRunsListColumns = (
       field: "start",
       headerName: intl.formatMessage(messages.courseStart),
       flex: 1,
-      valueGetter: (params) =>
-        params.row.start ? new Date(params.row.start).toLocaleString() : "",
+      valueGetter: (value, row) =>
+        row.start ? new Date(row.start).toLocaleString() : "",
     },
     {
       field: "end",
       headerName: intl.formatMessage(messages.courseEnd),
       flex: 1,
-      valueGetter: (params) =>
-        params.row.end ? new Date(params.row.end).toLocaleString() : "",
+      valueGetter: (value, row) =>
+        row.end ? new Date(row.end).toLocaleString() : "",
     },
     {
       field: "state",
