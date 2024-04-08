@@ -66,7 +66,7 @@ export function CourseGeneralForm({ course, ...props }: Props) {
       cover: undefined,
       effort: defaultCourse?.effort
         ? moment.duration(defaultCourse.effort).asHours()
-        : null,
+        : "",
     };
   };
 

@@ -142,8 +142,9 @@ test.describe("Course form", async () => {
       page.getByRole("heading", { name: "Edit course: Test course" }),
     ).toBeVisible();
     await page.getByRole("link", { name: "List" }).click();
-    await page.getByRole("cell", { name: "Test course" }).click();
-    await page.getByRole("cell", { name: "TEST_COURSE_CODE" }).click();
+    await expect(page.getByRole("heading", { name: "Courses" })).toBeVisible();
+    await page.getByRole("gridcell", { name: "Test course" }).click();
+    await page.getByRole("gridcell", { name: "TEST_COURSE_CODE" }).click();
   });
 
   test("Validate an empty form and check error messages", async ({ page }) => {
@@ -203,11 +204,11 @@ test.describe("Course form", async () => {
     ).toBeVisible();
     await page.getByRole("link", { name: "List", exact: true }).click();
     await expect(
-      page.getByRole("cell", { name: oldCourseTitle, exact: true }),
+      page.getByRole("gridcell", { name: oldCourseTitle, exact: true }),
     ).toHaveCount(0);
-    await expect(page.getByRole("cell", { name: newCourseTitle })).toHaveCount(
-      1,
-    );
+    await expect(
+      page.getByRole("gridcell", { name: newCourseTitle }),
+    ).toHaveCount(1);
   });
 
   test("Click on an course in the list and use it as a template from its form", async ({

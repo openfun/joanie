@@ -406,16 +406,16 @@ test.describe("Order list", () => {
         const rowLocator = page.locator(`[data-id='${order.id}']`);
         await expect(rowLocator).toBeVisible();
         await expect(
-          rowLocator.getByRole("cell", { name: order.organization_title }),
+          rowLocator.getByRole("gridcell", { name: order.organization_title }),
         ).toBeVisible();
         await expect(
-          rowLocator.getByRole("cell", { name: order.owner_name }),
+          rowLocator.getByRole("gridcell", { name: order.owner_name }),
         ).toBeVisible();
         await expect(
-          rowLocator.getByRole("cell", { name: order.product_title }),
+          rowLocator.getByRole("gridcell", { name: order.product_title }),
         ).toBeVisible();
         await expect(
-          rowLocator.getByRole("cell", { name: order.state }),
+          rowLocator.getByRole("gridcell", { name: order.state }),
         ).toBeVisible();
       }),
     );
