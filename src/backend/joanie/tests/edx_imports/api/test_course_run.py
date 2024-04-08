@@ -98,3 +98,58 @@ class EdxImportsCourseRunApiTest(TestCase):
                 },
             },
         )
+
+    @override_settings(JOANIE_AUTHORIZED_API_TOKENS=["valid_known_secret_token_sample"])
+    def test_course_run_api_valid_api_token_strict_resource_link(self):
+        """
+        Test course run API with valid API token and known resource_link should return 200.
+        The lookup to find the resource_link is case insensitive but looking for the exact match.
+        """
+        good_resource_link = "https://example.com/Course-run/1"
+        other_resource_link = "https://example.com/course-run/10"
+        course = factories.CourseFactory.create()
+        course_run = factories.CourseRunFactory.create(
+            course=course, resource_link=good_resource_link.lower()
+        )
+        factories.CourseRunFactory.create(
+            course=course, resource_link=other_resource_link
+        )
+        resource_link = f"{good_resource_link}".replace("+", "%2B")
+        response = self.client.get(
+            f"/api/v1.0/edx_imports/course-run/?resource_link={resource_link}",
+            HTTP_AUTHORIZATION="Bearer valid_known_secret_token_sample",
+        )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(
+            response.json(),
+            {
+                "id": str(course_run.id),
+                "start": format_date(course_run.start),
+                "end": format_date(course_run.end),
+                "enrollment_start": format_date(course_run.enrollment_start),
+                "enrollment_end": format_date(course_run.enrollment_end),
+                "course": {
+                    "code": course_run.course.code,
+                    "title": course_run.course.title,
+                    "id": str(course_run.course.id),
+                    "state": {
+                        "priority": course_run.course.state["priority"],
+                        "datetime": format_date(course_run.course.state["datetime"]),
+                        "call_to_action": course_run.course.state["call_to_action"],
+                        "text": course_run.course.state["text"],
+                    },
+                },
+                "resource_link": course_run.resource_link,
+                "title": course_run.title,
+                "is_gradable": course_run.is_gradable,
+                "is_listed": course_run.is_listed,
+                "languages": course_run.languages,
+                "uri": course_run.uri,
+                "state": {
+                    "priority": course_run.state["priority"],
+                    "datetime": format_date(course_run.state["datetime"]),
+                    "call_to_action": course_run.state["call_to_action"],
+                    "text": course_run.state["text"],
+                },
+            },
+        )

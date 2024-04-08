@@ -30,7 +30,7 @@ def course_run_view(request: Request):
             status=HTTPStatus.BAD_REQUEST,
         )
 
-    course_run = get_object_or_404(CourseRun, resource_link__icontains=resource_link)
+    course_run = get_object_or_404(CourseRun, resource_link__iexact=resource_link)
 
     if not course_run:
         return Response(
