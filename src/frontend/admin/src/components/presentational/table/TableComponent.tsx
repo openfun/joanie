@@ -221,7 +221,6 @@ export function TableComponent<T extends GridValidRowModel>({
           }}
           rows={rows}
           columns={getColumns()}
-          columnBuffer={props?.columnBuffer ?? 3}
           loading={props.loading}
           pagination={true}
           slots={{

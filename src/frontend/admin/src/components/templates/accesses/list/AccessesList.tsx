@@ -43,8 +43,8 @@ export function AccessesList(props: Props) {
       {
         field: "user.username",
         headerName: intl.formatMessage(messages.usernameHeader),
-        valueGetter: (params) => {
-          return params.row.user.username;
+        valueGetter: (value, row) => {
+          return row.user.username;
         },
         flex: 1,
       },
