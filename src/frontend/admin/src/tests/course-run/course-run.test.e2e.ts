@@ -234,7 +234,7 @@ test.describe("Course run form", () => {
     ).toBeVisible();
     await page.getByRole("link", { name: "List" }).click();
     await expect(
-      page.getByRole("cell", { name: "Course run title" }),
+      page.getByRole("gridcell", { name: "Course run title" }),
     ).toBeVisible();
   });
 });
