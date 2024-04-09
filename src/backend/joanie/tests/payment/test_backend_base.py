@@ -5,6 +5,7 @@ from logging import Logger
 from unittest import mock
 
 from django.core import mail
+from django.test import override_settings
 
 from rest_framework.test import APIRequestFactory
 
@@ -53,6 +54,8 @@ class TestBasePaymentBackend(BasePaymentBackend):
         pass
 
 
+@override_settings(JOANIE_CATALOG_NAME="Test Catalog")
+@override_settings(JOANIE_CATALOG_BASE_URL="https://richie.education")
 class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase):
     """Test suite for the Base Payment Backend"""
 

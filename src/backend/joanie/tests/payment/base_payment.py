@@ -35,5 +35,5 @@ class BasePaymentTestCase(TestCase):
         # contain any trans tag, it might happen if \n are generated
         self.assertNotIn("trans ", email_content)
 
-        # Site information are included in the email
-        self.assertIn("example.com", email_content)
+        # catalog url is included in the email
+        self.assertIn("https://richie.education", email_content)

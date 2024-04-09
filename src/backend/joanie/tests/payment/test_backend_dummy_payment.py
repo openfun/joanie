@@ -6,6 +6,7 @@ from logging import Logger
 from unittest import mock
 
 from django.core.cache import cache
+from django.test import override_settings
 from django.urls import reverse
 
 from rest_framework.test import APIRequestFactory
@@ -92,6 +93,8 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
         "create_payment",
         side_effect=DummyPaymentBackend().create_payment,
     )
+    @override_settings(JOANIE_CATALOG_NAME="Test Catalog")
+    @override_settings(JOANIE_CATALOG_BASE_URL="https://richie.education")
     def test_payment_backend_dummy_create_one_click_payment(
         self, mock_create_payment, mock_handle_notification, mock_logger
     ):

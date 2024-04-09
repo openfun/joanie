@@ -4,6 +4,7 @@ import re
 from decimal import Decimal as D
 from unittest import mock
 
+from django.test import override_settings
 from django.urls import reverse
 
 import payplug
@@ -435,6 +436,8 @@ class PayplugBackendTestCase(BasePaymentTestCase):
             },
         )
 
+    @override_settings(JOANIE_CATALOG_NAME="Test Catalog")
+    @override_settings(JOANIE_CATALOG_BASE_URL="https://richie.education")
     @mock.patch.object(payplug.notifications, "treat")
     def test_payment_backend_payplug_handle_notification_payment_mail(self, mock_treat):
         """
