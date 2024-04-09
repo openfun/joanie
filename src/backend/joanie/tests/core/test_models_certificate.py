@@ -1,7 +1,7 @@
 """Test suite for Certificate Model"""
 
 from django.conf import settings
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from joanie.core import enums, factories
 
@@ -19,6 +19,8 @@ class CertificateModelTestCase(TestCase):
 
         self.assertEqual(len(list(certificate.localized_context)), len(languages))
 
+    @override_settings(JOANIE_CATALOG_NAME="Test Catalog")
+    @override_settings(JOANIE_CATALOG_BASE_URL="https://richie.education")
     def test_models_certificate_get_document_context(self):
         """
         We should get the document context in the provided language. If the translation
@@ -44,16 +46,22 @@ class CertificateModelTestCase(TestCase):
         self.assertEqual(context["course"]["name"], "Graded product")
         self.assertEqual(len(context["organizations"]), 1)
         self.assertEqual(context["organizations"][0]["name"], "Organization 1")
+        self.assertEqual(context["site"]["name"], "Test Catalog")
+        self.assertEqual(context["site"]["hostname"], "https://richie.education")
 
         context = certificate.get_document_context("fr-fr")
         self.assertEqual(context["course"]["name"], "Produit certifiant")
         self.assertEqual(context["organizations"][0]["name"], "Établissement 1")
+        self.assertEqual(context["site"]["name"], "Test Catalog")
+        self.assertEqual(context["site"]["hostname"], "https://richie.education")
 
         # When translation for the given language does not exist,
         # we should get the fallback language translation.
         context = certificate.get_document_context("de-de")
         self.assertEqual(context["course"]["name"], "Graded product")
         self.assertEqual(context["organizations"][0]["name"], "Organization 1")
+        self.assertEqual(context["site"]["name"], "Test Catalog")
+        self.assertEqual(context["site"]["hostname"], "https://richie.education")
 
     def test_models_certificate_get_document_context_with_incomplete_information_raises_error(
         self,

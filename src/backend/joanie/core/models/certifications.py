@@ -19,7 +19,6 @@ from parler.utils import get_language_settings
 from joanie.core import enums
 from joanie.core.models.base import BaseModel
 from joanie.core.utils import image_to_base64, merge_dict
-from joanie.core.utils.issuers import generate_document
 
 logger = logging.getLogger(__name__)
 
@@ -205,7 +204,6 @@ class Certificate(BaseModel):
         If no language_code is provided, we use the active language.
         """
         language_settings = get_language_settings(language_code or get_language())
-        site = Site.objects.get_current()
 
         base_context = {
             "id": str(self.pk),
@@ -216,8 +214,8 @@ class Certificate(BaseModel):
                 "name": self.owner.get_full_name() or self.owner.username,
             },
             "site": {
-                "name": site.name,
-                "hostname": f"https://{site.domain}",
+                "name": settings.JOANIE_CATALOG_NAME,
+                "hostname": settings.JOANIE_CATALOG_BASE_URL,
             },
         }
 
