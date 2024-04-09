@@ -2,7 +2,7 @@
 
 import base64
 
-from django.contrib.sites.models import Site
+from django.conf import settings
 from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView
 
@@ -35,15 +35,14 @@ class CertificateVerificationView(TemplateView):
             name=certificate.certificate_definition.template,
             context=certificate_context,
         )
-        site = Site.objects.get_current()
 
         context.update(
             {
                 "certificate_context": certificate_context,
                 "base64_pdf": base64.b64encode(document).decode("utf-8"),
                 "site": {
-                    "name": site.name,
-                    "hostname": f"https://{site.domain}",
+                    "name": settings.JOANIE_CATALOG_NAME,
+                    "hostname": settings.JOANIE_CATALOG_BASE_URL,
                 },
             }
         )
