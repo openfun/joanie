@@ -4,7 +4,7 @@ import base64
 import datetime
 from logging import getLogger
 
-from django.contrib.sites.models import Site
+from django.conf import settings
 from django.views.generic.base import TemplateView
 
 from joanie.core import factories
@@ -30,7 +30,6 @@ class DebugMailSuccessPayment(TemplateView):
 
     def get_context_data(self, **kwargs):
         """Generates sample datas to have a valid debug email"""
-        site = Site.objects.get_current()
         order = factories.OrderFactory()
         context = super().get_context_data(**kwargs)
         context["title"] = "👨‍💻Development email preview"
@@ -38,8 +37,8 @@ class DebugMailSuccessPayment(TemplateView):
         context["fullname"] = order.owner.get_full_name() or order.owner.username
         context["product"] = order.product
         context["site"] = {
-            "name": site.name,
-            "url": "https://" + site.domain,
+            "name": settings.JOANIE_CATALOG_NAME,
+            "url": settings.JOANIE_CATALOG_BASE_URL,
         }
 
         return context
