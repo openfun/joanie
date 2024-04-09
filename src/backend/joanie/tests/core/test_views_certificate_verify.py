@@ -3,7 +3,7 @@
 import uuid
 from http import HTTPStatus
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 import lxml
@@ -44,6 +44,8 @@ class CertificateVerificationViewTestCase(TestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
+    @override_settings(JOANIE_CATALOG_NAME="Test Catalog")
+    @override_settings(JOANIE_CATALOG_BASE_URL="https://richie.education")
     def test_views_certificate_verification_view(self):
         """
         CertificateVerificationView should return a 200 if the certificate id is known
@@ -90,6 +92,11 @@ class CertificateVerificationViewTestCase(TestCase):
             "Please compare information displayed "
             "on the certificate below with yours.",
         )
+
+        footer = html.cssselect(".footer__content")
+        self.assertIn("Test Catalog", footer[0].text)
+        footer_link = html.cssselect(".footer__content a")
+        self.assertIn("https://richie.education", footer_link[0].text)
 
         pdf_overview = html.cssselect("iframe")
         self.assertRegex(pdf_overview[0].attrib["src"], "^data:application/pdf;base64,")
