@@ -252,7 +252,7 @@ class Contract(BaseModel):
             return False
 
         valid_until = self.submitted_for_signature_on + timedelta(
-            seconds=settings.JOANIE_SIGNATURE_VALIDITY_PERIOD
+            seconds=settings.JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS
         )
         is_still_valid = timezone.now() < valid_until
         if not is_still_valid:
@@ -262,7 +262,9 @@ class Contract(BaseModel):
                     "context": {
                         "contract": self.to_dict(),
                         "submitted_for_signature_on": self.submitted_for_signature_on,
-                        "signature_validity_period": settings.JOANIE_SIGNATURE_VALIDITY_PERIOD,
+                        "signature_validity_period": (
+                            settings.JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS
+                        ),
                         "valid_until": valid_until,
                     },
                 },

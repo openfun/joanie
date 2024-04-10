@@ -184,7 +184,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         self.assertIn(expected_substring_invite_url, invitation_url)
 
     @override_settings(
-        JOANIE_SIGNATURE_VALIDITY_PERIOD=60 * 60 * 24 * 15,
+        JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS=60 * 60 * 24 * 15,
     )
     def test_api_order_submit_for_signature_contract_be_resubmitted_with_validity_period_passed(
         self,
@@ -236,7 +236,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         self.assertIn(expected_substring_invite_url, invitation_link)
 
     @override_settings(
-        JOANIE_SIGNATURE_VALIDITY_PERIOD=60 * 60 * 24 * 15,
+        JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS=60 * 60 * 24 * 15,
     )
     def test_api_order_submit_for_signature_contract_context_has_changed_and_still_valid_period(
         self,

@@ -24,7 +24,7 @@ from joanie.tests.base import BaseLogMixinTestCase
     JOANIE_SIGNATURE_LEXPERSONA_SESSION_USER_ID="usr_id_fake",
     JOANIE_SIGNATURE_LEXPERSONA_PROFILE_ID="sip_profile_id_fake",
     JOANIE_SIGNATURE_LEXPERSONA_TOKEN="token_id_fake",
-    JOANIE_SIGNATURE_VALIDITY_PERIOD=60 * 60 * 24 * 15,
+    JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS=60 * 60 * 24 * 15,
     JOANIE_SIGNATURE_TIMEOUT=3,
 )
 class LexPersonaBackendHandleNotificationTestCase(TestCase, BaseLogMixinTestCase):
@@ -434,7 +434,7 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase, BaseLogMixinTestCase
         )
 
     @override_settings(
-        JOANIE_SIGNATURE_VALIDITY_PERIOD=60 * 60 * 24 * 15,
+        JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS=60 * 60 * 24 * 15,
     )
     @responses.activate
     def test_backend_lex_persona_handle_notification_workflow_finished_event_but_signature_expired(

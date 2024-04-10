@@ -539,7 +539,7 @@ class ContractModelTestCase(TestCase):
         self.assertIsNone(contract.definition_checksum)
 
     @override_settings(
-        JOANIE_SIGNATURE_VALIDITY_PERIOD=60 * 60 * 24 * 15,
+        JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS=60 * 60 * 24 * 15,
     )
     def test_model_contract_is_eligible_for_signature_must_be_true(self):
         """
@@ -563,7 +563,7 @@ class ContractModelTestCase(TestCase):
         self.assertEqual(response, True)
 
     @override_settings(
-        JOANIE_SIGNATURE_VALIDITY_PERIOD=60 * 60 * 24 * 15,
+        JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS=60 * 60 * 24 * 15,
     )
     def test_model_contract_is_eligible_for_signature_must_be_false(self):
         """

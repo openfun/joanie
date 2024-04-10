@@ -80,7 +80,7 @@ variables. Here is a list of **all the required configuration** you will need to
 
 Futhermore, here are the common settings that are used for the signature :
 
-* `JOANIE_SIGNATURE_VALIDITY_PERIOD` : This value is declared in seconds. It's the window of time where a file is eligible
+* `JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS` : This value is declared in seconds. It's the window of time where a file is eligible
 to get signed by the signer.
 
 * `JOANIE_SIGNATURE_TIMEOUT` : A timeout refers to the maximum amount of time in seconds for our
