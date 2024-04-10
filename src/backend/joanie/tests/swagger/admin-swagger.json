@@ -4675,7 +4675,7 @@
                     "product_relations": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/AdminProductRelation"
+                            "$ref": "#/components/schemas/AdminCourseProductRelations"
                         },
                         "readOnly": true
                     },
@@ -4781,71 +4781,6 @@
                     "title"
                 ]
             },
-            "AdminCourseNested": {
-                "type": "object",
-                "description": "Serializer for Course model nested in product.",
-                "properties": {
-                    "id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "readOnly": true,
-                        "description": "primary key for the record as UUID"
-                    },
-                    "code": {
-                        "type": "string",
-                        "maxLength": 100
-                    },
-                    "cover": {
-                        "type": "string",
-                        "format": "uri"
-                    },
-                    "title": {
-                        "type": "string"
-                    },
-                    "organizations": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/AdminOrganizationLight"
-                        },
-                        "readOnly": true
-                    },
-                    "state": {
-                        "type": "string",
-                        "description": "The state of the course carrying information on what to display on a course glimpse.\n\nThe game is to find the highest priority state for this course among\nits course runs and its products.",
-                        "readOnly": true
-                    }
-                },
-                "required": [
-                    "code",
-                    "id",
-                    "organizations",
-                    "state",
-                    "title"
-                ]
-            },
-            "AdminCourseNestedRequest": {
-                "type": "object",
-                "description": "Serializer for Course model nested in product.",
-                "properties": {
-                    "code": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 100
-                    },
-                    "cover": {
-                        "type": "string",
-                        "format": "binary"
-                    },
-                    "title": {
-                        "type": "string",
-                        "minLength": 1
-                    }
-                },
-                "required": [
-                    "code",
-                    "title"
-                ]
-            },
             "AdminCourseProductRelations": {
                 "type": "object",
                 "description": "Serialize all information about a course relation nested in a product.",
@@ -4863,7 +4798,7 @@
                     "course": {
                         "allOf": [
                             {
-                                "$ref": "#/components/schemas/AdminCourseNested"
+                                "$ref": "#/components/schemas/AdminCourseLight"
                             }
                         ],
                         "readOnly": true
@@ -4885,7 +4820,7 @@
                     "product": {
                         "allOf": [
                             {
-                                "$ref": "#/components/schemas/AdminProduct"
+                                "$ref": "#/components/schemas/AdminProductLight"
                             }
                         ],
                         "readOnly": true
@@ -6373,56 +6308,6 @@
                     "target_courses",
                     "title",
                     "type"
-                ]
-            },
-            "AdminProductRelation": {
-                "type": "object",
-                "description": "Serializer for CourseProductRelation model.",
-                "properties": {
-                    "id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "readOnly": true,
-                        "description": "primary key for the record as UUID"
-                    },
-                    "can_edit": {
-                        "type": "string",
-                        "readOnly": true
-                    },
-                    "organizations": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/AdminOrganizationLight"
-                        },
-                        "readOnly": true
-                    },
-                    "order_groups": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/AdminOrderGroup"
-                        },
-                        "readOnly": true
-                    },
-                    "product": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/AdminProduct"
-                            }
-                        ],
-                        "readOnly": true
-                    },
-                    "uri": {
-                        "type": "string",
-                        "readOnly": true
-                    }
-                },
-                "required": [
-                    "can_edit",
-                    "id",
-                    "order_groups",
-                    "organizations",
-                    "product",
-                    "uri"
                 ]
             },
             "AdminProductRequest": {
