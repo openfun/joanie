@@ -1,7 +1,7 @@
 {
   "components.modal.alterModal.cancel": {
     "description": "Cancel CTA label for alert modal",
-    "message": "Cancel"
+    "message": "Annuler"
   },
   "components.modal.alterModal.validate": {
     "description": "Validate CTA label for alert modal",
@@ -14,6 +14,34 @@
   "components.presentational.dnd.DndList.emptyList": {
     "description": "Text when the drag n drop list is empty",
     "message": "No line to display, click add to add one"
+  },
+  "components.presentational.filters.searchFilters.clear": {
+    "description": "Label for the clear filters button",
+    "message": "Clear"
+  },
+  "components.presentational.filters.searchFilters.filtersLabelButton": {
+    "description": "Label for the filters button",
+    "message": "Filters"
+  },
+  "components.presentational.filters.searchFilters.filtersModalInfo": {
+    "description": "Label for the filter modal alert info",
+    "message": "In this part, you can add filters to filter entities based on different parameters. On a multiple choice filter, an \"OR\" is applied"
+  },
+  "components.presentational.filters.searchFilters.filtersModalTitle": {
+    "description": "Label for the filter modal title",
+    "message": "Add filters"
+  },
+  "components.presentational.filters.searchFilters.searchPlaceholder": {
+    "description": "Label for the search input",
+    "message": "Search..."
+  },
+  "components.presentational.hookForm.provider.dirtyModalMessage": {
+    "description": "Message for the dirty alert modal",
+    "message": "Changes in the form have been detected. Please submit the form or your changes will be lost."
+  },
+  "components.presentational.hookForm.provider.dirtyModalTitle": {
+    "description": "Title for the dirty alert modal",
+    "message": "Before you leave!"
   },
   "components.presentational.hookForm.provider.submit": {
     "description": "Submit label for submit button",
@@ -67,6 +95,10 @@
     "description": "User label for the user input",
     "message": "User"
   },
+  "components.templates.certificateDefinition.form.RHFCertificateDefinitionTemplates.templateLabel": {
+    "description": "Label for the certificate definition template input",
+    "message": "Template"
+  },
   "components.templates.certificateDefinitions.form.descriptionLabel": {
     "description": "Label for the name input",
     "message": "Description"
@@ -83,6 +115,10 @@
     "description": "Label for the title input",
     "message": "Title"
   },
+  "components.templates.certificatesDefinitions.filters.CertificateDefinitionFilters.searchPlaceholder": {
+    "description": "Text for the search input placeholder",
+    "message": "Search by title, code"
+  },
   "components.templates.certificatesDefinitions.list.nameHeader": {
     "description": "Label for the Name header inside the table  ",
     "message": "Name"
@@ -98,6 +134,14 @@
   "components.templates.certificatesDefinitions.modals.CreateOrEditCertificationModal.edit": {
     "description": "Title for add definition modal",
     "message": "Edit the \"{name}\" course"
+  },
+  "components.templates.contractDefinition.filters.ContractDefinitionFilters.searchPlaceholder": {
+    "description": "Text for the search input placeholder",
+    "message": "Search by title"
+  },
+  "components.templates.contractDefinitions.form.RhfContractDefinitionLanguage.languageLabel": {
+    "description": "Label for the language input",
+    "message": "Language"
   },
   "components.templates.contractDefinitions.form.bodyLabel": {
     "description": "Label for the body input",
@@ -122,6 +166,14 @@
   "components.templates.contractDefinitions.form.titleLabel": {
     "description": "Label for the title input",
     "message": "Title"
+  },
+  "components.templates.contractDefinitions.modals.CreateOrEditContractDefinitionModal.add": {
+    "description": "Title for add definition modal",
+    "message": "Add a contract definition"
+  },
+  "components.templates.contractDefinitions.modals.CreateOrEditContractDefinitionModal.edit": {
+    "description": "Title for add contract definition modal",
+    "message": "Edit the \"{name}\" contract template"
   },
   "components.templates.contractsDefinitions.list.languageHeader": {
     "description": "Label for the language header inside the table  ",
@@ -151,29 +203,77 @@
     "description": "Label for the Code input form",
     "message": "Code"
   },
+  "components.templates.course.form.translations.courseRunsTabTitle": {
+    "description": "Title for the course runs tab",
+    "message": "Course runs"
+  },
   "components.templates.course.form.translations.coverLabel": {
     "description": "Label for the cover field",
     "message": "Cover"
+  },
+  "components.templates.course.form.translations.effortHelperText": {
+    "description": "Text for the effort helper text",
+    "message": "The estimated duration in hours to fulfill the course"
+  },
+  "components.templates.course.form.translations.effortLabel": {
+    "description": "Label for the effort input form",
+    "message": "Effort"
+  },
+  "components.templates.course.form.translations.generalSectionInfo": {
+    "description": "Text for the general section info",
+    "message": "In this section, you can configure your course by filling in all the required fields."
   },
   "components.templates.course.form.translations.generalSubtitle": {
     "description": "Label for the main information subheader form",
     "message": "Main information"
   },
+  "components.templates.course.form.translations.generalTabTitle": {
+    "description": "Title for the general tab",
+    "message": "General"
+  },
+  "components.templates.course.form.translations.membersSectionInfo": {
+    "description": "Text for the member info section",
+    "message": "In this section you can manage access to this course. You can also edit roles easily. Please note, you must have at least one owner for a course."
+  },
   "components.templates.course.form.translations.membersSectionTitle": {
     "description": "Title for the member section",
     "message": "Course members"
+  },
+  "components.templates.course.form.translations.membersTabTitle": {
+    "description": "Title for the members tab",
+    "message": "Members"
   },
   "components.templates.course.form.translations.organizationsLabel": {
     "description": "Label for the organizations input form",
     "message": "Organizations"
   },
+  "components.templates.course.form.translations.productRelation.chooseProduct": {
+    "description": "Label form the product search input",
+    "message": "Choose your product"
+  },
+  "components.templates.course.form.translations.productRelation.organizationsTitle": {
+    "description": "Title for the organizations section",
+    "message": "Managed by this organizations"
+  },
+  "components.templates.course.form.translations.productRelation.productLabel": {
+    "description": "Product label for the CourseProductRelation form",
+    "message": "Product"
+  },
   "components.templates.course.form.translations.productRelationSubtitle": {
     "description": "Label for the product relation subheader form",
     "message": "Relation to products"
   },
+  "components.templates.course.form.translations.productsTabTitle": {
+    "description": "Title for the products tab",
+    "message": "Products"
+  },
+  "components.templates.course.form.translations.targetCourseRunAlertInfo": {
+    "description": "Title for the course run section info",
+    "message": "In this section, you can view, add, modify or delete the course runs linked to this course"
+  },
   "components.templates.course.form.translations.targetCourseRunTitle": {
     "description": "Title for the course run section inside the course form",
-    "message": "Course runs of this course"
+    "message": "Relation to course runs"
   },
   "components.templates.course.form.translations.uploadCoverButtonLabel": {
     "description": "Label for the add cover button",
@@ -194,6 +294,10 @@
   "components.templates.courseRuns.form.translations.courseStartLabel": {
     "description": "Label for the course start input",
     "message": "Course start"
+  },
+  "components.templates.courseRuns.form.translations.endLabel": {
+    "description": "Label for the course run end input",
+    "message": "End"
   },
   "components.templates.courseRuns.form.translations.enrollmentDatesSubtitle": {
     "description": "Label for the enrollment dates subheader form",
@@ -227,13 +331,29 @@
     "description": "Label for the is_listed input",
     "message": "Is listed?"
   },
+  "components.templates.courseRuns.form.translations.language": {
+    "description": "Label for the course run Language input",
+    "message": "Language"
+  },
   "components.templates.courseRuns.form.translations.resourceLinkLabel": {
     "description": "Label for the resource link input",
     "message": "Resource link"
   },
+  "components.templates.courseRuns.form.translations.startLabel": {
+    "description": "Label for the course run start input",
+    "message": "Start"
+  },
   "components.templates.courseRuns.list.clickToCopy": {
     "description": "Label for the click to copy tooltip",
     "message": "Click to copy this link"
+  },
+  "components.templates.courseRuns.list.copyResourceLink": {
+    "description": "Label for the copy the resource link option inside the more button",
+    "message": "Copy the resource link"
+  },
+  "components.templates.courseRuns.list.courseCode": {
+    "description": "Label for the course code header inside the table  ",
+    "message": "Course code"
   },
   "components.templates.courseRuns.list.courseEnd": {
     "description": "Label for the course end attribute header inside the table  ",
@@ -247,10 +367,6 @@
     "description": "Label for the isGradable attribute header inside the table  ",
     "message": "Is gradable"
   },
-  "components.templates.courseRuns.list.resourceLink": {
-    "description": "Label for the resourceLink header inside the table  ",
-    "message": "Resource link"
-  },
   "components.templates.courseRuns.list.state": {
     "description": "Label for the State attribute header inside the table  ",
     "message": "State"
@@ -263,6 +379,10 @@
     "description": "Label for the title attribute header inside the table  ",
     "message": "Title"
   },
+  "components.templates.courses.filters.CourseFilters.searchPlaceholder": {
+    "description": "Text for the search input placeholder",
+    "message": "Search by title or code"
+  },
   "components.templates.courses.form.productRelation.CourseFormProductRelationsSection.deleteRelationModalContent": {
     "description": "Content for the delete relation modal",
     "message": "Are you sure you want to delete this relation?"
@@ -274,10 +394,6 @@
   "components.templates.courses.form.productRelation.CourseFormProductRelationsSection.emptyList": {
     "description": "Message for empty list",
     "message": "No product relationships have been created for this course"
-  },
-  "components.templates.courses.form.productRelation.CourseFormProductRelationsSection.sectionHelp": {
-    "description": "Help text to explain what this section is about",
-    "message": "In this section, you can choose the products that will be displayed on this course."
   },
   "components.templates.courses.form.productRelation.row.addOrderGroupButton": {
     "description": "Add order group button label",
@@ -363,9 +479,341 @@
     "description": "Label for the title header inside the table  ",
     "message": "Title"
   },
+  "components.templates.coursesRuns.filters.CourseRunFilters.searchPlaceholder": {
+    "description": "Text for the search input placeholder",
+    "message": "Search by title or resource link"
+  },
+  "components.templates.coursesRuns.input.RHFOrderState.state": {
+    "description": "Label text for the select state input",
+    "message": "State"
+  },
+  "components.templates.coursesRuns.input.RHFSelectCourseRunState.state": {
+    "description": "Label text for the select state input",
+    "message": "State"
+  },
+  "components.templates.orders.buttons.orderActionsButton.alreadyCancelTooltip": {
+    "description": "Text when the order has already been canceled",
+    "message": "The order has already been canceled"
+  },
+  "components.templates.orders.buttons.orderActionsButton.alreadyGenerateCertificateTooltip": {
+    "description": "Text when the certificate has already been generated",
+    "message": "The certificate has already been generated"
+  },
+  "components.templates.orders.buttons.orderActionsButton.cancelOrder": {
+    "description": "Label for the cancel order action",
+    "message": "Cancel this order"
+  },
+  "components.templates.orders.buttons.orderActionsButton.generateCertificate": {
+    "description": "Label for the generate certificate order action",
+    "message": "Generate certificate"
+  },
+  "components.templates.orders.buttons.orderActionsButton.orderActionsLabel": {
+    "description": "Label for the actions button",
+    "message": "Actions"
+  },
+  "components.templates.orders.filters.OrderFilters.searchPlaceholder": {
+    "description": "Text for the search input placeholder",
+    "message": "Search by product title, owner (full name or email), organization (code or title), course code"
+  },
+  "components.templates.orders.list.id": {
+    "description": "Label for the id header inside the table",
+    "message": "ID"
+  },
+  "components.templates.orders.list.organizationTitle": {
+    "description": "Label for the organization header inside the table",
+    "message": "Organization"
+  },
+  "components.templates.orders.list.owner": {
+    "description": "Label for the owner header inside the table",
+    "message": "Owner"
+  },
+  "components.templates.orders.list.product": {
+    "description": "Label for the product header inside the table",
+    "message": "Product"
+  },
+  "components.templates.orders.list.state": {
+    "description": "Label for the state header inside the table",
+    "message": "State"
+  },
+  "components.templates.orders.view.billingAddress": {
+    "description": "Billing address field",
+    "message": "Billing address"
+  },
+  "components.templates.orders.view.certificate": {
+    "description": "Certificate field",
+    "message": "Certificate"
+  },
+  "components.templates.orders.view.certificateDefinitionDate": {
+    "description": "Issuance date field",
+    "message": "Issuance date"
+  },
+  "components.templates.orders.view.certificateDefinitionTemplate": {
+    "description": "Certificate field",
+    "message": "Certificate template"
+  },
+  "components.templates.orders.view.certificateDetailsSectionTitle": {
+    "description": "Title for the certificate section",
+    "message": "Certificate details"
+  },
+  "components.templates.orders.view.contract": {
+    "description": "Contract field",
+    "message": "Contract"
+  },
+  "components.templates.orders.view.contractDetailsSectionTitle": {
+    "description": "Title for the contract section",
+    "message": "Contract details"
+  },
+  "components.templates.orders.view.course": {
+    "description": "Course field",
+    "message": "Course"
+  },
+  "components.templates.orders.view.enrollment": {
+    "description": "Enrollment field",
+    "message": "Enrollment"
+  },
+  "components.templates.orders.view.enrollmentAt": {
+    "description": "Enrollment at text",
+    "message": "Registered on"
+  },
+  "components.templates.orders.view.enrollmentValue": {
+    "description": "Enrollment field",
+    "message": "{courseRunTitle} ({courseRunState}) Registered on: {registerOn}"
+  },
+  "components.templates.orders.view.hasConsentToTerms": {
+    "description": "Text for the has consent to term label",
+    "message": "The user has accepted the terms and conditions when purchasing"
+  },
+  "components.templates.orders.view.hasNotConsentToTerms": {
+    "description": "Text for the has consent to term label",
+    "message": "The user has not accepted the terms and conditions when purchasing"
+  },
+  "components.templates.orders.view.invoiceBalance": {
+    "description": "Invoice balance field",
+    "message": "Balance"
+  },
+  "components.templates.orders.view.invoiceCreatedOn": {
+    "description": "Invoice created on field",
+    "message": "Created on"
+  },
+  "components.templates.orders.view.invoiceDetailsSectionAlert": {
+    "description": "Text for the invoice details alert",
+    "message": "In this section, you have access to the main invoice with its total and balance, as well as sub-invoices (such as credit notes for example)"
+  },
+  "components.templates.orders.view.invoiceDetailsSectionTitle": {
+    "description": "Title for the invoice section",
+    "message": "Invoice details"
+  },
+  "components.templates.orders.view.invoiceRef": {
+    "description": "Invoice ref prefix",
+    "message": "Ref:"
+  },
+  "components.templates.orders.view.invoiceState": {
+    "description": "Invoice state field",
+    "message": "State"
+  },
+  "components.templates.orders.view.invoiceType": {
+    "description": "invoice type field",
+    "message": "Type"
+  },
+  "components.templates.orders.view.invoiceUpdatedOn": {
+    "description": "Invoice updated on field",
+    "message": "Updated on"
+  },
+  "components.templates.orders.view.orderDetailsSectionAlert": {
+    "description": "Text for the order details alert",
+    "message": "In this view, you can see the details of an order, such as the user concerned, their status etc."
+  },
+  "components.templates.orders.view.orderDetailsSectionTitle": {
+    "description": "Title for the order section",
+    "message": "Order informations"
+  },
+  "components.templates.orders.view.orderGroup": {
+    "description": "Order group field",
+    "message": "Order group"
+  },
+  "components.templates.orders.view.orderStatesMessages.canceled": {
+    "description": "Text for canceled order state",
+    "message": "Canceled"
+  },
+  "components.templates.orders.view.orderStatesMessages.draft": {
+    "description": "Text for draft order state",
+    "message": "Draft"
+  },
+  "components.templates.orders.view.orderStatesMessages.pending": {
+    "description": "Text for pending order state",
+    "message": "Pending"
+  },
+  "components.templates.orders.view.orderStatesMessages.submitted": {
+    "description": "Text for submitted order state",
+    "message": "Submitted"
+  },
+  "components.templates.orders.view.orderStatesMessages.validated": {
+    "description": "Text for validated order state",
+    "message": "Validated"
+  },
+  "components.templates.orders.view.orderStatus.paid": {
+    "description": "Text for paid status",
+    "message": "Paid"
+  },
+  "components.templates.orders.view.orderStatus.refunded": {
+    "description": "Text for refunded status",
+    "message": "Refunded"
+  },
+  "components.templates.orders.view.orderStatus.unpaid": {
+    "description": "Text for unpaid status",
+    "message": "Unpaid"
+  },
+  "components.templates.orders.view.orderTypes.credit_note": {
+    "description": "Text for credit note type",
+    "message": "Credit note"
+  },
+  "components.templates.orders.view.orderTypes.invoice": {
+    "description": "Text for invoice type",
+    "message": "Invoice"
+  },
+  "components.templates.orders.view.organization": {
+    "description": "Organization field",
+    "message": "Organization"
+  },
+  "components.templates.orders.view.organizationSignedOn": {
+    "description": "Organization signature date label field",
+    "message": "Organization signature date"
+  },
+  "components.templates.orders.view.owner": {
+    "description": "Owner field",
+    "message": "Owner"
+  },
+  "components.templates.orders.view.price": {
+    "description": "Price field",
+    "message": "Price"
+  },
+  "components.templates.orders.view.product": {
+    "description": "Product field",
+    "message": "Product"
+  },
+  "components.templates.orders.view.state": {
+    "description": "State field",
+    "message": "State"
+  },
+  "components.templates.orders.view.studentSignedOn": {
+    "description": "Student signature date label field",
+    "message": "Student signature date"
+  },
+  "components.templates.orders.view.subInvoiceList": {
+    "description": "Sub invoice list title",
+    "message": "List of sub-invoices"
+  },
+  "components.templates.orders.view.submittedForSignatureOn": {
+    "description": "date of signing on start label input",
+    "message": "Submit for signature"
+  },
+  "components.templates.orders.view.taxIncluded": {
+    "description": "Helper text for the price filed",
+    "message": "tax included"
+  },
+  "components.templates.orders.view.total": {
+    "description": "Total field",
+    "message": "Total"
+  },
+  "components.templates.organizations.address.form.translations.addressLabel": {
+    "description": "Label for address organization address input",
+    "message": "Address"
+  },
+  "components.templates.organizations.address.form.translations.addressTabInfo": {
+    "description": "Text for address tab info",
+    "message": "In this section, you must fill in the details of the organization's address"
+  },
+  "components.templates.organizations.address.form.translations.addressTabTitle": {
+    "description": "Title for address tab",
+    "message": "Address"
+  },
+  "components.templates.organizations.address.form.translations.cityLabel": {
+    "description": "Label for city organization address input",
+    "message": "City"
+  },
+  "components.templates.organizations.address.form.translations.countryLabel": {
+    "description": "Label for country organization address input",
+    "message": "Country"
+  },
+  "components.templates.organizations.address.form.translations.firstNameLabel": {
+    "description": "Label for first name organization address input",
+    "message": "First name"
+  },
+  "components.templates.organizations.address.form.translations.generalTabInfo": {
+    "description": "Text for general tab info",
+    "message": "In this section, you can provide general information, give information on the signatories or even on the legal part of the organization"
+  },
+  "components.templates.organizations.address.form.translations.generalTabTitle": {
+    "description": "Title for general tab",
+    "message": "General"
+  },
+  "components.templates.organizations.address.form.translations.lastNameLabel": {
+    "description": "Label for last name organization address input",
+    "message": "Last name"
+  },
+  "components.templates.organizations.address.form.translations.memberTabInfo": {
+    "description": "Text for members tab info",
+    "message": "In this section, you can manage the members of the organization and their roles. Please note, there must be at least one owner of the organization"
+  },
+  "components.templates.organizations.address.form.translations.memberTabTitle": {
+    "description": "Title for members tab",
+    "message": "Members"
+  },
+  "components.templates.organizations.address.form.translations.postCodeLabel": {
+    "description": "Label for post code organization address input",
+    "message": "Post code"
+  },
+  "components.templates.organizations.address.form.translations.sectionTitle": {
+    "description": "Title for the organization address section",
+    "message": "Organization address"
+  },
+  "components.templates.organizations.address.form.translations.titleLabel": {
+    "description": "Label for title organization address input",
+    "message": "Title"
+  },
+  "components.templates.organizations.form.translations.activityCategoryCodeLabel": {
+    "description": "Label for the activity category code input",
+    "message": "Activity category code"
+  },
   "components.templates.organizations.form.translations.codeLabel": {
     "description": "Label for the code input",
     "message": "Code"
+  },
+  "components.templates.organizations.form.translations.contactEmailLabel": {
+    "description": "Label for the activity contact email input",
+    "message": "Contact email"
+  },
+  "components.templates.organizations.form.translations.contactPhoneLabel": {
+    "description": "Label for the activity contact phone input",
+    "message": "Contact phone"
+  },
+  "components.templates.organizations.form.translations.contactSectionTitle": {
+    "description": "Title for the contact section of organization form",
+    "message": "Contact"
+  },
+  "components.templates.organizations.form.translations.countryLabel": {
+    "description": "Label for the country input",
+    "message": "Country"
+  },
+  "components.templates.organizations.form.translations.dpoContactEmailLabel": {
+    "description": "Label for the activity DPO contact email input",
+    "message": "DPO Contact email"
+  },
+  "components.templates.organizations.form.translations.enterpriseCodeLabel": {
+    "description": "Label for the enterprise code input",
+    "message": "Enterprise code"
+  },
+  "components.templates.organizations.form.translations.generalSectionTitle": {
+    "description": "Title for the general section of organization form",
+    "message": "General"
+  },
+  "components.templates.organizations.form.translations.imagesSectionTitle": {
+    "description": "Title for the images section of organization form",
+    "message": "Images"
+  },
+  "components.templates.organizations.form.translations.legalPartSectionTitle": {
+    "description": "Title for the legal part section of organization form",
+    "message": "Legal part"
   },
   "components.templates.organizations.form.translations.logoLabel": {
     "description": "Label for the upload logo input",
@@ -378,6 +826,30 @@
   "components.templates.organizations.form.translations.representativeLabel": {
     "description": "Label for the representative input",
     "message": "Representative"
+  },
+  "components.templates.organizations.form.translations.representativeProfessionLabel": {
+    "description": "Label for the representative profession input",
+    "message": "Profession of the representative"
+  },
+  "components.templates.organizations.form.translations.signatoryDetails": {
+    "description": "Title for the signatory section info",
+    "message": "If you do not specify the representative signatory, the representative name will be used."
+  },
+  "components.templates.organizations.form.translations.signatoryDetailsSectionTitle": {
+    "description": "Title for the signatory section of organization form",
+    "message": "Signatory details"
+  },
+  "components.templates.organizations.form.translations.signatoryRepresentativeLabel": {
+    "description": "Label for the signatory representative input",
+    "message": "Signatory representative"
+  },
+  "components.templates.organizations.form.translations.signatoryRepresentativeProfessionHelperText": {
+    "description": "Label for the signatory representative profession input",
+    "message": "Mandatory if signatory representative is set"
+  },
+  "components.templates.organizations.form.translations.signatoryRepresentativeProfessionLabel": {
+    "description": "Label for the signatory representative profession input",
+    "message": "Profession of the signatory representative"
   },
   "components.templates.organizations.form.translations.signatureLabel": {
     "description": "Label for the upload signature input",
@@ -407,6 +879,10 @@
     "description": "Title for add organization modal",
     "message": "Edit the \"{name}\" organization"
   },
+  "components.templates.products.filters.ProductFilers.searchPlaceholder": {
+    "description": "Text for the search input placeholder",
+    "message": "Search by title"
+  },
   "components.templates.products.form.sections.OderGroups.OrderGroupForm.isActiveLabel": {
     "description": "The input label for the activate switch",
     "message": "Activate this order group"
@@ -414,6 +890,10 @@
   "components.templates.products.form.sections.OderGroups.OrderGroupForm.numberOfSeatInputLabel": {
     "description": "The input label for the number of seats",
     "message": "Number of seats"
+  },
+  "components.templates.products.form.sections.ProductFormTypeSection.microCredentialTitle": {
+    "description": "Title for the credential product type",
+    "message": "Microcredential"
   },
   "components.templates.products.form.translations.addRelatedCourseButtonLabel": {
     "description": "Label for the add related courses button",
@@ -435,6 +915,30 @@
     "description": "Label for the call to action input",
     "message": "Call to action"
   },
+  "components.templates.products.form.translations.choiceTargetCourseCourseRunModalAlertContent": {
+    "description": "Content for the select course runs selection alert",
+    "message": "By default all course runs are selected, turn this switch on if you want to choose which course runs are selected."
+  },
+  "components.templates.products.form.translations.choiceTargetCourseCourseRunModalTitle": {
+    "description": "Title for the course runs selection section",
+    "message": "Course run selection"
+  },
+  "components.templates.products.form.translations.contractDefinition": {
+    "description": "Label for the contract definition input",
+    "message": "Contract definition"
+  },
+  "components.templates.products.form.translations.contractDefinitionHelper": {
+    "description": "Helper text for the contract definition input",
+    "message": "This is a contract template that will be used when purchasing the product"
+  },
+  "components.templates.products.form.translations.contractDefinitionPlaceholder": {
+    "description": "placeholder text for the contract definition input",
+    "message": "Search a contract definition"
+  },
+  "components.templates.products.form.translations.courseProductRelations.sectionTitle": {
+    "description": "Product course relation section title",
+    "message": "List of courses to which this product is linked"
+  },
   "components.templates.products.form.translations.definition": {
     "description": "Label for the definition input",
     "message": "Certificate definition"
@@ -447,6 +951,14 @@
     "description": "Title for the financial information section",
     "message": "Financial information's"
   },
+  "components.templates.products.form.translations.generalTabInfo": {
+    "description": "Text for the linked course info tab",
+    "message": "In this section you can create or modify a product."
+  },
+  "components.templates.products.form.translations.generalTabTitle": {
+    "description": "Title for the linked course tab",
+    "message": "General"
+  },
   "components.templates.products.form.translations.instructionsTitle": {
     "description": "Title for the instruction section",
     "message": "Product instructions"
@@ -454,6 +966,10 @@
   "components.templates.products.form.translations.instructionsTitleHelp": {
     "description": "Help for the for the instruction section",
     "message": "(click to edit)"
+  },
+  "components.templates.products.form.translations.linkedCourseTabInfo": {
+    "description": "Text for the linked course info tab",
+    "message": "In this section, you have access to all courses to which this product is attached. Click on the course title to navigate to its detail."
   },
   "components.templates.products.form.translations.mainInformationTitle": {
     "description": "Title for the main information section",
@@ -503,6 +1019,10 @@
     "description": "Label for the related courses input",
     "message": "Related courses"
   },
+  "components.templates.products.form.translations.syllabusTabTitle": {
+    "description": "Title for the syllabus tab",
+    "message": "Syllabus"
+  },
   "components.templates.products.form.translations.targetCourseRowSubTitle": {
     "description": "Label for the use all course run checkbox",
     "message": "{numPhotos, plural, =0 {All selected course_runs.} other {# course runs selected.} }"
@@ -522,6 +1042,10 @@
   "components.templates.products.form.translations.useSpecificCourseRunsCheckboxLabel": {
     "description": "Label for the use specific course run checkbox",
     "message": "Choose specific course-runs"
+  },
+  "components.templates.products.input.RHFProductType.type": {
+    "description": "Label text for the select types input",
+    "message": "Type"
   },
   "components.templates.products.list.priceHeader": {
     "description": "Label for the price header inside the table  ",
@@ -667,6 +1191,30 @@
     "description": "Error message shown to the user when course run update request fails.",
     "message": "An error occurred while updating the course run. Please retry later."
   },
+  "hooks.useOrders.errorCreate": {
+    "description": "Error message shown to the user when order creation request fails.",
+    "message": "An error occurred while creating the order. Please retry later."
+  },
+  "hooks.useOrders.errorDelete": {
+    "description": "Error message shown to the user when order deletion request fails.",
+    "message": "An error occurred while deleting the order. Please retry later."
+  },
+  "hooks.useOrders.errorGet": {
+    "description": "Error message shown to the user when orders fetch request fails.",
+    "message": "An error occurred while fetching orders. Please retry later."
+  },
+  "hooks.useOrders.errorNotFound": {
+    "description": "Error message shown to the user when no order matches.",
+    "message": "Cannot find the order"
+  },
+  "hooks.useOrders.errorUpdate": {
+    "description": "Error message shown to the user when order update request fails.",
+    "message": "An error occurred while updating the order. Please retry later."
+  },
+  "hooks.useOrders.successCertificateGenerate": {
+    "description": "Success message shown to the user when the certificate has been generated.",
+    "message": "Certificate successfully generated."
+  },
   "hooks.useOrganizations.errorCreate": {
     "description": "Error message shown to the user when organization creation request fails.",
     "message": "An error occurred while creating the organization. Please retry later."
@@ -767,6 +1315,10 @@
     "description": "administrator label",
     "message": "Administrator"
   },
+  "layouts.dashboard.nav.account.djangoAdmin": {
+    "description": "Django admin link label",
+    "message": "Django admin"
+  },
   "layouts.dashboard.nav.account.logout": {
     "description": "Logout label",
     "message": "Logout"
@@ -781,7 +1333,7 @@
   },
   "layouts.dashboard.nav.config.certificatesNavTitle": {
     "description": "Title for the Certificates nav item",
-    "message": "Certificates"
+    "message": "Certificate definition"
   },
   "layouts.dashboard.nav.config.contractDefinitionNavTitle": {
     "description": "Title for the Contract definition nav item",
@@ -798,6 +1350,10 @@
   "layouts.dashboard.nav.config.managementSubHeader": {
     "description": "Subheader for the nav management section",
     "message": "Management"
+  },
+  "layouts.dashboard.nav.config.ordersNavTitle": {
+    "description": "Title for the Order nav item",
+    "message": "Orders"
   },
   "layouts.dashboard.nav.config.organizationNavTitle": {
     "description": "Title for the Organization nav item",
@@ -991,6 +1547,22 @@
     "description": "Label for the root breadcrumn ",
     "message": "Home page"
   },
+  "pages.admin.orders.breadcrumbsTranslations.listBreadcrumb": {
+    "description": "Breadcrumb label for the order list page",
+    "message": "List"
+  },
+  "pages.admin.orders.breadcrumbsTranslations.rootBreadcrumb": {
+    "description": "Breadcrumb label for the order root page",
+    "message": "Orders"
+  },
+  "pages.admin.orders.breadcrumbsTranslations.viewBreadcrumb": {
+    "description": "Breadcrumb label for the order view page",
+    "message": "View"
+  },
+  "pages.admin.orders.list.pageTitle": {
+    "description": "Label for the order list page title",
+    "message": "Orders"
+  },
   "pages.admin.organizations.breadcrumbsTranslations.createBreadcrumb": {
     "description": "Breadcrumb label for the organization create page",
     "message": "Create"
@@ -1051,6 +1623,18 @@
     "description": "Common add label",
     "message": "Add"
   },
+  "translations.common.commonTranslations.clickToCopy": {
+    "description": "Text for a click to copy text",
+    "message": "Click to copy"
+  },
+  "translations.common.commonTranslations.clickToView": {
+    "description": "Text for a click to view tooltip",
+    "message": "Click to view"
+  },
+  "translations.common.commonTranslations.copyUrl": {
+    "description": "Text for the common copy url label",
+    "message": "Copy url"
+  },
   "translations.common.commonTranslations.delete": {
     "description": "Common delete label",
     "message": "Delete"
@@ -1063,13 +1647,33 @@
     "description": "Common edit label",
     "message": "Edit"
   },
+  "translations.common.commonTranslations.formIsDirty": {
+    "description": "Text for a dirty form",
+    "message": "Changes are not saved"
+  },
   "translations.common.commonTranslations.language": {
     "description": "Common language label",
     "message": "Language"
   },
+  "translations.common.commonTranslations.no": {
+    "description": "Text for the no word",
+    "message": "No"
+  },
+  "translations.common.commonTranslations.none": {
+    "description": "None label",
+    "message": "None"
+  },
+  "translations.common.commonTranslations.state": {
+    "description": "Common state label",
+    "message": "State"
+  },
   "translations.common.commonTranslations.submit": {
     "description": "Common submit label",
     "message": "Submit"
+  },
+  "translations.common.commonTranslations.successCopy": {
+    "description": "Text for the success click to copy notification",
+    "message": "Link added to your clipboard"
   },
   "translations.common.commonTranslations.title": {
     "description": "Common title label",
@@ -1083,6 +1687,30 @@
     "description": "Use as template text",
     "message": "Use as a template"
   },
+  "translations.common.commonTranslations.view": {
+    "description": "Common view label",
+    "message": "View"
+  },
+  "translations.common.commonTranslations.yes": {
+    "description": "Text for the yes word",
+    "message": "Yes"
+  },
+  "translations.common.entitiesInputLabel.course": {
+    "description": "Common Course input label",
+    "message": "Course"
+  },
+  "translations.common.entitiesInputLabel.organization": {
+    "description": "Common Organization input label",
+    "message": "Organization"
+  },
+  "translations.common.entitiesInputLabel.owner": {
+    "description": "Common Owner input label",
+    "message": "Owner"
+  },
+  "translations.common.entitiesInputLabel.product": {
+    "description": "Common Product input label",
+    "message": "Product"
+  },
   "translations.common.languageTranslations.english": {
     "description": "Common english label",
     "message": "English"
@@ -1090,5 +1718,49 @@
   "translations.common.languageTranslations.french": {
     "description": "Common french label",
     "message": "French"
+  },
+  "translations.courseRuns.priorityState.archivedClosed": {
+    "description": "Label for the ARCHIVED_CLOSED priority",
+    "message": "Archived closed"
+  },
+  "translations.courseRuns.priorityState.archivedOpen": {
+    "description": "Label for the ARCHIVED_OPEN priority",
+    "message": "Archived open"
+  },
+  "translations.courseRuns.priorityState.futureClosed": {
+    "description": "Label for the FUTURE_CLOSED priority",
+    "message": "Future closed"
+  },
+  "translations.courseRuns.priorityState.futureNotYetOpen": {
+    "description": "Label for the FUTURE_NOT_YET_OPEN priority",
+    "message": "Future not yet open"
+  },
+  "translations.courseRuns.priorityState.futureOpen": {
+    "description": "Label for the FUTURE_OPEN priority",
+    "message": "Future open"
+  },
+  "translations.courseRuns.priorityState.onGoingOpen": {
+    "description": "Label for the ON_GOING_OPEN priority",
+    "message": "Currently open"
+  },
+  "translations.courseRuns.priorityState.ongoigClosed": {
+    "description": "Label for the ONGOING_CLOSED priority",
+    "message": "Ongoing closed"
+  },
+  "translations.courseRuns.priorityState.toBeScheduled": {
+    "description": "Label for the TO_BE_SCHEDULED priority",
+    "message": "To be scheduled"
+  },
+  "translations.products.productTypesMessages.certificate": {
+    "description": "Label for the CERTIFICATE product type",
+    "message": "Certificate"
+  },
+  "translations.products.productTypesMessages.credential": {
+    "description": "Label for the CREDENTIAL product type",
+    "message": "Credential"
+  },
+  "translations.products.productTypesMessages.enrollment": {
+    "description": "Label for the ENROLLMENT product type",
+    "message": "Enrollment"
   }
 }
