@@ -651,8 +651,6 @@ class EnrollmentApiTest(BaseAPITestCase):
             state=enums.ORDER_STATE_VALIDATED,
         )
 
-        # breakpoint()
-
         enrollment = factories.EnrollmentFactory(
             course_run=target_course_runs[0],
             user=user,

@@ -1240,6 +1240,39 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
         self.assertEqual(order.target_courses.count(), product.target_courses.count())
 
+    @mock.patch(
+        "joanie.signature.backends.dummy.DummySignatureBackend.submit_for_signature",
+        return_value=("mocked", "mocked"),
+    )
+    def test_models_order_submit_for_signature_document_title(
+        self, _mock_submit_for_signature
+    ):
+        """
+        Order submit_for_signature should set the document title uploaded
+        to the signature backend according to the current date, the related
+        course and the order pk.
+        """
+        user = factories.UserFactory()
+        order = factories.OrderFactory(
+            owner=user,
+            state=enums.ORDER_STATE_VALIDATED,
+            product__contract_definition=factories.ContractDefinitionFactory(),
+        )
+
+        order.submit_for_signature(user=user)
+        now = django_timezone.now()
+
+        _mock_submit_for_signature.assert_called_once()
+        # Check that the title is correctly formatted
+        self.assertEqual(
+            _mock_submit_for_signature.call_args[1]["title"],
+            f"{now.strftime('%Y-%m-%d')}_{order.course.code}_{order.pk}",
+        )
+        self.assertEqual(_mock_submit_for_signature.call_args[1]["order"], order)
+        self.assertIsInstance(
+            _mock_submit_for_signature.call_args[1]["file_bytes"], bytes
+        )
+
     def test_models_order_submit_for_signature_fails_when_the_product_has_no_contract_definition(
         self,
     ):

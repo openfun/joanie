@@ -1042,8 +1042,14 @@ class Order(BaseModel):
         #    before expiration of the signature workflow
         # 3- the contract context has changed since it was last submitted for signature
         if should_be_resubmitted or not was_already_submitted:
+            now = timezone.now()
+            course_code = (
+                self.course.code
+                if self.course
+                else self.enrollment.course_run.course.code
+            )
             reference, checksum = backend_signature.submit_for_signature(
-                title=contract_definition.title,
+                title=f'{now.strftime("%Y-%m-%d")}_{course_code}_{self.pk}',
                 file_bytes=file_bytes,
                 order=self,
             )
