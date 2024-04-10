@@ -4,13 +4,11 @@ Test suite for CourseProductRelation list Admin API.
 """
 
 from http import HTTPStatus
-from unittest import mock
 
 from django.conf import settings
 from django.test import TestCase
 
 from joanie.core import enums, factories
-from joanie.core.serializers import fields
 
 
 class CourseProductRelationListAdminApiTest(TestCase):
@@ -51,12 +49,7 @@ class CourseProductRelationListAdminApiTest(TestCase):
             {"detail": "You do not have permission to perform this action."},
         )
 
-    @mock.patch.object(
-        fields.ThumbnailDetailField,
-        "to_representation",
-        return_value="_this_field_is_mocked",
-    )
-    def test_admin_api_course_products_relation_list_superuser(self, _):
+    def test_admin_api_course_products_relation_list_superuser(self):
         """
         Super admin user should be able to list a course product relation.
         """
@@ -87,9 +80,7 @@ class CourseProductRelationListAdminApiTest(TestCase):
                         "course": {
                             "code": relation.course.code,
                             "id": str(relation.course.id),
-                            "cover": "_this_field_is_mocked",
                             "title": relation.course.title,
-                            "organizations": [],
                             "state": {
                                 "priority": relation.course.state["priority"],
                                 "datetime": relation.course.state["datetime"]
@@ -105,116 +96,23 @@ class CourseProductRelationListAdminApiTest(TestCase):
                         },
                         "order_groups": [],
                         "product": {
+                            "price": float(relation.product.price),
+                            "price_currency": settings.DEFAULT_CURRENCY,
                             "id": str(relation.product.id),
                             "title": relation.product.title,
                             "description": relation.product.description,
                             "call_to_action": relation.product.call_to_action,
-                            "price": float(relation.product.price),
-                            "price_currency": settings.DEFAULT_CURRENCY,
                             "type": relation.product.type,
-                            "certificate_definition": {
-                                "id": str(relation.product.certificate_definition.id),
-                                "description": relation.product.certificate_definition.description,
-                                "name": relation.product.certificate_definition.name,
-                                "title": relation.product.certificate_definition.title,
-                                "template": relation.product.certificate_definition.template,
-                            },
+                            "certificate_definition": str(
+                                relation.product.certificate_definition.id
+                            ),
                             "contract_definition": None,
                             "target_courses": [
-                                {
-                                    "code": target_course.code,
-                                    "course_runs": [
-                                        {
-                                            "id": course_run.id,
-                                            "title": course_run.title,
-                                            "resource_link": course_run.resource_link,
-                                            "state": {
-                                                "priority": course_run.state[
-                                                    "priority"
-                                                ],
-                                                "datetime": course_run.state["datetime"]
-                                                .isoformat()
-                                                .replace("+00:00", "Z"),
-                                                "call_to_action": course_run.state[
-                                                    "call_to_action"
-                                                ],
-                                                "text": course_run.state["text"],
-                                            },
-                                            "start": course_run.start.isoformat().replace(
-                                                "+00:00", "Z"
-                                            ),
-                                            "end": course_run.end.isoformat().replace(
-                                                "+00:00", "Z"
-                                            ),
-                                            "enrollment_start": (
-                                                course_run.enrollment_start.isoformat().replace(
-                                                    "+00:00", "Z"
-                                                )
-                                            ),
-                                            "enrollment_end": (
-                                                course_run.enrollment_end.isoformat().replace(
-                                                    "+00:00", "Z"
-                                                )
-                                            ),
-                                        }
-                                        for course_run in target_course.course_runs.all().order_by(
-                                            "start"
-                                        )
-                                    ],
-                                    "position": target_course.product_relations.get(
-                                        product=relation.product
-                                    ).position,
-                                    "is_graded": target_course.product_relations.get(
-                                        product=relation.product
-                                    ).is_graded,
-                                    "title": target_course.title,
-                                }
-                                for target_course in (
-                                    relation.product.target_courses.all().order_by(
-                                        "product_target_relations__position"
-                                    )
+                                str(target_course.id)
+                                for target_course in relation.product.target_courses.all().order_by(
+                                    "product_target_relations__position"
                                 )
                             ],
-                            "course_relations": [
-                                {
-                                    "can_edit": True,
-                                    "course": {
-                                        "code": relation.course.code,
-                                        "cover": "_this_field_is_mocked",
-                                        "id": str(relation.course.id),
-                                        "organizations": [],
-                                        "state": {
-                                            "priority": relation.course.state[
-                                                "priority"
-                                            ],
-                                            "datetime": relation.course.state[
-                                                "datetime"
-                                            ]
-                                            .isoformat()
-                                            .replace("+00:00", "Z")
-                                            if relation.course.state["datetime"]
-                                            else None,
-                                            "call_to_action": relation.course.state[
-                                                "call_to_action"
-                                            ],
-                                            "text": relation.course.state["text"],
-                                        },
-                                        "title": relation.course.title,
-                                    },
-                                    "id": str(relation.id),
-                                    "uri": relation.uri,
-                                    "order_groups": [],
-                                    "organizations": [
-                                        {
-                                            "code": organization.code,
-                                            "id": str(organization.id),
-                                            "title": organization.title,
-                                        }
-                                        for organization in relation.organizations.all()
-                                    ],
-                                }
-                            ],
-                            "instructions": "",
                         },
                         "organizations": [
                             {

@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Changed
+
+- Use generic AdminCourseProductRelationSerializer
+
 ## [2.0.1] - 2024-04-16
 
 ### Fixed

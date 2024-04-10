@@ -5,6 +5,7 @@ Test suite for Product Admin API.
 import random
 from http import HTTPStatus
 
+from django.conf import settings
 from django.test import TestCase
 
 from joanie.core import enums, factories, models
@@ -14,6 +15,8 @@ class ProductAdminApiTest(TestCase):
     """
     Test suite for Product Admin API.
     """
+
+    maxDiff = None
 
     def test_admin_api_product_request_without_authentication(self):
         """
@@ -245,27 +248,33 @@ class ProductAdminApiTest(TestCase):
                     "course": {
                         "id": str(relation.course.id),
                         "code": relation.course.code,
-                        "cover": {
-                            "filename": relation.course.cover.name,
-                            "height": relation.course.cover.height,
-                            "width": relation.course.cover.width,
-                            "src": f"{relation.course.cover.url}.1x1_q85.webp",
-                            "size": relation.course.cover.size,
-                            "srcset": (
-                                f"{relation.course.cover.url}.1920x1080_q85_crop-scale_upscale.webp 1920w, "  # pylint: disable=line-too-long
-                                f"{relation.course.cover.url}.1280x720_q85_crop-scale_upscale.webp 1280w, "  # pylint: disable=line-too-long
-                                f"{relation.course.cover.url}.768x432_q85_crop-scale_upscale.webp 768w, "  # pylint: disable=line-too-long
-                                f"{relation.course.cover.url}.384x216_q85_crop-scale_upscale.webp 384w"  # pylint: disable=line-too-long
-                            ),
-                        },
                         "title": relation.course.title,
-                        "organizations": [],
                         "state": {
                             "priority": relation.course.state["priority"],
                             "datetime": relation.course.state["datetime"],
                             "call_to_action": relation.course.state["call_to_action"],
                             "text": relation.course.state["text"],
                         },
+                    },
+                    "product": {
+                        "price": float(relation.product.price),
+                        "price_currency": settings.DEFAULT_CURRENCY,
+                        "id": str(relation.product.id),
+                        "title": relation.product.title,
+                        "description": relation.product.description,
+                        "call_to_action": relation.product.call_to_action,
+                        "type": relation.product.type,
+                        "certificate_definition": str(
+                            relation.product.certificate_definition.id
+                        ),
+                        "contract_definition": str(
+                            relation.product.contract_definition.id
+                        ),
+                        "target_courses": [
+                            str(relations[0].course.id),
+                            str(relations[1].course.id),
+                            str(relations[2].course.id),
+                        ],
                     },
                     "organizations": [
                         {

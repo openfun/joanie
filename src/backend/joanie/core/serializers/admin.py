@@ -471,8 +471,8 @@ class AdminCourseProductRelationsSerializer(serializers.ModelSerializer):
     Serialize all information about a course relation nested in a product.
     """
 
-    course = AdminCourseNestedSerializer(read_only=True)
-    product = AdminProductSerializer(read_only=True)
+    course = AdminCourseLightSerializer(read_only=True)
+    product = AdminProductLightSerializer(read_only=True)
     organizations = AdminOrganizationLightSerializer(many=True, read_only=True)
     order_groups = AdminOrderGroupSerializer(many=True, read_only=True)
 
@@ -551,32 +551,6 @@ class AdminCourseProductRelationsSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
-class AdminCourseRelationsSerializer(AdminCourseProductRelationsSerializer):
-    """
-    Serialize all information about a course relation nested in a product.
-    """
-
-    class Meta(AdminCourseProductRelationsSerializer.Meta):
-        fields = [
-            field
-            for field in AdminCourseProductRelationsSerializer.Meta.fields
-            if field != "product"
-        ]
-        read_only_fields = fields
-
-
-class AdminProductRelationSerializer(AdminCourseProductRelationsSerializer):
-    """Serializer for CourseProductRelation model."""
-
-    class Meta(AdminCourseProductRelationsSerializer.Meta):
-        fields = [
-            field
-            for field in AdminCourseProductRelationsSerializer.Meta.fields
-            if field != "course"
-        ]
-        read_only_fields = ["id", "can_edit", "order_groups"]
-
-
 class AdminCourseAccessSerializer(serializers.ModelSerializer):
     """Serializer for CourseAccess model."""
 
@@ -629,7 +603,7 @@ class AdminCourseSerializer(serializers.ModelSerializer):
     title = serializers.CharField()
     cover = ThumbnailDetailField(required=False)
     organizations = AdminOrganizationLightSerializer(many=True, read_only=True)
-    product_relations = AdminProductRelationSerializer(many=True, read_only=True)
+    product_relations = AdminCourseProductRelationsSerializer(many=True, read_only=True)
     accesses = AdminCourseAccessSerializer(many=True, read_only=True)
     course_runs = AdminCourseRunLightSerializer(many=True, read_only=True)
     effort = ISO8601DurationField(allow_null=True, required=False)
@@ -932,7 +906,7 @@ class AdminProductDetailSerializer(serializers.ModelSerializer):
     price = serializers.DecimalField(
         coerce_to_string=False, decimal_places=2, max_digits=9, min_value=0
     )
-    course_relations = AdminCourseRelationsSerializer(read_only=True, many=True)
+    course_relations = AdminCourseProductRelationsSerializer(read_only=True, many=True)
     price_currency = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
