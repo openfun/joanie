@@ -129,7 +129,8 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
                                     }
                                 ],
                                 "requiredRecipients": 1,
-                                "validityPeriod": settings.JOANIE_SIGNATURE_VALIDITY_PERIOD,
+                                "validityPeriod": settings.JOANIE_SIGNATURE_VALIDITY_PERIOD
+                                * 1000,
                                 "invitePeriod": None,
                                 "maxInvites": 0,
                                 "sendDownloadLink": True,
@@ -151,7 +152,8 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
                                     for access in reversed(accesses)
                                 ],
                                 "requiredRecipients": 1,
-                                "validityPeriod": settings.JOANIE_SIGNATURE_VALIDITY_PERIOD,
+                                "validityPeriod": settings.JOANIE_SIGNATURE_VALIDITY_PERIOD
+                                * 1000,
                                 "invitePeriod": None,
                                 "maxInvites": 0,
                                 "sendDownloadLink": True,

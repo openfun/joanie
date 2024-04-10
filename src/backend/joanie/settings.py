@@ -471,7 +471,8 @@ class Base(Configuration):
         environ_prefix=None,
     )
     JOANIE_SIGNATURE_VALIDITY_PERIOD = values.PositiveIntegerValue(
-        60 * 60 * 24 * 15,
+        99 * 60 * 60 * 24,  # Duration in seconds
+        # 99 days is the maximum validity period accepted by Lex Persona
         environ_name="JOANIE_SIGNATURE_VALIDITY_PERIOD",
         environ_prefix=None,
     )
