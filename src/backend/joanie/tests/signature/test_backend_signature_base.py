@@ -125,7 +125,7 @@ class BaseSignatureBackendTestCase(TestCase):
                 "joanie.signature.backends.dummy.DummySignatureBackend",
             ],
         ),
-        JOANIE_SIGNATURE_VALIDITY_PERIOD=60 * 60 * 24 * 15,
+        JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS=60 * 60 * 24 * 15,
     )
     def test_backend_signature_base_backend_confirm_student_signature_but_validity_period_is_passed(
         self,

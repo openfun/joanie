@@ -1462,7 +1462,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         self.assertIsNotNone(contract.student_signed_on)
 
     @override_settings(
-        JOANIE_SIGNATURE_VALIDITY_PERIOD=60 * 60 * 24 * 15,
+        JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS=60 * 60 * 24 * 15,
     )
     def test_models_order_submit_for_signature_contract_same_context_but_passed_validity_period(
         self,

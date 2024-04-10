@@ -23,7 +23,7 @@ from . import get_expected_workflow_payload
     JOANIE_SIGNATURE_LEXPERSONA_SESSION_USER_ID="usr_id_fake",
     JOANIE_SIGNATURE_LEXPERSONA_PROFILE_ID="sip_profile_id_fake",
     JOANIE_SIGNATURE_LEXPERSONA_TOKEN="token_id_fake",
-    JOANIE_SIGNATURE_VALIDITY_PERIOD=60 * 60 * 24 * 15,
+    JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS=60 * 60 * 24 * 15,
     JOANIE_SIGNATURE_TIMEOUT=3,
 )
 class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
@@ -129,8 +129,10 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
                                     }
                                 ],
                                 "requiredRecipients": 1,
-                                "validityPeriod": settings.JOANIE_SIGNATURE_VALIDITY_PERIOD
-                                * 1000,
+                                "validityPeriod": (
+                                    settings.JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS
+                                    * 1000
+                                ),
                                 "invitePeriod": None,
                                 "maxInvites": 0,
                                 "sendDownloadLink": True,
@@ -152,8 +154,10 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
                                     for access in reversed(accesses)
                                 ],
                                 "requiredRecipients": 1,
-                                "validityPeriod": settings.JOANIE_SIGNATURE_VALIDITY_PERIOD
-                                * 1000,
+                                "validityPeriod": (
+                                    settings.JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS
+                                    * 1000
+                                ),
                                 "invitePeriod": None,
                                 "maxInvites": 0,
                                 "sendDownloadLink": True,

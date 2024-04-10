@@ -104,7 +104,9 @@ class LexPersonaBackend(BaseSignatureBackend):
         provider.
         """
         timeout = settings.JOANIE_SIGNATURE_TIMEOUT
-        validity_period_in_ms = settings.JOANIE_SIGNATURE_VALIDITY_PERIOD * 1000
+        validity_period_in_ms = (
+            settings.JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS * 1000
+        )
 
         base_url = self.get_setting("BASE_URL")
         session_user_id = self.get_setting("SESSION_USER_ID")
