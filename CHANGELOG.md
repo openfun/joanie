@@ -8,7 +8,9 @@ and this project adheres to
 
 ## [Unreleased]
 
-## Added
+## [2.0.0] - 2024-04-10
+
+### Added
 
 - Add a new endpoint to withdraw an order
 - Endpoint to retrieve the first course_run related to a course_link
@@ -246,7 +248,8 @@ and this project adheres to
 - First working version serving sellable micro-credentials for multiple
   organizations synchronized to a remote catalog
 
-[unreleased]: https://github.com/openfun/joanie/compare/v1.2.0...main
+[unreleased]: https://github.com/openfun/joanie/compare/v2.0.0...main
+[2.0.0]: https://github.com/openfun/joanie/compare/v1.2.0...v2.0.0
 [1.2.0]: https://github.com/openfun/joanie/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/openfun/joanie/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/openfun/joanie/compare/695965575b80d45c2600a1bcaf84d78bebaec1e7...v1.0.0

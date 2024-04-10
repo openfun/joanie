@@ -330,7 +330,7 @@ class Base(Configuration):
     SPECTACULAR_SETTINGS = {
         "TITLE": "Joanie API",
         "DESCRIPTION": "This is the Joanie API schema.",
-        "VERSION": "1.0.0",
+        "VERSION": "2.0.0",
         "SERVE_INCLUDE_SCHEMA": False,
         "ENABLE_DJANGO_DEPLOY_CHECK": values.BooleanValue(
             default=False,
