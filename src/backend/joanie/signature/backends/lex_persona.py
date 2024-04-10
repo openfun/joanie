@@ -104,7 +104,7 @@ class LexPersonaBackend(BaseSignatureBackend):
         provider.
         """
         timeout = settings.JOANIE_SIGNATURE_TIMEOUT
-        validity_period = settings.JOANIE_SIGNATURE_VALIDITY_PERIOD
+        validity_period_in_ms = settings.JOANIE_SIGNATURE_VALIDITY_PERIOD * 1000
 
         base_url = self.get_setting("BASE_URL")
         session_user_id = self.get_setting("SESSION_USER_ID")
@@ -123,7 +123,7 @@ class LexPersonaBackend(BaseSignatureBackend):
                     "stepType": "signature",
                     "recipients": student_recipient_data,
                     "requiredRecipients": 1,
-                    "validityPeriod": validity_period,
+                    "validityPeriod": validity_period_in_ms,
                     "invitePeriod": None,
                     "maxInvites": 0,
                     "sendDownloadLink": True,
@@ -135,7 +135,7 @@ class LexPersonaBackend(BaseSignatureBackend):
                     "stepType": "signature",
                     "recipients": organization_recipient_data,
                     "requiredRecipients": 1,
-                    "validityPeriod": validity_period,
+                    "validityPeriod": validity_period_in_ms,
                     "invitePeriod": None,
                     "maxInvites": 0,
                     "sendDownloadLink": True,
