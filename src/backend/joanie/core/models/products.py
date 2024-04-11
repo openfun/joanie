@@ -844,7 +844,7 @@ class Order(BaseModel):
                 else course_relation.open_course_run_id
             )
             try:
-                enrollment = Enrollment.objects.only("is_active").get(
+                enrollment = Enrollment.objects.get(
                     course_run_id=open_course_run_id, user=self.owner
                 )
             except Enrollment.DoesNotExist:
@@ -1165,6 +1165,16 @@ def order_post_transition_callback(sender, instance, **kwargs):  # pylint: disab
     unenrolls user.
     """
     instance.save()
+
+    # When an order is validated, if the user was previously enrolled for free in any of the
+    # course runs targeted by the purchased product, we should change their enrollment mode on
+    # these course runs to "verified".
+    if instance.state in [enums.ORDER_STATE_VALIDATED, enums.ORDER_STATE_CANCELED]:
+        for enrollment in Enrollment.objects.filter(
+            course_run__course__target_orders=instance, is_active=True
+        ).select_related("course_run", "user"):
+            enrollment.set()
+
     # Only enroll user if the product has no contract to sign, otherwise we should wait
     # for the contract to be signed before enrolling the user.
     if (
@@ -1175,15 +1185,6 @@ def order_post_transition_callback(sender, instance, **kwargs):  # pylint: disab
 
     if instance.state == enums.ORDER_STATE_CANCELED:
         instance.unenroll_user_from_course_runs()
-
-    # When an order is validated, if the user was previously enrolled for free in any of the
-    # course runs targeted by the purchased product, we should change their enrollment mode on
-    # these course runs to "verified".
-    if instance.state in [enums.ORDER_STATE_VALIDATED, enums.ORDER_STATE_CANCELED]:
-        for enrollment in Enrollment.objects.filter(
-            course_run__course__target_orders=instance
-        ).select_related("course_run", "user"):
-            enrollment.set()
 
     if order_enrollment := instance.enrollment:
         # Trigger LMS synchronization for source enrollment to update mode

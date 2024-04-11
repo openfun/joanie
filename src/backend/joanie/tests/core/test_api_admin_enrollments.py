@@ -2,6 +2,7 @@
 
 import uuid
 from http import HTTPStatus
+from unittest import mock
 
 from django.test import TestCase
 from django.utils import timezone
@@ -340,7 +341,8 @@ class OrdersAdminApiTestCase(TestCase):
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["id"], str(active_enrollment.id))
 
-    def test_api_admin_enrollments_filter_by_state(self):
+    @mock.patch("joanie.core.models.courses.Enrollment.set")
+    def test_api_admin_enrollments_filter_by_state(self, _):
         """
         Authenticated admin user should be able to filter all existing enrollments by
         their state.

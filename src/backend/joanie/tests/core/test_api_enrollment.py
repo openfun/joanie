@@ -847,7 +847,10 @@ class EnrollmentApiTest(BaseAPITestCase):
 
         self.assertEqual(models.Enrollment.objects.count(), 1)
         enrollment = models.Enrollment.objects.get()
-        mock_set.assert_called_once_with(enrollment)
+        if is_active is True:
+            mock_set.assert_called_once_with(enrollment)
+        else:
+            mock_set.assert_not_called()
         self.assertDictEqual(
             content,
             {
@@ -889,7 +892,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "is_active": is_active,
                 "orders": [],
                 "product_relations": [],
-                "state": "set",
+                "state": "set" if is_active else "",
                 "was_created_by_order": False,
             },
         )
@@ -957,15 +960,14 @@ class EnrollmentApiTest(BaseAPITestCase):
         """
         If the resource link does not match any LMS, the enrollment should fail.
         """
-        is_active = random.choice([True, False])
-        mock_set.return_value = is_active
+        mock_set.return_value = True
 
         course_run = self.create_opened_course_run(
             resource_link="http://unknown.com/", is_listed=True
         )
         data = {
             "course_run_id": course_run.id,
-            "is_active": is_active,
+            "is_active": True,
             "was_created_by_order": False,
         }
         token = self.get_user_token("panoramix")
@@ -1019,7 +1021,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                     "languages": course_run.languages,
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
-                "is_active": is_active,
+                "is_active": True,
                 "orders": [],
                 "product_relations": [],
                 "state": "failed",
@@ -1050,7 +1052,6 @@ class EnrollmentApiTest(BaseAPITestCase):
         resource_link = (
             "http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course"
         )
-        is_active = random.choice([True, False])
         mock_set.side_effect = enrollment_error
 
         course_run = self.create_opened_course_run(
@@ -1058,7 +1059,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         )
         data = {
             "course_run_id": course_run.id,
-            "is_active": is_active,
+            "is_active": True,
             "was_created_by_order": False,
         }
         token = self.get_user_token("panoramix")
@@ -1113,7 +1114,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                     "languages": course_run.languages,
                 },
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
-                "is_active": is_active,
+                "is_active": True,
                 "orders": [],
                 "product_relations": [],
                 "state": "failed",
@@ -1319,7 +1320,10 @@ class EnrollmentApiTest(BaseAPITestCase):
 
         self.assertEqual(models.Enrollment.objects.count(), 1)
         enrollment = models.Enrollment.objects.get()
-        mock_set.assert_called_once_with(enrollment)
+        if is_active is True:
+            mock_set.assert_called_once_with(enrollment)
+        else:
+            mock_set.assert_not_called()
 
         # - Enrollment uid has been generated and state has been set according
         #   to LMSHandler.set_enrollment response
@@ -1365,7 +1369,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "is_active": is_active,
                 "orders": [],
                 "product_relations": [],
-                "state": "set",
+                "state": "set" if is_active else "",
                 "was_created_by_order": False,
             },
         )
@@ -1607,6 +1611,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                     resource_link=resource_link.format(id=i), is_listed=True
                 ),
                 is_active=is_active_old,
+                state="",
             )
             token = self.generate_token_from_user(enrollment.user)
 
@@ -1668,7 +1673,9 @@ class EnrollmentApiTest(BaseAPITestCase):
                     "is_active": is_active_new,
                     "orders": [],
                     "product_relations": [],
-                    "state": "set",
+                    "state": ""
+                    if is_active_old is False and is_active_new is False
+                    else "set",
                     "was_created_by_order": False,
                 },
             )

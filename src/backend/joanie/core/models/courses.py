@@ -1015,6 +1015,10 @@ class Enrollment(BaseModel):
         verbose_name_plural = _("Enrollments")
         ordering = ["-created_on"]
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.last_is_active = self.is_active
+
     def __str__(self):
         active = _("active") if self.is_active else _("inactive")
         return f"[{active}][{self.state}] {self.user} for {self.course_run}"
@@ -1191,6 +1195,25 @@ class Enrollment(BaseModel):
         Enrollment.objects.filter(pk=self.pk).update(state=state)
 
     def save(self, *args, **kwargs):
-        """Call full clean before saving instance."""
+        """
+        Call full clean before saving instance and sync enrollment active state
+        with LMS if needed.
+        """
         self.full_clean()
+        is_creating = self.created_on is None
+
         super().save(*args, **kwargs)
+
+        if is_creating is True and self.is_active is True:
+            logger.info("Active Enrollment %s has been created", self.id)
+            self.set()
+
+        if self.is_active != self.last_is_active:
+            # The user has changed their subscription status
+            logger.info(
+                "Enrollment %s has changed its active status to %s",
+                self.id,
+                self.is_active,
+            )
+            self.last_is_active = self.is_active
+            self.set()

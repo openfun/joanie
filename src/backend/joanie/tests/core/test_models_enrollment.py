@@ -35,6 +35,7 @@ from joanie.lms_handler.backends.openedx import OpenEdXLMSBackend
         },
     ]
 )
+# pylint: disable=too-many-public-methods
 class EnrollmentModelsTestCase(TestCase):
     """Test suite for the Enrollment model."""
 
@@ -282,6 +283,44 @@ class EnrollmentModelsTestCase(TestCase):
             str(context.exception),
         )
         self.assertEqual(user.enrollments.count(), 0)
+
+    @mock.patch("joanie.core.models.Enrollment.set")
+    def test_models_enrollment_set_on_create(self, mock_set):
+        """
+        When an enrollment is created, the set method should be called to
+        create the enrollment on the LMS if this one is active
+        """
+        factories.EnrollmentFactory(is_active=False)
+        mock_set.assert_not_called()
+
+        factories.EnrollmentFactory(is_active=True)
+        mock_set.assert_called_once()
+
+    @mock.patch("joanie.core.models.Enrollment.set")
+    def test_models_enrollment_set_on_update(self, mock_set):
+        """
+        When an enrollment is updated, only if the is_active state is
+        changed, the method set should be called.
+        """
+        enrollment = factories.EnrollmentFactory(is_active=True)
+        mock_set.assert_called_once()
+        mock_set.reset_mock()
+
+        enrollment.is_active = False
+        enrollment.save()
+        enrollment.refresh_from_db()
+        mock_set.assert_called_once()
+        mock_set.reset_mock()
+
+        enrollment.is_active = False
+        enrollment.save()
+        enrollment.refresh_from_db()
+        mock_set.assert_not_called()
+        mock_set.reset_mock()
+
+        enrollment.is_active = True
+        enrollment.save()
+        mock_set.assert_called_once()
 
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
     def test_models_enrollment_forbid_for_non_listed_course_run_not_included_in_product(

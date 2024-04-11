@@ -49,8 +49,9 @@ class MigrateOpenEdxTestCase(MigrateOpenEdxBaseTestCase):
 
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_enrollments_count")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_enrollments")
+    @patch("joanie.core.models.Enrollment.set")
     def test_command_migrate_enrollments_update(
-        self, mock_get_enrollments, mock_get_enrollments_count
+        self, _, mock_get_enrollments, mock_get_enrollments_count
     ):
         """
         Test that enrollments are updated from the edx enrollments.
