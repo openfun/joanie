@@ -229,10 +229,26 @@ class OpenEdXLMSBackendTestCase(TestCase):
         user = factories.UserFactory()
         factories.EnrollmentFactory(
             course_run=course_run,
+            is_active=True,
             user=user,
             # Whether the enrollment comes from an order or not
             was_created_by_order=random.choice([True, False]),
         )
+        self.assertEqual(len(responses.calls), 1)
+        self.assertEqual(responses.calls[0].request.url, url)
+        self.assertEqual(
+            responses.calls[0].request.headers["X-Edx-Api-Key"], "a_secure_api_token"
+        )
+        self.assertEqual(
+            json.loads(responses.calls[0].request.body),
+            {
+                "is_active": True,
+                "mode": "honor",
+                "user": user.username,
+                "course_details": {"course_id": "course-v1:edx+000001+Demo_Course"},
+            },
+        )
+        responses.calls.reset()  # pylint: disable=no-member
         order = factories.OrderFactory(product=product, owner=user)
         self.assertEqual(len(responses.calls), 0)
 
@@ -283,22 +299,24 @@ class OpenEdXLMSBackendTestCase(TestCase):
             user=user,
             is_active=is_active,
         )
+
         backend = LMSHandler.select_lms(resource_link)
         self.assertIsInstance(backend, OpenEdXLMSBackend)
+        if is_active is True:
+            self.assertEqual(len(responses.calls), 1)
+            self.assertEqual(
+                json.loads(responses.calls[0].request.body),
+                {
+                    "is_active": is_active,
+                    "mode": "honor",
+                    "user": user.username,
+                    "course_details": {"course_id": "course-v1:edx+000001+Demo_Course"},
+                },
+            )
+        else:
+            self.assertEqual(len(responses.calls), 0)
 
-        result = backend.set_enrollment(enrollment)
-
-        self.assertIsNone(result)
-        self.assertEqual(len(responses.calls), 1)
-        self.assertEqual(
-            json.loads(responses.calls[0].request.body),
-            {
-                "is_active": is_active,
-                "mode": "honor",
-                "user": user.username,
-                "course_details": {"course_id": "course-v1:edx+000001+Demo_Course"},
-            },
-        )
+        responses.calls.reset()  # pylint: disable=no-member
 
         order = factories.OrderFactory(
             course=None,
@@ -310,9 +328,9 @@ class OpenEdXLMSBackendTestCase(TestCase):
         result = backend.set_enrollment(enrollment)
 
         self.assertIsNone(result)
-        self.assertEqual(len(responses.calls), 2)
+        self.assertEqual(len(responses.calls), 1)
         self.assertEqual(
-            json.loads(responses.calls[1].request.body),
+            json.loads(responses.calls[0].request.body),
             {
                 "is_active": is_active,
                 "mode": "verified",
@@ -324,9 +342,9 @@ class OpenEdXLMSBackendTestCase(TestCase):
         # If the order is later canceled, the enrollment should be set back to honor
         order.cancel()
 
-        self.assertEqual(len(responses.calls), 3)
+        self.assertEqual(len(responses.calls), 2)
         self.assertEqual(
-            json.loads(responses.calls[2].request.body),
+            json.loads(responses.calls[1].request.body),
             {
                 "is_active": is_active,
                 "mode": "honor",

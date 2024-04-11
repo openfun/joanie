@@ -56,9 +56,11 @@ class MigrateOpenEdxCertificatesTestCase(MigrateOpenEdxBaseTestCase):
     @patch("joanie.edx_imports.edx_mongodb.get_signature_from_enrollment")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates_count")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates")
+    @patch("joanie.core.models.Enrollment.set")
     @responses.activate(assert_all_requests_are_fired=True)
     def test_command_migrate_certificates_create(
         self,
+        _,
         mock_get_certificates,
         mock_get_certificates_count,
         mock_get_signature_from_enrollment,
@@ -123,8 +125,10 @@ class MigrateOpenEdxCertificatesTestCase(MigrateOpenEdxBaseTestCase):
     @patch("joanie.edx_imports.edx_mongodb.get_signature_from_enrollment")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates_count")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates")
+    @patch("joanie.core.models.Enrollment.set")
     def test_command_migrate_certificates_update(
         self,
+        _,
         mock_get_certificates,
         mock_get_certificates_count,
         mock_get_signature_from_enrollment,
@@ -185,9 +189,11 @@ class MigrateOpenEdxCertificatesTestCase(MigrateOpenEdxBaseTestCase):
     @patch("joanie.edx_imports.edx_mongodb.get_signature_from_enrollment")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates_count")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates")
+    @patch("joanie.core.models.Enrollment.set")
     @responses.activate(assert_all_requests_are_fired=True)
     def test_command_migrate_certificates_create_missing_joanie_enrollments(
         self,
+        _,
         mock_get_certificates,
         mock_get_certificates_count,
         mock_get_signature_from_enrollment,
@@ -266,9 +272,11 @@ class MigrateOpenEdxCertificatesTestCase(MigrateOpenEdxBaseTestCase):
     @patch("joanie.edx_imports.edx_mongodb.get_signature_from_enrollment")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates_count")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates")
+    @patch("joanie.core.models.Enrollment.set")
     @responses.activate(assert_all_requests_are_fired=False)
     def test_command_migrate_certificates_create_dry_run_offset_size(
         self,
+        _,
         mock_get_certificates,
         mock_get_certificates_count,
         mock_get_signature_from_enrollment,

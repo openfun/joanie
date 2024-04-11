@@ -509,7 +509,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         InvoiceFactory(order=order, total=order.total)
 
         # - Validate the order should automatically enroll user to course run
-        with self.assertNumQueries(27):
+        with self.assertNumQueries(21):
             order.validate()
 
         enrollment.refresh_from_db()
@@ -770,6 +770,17 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
 
     @responses.activate
+    @override_settings(
+        JOANIE_LMS_BACKENDS=[
+            {
+                "API_TOKEN": "a_secure_api_token",
+                "BACKEND": "joanie.lms_handler.backends.openedx.OpenEdXLMSBackend",
+                "BASE_URL": "http://openedx.test",
+                "COURSE_REGEX": r"^.*/courses/(?P<course_id>.*)/course/?$",
+                "SELECTOR_REGEX": r".*",
+            }
+        ]
+    )
     def test_models_order_validate_preexisting_enrollments_targeted(self):
         """
         When an order is validated, if the user was previously enrolled for free in any of the
@@ -791,41 +802,28 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         )
         product = factories.ProductFactory(target_courses=[course], price="0.00")
 
-        # Create a pre-existing free enrollment
-        enrollment = factories.EnrollmentFactory(course_run=course_run)
-        order = factories.OrderFactory(product=product)
-
         url = "http://openedx.test/api/enrollment/v1/enrollment"
-
         responses.add(
             responses.POST,
             url,
             status=HTTPStatus.OK,
-            json={"is_active": enrollment.is_active},
+            json={"is_active": True},
         )
 
-        with override_settings(
-            JOANIE_LMS_BACKENDS=[
-                {
-                    "API_TOKEN": "a_secure_api_token",
-                    "BACKEND": "joanie.lms_handler.backends.openedx.OpenEdXLMSBackend",
-                    "BASE_URL": "http://openedx.test",
-                    "COURSE_REGEX": r"^.*/courses/(?P<course_id>.*)/course/?$",
-                    "SELECTOR_REGEX": r".*",
-                }
-            ]
-        ):
-            order.submit()
+        # Create a pre-existing free enrollment
+        enrollment = factories.EnrollmentFactory(course_run=course_run, is_active=True)
+        order = factories.OrderFactory(product=product)
+        order.submit()
 
         self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
 
-        self.assertEqual(len(responses.calls), 1)
-        self.assertEqual(responses.calls[0].request.url, url)
+        self.assertEqual(len(responses.calls), 2)
+        self.assertEqual(responses.calls[1].request.url, url)
         self.assertEqual(
             responses.calls[0].request.headers["X-Edx-Api-Key"], "a_secure_api_token"
         )
         self.assertEqual(
-            json.loads(responses.calls[0].request.body),
+            json.loads(responses.calls[1].request.body),
             {
                 "is_active": enrollment.is_active,
                 "mode": "verified",
@@ -864,11 +862,6 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             course=course, state=CourseState.ONGOING_OPEN, is_listed=True
         )
         product = factories.ProductFactory(target_courses=[course], price="0.00")
-
-        # Create a pre-existing free enrollment
-        enrollment = factories.EnrollmentFactory(course_run=course_run)
-        order = factories.OrderFactory(product=product)
-
         backend = LMSHandler.select_lms(resource_link)
 
         responses.add(
@@ -878,7 +871,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
                 responses.matchers.urlencoded_params_matcher(
                     {
                         "criteria[0][key]": "username",
-                        "criteria[0][value]": enrollment.user.username,
+                        "criteria[0][value]": "student",
                     }
                 )
             ],
@@ -947,11 +940,17 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             status=HTTPStatus.OK,
         )
 
+        # Create a pre-existing free enrollment
+        factories.EnrollmentFactory(
+            course_run=course_run, user__username="student", is_active=True
+        )
+        order = factories.OrderFactory(product=product)
+
         order.submit()
 
         self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
 
-        self.assertEqual(len(responses.calls), 3)
+        self.assertEqual(len(responses.calls), 6)
 
     def test_models_order_cancel_success(self):
         """Test that the cancel transition is successful from any state"""
@@ -1054,6 +1053,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             course_run__state=CourseState.FUTURE_OPEN,
             course_run__is_listed=True,
             course_run__resource_link=resource_link,
+            is_active=True,
         )
         order = factories.OrderFactory(
             course=None,
@@ -1149,7 +1149,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         enrollment.refresh_from_db()
         self.assertEqual(enrollment.state, "set")
 
-        self.assertEqual(len(responses.calls), 3)
+        self.assertEqual(len(responses.calls), 4)
 
     def test_models_order_cancel_certificate_product_enrollment_state_failed(self):
         """
@@ -1504,6 +1504,8 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         with self.assertLogs("joanie") as logger:
             invitation_url = order.submit_for_signature(user=user)
 
+        enrollment = user.enrollments.first()
+
         contract.refresh_from_db()
         self.assertEqual(
             contract.context, json.loads(DjangoJSONEncoder().encode(context))
@@ -1513,7 +1515,6 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         self.assertNotEqual("wfl_fake_dummy_id_1", contract.signature_backend_reference)
         self.assertIsNotNone(contract.submitted_for_signature_on)
         self.assertIsNotNone(contract.student_signed_on)
-
         self.assertLogsEquals(
             logger.records,
             [
@@ -1530,6 +1531,10 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
                 (
                     "INFO",
                     f"Document signature refused for the contract '{contract.id}'",
+                ),
+                (
+                    "INFO",
+                    f"Active Enrollment {enrollment.pk} has been created",
                 ),
                 ("INFO", f"Student signed the contract '{contract.id}'"),
                 (
