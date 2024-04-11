@@ -458,6 +458,17 @@ jobs:
       - run:
           name: Check built image availability
           command: docker images "joanie:${CIRCLE_SHA1}*"
+      - run:
+          name: Build admin image
+          command: |
+              docker build . \
+                --build-arg NEXT_PUBLIC_API_ENDPOINT=${NEXT_PREPROD_PUBLIC_API_ENDPOINT} \
+                --build-arg NEXT_PUBLIC_DJANGO_ADMIN_BASE_URL=${NEXT_PREPROD_PUBLIC_DJANGO_ADMIN_BASE_URL} \
+                -f docker/images/admin/Dockerfile \
+                -t joanie-admin:${CIRCLE_SHA1}
+      - run:
+          name: Check built admin image availability
+          command: docker images "joanie-admin:${CIRCLE_SHA1}*"
       # Login to DockerHub to Publish new images
       #
       # Nota bene: you'll need to define the following secrets environment vars
@@ -527,13 +538,17 @@ jobs:
             echo "  - name: joanie" >> ${VARS_FILE}
             echo "joanie_image_name: ${K3D_REGISTRY_NAME}:${K3D_REGISTRY_PORT}/ci-joanie/joanie" >> ${VARS_FILE}
             echo "joanie_image_tag: ${CIRCLE_SHA1}" >> ${VARS_FILE}
+            echo "joanie_admin_nginx_image_name: ${K3D_REGISTRY_NAME}:${K3D_REGISTRY_PORT}/ci-joanie/joanie-admin" >> ${VARS_FILE}
+            echo "joanie_admin_nginx_image_tag: ${CIRCLE_SHA1}" >> ${VARS_FILE}
             echo "joanie_app_replicas: 1" >> ${VARS_FILE}
             echo "joanie_django_configuration: ${DJANGO_CONFIGURATION}" >> ${VARS_FILE}
       - run:
-          name: Push joanie image to the k8s cluster docker registry
+          name: Push joanie images to the k8s cluster docker registry
           command: |
             docker tag joanie:${CIRCLE_SHA1} "${K3D_REGISTRY_NAME}:${K3D_REGISTRY_PORT}/ci-joanie/joanie:${CIRCLE_SHA1}"
             docker push "${K3D_REGISTRY_NAME}:${K3D_REGISTRY_PORT}/ci-joanie/joanie:${CIRCLE_SHA1}"
+            docker tag joanie-admin:${CIRCLE_SHA1} "${K3D_REGISTRY_NAME}:${K3D_REGISTRY_PORT}/ci-joanie/joanie-admin:${CIRCLE_SHA1}"
+            docker push "${K3D_REGISTRY_NAME}:${K3D_REGISTRY_PORT}/ci-joanie/joanie-admin:${CIRCLE_SHA1}"
       - run:
           name: Bootstrap joanie application
           command: |
