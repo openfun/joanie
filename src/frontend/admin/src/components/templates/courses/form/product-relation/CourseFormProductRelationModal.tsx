@@ -43,36 +43,20 @@ enum Mode {
 }
 
 interface Props extends Omit<CustomModalProps, "title"> {
-  courseId: string;
-  courseRelationToProduct?: CourseRelationToProduct;
-  onAdd: (
-    payload: DTOCourseRelationToProduct,
-    formValues: CourseProductRelationFormValues,
-  ) => void;
-  onEdit: (
-    id: string,
-    payload: DTOCourseRelationToProduct,
+  courseId?: string;
+  productId?: string;
+  relation?: CourseProductRelation;
+  onSubmitForm?: (
+    payload: DTOCourseProductRelation,
     formValues: CourseProductRelationFormValues,
   ) => void;
 }
 
 export function CourseFormProductRelationModal(props: Props) {
   const intl = useIntl();
-
   const mode: Mode = useMemo(() => {
-    return props.courseRelationToProduct !== undefined ? Mode.EDIT : Mode.ADD;
-  }, [props.courseRelationToProduct]);
-
-  const validate = async (
-    payload: DTOCourseRelationToProduct,
-    formValues: CourseProductRelationFormValues,
-  ): Promise<void> => {
-    if (mode === Mode.ADD) {
-      props.onAdd(payload, formValues);
-    } else {
-      props.onEdit(props.courseRelationToProduct!.id, payload, formValues);
-    }
-  };
+    return props.relation !== undefined ? Mode.EDIT : Mode.ADD;
+  }, [props.relation]);
 
   return (
     <CustomModal
@@ -83,9 +67,11 @@ export function CourseFormProductRelationModal(props: Props) {
       handleClose={props.handleClose}
     >
       <CourseProductRelationForm
+        productId={props.productId}
         courseId={props.courseId}
-        relation={props.courseRelationToProduct}
-        onSubmit={validate}
+        defaultProduct={props.relation?.product}
+        defaultCourse={props.relation?.course}
+        onSubmit={props.onSubmitForm}
       />
     </CustomModal>
   );
