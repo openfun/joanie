@@ -21,6 +21,12 @@ logger = logging.getLogger(__name__)
 class PayplugBackend(BasePaymentBackend):
     """
     The Payplug payment backend
+
+    Environment variables needed to configure the backend:
+
+    JOANIE_PAYMENT_BACKEND="joanie.payment.backends.payplug.PayplugBackend"
+    JOANIE_PAYMENT_CONFIGURATION={"secret_key": "fake_secret_key",
+    "public_key": "fake_public_key"}
     """
 
     name = "payplug"

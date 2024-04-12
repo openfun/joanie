@@ -414,14 +414,11 @@ class Base(Configuration):
             environ_name="JOANIE_PAYMENT_BACKEND",
             environ_prefix=None,
         ),
-        "configuration": {
-            "secret_key": values.Value(
-                "", environ_name="PAYPLUG_SECRET_KEY", environ_prefix=None
-            ),
-            "public_key": values.Value(
-                "", environ_name="PAYPLUG_PUBLIC_KEY", environ_prefix=None
-            ),
-        },
+        # Check the docstring of the related payment backend to know
+        # which dict to pass here.
+        "configuration": values.DictValue(
+            environ_name="JOANIE_PAYMENT_CONFIGURATION", environ_prefix=None
+        ),
     }
 
     # CORS

@@ -1,0 +1,22 @@
+{
+    "webService": "Charge/CreatePayment",
+    "version": "V4",
+    "applicationVersion": "6.14.3",
+    "status": "ERROR",
+    "answer": {
+        "errorCode": "INT_902",
+        "errorMessage": "web-service input data validation error",
+        "detailedErrorCode": null,
+        "detailedErrorMessage": "can't decode JSON data : line: 1 column: 1",
+        "ticket": "null",
+        "shopId": "69876357",
+        "_type": "V4/WebService/WebServiceError"
+    },
+    "ticket": "6d91a4977c0e4c35af188a545875ce82",
+    "serverDate": "2024-04-12T09:27:39+00:00",
+    "applicationProvider": "LYRA",
+    "metadata": null,
+    "mode": "TEST",
+    "serverUrl": "https://api.lyra.com",
+    "_type": "V4/WebService/Response"
+}
