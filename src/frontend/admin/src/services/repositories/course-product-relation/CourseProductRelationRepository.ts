@@ -7,8 +7,8 @@ import {
   getAcceptLanguage,
 } from "@/services/http/HttpService";
 import {
-  CourseRelationToProduct,
-  DTOCourseRelationToProduct,
+  CourseProductRelation,
+  DTOCourseProductRelation,
 } from "@/services/api/models/Relations";
 import { DTOOrderGroup, OrderGroup } from "@/services/api/models/OrderGroup";
 import { exportToFormData } from "@/utils/forms";
@@ -33,7 +33,7 @@ export const CourseProductRelationRepository = class CourseProductRelationReposi
   static get(
     id: string,
     filters?: Maybe<ResourcesQuery>,
-  ): Promise<CourseRelationToProduct> {
+  ): Promise<CourseProductRelation> {
     const url = courseProductRelationsRoutes.get(
       id,
       filters ? `?${queryString.stringify(filters)}` : "",
@@ -43,7 +43,7 @@ export const CourseProductRelationRepository = class CourseProductRelationReposi
 
   static getAll(
     filters: Maybe<ResourcesQuery>,
-  ): Promise<PaginatedResponse<CourseRelationToProduct>> {
+  ): Promise<PaginatedResponse<CourseProductRelation>> {
     const url = courseProductRelationsRoutes.getAll(
       filters ? `?${queryString.stringify(filters)}` : "",
     );
@@ -51,8 +51,8 @@ export const CourseProductRelationRepository = class CourseProductRelationReposi
   }
 
   static create(
-    payload: DTOCourseRelationToProduct,
-  ): Promise<CourseRelationToProduct> {
+    payload: DTOCourseProductRelation,
+  ): Promise<CourseProductRelation> {
     return fetchApi(courseProductRelationsRoutes.create, {
       method: "POST",
       body: JSON.stringify(payload),
@@ -70,8 +70,8 @@ export const CourseProductRelationRepository = class CourseProductRelationReposi
 
   static update(
     id: string,
-    payload: DTOCourseRelationToProduct,
-  ): Promise<CourseRelationToProduct> {
+    payload: DTOCourseProductRelation,
+  ): Promise<CourseProductRelation> {
     return fetchApi(courseProductRelationsRoutes.update(id), {
       method: "PATCH",
       body: JSON.stringify(payload),

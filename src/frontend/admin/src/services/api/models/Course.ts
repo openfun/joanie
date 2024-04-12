@@ -1,6 +1,6 @@
 import moment from "moment";
 import { Organization } from "./Organization";
-import { CourseRelationToProduct } from "./Relations";
+import { CourseProductRelation } from "./Relations";
 import { Accesses } from "@/services/api/models/Accesses";
 import { CourseRun } from "@/services/api/models/CourseRun";
 import { ThumbnailDetailField } from "@/services/api/models/Image";
@@ -11,7 +11,7 @@ export type Course = {
   title: string;
   organizations: Organization[];
   is_graded: boolean;
-  product_relations?: CourseRelationToProduct[];
+  product_relations?: CourseProductRelation[];
   state?: CourseState;
   courses_runs?: CourseRun[];
   cover?: ThumbnailDetailField;

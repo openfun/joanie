@@ -13,8 +13,8 @@ import { CourseRun } from "@/services/api/models/CourseRun";
 import { catchAllIdRegex } from "@/tests/useResourceHandler";
 import { postUpdateOrganization } from "@/tests/organization/OrganizationTestScenario";
 import {
-  CourseRelationToProduct,
-  DTOCourseRelationToProduct,
+  CourseProductRelation,
+  DTOCourseProductRelation,
 } from "@/services/api/models/Relations";
 import { DTOOrderGroup, OrderGroup } from "@/services/api/models/OrderGroup";
 import { mockCourseRunsFromCourse } from "@/tests/mocks/course-runs/course-runs-mocks";
@@ -24,7 +24,7 @@ export const getCourseScenarioStore = () => {
   const organizationList: Organization[] = [];
   const userList: User[] = [];
   const products: Product[] = [];
-  const productRelations: CourseRelationToProduct[] = [];
+  const productRelations: CourseProductRelation[] = [];
   const courseRuns: CourseRun[] = [];
   let orderGroups: OrderGroup[] = [];
 
@@ -55,8 +55,8 @@ export const getCourseScenarioStore = () => {
   });
 
   const productRelationResource = mockResource<
-    CourseRelationToProduct,
-    DTOCourseRelationToProduct
+    CourseProductRelation,
+    DTOCourseProductRelation
   >({
     data: productRelations,
   });
@@ -66,8 +66,8 @@ export const getCourseScenarioStore = () => {
   });
 
   const postProductRelation = (
-    payload: DTOCourseRelationToProduct,
-    relation?: CourseRelationToProduct,
+    payload: DTOCourseProductRelation,
+    relation?: CourseProductRelation,
   ) => {
     const course = courseResource.getResource(payload.course_id);
     const product = productResource.getResource(payload.product_id);
@@ -79,7 +79,7 @@ export const getCourseScenarioStore = () => {
       }
     });
 
-    let result: CourseRelationToProduct;
+    let result: CourseProductRelation;
     if (relation) {
       result = {
         ...relation,
@@ -162,7 +162,7 @@ export const getCourseScenarioStore = () => {
 
 export const mockOrderGroup = async (
   page: Page,
-  relations: CourseRelationToProduct[] = [],
+  relations: CourseProductRelation[] = [],
   orderGroupList: OrderGroup[] = [],
 ) => {
   const orderGroupRegex = catchAllIdRegex(
@@ -180,8 +180,8 @@ export const mockOrderGroup = async (
   });
 
   const relationsResource = mockResource<
-    CourseRelationToProduct,
-    DTOCourseRelationToProduct
+    CourseProductRelation,
+    DTOCourseProductRelation
   >({
     data: relations,
   });

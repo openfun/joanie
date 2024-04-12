@@ -13,8 +13,8 @@ import { User } from "@/services/api/models/User";
 import { CourseRun, DTOCourseRun } from "@/services/api/models/CourseRun";
 import { PATH_ADMIN } from "@/utils/routes/path";
 import {
-  CourseRelationToProduct,
-  DTOCourseRelationToProduct,
+  CourseProductRelation,
+  DTOCourseProductRelation,
 } from "@/services/api/models/Relations";
 import { OrderGroup } from "@/services/api/models/OrderGroup";
 import { expectHaveClasses, expectHaveNotClasses } from "@/tests/utils";
@@ -42,10 +42,7 @@ test.describe("Course product relation", () => {
       page,
     });
 
-    await mockPlaywrightCrud<
-      CourseRelationToProduct,
-      DTOCourseRelationToProduct
-    >({
+    await mockPlaywrightCrud<CourseProductRelation, DTOCourseProductRelation>({
       data: store.productRelations,
       routeUrl:
         "http://localhost:8071/api/v1.0/admin/course-product-relations/",
