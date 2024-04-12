@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+
+    <!-- STEP :
+    1 : load the JS librairy
+    2 : required public key and the JS parameters as url success -->
+
+    <script type="text/javascript"
+            src="https://static.lyra.com/static/js/krypton-client/V4.0/stable/kr-payment-form.min.js"
+            kr-public-key="{{ public_key }}"
+            kr-post-url-success="{{ success }}" ;>
+    </script>
+
+    <!-- 3 : theme néon should be loaded in the HEAD section   -->
+    <link rel="stylesheet"
+          href="https://static.lyra.com/static/js/krypton-client/V4.0/ext/neon-reset.min.css">
+    <script type="text/javascript"
+            src="https://static.lyra.com/static/js/krypton-client/V4.0/ext/neon.js">
+    </script>
+  </head>
+
+  <body>
+  <!-- 4 : display the form payment -->
+  <div class="kr-smart-form" kr-card-form-expanded kr-no-card-logo-header
+       kr-form-token="{{ form_token }}">
+  </div>
+
+  <div>
+    <pre>
+      {{ billing_address|pprint }}
+    </pre>
+  </div>
+
+  <!-- 5 : display the lyra response -->
+  {% if response %}
+    <div>
+      <pre>{{ response|pprint }}</pre>
+    </div>
+  {% endif %}
+
+  </body>
+</html>
