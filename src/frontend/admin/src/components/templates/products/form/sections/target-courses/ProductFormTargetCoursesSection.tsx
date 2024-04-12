@@ -83,7 +83,9 @@ export function ProductFormTargetCoursesSection(props: Props) {
       ...editRelationState.item,
       course: values!.course,
       course_runs: values.course_runs ?? [],
+      is_graded: values.is_graded,
     };
+
     const payload = transformProductTargetCourseRelationToDTO(newValue);
     targetCourses.update(arrayIndex, newValue);
     products.methods.updateTargetCourse(
@@ -164,7 +166,7 @@ export function ProductFormTargetCoursesSection(props: Props) {
       showSubmit={false}
       methods={methods}
     >
-      <Grid container spacing={2}>
+      <Grid container spacing={2} padding={2}>
         <Grid xs={12}>
           <Alert severity="info">
             {intl.formatMessage(productFormMessages.targetCoursesHelperSection)}

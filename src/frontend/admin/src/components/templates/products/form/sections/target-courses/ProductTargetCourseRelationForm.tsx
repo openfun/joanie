@@ -11,6 +11,7 @@ import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import Switch from "@mui/material/Switch";
 import {
+  DEFAULT_IS_GRADED_VALUE,
   ProductTargetCourseRelation,
   ProductTargetCourseRelationFormValues,
 } from "@/services/api/models/ProductTargetCourseRelation";
@@ -21,6 +22,7 @@ import { Optional } from "@/types/utils";
 import { CoursesRunsList } from "@/components/templates/courses-runs/list/CoursesRunsList";
 import { Course } from "@/services/api/models/Course";
 import { CourseRun } from "@/services/api/models/CourseRun";
+import RHFSwitch from "@/components/presentational/hook-form/RHFSwitch";
 
 type Props = {
   targetCourse?: Optional<ProductTargetCourseRelation, "id">;
@@ -36,6 +38,7 @@ export function ProductTargetCourseRelationForm(props: Props) {
 
   const Schema = Yup.object().shape({
     course: Yup.mixed<Course>().required(),
+    is_graded: Yup.boolean().required(),
     course_runs: Yup.array<any, CourseRun>().min(0).optional(),
   });
 
@@ -52,6 +55,7 @@ export function ProductTargetCourseRelationForm(props: Props) {
     return {
       course: courseDefault,
       course_runs: courseRunsDefault,
+      is_graded: props.targetCourse?.is_graded ?? DEFAULT_IS_GRADED_VALUE,
     };
   };
 
@@ -64,6 +68,7 @@ export function ProductTargetCourseRelationForm(props: Props) {
     props.onSubmit({
       course: values.course,
       course_runs: values.course_runs ?? [],
+      is_graded: values.is_graded ?? DEFAULT_IS_GRADED_VALUE,
     });
   };
 
@@ -97,6 +102,12 @@ export function ProductTargetCourseRelationForm(props: Props) {
         <Grid xs={12} mt={3}>
           <Stack spacing={2}>
             <CourseSearch enableAdd enableEdit name="course" />
+            <RHFSwitch
+              name="is_graded"
+              label={intl.formatMessage(
+                productFormMessages.targetCourseIsGradedLabel,
+              )}
+            />
 
             {valueCourse != null && (
               <Box sx={{ mt: 3 }}>
