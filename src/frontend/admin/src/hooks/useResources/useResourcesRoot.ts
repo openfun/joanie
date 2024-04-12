@@ -128,8 +128,9 @@ export const useResourcesRoot = <
     [api, filters],
   );
 
-  const showSuccessMessage = (message: string) => {
-    snackbar.enqueueSnackbar(message, {
+  const showSuccessMessage = (message?: string) => {
+    const str = message ?? intl.formatMessage(messages.postSuccess);
+    snackbar.enqueueSnackbar(str, {
       variant: "success",
       preventDuplicate: true,
     });

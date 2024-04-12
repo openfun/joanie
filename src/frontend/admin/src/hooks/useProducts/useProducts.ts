@@ -126,6 +126,7 @@ export const useProducts = (
         },
         onSuccess: () => {
           custom.methods.invalidate();
+          custom.methods.showSuccessMessage();
         },
         onError: () => {
           custom.methods.setError(
@@ -142,6 +143,7 @@ export const useProducts = (
         },
         onSuccess: () => {
           custom.methods.invalidate();
+          custom.methods.showSuccessMessage();
         },
         onError: () => {
           custom.methods.setError(
@@ -163,6 +165,7 @@ export const useProducts = (
         },
         onSuccess: () => {
           custom.methods.invalidate();
+          custom.methods.showSuccessMessage();
         },
         onError: () => {
           custom.methods.setError(
