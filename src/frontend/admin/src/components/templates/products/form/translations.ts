@@ -182,4 +182,9 @@ export const productFormMessages = defineMessages({
     defaultMessage: "List of available course runs",
     description: "Title for the course runs selection section",
   },
+  targetCourseIsGradedLabel: {
+    id: "components.templates.products.form.translations.targetCourseIsGradedLabel",
+    defaultMessage: "Taken into account for certification",
+    description: "Label for the is graded switch",
+  },
 });

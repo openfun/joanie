@@ -13,6 +13,8 @@ import { DndDefaultRow } from "@/components/presentational/dnd/DndDefaultRow";
 import { ProductSearch } from "@/components/templates/products/inputs/search/ProductSearch";
 import { OrganizationControlledSearch } from "@/components/templates/organizations/inputs/search/OrganizationControlledSearch";
 import { Product } from "@/services/api/models/Product";
+import { Course } from "@/services/api/models/Course";
+import { CourseSearch } from "@/components/templates/courses/inputs/search/CourseSearch";
 
 const messages = defineMessages({
   productLabel: {
@@ -20,10 +22,20 @@ const messages = defineMessages({
     defaultMessage: "Product",
     description: "Product label for the CourseProductRelation form",
   },
+  courseLabel: {
+    id: "components.templates.course.form.translations.productRelation.courseLabel",
+    defaultMessage: "Course",
+    description: "Course label for the CourseProductRelation form",
+  },
   chooseProduct: {
     id: "components.templates.course.form.translations.productRelation.chooseProduct",
     defaultMessage: "Choose your product",
     description: "Label form the product search input",
+  },
+  chooseCourse: {
+    id: "components.templates.course.form.translations.productRelation.chooseCourse",
+    defaultMessage: "Choose your course",
+    description: "Label form the course search input",
   },
   organizationsTitle: {
     id: "components.templates.course.form.translations.productRelation.organizationsTitle",
@@ -34,35 +46,46 @@ const messages = defineMessages({
 
 export interface CourseProductRelationFormValues {
   product: Product | null;
+  course: Course | null;
   organizations: Organization[];
 }
 
-interface Props {
-  courseId: string;
+interface BaseProps {
   onSubmit?: (
     payload: DTOCourseProductRelation,
     formValues: CourseProductRelationFormValues,
   ) => void;
-  relation?: CourseRelationToProduct;
+  defaultProduct?: Product;
+  defaultCourse?: Course;
+  organizations?: Organization[];
+  courseId?: string;
+  productId?: string;
 }
+
+type Props = BaseProps;
 
 export const CourseProductRelationFormSchema = Yup.object().shape({
   product: Yup.mixed<Product>().required().nullable(),
+  course: Yup.mixed<Course>().required().nullable(),
   organizations: Yup.array().required(),
 });
 
 export function CourseProductRelationForm({
-  relation,
+  defaultProduct,
+  defaultCourse,
+  organizations,
   onSubmit,
+  productId,
   courseId,
 }: Props) {
   const intl = useIntl();
 
   const methods = useForm<CourseProductRelationFormValues>({
-    resolver: yupResolver(CourseProductRelationFormSchema),
+    resolver: yupResolver(CourseProductRelationFormSchema) as any,
     defaultValues: {
-      product: relation?.product ?? null,
-      organizations: relation?.organizations ?? [],
+      product: defaultProduct ?? null,
+      course: defaultCourse ?? null,
+      organizations: organizations ?? [],
     },
   });
 
@@ -76,25 +99,45 @@ export function CourseProductRelationForm({
       methods={methods}
       id="course-relation-to-products-form"
       onSubmit={methods.handleSubmit((values) => {
-        const payload: DTOCourseRelationToProduct = {
-          product_id: values.product!.id,
-          course_id: courseId,
-          organization_ids: values.organizations.map((org) => org.id),
-        };
-        onSubmit?.(payload, values);
+        let payload: DTOCourseProductRelation;
+
+        if (courseId) {
+          payload = {
+            product_id: values.product!.id,
+            course_id: courseId,
+            organization_ids: values.organizations.map((org) => org.id),
+          };
+        } else if (productId) {
+          payload = {
+            product_id: productId,
+            course_id: values.course!.id,
+            organization_ids: values.organizations.map((org) => org.id),
+          };
+        }
+        onSubmit?.(payload!, values);
       })}
     >
       <Grid container spacing={2}>
         <Grid xs={12}>
           <Typography variant="subtitle2">
-            <FormattedMessage {...messages.productLabel} />
+            <FormattedMessage
+              {...(productId ? messages.courseLabel : messages.productLabel)}
+            />
           </Typography>
         </Grid>
         <Grid xs={12}>
-          <ProductSearch
-            name="product"
-            label={intl.formatMessage(messages.chooseProduct)}
-          />
+          {courseId && (
+            <ProductSearch
+              name="product"
+              label={intl.formatMessage(messages.chooseProduct)}
+            />
+          )}
+          {productId && (
+            <CourseSearch
+              name="course"
+              label={intl.formatMessage(messages.chooseCourse)}
+            />
+          )}
         </Grid>
         <Grid xs={12}>
           <Typography variant="subtitle2">

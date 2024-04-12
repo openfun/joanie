@@ -13,7 +13,7 @@ import { CourseProductRelation } from "@/services/api/models/Relations";
 import { CourseProductRelationDummyRow } from "@/components/templates/courses/form/sections/product-relation/CourseProductRelationDummyRow";
 import { AlertModal } from "@/components/presentational/modal/AlertModal";
 import { CustomList } from "@/components/presentational/list/CustomList";
-import { useCourseProductRelationList } from "@/components/templates/courses/form/sections/product-relation/useCourseProductRelationList";
+import { useCourseProductRelationList } from "@/components/templates/relations/course-product-relation/useCourseProductRelationList";
 
 export enum CourseProductRelationSource {
   PRODUCT = "product",

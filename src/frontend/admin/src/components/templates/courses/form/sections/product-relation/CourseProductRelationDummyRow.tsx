@@ -15,12 +15,11 @@ export function CourseProductRelationDummyRow({ relation, source }: Props) {
       : relation.course!.title;
   };
 
-export function CourseProductRelationDummyRow({ relation }: Props) {
   return (
     <DefaultRow
       loading={true}
-      key={relation.product.title}
-      mainTitle={relation.product.title}
+      key={getTitle()}
+      mainTitle={getTitle()}
       enableEdit={false}
       enableDelete={false}
       subTitle={relation.organizations.map((org) => org.title).join(",")}

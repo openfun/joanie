@@ -15,6 +15,7 @@ and this project adheres to
 - Add enrollments pages
 - Addition of clickable columns value in the different lists
 - Add admin page to decrypt additional data sent to Sentry
+- Allow to link a syllabus inside the product detail view
 
 ### Changed
 
@@ -35,7 +36,7 @@ and this project adheres to
 
 - Ignore conflicts when creating batch of enrollments
 - Fix translation content logic
-
+ 
 ## [2.0.0] - 2024-04-10
 
 ### Added

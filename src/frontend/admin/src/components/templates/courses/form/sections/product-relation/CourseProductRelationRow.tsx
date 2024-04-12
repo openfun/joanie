@@ -84,12 +84,10 @@ type EditOrderGroupState = {
 
 type Props = {
   loading?: boolean;
-  relation: CourseRelationToProduct;
-  onClickEdit: (relation: CourseRelationToProduct) => void;
-  onClickDelete: (relation: CourseRelationToProduct) => void;
   relation: CourseProductRelation;
   onClickEdit: (relation: CourseProductRelation) => void;
   onClickDelete: (relation: CourseProductRelation) => void;
+  source: CourseProductRelationSource;
   invalidateCourse: () => void;
 };
 
@@ -97,6 +95,7 @@ export function CourseProductRelationRow({
   relation,
   onClickEdit,
   onClickDelete,
+  source,
 }: Props) {
   const intl = useIntl();
   const copyToClipboard = useCopyToClipboard();
@@ -207,16 +206,34 @@ export function CourseProductRelationRow({
     orderGroupListMethods.set(relation.order_groups);
   }, [relation]);
 
+  const getMainTitle = (): ReactNode => {
+    if (source === CourseProductRelationSource.PRODUCT) {
+      return (
+        <CustomLink href={PATH_ADMIN.courses.edit(relation.course!.id)}>
+          {relation.course!.title}
+        </CustomLink>
+      );
+    }
+    return (
+      <CustomLink href={PATH_ADMIN.products.edit(relation.product!.id)}>
+        {relation.product!.title}
+      </CustomLink>
+    );
+  };
+
+  const getTitle = (): string => {
+    return source === CourseProductRelationSource.COURSE
+      ? relation.product!.title
+      : relation.course!.title;
+  };
+
   return (
     <>
       <DefaultRow
         loading={courseProductRelationQuery.states.updating}
-        key={relation.product.title}
-        mainTitle={
-          <CustomLink href={PATH_ADMIN.products.edit(relation.product.id)}>
-            {relation.product.title}
-          </CustomLink>
-        }
+        key={getTitle()}
+        mainTitle={getMainTitle()}
+        subTitle={relation.organizations.map((org) => org.title).join(",")}
         enableEdit={canEdit}
         enableDelete={canEdit}
         disableDeleteMessage={disabledActionsMessage}
@@ -235,7 +252,6 @@ export function CourseProductRelationRow({
         disableEditMessage={disabledActionsMessage}
         onEdit={() => onClickEdit(relation)}
         onDelete={() => onClickDelete(relation)}
-        subTitle={relation.organizations.map((org) => org.title).join(",")}
       >
         <Stack gap={2}>
           {orderGroupList.map((orderGroup, orderIndex) => {

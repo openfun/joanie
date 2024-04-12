@@ -99,17 +99,16 @@ export function ProductForm({ product, fromProduct, afterSubmit }: Props) {
           </SimpleCard>
         ),
       },
-      {
+    ];
+
+    if (product) {
+      result.push({
         label: intl.formatMessage(messages.syllabusTabTitle),
         show: !!product,
         tabInfo: intl.formatMessage(messages.linkedCourseTabInfo),
-        component: (
-          <ProductFormCourseProductRelations
-            relations={product?.course_relations ?? []}
-          />
-        ),
-      },
-    ];
+        component: <ProductFormCourseProductRelations product={product!} />,
+      });
+    }
     return result;
   }, [product, productType, formSteps]);
 
