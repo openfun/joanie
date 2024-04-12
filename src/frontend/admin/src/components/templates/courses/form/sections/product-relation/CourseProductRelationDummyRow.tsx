@@ -1,10 +1,19 @@
 import * as React from "react";
 import { DefaultRow } from "@/components/presentational/list/DefaultRow";
-import { CourseRelationToProductDummy } from "@/services/api/models/Relations";
+import { CourseProductRelationDummy } from "@/services/api/models/Relations";
+import { CourseProductRelationSource } from "@/components/templates/relations/course-product-relation/CourseProductRelationList";
 
 type Props = {
-  relation: CourseRelationToProductDummy;
+  source: CourseProductRelationSource;
+  relation: CourseProductRelationDummy;
 };
+
+export function CourseProductRelationDummyRow({ relation, source }: Props) {
+  const getTitle = (): string => {
+    return source === CourseProductRelationSource.COURSE
+      ? relation.product!.title
+      : relation.course!.title;
+  };
 
 export function CourseProductRelationDummyRow({ relation }: Props) {
   return (

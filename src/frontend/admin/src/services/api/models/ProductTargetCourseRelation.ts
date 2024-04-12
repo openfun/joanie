@@ -8,7 +8,7 @@ import { CourseRunFactory } from "@/services/factories/courses-runs";
 export type ProductTargetCourseRelation = {
   id: string;
   course: Course;
-  graded?: boolean;
+  is_graded?: boolean;
   course_runs: CourseRun[];
   position?: number;
 };
@@ -16,7 +16,7 @@ export type ProductTargetCourseRelation = {
 export type DTOProductTargetCourseRelation = {
   id?: string;
   course: string;
-  graded?: boolean;
+  is_graded?: boolean;
   course_runs?: string[];
   position?: number;
 };
@@ -39,13 +39,14 @@ export type ProductTargetCourseRelationFormValues = {
   course: Course;
   course_runs?: CourseRun[];
   enable_course_runs?: boolean;
+  is_graded: boolean;
 };
 
 const buildProductTargetCourseRelation = (): ProductTargetCourseRelation => {
   return {
     id: faker.string.uuid(),
     course: CourseFactory(),
-    graded: true,
+    is_graded: true,
     course_runs: CourseRunFactory(randomNumber(2)),
   };
 };

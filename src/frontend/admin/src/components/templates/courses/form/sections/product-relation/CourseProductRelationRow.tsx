@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useEffect, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import Stack from "@mui/material/Stack";
 import Button from "@mui/material/Button";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
@@ -12,7 +12,7 @@ import {
   OrderGroupDummy,
 } from "@/services/api/models/OrderGroup";
 import { DefaultRow } from "@/components/presentational/list/DefaultRow";
-import { CourseRelationToProduct } from "@/services/api/models/Relations";
+import { CourseProductRelation } from "@/services/api/models/Relations";
 import { useModal } from "@/components/presentational/modal/useModal";
 import { CustomModal } from "@/components/presentational/modal/Modal";
 import { OrderGroupForm } from "@/components/templates/courses/form/sections/product-relation/OrderGroupForm";
@@ -26,6 +26,7 @@ import { PATH_ADMIN } from "@/utils/routes/path";
 import { MenuPopover } from "@/components/presentational/menu-popover/MenuPopover";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { commonTranslations } from "@/translations/common/commonTranslations";
+import { CourseProductRelationSource } from "@/components/templates/relations/course-product-relation/CourseProductRelationList";
 
 const messages = defineMessages({
   mainTitleOrderGroup: {
@@ -86,6 +87,9 @@ type Props = {
   relation: CourseRelationToProduct;
   onClickEdit: (relation: CourseRelationToProduct) => void;
   onClickDelete: (relation: CourseRelationToProduct) => void;
+  relation: CourseProductRelation;
+  onClickEdit: (relation: CourseProductRelation) => void;
+  onClickDelete: (relation: CourseProductRelation) => void;
   invalidateCourse: () => void;
 };
 

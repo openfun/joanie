@@ -3,7 +3,7 @@ import {
   DTOProductTargetCourseRelation,
   ProductTargetCourseRelation,
 } from "./ProductTargetCourseRelation";
-import { ProductRelationToCourse } from "./Relations";
+import { CourseProductRelation } from "./Relations";
 import { Nullable, Optional, ToFormValues } from "@/types/utils";
 import { ProductFormMainValues } from "@/components/templates/products/form/sections/main/ProductFormMain";
 import { ContractDefinition } from "@/services/api/models/ContractDefinition";
@@ -22,7 +22,7 @@ export type BaseProduct = {
 export type Product = BaseProduct & {
   target_courses?: ProductTargetCourseRelation[];
   certificate_definition?: CertificateDefinition;
-  course_relations?: ProductRelationToCourse[];
+  course_relations?: CourseProductRelation[];
   contract_definition?: ContractDefinition;
 };
 
@@ -85,7 +85,7 @@ export const transformProductTargetCourseRelationToDTO = (
   return {
     ...(target_course.id && { id: target_course.id }),
     course: target_course.course?.id,
-    graded: target_course.graded ?? false,
+    is_graded: target_course.is_graded ?? false,
     position: target_course.position ?? 0,
     course_runs: courseRuns ?? [],
   };

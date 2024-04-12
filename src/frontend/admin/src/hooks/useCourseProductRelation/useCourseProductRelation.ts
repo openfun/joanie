@@ -8,7 +8,7 @@ import {
   UseResourcesProps,
 } from "@/hooks/useResources";
 import { CourseProductRelationRepository } from "@/services/repositories/course-product-relation/CourseProductRelationRepository";
-import { CourseRelationToProduct } from "@/services/api/models/Relations";
+import { CourseProductRelation } from "@/services/api/models/Relations";
 import { DTOOrderGroup } from "@/services/api/models/OrderGroup";
 
 const messages = defineMessages({
@@ -73,7 +73,7 @@ const messages = defineMessages({
  * Joanie Api hook to retrieve/create/update/delete course product relations
  * owned by the authenticated user.
  */
-const props: UseResourcesProps<CourseRelationToProduct, ResourcesQuery> = {
+const props: UseResourcesProps<CourseProductRelation, ResourcesQuery> = {
   queryKey: ["course-product-relation"],
   apiInterface: () => ({
     get: async (filters) => {
@@ -98,7 +98,7 @@ const props: UseResourcesProps<CourseRelationToProduct, ResourcesQuery> = {
 
 export const useCourseProductRelations = (
   filters?: ResourcesQuery,
-  queryOptions?: QueryOptions<CourseRelationToProduct>,
+  queryOptions?: QueryOptions<CourseProductRelation>,
 ) => {
   const intl = useIntl();
   const custom = useResourcesCustom({ ...props, filters, queryOptions });

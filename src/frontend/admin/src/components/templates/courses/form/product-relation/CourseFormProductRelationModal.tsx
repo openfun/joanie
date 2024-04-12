@@ -6,8 +6,8 @@ import {
   CustomModalProps,
 } from "@/components/presentational/modal/Modal";
 import {
-  CourseRelationToProduct,
-  DTOCourseRelationToProduct,
+  CourseProductRelation,
+  DTOCourseProductRelation,
 } from "@/services/api/models/Relations";
 import {
   CourseProductRelationForm,

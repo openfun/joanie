@@ -7,10 +7,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 import { RHFProvider } from "@/components/presentational/hook-form/RHFProvider";
-import {
-  CourseRelationToProduct,
-  DTOCourseRelationToProduct,
-} from "@/services/api/models/Relations";
+import { DTOCourseProductRelation } from "@/services/api/models/Relations";
 import { Organization } from "@/services/api/models/Organization";
 import { DndDefaultRow } from "@/components/presentational/dnd/DndDefaultRow";
 import { ProductSearch } from "@/components/templates/products/inputs/search/ProductSearch";
@@ -43,7 +40,7 @@ export interface CourseProductRelationFormValues {
 interface Props {
   courseId: string;
   onSubmit?: (
-    payload: DTOCourseRelationToProduct,
+    payload: DTOCourseProductRelation,
     formValues: CourseProductRelationFormValues,
   ) => void;
   relation?: CourseRelationToProduct;

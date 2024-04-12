@@ -2,57 +2,58 @@ import { faker } from "@faker-js/faker";
 import { Organization } from "./Organization";
 import { Course } from "./Course";
 import { Product } from "@/services/api/models/Product";
-import { CourseFactory } from "@/services/factories/courses";
+import { CourseFactoryLight } from "@/services/factories/courses";
 import { OrganizationFactory } from "@/services/factories/organizations";
 import { randomNumber } from "@/utils/numbers";
 import { OrderGroup } from "@/services/api/models/OrderGroup";
+import { ProductFactoryLight } from "@/services/factories/product";
+import { Nullable } from "@/types/utils";
+import { OrderGroupFactory } from "@/services/factories/order-group";
 
-export type CourseRelationToProduct = {
+export type CourseProductRelation = {
   can_edit: boolean;
   id: string;
-  product: Product;
   organizations: Organization[];
   order_groups: OrderGroup[];
   uri?: string;
+  product: Product;
+  course: Course;
 };
 
-export type CourseRelationToProductDummy = Omit<
-  CourseRelationToProduct,
-  "id"
+export type CourseProductRelationDummy = Omit<
+  CourseProductRelation,
+  "id" | "product" | "course"
 > & {
   dummyId?: string;
+  product?: Nullable<Product>;
+  course?: Nullable<Course>;
 };
 
-export type DTOCourseRelationToProduct = {
+export type DTOCourseProductRelation = {
   product_id: string;
   course_id: string;
   organization_ids: string[];
 };
 
-export type ProductRelationToCourse = {
-  id?: string;
-  course: Course;
-  graded?: boolean;
-  organizations: Organization[];
-  uri?: string;
-};
-
-const buildProductRelationToCourse = (): ProductRelationToCourse => {
+const buildCourseProductRelation = (): CourseProductRelation => {
   return {
     id: faker.string.uuid(),
-    course: CourseFactory(),
+    can_edit: faker.datatype.boolean(),
+    order_groups: OrderGroupFactory(2),
+    course: CourseFactoryLight(),
+    product: ProductFactoryLight(),
     organizations: OrganizationFactory(randomNumber(4)),
     uri: faker.internet.url(),
   };
 };
 
-export function ProductRelationToCourseFactory(): ProductRelationToCourse;
-export function ProductRelationToCourseFactory(
+export function CourseProductRelationFactory(): CourseProductRelation;
+export function CourseProductRelationFactory(
   count: number,
-): ProductRelationToCourse[];
-export function ProductRelationToCourseFactory(
+): CourseProductRelation[];
+export function CourseProductRelationFactory(
   count?: number,
-): ProductRelationToCourse | ProductRelationToCourse[] {
-  if (count) return [...Array(count)].map(buildProductRelationToCourse);
-  return buildProductRelationToCourse();
+): CourseProductRelation | CourseProductRelation[] {
+  if (count) return [...Array(count)].map(buildCourseProductRelation);
+  return buildCourseProductRelation();
 }

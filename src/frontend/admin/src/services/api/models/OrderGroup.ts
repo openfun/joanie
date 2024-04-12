@@ -1,4 +1,4 @@
-import { CourseRelationToProduct } from "@/services/api/models/Relations";
+import { CourseProductRelation } from "@/services/api/models/Relations";
 
 export type OrderGroup = {
   id: string;
@@ -15,5 +15,5 @@ export type OrderGroupDummy = Omit<OrderGroup, "id"> & {
 export type DTOOrderGroup = {
   nb_seats: OrderGroup["nb_seats"];
   is_active: OrderGroup["is_active"];
-  course_product_relation: CourseRelationToProduct["id"];
+  course_product_relation: CourseProductRelation["id"];
 };
