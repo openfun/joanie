@@ -5,6 +5,8 @@ import { CourseFactory } from "@/services/factories/courses";
 import { randomNumber } from "@/utils/numbers";
 import { CourseRunFactory } from "@/services/factories/courses-runs";
 
+export const DEFAULT_IS_GRADED_VALUE = true;
+
 export type ProductTargetCourseRelation = {
   id: string;
   course: Course;

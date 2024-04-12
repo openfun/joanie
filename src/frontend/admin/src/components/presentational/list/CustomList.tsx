@@ -15,6 +15,7 @@ export interface ListDummyRow {
 type Props<Row extends ListRow, DummyRow extends ListDummyRow> = {
   rows: Row[];
   dummyRows?: DummyRow[];
+  dummyRowsPosition?: "top" | "bottom";
   renderRow: (row: Row, index: number) => ReactNode;
   renderDummyRow?: (dummyRow: DummyRow, index: number) => ReactNode;
   emptyListMessage: string;
@@ -25,17 +26,19 @@ export function CustomList<Row extends ListRow, DummyRow extends ListDummyRow>({
   dummyRows = [],
   renderDummyRow,
   emptyListMessage,
+  dummyRowsPosition = "bottom",
 }: Props<Row, DummyRow>) {
   return (
     <Stack padding={3} gap={2}>
-      {rows.map((row, index) => {
-        return renderRow(row, index);
-      })}
+      {dummyRowsPosition === "top" &&
+        renderDummyRow &&
+        dummyRows.map(renderDummyRow)}
 
-      {renderDummyRow &&
-        dummyRows.map((row, index) => {
-          return renderDummyRow(row, index);
-        })}
+      {rows.map(renderRow)}
+
+      {dummyRowsPosition === "bottom" &&
+        renderDummyRow &&
+        dummyRows.map(renderDummyRow)}
 
       {rows.length === 0 && dummyRows.length === 0 && (
         <Box display="flex" alignItems="center" justifyContent="center">
