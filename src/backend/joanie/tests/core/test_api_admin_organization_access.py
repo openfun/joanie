@@ -4,6 +4,7 @@ Test suite for OrganizationAccess Admin API.
 
 import uuid
 from http import HTTPStatus
+from unittest import mock
 
 from django.test import TestCase
 
@@ -352,3 +353,504 @@ class OrganizationAccessAdminApiTest(TestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
         self.assertEqual(organization.accesses.count(), 0)
+
+    @mock.patch("joanie.core.api.admin.update_organization_signatories_contracts_task")
+    def test_admin_api_organization_accesses_create_triggers_update_signatories_for_organization(
+        self, mock_update_organization_signatories
+    ):
+        """
+        When the super admin creates a new organization access with the 'owner' role,
+        it should trigger the update of signatories.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        organization = factories.OrganizationFactory()
+        user = factories.UserFactory()
+
+        response = self.client.post(
+            f"/api/v1.0/admin/organizations/{organization.id}/accesses/",
+            content_type="application/json",
+            data={
+                "user_id": str(user.id),
+                "role": enums.OWNER,
+            },
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertEqual(organization.accesses.count(), 1)
+        self.assertTrue(mock_update_organization_signatories.delay.called)
+        mock_update_organization_signatories.delay.assert_called_with(
+            organization_id=organization.id
+        )
+        mock_update_organization_signatories.delay.reset_mock()
+
+        member_user = factories.UserFactory()
+        response = self.client.post(
+            f"/api/v1.0/admin/organizations/{organization.id}/accesses/",
+            content_type="application/json",
+            data={
+                "user_id": str(member_user.id),
+                "role": enums.MEMBER,
+            },
+        )
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertEqual(organization.accesses.count(), 2)
+        self.assertEqual(organization.accesses.filter(role=enums.OWNER).count(), 1)
+        self.assertFalse(mock_update_organization_signatories.delay.called)
+        mock_update_organization_signatories.delay.reset_mock()
+
+        admin_user = factories.UserFactory()
+        response = self.client.post(
+            f"/api/v1.0/admin/organizations/{organization.id}/accesses/",
+            content_type="application/json",
+            data={
+                "user_id": str(admin_user.id),
+                "role": enums.ADMIN,
+            },
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertEqual(organization.accesses.count(), 3)
+        self.assertEqual(organization.accesses.filter(role=enums.OWNER).count(), 1)
+        self.assertFalse(mock_update_organization_signatories.delay.called)
+
+    @mock.patch("joanie.core.api.admin.update_organization_signatories_contracts_task")
+    def test_admin_api_organization_accesses_update_role_to_owner_trigger_update_signatories(
+        self, mock_update_organization_signatories
+    ):
+        """
+        When the super admin updates an existing organization access to the 'owner' role,
+        it should trigger the update of signatories.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        organization = factories.OrganizationFactory()
+        organization_access = factories.UserOrganizationAccessFactory(
+            organization=organization, user=factories.UserFactory(), role=enums.MEMBER
+        )
+
+        response = self.client.put(
+            f"/api/v1.0/admin/organizations/{organization.id}/accesses/{organization_access.id}/",
+            content_type="application/json",
+            data={
+                "user_id": str(organization_access.user.id),
+                "role": enums.OWNER,
+            },
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(organization.accesses.count(), 1)
+        self.assertEqual(organization.accesses.filter(role=enums.OWNER).count(), 1)
+        self.assertTrue(mock_update_organization_signatories.delay.called)
+        mock_update_organization_signatories.delay.assert_called_with(
+            organization_id=organization.id
+        )
+        mock_update_organization_signatories.delay.reset_mock()
+
+        organization_access_2 = factories.UserOrganizationAccessFactory(
+            organization=organization, user=factories.UserFactory(), role=enums.ADMIN
+        )
+        response = self.client.put(
+            f"/api/v1.0/admin/organizations/{organization.id}/accesses/{organization_access_2.id}/",
+            content_type="application/json",
+            data={
+                "user_id": str(organization_access_2.user.id),
+                "role": enums.OWNER,
+            },
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(organization.accesses.count(), 2)
+        self.assertEqual(organization.accesses.filter(role=enums.OWNER).count(), 2)
+        self.assertTrue(mock_update_organization_signatories.delay.called)
+        mock_update_organization_signatories.delay.assert_called_with(
+            organization_id=organization.id
+        )
+
+    @mock.patch("joanie.core.api.admin.update_organization_signatories_contracts_task")
+    def test_admin_api_organization_accesses_update_role_from_owner_trigger_update_signatories(
+        self, mock_update_organization_signatories
+    ):
+        """
+        When the super admin updates an existing organization access from the 'owner' role
+        to 'member' or 'admin', it should trigger the update of signatories.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(
+            organization=organization, user=factories.UserFactory(), role=enums.OWNER
+        )
+        access_1 = factories.UserOrganizationAccessFactory(
+            organization=organization, user=factories.UserFactory(), role=enums.OWNER
+        )
+        access_2 = factories.UserOrganizationAccessFactory(
+            organization=organization, user=factories.UserFactory(), role=enums.OWNER
+        )
+
+        response = self.client.put(
+            f"/api/v1.0/admin/organizations/{organization.id}/accesses/{access_1.id}/",
+            content_type="application/json",
+            data={
+                "user_id": str(access_1.user.id),
+                "role": enums.MEMBER,
+            },
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(organization.accesses.count(), 3)
+        self.assertEqual(organization.accesses.filter(role=enums.OWNER).count(), 2)
+        self.assertEqual(organization.accesses.filter(role=enums.MEMBER).count(), 1)
+        self.assertTrue(mock_update_organization_signatories.delay.called)
+        mock_update_organization_signatories.delay.assert_called_with(
+            organization_id=organization.id
+        )
+        mock_update_organization_signatories.delay.reset_mock()
+
+        response = self.client.put(
+            f"/api/v1.0/admin/organizations/{organization.id}/accesses/{access_2.id}/",
+            content_type="application/json",
+            data={
+                "user_id": str(access_2.user.id),
+                "role": enums.ADMIN,
+            },
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(organization.accesses.count(), 3)
+        self.assertEqual(organization.accesses.filter(role=enums.OWNER).count(), 1)
+        self.assertEqual(organization.accesses.filter(role=enums.ADMIN).count(), 1)
+        self.assertTrue(mock_update_organization_signatories.delay.called)
+        mock_update_organization_signatories.delay.assert_called_with(
+            organization_id=organization.id
+        )
+
+    @mock.patch("joanie.core.api.admin.update_organization_signatories_contracts_task")
+    def test_admin_api_organization_accesses_role_member_or_admin_should_not_trigger_signatories(
+        self, mock_update_organization_signatories
+    ):
+        """
+        When the super admin updates an existing organization access where the role is not 'owner'
+        at its origin, it should not trigger the update of signatories.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        organization = factories.OrganizationFactory()
+        access = factories.UserOrganizationAccessFactory(
+            organization=organization, user=factories.UserFactory(), role=enums.ADMIN
+        )
+
+        response = self.client.put(
+            f"/api/v1.0/admin/organizations/{organization.id}/accesses/{access.id}/",
+            content_type="application/json",
+            data={
+                "user_id": str(access.user.id),
+                "role": enums.MEMBER,
+            },
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(organization.accesses.filter(role=enums.MEMBER).count(), 1)
+        self.assertFalse(mock_update_organization_signatories.delay.called)
+        mock_update_organization_signatories.delay.reset_mock()
+
+        response = self.client.put(
+            f"/api/v1.0/admin/organizations/{organization.id}/accesses/{access.id}/",
+            content_type="application/json",
+            data={
+                "user_id": str(access.user.id),
+                "role": enums.ADMIN,
+            },
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertFalse(mock_update_organization_signatories.delay.called)
+
+    @mock.patch("joanie.core.api.admin.update_organization_signatories_contracts_task")
+    def test_admin_api_organization_accesses_partially_update_to_owner_trigger_update_signatories(
+        self, mock_update_organization_signatories
+    ):
+        """
+        When the super admin partially updates an existing organization access to the 'owner' role,
+        it should trigger the update of signatories.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        organization = factories.OrganizationFactory()
+        organization_access = factories.UserOrganizationAccessFactory(
+            organization=organization, user=factories.UserFactory(), role=enums.MEMBER
+        )
+
+        response = self.client.patch(
+            f"/api/v1.0/admin/organizations/{organization.id}/accesses/{organization_access.id}/",
+            content_type="application/json",
+            data={
+                "role": enums.OWNER,
+            },
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(organization.accesses.count(), 1)
+        self.assertEqual(organization.accesses.filter(role=enums.OWNER).count(), 1)
+        self.assertTrue(mock_update_organization_signatories.delay.called)
+        mock_update_organization_signatories.delay.assert_called_with(
+            organization_id=organization.id
+        )
+        mock_update_organization_signatories.delay.reset_mock()
+
+        organization_access_2 = factories.UserOrganizationAccessFactory(
+            organization=organization, user=factories.UserFactory(), role=enums.ADMIN
+        )
+        response = self.client.patch(
+            f"/api/v1.0/admin/organizations/{organization.id}/accesses/{organization_access_2.id}/",
+            content_type="application/json",
+            data={
+                "role": enums.OWNER,
+            },
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(organization.accesses.count(), 2)
+        self.assertEqual(organization.accesses.filter(role=enums.OWNER).count(), 2)
+        self.assertTrue(mock_update_organization_signatories.delay.called)
+        mock_update_organization_signatories.delay.assert_called_with(
+            organization_id=organization.id
+        )
+
+    @mock.patch("joanie.core.api.admin.update_organization_signatories_contracts_task")
+    def test_admin_api_organization_accesses_partial_update_from_owner_trigger_update_signatories(
+        self, mock_update_organization_signatories
+    ):
+        """
+        When the super admin partially updates an existing organization access from the
+        'owner' role to 'member' or 'admin', it should trigger the update of signatories.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(
+            organization=organization, user=factories.UserFactory(), role=enums.OWNER
+        )
+        access_1 = factories.UserOrganizationAccessFactory(
+            organization=organization, user=factories.UserFactory(), role=enums.OWNER
+        )
+        access_2 = factories.UserOrganizationAccessFactory(
+            organization=organization, user=factories.UserFactory(), role=enums.OWNER
+        )
+
+        response = self.client.patch(
+            f"/api/v1.0/admin/organizations/{organization.id}/accesses/{access_1.id}/",
+            content_type="application/json",
+            data={
+                "role": enums.MEMBER,
+            },
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(organization.accesses.count(), 3)
+        self.assertEqual(organization.accesses.filter(role=enums.OWNER).count(), 2)
+        self.assertEqual(organization.accesses.filter(role=enums.MEMBER).count(), 1)
+        self.assertTrue(mock_update_organization_signatories.delay.called)
+        mock_update_organization_signatories.delay.assert_called_with(
+            organization_id=organization.id
+        )
+        mock_update_organization_signatories.delay.reset_mock()
+
+        response = self.client.patch(
+            f"/api/v1.0/admin/organizations/{organization.id}/accesses/{access_2.id}/",
+            content_type="application/json",
+            data={
+                "role": enums.ADMIN,
+            },
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(organization.accesses.count(), 3)
+        self.assertEqual(organization.accesses.filter(role=enums.OWNER).count(), 1)
+        self.assertEqual(organization.accesses.filter(role=enums.ADMIN).count(), 1)
+        self.assertEqual(organization.accesses.filter(role=enums.MEMBER).count(), 1)
+        self.assertTrue(mock_update_organization_signatories.delay.called)
+        mock_update_organization_signatories.delay.assert_called_with(
+            organization_id=organization.id
+        )
+
+    @mock.patch("joanie.core.api.admin.update_organization_signatories_contracts_task")
+    def test_admin_api_organization_accesses_partial_member_or_admin_not_trigger_signatories(
+        self, mock_update_organization_signatories
+    ):
+        """
+        When the super admin partially updates an existing organization access where
+        the role is not 'owner' at its origin, it should not trigger the update of signatories.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        organization = factories.OrganizationFactory()
+        access = factories.UserOrganizationAccessFactory(
+            organization=organization, user=factories.UserFactory(), role=enums.ADMIN
+        )
+
+        response = self.client.patch(
+            f"/api/v1.0/admin/organizations/{organization.id}/accesses/{access.id}/",
+            content_type="application/json",
+            data={
+                "role": enums.MEMBER,
+            },
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(organization.accesses.filter(role=enums.MEMBER).count(), 1)
+        self.assertFalse(mock_update_organization_signatories.delay.called)
+        mock_update_organization_signatories.delay.reset_mock()
+
+        response = self.client.patch(
+            f"/api/v1.0/admin/organizations/{organization.id}/accesses/{access.id}/",
+            content_type="application/json",
+            data={
+                "role": enums.ADMIN,
+            },
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertFalse(mock_update_organization_signatories.delay.called)
+
+    @mock.patch("joanie.core.api.admin.update_organization_signatories_contracts_task")
+    def test_admin_api_organization_accesses_delete_organization_access_trigger_update_signatories(
+        self, mock_update_organization_signatories
+    ):
+        """
+        When the super admin deletes an existing organization access where the role is 'owner',
+        it should trigger the update of signatories. The update should happen only when the role
+        was 'owner'.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        organization = factories.OrganizationFactory()
+        # Always keep 1 owner access for the organization
+        factories.UserOrganizationAccessFactory(
+            organization=organization, user=factories.UserFactory(), role=enums.OWNER
+        )
+        access_1 = factories.UserOrganizationAccessFactory(
+            organization=organization, user=factories.UserFactory(), role=enums.OWNER
+        )
+        access_2 = factories.UserOrganizationAccessFactory(
+            organization=organization, user=factories.UserFactory(), role=enums.MEMBER
+        )
+        access_3 = factories.UserOrganizationAccessFactory(
+            organization=organization, user=factories.UserFactory(), role=enums.ADMIN
+        )
+
+        response = self.client.delete(
+            f"/api/v1.0/admin/organizations/{organization.id}/accesses/{access_1.id}/",
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertEqual(organization.accesses.filter(role=enums.OWNER).count(), 1)
+        self.assertTrue(mock_update_organization_signatories.delay.called)
+        mock_update_organization_signatories.delay.assert_called_with(
+            organization_id=organization.id
+        )
+        mock_update_organization_signatories.delay.reset_mock()
+
+        response = self.client.delete(
+            f"/api/v1.0/admin/organizations/{organization.id}/accesses/{access_2.id}/",
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertEqual(organization.accesses.filter(role=enums.MEMBER).count(), 0)
+        self.assertFalse(mock_update_organization_signatories.delay.called)
+        mock_update_organization_signatories.delay.reset_mock()
+
+        response = self.client.delete(
+            f"/api/v1.0/admin/organizations/{organization.id}/accesses/{access_3.id}/",
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertEqual(organization.accesses.filter(role=enums.ADMIN).count(), 0)
+        self.assertFalse(mock_update_organization_signatories.delay.called)
+        mock_update_organization_signatories.delay.reset_mock()
+
+    @mock.patch("joanie.core.api.admin.update_organization_signatories_contracts_task")
+    def test_admin_api_organization_accesses_update_owner_with_wrong_role_should_not_update(
+        self, mock_update_organization_signatories
+    ):
+        """
+        When we request to update an organization access with a valid user and an invalid role,
+        it should be blocked and not trigger the update of contract signatories.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        organization = factories.OrganizationFactory()
+        access = factories.UserOrganizationAccessFactory(
+            organization=organization, user=factories.UserFactory(), role=enums.OWNER
+        )
+
+        response = self.client.put(
+            f"/api/v1.0/admin/organizations/{organization.id}/accesses/{access.id}/",
+            content_type="application/json",
+            data={
+                "user_id": str(access.user.id),
+                "role": "invalid_fake_role",
+            },
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(
+            response.json(), {"role": ['"invalid_fake_role" is not a valid choice.']}
+        )
+        self.assertFalse(mock_update_organization_signatories.delay.called)
+
+    @mock.patch("joanie.core.api.admin.update_organization_signatories_contracts_task")
+    def test_admin_api_organization_accesses_partial_owner_with_wrong_role_should_not_update(
+        self, mock_update_organization_signatories
+    ):
+        """
+        When we request to partially update an organization access with an invalid role, it should
+        be blocked and not trigger the update of contract signatories.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        organization = factories.OrganizationFactory()
+        access = factories.UserOrganizationAccessFactory(
+            organization=organization, user=factories.UserFactory(), role=enums.OWNER
+        )
+
+        response = self.client.patch(
+            f"/api/v1.0/admin/organizations/{organization.id}/accesses/{access.id}/",
+            content_type="application/json",
+            data={
+                "role": "invalid_fake_role",
+            },
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(
+            response.json(), {"role": ['"invalid_fake_role" is not a valid choice.']}
+        )
+        self.assertFalse(mock_update_organization_signatories.delay.called)
+
+    @mock.patch("joanie.core.api.admin.update_organization_signatories_contracts_task")
+    def test_admin_api_organization_accesses_delete_last_organization_owner_should_not_update(
+        self, mock_update_organization_signatories
+    ):
+        """
+        When we request to delete the last organization access with the 'owner' role, it should not
+        be allowed and it should not call the task to update the signatories for contracts.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        organization = factories.OrganizationFactory()
+        access = factories.UserOrganizationAccessFactory(
+            organization=organization, user=factories.UserFactory(), role=enums.OWNER
+        )
+
+        response = self.client.delete(
+            f"/api/v1.0/admin/organizations/{organization.id}/accesses/{access.id}/",
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertEqual(
+            response.json(),
+            {"detail": "An organization should keep at least one owner."},
+        )
+        self.assertFalse(mock_update_organization_signatories.delay.called)

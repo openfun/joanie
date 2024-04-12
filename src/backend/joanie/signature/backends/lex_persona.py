@@ -591,7 +591,8 @@ class LexPersonaBackend(BaseSignatureBackend):
                         order
                     ),
                     "requiredRecipients": 1,
-                    "validityPeriod": settings.JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS * 1000,
+                    "validityPeriod": settings.JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS
+                    * 1000,
                     "invitePeriod": None,
                     "maxInvites": 0,
                     "sendDownloadLink": True,
@@ -611,7 +612,8 @@ class LexPersonaBackend(BaseSignatureBackend):
                         order
                     ),
                     "requiredRecipients": 1,
-                    "validityPeriod": settings.JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS * 1000,
+                    "validityPeriod": settings.JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS
+                    * 1000,
                     "invitePeriod": None,
                     "maxInvites": 0,
                     "sendDownloadLink": True,

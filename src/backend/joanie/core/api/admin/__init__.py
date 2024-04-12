@@ -21,11 +21,14 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.response import Response
 from sentry_sdk import capture_exception
 
-from joanie.core import filters, models, serializers
+from joanie.core import enums, filters, models, serializers
 from joanie.core.api.base import NestedGenericViewSet, SerializerPerActionMixin
 from joanie.core.authentication import SessionAuthenticationWithAuthenticateHeader
 from joanie.core.exceptions import CertificateGenerationError
-from joanie.core.tasks import generate_certificates_task
+from joanie.core.tasks import (
+    generate_certificates_task,
+    update_organization_signatories_contracts_task,
+)
 from joanie.core.utils.course_product_relation import (
     get_generated_certificates,
     get_orders,
@@ -211,12 +214,14 @@ class OrganizationAccessViewSet(
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
-    viewsets.GenericViewSet,
+    NestedGenericViewSet,
 ):
     """
     Write only Organization Access ViewSet
     """
 
+    lookup_fields = ["organization_id", "pk"]
+    lookup_url_kwargs = ["organization_id", "pk"]
     authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_class = serializers.AdminOrganizationAccessSerializer
@@ -231,6 +236,58 @@ class OrganizationAccessViewSet(
         context = super().get_serializer_context()
         context["organization_id"] = self.kwargs["organization_id"]
         return context
+
+    def perform_create(self, serializer):
+        """
+        Creates organization access and updates the organization signatories
+        for ongoing signature procedures when the role is 'owner'.
+        """
+        instance = serializer.save()
+
+        if instance.role == enums.OWNER:
+            update_organization_signatories_contracts_task.delay(
+                organization_id=instance.organization_id
+            )
+
+    def perform_update(self, serializer):
+        """
+        Updates the organization access and may trigger adjustments to the organization's
+        signatories for ongoing signature procedures.
+        Such adjustments occur when there is a change in the instance user's role, specifically
+        when transitioning to or from the 'owner' role.
+        """
+        instance_role_before_update = serializer.instance.role
+        serializer.save()
+
+        if any(
+            role == enums.OWNER
+            for role in (instance_role_before_update, serializer.instance.role)
+        ):
+            try:
+                # ruff : noqa : BLE001
+                # pylint: disable=broad-exception-caught
+                update_organization_signatories_contracts_task.delay(
+                    organization_id=serializer.instance.organization_id
+                )
+            except Exception as error:
+                capture_exception(error)
+
+    def perform_destroy(self, instance):
+        """
+        Deletes organization access and update the signatories of the organization
+        when the deleted instance had the role 'owner'.
+        """
+        instance.delete()
+
+        if instance.role == enums.OWNER:
+            try:
+                # ruff : noqa : BLE001
+                # pylint: disable=broad-exception-caught
+                update_organization_signatories_contracts_task.delay(
+                    organization_id=instance.organization_id
+                )
+            except Exception as error:
+                capture_exception(error)
 
 
 class TargetCoursesViewSet(
