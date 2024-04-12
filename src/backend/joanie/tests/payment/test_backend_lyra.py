@@ -4,14 +4,21 @@
 import json
 from decimal import Decimal as D
 from os.path import dirname, join, realpath
+from unittest.mock import patch
+
+from django.test import override_settings
+from django.urls import reverse
 
 import responses
 from requests import HTTPError, RequestException
 from rest_framework.test import APIRequestFactory
 
 from joanie.core.factories import OrderFactory, ProductFactory, UserFactory
+from joanie.payment.backends.base import BasePaymentBackend
 from joanie.payment.backends.lyra import LyraBackend
+from joanie.payment.exceptions import ParseNotificationFailed, RegisterPaymentFailed
 from joanie.payment.factories import BillingAddressDictFactory
+from joanie.payment.models import CreditCard
 from joanie.tests.base import BaseLogMixinTestCase
 from joanie.tests.payment.base_payment import BasePaymentTestCase
 
@@ -317,3 +324,204 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         response = backend.create_payment(order, billing_address)
 
         self.assertEqual(response, json_response.get("answer").get("formToken"))
+
+    def test_payment_backend_lyra_handle_notification_unknown_resource(self):
+        """
+        When backend receives a notification for a unknown lyra resource,
+        a ParseNotificationFailed exception should be raised
+        """
+        backend = LyraBackend(self.configuration)
+
+        with self.open("lyra/requests/payment_accepted_no_store_card.json") as file:
+            json_request = json.loads(file.read())
+        json_request["kr-hash"] = "wrong_hash"
+
+        request = APIRequestFactory().post(
+            reverse("payment_webhook"), data=json_request, format="multipart"
+        )
+
+        with self.assertRaises(ParseNotificationFailed) as context:
+            backend.handle_notification(request)
+
+        self.assertEqual(str(context.exception), "Cannot parse notification.")
+
+    @patch("joanie.payment.backends.lyra.LyraBackend._check_hash")
+    def test_payment_backend_lyra_handle_notification_payment_unknown_order(
+        self, mock_check_hash
+    ):
+        """
+        When backend receives a payment notification, if it relies on an
+        unknown order, it should raises a RegisterPaymentFailed exception.
+        """
+        mock_check_hash.return_value = True
+        backend = LyraBackend(self.configuration)
+
+        with self.open("lyra/requests/payment_accepted_no_store_card.json") as file:
+            json_request = json.loads(file.read())
+
+        request = APIRequestFactory().post(
+            reverse("payment_webhook"), data=json_request, format="multipart"
+        )
+
+        with self.assertRaises(RegisterPaymentFailed) as context:
+            backend.handle_notification(request)
+
+        self.assertEqual(
+            str(context.exception),
+            "Payment b4a819d9e4224247b58ccc861321a94a relies on "
+            "a non-existing order (514070fe-c12c-48b8-97cf-5262708673a3).",
+        )
+
+    @patch.object(BasePaymentBackend, "_do_on_payment_failure")
+    def test_payment_backend_lyra_handle_notification_payment_failure(
+        self, mock_do_on_payment_failure
+    ):
+        """
+        When backend receives a payment notification which failed, the generic
+        method `_do_on_failure` should be called.
+        """
+        backend = LyraBackend(self.configuration)
+        owner = UserFactory(email="john.doe@acme.org")
+        product = ProductFactory(price=D("123.45"))
+        order = OrderFactory(
+            id="758c2570-a7af-4335-b091-340d0cc6e694", owner=owner, product=product
+        )
+
+        with self.open("lyra/requests/payment_refused.json") as file:
+            json_request = json.loads(file.read())
+
+        request = APIRequestFactory().post(
+            reverse("payment_webhook"), data=json_request, format="multipart"
+        )
+
+        backend.handle_notification(request)
+
+        mock_do_on_payment_failure.assert_called_once_with(order)
+
+    @patch.object(BasePaymentBackend, "_do_on_payment_success")
+    def test_payment_backend_lyra_handle_notification_payment(
+        self, mock_do_on_payment_success
+    ):
+        """
+        When backend receives a payment notification, the generic
+        method `_do_on_payment_success` should be called.
+        """
+        backend = LyraBackend(self.configuration)
+        owner = UserFactory(email="john.doe@acme.org")
+        product = ProductFactory(price=D("123.45"))
+        order = OrderFactory(
+            id="514070fe-c12c-48b8-97cf-5262708673a3", owner=owner, product=product
+        )
+
+        with self.open("lyra/requests/payment_accepted_no_store_card.json") as file:
+            json_request = json.loads(file.read())
+
+        with self.open(
+            "lyra/requests/payment_accepted_no_store_card_answer.json"
+        ) as file:
+            json_answer = json.loads(file.read())
+
+        request = APIRequestFactory().post(
+            reverse("payment_webhook"), data=json_request, format="multipart"
+        )
+
+        backend.handle_notification(request)
+
+        transaction_id = json_answer["transactions"][0]["uuid"]
+        billing_details = json_answer["customer"]["billingDetails"]
+        mock_do_on_payment_success.assert_called_once_with(
+            order=order,
+            payment={
+                "id": transaction_id,
+                "amount": D("123.45"),
+                "billing_address": {
+                    "address": billing_details["address"],
+                    "city": billing_details["city"],
+                    "country": billing_details["country"],
+                    "first_name": billing_details["firstName"],
+                    "last_name": billing_details["lastName"],
+                    "postcode": billing_details["zipCode"],
+                },
+            },
+        )
+
+    @override_settings(JOANIE_CATALOG_NAME="Test Catalog")
+    @override_settings(JOANIE_CATALOG_BASE_URL="https://richie.education")
+    def test_payment_backend_lyra_handle_notification_payment_mail(self):
+        """
+        When backend receives a payment success notification, success email is sent
+        """
+        backend = LyraBackend(self.configuration)
+        owner = UserFactory(email="john.doe@acme.org", language="en-us")
+        product = ProductFactory(price=D("123.45"))
+        order = OrderFactory(
+            id="514070fe-c12c-48b8-97cf-5262708673a3", owner=owner, product=product
+        )
+
+        with self.open("lyra/requests/payment_accepted_no_store_card.json") as file:
+            json_request = json.loads(file.read())
+
+        request = APIRequestFactory().post(
+            reverse("payment_webhook"), data=json_request, format="multipart"
+        )
+
+        backend.handle_notification(request)
+
+        # Email has been sent
+        self._check_order_validated_email_sent(
+            order.owner.email, order.owner.get_full_name(), order
+        )
+
+    @patch.object(BasePaymentBackend, "_do_on_payment_success")
+    def test_payment_backend_lyra_handle_notification_payment_register_card(
+        self, mock_do_on_payment_success
+    ):
+        """
+        When backend receives a payment notification, if user asks to save its
+        card, payment resource should contains a card resource with an id. In
+        this case, a credit card object should be created.
+        """
+        backend = LyraBackend(self.configuration)
+        owner = UserFactory(email="john.doe@acme.org")
+        product = ProductFactory(price=D("123.45"))
+        order = OrderFactory(
+            id="a7834082-a000-4de4-af6e-e09683c9a752", owner=owner, product=product
+        )
+
+        with self.open("lyra/requests/payment_accepted_store_card.json") as file:
+            json_request = json.loads(file.read())
+
+        with self.open("lyra/requests/payment_accepted_store_card_answer.json") as file:
+            json_answer = json.loads(file.read())
+
+        card_id = json_answer["transactions"][0]["paymentMethodToken"]
+
+        request = APIRequestFactory().post(
+            reverse("payment_webhook"), data=json_request, format="multipart"
+        )
+
+        # - Right now there is no credit card with token `card_00000`
+        self.assertEqual(CreditCard.objects.filter(token=card_id).count(), 0)
+
+        backend.handle_notification(request)
+
+        transaction_id = json_answer["transactions"][0]["uuid"]
+        billing_details = json_answer["customer"]["billingDetails"]
+        mock_do_on_payment_success.assert_called_once_with(
+            order=order,
+            payment={
+                "id": transaction_id,
+                "amount": D("123.45"),
+                "billing_address": {
+                    "address": billing_details["address"],
+                    "city": billing_details["city"],
+                    "country": billing_details["country"],
+                    "first_name": billing_details["firstName"],
+                    "last_name": billing_details["lastName"],
+                    "postcode": billing_details["zipCode"],
+                },
+            },
+        )
+
+        # - After payment notification has been handled, a credit card exists
+        self.assertEqual(CreditCard.objects.filter(token=card_id).count(), 1)
