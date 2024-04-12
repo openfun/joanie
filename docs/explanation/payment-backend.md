@@ -31,6 +31,11 @@ On the other hand, your payment backend has to implement 5 methods :
 - **`delete_credit_card(self, credit_card)`**
 - **`abort_payment(self, payment_id)`**
 
+If the payment backend (such as Lyra) supports zero-click payment, you can
+implement the `create_zero_click_payment` method.
+This method is called when the user has already saved its credit card and
+when a payment schedule exists for an order.
+
 ## How to
 
 ### Use payment module from local environment
@@ -91,6 +96,7 @@ You can find all payment backends at `src/backend/joanie/payment/backends`.
 Currently, Joanie supports :
 
 - [Payplug](https://www.payplug.com/)
+- [Lyra](https://www.lyra.com/)
 
 ## Contributing
 

@@ -27,6 +27,19 @@ JOANIE_ENROLLMENT_GRADE_CACHE_TTL=600
 # Payment Backend
 JOANIE_PAYMENT_BACKEND=joanie.payment.backends.dummy.DummyPaymentBackend
 
+## payplug payment backend settings
+# JOANIE_PAYMENT_BACKEND="joanie.payment.backends.payplug.PayplugBackend"
+# JOANIE_PAYMENT_CONFIGURATION={"secret_key": "fake_secret_key", "public_key": "fake_public_key"}
+
+## Lyra payment backend settings
+# LYRA_USERNAME="69876357"
+# LYRA_PASSWORD="testpassword_DEMOPRIVATEKEY23G4475zXZQ2UA5x7M"
+# LYRA_PUBLIC_KEY="69876357:testpublickey_DEMOPUBLICKEY95me92597fd28tGD4r5"
+# LYRA_BASE_URL="https://api.lyra.com"
+
+# JOANIE_PAYMENT_BACKEND="joanie.payment.backends.lyra.LyraBackend"
+# JOANIE_PAYMENT_CONFIGURATION={"username": "$LYRA_USERNAME", "password": "$LYRA_PASSWORD", "public_key": "$LYRA_PUBLIC_KEY", "api_base_url": "$LYRA_BASE_URL"}
+
 # Badge providers
 # OBF_CLIENT_ID=
 # OBF_CLIENT_SECRET=
