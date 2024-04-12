@@ -1,12 +1,9 @@
 # pylint: disable=line-too-long,unexpected-keyword-arg,no-value-for-parameter
 """Test suite of the Lyra backend"""
 
-import uuid
-
 import json
-from os.path import join, dirname, realpath
-
 from decimal import Decimal as D
+from os.path import dirname, join, realpath
 
 import responses
 from requests import HTTPError, RequestException

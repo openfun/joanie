@@ -2,18 +2,28 @@
 
 import base64
 import datetime
+import json
+from decimal import Decimal
 from logging import getLogger
 
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.urls import reverse
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.base import TemplateView
+
+from factory import random
 
 from joanie.core import factories
 from joanie.core.enums import CERTIFICATE, CONTRACT_DEFINITION, DEGREE
+from joanie.core.factories import OrderFactory, ProductFactory, UserFactory
 from joanie.core.models import Certificate, Contract
 from joanie.core.utils import contract_definition, issuers
 from joanie.core.utils.sentry import decrypt_data
+from joanie.payment import get_payment_backend
 from joanie.payment.enums import INVOICE_TYPE_INVOICE
+from joanie.payment.factories import BillingAddressDictFactory
 from joanie.payment.models import Invoice
 
 logger = getLogger(__name__)
@@ -273,3 +283,51 @@ class SentryDecryptView(LoginRequiredMixin, TemplateView):
                 decrypted=decrypted,
             )
         )
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class DebugPaymentTemplateView(TemplateView):
+    """
+    Simple class to render the payment form
+    """
+
+    # model = None
+    # issuer_document = None
+    template_name = "debug/payment.html"
+
+    def get_context_data(self, **kwargs):
+        """
+        Base method to prepare the document to render in the debug view in base64.
+        """
+        context = super().get_context_data()
+        backend = get_payment_backend()
+        random.reseed_random("reproductible_seed")
+
+        owner = UserFactory(username="test_card", email="john.doe@acme.org")
+        product = ProductFactory(price=Decimal("123.45"))
+        order = OrderFactory(owner=owner, product=product)
+        billing_address = BillingAddressDictFactory()
+
+        form_token = backend.create_payment(order, billing_address)
+
+        success = reverse("debug.payment_template")
+        context.update(
+            {
+                "public_key": backend.public_key,
+                "form_token": form_token,
+                "success": success,
+                "billing_address": billing_address,
+            }
+        )
+
+        return context
+
+    def post(self, request, *args, **kwargs):
+        """
+        Method to handle the form submission.
+        """
+        context = self.get_context_data()
+        response = self.request.POST.get("kr-answer")
+        response = json.loads(response)
+        context.update({"response": response})
+        return self.render_to_response(context)
