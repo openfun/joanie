@@ -637,3 +637,40 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
                 },
             },
         )
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_payment_backend_lyra_delete_credit_card(self):
+        """
+        When backend deletes a credit card, it should return the answer
+        """
+        backend = LyraBackend(self.configuration)
+        credit_card = CreditCardFactory(token="854d630f17f54ee7bce03fb4fcf764e9")
+
+        with self.open("lyra/responses/cancel_token.json") as file:
+            json_response = json.loads(file.read())
+
+        responses.add(
+            responses.POST,
+            "https://api.lyra.com/api-payment/V4/Token/Cancel",
+            headers={
+                "Content-Type": "application/json",
+            },
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        "content-type": "application/json",
+                        "authorization": "Basic Njk4NzYzNTc6dGVzdHBhc3N3b3JkX0RFTU9QUklWQVRFS0VZMjNHNDQ3NXpYWlEyVUE1eDdN",
+                    }
+                ),
+                responses.matchers.json_params_matcher(
+                    {
+                        "paymentMethodToken": credit_card.token,
+                    }
+                ),
+            ],
+            status=200,
+            json=json_response,
+        )
+
+        response = backend.delete_credit_card(credit_card)
+        self.assertEqual(response, json_response.get("answer"))
