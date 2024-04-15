@@ -16,6 +16,7 @@ and this project adheres to
 - Addition of clickable columns value in the different lists
 - Add admin page to decrypt additional data sent to Sentry
 - Allow to link a syllabus inside the product detail view
+- Add Lyra payment backend
 
 ### Changed
 

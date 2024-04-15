@@ -294,3 +294,8 @@ class LyraBackend(BasePaymentBackend):
             return None
 
         return response_json.get("answer")
+
+    def abort_payment(self, payment_id):
+        """
+        Abort a payment, nothing to do for Lyra
+        """
