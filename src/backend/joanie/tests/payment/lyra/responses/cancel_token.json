@@ -1,0 +1,17 @@
+{
+  "webService": "Token/Cancel",
+  "version": "V4",
+  "applicationVersion": "6.14.3",
+  "status": "SUCCESS",
+  "answer": {
+    "responseCode": 0,
+    "_type": "V4/Common/ResponseCodeAnswer"
+  },
+  "ticket": "04812a9ed3ea4d2491ad42b1ba02ffac",
+  "serverDate": "2024-04-15T12:59:58+00:00",
+  "applicationProvider": "LYRA",
+  "metadata": null,
+  "mode": "TEST",
+  "serverUrl": "https://api.lyra.com",
+  "_type": "V4/WebService/Response"
+}

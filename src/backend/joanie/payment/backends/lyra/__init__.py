@@ -280,3 +280,17 @@ class LyraBackend(BasePaymentBackend):
             )
         else:
             self._do_on_payment_failure(order)
+
+    def delete_credit_card(self, credit_card):
+        """Delete a credit card from Lyra"""
+        payload = {
+            "paymentMethodToken": credit_card.token,
+        }
+
+        url = f"{self.api_url}Token/Cancel"
+        response_json = self._call_api(url, payload)
+
+        if not response_json:
+            return None
+
+        return response_json.get("answer")
