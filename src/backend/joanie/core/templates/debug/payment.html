@@ -24,6 +24,20 @@
   </head>
 
   <body>
+
+  <div>
+    <a href="{% url "debug.payment_template" %}">Payment</a>
+    {% if credit_card %}
+      <a href="{% url "debug.payment_template" %}?one-click">One click Payment</a>
+    {% endif %}
+  </div>
+
+  {% if one_click %}
+    <h1>One click Payment</h1>
+  {% else %}
+    <h1>Payment</h1>
+  {% endif %}
+
   <!-- 4 : display the form payment -->
   <div class="kr-smart-form" kr-card-form-expanded kr-no-card-logo-header
        kr-form-token="{{ form_token }}">
@@ -32,6 +46,17 @@
   <div>
     <pre>
       {{ billing_address|pprint }}
+    </pre>
+  </div>
+  <div>
+    <pre>
+      {{ credit_card|pprint }}
+    </pre>
+  </div>
+  <div>
+    <p>{{ product_title }}</p>
+    <pre>
+      {{ product|pprint }}
     </pre>
   </div>
 

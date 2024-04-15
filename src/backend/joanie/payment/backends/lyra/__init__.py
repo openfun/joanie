@@ -174,6 +174,19 @@ class LyraBackend(BasePaymentBackend):
         payload["formAction"] = "ASK_REGISTER_PAY"
         return self._get_form_token(url, payload)
 
+    def create_one_click_payment(self, order, billing_address, credit_card_token):
+        """
+        Create a one click payment object for a given order
+
+        https://docs.lyra.com/fr/rest/V4.0/api/kb/one_click_payment.html
+        https://docs.lyra.com/fr/rest/V4.0/api/playground/Charge/CreatePayment
+        """
+        url = f"{self.api_url}Charge/CreatePayment"
+        payload = self._get_common_payload_data(order, billing_address)
+        payload["formAction"] = "PAYMENT"
+        payload["paymentMethodToken"] = credit_card_token
+        return self._get_form_token(url, payload)
+
     def _check_hash(self, post_data):
         """Verify IPN authenticity"""
         kr_answer = post_data["kr-answer"].encode("utf-8")

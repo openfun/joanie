@@ -17,7 +17,7 @@ from joanie.core.factories import OrderFactory, ProductFactory, UserFactory
 from joanie.payment.backends.base import BasePaymentBackend
 from joanie.payment.backends.lyra import LyraBackend
 from joanie.payment.exceptions import ParseNotificationFailed, RegisterPaymentFailed
-from joanie.payment.factories import BillingAddressDictFactory
+from joanie.payment.factories import BillingAddressDictFactory, CreditCardFactory
 from joanie.payment.models import CreditCard
 from joanie.tests.base import BaseLogMixinTestCase
 from joanie.tests.payment.base_payment import BasePaymentTestCase
@@ -325,6 +325,73 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
 
         self.assertEqual(response, json_response.get("answer").get("formToken"))
 
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_payment_backend_lyra_create_one_click_payment(self):
+        """
+        When backend creates a one click payment, it should return payment information.
+        """
+        backend = LyraBackend(self.configuration)
+        owner = UserFactory(email="john.doe@acme.org")
+        product = ProductFactory(price=D("123.45"))
+        order = OrderFactory(owner=owner, product=product)
+        billing_address = BillingAddressDictFactory()
+        credit_card = CreditCardFactory(
+            owner=owner, token="854d630f17f54ee7bce03fb4fcf764e9"
+        )
+
+        with self.open("lyra/responses/create_one_click_payment.json") as file:
+            json_response = json.loads(file.read())
+
+        responses.add(
+            responses.POST,
+            "https://api.lyra.com/api-payment/V4/Charge/CreatePayment",
+            headers={
+                "Content-Type": "application/json",
+            },
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        "content-type": "application/json",
+                        "authorization": "Basic Njk4NzYzNTc6dGVzdHBhc3N3b3JkX0RFTU9QUklWQVRFS0VZMjNHNDQ3NXpYWlEyVUE1eDdN",
+                    }
+                ),
+                responses.matchers.json_params_matcher(
+                    {
+                        "amount": 12345,
+                        "currency": "EUR",
+                        "customer": {
+                            "email": "john.doe@acme.org",
+                            "reference": str(owner.id),
+                            "billingDetails": {
+                                "firstName": billing_address["first_name"],
+                                "lastName": billing_address["last_name"],
+                                "address": billing_address["address"],
+                                "zipCode": billing_address["postcode"],
+                                "city": billing_address["city"],
+                                "country": billing_address["country"],
+                                "language": owner.language,
+                            },
+                            "shippingDetails": {
+                                "shippingMethod": "DIGITAL_GOOD",
+                            },
+                        },
+                        "orderId": str(order.id),
+                        "formAction": "PAYMENT",
+                        "paymentMethodToken": credit_card.token,
+                        "ipnTargetUrl": "https://example.com/api/v1.0/payments/notifications",
+                    }
+                ),
+            ],
+            status=200,
+            json=json_response,
+        )
+
+        response = backend.create_one_click_payment(
+            order, billing_address, credit_card.token
+        )
+
+        self.assertEqual(response, json_response.get("answer").get("formToken"))
+
     def test_payment_backend_lyra_handle_notification_unknown_resource(self):
         """
         When backend receives a notification for a unknown lyra resource,
@@ -525,3 +592,48 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
 
         # - After payment notification has been handled, a credit card exists
         self.assertEqual(CreditCard.objects.filter(token=card_id).count(), 1)
+
+    @patch.object(BasePaymentBackend, "_do_on_payment_success")
+    def test_payment_backend_lyra_handle_notification_one_click_payment(
+        self, mock_do_on_payment_success
+    ):
+        """
+        When backend receives a payment notification, the generic
+        method `_do_on_payment_success` should be called.
+        """
+        backend = LyraBackend(self.configuration)
+        owner = UserFactory(email="john.doe@acme.org")
+        product = ProductFactory(price=D("123.45"))
+        order = OrderFactory(
+            id="93e64f3a-6b60-475a-91e3-f4b8a364a844", owner=owner, product=product
+        )
+
+        with self.open("lyra/requests/one_click_payment_accepted.json") as file:
+            json_request = json.loads(file.read())
+
+        with self.open("lyra/requests/one_click_payment_accepted_answer.json") as file:
+            json_answer = json.loads(file.read())
+
+        request = APIRequestFactory().post(
+            reverse("payment_webhook"), data=json_request, format="multipart"
+        )
+
+        backend.handle_notification(request)
+
+        transaction_id = json_answer["transactions"][0]["uuid"]
+        billing_details = json_answer["customer"]["billingDetails"]
+        mock_do_on_payment_success.assert_called_once_with(
+            order=order,
+            payment={
+                "id": transaction_id,
+                "amount": D("123.45"),
+                "billing_address": {
+                    "address": billing_details["address"],
+                    "city": billing_details["city"],
+                    "country": billing_details["country"],
+                    "first_name": billing_details["firstName"],
+                    "last_name": billing_details["lastName"],
+                    "postcode": billing_details["zipCode"],
+                },
+            },
+        )

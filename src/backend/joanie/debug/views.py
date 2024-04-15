@@ -24,7 +24,7 @@ from joanie.core.utils.sentry import decrypt_data
 from joanie.payment import get_payment_backend
 from joanie.payment.enums import INVOICE_TYPE_INVOICE
 from joanie.payment.factories import BillingAddressDictFactory
-from joanie.payment.models import Invoice
+from joanie.payment.models import CreditCard, Invoice
 
 logger = getLogger(__name__)
 LOGO_FALLBACK = (
@@ -305,10 +305,22 @@ class DebugPaymentTemplateView(TemplateView):
 
         owner = UserFactory(username="test_card", email="john.doe@acme.org")
         product = ProductFactory(price=Decimal("123.45"))
+        product.set_current_language("en-us")
+        product.title = "Test product"
+        product.set_current_language("fr-fr")
+        product.title = "Test produit"
+        product.save()
         order = OrderFactory(owner=owner, product=product)
         billing_address = BillingAddressDictFactory()
+        credit_card = CreditCard.objects.get(owner=owner)
+        one_click = "one-click" in self.request.GET
 
-        form_token = backend.create_payment(order, billing_address)
+        if credit_card is not None and one_click:
+            form_token = backend.create_one_click_payment(
+                order, billing_address, credit_card.token
+            )
+        else:
+            form_token = backend.create_payment(order, billing_address)
 
         success = reverse("debug.payment_template")
         context.update(
@@ -317,6 +329,10 @@ class DebugPaymentTemplateView(TemplateView):
                 "form_token": form_token,
                 "success": success,
                 "billing_address": billing_address,
+                "product": product.to_dict(),
+                "product_title": product.title,
+                "one_click": one_click,
+                "credit_card": credit_card.to_dict() if credit_card else None,
             }
         )
 
