@@ -281,6 +281,14 @@ jobs:
             - v6-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
             - v6-frontend-admin-dependencies-
       - run:
+          name: Setup custom environment variables
+          command: echo 'export NEXT_PUBLIC_API_SOURCE="test"' >> "$BASH_ENV"
+      - run:
+          name: Set up environment variables into .env
+          command: echo "NEXT_PUBLIC_API_SOURCE=${NEXT_PUBLIC_API_SOURCE}" > .env |
+            echo "NEXT_PUBLIC_API_ENDPOINT=${NEXT_PUBLIC_API_ENDPOINT}" > .env |
+            echo "NEXT_PUBLIC_DJANGO_ADMIN_BASE_URL=${NEXT_PUBLIC_DJANGO_ADMIN_BASE_URL}" > .env
+      - run:
           name: Install front-end dependencies
           command: yarn install
       - run:
@@ -325,6 +333,7 @@ jobs:
         auth:
           username: $DOCKER_HUB_USER
           password: $DOCKER_HUB_PASSWORD
+
     parallelism: 5
     resource_class: large
     working_directory: ~/joanie/src/frontend/admin
@@ -357,6 +366,9 @@ jobs:
           keys:
             - v6-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
             - v6-frontend-admin-dependencies-
+      - run:
+          name: Set up environment variables into .env
+          command: echo "NEXT_PUBLIC_API_SOURCE=test" > .env
       - run:
           name: Install Playwright dependencies (platform deps + browser)
           command: yarn playwright install --with-deps chromium
