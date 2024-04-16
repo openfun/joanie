@@ -602,7 +602,7 @@ class EnrollmentAdmin(admin.ModelAdmin):
     search_fields = (
         "user__email",
         "user__username",
-        "organization__translations__title",
+        "course_run__course__organizations__translations__title",
         "course_run__course__translations__title",
     )
 

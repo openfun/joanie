@@ -12,6 +12,10 @@ and this project adheres to
 
 - Use generic AdminCourseProductRelationSerializer
 
+### Fixed
+
+- Query string search for enrollment in django admin backoffice
+
 ## [2.0.1] - 2024-04-16
 
 ### Fixed
@@ -135,7 +139,7 @@ and this project adheres to
 
 ### Changed
 
-- Update network name in docker-compose file in order  to fit richie 
+- Update network name in docker-compose file in order  to fit richie
   and openedx-docker naming.
 - Update the certificate viewset for the API client to return
   certificates from orders and from enrollments owned by a user.
