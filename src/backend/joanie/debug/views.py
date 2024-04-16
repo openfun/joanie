@@ -314,8 +314,11 @@ class DebugPaymentTemplateView(TemplateView):
         billing_address = BillingAddressDictFactory()
         credit_card = CreditCard.objects.get(owner=owner)
         one_click = "one-click" in self.request.GET
+        tokenize_card = "tokenize-card" in self.request.GET
 
-        if credit_card is not None and one_click:
+        if tokenize_card:
+            form_token = backend.tokenize_card(order, billing_address)
+        elif credit_card is not None and one_click:
             form_token = backend.create_one_click_payment(
                 order, billing_address, credit_card.token
             )
@@ -332,6 +335,7 @@ class DebugPaymentTemplateView(TemplateView):
                 "product": product.to_dict(),
                 "product_title": product.title,
                 "one_click": one_click,
+                "tokenize_card": tokenize_card,
                 "credit_card": credit_card.to_dict() if credit_card else None,
             }
         )

@@ -1,4 +1,4 @@
-# pylint: disable=line-too-long,unexpected-keyword-arg,no-value-for-parameter
+# pylint: disable=line-too-long,unexpected-keyword-arg,no-value-for-parameter,too-many-public-methods
 """Test suite of the Lyra backend"""
 
 import json
@@ -326,6 +326,64 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         self.assertEqual(response, json_response.get("answer").get("formToken"))
 
     @responses.activate(assert_all_requests_are_fired=True)
+    def test_payment_backend_lyra_tokenize_card(self):
+        """
+        When backend creates a payment, it should return a form token.
+        """
+        backend = LyraBackend(self.configuration)
+        owner = UserFactory(email="john.doe@acme.org")
+        product = ProductFactory(price=D("123.45"))
+        order = OrderFactory(owner=owner, product=product)
+        billing_address = BillingAddressDictFactory()
+
+        with self.open("lyra/responses/tokenize_card.json") as file:
+            json_response = json.loads(file.read())
+
+        responses.add(
+            responses.POST,
+            "https://api.lyra.com/api-payment/V4/Charge/CreateToken",
+            headers={
+                "Content-Type": "application/json",
+            },
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        "content-type": "application/json",
+                        "authorization": "Basic Njk4NzYzNTc6dGVzdHBhc3N3b3JkX0RFTU9QUklWQVRFS0VZMjNHNDQ3NXpYWlEyVUE1eDdN",
+                    }
+                ),
+                responses.matchers.json_params_matcher(
+                    {
+                        "currency": "EUR",
+                        "customer": {
+                            "email": "john.doe@acme.org",
+                            "reference": str(owner.id),
+                            "billingDetails": {
+                                "firstName": billing_address["first_name"],
+                                "lastName": billing_address["last_name"],
+                                "address": billing_address["address"],
+                                "zipCode": billing_address["postcode"],
+                                "city": billing_address["city"],
+                                "country": billing_address["country"],
+                                "language": owner.language,
+                            },
+                        },
+                        "orderId": str(order.id),
+                        "formAction": "REGISTER",
+                        "ipnTargetUrl": "https://example.com/api/v1.0/payments/notifications",
+                        "strongAuthentication": "CHALLENGE_REQUESTED",
+                    }
+                ),
+            ],
+            status=200,
+            json=json_response,
+        )
+
+        response = backend.tokenize_card(order, billing_address)
+
+        self.assertEqual(response, json_response.get("answer").get("formToken"))
+
+    @responses.activate(assert_all_requests_are_fired=True)
     def test_payment_backend_lyra_create_one_click_payment(self):
         """
         When backend creates a one click payment, it should return payment information.
@@ -636,6 +694,63 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
                     "postcode": billing_details["zipCode"],
                 },
             },
+        )
+
+    @patch.object(BasePaymentBackend, "_do_on_payment_success")
+    def test_payment_backend_lyra_handle_notification_tokenize_card(
+        self, mock_do_on_payment_success
+    ):
+        """
+        When backend receives a payment notification, the generic
+        method `_do_on_payment_success` should be called.
+        """
+        backend = LyraBackend(self.configuration)
+        owner = UserFactory(email="john.doe@acme.org")
+        product = ProductFactory(price=D("123.45"))
+        order = OrderFactory(
+            id="93e64f3a-6b60-475a-91e3-f4b8a364a844", owner=owner, product=product
+        )
+
+        with self.open("lyra/requests/tokenize_card.json") as file:
+            json_request = json.loads(file.read())
+
+        with self.open("lyra/requests/tokenize_card_answer.json") as file:
+            json_answer = json.loads(file.read())
+
+        request = APIRequestFactory().post(
+            reverse("payment_webhook"), data=json_request, format="multipart"
+        )
+
+        backend.handle_notification(request)
+
+        transaction_id = json_answer["transactions"][0]["uuid"]
+        billing_details = json_answer["customer"]["billingDetails"]
+        mock_do_on_payment_success.assert_called_once_with(
+            order=order,
+            payment={
+                "id": transaction_id,
+                "amount": D("0.00"),
+                "billing_address": {
+                    "address": billing_details["address"],
+                    "city": billing_details["city"],
+                    "country": billing_details["country"],
+                    "first_name": billing_details["firstName"],
+                    "last_name": billing_details["lastName"],
+                    "postcode": billing_details["zipCode"],
+                },
+            },
+        )
+
+        card_id = json_answer["transactions"][0]["paymentMethodToken"]
+        initial_issuer_transaction_identifier = json_answer["transactions"][0][
+            "transactionDetails"
+        ]["cardDetails"]["initialIssuerTransactionIdentifier"]
+        card = CreditCard.objects.get(token=card_id)
+        self.assertEqual(card.owner, owner)
+        self.assertEqual(card.token, card_id)
+        self.assertEqual(
+            card.initial_issuer_transaction_identifier,
+            initial_issuer_transaction_identifier,
         )
 
     @responses.activate(assert_all_requests_are_fired=True)

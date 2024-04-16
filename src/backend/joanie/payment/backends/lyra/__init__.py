@@ -162,6 +162,20 @@ class LyraBackend(BasePaymentBackend):
 
         return response_json.get("answer", {}).get("formToken")
 
+    def tokenize_card(self, order, billing_address):
+        """
+        Tokenize a card for a given order
+
+        https://docs.lyra.com/fr/rest/V4.0/api/playground/Charge/CreateToken
+        """
+        url = f"{self.api_url}Charge/CreateToken"
+        payload = self._get_common_payload_data(order, billing_address)
+        payload["formAction"] = "REGISTER"
+        payload["strongAuthentication"] = "CHALLENGE_REQUESTED"
+        del payload["amount"]
+        del payload["customer"]["shippingDetails"]
+        return self._get_form_token(url, payload)
+
     def create_payment(self, order, billing_address):
         """
         Create a payment object for a given order
@@ -244,6 +258,9 @@ class LyraBackend(BasePaymentBackend):
         card_token = answer["transactions"][0]["paymentMethodToken"]
         card_details = answer["transactions"][0]["transactionDetails"]["cardDetails"]
         card_pan = card_details["pan"]
+        initial_issuer_transaction_identifier = answer["transactions"][0][
+            "transactionDetails"
+        ]["cardDetails"]["initialIssuerTransactionIdentifier"]
         # Register card if user has requested it
         if card_token is not None and card_pan is not None:
             # In the case of a one click payment, card.id is not None but other
@@ -257,6 +274,7 @@ class LyraBackend(BasePaymentBackend):
                 last_numbers=card_pan[-4:],  # last 4 digits
                 owner=order.owner,
                 token=card_token,
+                initial_issuer_transaction_identifier=initial_issuer_transaction_identifier,
             )
 
         if answer["orderStatus"] == "PAID":
