@@ -215,6 +215,21 @@ test.describe("Organization address form", () => {
     await page.getByTestId("submit-button-organization-address-form").click();
     await expect(page.getByText("Operation completed")).toBeVisible();
   });
+
+  test("if code and title are links", async ({ page }) => {
+    await page.goto(PATH_ADMIN.organizations.list);
+    await Promise.all(
+      store.list.map(async (org) => {
+        await expect(
+          page.getByRole("link", { name: org.code }).first(),
+        ).toBeVisible();
+        await expect(
+          page.getByRole("link", { name: org.title }).first(),
+        ).toBeVisible();
+      }),
+    );
+  });
+
   test("Test error form", async ({ page }) => {
     const org = store.list[0];
     await page.goto(PATH_ADMIN.organizations.list);

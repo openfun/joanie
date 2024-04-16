@@ -270,6 +270,20 @@ test.describe("Course list", async () => {
     );
   });
 
+  test("if code and title are links", async ({ page }) => {
+    await page.goto(PATH_ADMIN.courses.list);
+    await Promise.all(
+      store.list.map(async (course) => {
+        await expect(
+          page.getByRole("link", { name: course.code }).first(),
+        ).toBeVisible();
+        await expect(
+          page.getByRole("link", { name: course.title }).first(),
+        ).toBeVisible();
+      }),
+    );
+  });
+
   test("Search a course in list with the search input", async ({ page }) => {
     // Go to the page
     await mockPlaywrightCrud<Course, DTOCourse>({

@@ -7,7 +7,7 @@ import {
 import { transformOrdersToOrderListItems } from "@/services/api/models/Order";
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { Course, DTOCourse } from "@/services/api/models/Course";
-import { DTOProduct, Product } from "@/services/api/models/Product";
+import { DTOProduct, ProductSimple } from "@/services/api/models/Product";
 import {
   DTOOrganization,
   Organization,
@@ -31,7 +31,7 @@ test.describe("Order filters", () => {
       }
     });
 
-    await mockPlaywrightCrud<Product, DTOProduct>({
+    await mockPlaywrightCrud<ProductSimple, DTOProduct>({
       data: store.products,
       routeUrl: "http://localhost:8071/api/v1.0/admin/products/",
       page,
@@ -90,8 +90,9 @@ test.describe("Order filters", () => {
       .getByLabel("State")
       .click();
     await page.getByRole("option", { name: "Submitted" }).click();
-    await page.getByRole("combobox", { name: "Product" }).click();
-    await page.getByRole("combobox", { name: "Product" }).fill("p");
+    await page.getByTestId("custom-modal").getByLabel("Product").click();
+
+    await page.getByTestId("custom-modal").getByLabel("Product").fill("p");
     await page.getByRole("option", { name: store.products[0].title }).click();
     await page.getByLabel("Course").click();
     await page.getByLabel("Course").fill("c");

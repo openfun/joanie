@@ -55,6 +55,19 @@ test.describe("Order view", () => {
 
   test("Check all field are the good value", async ({ page }) => {
     const order = store.list[0];
+    order.main_invoice.created_on = new Date(
+      Date.UTC(2024, 0, 23, 19, 30),
+    ).toLocaleString();
+    order.main_invoice.updated_on = new Date(
+      Date.UTC(2024, 0, 23, 20, 30),
+    ).toLocaleString();
+    await page.unroute(catchIdRegex);
+    await page.route(catchIdRegex, async (route, request) => {
+      const methods = request.method();
+      if (methods === "GET") {
+        await route.fulfill({ json: store.list[0] });
+      }
+    });
     await page.goto(PATH_ADMIN.orders.list);
     await page.getByRole("heading", { name: "Orders" }).click();
     await page.getByRole("link", { name: order.product.title }).click();
@@ -87,16 +100,13 @@ test.describe("Order view", () => {
     await expect(page.getByLabel("Billing address")).toHaveValue(
       order.main_invoice.recipient_address,
     );
-    await expect(page.getByLabel("Created on")).toHaveValue(
-      new Date(order.main_invoice.created_on).toLocaleDateString(),
-    );
-    await expect(page.getByLabel("Updated on")).toHaveValue(
-      new Date(order.main_invoice.updated_on).toLocaleDateString(),
-    );
+
+    await expect(page.getByLabel("Created on")).toHaveValue("1/23/24, 7:30 PM");
+
+    await expect(page.getByLabel("Updated on")).toHaveValue("1/23/24, 8:30 PM");
     await expect(page.getByLabel("Balance")).toHaveValue(
       order.main_invoice.balance,
     );
-
     if (order.certificate) {
       await expect(page.getByLabel("Certificate", { exact: true })).toHaveValue(
         order.certificate.definition_title,
@@ -311,7 +321,7 @@ test.describe("Order view", () => {
             json: {
               definition_title: "Certificate definition",
               id: "e4c5c271-5695-4e29-a381-09e3c1635e74",
-              issued_on: "2024-03-25T14:00:58.034185Z",
+              issued_on: "2024-03-25T14:00:00.034185 +00:00",
             },
           });
         }
@@ -321,7 +331,7 @@ test.describe("Order view", () => {
     order.certificate = {
       definition_title: "Certificate definition",
       id: "e4c5c271-5695-4e29-a381-09e3c1635e74",
-      issued_on: "2024-03-25T14:00:58.034185Z",
+      issued_on: "2024-03-25T14:00:00.034185Z",
     };
     await page.unroute(catchIdRegex);
     await page.route(catchIdRegex, async (route, request) => {
@@ -355,7 +365,7 @@ test.describe("Order view", () => {
 
     const generatedDate = page.getByLabel("Issuance date");
     await expect(generatedDate).toBeVisible();
-    await expect(generatedDate).toHaveValue("3/25/2024");
+    await expect(generatedDate).toHaveValue("3/25/24, 2:00 PM");
 
     await closeAllNotification(page);
     await actionsMenuButton.click();
