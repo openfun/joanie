@@ -7,6 +7,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import { orderViewMessages } from "@/components/templates/orders/view/translations";
 import { Order } from "@/services/api/models/Order";
 import { PATH_ADMIN } from "@/utils/routes/path";
+import { formatShortDate } from "@/utils/dates";
 
 type Props = {
   order?: Order;
@@ -59,9 +60,7 @@ export function OrderViewContractSection({
           label={intl.formatMessage(orderViewMessages.submittedForSignatureOn)}
           value={
             order.contract.submitted_for_signature_on
-              ? new Date(
-                  order.contract.submitted_for_signature_on,
-                ).toLocaleDateString()
+              ? formatShortDate(order.contract.submitted_for_signature_on)
               : ""
           }
         />
@@ -77,7 +76,7 @@ export function OrderViewContractSection({
           label={intl.formatMessage(orderViewMessages.studentSignedOn)}
           value={
             order.contract.student_signed_on
-              ? new Date(order.contract.student_signed_on).toLocaleDateString()
+              ? formatShortDate(order.contract.student_signed_on)
               : ""
           }
         />
@@ -93,9 +92,7 @@ export function OrderViewContractSection({
           label={intl.formatMessage(orderViewMessages.organizationSignedOn)}
           value={
             order.contract.organization_signed_on
-              ? new Date(
-                  order.contract.organization_signed_on,
-                ).toLocaleDateString()
+              ? formatShortDate(order.contract.organization_signed_on)
               : ""
           }
         />

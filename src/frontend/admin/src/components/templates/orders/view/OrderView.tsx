@@ -26,6 +26,7 @@ import { OrderViewInvoiceSection } from "@/components/templates/orders/view/sect
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { OrderViewContractSection } from "@/components/templates/orders/view/sections/OrderViewContractSection";
 import { OrderViewCertificateSection } from "@/components/templates/orders/view/sections/OrderViewCertificateSection";
+import { formatShortDate } from "@/utils/dates";
 
 type Props = {
   order: Order;
@@ -134,9 +135,7 @@ export function OrderView({ order }: Props) {
                   value={intl.formatMessage(orderViewMessages.enrollmentValue, {
                     courseRunTitle: order.enrollment.course_run.title,
                     courseRunState: order.enrollment.course_run.state?.text,
-                    registerOn: new Date(
-                      order.enrollment.created_on,
-                    ).toLocaleDateString(),
+                    registerOn: formatShortDate(order.enrollment.created_on),
                   })}
                 />
               )}

@@ -17,6 +17,7 @@ import {
 } from "@/components/templates/orders/view/translations";
 import { Order } from "@/services/api/models/Order";
 import { OrderViewInvoiceChildrenRow } from "@/components/templates/orders/view/sections/OrderViewInvoiceChildrenRow";
+import { formatShortDate } from "@/utils/dates";
 
 type Props = {
   order?: Order;
@@ -102,9 +103,7 @@ export function OrderViewInvoiceSection({ order }: Props) {
                   fullWidth={true}
                   disabled={true}
                   label={intl.formatMessage(orderViewMessages.invoiceCreatedOn)}
-                  value={new Date(
-                    order.main_invoice.created_on,
-                  ).toLocaleDateString()}
+                  value={formatShortDate(order.main_invoice.created_on)}
                 />
               </Grid>
               <Grid xs={12} sm={6}>
@@ -112,9 +111,7 @@ export function OrderViewInvoiceSection({ order }: Props) {
                   fullWidth={true}
                   disabled={true}
                   label={intl.formatMessage(orderViewMessages.invoiceUpdatedOn)}
-                  value={new Date(
-                    order.main_invoice.updated_on,
-                  ).toLocaleDateString()}
+                  value={formatShortDate(order.main_invoice.updated_on)}
                 />
               </Grid>
               <Grid xs={12}>

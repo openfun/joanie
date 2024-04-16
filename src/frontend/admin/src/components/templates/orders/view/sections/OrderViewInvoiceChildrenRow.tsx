@@ -11,6 +11,7 @@ import {
   invoiceTypesMessages,
   orderViewMessages,
 } from "@/components/templates/orders/view/translations";
+import { formatShortDate } from "@/utils/dates";
 
 type Props = {
   child: OrderMainInvoiceChildren;
@@ -38,7 +39,7 @@ export function OrderViewInvoiceChildrenRow({ child }: Props) {
             {child.invoiced_balance} {child.total_currency}
           </Typography>
           <Typography variant="caption">
-            {`(${new Date(child.created_on).toLocaleDateString()})`}
+            {`(${formatShortDate(child.created_on)})`}
           </Typography>
         </Box>
       }
