@@ -53,6 +53,16 @@ export function CoursesList(props: Props) {
       headerName: intl.formatMessage(messages.codeHeader),
       minWidth: 150,
       maxWidth: 250,
+      renderCell: (cell) => {
+        return (
+          <CustomLink
+            href={PATH_ADMIN.courses.edit(cell.row.id)}
+            title={intl.formatMessage(commonTranslations.edit)}
+          >
+            {cell.row.code}
+          </CustomLink>
+        );
+      },
     },
     {
       field: "title",

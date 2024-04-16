@@ -38,11 +38,21 @@ export function OrganizationsList(props: Props) {
     changeUrlOnPageChange: props.changeUrlOnPageChange,
   });
 
-  const columns: GridColDef[] = [
+  const columns: GridColDef<Organization>[] = [
     {
       field: "code",
       headerName: intl.formatMessage(messages.codeHeader),
       maxWidth: 200,
+      renderCell: (cell) => {
+        return (
+          <CustomLink
+            href={PATH_ADMIN.organizations.edit(cell.row.id)}
+            title={intl.formatMessage(commonTranslations.edit)}
+          >
+            {cell.row.code}
+          </CustomLink>
+        );
+      },
     },
     {
       field: "title",

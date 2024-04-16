@@ -58,7 +58,16 @@ export const getCoursesRunsListColumns = (
       field: "course_code",
       headerName: intl.formatMessage(messages.courseCode),
       flex: 1,
-      valueGetter: (value, row) => row.course.code,
+      renderCell: (cell) => {
+        return (
+          <CustomLink
+            href={PATH_ADMIN.courses_run.edit(cell.row.id)}
+            title={intl.formatMessage(commonTranslations.edit)}
+          >
+            {cell.row.course.code}
+          </CustomLink>
+        );
+      },
     },
     {
       field: "title",
