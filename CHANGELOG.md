@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [2.0.1] - 2024-04-16
+
 ### Fixed
 
 - Ignore conflicts when creating batch of enrollments
@@ -254,7 +256,8 @@ and this project adheres to
 - First working version serving sellable micro-credentials for multiple
   organizations synchronized to a remote catalog
 
-[unreleased]: https://github.com/openfun/joanie/compare/v2.0.0...main
+[unreleased]: https://github.com/openfun/joanie/compare/v2.0.1...main
+[2.0.1]: https://github.com/openfun/joanie/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/openfun/joanie/compare/v1.2.0...v2.0.0
 [1.2.0]: https://github.com/openfun/joanie/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/openfun/joanie/compare/v1.0.0...v1.1.0
