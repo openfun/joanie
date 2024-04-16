@@ -12,7 +12,10 @@ test.describe("Course run list", () => {
   let store = getCourseRunTestScenario();
   test.beforeEach(async ({ page }) => {
     store = getCourseRunTestScenario();
-
+    const firstCourseRun = store.courseRuns[0];
+    firstCourseRun.start = new Date(
+      Date.UTC(2024, 1, 23, 7, 30),
+    ).toLocaleString();
     await mockPlaywrightCrud<CourseRun, DTOCourseRun>({
       data: store.courseRuns,
       routeUrl: "http://localhost:8071/api/v1.0/admin/course-runs/",
@@ -59,7 +62,7 @@ test.describe("Course run list", () => {
     await page.goto(PATH_ADMIN.courses_run.list);
     await page
       .getByRole("row", {
-        name: `${courseRun.course.code} ${courseRun.title} ${new Date(courseRun.start!).toLocaleDateString()}`,
+        name: `${courseRun.course.code} ${courseRun.title} 2/23/24, 7:30 AM`,
       })
       .getByRole("button")
       .click();
@@ -76,5 +79,19 @@ test.describe("Course run list", () => {
       page.getByRole("menuitem", { name: "Use as a template" }),
     ).toBeVisible();
     await expect(page.getByRole("menuitem", { name: "Delete" })).toBeVisible();
+  });
+
+  test("if code and title are links", async ({ page }) => {
+    await page.goto(PATH_ADMIN.courses_run.list);
+    await Promise.all(
+      store.courseRuns.map(async (courseRun) => {
+        await expect(
+          page.getByRole("link", { name: courseRun.course.code }).first(),
+        ).toBeVisible();
+        await expect(
+          page.getByRole("link", { name: courseRun.title }).first(),
+        ).toBeVisible();
+      }),
+    );
   });
 });

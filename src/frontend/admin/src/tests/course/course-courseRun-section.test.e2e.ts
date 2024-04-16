@@ -16,8 +16,14 @@ import { PATH_ADMIN } from "@/utils/routes/path";
 const coursesApiUrl = "http://localhost:8071/api/v1.0/admin/courses/";
 test.describe("Course product relation", () => {
   let store = getCourseScenarioStore();
+
   test.beforeEach(async ({ page }) => {
     store = getCourseScenarioStore();
+    const firstCourseRun = store.courseRuns[0];
+    firstCourseRun.start = new Date(
+      Date.UTC(2024, 1, 23, 7, 30),
+    ).toLocaleString();
+    store.list[0]!.courses_runs![0] = firstCourseRun;
     await mockPlaywrightCrud<User, any>({
       data: store.users,
       routeUrl: "http://localhost:8071/api/v1.0/admin/users/",
@@ -89,7 +95,7 @@ test.describe("Course product relation", () => {
 
     await page
       .getByRole("row", {
-        name: `${courseRun.course.code} ${courseRun.title} ${new Date(courseRun.start!).toLocaleDateString()}`,
+        name: `${courseRun.course.code} ${courseRun.title} 2/23/24, 7:30 AM`,
       })
       .getByRole("button")
       .click();
