@@ -357,6 +357,13 @@ class CreditCard(BaseModel):
         editable=False,
         null=False,
     )
+    initial_issuer_transaction_identifier = models.CharField(
+        _("initial issuer transaction identifier"),
+        max_length=50,
+        null=True,
+        blank=True,
+        editable=False,
+    )
     title = models.CharField(_("title"), max_length=100, null=True, blank=True)
     brand = models.CharField(_("brand"), max_length=40, null=True, blank=True)
     expiration_month = models.PositiveSmallIntegerField(
