@@ -5,6 +5,7 @@ import { CourseRun } from "@/services/api/models/CourseRun";
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { CustomLink } from "@/components/presentational/link/CustomLink";
 import { commonTranslations } from "@/translations/common/commonTranslations";
+import { formatShortDate } from "@/utils/dates";
 
 const messages = defineMessages({
   courseCode: {
@@ -90,14 +91,15 @@ export const getCoursesRunsListColumns = (
       headerName: intl.formatMessage(messages.courseStart),
       flex: 1,
       valueGetter: (value, row) =>
-        row.start ? new Date(row.start).toLocaleString() : "",
+        row.start ? formatShortDate(row.start) : "",
     },
     {
       field: "end",
       headerName: intl.formatMessage(messages.courseEnd),
       flex: 1,
-      valueGetter: (value, row) =>
-        row.end ? new Date(row.end).toLocaleString() : "",
+      valueGetter: (value, row) => {
+        return row.end ? formatShortDate(row.end) : "";
+      },
     },
     {
       field: "state",

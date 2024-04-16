@@ -11,11 +11,15 @@ and this project adheres to
 ### Added 
 
 - Add enrollments pages
+- Addition of clickable columns value in the different lists
 - Add admin page to decrypt additional data sent to Sentry
 
 ### Changed
 
 - Use generic AdminCourseProductRelationSerializer
+- Format all displayed date to the format "10/14/1983, 1:30 PM"
+
+### Removed
 
 ### Fixed
 

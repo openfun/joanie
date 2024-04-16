@@ -7,6 +7,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import { orderViewMessages } from "@/components/templates/orders/view/translations";
 import { Order } from "@/services/api/models/Order";
 import { PATH_ADMIN } from "@/utils/routes/path";
+import { formatShortDate } from "@/utils/dates";
 
 type Props = {
   order?: Order;
@@ -60,7 +61,7 @@ export function OrderViewCertificateSection({ order, getViewIcon }: Props) {
           )}
           value={
             order.certificate.issued_on
-              ? new Date(order.certificate.issued_on).toLocaleDateString()
+              ? formatShortDate(order.certificate.issued_on)
               : ""
           }
         />
