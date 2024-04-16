@@ -145,7 +145,7 @@ def import_enrollments_batch(batch_offset, batch_size, total, course_id, dry_run
         enrollment_created_on_field.editable = True
 
         enrollments_created = models.Enrollment.objects.bulk_create(
-            enrollments_to_create
+            enrollments_to_create, ignore_conflicts=True
         )
         report["enrollments"]["created"] += len(enrollments_created)
 

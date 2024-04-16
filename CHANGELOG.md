@@ -8,14 +8,9 @@ and this project adheres to
 
 ## [Unreleased]
 
-### Added
-
-### Changed
-
-### Removed
-
 ### Fixed
 
+- Ignore conflicts when creating batch of enrollments
 - Fix translation content logic
 
 ## [2.0.0] - 2024-04-10

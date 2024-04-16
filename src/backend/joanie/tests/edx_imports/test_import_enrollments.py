@@ -330,3 +330,48 @@ class EdxImportEnrollmentsTestCase(TestCase, BaseLogMixinTestCase):
             ("INFO", "1 import enrollments tasks launched"),
         ]
         self.assertLogsEquals(logger.records, expected_logs)
+
+    @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_enrollments_count")
+    @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_enrollments")
+    def test_import_enrollments_create_duplicate_entries(
+        self, mock_get_enrollments, mock_get_enrollments_count
+    ):
+        """
+        Trying to insert duplicate enrollments in the same bulk_create should ignore the duplicates.
+        """
+        edx_enrollments = edx_factories.EdxEnrollmentFactory.create_batch(10)
+
+        for edx_enrollment in edx_enrollments:
+            factories.CourseRunFactory.create(
+                course__code=extract_course_number(edx_enrollment.course_id),
+                resource_link=f"http://openedx.test/courses/{edx_enrollment.course_id}/course/",
+            )
+            factories.UserFactory.create(username=edx_enrollment.user.username)
+
+        edx_enrollments.append(edx_enrollments[0])
+        edx_enrollments.append(edx_enrollments[1])
+        mock_get_enrollments.return_value = edx_enrollments
+        mock_get_enrollments_count.return_value = len(edx_enrollments)
+        self.assertEqual(len(edx_enrollments), 12)
+        self.assertEqual(models.Enrollment.objects.count(), 0)
+
+        import_enrollments()
+
+        self.assertEqual(models.Enrollment.objects.count(), 10)
+        for edx_enrollment in edx_enrollments:
+            enrollment = models.Enrollment.objects.get(
+                user__username=edx_enrollment.user.username,
+                course_run__course__code=extract_course_number(
+                    edx_enrollment.course_id
+                ),
+            )
+            self.assertEqual(enrollment.is_active, edx_enrollment.is_active)
+            self.assertEqual(
+                enrollment.created_on, make_date_aware(edx_enrollment.created)
+            )
+            self.assertEqual(enrollment.user.username, edx_enrollment.user.username)
+            self.assertEqual(
+                enrollment.course_run.course.code,
+                extract_course_number(edx_enrollment.course_id),
+            )
+            self.assertEqual(enrollment.state, ENROLLMENT_STATE_SET)
