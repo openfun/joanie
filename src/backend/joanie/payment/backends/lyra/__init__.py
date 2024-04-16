@@ -1,3 +1,4 @@
+# pylint: disable=too-many-locals
 """Lyra Payment Backend"""
 
 import base64
@@ -186,6 +187,20 @@ class LyraBackend(BasePaymentBackend):
             "configuration": self._get_configuration(),
         }
 
+    def tokenize_card(self, order, billing_address):
+        """
+        Tokenize a card for a given order
+
+        https://docs.lyra.com/fr/rest/V4.0/api/playground/Charge/CreateToken
+        """
+        url = f"{self.api_url}Charge/CreateToken"
+        payload = self._get_common_payload_data(order, billing_address)
+        payload["formAction"] = "REGISTER"
+        payload["strongAuthentication"] = "CHALLENGE_REQUESTED"
+        del payload["amount"]
+        del payload["customer"]["shippingDetails"]
+        return self._get_payment_info(url, payload)
+
     def create_payment(self, order, billing_address):
         """
         Create a payment object for a given order
@@ -268,12 +283,19 @@ class LyraBackend(BasePaymentBackend):
             ) from error
 
         card_token = answer["transactions"][0]["paymentMethodToken"]
-        card_details = answer["transactions"][0]["transactionDetails"]["cardDetails"]
+        transaction_details = answer["transactions"][0]["transactionDetails"]
+        card_details = transaction_details["cardDetails"]
         card_pan = card_details["pan"]
         payment_method_source = card_details["paymentMethodSource"]
+        creation_context = transaction_details["creationContext"]
+        initial_issuer_transaction_identifier = card_details[
+            "initialIssuerTransactionIdentifier"
+        ]
 
         # Register card if user has requested it
-        if card_token is not None and payment_method_source != "TOKEN":
+        if card_token is not None and (
+            payment_method_source != "TOKEN" or creation_context == "VERIFICATION"
+        ):
             # In the case of a one click payment, card.id is not None and
             # paymentMethodSource is set to TOKEN. So to know if a user wants to save
             # its card, we check if card.id is set paymentMethodSource has another value
@@ -286,6 +308,7 @@ class LyraBackend(BasePaymentBackend):
                 last_numbers=card_pan[-4:],  # last 4 digits
                 owner=order.owner,
                 token=card_token,
+                initial_issuer_transaction_identifier=initial_issuer_transaction_identifier,
             )
 
         if answer["orderStatus"] == "PAID":

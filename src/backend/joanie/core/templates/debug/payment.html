@@ -30,10 +30,13 @@
     {% if credit_card %}
       <a href="{% url "debug.payment_template" %}?one-click">One click Payment</a>
     {% endif %}
+    <a href="{% url "debug.payment_template" %}?tokenize-card">Tokenize card</a>
   </div>
 
   {% if one_click %}
     <h1>One click Payment</h1>
+  {% elif tokenize_card %}
+    <h1>Tokenize card</h1>
   {% else %}
     <h1>Payment</h1>
   {% endif %}
