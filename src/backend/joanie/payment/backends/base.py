@@ -31,7 +31,7 @@ class BasePaymentBackend:
         self.configuration = configuration
 
     @classmethod
-    def _do_on_payment_success(cls, order, payment):
+    def _do_on_payment_success(cls, order, payment, validate_order=True):
         """
         Generic actions triggered when a succeeded payment has been received.
         It creates an invoice and registers the debit transaction,
@@ -61,8 +61,9 @@ class BasePaymentBackend:
             reference=payment["id"],
         )
 
-        # - Mark order as validated
-        order.flow.validate()
+        if validate_order:
+            # - Mark order as validated
+            order.flow.validate()
 
         # send mail
         cls._send_mail_payment_success(order)
