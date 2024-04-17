@@ -20,6 +20,7 @@ from configurations import Configuration, values
 from sentry_sdk.integrations.django import DjangoIntegration
 
 from joanie.core.utils import JSONValue
+from joanie.core.utils.sentry import before_send
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -73,6 +74,7 @@ class Base(Configuration):
     # Security
     ALLOWED_HOSTS = values.ListValue([])
     SECRET_KEY = values.Value(None)
+    LOGGING_SECRET_KEY = values.Value(None)
     # Security - Server to server authorized API keys
     JOANIE_AUTHORIZED_API_TOKENS = values.ListValue([], environ_prefix=None)
 
@@ -616,6 +618,7 @@ class Base(Configuration):
                 environment=cls.__name__.lower(),
                 release=get_release(),
                 integrations=[DjangoIntegration()],
+                before_send=before_send,
             )
             with sentry_sdk.configure_scope() as scope:
                 scope.set_extra("application", "backend")

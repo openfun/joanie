@@ -19,6 +19,7 @@ and this project adheres to
 ### Fixed
 
 - Query string search for enrollment in django admin backoffice
+- Encrypt sentry additional data (may contain sensitive data)
 
 ## [2.0.1] - 2024-04-16
 
