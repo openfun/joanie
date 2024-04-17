@@ -2,7 +2,7 @@
 
 import random
 from http import HTTPStatus
-from logging import ERROR
+from logging import ERROR, INFO
 
 from django.test import TestCase
 from django.test.utils import override_settings
@@ -884,7 +884,7 @@ class MoodleLMSBackendTestCase(TestCase):
 
         with (
             self.assertLogs(
-                "joanie.lms_handler.backends.moodle", level=ERROR
+                "joanie.lms_handler.backends.moodle", level=INFO
             ) as error_logs,
             self.assertRaises(EnrollmentError),
         ):
@@ -893,7 +893,7 @@ class MoodleLMSBackendTestCase(TestCase):
         self.assertEqual(
             error_logs.output,
             [
-                "ERROR:joanie.lms_handler.backends.moodle:User student not found in Moodle"
+                "INFO:joanie.lms_handler.backends.moodle:User student not found in Moodle"
             ],
         )
 
@@ -1537,7 +1537,7 @@ class MoodleLMSBackendTestCase(TestCase):
 
         with (
             self.assertLogs(
-                "joanie.lms_handler.backends.moodle", level=ERROR
+                "joanie.lms_handler.backends.moodle", level=INFO
             ) as error_logs,
             self.assertRaises(GradeError),
         ):
@@ -1546,7 +1546,7 @@ class MoodleLMSBackendTestCase(TestCase):
         self.assertEqual(
             error_logs.output,
             [
-                "ERROR:joanie.lms_handler.backends.moodle:User student not found in Moodle"
+                "INFO:joanie.lms_handler.backends.moodle:User student not found in Moodle"
             ],
         )
 
