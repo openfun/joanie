@@ -201,6 +201,37 @@ class LyraBackend(BasePaymentBackend):
         payload["paymentMethodToken"] = credit_card_token
         return self._get_form_token(url, payload)
 
+    def create_zero_click_payment(self, order, credit_card_token):
+        """
+        Create a zero click payment object for a given order
+
+        https://docs.lyra.com/fr/rest/V4.0/api/kb/zero_click_payment.html
+        https://docs.lyra.com/fr/rest/V4.0/api/playground/Charge/CreatePayment
+        """
+
+        url = f"{self.api_url}Charge/CreatePayment"
+        payload = self._get_common_payload_data(order)
+        payload["formAction"] = "SILENT"
+        payload["paymentMethodToken"] = credit_card_token
+
+        credit_card = CreditCard.objects.get(token=credit_card_token)
+        if (
+            initial_issuer_transaction_identifier
+            := credit_card.initial_issuer_transaction_identifier
+        ):
+            payload["transactionOptions"] = {
+                "cardOptions": {
+                    "initialIssuerTransactionIdentifier": initial_issuer_transaction_identifier
+                }
+            }
+
+        response_json = self._call_api(url, payload)
+
+        if not response_json:
+            return None
+
+        return response_json
+
     def _check_hash(self, post_data):
         """Verify IPN authenticity"""
         kr_answer = post_data["kr-answer"].encode("utf-8")

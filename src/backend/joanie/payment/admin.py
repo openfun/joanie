@@ -174,9 +174,18 @@ class CreditCardAdmin(admin.ModelAdmin):
     """Admin class for the credit card model."""
 
     autocomplete_fields = ["owner"]
-    list_display = ("owner", "title", "numbers", "expiration_date", "is_main")
+    list_display = (
+        "owner",
+        "title",
+        "numbers",
+        "expiration_date",
+        "is_main",
+        "has_token",
+        "has_initial_issuer_transaction_identifier",
+    )
     list_filter = [RequiredOwnerFilter, "is_main"]
     list_select_related = ["owner"]
+    readonly_fields = ("has_token", "has_initial_issuer_transaction_identifier")
 
     @staticmethod
     def numbers(credit_card):
@@ -193,6 +202,20 @@ class CreditCardAdmin(admin.ModelAdmin):
         """
 
         return f"{credit_card.expiration_month:02d}/{credit_card.expiration_year:02d}"
+
+    @staticmethod
+    def has_initial_issuer_transaction_identifier(credit_card):
+        """
+        Return the initial issuer transaction identifier
+        """
+        return "OK" if credit_card.initial_issuer_transaction_identifier else "-"
+
+    @staticmethod
+    def has_token(credit_card):
+        """
+        Return the token of the credit card
+        """
+        return "OK" if credit_card.token else "-"
 
     @csrf_protect_m
     def changelist_view(self, request, extra_context=None):

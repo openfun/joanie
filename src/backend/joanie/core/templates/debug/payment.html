@@ -31,20 +31,25 @@
       <a href="{% url "debug.payment_template" %}?one-click">One click Payment</a>
     {% endif %}
     <a href="{% url "debug.payment_template" %}?tokenize-card">Tokenize card</a>
+    <a href="{% url "debug.payment_template" %}?zero-click">Zero click Payment</a>
   </div>
 
   {% if one_click %}
     <h1>One click Payment</h1>
+  {% elif zero_click %}
+    <h1>Zero click Payment</h1>
   {% elif tokenize_card %}
     <h1>Tokenize card</h1>
   {% else %}
     <h1>Payment</h1>
   {% endif %}
 
-  <!-- 4 : display the form payment -->
-  <div class="kr-smart-form" kr-card-form-expanded kr-no-card-logo-header
-       kr-form-token="{{ form_token }}">
-  </div>
+  {% if not zero_click %}
+    <!-- 4 : display the form payment -->
+    <div class="kr-smart-form" kr-card-form-expanded kr-no-card-logo-header
+         kr-form-token="{{ form_token }}">
+    </div>
+  {% endif %}
 
   <div>
     <pre>
