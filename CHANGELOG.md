@@ -23,6 +23,7 @@ and this project adheres to
 
 ### Fixed
 
+- Prevent newsletter subscription on user save failure
 - Query string search for enrollment in django admin backoffice
 - Encrypt sentry additional data (may contain sensitive data)
 

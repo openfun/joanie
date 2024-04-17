@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from django.core.exceptions import ValidationError
+from django.db import IntegrityError
 from django.test.utils import override_settings
 
 from joanie.core import factories, models
@@ -10,6 +11,7 @@ from joanie.core.models import User
 from joanie.tests.base import BaseAPITestCase
 
 
+# pylint: disable=too-many-public-methods
 class UserModelTestCase(BaseAPITestCase):
     """Test suite for the User model."""
 
@@ -297,6 +299,27 @@ class UserModelTestCase(BaseAPITestCase):
         """New user with subscription should trigger the subscription"""
         factories.UserFactory(has_subscribed_to_commercial_newsletter=True)
         self.assertTrue(mock_set_commercial_newsletter_subscription.delay.called)
+
+    @patch("joanie.core.models.accounts.set_commercial_newsletter_subscription")
+    @patch("joanie.core.models.base.BaseModel.save")
+    def test_models_user_create_newsletter_subscription_not_called_if_save_failed(
+        self, mock_save, mock_set_commercial_newsletter_subscription
+    ):
+        """
+        If we try to create a user and the save fails, the subscription should
+        not be triggered.
+        """
+        mock_save.side_effect = IntegrityError
+
+        with self.assertRaises(IntegrityError):
+            User.objects.create(
+                username="Sam",
+                email="sam@example.com",
+                has_subscribed_to_commercial_newsletter=True,
+            )
+
+        mock_save.assert_called_once()
+        mock_set_commercial_newsletter_subscription.delay.assert_not_called()
 
     @patch("joanie.core.models.accounts.set_commercial_newsletter_subscription")
     def test_models_user_update_newsletter_subscription(

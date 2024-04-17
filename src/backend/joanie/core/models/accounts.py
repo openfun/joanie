@@ -76,9 +76,17 @@ class User(BaseModel, auth_models.AbstractUser):
         return super().clean()
 
     def save(self, *args, **kwargs):
-        """Enforce validation each time an instance is saved."""
+        """
+        Enforce validation each time an instance is saved and trigger the
+        commercial newsletter subscription task if the user has subscribed to
+        """
         self.full_clean()
-        if self.created_on is None and self.has_subscribed_to_commercial_newsletter:
+
+        is_creating = self.created_on is None
+
+        super().save(*args, **kwargs)
+
+        if is_creating and self.has_subscribed_to_commercial_newsletter:
             # The user is being created and has subscribed to the newsletter
             logger.info(
                 "New user %s has subscribed to the commercial newsletter", self.id
@@ -100,8 +108,6 @@ class User(BaseModel, auth_models.AbstractUser):
             set_commercial_newsletter_subscription.delay(self.to_dict())
         else:
             logger.info("User %s has not changed their subscription status", self.id)
-
-        super().save(*args, **kwargs)
 
     def update_from_token(self, token):
         """Update user from token token."""
