@@ -115,7 +115,7 @@ class MoodleLMSBackend(BaseLMSBackend):
             # username is unique in Moodle
             user_id = res.get("users", [])[0].get("id")
         except IndexError as e:
-            logger.error("User %s not found in Moodle", username)
+            logger.info("User %s not found in Moodle", username)
             raise MoodleUserException() from e
         return user_id
 
