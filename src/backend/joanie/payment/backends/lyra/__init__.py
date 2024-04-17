@@ -228,6 +228,61 @@ class LyraBackend(BasePaymentBackend):
 
         return self._get_payment_info(url, payload)
 
+    def create_zero_click_payment(self, order, credit_card_token, amount):
+        """
+        Create a zero click payment object for a given order
+
+        https://docs.lyra.com/fr/rest/V4.0/api/kb/zero_click_payment.html
+        https://docs.lyra.com/fr/rest/V4.0/api/playground/Charge/CreatePayment
+        """
+
+        url = f"{self.api_url}Charge/CreatePayment"
+        payload = self._get_common_payload_data(order)
+        payload["amount"] = int(amount * 100)
+        payload["formAction"] = "SILENT"
+        payload["paymentMethodToken"] = credit_card_token
+
+        credit_card = CreditCard.objects.get(token=credit_card_token)
+        if (
+            initial_issuer_transaction_identifier
+            := credit_card.initial_issuer_transaction_identifier
+        ):
+            payload["transactionOptions"] = {
+                "cardOptions": {
+                    "initialIssuerTransactionIdentifier": initial_issuer_transaction_identifier
+                }
+            }
+
+        response_json = self._call_api(url, payload)
+
+        if not response_json:
+            return False
+
+        success = response_json.get("status") == "SUCCESS"
+        answer = response_json.get("answer")
+        billing_details = answer["customer"]["billingDetails"]
+
+        if not success:
+            return False
+
+        self._do_on_payment_success(
+            order=order,
+            payment={
+                "id": answer["transactions"][0]["uuid"],
+                "amount": D(f"{answer['orderDetails']['orderTotalAmount'] / 100:.2f}"),
+                "billing_address": {
+                    "address": billing_details["address"],
+                    "city": billing_details["city"],
+                    "country": billing_details["country"],
+                    "first_name": billing_details["firstName"],
+                    "last_name": billing_details["lastName"],
+                    "postcode": billing_details["zipCode"],
+                },
+            },
+            validate_order=False,
+        )
+        return True
+
     def _check_hash(self, post_data):
         """Verify IPN authenticity"""
         kr_answer = post_data["kr-answer"].encode("utf-8")

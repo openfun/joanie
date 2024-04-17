@@ -116,7 +116,9 @@ class DummyPaymentBackend(BasePaymentBackend):
         logger.info("Mail is sent to %s from dummy payment", order.owner.email)
         super()._send_mail_payment_success(order)
 
-    def create_payment(self, order, billing_address):
+    def create_payment(
+        self, order, billing_address=None, credit_card_token=None, amount=None
+    ):
         """
         Generate a payment object then store it in the cache.
         """
@@ -125,11 +127,14 @@ class DummyPaymentBackend(BasePaymentBackend):
         notification_url = self.get_notification_url()
         payment_info = {
             "id": payment_id,
-            "amount": int(order.total * 100),
-            "billing_address": billing_address,
+            "amount": amount * 100 if amount else int(order.total * 100),
             "notification_url": notification_url,
             "metadata": {"order_id": order_id},
         }
+        if billing_address:
+            payment_info["billing_address"] = billing_address
+        if credit_card_token:
+            payment_info["credit_card_token"] = credit_card_token
         cache.set(payment_id, payment_info)
 
         return {
@@ -143,6 +148,29 @@ class DummyPaymentBackend(BasePaymentBackend):
         Call create_payment method and bind a `is_paid` property to payment information.
         """
         payment_info = self.create_payment(order, billing_address)
+        notification_request = APIRequestFactory().post(
+            reverse("payment_webhook"),
+            data={
+                "id": payment_info["payment_id"],
+                "type": "payment",
+                "state": "success",
+            },
+            format="json",
+        )
+        notification_request.data = json.loads(
+            notification_request.body.decode("utf-8")
+        )
+
+        return {
+            **payment_info,
+            "is_paid": True,
+        }
+
+    def create_zero_click_payment(self, order, credit_card_token=None, amount=None):
+        """
+        Call create_payment method and bind a `is_paid` property to payment information.
+        """
+        payment_info = self.create_payment(order, credit_card_token, amount=amount)
         notification_request = APIRequestFactory().post(
             reverse("payment_webhook"),
             data={

@@ -1,3 +1,4 @@
+# pylint: disable=too-many-locals
 """All debug views of the `debug`app."""
 
 import base64
@@ -312,24 +313,31 @@ class DebugPaymentTemplateView(TemplateView):
         product.save()
         order = OrderFactory(owner=owner, product=product)
         billing_address = BillingAddressDictFactory()
-        credit_card = CreditCard.objects.get(owner=owner)
+        credit_card = CreditCard.objects.filter(owner=owner, is_main=True).first()
         one_click = "one-click" in self.request.GET
         tokenize_card = "tokenize-card" in self.request.GET
+        zero_click = "zero-click" in self.request.GET
 
-        if tokenize_card:
-            form_token = backend.tokenize_card(order, billing_address)
+        if zero_click and credit_card:
+            response = backend.create_zero_click_payment(
+                order, credit_card.token, order.total
+            )
+        elif tokenize_card:
+            payment_infos = backend.tokenize_card(order, billing_address)
         elif credit_card is not None and one_click:
             payment_infos = backend.create_one_click_payment(
                 order, billing_address, credit_card.token
             )
         else:
-            form_token = backend.create_payment(order, billing_address)
+            payment_infos = backend.create_payment(order, billing_address)
+
+        form_token = payment_infos.get("form_token") if not zero_click else None
 
         success = reverse("debug.payment_template")
         context.update(
             {
                 "public_key": backend.public_key,
-                "form_token": form_token,
+                "form_token": form_token if not zero_click else None,
                 "success": success,
                 "billing_address": billing_address,
                 "product": product.to_dict(),
@@ -337,6 +345,8 @@ class DebugPaymentTemplateView(TemplateView):
                 "one_click": one_click,
                 "tokenize_card": tokenize_card,
                 "credit_card": credit_card.to_dict() if credit_card else None,
+                "zero_click": zero_click,
+                "response": response if zero_click else None,
             }
         )
 

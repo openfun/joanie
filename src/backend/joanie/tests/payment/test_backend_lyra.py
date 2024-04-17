@@ -13,6 +13,7 @@ import responses
 from requests import HTTPError, RequestException
 from rest_framework.test import APIRequestFactory
 
+from joanie.core.enums import ORDER_STATE_PENDING
 from joanie.core.factories import OrderFactory, ProductFactory, UserFactory
 from joanie.payment.backends.base import BasePaymentBackend
 from joanie.payment.backends.lyra import LyraBackend
@@ -23,6 +24,10 @@ from joanie.tests.base import BaseLogMixinTestCase
 from joanie.tests.payment.base_payment import BasePaymentTestCase
 
 
+@override_settings(
+    JOANIE_CATALOG_NAME="Test Catalog",
+    JOANIE_CATALOG_BASE_URL="https://richie.education",
+)
 class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
     """Test case of the Lyra backend"""
 
@@ -478,6 +483,87 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
                     "base_url": self.configuration.get("api_base_url"),
                 },
             },
+        )
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_payment_backend_lyra_create_zero_click_payment(self):
+        """
+        When backend creates a zero click payment, it should return payment information.
+        """
+        backend = LyraBackend(self.configuration)
+        owner = UserFactory(
+            email="john.doe@acme.org",
+            first_name="John",
+            last_name="Doe",
+            language="en-us",
+        )
+        product = ProductFactory(price=D("123.45"))
+        order = OrderFactory(owner=owner, product=product, state=ORDER_STATE_PENDING)
+        credit_card = CreditCardFactory(
+            owner=owner,
+            token="854d630f17f54ee7bce03fb4fcf764e9",
+            initial_issuer_transaction_identifier="4575676657929351",
+        )
+
+        with self.open("lyra/responses/create_zero_click_payment.json") as file:
+            json_response = json.loads(file.read())
+
+        responses.add(
+            responses.POST,
+            "https://api.lyra.com/api-payment/V4/Charge/CreatePayment",
+            headers={
+                "Content-Type": "application/json",
+            },
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        "content-type": "application/json",
+                        "authorization": "Basic Njk4NzYzNTc6dGVzdHBhc3N3b3JkX0RFTU9QUklWQVRFS0VZMjNHNDQ3NXpYWlEyVUE1eDdN",
+                    }
+                ),
+                responses.matchers.json_params_matcher(
+                    {
+                        "amount": 12345,
+                        "currency": "EUR",
+                        "customer": {
+                            "email": "john.doe@acme.org",
+                            "reference": str(owner.id),
+                            "shippingDetails": {
+                                "shippingMethod": "DIGITAL_GOOD",
+                            },
+                        },
+                        "orderId": str(order.id),
+                        "formAction": "SILENT",
+                        "paymentMethodToken": credit_card.token,
+                        "transactionOptions": {
+                            "cardOptions": {
+                                "initialIssuerTransactionIdentifier": credit_card.initial_issuer_transaction_identifier,
+                            }
+                        },
+                        "ipnTargetUrl": "https://example.com/api/v1.0/payments/notifications",
+                    }
+                ),
+            ],
+            status=200,
+            json=json_response,
+        )
+
+        response = backend.create_zero_click_payment(
+            order, credit_card.token, order.total
+        )
+
+        self.assertTrue(response)
+
+        # Invoice is created
+        self.assertEqual(order.invoices.count(), 1)
+        # Transaction is created
+        self.assertEqual(order.invoices.first().transactions.count(), 1)
+        # With 0 click payment, order state is not changed
+        order.refresh_from_db()
+        self.assertEqual(order.state, ORDER_STATE_PENDING)
+        # Mail is sent
+        self._check_order_validated_email_sent(
+            owner.email, owner.get_full_name(), order
         )
 
     def test_payment_backend_lyra_handle_notification_unknown_resource(self):
