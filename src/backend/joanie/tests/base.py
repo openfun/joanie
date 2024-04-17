@@ -13,6 +13,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 from joanie.core import enums
 from joanie.core.models import ActivityLog
 from joanie.core.utils.jwt_tokens import generate_jwt_token_from_user
+from joanie.core.utils.sentry import serialize_data
 
 
 class BaseAPITestCase(TestCase):
@@ -149,6 +150,10 @@ class BaseLogMixinTestCase:
                         _type,
                         f"{assert_failed_message} context key {key}",
                     )
+
+                # should not raise
+                # See SentryEncoder in src/backend/joanie/core/utils/sentry.py
+                serialize_data(context)
         except Exception as error:
             raise error
 
@@ -168,6 +173,10 @@ class BaseLogMixinTestCase:
                     pass
             if not is_found:
                 self.fail(f"Expected record {expected_record} not found in {records}")
+
+        for record in logger.records:
+            if hasattr(record, "context"):
+                serialize_data(record.context)
 
 
 class ActivityLogMixingTestCase:
