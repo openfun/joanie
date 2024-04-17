@@ -340,7 +340,7 @@ class OpenEdXLMSBackendTestCase(TestCase):
         )
 
         # If the order is later canceled, the enrollment should be set back to honor
-        order.cancel()
+        order.flow.cancel()
 
         self.assertEqual(len(responses.calls), 2)
         self.assertEqual(

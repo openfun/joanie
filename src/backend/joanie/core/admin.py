@@ -565,7 +565,7 @@ class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
     def cancel(self, request, queryset):  # pylint: disable=no-self-use
         """Cancel orders"""
         for order in queryset:
-            order.cancel()
+            order.flow.cancel()
 
     @takes_instance_or_queryset
     def generate_certificates(self, request, queryset):  # pylint: disable=no-self-use

@@ -439,7 +439,7 @@ class OrderViewSet(
                 status=HTTPStatus.UNPROCESSABLE_ENTITY,
             )
 
-        order.pending(payment_id)
+        order.flow.pending(payment_id)
 
         return Response(status=HTTPStatus.NO_CONTENT)
 
@@ -454,7 +454,7 @@ class OrderViewSet(
                 status=HTTPStatus.UNPROCESSABLE_ENTITY,
             )
 
-        order.cancel()
+        order.flow.cancel()
         return Response(status=HTTPStatus.NO_CONTENT)
 
     @action(detail=True, methods=["GET"])
@@ -504,7 +504,7 @@ class OrderViewSet(
         Validate the order
         """
         order = self.get_object()
-        order.validate()
+        order.flow.validate()
         return Response(status=HTTPStatus.OK)
 
     @extend_schema(request=None)

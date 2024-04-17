@@ -9,20 +9,18 @@ from collections import defaultdict
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
 import requests
-from django_fsm import FSMField, transition
-from django_fsm.signals import post_transition
 from parler import models as parler_models
 from urllib3.util import Retry
 
 from joanie.core import enums
 from joanie.core.exceptions import CertificateGenerationError
 from joanie.core.fields.schedule import OrderPaymentScheduleEncoder
+from joanie.core.flows.order import OrderFlow
 from joanie.core.models.accounts import User
 from joanie.core.models.base import BaseModel
 from joanie.core.models.certifications import Certificate
@@ -38,8 +36,6 @@ from joanie.core.models.courses import (
 from joanie.core.utils import contract_definition as contract_definition_utility
 from joanie.core.utils import issuers, webhooks
 from joanie.core.utils.payment_schedule import generate as generate_payment_schedule
-from joanie.payment import get_payment_backend
-from joanie.payment.models import CreditCard
 from joanie.signature.backends import get_signature_backend
 
 logger = logging.getLogger(__name__)
@@ -457,7 +453,7 @@ class Order(BaseModel):
         default=False,
         help_text=_("User has consented to the platform terms and conditions."),
     )
-    state = FSMField(
+    state = models.CharField(
         default=enums.ORDER_STATE_DRAFT,
         choices=enums.ORDER_STATE_CHOICES,
         db_index=True,
@@ -505,58 +501,13 @@ class Order(BaseModel):
         verbose_name_plural = _("Orders")
         ordering = ["-created_on"]
 
+    def __init__(self, *args, **kwargs):
+        """Initiate Order object"""
+        super().__init__(*args, **kwargs)
+        self.flow = OrderFlow(self)
+
     def __str__(self):
         return f"Order {self.product} for user {self.owner}"
-
-    def can_be_state_validated(self):
-        """
-        An order can be validated if the product is free or if it
-        has invoices.
-        """
-        return self.total == enums.MIN_ORDER_TOTAL_AMOUNT or self.invoices.count() > 0
-
-    def can_be_state_submitted(self):
-        """
-        An order can be submitted if the order has a course, an organization,
-        an owner, and a product
-        """
-        return (
-            (self.course is not None or self.enrollment is not None)
-            and self.organization is not None
-            and self.owner is not None
-            and self.product is not None
-        )
-
-    @transition(
-        field="state",
-        source=[enums.ORDER_STATE_DRAFT, enums.ORDER_STATE_PENDING],
-        target=enums.ORDER_STATE_SUBMITTED,
-        conditions=[can_be_state_submitted],
-    )
-    def _submit(self, billing_address=None, credit_card_id=None, request=None):
-        """
-        Transition order to submitted state.
-        Create a payment if the product is fee
-        """
-        payment_backend = get_payment_backend()
-        if credit_card_id:
-            try:
-                credit_card = CreditCard.objects.get(
-                    owner=self.owner, id=credit_card_id
-                )
-                return payment_backend.create_one_click_payment(
-                    request=request,
-                    order=self,
-                    billing_address=billing_address,
-                    credit_card_token=credit_card.token,
-                )
-            except (CreditCard.DoesNotExist, NotImplementedError):
-                pass
-        payment_info = payment_backend.create_payment(
-            request=request, order=self, billing_address=billing_address
-        )
-
-        return payment_info
 
     def submit(self, billing_address=None, credit_card_id=None, request=None):
         """
@@ -578,48 +529,10 @@ class Order(BaseModel):
                 order_relation.course_runs.set(relation.course_runs.all())
 
         if self.total == enums.MIN_ORDER_TOTAL_AMOUNT:
-            self.validate()
+            self.flow.validate()
             return None
 
-        return self._submit(billing_address, credit_card_id, request)
-
-    @transition(
-        field="state",
-        source=[
-            enums.ORDER_STATE_DRAFT,
-            enums.ORDER_STATE_SUBMITTED,
-        ],
-        target=enums.ORDER_STATE_VALIDATED,
-        conditions=[can_be_state_validated],
-    )
-    def validate(self):
-        """
-        Transition order to validated state.
-        """
-
-    @transition(
-        field="state",
-        source="*",
-        target=enums.ORDER_STATE_CANCELED,
-    )
-    def cancel(self):
-        """
-        Mark order instance as "canceled".
-        """
-
-    @transition(
-        field="state",
-        source=[enums.ORDER_STATE_SUBMITTED, enums.ORDER_STATE_VALIDATED],
-        target=enums.ORDER_STATE_PENDING,
-    )
-    def pending(self, payment_id=None):
-        """
-        Mark order instance as "pending" and abort the related
-        payment if there is one
-        """
-        if payment_id:
-            payment_backend = get_payment_backend()
-            payment_backend.abort_payment(payment_id)
+        return self.flow.submit(billing_address, credit_card_id, request)
 
     @property
     def target_course_runs(self):
@@ -1154,53 +1067,7 @@ class Order(BaseModel):
                 "Cannot withdraw order after the first installment due date"
             )
 
-        self.cancel()
-
-
-@receiver(post_transition, sender=Order)
-def order_post_transition_callback(sender, instance, **kwargs):  # pylint: disable=unused-argument
-    """
-    Post transition callback for Order model. When an order is validated,
-    it automatically enrolls user and when it is canceled, it automatically
-    unenrolls user.
-    """
-    instance.save()
-
-    # When an order is validated, if the user was previously enrolled for free in any of the
-    # course runs targeted by the purchased product, we should change their enrollment mode on
-    # these course runs to "verified".
-    if instance.state in [enums.ORDER_STATE_VALIDATED, enums.ORDER_STATE_CANCELED]:
-        for enrollment in Enrollment.objects.filter(
-            course_run__course__target_orders=instance, is_active=True
-        ).select_related("course_run", "user"):
-            enrollment.set()
-
-    # Only enroll user if the product has no contract to sign, otherwise we should wait
-    # for the contract to be signed before enrolling the user.
-    if (
-        instance.state == enums.ORDER_STATE_VALIDATED
-        and instance.product.contract_definition is None
-    ):
-        instance.enroll_user_to_course_run()
-
-    if instance.state == enums.ORDER_STATE_CANCELED:
-        instance.unenroll_user_from_course_runs()
-
-    if order_enrollment := instance.enrollment:
-        # Trigger LMS synchronization for source enrollment to update mode
-        # Make sure it is saved in case the state is modified e.g in case of synchronization
-        # failure
-        order_enrollment.set()
-
-    # Reset course product relation cache if its representation is impacted by changes
-    # on related orders
-    # e.g. number of remaining seats when an order group is used
-    # see test_api_course_product_relation_read_detail_with_order_groups_cache
-    if instance.order_group:
-        course_id = instance.course_id or instance.enrollment.course_run.course_id
-        CourseProductRelation.objects.filter(
-            product_id=instance.product_id, course_id=course_id
-        ).update(updated_on=timezone.now())
+        self.flow.cancel()
 
 
 class OrderTargetCourseRelation(BaseModel):

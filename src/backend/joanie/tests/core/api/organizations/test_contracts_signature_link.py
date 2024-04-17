@@ -153,7 +153,7 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
         order.contract.submitted_for_signature_on = timezone.now()
         order.contract.student_signed_on = timezone.now()
         # Simulate the user has signed its contract then later canceled its order
-        order.cancel()
+        order.flow.cancel()
 
         token = self.generate_token_from_user(access.user)
 

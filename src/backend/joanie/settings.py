@@ -208,7 +208,6 @@ class Base(Configuration):
         # Third party apps
         "admin_auto_filters",
         "django_object_actions",
-        "django_fsm",
         "adminsortable2",
         "corsheaders",
         "dockerflow.django",

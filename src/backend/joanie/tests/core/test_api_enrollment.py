@@ -1987,7 +1987,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         # - Create an invoice related to the order to mark it as validated and trigger the
         #   auto enrollment logic on validate transition
         InvoiceFactory(order=order, total=order.total)
-        order.validate()
+        order.flow.validate()
 
         # The enrollment should have been activated automatically
         enrollment.refresh_from_db()

@@ -4,9 +4,9 @@ from http import HTTPStatus
 
 from django.core.exceptions import ValidationError as DjangoValidationError
 
-from django_fsm import TransitionNotAllowed
 from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework.views import exception_handler as drf_exception_handler
+from viewflow.fsm import TransitionNotAllowed
 
 
 def exception_handler(exc, context):
@@ -16,7 +16,7 @@ def exception_handler(exc, context):
     This code comes from twidi's gist:
     https://gist.github.com/twidi/9d55486c36b6a51bdcb05ce3a763e79f
 
-    Handle TransitionNotAllowed from django_fsm to avoid getting a 500
+    Handle TransitionNotAllowed from viewflow to avoid getting a 500
     """
     if isinstance(exc, DjangoValidationError):
         if hasattr(exc, "message_dict"):

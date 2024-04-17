@@ -29,7 +29,7 @@ class EnrollUserToCourseRunOrderModelsTestCase(TestCase):
         InvoiceFactory(order=order, total=order.total)
 
         # - Validate the order should automatically enroll user to course run
-        order.validate()
+        order.flow.validate()
 
         self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
 

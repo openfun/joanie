@@ -599,7 +599,7 @@ class OrderViewSet(
     def destroy(self, request, *args, **kwargs):
         """Cancels an order."""
         order = self.get_object()
-        order.cancel()
+        order.flow.cancel()
         return Response(status=HTTPStatus.NO_CONTENT)
 
     @extend_schema(
