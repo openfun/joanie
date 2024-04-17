@@ -40,7 +40,7 @@ class Brevo:
         """Log an info message."""
         logger.info(message, self.user.get("id"), self.list_id)
 
-    def _call_api(self, url, payload=None, query_params=None):
+    def _call_api(self, url, payload=None, query_params=None, log_level=logging.ERROR):
         """
         Call the Brevo API with the given payload.
         """
@@ -51,7 +51,8 @@ class Brevo:
                 url, params=query_params, headers=self.headers, timeout=5
             )
         if not response.ok:
-            logger.error(
+            logger.log(
+                log_level,
                 "Error calling Brevo API %s | %s: %s",
                 url,
                 response.status_code,
@@ -65,9 +66,10 @@ class Brevo:
                     }
                 },
             )
+
         return response
 
-    def create_contact_to_commercial_list(self):
+    def create_contact_to_commercial_list(self, log_level=logging.ERROR):
         """
         Create a contact with the given email, and add it to the commercial newsletter list.
         """
@@ -81,7 +83,7 @@ class Brevo:
             },
             "listIds": [self.list_id],
         }
-        response = self._call_api(self.contact_url, payload)
+        response = self._call_api(self.contact_url, payload, log_level=log_level)
         if not response.ok:
             return None
 
@@ -94,7 +96,9 @@ class Brevo:
         self._log_info("Adding email for user %s to list %s")
 
         payload = {"emails": [self.user.get("email")]}
-        response = self._call_api(self.subscribe_to_list_url, payload)
+        response = self._call_api(
+            self.subscribe_to_list_url, payload, log_level=logging.INFO
+        )
         if not response.ok:
             if (
                 response.status_code == BAD_REQUEST
