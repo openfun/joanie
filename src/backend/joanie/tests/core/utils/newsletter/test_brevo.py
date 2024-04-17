@@ -12,6 +12,7 @@ import responses
 
 from joanie.core.factories import UserFactory
 from joanie.core.utils.newsletter.brevo import Brevo
+from joanie.tests.base import BaseLogMixinTestCase
 
 BREVO_CONTACTS_LIST = {
     "contacts": [
@@ -67,7 +68,7 @@ BREVO_CONTACTS_LIST = {
 @override_settings(
     BREVO_API_KEY="api-key", BREVO_COMMERCIAL_NEWSLETTER_LIST_ID="list-id"
 )
-class BrevoTestCase(TestCase):
+class BrevoTestCase(TestCase, BaseLogMixinTestCase):
     """
     Brevo API client test case.
     """
@@ -121,9 +122,80 @@ class BrevoTestCase(TestCase):
         )
 
         brevo_user = Brevo(user.to_dict())
-        response = brevo_user.create_contact_to_commercial_list()
+
+        with self.assertLogs() as logger:
+            response = brevo_user.create_contact_to_commercial_list()
 
         self.assertEqual(json_response, response)
+        self.assertLogsEquals(
+            logger.records,
+            [
+                (
+                    "INFO",
+                    f"Creating contact with email for user {user.id} in list list-id",
+                ),
+            ],
+        )
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_create_contact_to_commercial_list_failed(self):
+        """
+        Test the creation of a contact in the commercial newsletter list.
+        """
+        user = UserFactory.build(
+            has_subscribed_to_commercial_newsletter=True,
+            email="user@example.com",
+        )
+
+        responses.add(
+            responses.POST,
+            self.create_contact_url,
+            headers={
+                "Content-Type": "application/json",
+            },
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        "accept": "application/json",
+                        "content-type": "application/json",
+                        "api-key": settings.BREVO_API_KEY,
+                    }
+                ),
+                responses.matchers.json_params_matcher(
+                    {
+                        "email": user.email,
+                        "attributes": {
+                            "NOM": user.last_name,
+                            "PRENOM": user.first_name,
+                        },
+                        "listIds": [settings.BREVO_COMMERCIAL_NEWSLETTER_LIST_ID],
+                    }
+                ),
+            ],
+            status=400,
+            json={"code": "invalid_parameter"},
+        )
+
+        brevo_user = Brevo(user.to_dict())
+
+        with self.assertLogs() as logger:
+            response = brevo_user.create_contact_to_commercial_list()
+
+        self.assertIsNone(response)
+        self.assertLogsEquals(
+            logger.records,
+            [
+                (
+                    "INFO",
+                    f"Creating contact with email for user {user.id} in list list-id",
+                ),
+                (
+                    "ERROR",
+                    f"Error calling Brevo API {self.create_contact_url}"
+                    ' | 400: {"code": "invalid_parameter"}',
+                ),
+            ],
+        )
 
     @responses.activate(assert_all_requests_are_fired=True)
     def test_subscribe_to_commercial_list_exists(self):
@@ -161,9 +233,17 @@ class BrevoTestCase(TestCase):
         )
 
         brevo_user = Brevo(user.to_dict())
-        response = brevo_user.subscribe_to_commercial_list()
+
+        with self.assertLogs() as logger:
+            response = brevo_user.subscribe_to_commercial_list()
 
         self.assertEqual(json_response, response)
+        self.assertLogsEquals(
+            logger.records,
+            [
+                ("INFO", f"Adding email for user {user.id} to list list-id"),
+            ],
+        )
 
     @responses.activate(assert_all_requests_are_fired=True)
     def test_subscribe_to_commercial_list_create(self):
@@ -230,9 +310,114 @@ class BrevoTestCase(TestCase):
         )
 
         brevo_user = Brevo(user.to_dict())
-        response = brevo_user.subscribe_to_commercial_list()
+        with self.assertLogs() as logger:
+            response = brevo_user.subscribe_to_commercial_list()
 
         self.assertEqual(json_response, response)
+        self.assertLogsEquals(
+            logger.records,
+            [
+                ("INFO", f"Adding email for user {user.id} to list list-id"),
+                (
+                    "INFO",
+                    f"Error calling Brevo API {self.subscribe_to_list_url}"
+                    ' | 400: {"code": "invalid_parameter"}',
+                ),
+                (
+                    "INFO",
+                    f"Creating contact with email for user {user.id} in list list-id",
+                ),
+            ],
+        )
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_subscribe_to_commercial_list_create_failed(self):
+        """
+        Test the removal of a contact from the commercial newsletter list.
+        """
+        user = UserFactory.build(
+            has_subscribed_to_commercial_newsletter=True,
+            email="user@example.com",
+        )
+
+        responses.add(
+            responses.POST,
+            self.subscribe_to_list_url,
+            headers={
+                "Content-Type": "application/json",
+            },
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        "accept": "application/json",
+                        "content-type": "application/json",
+                        "api-key": settings.BREVO_API_KEY,
+                    }
+                ),
+                responses.matchers.json_params_matcher(
+                    {
+                        "emails": [user.email],
+                    }
+                ),
+            ],
+            status=400,
+            json={"code": "invalid_parameter"},
+        )
+
+        responses.add(
+            responses.POST,
+            self.create_contact_url,
+            headers={
+                "Content-Type": "application/json",
+            },
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        "accept": "application/json",
+                        "content-type": "application/json",
+                        "api-key": settings.BREVO_API_KEY,
+                    }
+                ),
+                responses.matchers.json_params_matcher(
+                    {
+                        "email": user.email,
+                        "attributes": {
+                            "NOM": user.last_name,
+                            "PRENOM": user.first_name,
+                        },
+                        "listIds": [settings.BREVO_COMMERCIAL_NEWSLETTER_LIST_ID],
+                    }
+                ),
+            ],
+            status=400,
+            json={"code": "invalid_parameter"},
+        )
+
+        brevo_user = Brevo(user.to_dict())
+        with self.assertLogs() as logger:
+            response = brevo_user.subscribe_to_commercial_list()
+
+        self.assertIsNone(response)
+        self.assertLogsEquals(
+            logger.records,
+            [
+                ("INFO", f"Adding email for user {user.id} to list list-id"),
+                (
+                    "INFO",
+                    f"Error calling Brevo API {self.subscribe_to_list_url}"
+                    ' | 400: {"code": "invalid_parameter"}',
+                ),
+                (
+                    "INFO",
+                    f"Creating contact with email for user {user.id} in list list-id",
+                ),
+                (
+                    "ERROR",
+                    f"Error calling Brevo API {self.create_contact_url}"
+                    ' | 400: {"code": "invalid_parameter"}',
+                ),
+            ],
+        )
 
     @responses.activate(assert_all_requests_are_fired=True)
     def test_unsubscribe_from_commercial_list_ok(self):
