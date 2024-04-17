@@ -925,7 +925,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         )
 
         # But if we cancel the first order, user should be able to create a new order
-        order.cancel()
+        order.flow.cancel()
 
         response = self.client.post(
             "/api/v1.0/orders/",
@@ -1460,7 +1460,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
 
         InvoiceFactory(order=order)
-        order.validate()
+        order.flow.validate()
         order.refresh_from_db()
         self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
 

@@ -61,7 +61,7 @@ class BasePaymentBackend:
         )
 
         # - Mark order as validated
-        order.validate()
+        order.flow.validate()
 
         # send mail
         cls._send_mail_payment_success(order)
@@ -109,7 +109,7 @@ class BasePaymentBackend:
         Mark the invoice as pending.
         """
         # - Unvalidate order
-        order.pending()
+        order.flow.pending()
         ActivityLog.create_payment_failed_activity_log(order)
 
     @staticmethod
@@ -136,7 +136,7 @@ class BasePaymentBackend:
 
         if invoice.state == INVOICE_STATE_REFUNDED:
             # order has been fully refunded
-            invoice.order.cancel()
+            invoice.order.flow.cancel()
 
     @staticmethod
     def get_notification_url(request):

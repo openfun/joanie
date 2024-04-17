@@ -7,14 +7,15 @@ from unittest import mock
 
 from django.urls import reverse
 
-from joanie.core import factories, models
+from joanie.core import factories
+from joanie.core.flows import OrderFlow
 from joanie.tests.base import BaseAPITestCase
 
 
 class OrderAdminTestCase(BaseAPITestCase):
     """Test suite for admin to manipulate orders."""
 
-    @mock.patch.object(models.Order, "cancel")
+    @mock.patch.object(OrderFlow, "cancel")
     def test_admin_order_action_cancel(self, mock_cancel):
         """
         Order admin should display an action to cancel an order which call

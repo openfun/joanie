@@ -446,7 +446,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             ]
         )
 
-        mocked_now = datetime(2024, 1, 12, 8, 8)
+        mocked_now = datetime(2024, 1, 12, 8, 8, tzinfo=ZoneInfo("UTC"))
         with mock.patch("django.utils.timezone.now", return_value=mocked_now):
             order.withdraw()
 

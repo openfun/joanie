@@ -869,7 +869,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
 
         # Cancelling order should re-credit the number of seat availabilities in the
         # representation of the product
-        order.cancel()
+        order.flow.cancel()
 
         response = self.client.get(
             f"/api/v1.0/course-product-relations/{relation.id}/",
