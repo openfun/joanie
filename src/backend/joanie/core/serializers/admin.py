@@ -2,6 +2,8 @@
 # pylint: disable=too-many-lines
 """Admin serializers for Joanie Core app."""
 
+from decimal import Decimal as D
+
 from django.conf import settings
 
 from drf_spectacular.utils import extend_schema_serializer
@@ -327,7 +329,7 @@ class AdminProductSerializer(serializers.ModelSerializer):
     )
     call_to_action = serializers.CharField()
     price = serializers.DecimalField(
-        coerce_to_string=False, decimal_places=2, max_digits=9, min_value=0
+        coerce_to_string=False, decimal_places=2, max_digits=9, min_value=D(0.00)
     )
     price_currency = serializers.SerializerMethodField(read_only=True)
     instructions = serializers.CharField(
@@ -367,7 +369,7 @@ class AdminProductLightSerializer(serializers.ModelSerializer):
         coerce_to_string=False,
         decimal_places=2,
         max_digits=9,
-        min_value=0,
+        min_value=D(0.00),
         read_only=True,
     )
     price_currency = serializers.SerializerMethodField(read_only=True)
@@ -904,7 +906,7 @@ class AdminProductDetailSerializer(serializers.ModelSerializer):
     contract_definition = AdminContractDefinitionSerializer(read_only=True)
     target_courses = serializers.SerializerMethodField(read_only=True)
     price = serializers.DecimalField(
-        coerce_to_string=False, decimal_places=2, max_digits=9, min_value=0
+        coerce_to_string=False, decimal_places=2, max_digits=9, min_value=D(0.00)
     )
     course_relations = AdminCourseProductRelationsSerializer(read_only=True, many=True)
     price_currency = serializers.SerializerMethodField(read_only=True)
@@ -1057,7 +1059,7 @@ class AdminOrderSerializer(serializers.ModelSerializer):
     enrollment = AdminOrderEnrollmentSerializer(read_only=True)
     owner = AdminUserSerializer(read_only=True)
     total = serializers.DecimalField(
-        coerce_to_string=False, decimal_places=2, max_digits=9, min_value=0
+        coerce_to_string=False, decimal_places=2, max_digits=9, min_value=D(0.00)
     )
     total_currency = serializers.SerializerMethodField(read_only=True)
     contract = AdminContractSerializer()
@@ -1111,7 +1113,7 @@ class AdminOrderLightSerializer(serializers.ModelSerializer):
     )
     owner_name = serializers.SerializerMethodField(read_only=True)
     total = serializers.DecimalField(
-        coerce_to_string=False, decimal_places=2, max_digits=9, min_value=0
+        coerce_to_string=False, decimal_places=2, max_digits=9, min_value=D(0.00)
     )
     total_currency = serializers.SerializerMethodField(read_only=True)
 

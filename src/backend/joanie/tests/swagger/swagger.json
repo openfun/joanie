@@ -6011,7 +6011,7 @@
                         "type": "number",
                         "format": "double",
                         "maximum": 10000000,
-                        "minimum": 0,
+                        "minimum": 0.0,
                         "exclusiveMaximum": true,
                         "readOnly": true
                     },
@@ -6080,7 +6080,7 @@
                         "type": "number",
                         "format": "double",
                         "maximum": 10000000,
-                        "minimum": 0,
+                        "minimum": 0.0,
                         "exclusiveMaximum": true
                     },
                     "due_date": {
@@ -6939,7 +6939,7 @@
                         "type": "number",
                         "format": "double",
                         "maximum": 10000000,
-                        "minimum": 0,
+                        "minimum": 0.0,
                         "exclusiveMaximum": true,
                         "readOnly": true
                     },
