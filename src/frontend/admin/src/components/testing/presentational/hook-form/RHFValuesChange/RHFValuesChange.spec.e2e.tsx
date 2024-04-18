@@ -43,7 +43,7 @@ test.describe("<RHFValuesChange/>", () => {
       .getByTestId("radio-input-enable")
       .getByLabel("None")
       .click();
-    await delay(25);
+    await delay(50);
     expect(router.asPath).toEqual("/?name=Doe&select=1");
   });
 

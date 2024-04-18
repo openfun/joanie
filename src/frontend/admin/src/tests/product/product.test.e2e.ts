@@ -281,6 +281,9 @@ test.describe("Product form", () => {
       .getByLabel("Select row")
       .check();
     await page.getByTestId("submit-button-product-target-course-form").click();
+    await expect(
+      page.getByText("Operation completed successfully."),
+    ).toBeVisible();
 
     const dummyTargetCourseLocator = page.getByTestId(
       `dummy-product-target-course-${course.id}`,
@@ -310,6 +313,9 @@ test.describe("Product form", () => {
       .uncheck();
     await page.getByTestId("submit-button-product-target-course-form").click();
     await expect(
+      page.getByText("Operation completed successfully."),
+    ).toBeVisible();
+    await expect(
       targetCourseLocator.getByText("All selected course_runs."),
     ).toBeVisible();
   });
@@ -329,17 +335,18 @@ test.describe("Product form", () => {
     await expect(page.getByRole("heading", { name: "Products" })).toBeVisible();
     await page.getByRole("link", { name: product.title }).click();
     await page.getByRole("tab", { name: "Syllabus" }).click();
-    await page
-      .getByRole("heading", {
-        name: "List of courses to which this product is linked",
-      })
-      .click();
+    await expect(
+      page.getByRole("heading", { name: "Relation to courses" }),
+    ).toBeVisible();
     await expect(
       page
         .getByRole("alert")
         .getByText(
           "In this section, you have access to all courses to which this product is attached. Click on the course title to navigate to its detail.",
         ),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Add order group" }).first(),
     ).toBeVisible();
     await Promise.all(
       relations.map(async (relation) => {

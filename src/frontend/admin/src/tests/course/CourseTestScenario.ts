@@ -89,15 +89,17 @@ export const getCourseScenarioStore = () => {
       const index = productRelationResource.getResourceIndex(relation.id);
       productRelations[index] = result;
     } else {
+      const { product_relations: pr, ...restCourse } = course;
       result = {
         id: faker.string.uuid(),
         product,
+        course: restCourse,
         organizations: orgs,
         order_groups: [],
         can_edit: true,
       };
       productRelations.push(result);
-      course.product_relations = [...(course.product_relations ?? []), result];
+      course.product_relations = [...(pr ?? []), result];
     }
     return result;
   };
