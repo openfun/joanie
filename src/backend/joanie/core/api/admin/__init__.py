@@ -188,12 +188,14 @@ class CourseAccessViewSet(
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
-    viewsets.GenericViewSet,
+    NestedGenericViewSet,
 ):
     """
     Write only Course Access ViewSet
     """
 
+    lookup_fields = ["course__pk", "pk"]
+    lookup_url_kwargs = ["course_id", "pk"]
     authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_class = serializers.AdminCourseAccessSerializer
@@ -294,12 +296,14 @@ class TargetCoursesViewSet(
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
-    viewsets.GenericViewSet,
+    NestedGenericViewSet,
 ):
     """
     Write only Product's TargetCourse ViewSet
     """
 
+    lookup_fields = ["product__pk", "pk"]
+    lookup_url_kwargs = ["product_id", "pk"]
     authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_class = serializers.AdminProductTargetCourseRelationSerializer
@@ -636,12 +640,14 @@ class OrganizationAddressViewSet(
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
-    viewsets.GenericViewSet,
+    NestedGenericViewSet,
 ):
     """
     Write only Address for Organizations ViewSet.
     """
 
+    lookup_fields = ["organization__pk", "pk"]
+    lookup_url_kwargs = ["organization_id", "pk"]
     authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_class = serializers.AdminOrganizationAddressSerializer

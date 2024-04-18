@@ -268,8 +268,8 @@ class OrganizationAddressAdminAPITest(TestCase):
         self,
     ):
         """
-        An 400 Bad request error should be raised if trying to update an address with a
-        non existing `organization_id`.
+        An 404 Not Found error should be raised if trying to update an address with a
+        non existing `organization_id` uuid.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
@@ -294,12 +294,9 @@ class OrganizationAddressAdminAPITest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
         self.assertEqual(
-            response.json(),
-            {
-                "detail": "The relation does not exist between the address and the organization."
-            },
+            response.json(), {"detail": "No Address matches the given query."}
         )
 
     def test_admin_api_organization_addresses_request_partial_update(self):
@@ -380,10 +377,9 @@ class OrganizationAddressAdminAPITest(TestCase):
             f"/api/v1.0/admin/organizations/{organization_2.id}/addresses/{address.id}/"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
         self.assertEqual(
-            response.json(),
-            ["The relation does not exist between the address and the organization."],
+            response.json(), {"detail": "No Address matches the given query."}
         )
 
     def test_admin_api_organization_addresses_request_update_with_wrong_address_id(
@@ -404,10 +400,7 @@ class OrganizationAddressAdminAPITest(TestCase):
             data={"title": "Office"},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
         self.assertEqual(
-            response.json(),
-            {
-                "detail": "The relation does not exist between the address and the organization."
-            },
+            response.json(), {"detail": "No Address matches the given query."}
         )
