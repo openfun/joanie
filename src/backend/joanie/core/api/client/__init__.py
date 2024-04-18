@@ -807,7 +807,7 @@ class OrganizationAccessViewSet(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
-    viewsets.GenericViewSet,
+    NestedGenericViewSet,
 ):
     """
     API ViewSet for all interactions with organization accesses.
@@ -833,7 +833,8 @@ class OrganizationAccessViewSet(
         Delete targeted organization access
     """
 
-    lookup_field = "pk"
+    lookup_fields = ["organization__pk", "pk"]
+    lookup_url_kwargs = ["organization_id", "pk"]
     permission_classes = [permissions.AccessPermission]
     queryset = models.OrganizationAccess.objects.all().select_related("user")
     serializer_class = serializers.OrganizationAccessSerializer
@@ -881,7 +882,7 @@ class CourseAccessViewSet(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
-    viewsets.GenericViewSet,
+    NestedGenericViewSet,
 ):
     """
     API ViewSet for all interactions with course accesses.
@@ -907,7 +908,8 @@ class CourseAccessViewSet(
         Delete targeted course access
     """
 
-    lookup_field = "pk"
+    lookup_fields = ["course__pk", "pk"]
+    lookup_url_kwargs = ["course_id", "pk"]
     permission_classes = [permissions.AccessPermission]
     queryset = models.CourseAccess.objects.all().select_related("user")
     serializer_class = serializers.CourseAccessSerializer
@@ -1129,8 +1131,6 @@ class ContractViewSet(GenericContractViewSet):
     GET /api/contracts/<contract_id>/download/
         Return a contract in PDF format when it is signed on.
     """
-
-    lookup_field = "pk"
 
     def get_queryset(self):
         """
@@ -1448,7 +1448,7 @@ class NestedOrderCourseViewSet(NestedGenericViewSet, mixins.ListModelMixin):
         Returns every users who made order on the course product relation object.
     """
 
-    lookup_fields = ["course_id", "pk"]
+    lookup_fields = ["course__pk", "pk"]
     lookup_url_kwargs = ["course_id", "pk"]
     permission_classes = [permissions.AccessPermission]
     serializer_class = serializers.NestedOrderCourseSerializer
