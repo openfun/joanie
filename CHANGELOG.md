@@ -28,6 +28,9 @@ and this project adheres to
 
 ### Changed
 
+- Use `NestedGenericViewSet` class for nested routes
+  on API viewsets (client and admin)
+- Migrate from `django-fsm` to `viewflow.fsm`
 - Store certificate images through a new DocumentImage model
 - Migrate to Sentry SDK 2.0
 - Add required filter by `Organization` and search through
