@@ -1,14 +1,14 @@
 import { expect, test } from "@playwright/experimental-ct-react";
-import { TranslatableContent } from "@/components/presentational/translatable-content/TranslatableContent";
 import { Maybe } from "@/types/utils";
+import { TranslatableForm } from "@/components/presentational/translatable-content/TranslatableForm";
 
-test.describe("<TranslatableContent/>", () => {
+test.describe("<TranslatableForm/>", () => {
   test("Check onSelectLang call", async ({ mount }) => {
     let lang: Maybe<string> = "";
     const component = await mount(
-      <TranslatableContent onSelectLang={(newLang) => (lang = newLang)}>
+      <TranslatableForm onSelectLang={(newLang) => (lang = newLang)}>
         John Doe
-      </TranslatableContent>,
+      </TranslatableForm>,
     );
     await expect(component.getByText("John Doe")).toBeVisible();
     expect(lang).toEqual("");
@@ -20,9 +20,7 @@ test.describe("<TranslatableContent/>", () => {
 
   test("Check local storage values", async ({ mount, page }) => {
     const component = await mount(
-      <TranslatableContent onSelectLang={() => {}}>
-        John Doe
-      </TranslatableContent>,
+      <TranslatableForm onSelectLang={() => {}}>John Doe</TranslatableForm>,
     );
 
     let states = await page.context().storageState();
@@ -43,9 +41,9 @@ test.describe("<TranslatableContent/>", () => {
 
   test("Check that the loader is displayed", async ({ mount }) => {
     const component = await mount(
-      <TranslatableContent isLoading={true} onSelectLang={() => {}}>
+      <TranslatableForm isLoading={true} onSelectLang={() => {}}>
         John Doe
-      </TranslatableContent>,
+      </TranslatableForm>,
     );
 
     await expect(component.getByRole("progressbar")).toBeVisible();
