@@ -422,7 +422,7 @@ class OrderViewSet(
             order.save()
 
         return Response(
-            {"payment_info": order.submit(billing_address, credit_card_id, request)},
+            {"payment_info": order.submit(billing_address, credit_card_id)},
             status=HTTPStatus.CREATED,
         )
 

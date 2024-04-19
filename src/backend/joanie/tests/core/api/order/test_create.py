@@ -7,7 +7,6 @@ from http import HTTPStatus
 from unittest import mock
 
 from django.conf import settings
-from django.test.client import RequestFactory
 
 from joanie.core import enums, factories, models
 from joanie.core.serializers import fields
@@ -589,7 +588,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         order = models.Order.objects.get()
-        order.submit(request=RequestFactory().request())
+        order.submit()
         # - Order has been successfully created and read_only_fields
         #   has been ignored.
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
@@ -1113,7 +1112,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 ],
             },
         )
-        with self.assertNumQueries(10):
+        with self.assertNumQueries(11):
             response = self.client.patch(
                 f"/api/v1.0/orders/{order.id}/submit/",
                 data=data,
@@ -1126,7 +1125,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "payment_info": {
                     "payment_id": f"pay_{order.id}",
                     "provider_name": "dummy",
-                    "url": "http://testserver/api/v1.0/payments/notifications",
+                    "url": "https://example.com/api/v1.0/payments/notifications",
                 }
             },
         )
@@ -1240,7 +1239,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             "payment_info": {
                 "payment_id": f"pay_{order.id}",
                 "provider_name": "dummy",
-                "url": "http://testserver/api/v1.0/payments/notifications",
+                "url": "https://example.com/api/v1.0/payments/notifications",
                 "is_paid": True,
             },
         }

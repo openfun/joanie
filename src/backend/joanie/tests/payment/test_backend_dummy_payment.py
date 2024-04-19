@@ -57,8 +57,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
         backend = DummyPaymentBackend()
         order = OrderFactory()
         billing_address = BillingAddressDictFactory()
-        request = APIRequestFactory().post(path="/")
-        payment_payload = backend.create_payment(request, order, billing_address)
+        payment_payload = backend.create_payment(order, billing_address)
         payment_id = f"pay_{order.id}"
 
         self.assertEqual(
@@ -66,7 +65,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
             {
                 "provider_name": "dummy",
                 "payment_id": payment_id,
-                "url": "http://testserver/api/v1.0/payments/notifications",
+                "url": "https://example.com/api/v1.0/payments/notifications",
             },
         )
 
@@ -77,7 +76,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
                 "id": payment_id,
                 "amount": int(order.total * 100),
                 "billing_address": billing_address,
-                "notification_url": "http://testserver/api/v1.0/payments/notifications",
+                "notification_url": "https://example.com/api/v1.0/payments/notifications",
                 "metadata": {"order_id": str(order.id)},
             },
         )
@@ -115,23 +114,20 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
         )
         order = OrderFactory(owner=owner, state=ORDER_STATE_SUBMITTED)
         billing_address = BillingAddressDictFactory()
-        request = APIRequestFactory().post(path="/")
         payment_id = f"pay_{order.id}"
 
-        payment_payload = backend.create_one_click_payment(
-            request, order, billing_address
-        )
+        payment_payload = backend.create_one_click_payment(order, billing_address)
 
         self.assertEqual(
             payment_payload,
             {
                 "provider_name": "dummy",
                 "payment_id": payment_id,
-                "url": "http://testserver/api/v1.0/payments/notifications",
+                "url": "https://example.com/api/v1.0/payments/notifications",
                 "is_paid": True,
             },
         )
-        mock_create_payment.assert_called_once_with(request, order, billing_address)
+        mock_create_payment.assert_called_once_with(order, billing_address)
 
         request = APIRequestFactory().post(
             reverse("payment_webhook"),
@@ -147,7 +143,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
                 "id": payment_id,
                 "amount": int(order.total * 100),
                 "billing_address": billing_address,
-                "notification_url": "http://testserver/api/v1.0/payments/notifications",
+                "notification_url": "https://example.com/api/v1.0/payments/notifications",
                 "metadata": {"order_id": str(order.id)},
             },
         )
@@ -190,10 +186,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
         # Create a payment
         order = OrderFactory()
         billing_address = BillingAddressDictFactory()
-        request = APIRequestFactory().post(path="/")
-        payment_id = backend.create_payment(request, order, billing_address)[
-            "payment_id"
-        ]
+        payment_id = backend.create_payment(order, billing_address)["payment_id"]
 
         # Notify a payment with a no state
         request = APIRequestFactory().post(
@@ -221,10 +214,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
         # Create a payment
         order = OrderFactory()
         billing_address = BillingAddressDictFactory()
-        request = APIRequestFactory().post(path="/")
-        payment_id = backend.create_payment(request, order, billing_address)[
-            "payment_id"
-        ]
+        payment_id = backend.create_payment(order, billing_address)["payment_id"]
 
         # Notify a payment with a no state
         request = APIRequestFactory().post(
@@ -255,10 +245,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
         # Create a payment
         order = OrderFactory(state=ORDER_STATE_SUBMITTED)
         billing_address = BillingAddressDictFactory()
-        request = APIRequestFactory().post(path="/")
-        payment_id = backend.create_payment(request, order, billing_address)[
-            "payment_id"
-        ]
+        payment_id = backend.create_payment(order, billing_address)["payment_id"]
 
         # Notify that payment failed
         request = APIRequestFactory().post(
@@ -287,10 +274,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
         # Create a payment
         order = OrderFactory()
         billing_address = BillingAddressDictFactory()
-        request = APIRequestFactory().post(path="/")
-        payment_id = backend.create_payment(request, order, billing_address)[
-            "payment_id"
-        ]
+        payment_id = backend.create_payment(order, billing_address)["payment_id"]
 
         # Notify that a payment succeeded
         request = APIRequestFactory().post(
@@ -322,10 +306,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
         # Create a payment
         order = OrderFactory()
         billing_address = BillingAddressDictFactory()
-        request = APIRequestFactory().post(path="/")
-        payment_id = backend.create_payment(request, order, billing_address)[
-            "payment_id"
-        ]
+        payment_id = backend.create_payment(order, billing_address)["payment_id"]
 
         # Notify that payment succeeded
         # Notify that payment has been refund
@@ -354,10 +335,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
         # Create a payment
         order = OrderFactory()
         billing_address = BillingAddressDictFactory()
-        request = APIRequestFactory().post(path="/")
-        payment_id = backend.create_payment(request, order, billing_address)[
-            "payment_id"
-        ]
+        payment_id = backend.create_payment(order, billing_address)["payment_id"]
 
         # Notify that payment has been refunded with an amount higher than
         # product price
@@ -391,10 +369,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
         # Create a payment
         order = OrderFactory()
         billing_address = BillingAddressDictFactory()
-        request = APIRequestFactory().post(path="/")
-        payment_id = backend.create_payment(request, order, billing_address)[
-            "payment_id"
-        ]
+        payment_id = backend.create_payment(order, billing_address)["payment_id"]
 
         # Notify that payment has been refunded
         request = request_factory.post(
@@ -427,10 +402,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
         # Create a payment
         order = OrderFactory(state=ORDER_STATE_SUBMITTED)
         billing_address = BillingAddressDictFactory()
-        request = APIRequestFactory().post(path="/")
-        payment_id = backend.create_payment(request, order, billing_address)[
-            "payment_id"
-        ]
+        payment_id = backend.create_payment(order, billing_address)["payment_id"]
 
         # Notify that payment has been paid
         request = request_factory.post(
@@ -489,9 +461,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
         request = APIRequestFactory().post(path="/")
 
         # Create a payment
-        payment_id = backend.create_payment(request, order, billing_address)[
-            "payment_id"
-        ]
+        payment_id = backend.create_payment(order, billing_address)["payment_id"]
 
         self.assertIsNotNone(cache.get(payment_id))
 

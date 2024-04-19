@@ -10,7 +10,7 @@ from unittest import mock
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
-from django.test import RequestFactory, TestCase
+from django.test import TestCase
 from django.test.utils import override_settings
 from django.utils import timezone as django_timezone
 
@@ -300,10 +300,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
 
         # Create an order link to the product
         order = factories.OrderFactory(product=product)
-        order.submit(
-            request=RequestFactory().request(),
-            billing_address=BillingAddressDictFactory(),
-        )
+        order.submit(billing_address=BillingAddressDictFactory())
 
         target_courses = order.target_courses.order_by("product_target_relations")
         self.assertCountEqual(target_courses, courses)
@@ -419,10 +416,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
 
         # - Create an order link to the product
         order = factories.OrderFactory(product=product)
-        order.submit(
-            request=RequestFactory().request(),
-            billing_address=BillingAddressDictFactory(),
-        )
+        order.submit(billing_address=BillingAddressDictFactory())
 
         # - Update product course relation, order course relation should not be impacted
         relation.course_runs.set([])
@@ -454,10 +448,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         self.assertEqual(order.target_courses.count(), 0)
 
         # Then we submit the order
-        order.submit(
-            request=RequestFactory().request(),
-            billing_address=BillingAddressDictFactory(),
-        )
+        order.submit(billing_address=BillingAddressDictFactory())
 
         self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
         self.assertEqual(order.target_courses.count(), 2)
@@ -476,10 +467,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         self.assertEqual(order.target_courses.count(), 0)
 
         # Then we submit the order
-        order.submit(
-            request=RequestFactory().request(),
-            billing_address=BillingAddressDictFactory(),
-        )
+        order.submit(billing_address=BillingAddressDictFactory())
 
         self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
         self.assertEqual(order.target_courses.count(), 2)
@@ -490,10 +478,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
 
         # So we need to submit it again
-        order.submit(
-            request=RequestFactory().request(),
-            billing_address=BillingAddressDictFactory(),
-        )
+        order.submit(billing_address=BillingAddressDictFactory())
 
         self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
         self.assertEqual(order.target_courses.count(), product.target_courses.count())

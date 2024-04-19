@@ -4,7 +4,7 @@ Test suite the `enroll_user_to_course_run` method on Order model
 
 import random
 
-from django.test import RequestFactory, TestCase
+from django.test import TestCase
 
 from joanie.core import enums, factories
 from joanie.core.models import CourseState, Enrollment
@@ -17,10 +17,7 @@ class EnrollUserToCourseRunOrderModelsTestCase(TestCase):
 
     def _create_validated_order(self, **kwargs):
         order = factories.OrderFactory(**kwargs)
-        order.submit(
-            request=RequestFactory().request(),
-            billing_address=BillingAddressDictFactory(),
-        )
+        order.submit(billing_address=BillingAddressDictFactory())
 
         self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
         self.assertEqual(Enrollment.objects.count(), 0)

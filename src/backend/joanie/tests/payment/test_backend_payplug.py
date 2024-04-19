@@ -68,9 +68,8 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         product = ProductFactory(price=D("123.45"))
         order = OrderFactory(owner=owner, product=product)
         billing_address = BillingAddressDictFactory()
-        request = APIRequestFactory().post("/")
         # pylint: disable=protected-access
-        payload = backend._get_payment_data(request, order, billing_address)
+        payload = backend._get_payment_data(order, billing_address)
 
         self.assertEqual(
             payload,
@@ -87,7 +86,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
                     "country": billing_address["country"],
                 },
                 "shipping": {"delivery_type": "DIGITAL_GOODS"},
-                "notification_url": "http://testserver/api/v1.0/payments/notifications",
+                "notification_url": "https://example.com/api/v1.0/payments/notifications",
                 "metadata": {"order_id": str(order.id)},
             },
         )
@@ -102,10 +101,9 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         backend = PayplugBackend(self.configuration)
         order = OrderFactory(product=ProductFactory())
         billing_address = BillingAddressDictFactory()
-        request = APIRequestFactory().post("/")
 
         with self.assertRaises(CreatePaymentFailed) as context:
-            backend.create_payment(request, order, billing_address)
+            backend.create_payment(order, billing_address)
 
         self.assertEqual(
             str(context.exception),
@@ -123,9 +121,8 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         product = ProductFactory(price=D("123.45"))
         order = OrderFactory(owner=owner, product=product)
         billing_address = BillingAddressDictFactory()
-        request = APIRequestFactory().post("/")
 
-        payload = backend.create_payment(request, order, billing_address)
+        payload = backend.create_payment(order, billing_address)
 
         mock_payplug_create.assert_called_once_with(
             **{
@@ -142,7 +139,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
                     "country": billing_address["country"],
                 },
                 "shipping": {"delivery_type": "DIGITAL_GOODS"},
-                "notification_url": "http://testserver/api/v1.0/payments/notifications",
+                "notification_url": "https://example.com/api/v1.0/payments/notifications",
                 "metadata": {"order_id": str(order.id)},
             }
         )
@@ -166,7 +163,6 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         order = OrderFactory(owner=owner, product=product)
         billing_address = BillingAddressDictFactory()
         credit_card = CreditCardFactory()
-        request = APIRequestFactory().post("/")
 
         mock_payplug_create.side_effect = BadRequest()
         mock_backend_create_payment.return_value = {
@@ -177,7 +173,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         }
 
         payload = backend.create_one_click_payment(
-            request, order, billing_address, credit_card.token
+            order, billing_address, credit_card.token
         )
 
         # - One click payment create has been called
@@ -198,15 +194,13 @@ class PayplugBackendTestCase(BasePaymentTestCase):
                     "country": billing_address["country"],
                 },
                 "shipping": {"delivery_type": "DIGITAL_GOODS"},
-                "notification_url": "http://testserver/api/v1.0/payments/notifications",
+                "notification_url": "https://example.com/api/v1.0/payments/notifications",
                 "metadata": {"order_id": str(order.id)},
             }
         )
 
         # - As fallback `create_payment` has been called
-        mock_backend_create_payment.assert_called_once_with(
-            request, order, billing_address
-        )
+        mock_backend_create_payment.assert_called_once_with(order, billing_address)
         self.assertEqual(
             payload,
             {
@@ -234,10 +228,9 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         order = OrderFactory(owner=owner, product=product)
         billing_address = BillingAddressDictFactory()
         credit_card = CreditCardFactory()
-        request = APIRequestFactory().post("/")
 
         payload = backend.create_one_click_payment(
-            request, order, billing_address, credit_card.token
+            order, billing_address, credit_card.token
         )
 
         # - One click payment create has been called
@@ -258,7 +251,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
                     "country": billing_address["country"],
                 },
                 "shipping": {"delivery_type": "DIGITAL_GOODS"},
-                "notification_url": "http://testserver/api/v1.0/payments/notifications",
+                "notification_url": "https://example.com/api/v1.0/payments/notifications",
                 "metadata": {"order_id": str(order.id)},
             }
         )
@@ -286,10 +279,9 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         order = OrderFactory(owner=owner, product=product)
         billing_address = BillingAddressDictFactory()
         credit_card = CreditCardFactory()
-        request = APIRequestFactory().post("/")
 
         payload = backend.create_one_click_payment(
-            request, order, billing_address, credit_card.token
+            order, billing_address, credit_card.token
         )
 
         # - One click payment create has been called
@@ -310,7 +302,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
                     "country": billing_address["country"],
                 },
                 "shipping": {"delivery_type": "DIGITAL_GOODS"},
-                "notification_url": "http://testserver/api/v1.0/payments/notifications",
+                "notification_url": "https://example.com/api/v1.0/payments/notifications",
                 "metadata": {"order_id": str(order.id)},
             }
         )

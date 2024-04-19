@@ -8,7 +8,7 @@ import random
 from http import HTTPStatus
 from unittest import mock
 
-from django.test import RequestFactory, TestCase
+from django.test import TestCase
 from django.test.utils import override_settings
 
 import responses
@@ -50,10 +50,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             product=product,
             course=course,
         )
-        order.submit(
-            request=RequestFactory().request(),
-            billing_address=BillingAddressDictFactory(),
-        )
+        order.submit(billing_address=BillingAddressDictFactory())
 
         self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
         self.assertEqual(Enrollment.objects.count(), 0)
@@ -95,10 +92,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             product=product,
             course=course,
         )
-        order.submit(
-            request=RequestFactory().request(),
-            billing_address=BillingAddressDictFactory(),
-        )
+        order.submit(billing_address=BillingAddressDictFactory())
 
         self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
         self.assertEqual(Enrollment.objects.count(), 0)
@@ -139,10 +133,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             product=product,
             course=course,
         )
-        order.submit(
-            request=RequestFactory().request(),
-            billing_address=BillingAddressDictFactory(),
-        )
+        order.submit(billing_address=BillingAddressDictFactory())
 
         # - Create an inactive enrollment for related course run
         enrollment = factories.EnrollmentFactory(
