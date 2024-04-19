@@ -1,5 +1,4 @@
 import * as React from "react";
-import { useEffect } from "react";
 import * as Yup from "yup";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -11,13 +10,15 @@ import { RHFTextField } from "@/components/presentational/hook-form/RHFTextField
 import { useCertificateDefinitions } from "@/hooks/useCertificateDefinitions/useCertificateDefinitions";
 import { ServerSideErrorForm } from "@/types/utils";
 import { genericUpdateFormError } from "@/utils/forms";
-import { TranslatableContent } from "@/components/presentational/translatable-content/TranslatableContent";
+import { TranslatableForm } from "@/components/presentational/translatable-content/TranslatableForm";
 import {
   CertificateDefinition,
   CertificationDefinitionTemplate,
   DTOCertificateDefinition,
 } from "@/services/api/models/CertificateDefinition";
 import { RHFCertificateDefinitionTemplates } from "@/components/templates/certificates-definitions/inputs/RHFCertificateDefinitionTemplate";
+import { RHFValuesChange } from "@/components/presentational/hook-form/RFHValuesChange";
+import { useFormSubmit } from "@/hooks/form/useFormSubmit";
 
 const messages = defineMessages({
   titleLabel: {
@@ -50,6 +51,7 @@ interface Props {
 
 export function CertificateDefinitionForm({ definition, ...props }: Props) {
   const intl = useIntl();
+  const formSubmitProps = useFormSubmit(definition);
   const defaultDefinition = definition ?? props.fromDefinition;
 
   const certificateDefinitions = useCertificateDefinitions(
@@ -85,15 +87,18 @@ export function CertificateDefinitionForm({ definition, ...props }: Props) {
   };
 
   const onSubmit = (values: DTOCertificateDefinition) => {
+    const newValues: DTOCertificateDefinition = {
+      ...values,
+    };
     if (definition) {
-      values.id = definition.id;
-      certificateDefinitions.methods.update(values, {
+      newValues.id = definition.id;
+      certificateDefinitions.methods.update(newValues, {
         onError: (error) => updateFormError(error.data),
         onSuccess: (updatedCertificate) =>
           props.afterSubmit?.(updatedCertificate),
       });
     } else {
-      certificateDefinitions.methods.create(values, {
+      certificateDefinitions.methods.create(newValues, {
         onError: (error) => updateFormError(error.data),
         onSuccess: (updatedCertificate) =>
           props.afterSubmit?.(updatedCertificate),
@@ -101,50 +106,56 @@ export function CertificateDefinitionForm({ definition, ...props }: Props) {
     }
   };
 
-  useEffect(() => {
-    methods.reset(getDefaultValues());
-  }, [definition]);
-
   return (
-    <TranslatableContent
-      onSelectLang={() => {
-        if (definition) certificateDefinitions.methods.invalidate();
+    <TranslatableForm
+      resetForm={() => methods.reset(getDefaultValues())}
+      entitiesDeps={[definition]}
+      onSelectLang={async () => {
+        if (definition) {
+          await certificateDefinitions.methods.invalidate();
+        }
       }}
     >
       <Box padding={4}>
         <RHFProvider
           checkBeforeUnload={true}
+          showSubmit={formSubmitProps.showSubmit}
           methods={methods}
           id="certificate-definition-form"
           onSubmit={methods.handleSubmit(onSubmit)}
         >
-          <Grid container spacing={2}>
-            <Grid xs={12} md={6}>
-              <RHFTextField
-                name="title"
-                label={intl.formatMessage(messages.titleLabel)}
-              />
+          <RHFValuesChange
+            autoSave={formSubmitProps.enableAutoSave}
+            onSubmit={onSubmit}
+          >
+            <Grid container spacing={2}>
+              <Grid xs={12} md={6}>
+                <RHFTextField
+                  name="title"
+                  label={intl.formatMessage(messages.titleLabel)}
+                />
+              </Grid>
+              <Grid xs={12} md={6}>
+                <RHFTextField
+                  name="name"
+                  label={intl.formatMessage(messages.nameLabel)}
+                />
+              </Grid>
+              <Grid xs={12}>
+                <RHFCertificateDefinitionTemplates name="template" />
+              </Grid>
+              <Grid xs={12}>
+                <RHFTextField
+                  name="description"
+                  multiline
+                  minRows={5}
+                  label={intl.formatMessage(messages.descriptionLabel)}
+                />
+              </Grid>
             </Grid>
-            <Grid xs={12} md={6}>
-              <RHFTextField
-                name="name"
-                label={intl.formatMessage(messages.nameLabel)}
-              />
-            </Grid>
-            <Grid xs={12}>
-              <RHFCertificateDefinitionTemplates name="template" />
-            </Grid>
-            <Grid xs={12}>
-              <RHFTextField
-                name="description"
-                multiline
-                minRows={5}
-                label={intl.formatMessage(messages.descriptionLabel)}
-              />
-            </Grid>
-          </Grid>
+          </RHFValuesChange>
         </RHFProvider>
       </Box>
-    </TranslatableContent>
+    </TranslatableForm>
   );
 }

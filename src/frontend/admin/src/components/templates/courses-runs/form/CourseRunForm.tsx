@@ -1,5 +1,4 @@
 import * as React from "react";
-import { useEffect } from "react";
 import * as Yup from "yup";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -23,8 +22,10 @@ import {
   useSelectLanguageUtils,
 } from "@/components/presentational/hook-form/RHFSelectLanguage";
 import { genericUpdateFormError } from "@/utils/forms";
-import { TranslatableContent } from "@/components/presentational/translatable-content/TranslatableContent";
+import { TranslatableForm } from "@/components/presentational/translatable-content/TranslatableForm";
 import { RHFCheckbox } from "@/components/presentational/hook-form/RHFCheckbox";
+import { RHFValuesChange } from "@/components/presentational/hook-form/RFHValuesChange";
+import { useFormSubmit } from "@/hooks/form/useFormSubmit";
 
 interface FormValues
   extends ToFormValues<
@@ -43,6 +44,7 @@ interface Props {
 
 export function CourseRunForm({ courseRun, addToCourse, ...props }: Props) {
   const intl = useIntl();
+  const formSubmitProps = useFormSubmit(courseRun);
   const disableCourseInput = !!addToCourse;
 
   const selectLanguageUtils = useSelectLanguageUtils();
@@ -88,10 +90,6 @@ export function CourseRunForm({ courseRun, addToCourse, ...props }: Props) {
     genericUpdateFormError(errors, methods.setError);
   };
 
-  useEffect(() => {
-    methods.reset(getDefaultValues());
-  }, [courseRun]);
-
   const onSubmit = (values: FormValues) => {
     const payload: DTOCourseRun = {
       ...values,
@@ -116,7 +114,9 @@ export function CourseRunForm({ courseRun, addToCourse, ...props }: Props) {
   };
 
   return (
-    <TranslatableContent
+    <TranslatableForm
+      entitiesDeps={[courseRun]}
+      resetForm={() => methods.reset(getDefaultValues())}
       onSelectLang={() => {
         if (courseRun) courseRunsQuery.methods.invalidate();
       }}
@@ -124,6 +124,7 @@ export function CourseRunForm({ courseRun, addToCourse, ...props }: Props) {
       <Box padding={4}>
         <RHFProvider
           checkBeforeUnload={true}
+          showSubmit={formSubmitProps.showSubmit}
           methods={methods}
           isSubmitting={
             courseRunsQuery.states.creating || courseRunsQuery.states.updating
@@ -131,107 +132,114 @@ export function CourseRunForm({ courseRun, addToCourse, ...props }: Props) {
           id="course-run-form"
           onSubmit={methods.handleSubmit(onSubmit)}
         >
-          <Grid container spacing={2}>
-            <Grid xs={12}>
-              <Typography variant="subtitle2">
-                {intl.formatMessage(courseRunFormMessages.generalSubtitle)}
-              </Typography>
+          <RHFValuesChange
+            autoSave={formSubmitProps.enableAutoSave}
+            onSubmit={onSubmit}
+          >
+            <Grid container spacing={2}>
+              <Grid xs={12}>
+                <Typography variant="subtitle2">
+                  {intl.formatMessage(courseRunFormMessages.generalSubtitle)}
+                </Typography>
+              </Grid>
+              <Grid xs={12} md={6}>
+                <CourseSearch
+                  disabled={disableCourseInput}
+                  enableAdd={!disableCourseInput}
+                  enableEdit={!disableCourseInput}
+                  name="course"
+                  label={intl.formatMessage(courseRunFormMessages.courseLabel)}
+                />
+              </Grid>
+              <Grid xs={12} md={6}>
+                <RHFTextField
+                  name="title"
+                  label={intl.formatMessage(commonTranslations.title)}
+                />
+              </Grid>
+              <Grid xs={12} md={6}>
+                <RHFTextField
+                  name="resource_link"
+                  label={intl.formatMessage(
+                    courseRunFormMessages.resourceLinkLabel,
+                  )}
+                />
+              </Grid>
+              <Grid xs={12} md={6}>
+                <RHFSelectLanguage
+                  multiple={true}
+                  name="languages"
+                  label={intl.formatMessage(courseRunFormMessages.language)}
+                />
+              </Grid>
+              <Grid xs={12}>
+                <Typography variant="subtitle2">
+                  {intl.formatMessage(
+                    courseRunFormMessages.courseRunDatesSubtitle,
+                  )}
+                </Typography>
+              </Grid>
+              <Grid xs={12} md={6}>
+                <RHFDateTimePicker
+                  name="start"
+                  label={intl.formatMessage(courseRunFormMessages.startLabel)}
+                />
+              </Grid>
+              <Grid xs={12} md={6}>
+                <RHFDateTimePicker
+                  name="end"
+                  label={intl.formatMessage(courseRunFormMessages.endLabel)}
+                />
+              </Grid>
+              <Grid xs={12}>
+                <Typography variant="subtitle2">
+                  {intl.formatMessage(
+                    courseRunFormMessages.enrollmentDatesSubtitle,
+                  )}
+                </Typography>
+              </Grid>
+              <Grid xs={12} md={6}>
+                <RHFDateTimePicker
+                  name="enrollment_start"
+                  label={intl.formatMessage(
+                    courseRunFormMessages.enrollmentStartLabel,
+                  )}
+                />
+              </Grid>
+              <Grid xs={12} md={6}>
+                <RHFDateTimePicker
+                  name="enrollment_end"
+                  label={intl.formatMessage(
+                    courseRunFormMessages.enrollmentEndLabel,
+                  )}
+                />
+              </Grid>
+              <Grid xs={12} sm={6}>
+                <RHFCheckbox
+                  name="is_gradable"
+                  label={intl.formatMessage(
+                    courseRunFormMessages.isGradableLabel,
+                  )}
+                  helperText={intl.formatMessage(
+                    courseRunFormMessages.isGradableHelpText,
+                  )}
+                />
+              </Grid>
+              <Grid xs={12} sm={6}>
+                <RHFCheckbox
+                  name="is_listed"
+                  label={intl.formatMessage(
+                    courseRunFormMessages.isListedLabel,
+                  )}
+                  helperText={intl.formatMessage(
+                    courseRunFormMessages.isListedHelpText,
+                  )}
+                />
+              </Grid>
             </Grid>
-            <Grid xs={12} md={6}>
-              <CourseSearch
-                disabled={disableCourseInput}
-                enableAdd={!disableCourseInput}
-                enableEdit={!disableCourseInput}
-                name="course"
-                label={intl.formatMessage(courseRunFormMessages.courseLabel)}
-              />
-            </Grid>
-            <Grid xs={12} md={6}>
-              <RHFTextField
-                name="title"
-                label={intl.formatMessage(commonTranslations.title)}
-              />
-            </Grid>
-            <Grid xs={12} md={6}>
-              <RHFTextField
-                name="resource_link"
-                label={intl.formatMessage(
-                  courseRunFormMessages.resourceLinkLabel,
-                )}
-              />
-            </Grid>
-            <Grid xs={12} md={6}>
-              <RHFSelectLanguage
-                multiple={true}
-                name="languages"
-                label={intl.formatMessage(courseRunFormMessages.language)}
-              />
-            </Grid>
-            <Grid xs={12}>
-              <Typography variant="subtitle2">
-                {intl.formatMessage(
-                  courseRunFormMessages.courseRunDatesSubtitle,
-                )}
-              </Typography>
-            </Grid>
-            <Grid xs={12} md={6}>
-              <RHFDateTimePicker
-                name="start"
-                label={intl.formatMessage(courseRunFormMessages.startLabel)}
-              />
-            </Grid>
-            <Grid xs={12} md={6}>
-              <RHFDateTimePicker
-                name="end"
-                label={intl.formatMessage(courseRunFormMessages.endLabel)}
-              />
-            </Grid>
-            <Grid xs={12}>
-              <Typography variant="subtitle2">
-                {intl.formatMessage(
-                  courseRunFormMessages.enrollmentDatesSubtitle,
-                )}
-              </Typography>
-            </Grid>
-            <Grid xs={12} md={6}>
-              <RHFDateTimePicker
-                name="enrollment_start"
-                label={intl.formatMessage(
-                  courseRunFormMessages.enrollmentStartLabel,
-                )}
-              />
-            </Grid>
-            <Grid xs={12} md={6}>
-              <RHFDateTimePicker
-                name="enrollment_end"
-                label={intl.formatMessage(
-                  courseRunFormMessages.enrollmentEndLabel,
-                )}
-              />
-            </Grid>
-            <Grid xs={12} sm={6}>
-              <RHFCheckbox
-                name="is_gradable"
-                label={intl.formatMessage(
-                  courseRunFormMessages.isGradableLabel,
-                )}
-                helperText={intl.formatMessage(
-                  courseRunFormMessages.isGradableHelpText,
-                )}
-              />
-            </Grid>
-            <Grid xs={12} sm={6}>
-              <RHFCheckbox
-                name="is_listed"
-                label={intl.formatMessage(courseRunFormMessages.isListedLabel)}
-                helperText={intl.formatMessage(
-                  courseRunFormMessages.isListedHelpText,
-                )}
-              />
-            </Grid>
-          </Grid>
+          </RHFValuesChange>
         </RHFProvider>
       </Box>
-    </TranslatableContent>
+    </TranslatableForm>
   );
 }

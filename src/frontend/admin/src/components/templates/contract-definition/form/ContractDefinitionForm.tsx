@@ -1,5 +1,4 @@
 import * as React from "react";
-import { useEffect } from "react";
 import * as Yup from "yup";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -22,6 +21,8 @@ import {
 import { MarkdownComponent } from "@/components/presentational/inputs/markdown/MardownComponent";
 import { removeEOL } from "@/utils/string";
 import { RHFContractDefinitionLanguage } from "@/components/templates/contract-definition/inputs/RHFContractDefinitionLanguage";
+import { RHFValuesChange } from "@/components/presentational/hook-form/RFHValuesChange";
+import { useFormSubmit } from "@/hooks/form/useFormSubmit";
 
 const messages = defineMessages({
   informationText: {
@@ -68,6 +69,7 @@ export function ContractDefinitionForm({
   ...props
 }: Props) {
   const intl = useIntl();
+  const formSubmitProps = useFormSubmit(contractDefinition);
   const contractDefinitionQuery = useContractDefinitions(
     {},
     { enabled: false },
@@ -125,71 +127,74 @@ export function ContractDefinitionForm({
 
   const bodyValue = methods.watch("body");
 
-  useEffect(() => {
-    methods.reset(getDefaultValues());
-  }, [contractDefinition]);
-
   return (
     <Box padding={4}>
       <RHFProvider
         checkBeforeUnload={true}
+        showSubmit={formSubmitProps.showSubmit}
         methods={methods}
         id="contract-definition-form"
         onSubmit={methods.handleSubmit(onSubmit)}
       >
-        <Grid container spacing={2}>
-          <Grid xs={12}>
-            <Typography variant="subtitle2">
-              {intl.formatMessage(messages.mainInformationTitle)}
-            </Typography>
+        <RHFValuesChange
+          autoSave={formSubmitProps.enableAutoSave}
+          onSubmit={onSubmit}
+        >
+          <Grid container spacing={2}>
+            <Grid xs={12}>
+              <Typography variant="subtitle2">
+                {intl.formatMessage(messages.mainInformationTitle)}
+              </Typography>
+            </Grid>
+            <Grid xs={12}>
+              <Alert severity="info">
+                {intl.formatMessage(messages.informationText)}
+              </Alert>
+            </Grid>
+            <Grid xs={12}>
+              <RHFTextField
+                name="title"
+                label={intl.formatMessage(messages.titleLabel)}
+              />
+            </Grid>
+            <Grid xs={12}>
+              <RHFContractDefinitionLanguage name="language" />
+            </Grid>
+            <Grid xs={12}>
+              <RHFTextField
+                name="description"
+                multiline
+                rows={5}
+                label={intl.formatMessage(messages.descriptionLabel)}
+              />
+            </Grid>
+            <Grid xs={12}>
+              <Typography variant="subtitle2">
+                {intl.formatMessage(messages.bodyLabel)}
+              </Typography>
+            </Grid>
+            <Grid xs={12}>
+              <MarkdownComponent
+                value={bodyValue ?? ""}
+                onChange={(markdown) => {
+                  methods.setValue("body", markdown ?? "", {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  });
+                }}
+              />
+              <ErrorMessage
+                errors={methods.formState.errors}
+                name="body"
+                render={(data) => (
+                  <FormHelperText sx={{ marginLeft: "14px" }} error={true}>
+                    {data.message}
+                  </FormHelperText>
+                )}
+              />
+            </Grid>
           </Grid>
-          <Grid xs={12}>
-            <Alert severity="info">
-              {intl.formatMessage(messages.informationText)}
-            </Alert>
-          </Grid>
-          <Grid xs={12}>
-            <RHFTextField
-              name="title"
-              label={intl.formatMessage(messages.titleLabel)}
-            />
-          </Grid>
-          <Grid xs={12}>
-            <RHFContractDefinitionLanguage name="language" />
-          </Grid>
-          <Grid xs={12}>
-            <RHFTextField
-              name="description"
-              multiline
-              rows={5}
-              label={intl.formatMessage(messages.descriptionLabel)}
-            />
-          </Grid>
-          <Grid xs={12}>
-            <Typography variant="subtitle2">
-              {intl.formatMessage(messages.bodyLabel)}
-            </Typography>
-          </Grid>
-          <Grid xs={12}>
-            <MarkdownComponent
-              value={bodyValue ?? ""}
-              onChange={(markdown) => {
-                methods.setValue("body", markdown ?? "", {
-                  shouldDirty: true,
-                });
-              }}
-            />
-            <ErrorMessage
-              errors={methods.formState.errors}
-              name="body"
-              render={(data) => (
-                <FormHelperText sx={{ marginLeft: "14px" }} error={true}>
-                  {data.message}
-                </FormHelperText>
-              )}
-            />
-          </Grid>
-        </Grid>
+        </RHFValuesChange>
       </RHFProvider>
     </Box>
   );

@@ -16,7 +16,7 @@ export const buildCourseRun = (course?: Course): CourseRun => {
     end: new Date("2024-04-23").toISOString(),
     enrollment_start: new Date("2022-12-01").toISOString(),
     enrollment_end: new Date("2022-12-25").toISOString(),
-    languages: ["en"],
+    languages: ["en-us"],
     is_gradable: faker.datatype.boolean(),
     is_listed: faker.datatype.boolean(),
     state: CourseStateFactory(),

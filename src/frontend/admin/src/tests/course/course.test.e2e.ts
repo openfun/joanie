@@ -197,7 +197,6 @@ test.describe("Course form", async () => {
     await page
       .getByRole("textbox", { name: "Title", exact: true })
       .fill(newCourseTitle);
-    await page.getByRole("button", { name: "Submit" }).click();
     await page.getByText("Operation completed successfully.").click();
     await expect(
       page.getByRole("heading", { name: `Edit course: ${newCourseTitle}` }),

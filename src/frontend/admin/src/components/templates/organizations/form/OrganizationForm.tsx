@@ -62,7 +62,8 @@ export function OrganizationForm(props: Props) {
         tabInfo: intl.formatMessage(messages.generalTabInfo),
         component: (
           <OrganizationGeneralSection
-            organization={defaultOrganization}
+            organization={props.organization}
+            fromOrganization={props.fromOrganization}
             afterSubmit={props.afterSubmit}
           />
         ),

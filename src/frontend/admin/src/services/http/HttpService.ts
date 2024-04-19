@@ -26,6 +26,9 @@ export const fetchApi = (routes: RequestInfo, options: RequestInit = {}) => {
 };
 
 export const getAcceptLanguage = (): string => {
+  if (process.env.NEXT_PUBLIC_API_SOURCE === "test") {
+    return LocalesEnum.ENGLISH;
+  }
   const force = localStorage.getItem(FORCE_TRANSLATE_CONTENT_LANGUAGE);
   const translateContent = localStorage.getItem(TRANSLATE_CONTENT_LANGUAGE);
   const interfaceLang = getDjangoLang();

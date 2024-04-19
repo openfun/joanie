@@ -212,7 +212,6 @@ test.describe("Organization address form", () => {
     await page.getByLabel("First name").fill("John");
     await page.getByLabel("First name").press("Tab");
     await page.getByLabel("Last name").fill("Doe");
-    await page.getByTestId("submit-button-organization-address-form").click();
     await expect(page.getByText("Operation completed")).toBeVisible();
   });
 
@@ -241,7 +240,8 @@ test.describe("Organization address form", () => {
     await expect(
       page.getByRole("heading", { name: "Organization address" }),
     ).toBeVisible();
-    await page.getByTestId("submit-button-organization-address-form").click();
+    await page.getByLabel("Country").click();
+    await page.getByRole("option", { name: "United Kingdom" }).click();
     await expectHaveClasses(
       page.getByText("title is a required field"),
       "Mui-error",

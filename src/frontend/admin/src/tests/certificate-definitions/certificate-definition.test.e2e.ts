@@ -148,7 +148,6 @@ test.describe("Certificate definition form", () => {
     await page.getByLabel("Title").click();
     await page.getByLabel("Title").fill(newTitle);
 
-    await page.getByRole("button", { name: "Submit" }).click();
     // Get the successfully notification
     await expect(
       page.getByText("Operation completed successfully."),

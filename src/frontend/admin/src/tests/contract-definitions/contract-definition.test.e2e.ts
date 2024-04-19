@@ -71,7 +71,7 @@ test.describe("Contract definition form", () => {
     await page.getByLabel("Title", { exact: true }).fill("Contract title");
     await page.getByLabel("Language").click();
     await page.getByRole("option", { name: "English" }).click();
-    await page.getByLabel("Description").dblclick();
+    await page.getByLabel("Description").click();
     await page.getByLabel("Description").fill("Contract description");
     await page.getByTestId("md-editor").getByRole("textbox").click();
     await page
@@ -135,7 +135,6 @@ test.describe("Contract definition form", () => {
     await page.getByLabel("Title", { exact: true }).fill(newTitle);
     await page.getByLabel("Language").click();
     await page.getByRole("option", { name: "English" }).click();
-    await page.getByRole("button", { name: "Submit" }).click();
     await expect(
       page.getByText("Operation completed successfully."),
     ).toBeVisible();
