@@ -22,6 +22,7 @@ and this project adheres to
 
 - Migrate from `django-fsm` to `viewflow.fsm` 
 - Use generic AdminCourseProductRelationSerializer
+- Make editing forms in auto save mode
 - Format all displayed date to the format "10/14/1983, 1:30 PM"
 
 ### Removed

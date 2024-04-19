@@ -1,5 +1,4 @@
 import * as React from "react";
-import { useEffect } from "react";
 import * as Yup from "yup";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -20,10 +19,12 @@ import { organizationFormMessages } from "@/components/templates/organizations/f
 import { useOrganizations } from "@/hooks/useOrganizations/useOrganizations";
 import { Maybe, ServerSideErrorForm } from "@/types/utils";
 import { genericUpdateFormError } from "@/utils/forms";
-import { TranslatableContent } from "@/components/presentational/translatable-content/TranslatableContent";
+import { TranslatableForm } from "@/components/presentational/translatable-content/TranslatableForm";
 import { SimpleCard } from "@/components/presentational/card/SimpleCard";
 import { ThumbnailDetailField } from "@/services/api/models/Image";
 import { RHFSelect } from "@/components/presentational/hook-form/RHFSelect";
+import { RHFValuesChange } from "@/components/presentational/hook-form/RFHValuesChange";
+import { useFormSubmit } from "@/hooks/form/useFormSubmit";
 
 interface FormValues {
   code: string;
@@ -44,12 +45,14 @@ interface FormValues {
 interface Props {
   afterSubmit?: (values: Organization) => void;
   organization?: Organization;
+  fromOrganization?: Organization;
 }
 
 export function OrganizationGeneralSection(props: Props) {
   const intl = useIntl();
+  const formSubmitProps = useFormSubmit(props.organization);
   const organizationQuery = useOrganizations({}, { enabled: false });
-  const defaultOrganization = props.organization;
+  const defaultOrganization = props.organization ?? props.fromOrganization;
 
   const getDefaultValues = () => {
     return {
@@ -148,14 +151,12 @@ export function OrganizationGeneralSection(props: Props) {
     return defaultOrganization?.logo ? [defaultOrganization.logo] : [];
   };
 
-  useEffect(() => {
-    methods.reset(getDefaultValues());
-  }, [props.organization]);
-
   const { handleSubmit } = methods;
   return (
     <SimpleCard>
-      <TranslatableContent
+      <TranslatableForm
+        entitiesDeps={[props.organization]}
+        resetForm={() => methods.reset(getDefaultValues())}
         onSelectLang={() => {
           if (props.organization) organizationQuery.methods.invalidate();
         }}
@@ -163,183 +164,192 @@ export function OrganizationGeneralSection(props: Props) {
         <Box padding={4}>
           <RHFProvider
             checkBeforeUnload={true}
-            showSubmit={true}
+            showSubmit={formSubmitProps.showSubmit}
             methods={methods}
             isSubmitting={organizationQuery.states.updating}
             id="organization-form"
             onSubmit={handleSubmit(onSubmit)}
           >
-            <Grid container spacing={2}>
-              <Grid xs={12}>
-                <Typography variant="subtitle2">
-                  <FormattedMessage
-                    {...organizationFormMessages.generalSectionTitle}
+            <RHFValuesChange
+              autoSave={formSubmitProps.enableAutoSave}
+              onSubmit={onSubmit}
+            >
+              <Grid container spacing={2}>
+                <Grid xs={12}>
+                  <Typography variant="subtitle2">
+                    <FormattedMessage
+                      {...organizationFormMessages.generalSectionTitle}
+                    />
+                  </Typography>
+                </Grid>
+
+                <Grid xs={12} md={6}>
+                  <RHFTextField
+                    name="title"
+                    label={intl.formatMessage(commonTranslations.title)}
                   />
-                </Typography>
-              </Grid>
-
-              <Grid xs={12} md={6}>
-                <RHFTextField
-                  name="title"
-                  label={intl.formatMessage(commonTranslations.title)}
-                />
-              </Grid>
-              <Grid xs={12} md={6}>
-                <RHFTextField
-                  name="code"
-                  label={intl.formatMessage(organizationFormMessages.codeLabel)}
-                />
-              </Grid>
-
-              <Grid xs={12} md={6}>
-                <RHFTextField
-                  name="representative"
-                  label={intl.formatMessage(
-                    organizationFormMessages.representativeLabel,
-                  )}
-                />
-              </Grid>
-              <Grid xs={12} md={6}>
-                <RHFTextField
-                  name="representative_profession"
-                  label={intl.formatMessage(
-                    organizationFormMessages.representativeProfessionLabel,
-                  )}
-                />
-              </Grid>
-
-              <Grid xs={12}>
-                <RHFSelect
-                  disabled={!organizationQuery.countries}
-                  name="country"
-                  options={organizationQuery.countries ?? []}
-                  label={intl.formatMessage(
-                    organizationFormMessages.countryLabel,
-                  )}
-                />
-              </Grid>
-
-              <Grid xs={12}>
-                <RHFUploadImage
-                  thumbnailFiles={getUploadedLogo()}
-                  buttonLabel={intl.formatMessage(
-                    organizationFormMessages.uploadLogoButtonLabel,
-                  )}
-                  name="logo"
-                  accept="image/*"
-                  label={intl.formatMessage(organizationFormMessages.logoLabel)}
-                />
-              </Grid>
-
-              <Grid xs={12}>
-                <Typography variant="subtitle2">
-                  <FormattedMessage
-                    {...organizationFormMessages.signatoryDetailsSectionTitle}
+                </Grid>
+                <Grid xs={12} md={6}>
+                  <RHFTextField
+                    name="code"
+                    label={intl.formatMessage(
+                      organizationFormMessages.codeLabel,
+                    )}
                   />
-                </Typography>
-              </Grid>
+                </Grid>
 
-              <Grid xs={12}>
-                <Alert severity="info">
-                  <FormattedMessage
-                    {...organizationFormMessages.signatoryDetailsSectionInfo}
+                <Grid xs={12} md={6}>
+                  <RHFTextField
+                    name="representative"
+                    label={intl.formatMessage(
+                      organizationFormMessages.representativeLabel,
+                    )}
                   />
-                </Alert>
-              </Grid>
-
-              <Grid xs={12} md={6}>
-                <RHFTextField
-                  name="signatory_representative"
-                  label={intl.formatMessage(
-                    organizationFormMessages.signatoryRepresentativeLabel,
-                  )}
-                />
-              </Grid>
-
-              <Grid xs={12} md={6}>
-                <RHFTextField
-                  name="signatory_representative_profession"
-                  helperText={intl.formatMessage(
-                    organizationFormMessages.signatoryRepresentativeProfessionHelperText,
-                  )}
-                  label={intl.formatMessage(
-                    organizationFormMessages.signatoryRepresentativeProfessionLabel,
-                  )}
-                />
-              </Grid>
-              <Grid xs={12}>
-                <RHFUploadImage
-                  thumbnailFiles={getUploadedSignature()}
-                  name="signature"
-                  buttonLabel={intl.formatMessage(
-                    organizationFormMessages.uploadSignatureButtonLabel,
-                  )}
-                  accept="image/*"
-                  label={intl.formatMessage(
-                    organizationFormMessages.signatureLabel,
-                  )}
-                />
-              </Grid>
-
-              <Grid xs={12}>
-                <Typography variant="subtitle2">
-                  <FormattedMessage
-                    {...organizationFormMessages.legalPartSectionTitle}
+                </Grid>
+                <Grid xs={12} md={6}>
+                  <RHFTextField
+                    name="representative_profession"
+                    label={intl.formatMessage(
+                      organizationFormMessages.representativeProfessionLabel,
+                    )}
                   />
-                </Typography>
-              </Grid>
-              <Grid xs={12} md={6}>
-                <RHFTextField
-                  name="enterprise_code"
-                  label={intl.formatMessage(
-                    organizationFormMessages.enterpriseCodeLabel,
-                  )}
-                />
-              </Grid>
-              <Grid xs={12} lg={6}>
-                <RHFTextField
-                  name="activity_category_code"
-                  label={intl.formatMessage(
-                    organizationFormMessages.activityCategoryCodeLabel,
-                  )}
-                />
-              </Grid>
+                </Grid>
 
-              <Grid xs={12}>
-                <Typography variant="subtitle2">
-                  <FormattedMessage
-                    {...organizationFormMessages.contactSectionTitle}
+                <Grid xs={12}>
+                  <RHFSelect
+                    disabled={!organizationQuery.countries}
+                    name="country"
+                    options={organizationQuery.countries ?? []}
+                    label={intl.formatMessage(
+                      organizationFormMessages.countryLabel,
+                    )}
                   />
-                </Typography>
+                </Grid>
+
+                <Grid xs={12}>
+                  <RHFUploadImage
+                    thumbnailFiles={getUploadedLogo()}
+                    buttonLabel={intl.formatMessage(
+                      organizationFormMessages.uploadLogoButtonLabel,
+                    )}
+                    name="logo"
+                    accept="image/*"
+                    label={intl.formatMessage(
+                      organizationFormMessages.logoLabel,
+                    )}
+                  />
+                </Grid>
+
+                <Grid xs={12}>
+                  <Typography variant="subtitle2">
+                    <FormattedMessage
+                      {...organizationFormMessages.signatoryDetailsSectionTitle}
+                    />
+                  </Typography>
+                </Grid>
+
+                <Grid xs={12}>
+                  <Alert severity="info">
+                    <FormattedMessage
+                      {...organizationFormMessages.signatoryDetailsSectionInfo}
+                    />
+                  </Alert>
+                </Grid>
+
+                <Grid xs={12} md={6}>
+                  <RHFTextField
+                    name="signatory_representative"
+                    label={intl.formatMessage(
+                      organizationFormMessages.signatoryRepresentativeLabel,
+                    )}
+                  />
+                </Grid>
+
+                <Grid xs={12} md={6}>
+                  <RHFTextField
+                    name="signatory_representative_profession"
+                    helperText={intl.formatMessage(
+                      organizationFormMessages.signatoryRepresentativeProfessionHelperText,
+                    )}
+                    label={intl.formatMessage(
+                      organizationFormMessages.signatoryRepresentativeProfessionLabel,
+                    )}
+                  />
+                </Grid>
+                <Grid xs={12}>
+                  <RHFUploadImage
+                    thumbnailFiles={getUploadedSignature()}
+                    name="signature"
+                    buttonLabel={intl.formatMessage(
+                      organizationFormMessages.uploadSignatureButtonLabel,
+                    )}
+                    accept="image/*"
+                    label={intl.formatMessage(
+                      organizationFormMessages.signatureLabel,
+                    )}
+                  />
+                </Grid>
+
+                <Grid xs={12}>
+                  <Typography variant="subtitle2">
+                    <FormattedMessage
+                      {...organizationFormMessages.legalPartSectionTitle}
+                    />
+                  </Typography>
+                </Grid>
+                <Grid xs={12} md={6}>
+                  <RHFTextField
+                    name="enterprise_code"
+                    label={intl.formatMessage(
+                      organizationFormMessages.enterpriseCodeLabel,
+                    )}
+                  />
+                </Grid>
+                <Grid xs={12} lg={6}>
+                  <RHFTextField
+                    name="activity_category_code"
+                    label={intl.formatMessage(
+                      organizationFormMessages.activityCategoryCodeLabel,
+                    )}
+                  />
+                </Grid>
+
+                <Grid xs={12}>
+                  <Typography variant="subtitle2">
+                    <FormattedMessage
+                      {...organizationFormMessages.contactSectionTitle}
+                    />
+                  </Typography>
+                </Grid>
+                <Grid xs={12} md={6} lg={4}>
+                  <RHFTextField
+                    name="contact_phone"
+                    label={intl.formatMessage(
+                      organizationFormMessages.contactPhoneLabel,
+                    )}
+                  />
+                </Grid>
+                <Grid xs={12} md={6} lg={4}>
+                  <RHFTextField
+                    name="contact_email"
+                    label={intl.formatMessage(
+                      organizationFormMessages.contactEmailLabel,
+                    )}
+                  />
+                </Grid>
+                <Grid xs={12} lg={4}>
+                  <RHFTextField
+                    name="dpo_email"
+                    label={intl.formatMessage(
+                      organizationFormMessages.dpoContactEmailLabel,
+                    )}
+                  />
+                </Grid>
               </Grid>
-              <Grid xs={12} md={6} lg={4}>
-                <RHFTextField
-                  name="contact_phone"
-                  label={intl.formatMessage(
-                    organizationFormMessages.contactPhoneLabel,
-                  )}
-                />
-              </Grid>
-              <Grid xs={12} md={6} lg={4}>
-                <RHFTextField
-                  name="contact_email"
-                  label={intl.formatMessage(
-                    organizationFormMessages.contactEmailLabel,
-                  )}
-                />
-              </Grid>
-              <Grid xs={12} lg={4}>
-                <RHFTextField
-                  name="dpo_email"
-                  label={intl.formatMessage(
-                    organizationFormMessages.dpoContactEmailLabel,
-                  )}
-                />
-              </Grid>
-            </Grid>
+            </RHFValuesChange>
           </RHFProvider>
         </Box>
-      </TranslatableContent>
+      </TranslatableForm>
     </SimpleCard>
   );
 }

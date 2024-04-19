@@ -24,7 +24,6 @@ interface Props {
 export function CourseForm({ course, shortcutMode = false, ...props }: Props) {
   const intl = useIntl();
   const coursesQuery = useCourses({}, { enabled: false });
-  const defaultCourse = course ?? props.fromCourse;
 
   const tabs = useMemo(() => {
     let result: TabValue[] = [
@@ -34,7 +33,8 @@ export function CourseForm({ course, shortcutMode = false, ...props }: Props) {
         component: (
           <CourseGeneralForm
             isLoading={props.isLoading}
-            course={defaultCourse}
+            course={course}
+            fromCourse={props.fromCourse}
             afterSubmit={props.afterSubmit}
           />
         ),
