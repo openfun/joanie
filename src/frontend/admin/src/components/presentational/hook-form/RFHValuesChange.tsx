@@ -5,8 +5,10 @@ import { useDebouncedCallback } from "use-debounce";
 import { FieldValues } from "react-hook-form/dist/types/fields";
 import { useRouter } from "next/router";
 import { deleteUnusedFilters } from "@/utils/filters";
+import { useTranslatableFormContext } from "@/components/presentational/translatable-content/TranslatableForm";
 
 export type RHFValuesChangeProps<T extends FieldValues> = {
+  autoSave?: boolean;
   onSubmit: (values: T) => void;
   debounceTime?: number;
   useAnotherValueReference?: boolean;
@@ -16,6 +18,7 @@ export type RHFValuesChangeProps<T extends FieldValues> = {
 export function RHFValuesChange<T extends FieldValues>({
   debounceTime = 800,
   updateUrl = false,
+  autoSave = true,
   formValuesToFilterValues,
   useAnotherValueReference = false,
   ...props
@@ -23,8 +26,10 @@ export function RHFValuesChange<T extends FieldValues>({
   const {
     handleSubmit,
     watch,
+    trigger,
     formState: { isValid },
   } = useFormContext<T>();
+  const translatableFormContext = useTranslatableFormContext();
   const values = watch();
   const router = useRouter();
   const [oldValues, setOldValues] = useState<T>(values);
@@ -40,6 +45,7 @@ export function RHFValuesChange<T extends FieldValues>({
 
   const onValuesChange = useDebouncedCallback(() => {
     if (!isValid) {
+      trigger();
       return;
     }
     /**
@@ -58,8 +64,17 @@ export function RHFValuesChange<T extends FieldValues>({
   }, debounceTime);
 
   useEffect(() => {
+    if (!autoSave) {
+      return;
+    }
+
     if (JSON.stringify(values) !== JSON.stringify(oldValues)) {
       setOldValues(values);
+      // If the form has been changed related to language change, no need to submit the new values.
+      if (translatableFormContext?.formHasBeenReset) {
+        translatableFormContext.setFormHasBeenReset(false);
+        return;
+      }
       onValuesChange();
     }
   }, [values]);

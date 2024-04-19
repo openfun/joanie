@@ -155,4 +155,48 @@ test.describe("<RHFValuesChange/>", () => {
     await delay(240);
     expect(values).toEqual({ enable: "", name: "John", select: "None" });
   });
+  test("If auto save is disabled", async ({ mount }) => {
+    const router = mockRouter;
+    let values = null;
+    const component = await mount<HooksConfig>(
+      <PlaywrightCustomRouter router={router}>
+        <RHFValuesChangeTestWrapper
+          debounceTime={200}
+          autoSave={false}
+          onSubmit={(newValues) => {
+            values = newValues;
+          }}
+        />
+      </PlaywrightCustomRouter>,
+      { hooksConfig: { customRouting: true } },
+    );
+    expect(values).toEqual(null);
+    await component.getByLabel("Name", { exact: true }).fill("John");
+    await component.click();
+    await delay(240);
+    expect(values).toEqual(null);
+    await delay(200);
+    expect(values).toEqual(null);
+  });
+  test("If auto save is enable", async ({ mount }) => {
+    const router = mockRouter;
+    let values = null;
+    const component = await mount<HooksConfig>(
+      <PlaywrightCustomRouter router={router}>
+        <RHFValuesChangeTestWrapper
+          debounceTime={200}
+          autoSave={true}
+          onSubmit={(newValues) => {
+            values = newValues;
+          }}
+        />
+      </PlaywrightCustomRouter>,
+      { hooksConfig: { customRouting: true } },
+    );
+    expect(values).toEqual(null);
+    await component.getByLabel("Name", { exact: true }).fill("John");
+    await component.click();
+    await delay(240);
+    expect(values).toEqual({ enable: "", name: "John", select: "None" });
+  });
 });
