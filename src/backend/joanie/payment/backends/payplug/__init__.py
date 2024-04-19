@@ -31,7 +31,7 @@ class PayplugBackend(BasePaymentBackend):
         payplug.set_secret_key(self.configuration["secret_key"])
         payplug.set_api_version(self.api_version)
 
-    def _get_payment_data(self, request, order, billing_address):
+    def _get_payment_data(self, order, billing_address):
         """Build the generic payment object"""
 
         payment_data = {
@@ -49,7 +49,7 @@ class PayplugBackend(BasePaymentBackend):
             "shipping": {
                 "delivery_type": "DIGITAL_GOODS",
             },
-            "notification_url": self.get_notification_url(request),
+            "notification_url": self.get_notification_url(),
             "metadata": {
                 "order_id": str(order.id),
             },
@@ -132,11 +132,11 @@ class PayplugBackend(BasePaymentBackend):
             refund_reference=resource.id,
         )
 
-    def create_payment(self, request, order, billing_address):
+    def create_payment(self, order, billing_address):
         """
         Create a payment object for a given order
         """
-        payment_data = self._get_payment_data(request, order, billing_address)
+        payment_data = self._get_payment_data(order, billing_address)
         payment_data["allow_save_card"] = True
 
         try:
@@ -150,9 +150,7 @@ class PayplugBackend(BasePaymentBackend):
             "url": payment.hosted_payment.payment_url,
         }
 
-    def create_one_click_payment(
-        self, request, order, billing_address, credit_card_token
-    ):
+    def create_one_click_payment(self, order, billing_address, credit_card_token):
         """
         Create a one click payment
 
@@ -160,7 +158,7 @@ class PayplugBackend(BasePaymentBackend):
         and we have to notify frontend that payment has not been paid.
         """
         # - Build the payment object
-        payment_data = self._get_payment_data(request, order, billing_address)
+        payment_data = self._get_payment_data(order, billing_address)
         payment_data["allow_save_card"] = False
         payment_data["initiator"] = "PAYER"
         payment_data["payment_method"] = credit_card_token
@@ -168,7 +166,7 @@ class PayplugBackend(BasePaymentBackend):
         try:
             payment = payplug.Payment.create(**payment_data)
         except BadRequest:
-            return self.create_payment(request, order, billing_address)
+            return self.create_payment(order, billing_address)
 
         return {
             "payment_id": payment.id,

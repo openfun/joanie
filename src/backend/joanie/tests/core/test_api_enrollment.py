@@ -9,7 +9,6 @@ from http import HTTPStatus
 from logging import Logger
 from unittest import mock
 
-from django.test.client import RequestFactory
 from django.test.utils import override_settings
 from django.utils import timezone
 
@@ -917,7 +916,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         )
         product = factories.ProductFactory(target_courses=[target_course], price="0.00")
         order = factories.OrderFactory(owner=user, product=product)
-        order.submit(request=RequestFactory().request())
+        order.submit()
 
         # Create a pre-existing enrollment and try to enroll to this course's second course run
         factories.EnrollmentFactory(

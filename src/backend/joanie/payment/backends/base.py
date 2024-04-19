@@ -4,6 +4,7 @@ import smtplib
 from logging import getLogger
 
 from django.conf import settings
+from django.contrib.sites.models import Site
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -139,15 +140,15 @@ class BasePaymentBackend:
             invoice.order.flow.cancel()
 
     @staticmethod
-    def get_notification_url(request):
+    def get_notification_url():
         """
-        Method used to get the notification url according to the request uri.
+        Method used to get the notification url according to the current site.
         """
-        hostname = request.build_absolute_uri("/")[:-1]
+        site = Site.objects.get_current()
         path = reverse("payment_webhook")
-        return f"{hostname}{path}"
+        return f"https://{site.domain}{path}"
 
-    def create_payment(self, request, order, billing_address):
+    def create_payment(self, order, billing_address):
         """
         Method used to create a payment from the payment provider.
         """
@@ -155,9 +156,7 @@ class BasePaymentBackend:
             "subclasses of BasePaymentBackend must provide a create_payment() method."
         )
 
-    def create_one_click_payment(
-        self, request, order, billing_address, credit_card_token
-    ):
+    def create_one_click_payment(self, order, billing_address, credit_card_token):
         """
         Method used to create a one click payment from the payment provider.
         """

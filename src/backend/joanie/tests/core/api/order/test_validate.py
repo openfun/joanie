@@ -3,7 +3,6 @@
 from http import HTTPStatus
 
 from django.core.cache import cache
-from django.test.client import RequestFactory
 
 from joanie.core import enums, factories
 from joanie.payment.factories import BillingAddressDictFactory, InvoiceFactory
@@ -24,10 +23,7 @@ class OrderValidateApiTest(BaseAPITestCase):
         Anonymous user should not be able to validate an order
         """
         order = factories.OrderFactory()
-        order.submit(
-            request=RequestFactory().request(),
-            billing_address=BillingAddressDictFactory(),
-        )
+        order.submit(billing_address=BillingAddressDictFactory())
         response = self.client.put(
             f"/api/v1.0/orders/{order.id}/validate/",
         )
@@ -56,10 +52,7 @@ class OrderValidateApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         order = factories.OrderFactory()
-        order.submit(
-            request=RequestFactory().request(),
-            billing_address=BillingAddressDictFactory(),
-        )
+        order.submit(billing_address=BillingAddressDictFactory())
         response = self.client.put(
             f"/api/v1.0/orders/{order.id}/validate/",
             HTTP_AUTHORIZATION=f"Bearer {token}",

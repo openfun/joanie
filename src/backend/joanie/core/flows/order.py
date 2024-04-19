@@ -52,7 +52,7 @@ class OrderFlow:
         target=enums.ORDER_STATE_SUBMITTED,
         conditions=[_can_be_state_submitted],
     )
-    def submit(self, billing_address=None, credit_card_id=None, request=None):
+    def submit(self, billing_address=None, credit_card_id=None):
         """
         Transition order to submitted state.
         Create a payment if the product is fee
@@ -65,7 +65,6 @@ class OrderFlow:
                     owner=self.instance.owner, id=credit_card_id
                 )
                 return payment_backend.create_one_click_payment(
-                    request=request,
                     order=self.instance,
                     billing_address=billing_address,
                     credit_card_token=credit_card.token,
@@ -73,7 +72,7 @@ class OrderFlow:
             except (CreditCard.DoesNotExist, NotImplementedError):
                 pass
         payment_info = payment_backend.create_payment(
-            request=request, order=self.instance, billing_address=billing_address
+            order=self.instance, billing_address=billing_address
         )
 
         return payment_info

@@ -116,13 +116,13 @@ class DummyPaymentBackend(BasePaymentBackend):
         logger.info("Mail is sent to %s from dummy payment", order.owner.email)
         super()._send_mail_payment_success(order)
 
-    def create_payment(self, request, order, billing_address):
+    def create_payment(self, order, billing_address):
         """
         Generate a payment object then store it in the cache.
         """
         order_id = str(order.id)
         payment_id = self.get_payment_id(order_id)
-        notification_url = self.get_notification_url(request)
+        notification_url = self.get_notification_url()
         payment_info = {
             "id": payment_id,
             "amount": int(order.total * 100),
@@ -138,13 +138,11 @@ class DummyPaymentBackend(BasePaymentBackend):
             "url": notification_url,
         }
 
-    def create_one_click_payment(
-        self, request, order, billing_address, credit_card_token=None
-    ):
+    def create_one_click_payment(self, order, billing_address, credit_card_token=None):
         """
         Call create_payment method and bind a `is_paid` property to payment information.
         """
-        payment_info = self.create_payment(request, order, billing_address)
+        payment_info = self.create_payment(order, billing_address)
         notification_request = APIRequestFactory().post(
             reverse("payment_webhook"),
             data={

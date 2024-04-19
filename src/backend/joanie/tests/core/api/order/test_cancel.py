@@ -3,7 +3,6 @@
 from http import HTTPStatus
 
 from django.core.cache import cache
-from django.test.client import RequestFactory
 
 from joanie.core import enums, factories
 from joanie.payment.factories import BillingAddressDictFactory
@@ -55,7 +54,6 @@ class OrderCancelApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
         order = factories.OrderFactory()
         order.submit(
-            request=RequestFactory().request(),
             billing_address=BillingAddressDictFactory(),
         )
         response = self.client.post(

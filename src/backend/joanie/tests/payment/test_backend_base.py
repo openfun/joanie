@@ -7,8 +7,6 @@ from unittest import mock
 from django.core import mail
 from django.test import override_settings
 
-from rest_framework.test import APIRequestFactory
-
 from joanie.core import enums
 from joanie.core.factories import OrderFactory, UserAddressFactory, UserFactory
 from joanie.core.models import Address
@@ -39,12 +37,10 @@ class TestBasePaymentBackend(BasePaymentBackend):
     def abort_payment(self, payment_id):
         pass
 
-    def create_one_click_payment(
-        self, request, order, billing_address, credit_card_token
-    ):
+    def create_one_click_payment(self, order, billing_address, credit_card_token):
         pass
 
-    def create_payment(self, request, order, billing_address):
+    def create_payment(self, order, billing_address):
         pass
 
     def delete_credit_card(self, credit_card):
@@ -79,7 +75,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         backend = BasePaymentBackend()
 
         with self.assertRaises(NotImplementedError) as context:
-            backend.create_payment(None, None, None)
+            backend.create_payment(None, None)
 
         self.assertEqual(
             str(context.exception),
@@ -91,7 +87,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         backend = BasePaymentBackend()
 
         with self.assertRaises(NotImplementedError) as context:
-            backend.create_one_click_payment(None, None, None, None)
+            backend.create_one_click_payment(None, None, None)
 
         self.assertEqual(
             str(context.exception),
@@ -302,10 +298,9 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         which aims to be called by the payment provider webhook.
         """
         backend = BasePaymentBackend()
-        request = APIRequestFactory().post(path="/")
         self.assertEqual(
-            backend.get_notification_url(request),
-            "http://testserver/api/v1.0/payments/notifications",
+            backend.get_notification_url(),
+            "https://example.com/api/v1.0/payments/notifications",
         )
 
     @mock.patch(
