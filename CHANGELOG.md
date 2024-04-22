@@ -11,6 +11,7 @@ and this project adheres to
 ### Added 
 
 - Add enrollments pages
+- Add admin page to decrypt additional data sent to Sentry
 
 ### Changed
 

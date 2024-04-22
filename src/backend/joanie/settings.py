@@ -199,7 +199,6 @@ class Base(Configuration):
 
     # Django applications from the highest priority to the lowest
     INSTALLED_APPS = [
-        "django.contrib.admin",
         "django.contrib.auth",
         "django.contrib.contenttypes",
         "django.contrib.sessions",
@@ -219,6 +218,8 @@ class Base(Configuration):
         "easy_thumbnails",
         # Joanie
         "joanie.core",
+        # contrib admin needs to be after joanie.core to override templates
+        "django.contrib.admin",
         "joanie.payment",
         "joanie.badges",
         "joanie.demo",
