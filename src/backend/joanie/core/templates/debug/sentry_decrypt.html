@@ -1,0 +1,19 @@
+{% extends "admin/index.html" %}
+
+{% block content %}
+  <div id="content-main">
+    <form action="{% url "sentry-decrypt" %}" method="post">
+      {% csrf_token %}
+      <textarea name="encrypted" rows="20" cols="100" >{{ encrypted }}</textarea>
+      <input type="submit" value="Decrypt">
+    </form>
+
+    {% if decrypted %}
+      <h2>Decrypted</h2>
+      <pre>{{ decrypted | pprint }}</pre>
+    {% endif %}
+  </div>
+{% endblock %}
+
+{% block sidebar %}
+{% endblock %}

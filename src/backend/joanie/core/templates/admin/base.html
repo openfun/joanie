@@ -1,0 +1,7 @@
+{% extends "admin/base.html" %}
+{% load i18n %}
+
+{% block userlinks %}
+    <a href={% url "sentry-decrypt" %}>{% trans "Sentry tools" %}</a> /
+  {{block.super}}
+{% endblock %}

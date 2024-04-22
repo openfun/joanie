@@ -33,12 +33,16 @@ from joanie.core.views import (
     CertificateVerificationView,
 )
 from joanie.debug import urls as debug_urls
+from joanie.debug.views import SentryDecryptView
 from joanie.edx_imports import urls as edx_imports_urls
 
 API_VERSION = settings.API_VERSION
 
 urlpatterns = (
     [
+        path(
+            "admin/sentry-decrypt", SentryDecryptView.as_view(), name="sentry-decrypt"
+        ),
         path("admin/", admin.site.urls),
         re_path(
             r"^redirects/backoffice/(?P<path>.*)$",

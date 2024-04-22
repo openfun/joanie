@@ -5,12 +5,14 @@ import datetime
 from logging import getLogger
 
 from django.conf import settings
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.base import TemplateView
 
 from joanie.core import factories
 from joanie.core.enums import CERTIFICATE, CONTRACT_DEFINITION, DEGREE
 from joanie.core.models import Certificate, Contract
 from joanie.core.utils import contract_definition, issuers
+from joanie.core.utils.sentry import decrypt_data
 from joanie.payment.enums import INVOICE_TYPE_INVOICE
 from joanie.payment.models import Invoice
 
@@ -249,3 +251,25 @@ class DebugInvoiceTemplateView(DebugPdfTemplateView):
                 "product": {"name": "deploy turn-key partnerships", "description": ""},
             },
         }
+
+
+class SentryDecryptView(LoginRequiredMixin, TemplateView):
+    """
+    Decrypt a Fernet token.
+
+    Used for debugging Sentry error context.
+    """
+
+    template_name = "debug/sentry_decrypt.html"
+
+    def post(self, request, *args, **kwargs):
+        """Decrypt a Fernet token."""
+        encrypted = request.POST.get("encrypted")
+        decrypted = decrypt_data(encrypted)
+
+        return self.render_to_response(
+            self.get_context_data(
+                encrypted=encrypted,
+                decrypted=decrypted,
+            )
+        )
