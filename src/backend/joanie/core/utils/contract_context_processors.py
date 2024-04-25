@@ -161,6 +161,9 @@ def parse_richie_syllabus(course_code: str, language_code: str | None) -> dict:
         "assessments": get_object_repr(
             subject=course, predicate=SDO.educationalCredentialAwarded
         ),
+        "accessibility": get_object_repr(
+            subject=course, predicate=SDO.accessibilitySummary
+        ),
         "licenses": [
             {
                 "logo": get_object_repr(subject=l, predicate=SDO.thumbnailUrl),
