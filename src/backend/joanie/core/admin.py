@@ -79,6 +79,13 @@ class OrganizationFilter(AutocompleteFilter):
     field_name = "organization"
 
 
+class RequiredOrganizationFilter(RequiredFilterMixin, AutocompleteFilter):
+    """Required Filter on an "organization" foreign key."""
+
+    title = _("Organization")
+    field_name = "organization"
+
+
 class OwnerFilter(AutocompleteFilter):
     """Filter on an "owner" foreign key."""
 
@@ -155,7 +162,15 @@ class CertificateAdmin(admin.ModelAdmin):
     """Admin class for the Certificate model"""
 
     list_display = ("organization", "order", "enrollment", "owner", "issued_on")
-    list_filter = [OrganizationFilter]
+    list_filter = [RequiredOrganizationFilter]
+    search_fields = [
+        "order__owner__username__iexact",
+        "order__owner__first_name__icontains",
+        "order__owner__email__iexact",
+        "enrollment__user__username__iexact",
+        "enrollment__user__first_name__icontains",
+        "enrollment__user__email__iexact",
+    ]
     readonly_fields = (
         "id",
         "organization",
@@ -165,6 +180,19 @@ class CertificateAdmin(admin.ModelAdmin):
         "owner",
         "certificate_definition",
     )
+
+    @csrf_protect_m
+    def changelist_view(self, request, extra_context=None):
+        """
+        Add instruction to explain that, due to the RequiredOrganizationFilter, no results will be
+        shown until the view is filtered for a specific organization.
+        """
+        extra_context = extra_context or {}
+        extra_context["subtitle"] = _(
+            "To get results, choose an organization on the right first, "
+            "then type the username of the student in the search bar."
+        )
+        return super().changelist_view(request, extra_context=extra_context)
 
 
 @admin.register(models.OrderGroup)
