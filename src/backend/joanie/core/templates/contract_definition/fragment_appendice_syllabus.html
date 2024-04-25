@@ -79,6 +79,10 @@
             <p>N/A</p>
         {% endif %}
     </section>
+    <section class="syllabus--content">
+        <h5>{% translate "Accessibility" %}</h5>
+        <div>{{ syllabus.accessibility|default:"N/A"|safe|linebreaks }}</div>
+    </section>
     <section class="syllabus--content syllabus--course-plan">
     <h5>{% trans "Course plan" %}</h5>
     {% if syllabus.plan %}

@@ -10,6 +10,8 @@ and this project adheres to
 
 ### Added
 
+- Add accessibility section from Richie course syllabus
+  in contract definition template through RDF attributes
 - Update signatories for organization owners and student on ongoing
   signature procedures
 - Add enrollments pages

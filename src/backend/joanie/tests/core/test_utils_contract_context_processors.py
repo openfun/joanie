@@ -51,6 +51,7 @@ class UtilsContractContextProcessors(TestCase):
                     <p property="description">Course long description</p>
                     <p property="coursePrerequisites">Course prerequisites</p>
                     <p property="educationalCredentialAwarded">Course assessments and awards</p>
+                    <p property="accessibilitySummary">What is the accessibility of this course?</p>
                     <div property="about" typeof="Thing">
                         <h2 property="name">Format</h2>
                         <p property="description">Course format</p>
@@ -58,6 +59,10 @@ class UtilsContractContextProcessors(TestCase):
                     <div property="about" typeof="Thing">
                         <h2 property="name">What you will learn?</h2>
                         <p property="description">Course teaches</p>
+                    </div>
+                    <div property="about" typeof="Thing">
+                        <h2 property="name">Required Equipment</h2>
+                        <p property="description">What are the required equipment to follow this course?</p>
                     </div>
                     <div property="author" typeof="Organization">
                         <img src="//fun-cdn.net/images/2" property="logo" />
@@ -96,7 +101,7 @@ class UtilsContractContextProcessors(TestCase):
                             <meta property="position" content="1" />
                         </li>
                     </ul>
-                </body> 
+                </body>
                 """,
             )
             context = parse_richie_syllabus("178001", "fr-fr")
@@ -113,6 +118,9 @@ class UtilsContractContextProcessors(TestCase):
         self.assertEqual(context["description"], "Course long description")
         self.assertEqual(context["prerequisites"], "Course prerequisites")
         self.assertEqual(context["assessments"], "Course assessments and awards")
+        self.assertEqual(
+            context["accessibility"], "What is the accessibility of this course?"
+        )
         self.assertEqual(context["effort"], "PT3H")
         self.assertEqual(context["languages"], "French")
         self.assertCountEqual(context["categories"], ["Category 1", "Category 2"])
@@ -126,6 +134,10 @@ class UtilsContractContextProcessors(TestCase):
                 {
                     "name": "What you will learn?",
                     "description": "Course teaches",
+                },
+                {
+                    "name": "Required Equipment",
+                    "description": "What are the required equipment to follow this course?",
                 },
             ],
         )
@@ -214,6 +226,7 @@ class UtilsContractContextProcessors(TestCase):
                 "description": "",
                 "prerequisites": "",
                 "assessments": "",
+                "accessibility": "",
                 "effort": "",
                 "languages": "",
                 "categories": [],
