@@ -20,7 +20,9 @@ and this project adheres to
 
 ### Changed
 
-- Migrate from `django-fsm` to `viewflow.fsm` 
+- Add required filter by `Organization` and search through
+  query on learner for certificate view in django admin
+- Migrate from `django-fsm` to `viewflow.fsm`
 - Use generic AdminCourseProductRelationSerializer
 - Make editing forms in auto save mode
 - Format all displayed date to the format "10/14/1983, 1:30 PM"
@@ -39,7 +41,7 @@ and this project adheres to
 
 - Ignore conflicts when creating batch of enrollments
 - Fix translation content logic
- 
+
 ## [2.0.0] - 2024-04-10
 
 ### Added
