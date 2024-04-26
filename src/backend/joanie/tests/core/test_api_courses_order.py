@@ -126,7 +126,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         self,
     ):
         """
-        When an authenticated user parses a course 'id' that does not exist in the query params
+        When an authenticated user passes a course 'id' that does not exist in the query params
         of the URL, it should return an empty list in return.
         """
         user = factories.UserFactory()
@@ -146,7 +146,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         self,
     ):
         """
-        When an authenticated user parses the wrong organization's 'id' in the query params
+        When an authenticated user passes the wrong organization's 'id' in the query params
         of the URL, the user should get an empty list in return.
         """
         user = factories.UserFactory()
@@ -169,7 +169,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         )
         token = self.get_user_token(user.username)
 
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(3):
             response = self.client.get(
                 f"/api/v1.0/courses/{relation.course.id}/orders/"
                 f"?organization_id={wrong_organization.id}",
@@ -186,7 +186,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         self,
     ):
         """
-        When an authenticated user parses a course 'id' that does not exist in the query params
+        When an authenticated user passes a course 'id' that does not exist in the query params
         of the URL, it should return an empty list in return.
         """
         user = factories.UserFactory()
@@ -194,7 +194,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         response = self.client.get(
-            f"/api/v1.0/courses/{course.id}/orders/" f"?product_id={uuid4()}",
+            f"/api/v1.0/courses/{course.id}/orders/?product_id={uuid4()}",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -207,7 +207,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         self,
     ):
         """
-        When an authenticated user parses a course product relation that does not exist in
+        When an authenticated user passes a course product relation that does not exist in
         the query params of the URL, it should return an empty list in return.
         """
         user = factories.UserFactory()
@@ -229,7 +229,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         self,
     ):
         """
-        When an authenticated user parses no query params to get the list of orders on a course,
+        When an authenticated user passes no query params to get the list of orders on a course,
         the queryset will take the 'course_id' in the URL to filter the list. In this case where 1
         product is present in two courses, we should get 1 'validated' out of 4 orders only in
         the list in return.
@@ -292,9 +292,13 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
             course=relation_3.course,
             state=enums.ORDER_STATE_VALIDATED,
         )
+        factories.UserOrganizationAccessFactory(
+            organization=organizations[0], user=user
+        )
+
         token = self.get_user_token(user.username)
 
-        with self.assertNumQueries(26):
+        with self.assertNumQueries(28):
             response = self.client.get(
                 f"/api/v1.0/courses/{relation_1.course.id}/orders/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -316,7 +320,8 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
     ):
         """
         Authenticated user should be able to filter out by organization the list of learners.
-        He should see the order made on the course by one user who is attached to the organization.
+        He should see the order made on the course by one user that is attached to the
+        organization.
         """
         user = factories.UserFactory()
         user_learners = [
@@ -345,10 +350,13 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
             factories.ContractFactory(order=order)
             factories.OrderCertificateFactory(order=order)
             orders += [order]
+        factories.UserOrganizationAccessFactory(
+            organization=organizations[1], user=user
+        )
 
         token = self.get_user_token(user.username)
 
-        with self.assertNumQueries(27):
+        with self.assertNumQueries(29):
             response = self.client.get(
                 f"/api/v1.0/courses/{relation.course.id}/orders/"
                 f"?organization_id={organizations[1].id}",
@@ -430,7 +438,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         self,
     ):
         """
-        Authenticated user should get the list of orders when he parses the product's 'id' in the
+        Authenticated user should get the list of orders when he passes the product's 'id' in the
         query params of the URL. When a product is present in two distinct courses, he should
         get the orders that are attached to the product's 'id' and the course's 'id'.
         """
@@ -476,9 +484,10 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
             course=courses[1],
             state=enums.ORDER_STATE_VALIDATED,
         )
+        factories.UserOrganizationAccessFactory(organization=organization, user=user)
         token = self.get_user_token(user.username)
 
-        with self.assertNumQueries(28):
+        with self.assertNumQueries(30):
             response = self.client.get(
                 f"/api/v1.0/courses/{courses[0].id}/orders/"
                 f"?product_id={product.id}",
@@ -502,7 +511,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
             response.json()["results"][1]["owner"]["id"], str(user_learners[0].id)
         )
 
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             response = self.client.get(
                 f"/api/v1.0/courses/{courses[1].id}/orders/"
                 f"?product_id={product.id}",
@@ -569,9 +578,12 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
             course=courses[1],
             state=enums.ORDER_STATE_VALIDATED,
         )
+        factories.UserOrganizationAccessFactory(
+            organization=organizations[0], user=user
+        )
         token = self.get_user_token(user.username)
 
-        with self.assertNumQueries(28):
+        with self.assertNumQueries(30):
             response = self.client.get(
                 f"/api/v1.0/courses/{courses[0].id}/orders/"
                 f"?organization_id={organizations[0].id}&product_id={product.id}",
@@ -597,7 +609,12 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
             str(organizations[0].id),
         )
 
-        with self.assertNumQueries(26):
+        # Give access to the user for the second organization
+        factories.UserOrganizationAccessFactory(
+            organization=organizations[1], user=user
+        )
+
+        with self.assertNumQueries(27):
             response = self.client.get(
                 f"/api/v1.0/courses/{courses[1].id}/orders/"
                 f"?organization_id={organizations[1].id}&product_id={product.id}",
@@ -619,8 +636,9 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         self,
     ):
         """
-        When an authenticated user parses a course product relation 'id' in the query params,
-        he should get the list of the leaners that are attached to this relation.
+        When an authenticated user passes a course product relation 'id' in the query params,
+        he should get the list of the leaners that are attached to this relation and where
+        the authenticated user has organization access to.
         """
         user = factories.UserFactory()
         product = factories.ProductFactory()
@@ -665,14 +683,18 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
             course=relation_2.course,
             state=enums.ORDER_STATE_VALIDATED,
         )
+        factories.UserOrganizationAccessFactory(
+            organization=organizations[0], user=user
+        )
         token = self.get_user_token(user.username)
 
         # should return 2 out of 3 learners
-        response = self.client.get(
-            f"/api/v1.0/courses/{course_1.id}/orders/"
-            f"?course_product_relation_id={relation_1.id}",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
+        with self.assertNumQueries(31):
+            response = self.client.get(
+                f"/api/v1.0/courses/{course_1.id}/orders/"
+                f"?course_product_relation_id={relation_1.id}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 2)
@@ -685,12 +707,26 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         )
         self.assertEqual(response.json()["results"][1]["course_id"], str(course_1.id))
 
-        # should return 1 out of 3 learners
-        response = self.client.get(
-            f"/api/v1.0/courses/{course_2.id}/orders/"
-            f"?course_product_relation_id={relation_2.id}",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
+        # should not get results because the user has not yet access to the organization
+        with self.assertNumQueries(3):
+            response = self.client.get(
+                f"/api/v1.0/courses/{course_2.id}/orders/"
+                f"?course_product_relation_id={relation_2.id}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(response.json()["count"], 0)
+
+        # Give requesting user the access to the organization
+        factories.UserOrganizationAccessFactory(
+            organization=organizations[1], user=user
         )
+        with self.assertNumQueries(28):
+            response = self.client.get(
+                f"/api/v1.0/courses/{course_2.id}/orders/"
+                f"?course_product_relation_id={relation_2.id}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 1)
@@ -703,7 +739,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         self,
     ):
         """
-        When an authenticated user is parsing a course 'id' that is not related to the course
+        When an authenticated user passes a course 'id' that is not related to the course
         product relation object (vice versa) he should get an empty list in return. In this case
         'course_1' is related to 'relation_1', and 'course_2' is related to 'relation_2'.
         """
@@ -750,20 +786,121 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
             course=relation_2.course,
             state=enums.ORDER_STATE_VALIDATED,
         )
+        for organization in organizations:
+            factories.UserOrganizationAccessFactory(
+                organization=organization, user=user
+            )
+
         token = self.get_user_token(user.username)
 
-        response = self.client.get(
-            f"/api/v1.0/courses/{course_1.id}/orders/"
-            f"?course_product_relation_id={relation_2.id}",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
+        with self.assertNumQueries(3):
+            response = self.client.get(
+                f"/api/v1.0/courses/{course_1.id}/orders/"
+                f"?course_product_relation_id={relation_2.id}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 0)
 
-        response = self.client.get(
-            f"/api/v1.0/courses/{course_2.id}/orders/"
-            f"?course_product_relation_id={relation_1.id}",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
+        with self.assertNumQueries(2):
+            response = self.client.get(
+                f"/api/v1.0/courses/{course_2.id}/orders/"
+                f"?course_product_relation_id={relation_1.id}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 0)
+
+    def test_api_courses_order_get_list_must_have_organization_access_to_get_results(
+        self,
+    ):
+        """
+        When the requesting user does not have organization access, he should get an empty list
+        in return until he gets the organization access.
+        """
+        user = factories.UserFactory()
+        organization = factories.OrganizationFactory()
+        product = factories.ProductFactory()
+        course = factories.CourseFactory()
+        relation = factories.CourseProductRelationFactory(
+            product=product, course=course, organizations=[organization]
+        )
+        user_learner = factories.UserFactory(
+            email="john_doe@example.fr", first_name="John Doe", username="johnDoe"
+        )
+        factories.OrderFactory(
+            organization=organization,
+            owner=user_learner,
+            product=product,
+            course=relation.course,
+            state=enums.ORDER_STATE_VALIDATED,
+        )
+
+        token = self.get_user_token(user.username)
+
+        with self.assertNumQueries(4):
+            response = self.client.get(
+                f"/api/v1.0/courses/{course.id}/orders/"
+                f"?course_product_relation_id={relation.id}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(response.json()["count"], 0)
+
+        with self.assertNumQueries(2):
+            response = self.client.get(
+                f"/api/v1.0/courses/{course.id}/orders/" f"?product_id={product.id}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(response.json()["count"], 0)
+
+        with self.assertNumQueries(2):
+            response = self.client.get(
+                f"/api/v1.0/courses/{course.id}/orders/"
+                f"?organization_id={organization.id}&product_id={product.id}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(response.json()["count"], 0)
+
+        # Create the organization access for the requesting user to get results
+        factories.UserOrganizationAccessFactory(organization=organization, user=user)
+
+        with self.assertNumQueries(28):
+            response = self.client.get(
+                f"/api/v1.0/courses/{course.id}/orders/"
+                f"?course_product_relation_id={relation.id}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(response.json()["count"], 1)
+        self.assertEqual(
+            response.json()["results"][0]["product"]["id"], str(product.id)
+        )
+        self.assertEqual(response.json()["results"][0]["course_id"], str(course.id))
+
+        with self.assertNumQueries(5):
+            response = self.client.get(
+                f"/api/v1.0/courses/{course.id}/orders/" f"?product_id={product.id}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(response.json()["count"], 1)
+        self.assertEqual(
+            response.json()["results"][0]["product"]["id"], str(product.id)
+        )
+        self.assertEqual(response.json()["results"][0]["course_id"], str(course.id))
+
+        with self.assertNumQueries(5):
+            response = self.client.get(
+                f"/api/v1.0/courses/{course.id}/orders/"
+                f"?organization_id={organization.id}&product_id={product.id}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(response.json()["count"], 1)
+        self.assertEqual(
+            response.json()["results"][0]["product"]["id"], str(product.id)
+        )
+        self.assertEqual(response.json()["results"][0]["course_id"], str(course.id))

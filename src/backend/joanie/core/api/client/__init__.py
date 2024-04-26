@@ -1468,6 +1468,11 @@ class NestedOrderCourseViewSet(NestedGenericViewSet, mixins.ListModelMixin):
         .distinct()
     )
 
+    def get_queryset(self):
+        """Returns the queryset of orders where the user has access on the organization"""
+        queryset = super().get_queryset()
+        return queryset.filter(organization__accesses__user=self.request.user)
+
 
 class ActivityLogViewSet(
     mixins.CreateModelMixin,
