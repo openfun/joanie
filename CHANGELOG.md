@@ -42,6 +42,8 @@ and this project adheres to
 
 ### Fixed
 
+- Nested Order Course API client viewset returns the orders
+  where the user has access to organization
 - Contract's context `course_start`, `course_end`, `course_effort`
   and `course_price` are strings for template tags formatting
 - Prevent newsletter subscription on user save failure
