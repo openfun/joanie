@@ -2,11 +2,8 @@ import * as React from "react";
 import { ReactElement, useRef, useState } from "react";
 import Button, { ButtonProps } from "@mui/material/Button";
 import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import ListItemText from "@mui/material/ListItemText";
-import Typography from "@mui/material/Typography";
-import { ConditionalTooltip } from "@/components/presentational/tooltip/ConditionalTooltip";
+import { CustomMenuItem } from "@/components/presentational/menu-popover/CustomMenuItem";
 
 export type MenuOption = {
   icon?: ReactElement;
@@ -64,39 +61,10 @@ export default function ButtonMenu({
         }}
       >
         {options.map((menuOption) => (
-          <ConditionalTooltip
-            key={menuOption.mainLabel}
-            enableTooltip={!!menuOption?.isDisable}
-            title={menuOption.disableMessage ?? ""}
-          >
-            <span data-testid={menuOption.mainLabel}>
-              <MenuItem
-                disabled={!!menuOption?.isDisable}
-                onClick={() => {
-                  handleCloseMenu();
-                  menuOption.onClick?.();
-                }}
-              >
-                {menuOption.icon &&
-                  React.cloneElement(menuOption.icon, {
-                    fontSize: "small",
-                    sx: { mr: 1 },
-                  })}
-                <ListItemText sx={{ mr: menuOption.rightLabel ? 3 : 0 }}>
-                  {menuOption.mainLabel}
-                </ListItemText>
-                {menuOption.rightLabel &&
-                  typeof menuOption.rightLabel === "string" && (
-                    <Typography variant="body2" color="text.secondary">
-                      {menuOption.rightLabel}
-                    </Typography>
-                  )}
-                {menuOption.rightLabel &&
-                  typeof menuOption.rightLabel !== "string" &&
-                  menuOption.rightLabel}
-              </MenuItem>
-            </span>
-          </ConditionalTooltip>
+          <CustomMenuItem
+            handleClose={handleCloseMenu}
+            menuOption={menuOption}
+          />
         ))}
       </Menu>
     </div>

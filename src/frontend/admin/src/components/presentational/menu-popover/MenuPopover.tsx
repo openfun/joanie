@@ -3,12 +3,11 @@ import { MouseEvent, ReactElement, useMemo, useState } from "react";
 import Popover, { PopoverOrigin, PopoverProps } from "@mui/material/Popover";
 import MoreVertOutlinedIcon from "@mui/icons-material/MoreVertOutlined";
 import IconButton from "@mui/material/IconButton";
-import MenuItem from "@mui/material/MenuItem";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import ListItemText from "@mui/material/ListItemText";
 import MenuList from "@mui/material/MenuList";
 import { MenuPopoverArrowValue } from "@/components/presentational/menu-popover/types";
 import getPosition from "@/components/presentational/menu-popover/getPosition";
+import { MenuOption } from "@/components/presentational/button/menu/ButtonMenu";
+import { CustomMenuItem } from "@/components/presentational/menu-popover/CustomMenuItem";
 
 export interface ActionMenuPopoverItem {
   title: string;
@@ -18,7 +17,7 @@ export interface ActionMenuPopoverItem {
 
 interface Props extends Omit<PopoverProps, "open"> {
   button?: ReactElement;
-  menuItems: ActionMenuPopoverItem[];
+  menuItems: MenuOption[];
   arrow?: MenuPopoverArrowValue;
   disabledArrow?: boolean;
   id?: string;
@@ -77,18 +76,12 @@ export function MenuPopover({
         {...other}
       >
         <MenuList>
-          {menuItems.map((item) => {
+          {menuItems.map((menuOption) => {
             return (
-              <MenuItem
-                onClick={() => {
-                  handleClose();
-                  item.onClick?.();
-                }}
-                key={item.title}
-              >
-                {item.icon && <ListItemIcon>{item.icon}</ListItemIcon>}
-                <ListItemText>{item.title}</ListItemText>
-              </MenuItem>
+              <CustomMenuItem
+                handleClose={handleClose}
+                menuOption={menuOption}
+              />
             );
           })}
         </MenuList>
