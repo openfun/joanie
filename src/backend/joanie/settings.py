@@ -617,8 +617,7 @@ class Base(Configuration):
                 integrations=[DjangoIntegration()],
                 before_send=before_send,
             )
-            with sentry_sdk.configure_scope() as scope:
-                scope.set_extra("application", "backend")
+            sentry_sdk.set_tag("application", "backend")
 
         if cls.BREVO_WEBHOOK_TOKEN is not None:
             cls.JOANIE_AUTHORIZED_API_TOKENS.append(cls.BREVO_WEBHOOK_TOKEN)  # pylint: disable=no-member
