@@ -11,8 +11,8 @@ describe("<MenuPopover />", () => {
       <MenuPopover
         button={<Button>Open</Button>}
         menuItems={[
-          { title: "One", onClick: noop, icon: <TuneIcon /> },
-          { title: "Two" },
+          { mainLabel: "One", onClick: noop, icon: <TuneIcon /> },
+          { mainLabel: "Two" },
         ]}
         arrow="right-top"
       />

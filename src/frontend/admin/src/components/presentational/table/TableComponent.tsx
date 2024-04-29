@@ -10,14 +10,12 @@ import { GridValidRowModel } from "@mui/x-data-grid/models/gridRows";
 import TextField from "@mui/material/TextField";
 import InputAdornment from "@mui/material/InputAdornment";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
-import {
-  TableDefaultActions,
-  TableDefaultMenuItem,
-} from "@/components/presentational/table/TableDefaultActions";
+import { TableDefaultActions } from "@/components/presentational/table/TableDefaultActions";
 import { tableTranslations } from "@/components/presentational/table/translations";
 import { DEFAULT_PAGE_SIZE } from "@/utils/constants";
 import { mergeArrayUnique } from "@/utils/array";
 import { CustomTablePagination } from "@/components/presentational/table/TablePagination";
+import { MenuOption } from "@/components/presentational/button/menu/ButtonMenu";
 
 export type DefaultTableProps<T extends GridValidRowModel> = {
   enableSelect?: boolean;
@@ -46,7 +44,7 @@ export type TableComponentProps<T extends GridValidRowModel> =
       multiSelectActions?: ReactElement;
       loading?: boolean;
       columnBuffer?: number;
-      getOptions?: (row: T) => TableDefaultMenuItem[];
+      getOptions?: (row: T) => MenuOption[];
     };
 
 export function TableComponent<T extends GridValidRowModel>({
