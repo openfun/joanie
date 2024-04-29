@@ -75,12 +75,12 @@ export function CoursesRunsList({ courseId, ...props }: Props) {
 
         return [
           {
-            title: intl.formatMessage(commonTranslations.copyUrl),
+            mainLabel: intl.formatMessage(commonTranslations.copyUrl),
             icon: <CopyAllIcon fontSize="small" />,
             onClick: () => copyToClipboard(uri),
           },
           {
-            title: intl.formatMessage(messages.copyResourceLink),
+            mainLabel: intl.formatMessage(messages.copyResourceLink),
             icon: <CopyAllIcon fontSize="small" />,
             onClick: () => copyToClipboard(resourceLink),
           },

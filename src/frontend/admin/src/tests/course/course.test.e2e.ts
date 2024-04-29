@@ -13,6 +13,7 @@ import { DTOProduct, Product } from "@/services/api/models/Product";
 import { expectHaveClasses } from "@/tests/utils";
 import { User } from "@/services/api/models/User";
 import { CourseRun, DTOCourseRun } from "@/services/api/models/CourseRun";
+import { delay } from "@/components/testing/utils";
 
 const coursesApiUrl = "http://localhost:8071/api/v1.0/admin/courses/";
 test.describe("Course form", async () => {
@@ -346,5 +347,138 @@ test.describe("Course form page", () => {
     await page.getByRole("tab", { name: "Members" }).click();
     await page.getByRole("tab", { name: "Course runs" }).click();
     await page.getByRole("tab", { name: "Products" }).click();
+  });
+});
+
+test.describe("Course product tab", () => {
+  let store = getCourseScenarioStore();
+  test.beforeEach(async ({ page }) => {
+    store = getCourseScenarioStore();
+    await mockPlaywrightCrud<Course, DTOCourse>({
+      data: store.list,
+      routeUrl: coursesApiUrl,
+      page,
+      createCallback: store.postUpdate,
+      updateCallback: store.postUpdate,
+      searchResult: store.list[1],
+      optionsResult: COURSE_OPTIONS_REQUEST_RESULT,
+    });
+  });
+
+  test("Generate certificate on course product relation", async ({ page }) => {
+    const course = store.list[0];
+    const relation = course.product_relations![0];
+
+    await page.route(
+      `http://localhost:8071/api/v1.0/admin/course-product-relations/${relation.id}/generate_certificates/`,
+      async (route, request) => {
+        const methods = request.method();
+        if (methods === "POST") {
+          await route.fulfill({
+            json: {
+              course_product_relation_id: relation.id,
+              count_certificate_to_generate: 0,
+              count_exist_before_generation: 0,
+            },
+          });
+        }
+      },
+    );
+
+    await page.goto(PATH_ADMIN.courses.list);
+    await expect(page.getByRole("heading", { name: "Courses" })).toBeVisible();
+    await page.getByRole("link", { name: course.title }).click();
+    await expect(
+      page.getByRole("heading", { name: `Edit course: ${course.title}` }),
+    ).toBeVisible();
+
+    await page.getByRole("tab", { name: "Products" }).click();
+    await expect(
+      page.getByRole("heading", { name: "Relation to products" }),
+    ).toBeVisible();
+
+    await page.route(
+      `http://localhost:8071/api/v1.0/admin/course-product-relations/${relation.id}/check_certificates_generation_process/`,
+      async (route, request) => {
+        const methods = request.method();
+        if (methods === "GET") {
+          await route.fulfill({
+            json: {
+              course_product_relation_id: relation.id,
+              count_certificate_to_generate: 0,
+              count_exist_before_generation: 0,
+            },
+          });
+        }
+      },
+    );
+
+    await page
+      .getByTestId(`course-product-relation-actions-${relation.id}`)
+      .click();
+    await expect(
+      page.getByRole("menuitem", { name: "Generate certificate" }),
+    ).toBeVisible();
+    await page.getByRole("menuitem", { name: "Generate certificate" }).click();
+    await expect(
+      page.getByTestId(`already-generate-job-${relation.id}`),
+    ).toBeVisible();
+  });
+
+  test("Check when a certificate generation job is already in progress", async ({
+    page,
+  }) => {
+    const course = store.list[0];
+    const relation = course.product_relations![0];
+    await page.route(
+      `http://localhost:8071/api/v1.0/admin/course-product-relations/${relation.id}/check_certificates_generation_process/`,
+      async (route, request) => {
+        const methods = request.method();
+        if (methods === "GET") {
+          await route.fulfill({
+            json: {
+              course_product_relation_id: relation.id,
+              count_certificate_to_generate: 0,
+              count_exist_before_generation: 0,
+            },
+          });
+        }
+      },
+    );
+
+    await page.goto(PATH_ADMIN.courses.list);
+    await expect(page.getByRole("heading", { name: "Courses" })).toBeVisible();
+    await page.getByRole("link", { name: course.title }).click();
+    await expect(
+      page.getByRole("heading", { name: `Edit course: ${course.title}` }),
+    ).toBeVisible();
+
+    await page.getByRole("tab", { name: "Products" }).click();
+    await expect(
+      page.getByRole("heading", { name: "Relation to products" }),
+    ).toBeVisible();
+
+    await page
+      .getByTestId(`course-product-relation-actions-${relation.id}`)
+      .click();
+    await page.getByTestId("Generate certificates").hover();
+    await delay(200);
+
+    await expect(
+      page.getByText("There is already a certificate generation in progress"),
+    ).toBeVisible();
+
+    await page
+      .locator(
+        `#course-product-relation-actions-${relation.id} > .MuiBackdrop-root`,
+      )
+      .click();
+
+    await page.getByTestId(`already-generate-job-${relation.id}`).hover();
+    await delay(200);
+
+    await expect(
+      page.getByText("There is already a certificate generation in progress"),
+    ).toBeVisible();
   });
 });
