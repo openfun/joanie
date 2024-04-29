@@ -27,6 +27,11 @@ export const courseProductRelationsRoutes = {
     `/course-product-relations/${id}/order-groups/${orderGroupId}/`,
   deleteOrderGroup: (id: string, orderGroupId: string) =>
     `/course-product-relations/${id}/order-groups/${orderGroupId}/`,
+  checkCertificateGeneration: (id: string) =>
+    `/course-product-relations/${id}/check_certificates_generation_process/`,
+
+  generateMultipleCertificate: (id: string) =>
+    `/course-product-relations/${id}/generate_certificates/`,
 };
 
 export const CourseProductRelationRepository = class CourseProductRelationRepository {
@@ -113,6 +118,32 @@ export const CourseProductRelationRepository = class CourseProductRelationReposi
       courseProductRelationsRoutes.deleteOrderGroup(relationId, orderGroupId),
       {
         method: "DELETE",
+      },
+    ).then(checkStatus);
+  }
+
+  static checkStatutCertificateGenerationProcess(id: string): Promise<any> {
+    return fetchApi(
+      courseProductRelationsRoutes.checkCertificateGeneration(id),
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept-Language": getAcceptLanguage(),
+        },
+      },
+    ).then(checkStatus);
+  }
+
+  static generateMultipleCertificate(id: string): Promise<any> {
+    return fetchApi(
+      courseProductRelationsRoutes.generateMultipleCertificate(id),
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept-Language": getAcceptLanguage(),
+        },
       },
     ).then(checkStatus);
   }
