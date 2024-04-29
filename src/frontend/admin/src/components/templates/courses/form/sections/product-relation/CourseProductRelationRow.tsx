@@ -3,9 +3,12 @@ import { ReactNode, useEffect, useState } from "react";
 import Stack from "@mui/material/Stack";
 import Button from "@mui/material/Button";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
-
+import PostAddIcon from "@mui/icons-material/PostAdd";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import Box from "@mui/material/Box";
 import CopyAllIcon from "@mui/icons-material/CopyAll";
+import { useQuery } from "@tanstack/react-query";
+import Tooltip from "@mui/material/Tooltip";
 import {
   DTOOrderGroup,
   OrderGroup,
@@ -27,6 +30,7 @@ import { MenuPopover } from "@/components/presentational/menu-popover/MenuPopove
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { commonTranslations } from "@/translations/common/commonTranslations";
 import { CourseProductRelationSource } from "@/components/templates/relations/course-product-relation/CourseProductRelationList";
+import { CourseProductRelationRepository } from "@/services/repositories/course-product-relation/CourseProductRelationRepository";
 
 const messages = defineMessages({
   mainTitleOrderGroup: {
@@ -75,6 +79,17 @@ const messages = defineMessages({
     defaultMessage: "Edit an order group",
     description: "Title for the edit order group modal",
   },
+  generateCertificate: {
+    id: "components.templates.courses.form.productRelation.row.generateCertificate",
+    defaultMessage: "Generate certificates",
+    description: "Label for the generate certificate action",
+  },
+  alreadyCertificateGenerationInProgress: {
+    id: "components.templates.courses.form.productRelation.row.alreadyCertificateGenerationInProgress",
+    defaultMessage: "There is already a certificate generation in progress",
+    description:
+      "Text when hovering over the action to generate certificates, but a generation is already in progress",
+  },
 });
 
 type EditOrderGroupState = {
@@ -98,6 +113,17 @@ export function CourseProductRelationRow({
   source,
 }: Props) {
   const intl = useIntl();
+
+  const jobQuery = useQuery({
+    queryKey: ["course-product-relation-job", relation.id],
+    staleTime: 0,
+    queryFn: async () => {
+      return CourseProductRelationRepository.checkStatutCertificateGenerationProcess(
+        relation.id,
+      );
+    },
+  });
+
   const copyToClipboard = useCopyToClipboard();
   const canEdit = relation.can_edit;
   const disabledActionsMessage = canEdit
@@ -120,6 +146,13 @@ export function CourseProductRelationRow({
     {},
     { enabled: false },
   );
+
+  const sendGenerateCertificate = async () => {
+    await CourseProductRelationRepository.generateMultipleCertificate(
+      relation.id,
+    );
+    await jobQuery.refetch();
+  };
 
   const update = (
     payload: DTOOrderGroup,
@@ -238,16 +271,41 @@ export function CourseProductRelationRow({
         enableDelete={canEdit}
         disableDeleteMessage={disabledActionsMessage}
         permanentRightActions={
-          <MenuPopover
-            id={`course-product-relation-actions-${relation.id}`}
-            menuItems={[
-              {
-                title: intl.formatMessage(commonTranslations.copyUrl),
-                icon: <CopyAllIcon fontSize="small" />,
-                onClick: () => copyToClipboard(relation.uri!),
-              },
-            ]}
-          />
+          <>
+            {jobQuery.data && (
+              <Tooltip
+                title={intl.formatMessage(
+                  messages.alreadyCertificateGenerationInProgress,
+                )}
+              >
+                <AccessTimeIcon
+                  sx={{ ml: 1 }}
+                  data-testid={`already-generate-job-${relation.id}`}
+                  fontSize="medium"
+                  color="disabled"
+                />
+              </Tooltip>
+            )}
+            <MenuPopover
+              id={`course-product-relation-actions-${relation.id}`}
+              menuItems={[
+                {
+                  mainLabel: intl.formatMessage(messages.generateCertificate),
+                  icon: <PostAddIcon fontSize="small" />,
+                  onClick: sendGenerateCertificate,
+                  isDisable: jobQuery.data !== undefined,
+                  disableMessage: intl.formatMessage(
+                    messages.alreadyCertificateGenerationInProgress,
+                  ),
+                },
+                {
+                  mainLabel: intl.formatMessage(commonTranslations.copyUrl),
+                  icon: <CopyAllIcon fontSize="small" />,
+                  onClick: () => copyToClipboard(relation.uri!),
+                },
+              ]}
+            />
+          </>
         }
         disableEditMessage={disabledActionsMessage}
         onEdit={() => onClickEdit(relation)}

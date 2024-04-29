@@ -11,6 +11,7 @@ and this project adheres to
 ### Added
 
 - Allow to filter enrollment through `is_active` field on the client API
+- Add the possibility to add a syllabus inside the product form
 
 ### Fixed
 
@@ -32,6 +33,7 @@ and this project adheres to
 - Add admin page to decrypt additional data sent to Sentry
 - Allow to link a syllabus inside the product detail view
 - Add Lyra payment backend
+- BO : Add the possibility to add a syllabus inside the course form
 
 ### Changed
 
