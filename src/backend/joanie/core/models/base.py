@@ -12,6 +12,8 @@ from django.db import models
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
+from joanie.core.utils import file_checksum
+
 
 class BaseModel(models.Model):
     """Base model for all the models of the apps"""
@@ -67,3 +69,37 @@ class BaseModel(models.Model):
         for field in opts.many_to_many:
             data[field.name] = [related.id for related in field.value_from_object(self)]
         return data
+
+
+class DocumentImage(BaseModel):
+    """
+    DocumentImage represents an image used in a document.
+    """
+
+    checksum = models.CharField(
+        _("checksum"),
+        max_length=64,
+        help_text=_("SHA-256 Checksum of the file"),
+        editable=False,
+        unique=True,
+    )
+    file = models.ImageField(
+        _("file"),
+        max_length=255,
+        help_text=_("File used in the certificate"),
+        editable=False,
+        null=False,
+    )
+
+    def __str__(self):
+        return self.file.name
+
+    def save(self, *args, **kwargs):
+        """
+        Save the instance and calculate the checksum if it is not set.
+        """
+
+        if not self.checksum:
+            self.checksum = file_checksum(self.file)
+
+        super().save(*args, **kwargs)
