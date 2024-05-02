@@ -4,20 +4,99 @@ from django.conf import settings
 from django.test import TestCase, override_settings
 
 from joanie.core import enums, factories
+from joanie.core.models import Certificate, DocumentImage
 
 
 class CertificateModelTestCase(TestCase):
     """Certificate model test case."""
 
+    maxDiff = None
+
     def test_models_certificate_localized_context(self):
         """
         When a certificate is created, localized contexts in each enabled languages
-        should be created.
+        should be created and related images set.
         """
         certificate = factories.OrderCertificateFactory()
         languages = settings.LANGUAGES
 
         self.assertEqual(len(list(certificate.localized_context)), len(languages))
+
+    def test_models_certificate_set_localized_context_on_create(self):
+        """
+        When a certificate is created, localized contexts in each enabled languages
+        is created. DocumentImage relations should be also created.
+        """
+        organization = factories.OrganizationFactory(
+            title="University 1",
+            representative="Joanie Cunningham",
+            representative_profession="Teacher",
+        )
+        organization.translations.create(title="Université 1")
+        course = factories.CourseFactory(title="Course 1", organizations=[organization])
+        course.translations.create(title="Cours 1")
+        enrollment = factories.EnrollmentFactory(course_run__course=course)
+        definition = factories.CertificateDefinitionFactory()
+
+        # No DocumentImage should exist yet
+        self.assertEqual(DocumentImage.objects.count(), 0)
+
+        certificate = Certificate.objects.create(
+            certificate_definition=definition,
+            organization=organization,
+            enrollment=enrollment,
+        )
+
+        # After creation, a DocumentImage should have been created
+        # logo and signature images are the same when using OrganizationFactory
+        self.assertEqual(DocumentImage.objects.count(), 1)
+        # Relation to the DocumentImage should have been set
+        self.assertEqual(certificate.images.count(), 1)
+
+        image_id = str(DocumentImage.objects.first().id)
+        languages = settings.LANGUAGES
+        self.assertEqual(
+            certificate.localized_context,
+            {
+                language_code: {
+                    "course": {
+                        "name": course.safe_translation_getter("title", language_code)
+                    },
+                    "organizations": [
+                        {
+                            "name": organization.safe_translation_getter(
+                                "title", language_code
+                            ),
+                            "representative": organization.representative,
+                            "representative_profession": organization.representative_profession,
+                            "signature_id": image_id,
+                            "logo_id": image_id,
+                        }
+                    ],
+                }
+                for (language_code, _) in languages
+            },
+        )
+
+    def test_models_certificate_set_localized_context_dont_duplicate_images(self):
+        """On localized context creation, DocumentImage should not be duplicated."""
+        organization = factories.OrganizationFactory()
+        enrollment = factories.EnrollmentFactory(
+            course_run__course__organizations=[organization]
+        )
+
+        # Create a DocumentImage for the organization
+        image = DocumentImage.objects.create(file=organization.logo)
+
+        cert = factories.EnrollmentCertificateFactory(enrollment=enrollment)
+        cert.refresh_from_db()
+
+        # No new DocumentImage should have been created
+        self.assertEqual(DocumentImage.objects.count(), 1)
+
+        # A relation to the existing image should have been set
+        self.assertEqual(cert.images.count(), 1)
+        self.assertEqual(cert.images.first(), image)
 
     @override_settings(JOANIE_CATALOG_NAME="Test Catalog")
     @override_settings(JOANIE_CATALOG_BASE_URL="https://richie.education")
@@ -63,12 +142,12 @@ class CertificateModelTestCase(TestCase):
         self.assertEqual(context["site"]["name"], "Test Catalog")
         self.assertEqual(context["site"]["hostname"], "https://richie.education")
 
-    def test_models_certificate_get_document_context_with_incomplete_information_raises_error(
+    def test_models_certificate_get_document_context_with_incomplete_information(
         self,
     ):
         """
-        If the certificate context is incomplete (missing logo or signature for example),
-        it should raise a Value Error while creating the certificate.
+        If logo or signature are missing from the organization, the context should be
+        returned with None values for these fields.
         """
         organization = factories.OrganizationFactory(
             title="University X",
@@ -86,13 +165,12 @@ class CertificateModelTestCase(TestCase):
         order = factories.OrderFactory(product=product, organization=organization)
 
         # - Retrieve the document context should raise a ValueError
-        with self.assertRaises(ValueError) as context:
-            factories.OrderCertificateFactory(order=order)
 
-        self.assertEqual(
-            str(context.exception),
-            "The 'signature' attribute has no file associated with it.",
-        )
+        certificate = factories.OrderCertificateFactory(order=order)
+
+        context = certificate.get_document_context("en-us")
+        self.assertIsNone(context["organizations"][0]["logo"])
+        self.assertIsNone(context["organizations"][0]["signature"])
 
     def test_models_certificate_verification_uri(self):
         """

@@ -13,7 +13,8 @@ from hashids import Hashids
 from joanie.celery_app import app
 from joanie.core import models
 from joanie.core.enums import CERTIFICATE, DEGREE
-from joanie.core.utils import image_to_base64
+from joanie.core.models import DocumentImage
+from joanie.core.utils import file_checksum
 from joanie.edx_imports import edx_mongodb
 from joanie.edx_imports.edx_database import OpenEdxDB
 from joanie.edx_imports.utils import (
@@ -21,6 +22,7 @@ from joanie.edx_imports.utils import (
     extract_organization_code,
     format_percent,
     make_date_aware,
+    set_certificate_images,
 )
 from joanie.lms_handler.backends.openedx import OPENEDX_MODE_VERIFIED
 
@@ -134,6 +136,14 @@ def import_certificates_batch(
                 )
                 continue
 
+            logo = None
+            if organization.logo:
+                logo_checksum = file_checksum(organization.logo)
+                (logo, _created) = DocumentImage.objects.get_or_create(
+                    checksum=logo_checksum,
+                    defaults={"file": organization.logo},
+                )
+
             for language, _ in settings.LANGUAGES:
                 certificate_context[language] = {
                     "course": {
@@ -146,11 +156,9 @@ def import_certificates_batch(
                             "name": organization.safe_translation_getter(
                                 "title", language_code=language
                             ),
-                            "logo": image_to_base64(organization.logo)
-                            if organization.logo
-                            else None,
+                            "logo_id": logo.id if logo else None,
+                            "signature_id": None,
                             "representative": None,
-                            "signature": None,
                         }
                     ],
                 }
@@ -164,18 +172,18 @@ def import_certificates_batch(
                 )
 
                 signature = None
-                signatory_name = None
                 if signatory:
                     signature_image_path = signatory.get("signature_image_path")
                     if signature_image_path.startswith("/"):
                         signature_image_path = signature_image_path[1:]
                     signature_path = download_and_store(signature_image_path)
-                    signature = (
-                        image_to_base64(default_storage.open(signature_path))
-                        if signature_path
-                        else None
-                    )
-                    signatory_name = signatory.get("name")
+                    if signature_path:
+                        signature_file = default_storage.open(signature_path)
+                        signature_checksum = file_checksum(signature_file)
+                        (signature, _created) = DocumentImage.objects.get_or_create(
+                            checksum=signature_checksum,
+                            defaults={"file": signature_path},
+                        )
 
                     certificate_context["signatory"] = signatory
 
@@ -186,8 +194,8 @@ def import_certificates_batch(
                         ] = signatory_name
                     if signature:
                         certificate_context[language]["organizations"][0][
-                            "signature"
-                        ] = signature
+                            "signature_id"
+                        ] = signature.id
 
             certificates_to_create.append(
                 models.Certificate(
@@ -225,6 +233,10 @@ def import_certificates_batch(
         certificates_created = models.Certificate.objects.bulk_create(
             certificates_to_create
         )
+        # Create the relation between the certificate and the document images
+        for certificate in certificates_created:
+            set_certificate_images(certificate)
+
         report["certificates"]["created"] += len(certificates_created)
 
         certificate_issued_on_field.auto_now = True

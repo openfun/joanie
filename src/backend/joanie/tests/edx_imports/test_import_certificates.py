@@ -6,6 +6,7 @@ from os.path import dirname, join, realpath
 from unittest.mock import patch
 
 from django.conf import settings
+from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.test import TestCase, override_settings
 
@@ -14,7 +15,8 @@ from hashids import Hashids
 
 from joanie.core import factories, models
 from joanie.core.enums import CERTIFICATE, DEGREE
-from joanie.core.utils import image_to_base64
+from joanie.core.models import DocumentImage
+from joanie.core.utils import file_checksum
 from joanie.edx_imports import edx_factories
 from joanie.edx_imports.tasks.certificates import import_certificates
 from joanie.edx_imports.utils import (
@@ -25,11 +27,11 @@ from joanie.edx_imports.utils import (
 from joanie.lms_handler.backends.openedx import OPENEDX_MODE_VERIFIED
 
 SIGNATURE_NAME = "creative_common.jpeg"
-with open(
-    join(dirname(realpath(__file__)), f"images/{SIGNATURE_NAME}"), "rb"
-) as signature_image:
+SIGNATURE_PATH = join(dirname(realpath(__file__)), f"images/{SIGNATURE_NAME}")
+
+with open(SIGNATURE_PATH, "rb") as signature_image:
     SIGNATURE_CONTENT = signature_image.read()
-    SIGNATURE_CONTENT_BASE64 = image_to_base64(signature_image.name)
+    SIGNATURE_CHECKSUM = file_checksum(ContentFile(content=SIGNATURE_CONTENT))
 
 
 @override_settings(
@@ -130,12 +132,16 @@ class EdxImportCertificatesTestCase(TestCase):
             has_signatory = edx_certificate.mode == OPENEDX_MODE_VERIFIED
             certificate_template = CERTIFICATE
             mongo_signatory = None
-            signature = None
+            signature_id = None
             representative = None
+            logo_checksum = file_checksum(certificate.organization.logo)
+            logo_id = str(DocumentImage.objects.get(checksum=logo_checksum).id)
             if has_signatory:
                 certificate_template = DEGREE
                 mongo_signatory = mongo_enrollments[edx_certificate.id]
-                signature = SIGNATURE_CONTENT_BASE64
+                signature_id = str(
+                    DocumentImage.objects.get(checksum=SIGNATURE_CHECKSUM).id
+                )
                 representative = mongo_signatory.get("name")
             self.assertEqual(
                 certificate.certificate_definition.template, certificate_template
@@ -163,8 +169,8 @@ class EdxImportCertificatesTestCase(TestCase):
                                     "title", language_code="en"
                                 ),
                                 "representative": representative,
-                                "signature": signature,
-                                "logo": image_to_base64(certificate.organization.logo),
+                                "signature_id": signature_id,
+                                "logo_id": logo_id,
                             }
                         ],
                     },
@@ -182,8 +188,8 @@ class EdxImportCertificatesTestCase(TestCase):
                                     "title", language_code="fr"
                                 ),
                                 "representative": representative,
-                                "signature": signature,
-                                "logo": image_to_base64(certificate.organization.logo),
+                                "signature_id": signature_id,
+                                "logo_id": logo_id,
                             }
                         ],
                     },
@@ -197,6 +203,9 @@ class EdxImportCertificatesTestCase(TestCase):
                         )[1:]
                     )
                 )
+                certificate.images.filter(checksum=SIGNATURE_CHECKSUM).exists()
+
+            self.assertEqual(certificate.images.count(), 2 if has_signatory else 1)
 
     @patch("joanie.edx_imports.edx_mongodb.get_signature_from_enrollment")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates_count")
@@ -438,9 +447,14 @@ class EdxImportCertificatesTestCase(TestCase):
                 certificate.issued_on, make_date_aware(edx_certificate.created_date)
             )
             if edx_certificate in edx_certificates_with_mongodb_enrollments:
-                signature = SIGNATURE_CONTENT_BASE64
+                signature_id = str(
+                    DocumentImage.objects.get(checksum=SIGNATURE_CHECKSUM).id
+                )
             else:
-                signature = None
+                signature_id = None
+
+            logo_checksum = file_checksum(certificate.organization.logo)
+            logo_id = str(DocumentImage.objects.get(checksum=logo_checksum).id)
 
             mongo_signatory = mongo_enrollments[edx_certificate.id]
             mongo_signatory_name = (
@@ -465,8 +479,8 @@ class EdxImportCertificatesTestCase(TestCase):
                                     "title", language_code="en"
                                 ),
                                 "representative": mongo_signatory_name,
-                                "signature": signature,
-                                "logo": image_to_base64(certificate.organization.logo),
+                                "signature_id": signature_id,
+                                "logo_id": logo_id,
                             }
                         ],
                     },
@@ -484,8 +498,8 @@ class EdxImportCertificatesTestCase(TestCase):
                                     "title", language_code="fr"
                                 ),
                                 "representative": mongo_signatory_name,
-                                "signature": signature,
-                                "logo": image_to_base64(certificate.organization.logo),
+                                "signature_id": signature_id,
+                                "logo_id": logo_id,
                             }
                         ],
                     },
@@ -586,8 +600,8 @@ class EdxImportCertificatesTestCase(TestCase):
                                 "title", language_code="en"
                             ),
                             "representative": mongo_signatory.get("name"),
-                            "signature": None,
-                            "logo": None,
+                            "signature_id": None,
+                            "logo_id": None,
                         }
                     ],
                 },
@@ -605,12 +619,16 @@ class EdxImportCertificatesTestCase(TestCase):
                                 "title", language_code="fr"
                             ),
                             "representative": mongo_signatory.get("name"),
-                            "signature": None,
-                            "logo": None,
+                            "signature_id": None,
+                            "logo_id": None,
                         }
                     ],
                 },
             },
+        )
+        self.assertEqual(certificate.images.count(), 0)
+        self.assertFalse(
+            certificate.images.filter(checksum=SIGNATURE_CHECKSUM).exists()
         )
         self.assertFalse(
             default_storage.exists(
