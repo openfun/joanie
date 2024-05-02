@@ -4,6 +4,7 @@ Utils that can be useful throughout Joanie's core app
 
 import base64
 import collections.abc
+import hashlib
 import json
 import math
 
@@ -83,6 +84,18 @@ def image_to_base64(file_or_path, close=False):
             file.close()
         else:
             file.seek(file_pos)
+
+
+def file_checksum(file, chunk_size=4096):
+    """
+    Return the SHA256 checksum of the file.
+    """
+    sha256 = hashlib.sha256()
+    with file.open("rb"):
+        for chunk in file.chunks(chunk_size=chunk_size):
+            sha256.update(chunk)
+
+    return sha256.hexdigest()
 
 
 class JSONValue(values.Value):
