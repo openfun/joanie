@@ -1,9 +1,12 @@
 """Test suite for `generate_document_context` utility"""
 
+from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 from unittest import mock
 
 from django.contrib.sites.models import Site
 from django.test import TestCase, override_settings
+from django.utils import timezone as django_timezone
 
 from joanie.core import enums, factories
 from joanie.core.utils import contract_definition, image_to_base64
@@ -68,17 +71,39 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             signatory_representative_profession="Director",
         )
         address_organization = factories.OrganizationAddressFactory(
-            organization=organization, is_main=True, is_reusable=True
+            organization=organization,
+            owner=None,
+            is_main=True,
+            is_reusable=True,
         )
         relation = factories.CourseProductRelationFactory(
             organizations=[organization],
-            product__contract_definition=factories.ContractDefinitionFactory(
-                title="CONTRACT DEFINITION 1",
-                description="Contract definition description",
-                body="Articles de la convention",
-                language="en-us",
+            product=factories.ProductFactory(
+                contract_definition=factories.ContractDefinitionFactory(
+                    title="CONTRACT DEFINITION 1",
+                    description="Contract definition description",
+                    body="Articles de la convention",
+                    language="en-us",
+                ),
+                title="You will know that you know you don't know",
+                price="999.99",
+                target_courses=[
+                    factories.CourseFactory(
+                        course_runs=[
+                            factories.CourseRunFactory(
+                                start="2024-01-01T09:00:00+00:00",
+                                end="2024-03-31T18:00:00+00:00",
+                                enrollment_start="2024-01-01T12:00:00+00:00",
+                                enrollment_end="2024-02-01T12:00:00+00:00",
+                            )
+                        ]
+                    )
+                ],
             ),
-            course=factories.CourseFactory(organizations=[organization]),
+            course=factories.CourseFactory(
+                organizations=[organization],
+                effort=timedelta(hours=10, minutes=30, seconds=12),
+            ),
         )
         order = factories.OrderFactory(
             owner=user,
@@ -90,7 +115,6 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         factories.OrderTargetCourseRelationFactory(
             course=relation.course, order=order, position=1
         )
-        freezed_course_data = order.get_equivalent_course_run_dates()
         expected_context = {
             "contract": {
                 "body": "<p>Articles de la convention</p>",
@@ -102,10 +126,10 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             "course": {
                 "name": order.product.title,
                 "code": relation.course.code,
-                "start": freezed_course_data["start"],
-                "end": freezed_course_data["end"],
-                "effort": order.course.effort,
-                "price": order.total,
+                "start": "2024-01-01T09:00:00+00:00",
+                "end": "2024-03-31T18:00:00+00:00",
+                "effort": "P0DT10H30M12S",
+                "price": "999.99",
                 "currency": "€",
             },
             "student": {
@@ -158,7 +182,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             order=order,
         )
 
-        self.assertDictEqual(context, expected_context)
+        self.assertEqual(context, expected_context)
 
     def test_utils_contract_definition_generate_document_context_without_order(self):
         """
@@ -396,3 +420,137 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             contract_definition.generate_document_context(
                 contract_definition=definition
             )
+
+    def test_utils_contract_definition_generate_document_context_course_data_section_checks(
+        self,
+    ):
+        """
+        When we call `generate_document_context` utility method, we need to verify the type
+        of each values in the section course (course start, course end, effort and price) need
+        to be saved as 'string' in the context.
+        """
+        user = factories.UserFactory(
+            email="johndoe@example.fr",
+            first_name="John Doe",
+            last_name="",
+            phone_number="0123456789",
+        )
+        factories.SiteConfigFactory(
+            site=Site.objects.get_current(),
+            terms_and_conditions="## Terms and conditions",
+        )
+        user_address = factories.UserAddressFactory(
+            owner=user,
+            first_name="John",
+            last_name="Doe",
+            address="5 Rue de L'Exemple",
+            postcode="75000",
+            city="Paris",
+            country="FR",
+            title="Office",
+            is_main=False,
+        )
+        organization = factories.OrganizationFactory(
+            dpo_email="johnnydoes@example.fr",
+            contact_email="contact@example.fr",
+            contact_phone="0123456789",
+            enterprise_code="1234",
+            activity_category_code="abcd1234",
+            representative="Mister Example",
+            representative_profession="Educational representative",
+            signatory_representative="Big boss",
+            signatory_representative_profession="Director",
+        )
+        factories.OrganizationAddressFactory(
+            organization=organization,
+            owner=None,
+            is_main=True,
+            is_reusable=True,
+        )
+        relation = factories.CourseProductRelationFactory(
+            organizations=[organization],
+            product=factories.ProductFactory(
+                contract_definition=factories.ContractDefinitionFactory(
+                    title="CONTRACT DEFINITION 1",
+                    description="Contract definition description",
+                    body="Articles de la convention",
+                    language="en-us",
+                ),
+                title="You will know that you know you don't know",
+                price="999.99",
+                target_courses=[
+                    factories.CourseFactory(
+                        course_runs=[
+                            factories.CourseRunFactory(
+                                start="2024-02-01T10:00:00+00:00",
+                                end="2024-05-31T20:00:00+00:00",
+                                enrollment_start="2024-02-01T12:00:00+00:00",
+                                enrollment_end="2024-02-01T12:00:00+00:00",
+                            )
+                        ]
+                    )
+                ],
+            ),
+            course=factories.CourseFactory(
+                organizations=[organization],
+                effort=timedelta(hours=22, minutes=45, seconds=20),
+            ),
+        )
+
+        order = factories.OrderFactory(
+            owner=user,
+            product=relation.product,
+            course=relation.course,
+            state=enums.ORDER_STATE_VALIDATED,
+            main_invoice=InvoiceFactory(recipient_address=user_address),
+        )
+        factories.OrderTargetCourseRelationFactory(
+            course=relation.course, order=order, position=1
+        )
+        course_dates = order.get_equivalent_course_run_dates()
+
+        context = contract_definition.generate_document_context(
+            contract_definition=order.product.contract_definition,
+            user=user,
+            order=order,
+        )
+        contract = factories.ContractFactory(
+            order=order,
+            signature_backend_reference="abcd",
+            context=context,
+            student_signed_on=django_timezone.now(),
+            organization_signed_on=django_timezone.now(),
+        )
+
+        # Course effort check
+        self.assertIsInstance(order.course.effort, timedelta)
+        self.assertIsInstance(context["course"]["effort"], str)
+        self.assertIsInstance(contract.context["course"]["effort"], str)
+        self.assertEqual(
+            order.course.effort, timedelta(hours=22, minutes=45, seconds=20)
+        )
+        self.assertEqual(contract.context["course"]["effort"], "P0DT22H45M20S")
+        # Course start check
+        self.assertIsInstance(course_dates["start"], datetime)
+        self.assertIsInstance(context["course"]["start"], str)
+        self.assertIsInstance(contract.context["course"]["start"], str)
+        self.assertEqual(
+            course_dates["start"], datetime(2024, 2, 1, 10, 0, tzinfo=timezone.utc)
+        )
+        self.assertEqual(
+            contract.context["course"]["start"], "2024-02-01T10:00:00+00:00"
+        )
+        # Course end check
+        self.assertIsInstance(course_dates["end"], datetime)
+        self.assertIsInstance(context["course"]["end"], str)
+        self.assertIsInstance(contract.context["course"]["end"], str)
+        self.assertEqual(
+            course_dates["end"], datetime(2024, 5, 31, 20, 0, tzinfo=timezone.utc)
+        )
+        self.assertEqual(contract.context["course"]["end"], "2024-05-31T20:00:00+00:00")
+        # Pricing check
+        self.assertIsInstance(order.total, Decimal)
+        self.assertIsInstance(context["course"]["price"], str)
+        self.assertIsInstance(contract.context["course"]["price"], str)
+        self.assertEqual(order.total, Decimal("999.99"))
+        self.assertEqual(contract.context["course"]["price"], "999.99")

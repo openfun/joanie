@@ -23,7 +23,7 @@ and this project adheres to
 ### Changed
 
 - Store certificate images through a new DocumentImage model
-- Migrate to Sentry SDK 2.0 
+- Migrate to Sentry SDK 2.0
 - Add required filter by `Organization` and search through
   query on learner for certificate view in django admin
 - Migrate from `django-fsm` to `viewflow.fsm`
@@ -35,6 +35,8 @@ and this project adheres to
 
 ### Fixed
 
+- Contract's context `course_start`, `course_end`, `course_effort`
+  and `course_price` are strings for template tags formatting
 - Prevent newsletter subscription on user save failure
 - Query string search for enrollment in django admin backoffice
 - Encrypt sentry additional data (may contain sensitive data)
