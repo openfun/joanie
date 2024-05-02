@@ -12,7 +12,8 @@
       ],
       "matchPackageNames": [
         "hashids",
-        "PyMongo"
+        "PyMongo",
+        "WeasyPrint"
       ]
     },
     {
