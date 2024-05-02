@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [2.1.0] - 2024-05-02
+
 ### Added
 
 - Add accessibility section from Richie course syllabus
@@ -30,8 +32,6 @@ and this project adheres to
 - Use generic AdminCourseProductRelationSerializer
 - Make editing forms in auto save mode
 - Format all displayed date to the format "10/14/1983, 1:30 PM"
-
-### Removed
 
 ### Fixed
 
@@ -289,7 +289,8 @@ and this project adheres to
 - First working version serving sellable micro-credentials for multiple
   organizations synchronized to a remote catalog
 
-[unreleased]: https://github.com/openfun/joanie/compare/v2.0.1...main
+[unreleased]: https://github.com/openfun/joanie/compare/v2.1.0...main
+[2.1.0]: https://github.com/openfun/joanie/compare/v2.0.1...v2.1.0
 [2.0.1]: https://github.com/openfun/joanie/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/openfun/joanie/compare/v1.2.0...v2.0.0
 [1.2.0]: https://github.com/openfun/joanie/compare/v1.1.0...v1.2.0
