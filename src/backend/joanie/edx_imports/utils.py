@@ -10,11 +10,13 @@ from zoneinfo import ZoneInfo
 from django.conf import settings
 from django.core.files.storage import default_storage
 from django.utils.timezone import make_aware as django_make_aware
+from django.utils.translation import get_language
 
 import requests
 from parler.utils import get_language_settings
 
 from joanie.core import enums, utils
+from joanie.core.models import DocumentImage
 from joanie.lms_handler.backends.openedx import split_course_key
 
 logger = getLogger(__name__)
@@ -88,3 +90,18 @@ def format_percent(current, total):
     percent = (current / total) * 100
     percent = f"{percent:.3f}%" if percent < 100 else "100%"  # noqa: PLR2004
     return percent
+
+
+def set_certificate_images(certificate):
+    """Link Certificate to DocumentImage it is using."""
+    language_code = get_language_settings(get_language()).get("code")
+    certificate_context = certificate.localized_context[language_code]
+    images_set = set()
+
+    for organization in certificate_context["organizations"]:
+        for key in ["logo_id", "signature_id"]:
+            if image_id := organization.get(key):
+                image = DocumentImage.objects.get(id=image_id)
+                images_set.add(image)
+
+    certificate.images.set(images_set)

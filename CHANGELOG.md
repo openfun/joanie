@@ -22,6 +22,7 @@ and this project adheres to
 
 ### Changed
 
+- Store certificate images through a new DocumentImage model
 - Migrate to Sentry SDK 2.0 
 - Add required filter by `Organization` and search through
   query on learner for certificate view in django admin

@@ -17,8 +17,8 @@ from parler import models as parler_models
 from parler.utils import get_language_settings
 
 from joanie.core import enums
-from joanie.core.models.base import BaseModel
-from joanie.core.utils import image_to_base64, merge_dict
+from joanie.core.models.base import BaseModel, DocumentImage
+from joanie.core.utils import file_checksum, image_to_base64, merge_dict
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +97,13 @@ class Certificate(BaseModel):
         verbose_name=_("organization"),
         editable=False,
     )
-
+    images = models.ManyToManyField(
+        to=DocumentImage,
+        verbose_name=_("images"),
+        related_name="certificates",
+        editable=False,
+        blank=True,
+    )
     localized_context = models.JSONField(
         _("context"),
         help_text=_("Localized data that needs to be frozen on certificate creation"),
@@ -143,7 +149,7 @@ class Certificate(BaseModel):
         """Returns the certificate owner depending from the related order or enrollment."""
         return self.order.owner if self.order else self.enrollment.user
 
-    def _set_localized_context(self):
+    def _set_localized_context(self, created=True):
         """
         Update or create the certificate context for all languages.
 
@@ -153,7 +159,7 @@ class Certificate(BaseModel):
         title_object = (
             self.order.product if self.order else self.enrollment.course_run.course
         )
-
+        new_images = set()
         for language, __ in settings.LANGUAGES:
             context[language] = {
                 "course": {
@@ -161,7 +167,31 @@ class Certificate(BaseModel):
                         "title", language_code=language
                     ),
                 },
-                "organizations": [
+                "organizations": [],
+            }
+
+            for organization in self.course.organizations.all():
+                logo_id = None
+                signature_id = None
+                if organization.signature:
+                    signature_checksum = file_checksum(organization.signature)
+                    (signature, _created) = DocumentImage.objects.get_or_create(
+                        checksum=signature_checksum,
+                        defaults={"file": organization.signature},
+                    )
+                    new_images.add(signature)
+                    signature_id = str(signature.id)
+
+                if organization.logo:
+                    logo_checksum = file_checksum(organization.logo)
+                    (logo, _created) = DocumentImage.objects.get_or_create(
+                        checksum=logo_checksum,
+                        defaults={"file": organization.logo},
+                    )
+                    new_images.add(logo)
+                    logo_id = str(logo.id)
+
+                context[language]["organizations"].append(
                     {
                         "name": organization.safe_translation_getter(
                             "title", language_code=language
@@ -171,13 +201,17 @@ class Certificate(BaseModel):
                         "representative_profession": organization.signatory_representative_profession
                         if organization.signatory_representative
                         else organization.representative_profession,
-                        "signature": image_to_base64(organization.signature),
-                        "logo": image_to_base64(organization.logo),
+                        "signature_id": signature_id,
+                        "logo_id": logo_id,
                     }
-                    for organization in self.course.organizations.all()
-                ],
-            }
+                )
+
         self.localized_context = context
+
+        if created is False:
+            return new_images
+        else:
+            self.images.set(new_images)
 
     @property
     def verification_uri(self):
@@ -225,6 +259,26 @@ class Certificate(BaseModel):
             # - Otherwise use the first entry of the localized context
             localized_context = list(self.localized_context.values())[0]
 
+        # - Inject the assets
+        for index, organization in enumerate(localized_context["organizations"]):
+            signature_id = organization.get("signature_id")
+            logo_id = organization.get("logo_id")
+            signature_file = None
+            logo_file = None
+
+            if signature_id:
+                if signature := self.images.filter(pk=signature_id).first():
+                    signature_file = image_to_base64(signature.file)
+
+            if logo_id:
+                if logo := self.images.filter(pk=logo_id).first():
+                    logo_file = image_to_base64(logo.file)
+
+            organization["signature"] = signature_file
+            organization["logo"] = logo_file
+
+            localized_context["organizations"][index] = organization
+
         return merge_dict(base_context, localized_context)
 
     def save(self, *args, **kwargs):
@@ -233,7 +287,12 @@ class Certificate(BaseModel):
         self.full_clean()
 
         is_new = self.created_on is None
+        new_images = None
+
         if is_new:
-            self._set_localized_context()
+            new_images = self._set_localized_context(created=False)
 
         super().save(*args, **kwargs)
+
+        if new_images:
+            self.images.set(new_images)
