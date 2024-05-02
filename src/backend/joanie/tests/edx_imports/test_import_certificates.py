@@ -133,7 +133,8 @@ class EdxImportCertificatesTestCase(TestCase):
             certificate_template = CERTIFICATE
             mongo_signatory = None
             signature_id = None
-            representative = None
+            representative_name = None
+            representative_title = None
             logo_checksum = file_checksum(certificate.organization.logo)
             logo_id = str(DocumentImage.objects.get(checksum=logo_checksum).id)
             if has_signatory:
@@ -142,7 +143,8 @@ class EdxImportCertificatesTestCase(TestCase):
                 signature_id = str(
                     DocumentImage.objects.get(checksum=SIGNATURE_CHECKSUM).id
                 )
-                representative = mongo_signatory.get("name")
+                representative_name = mongo_signatory.get("name")
+                representative_title = mongo_signatory.get("title")
             self.assertEqual(
                 certificate.certificate_definition.template, certificate_template
             )
@@ -168,7 +170,8 @@ class EdxImportCertificatesTestCase(TestCase):
                                 "name": certificate.organization.safe_translation_getter(
                                     "title", language_code="en"
                                 ),
-                                "representative": representative,
+                                "representative": representative_name,
+                                "representative_profession": representative_title,
                                 "signature_id": signature_id,
                                 "logo_id": logo_id,
                             }
@@ -187,7 +190,8 @@ class EdxImportCertificatesTestCase(TestCase):
                                 "name": certificate.organization.safe_translation_getter(
                                     "title", language_code="fr"
                                 ),
-                                "representative": representative,
+                                "representative": representative_name,
+                                "representative_profession": representative_title,
                                 "signature_id": signature_id,
                                 "logo_id": logo_id,
                             }
@@ -460,6 +464,9 @@ class EdxImportCertificatesTestCase(TestCase):
             mongo_signatory_name = (
                 mongo_signatory.get("name") if mongo_signatory else None
             )
+            mongo_signatory_title = (
+                mongo_signatory.get("title") if mongo_signatory else None
+            )
             self.assertEqual(
                 certificate.localized_context,
                 {
@@ -479,6 +486,7 @@ class EdxImportCertificatesTestCase(TestCase):
                                     "title", language_code="en"
                                 ),
                                 "representative": mongo_signatory_name,
+                                "representative_profession": mongo_signatory_title,
                                 "signature_id": signature_id,
                                 "logo_id": logo_id,
                             }
@@ -498,6 +506,7 @@ class EdxImportCertificatesTestCase(TestCase):
                                     "title", language_code="fr"
                                 ),
                                 "representative": mongo_signatory_name,
+                                "representative_profession": mongo_signatory_title,
                                 "signature_id": signature_id,
                                 "logo_id": logo_id,
                             }
@@ -600,6 +609,7 @@ class EdxImportCertificatesTestCase(TestCase):
                                 "title", language_code="en"
                             ),
                             "representative": mongo_signatory.get("name"),
+                            "representative_profession": mongo_signatory.get("title"),
                             "signature_id": None,
                             "logo_id": None,
                         }
@@ -619,6 +629,7 @@ class EdxImportCertificatesTestCase(TestCase):
                                 "title", language_code="fr"
                             ),
                             "representative": mongo_signatory.get("name"),
+                            "representative_profession": mongo_signatory.get("title"),
                             "signature_id": None,
                             "logo_id": None,
                         }

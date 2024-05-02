@@ -159,6 +159,7 @@ def import_certificates_batch(
                             "logo_id": logo.id if logo else None,
                             "signature_id": None,
                             "representative": None,
+                            "representative_profession": None,
                         }
                     ],
                 }
@@ -188,10 +189,13 @@ def import_certificates_batch(
                     certificate_context["signatory"] = signatory
 
                 for language, _ in settings.LANGUAGES:
-                    if signatory_name:
+                    if signatory:
                         certificate_context[language]["organizations"][0][
                             "representative"
-                        ] = signatory_name
+                        ] = signatory.get("name")
+                        certificate_context[language]["organizations"][0][
+                            "representative_profession"
+                        ] = signatory.get("title")
                     if signature:
                         certificate_context[language]["organizations"][0][
                             "signature_id"
