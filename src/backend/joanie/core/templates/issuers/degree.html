@@ -50,8 +50,8 @@ which is the course provider. So the organization is accessed with organizations
                 <img class="organization__logo" src="{{ organizations.0.logo }}" />
                 <img class="organization__signature" src="{{ organizations.0.signature }}" />
                 <p class="organization__signatory">
-                    <em>{{ organizations.0.representative }}</em>
-                    <em>{{ organizations.0.representative_profession }}</em>
+                    <em>{{ organizations.0.representative|default:"" }}</em>
+                    <em>{{ organizations.0.representative_profession|default:"" }}</em>
                 </p>
             </div>
         </div>
