@@ -50,7 +50,7 @@ def iso8601_to_date(value: str, arg: str = None) -> str:
     Custom tag filter to format an ISO 8601 datetime string into
     a formatted date string.
 
-    Paramter:
+    Parameter:
         - `value`: An ISO8601 datetime string
         - `arg`: Date format
                  https://docs.djangoproject.com/en/5.0/ref/templates/builtins/#date

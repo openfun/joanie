@@ -1,5 +1,6 @@
 """Test suite for utility method to generate document of Contract Definition in PDF bytes format"""
 
+from datetime import timedelta
 from io import BytesIO
 
 from django.contrib.sites.models import Site
@@ -56,6 +57,7 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
 
         factories.OrganizationAddressFactory(
             organization=organization,
+            owner=None,
             address="1 Rue de l'Université",
             postcode="87000",
             city="Limoges",
@@ -82,7 +84,7 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
             ],
         )
 
-        course = factories.CourseFactory(code="UX-00001", effort="PT404H")
+        course = factories.CourseFactory(code="UX-00001", effort=timedelta(hours=404))
 
         relation = factories.CourseProductRelationFactory(
             product=product, course=course, organizations=[organization]

@@ -1,7 +1,10 @@
 """Utility to `generate document context` data"""
 
+from datetime import date, timedelta
+
 from django.conf import settings
 from django.contrib.sites.models import Site
+from django.utils.duration import duration_iso_string
 from django.utils.module_loading import import_string
 from django.utils.translation import gettext as _
 
@@ -52,7 +55,7 @@ def apply_contract_definition_context_processors(context):
     return context
 
 
-# ruff: noqa: PLR0915
+# ruff: noqa: PLR0912, PLR0915
 # pylint: disable=import-outside-toplevel, too-many-locals, too-many-statements
 def generate_document_context(contract_definition=None, user=None, order=None):
     """
@@ -160,9 +163,17 @@ def generate_document_context(contract_definition=None, user=None, order=None):
         course_start = course_dates["start"]
         course_end = course_dates["end"]
         course_effort = order.course.effort
-        course_price = order.total
-
+        course_price = str(order.total)
         user_address = order.main_invoice.recipient_address
+
+    # Transform duration value to ISO 8601 format
+    if isinstance(course_effort, timedelta):
+        course_effort = duration_iso_string(course_effort)
+    # Transform date value to ISO 8601 format
+    if isinstance(course_start, date):
+        course_start = course_start.isoformat()
+    if isinstance(course_end, date):
+        course_end = course_end.isoformat()
 
     if organization_address:
         organization_address = AddressSerializer(organization_address).data
@@ -209,5 +220,4 @@ def generate_document_context(contract_definition=None, user=None, order=None):
         },
     }
 
-    # Apply context processors
     return apply_contract_definition_context_processors(context)

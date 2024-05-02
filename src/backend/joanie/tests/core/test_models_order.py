@@ -5,9 +5,11 @@ Test suite for order models
 # pylint: disable=too-many-lines,too-many-public-methods
 import json
 import random
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 from unittest import mock
 
+from django.contrib.sites.models import Site
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
 from django.test import TestCase
@@ -15,7 +17,7 @@ from django.test.utils import override_settings
 from django.utils import timezone as django_timezone
 
 from joanie.core import enums, factories
-from joanie.core.models import CourseState
+from joanie.core.models import Contract, CourseState
 from joanie.core.utils import contract_definition
 from joanie.payment.factories import BillingAddressDictFactory, InvoiceFactory
 from joanie.tests.base import BaseLogMixinTestCase
@@ -916,3 +918,92 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
 
         self.assertEqual(o0.target_course_runs.count(), 1)
         self.assertEqual(o1.target_course_runs.count(), 3)
+
+    def test_models_order_submit_for_signature_check_contract_context_course_section_after_create(
+        self,
+    ):
+        """
+        When we call `submit_for_signature` with a validated order, it will generate the context
+        to add to the contract. In the contract context, we should find the values in the course
+        section where the `course_start`, `course_end`, `course_price` and
+        `course_effort` are string type.
+        """
+        user = factories.UserFactory()
+        factories.SiteConfigFactory(
+            site=Site.objects.get_current(),
+            terms_and_conditions="## Terms ",
+        )
+        user_address = factories.UserAddressFactory(owner=user)
+        organization = factories.OrganizationFactory()
+        factories.OrganizationAddressFactory(organization=organization)
+        relation = factories.CourseProductRelationFactory(
+            organizations=[organization],
+            product=factories.ProductFactory(
+                contract_definition=factories.ContractDefinitionFactory(),
+                title="You will know that you know you don't know",
+                price="1202.99",
+                target_courses=[
+                    factories.CourseFactory(
+                        course_runs=[
+                            factories.CourseRunFactory(
+                                start="2024-02-01T10:00:00+00:00",
+                                end="2024-05-31T20:00:00+00:00",
+                                enrollment_start="2024-02-01T12:00:00+00:00",
+                                enrollment_end="2024-02-01T12:00:00+00:00",
+                            )
+                        ]
+                    )
+                ],
+            ),
+            course=factories.CourseFactory(
+                organizations=[organization],
+                effort=timedelta(hours=13, minutes=30, seconds=12),
+            ),
+        )
+        order = factories.OrderFactory(
+            owner=user,
+            product=relation.product,
+            course=relation.course,
+            state=enums.ORDER_STATE_VALIDATED,
+            main_invoice=InvoiceFactory(recipient_address=user_address),
+        )
+        factories.OrderTargetCourseRelationFactory(
+            course=relation.course, order=order, position=1
+        )
+
+        order.submit_for_signature(user=user)
+
+        contract = Contract.objects.get(order=order)
+        course_dates = order.get_equivalent_course_run_dates()
+
+        # Course effort check
+        self.assertIsInstance(order.course.effort, timedelta)
+        self.assertIsInstance(contract.context["course"]["effort"], str)
+        self.assertEqual(
+            order.course.effort, timedelta(hours=13, minutes=30, seconds=12)
+        )
+        self.assertEqual(contract.context["course"]["effort"], "P0DT13H30M12S")
+
+        # Course start check
+        self.assertIsInstance(course_dates["start"], datetime)
+        self.assertIsInstance(contract.context["course"]["start"], str)
+        self.assertEqual(
+            course_dates["start"], datetime(2024, 2, 1, 10, 0, tzinfo=timezone.utc)
+        )
+        self.assertEqual(
+            contract.context["course"]["start"], "2024-02-01T10:00:00+00:00"
+        )
+
+        # Course end check
+        self.assertIsInstance(course_dates["end"], datetime)
+        self.assertIsInstance(contract.context["course"]["end"], str)
+        self.assertEqual(
+            course_dates["end"], datetime(2024, 5, 31, 20, 0, tzinfo=timezone.utc)
+        )
+        self.assertEqual(contract.context["course"]["end"], "2024-05-31T20:00:00+00:00")
+
+        # Pricing check
+        self.assertIsInstance(order.total, Decimal)
+        self.assertIsInstance(contract.context["course"]["price"], str)
+        self.assertEqual(order.total, Decimal("1202.99"))
+        self.assertEqual(contract.context["course"]["price"], "1202.99")
