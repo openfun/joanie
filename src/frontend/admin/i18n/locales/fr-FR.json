@@ -247,9 +247,17 @@
     "description": "Label for the organizations input form",
     "message": "Établissements"
   },
+  "components.templates.course.form.translations.productRelation.chooseCourse": {
+    "description": "Label form the course search input",
+    "message": "Choisissez votre cours "
+  },
   "components.templates.course.form.translations.productRelation.chooseProduct": {
     "description": "Label form the product search input",
     "message": "Choisissez votre produit"
+  },
+  "components.templates.course.form.translations.productRelation.courseLabel": {
+    "description": "Course label for the CourseProductRelation form",
+    "message": "Cours"
   },
   "components.templates.course.form.translations.productRelation.organizationsTitle": {
     "description": "Title for the organizations section",
@@ -383,18 +391,6 @@
     "description": "Text for the search input placeholder",
     "message": "Rechercher par titre, code"
   },
-  "components.templates.courses.form.productRelation.CourseFormProductRelationsSection.deleteRelationModalContent": {
-    "description": "Content for the delete relation modal",
-    "message": "Êtes-vous sûr de vouloir supprimer cette relation ?"
-  },
-  "components.templates.courses.form.productRelation.CourseFormProductRelationsSection.deleteRelationModalTitle": {
-    "description": "Title for the delete relation modal",
-    "message": "Supprimer la relation avec le produit"
-  },
-  "components.templates.courses.form.productRelation.CourseFormProductRelationsSection.emptyList": {
-    "description": "Message for empty list",
-    "message": "Aucune relation avec un produit n'a été créée pour ce cours"
-  },
   "components.templates.courses.form.productRelation.row.addOrderGroupButton": {
     "description": "Add order group button label",
     "message": "Ajouter un groupe de commandes"
@@ -490,6 +486,98 @@
   "components.templates.coursesRuns.input.RHFSelectCourseRunState.state": {
     "description": "Label text for the select state input",
     "message": "État"
+  },
+  "components.templates.enrollments.buttons.enrollmentActionsButton.enrollmentActionsLabel": {
+    "description": "Label for the actions button",
+    "message": "Actions"
+  },
+  "components.templates.enrollments.courseRun.id": {
+    "description": "Label for the course run header inside the table",
+    "message": "Session de cours"
+  },
+  "components.templates.enrollments.filters.EnrollmentFilters.isActiveLabel": {
+    "description": "Label for the is listed checkbox inside the Enrollment filters component",
+    "message": "Est actif"
+  },
+  "components.templates.enrollments.filters.EnrollmentFilters.searchPlaceholder": {
+    "description": "Text for the search input placeholder",
+    "message": "Recherche par titre de session de cours, lien de ressource, code de cours"
+  },
+  "components.templates.enrollments.input.RHFSelectEnrollmentState.state": {
+    "description": "Label text for the select state input",
+    "message": "État"
+  },
+  "components.templates.enrollments.list.isActive": {
+    "description": "Label for the is active header inside the table",
+    "message": "Est actif"
+  },
+  "components.templates.enrollments.list.owner": {
+    "description": "Label for the owner header inside the table",
+    "message": "Propriétaire"
+  },
+  "components.templates.enrollments.list.state": {
+    "description": "Label for the state header inside the table",
+    "message": "État"
+  },
+  "components.templates.enrollments.view.courseRun": {
+    "description": "Course run field",
+    "message": "Session de cours"
+  },
+  "components.templates.enrollments.view.isActive": {
+    "description": "Is active checkbox field",
+    "message": "Est actif"
+  },
+  "components.templates.enrollments.view.isActiveHelperText": {
+    "description": "Is active helper text",
+    "message": "Coché si l'utilisateur est inscrit à la session de cours."
+  },
+  "components.templates.enrollments.view.mainSectionTitle": {
+    "description": "Title for the main section",
+    "message": "Détails d'une inscription"
+  },
+  "components.templates.enrollments.view.state": {
+    "description": "State field",
+    "message": "État"
+  },
+  "components.templates.enrollments.view.stateFailedMessage": {
+    "description": "Message displayed when the status is failed",
+    "message": "Un problème est survenu lors de l'inscription sur le LMS."
+  },
+  "components.templates.enrollments.view.user": {
+    "description": "User field",
+    "message": "Utilisateur"
+  },
+  "components.templates.enrollments.view.wasCreatedForOrder": {
+    "description": "wasCreatedForOrder field",
+    "message": "A été créé dans le cadre d'une commande"
+  },
+  "components.templates.enrollments.view.wasCreatedForOrderHelperText": {
+    "description": "wasCreatedForOrder helper text",
+    "message": "Coché si l'inscription a été initialement créée dans le cadre d'une commande."
+  },
+  "components.templates.orders.buttons.enrollmentActionsButton.cantEnrollMessage": {
+    "description": "Label for the can't enroll tooltip message",
+    "message": "Il est impossible d'inscrire car la session n'est pas ouverte aux inscriptions."
+  },
+  "components.templates.orders.buttons.enrollmentActionsButton.enroll": {
+    "description": "Label for the enroll enrollment action",
+    "message": "Inscrire"
+  },
+  "components.templates.orders.buttons.enrollmentActionsButton.unroll": {
+    "description": "Label for the unenroll enrollment action",
+    "message": "Se désinscrire"
+  },
+  "components.templates.orders.buttons.enrollmentActionsButton.validateUnrollButImpossibleToEnrollAfterModalMessage": {
+    "description": "Text for the validate enroll modal message when the enrollment session is close",
+    "message": "Êtes-vous sûr de vouloir désinscrire {username} à {courseRunTitle}? {br}La fin des inscriptions était le ({enrollmentEndDate}). Cette date est passée, il ne sera pas possible d'annuler cette action."
+  },
+  "components.templates.orders.buttons.enrollmentActionsButton.validateUnrollModalMessage": {
+    "description": "Text for the validate enroll modal message when the enrollment session is open",
+    "message": "Êtes-vous sûr de vouloir désinscrire {username} à {courseRunTitle}? {br}Vous pouvez vous inscrire jusqu'à la fermeture des inscriptions ({enrollmentEndDate}). Après cette date, il ne sera plus possible d'annuler cette action."
+  },
+  "components.templates.orders.buttons.enrollmentActionsButton.validateUnrollModalTitle": {
+    "description": "Text shown when clicking on the 'unenroll' button to warn that it will not be possible to go back",
+    "message": "Désinscrire cet utilisateur"
   },
   "components.templates.orders.buttons.orderActionsButton.alreadyCancelTooltip": {
     "description": "Text when the order has already been canceled",
@@ -935,10 +1023,6 @@
     "description": "placeholder text for the contract definition input",
     "message": "Rechercher un modèle de contrat"
   },
-  "components.templates.products.form.translations.courseProductRelations.sectionTitle": {
-    "description": "Product course relation section title",
-    "message": "Liste des courses auxquels le produit est lié"
-  },
   "components.templates.products.form.translations.definition": {
     "description": "Label for the definition input",
     "message": "Modèle de certificat"
@@ -1023,6 +1107,10 @@
     "description": "Title for the syllabus tab",
     "message": "Syllabus"
   },
+  "components.templates.products.form.translations.targetCourseIsGradedLabel": {
+    "description": "Label for the is graded switch",
+    "message": "Prendre en compte pour la certification"
+  },
   "components.templates.products.form.translations.targetCourseRowSubTitle": {
     "description": "Label for the use all course run checkbox",
     "message": "{numPhotos, plural, =0 {Toutes les sessions sont sélectionnées.} other {# sessions sont sélectionnées.} }"
@@ -1078,6 +1166,34 @@
   "components.templates.products;form.sections.ProductFormTypeSection.microCredentialTitle": {
     "description": "Title for the credential product type",
     "message": "Micro-certification"
+  },
+  "components.templates.relations.courseProductRelation.CourseProductRelationList.addRelationButtonLabel": {
+    "description": "Label for the product relation subheader form",
+    "message": "Ajouter une relation"
+  },
+  "components.templates.relations.courseProductRelation.CourseProductRelationList.deleteRelationModalContent": {
+    "description": "Content for the delete relation modal",
+    "message": "Êtes-vous sûr de vouloir supprimer cette relation ?"
+  },
+  "components.templates.relations.courseProductRelation.CourseProductRelationList.deleteRelationModalTitle": {
+    "description": "Title for the delete relation modal",
+    "message": "Supprimer la relation avec le produit"
+  },
+  "components.templates.relations.courseProductRelation.CourseProductRelationList.emptyCourseList": {
+    "description": "Message when the course relation product list is empty inside the course form",
+    "message": "Aucune relation avec un produit n'a été créée pour ce cours"
+  },
+  "components.templates.relations.courseProductRelation.CourseProductRelationList.emptyProductList": {
+    "description": "Message when the course relation product list is empty inside the product form",
+    "message": "Aucune relation avec un cours n'a été créée pour ce produit"
+  },
+  "components.templates.relations.courseProductRelation.CourseProductRelationList.titleCourseHeader": {
+    "description": "Title for the course relation product list inside the course form",
+    "message": "Produits associés"
+  },
+  "components.templates.relations.courseProductRelation.CourseProductRelationList.titleProductHeader": {
+    "description": "Title for the course relation product list inside the product form",
+    "message": "Cours associés"
   },
   "hooks.useCertificateDefinitions.errorCreate": {
     "description": "Error message shown to the user when certificate definition creation request fails.",
@@ -1190,6 +1306,26 @@
   "hooks.useCourseRun.errorUpdate": {
     "description": "Error message shown to the user when course run update request fails.",
     "message": "Une erreur s'est produite lors de la mise à jour de la session de cours. Veuillez réessayer plus tard."
+  },
+  "hooks.useEnrollments.errorCreate": {
+    "description": "Error message shown to the user when order creation request fails.",
+    "message": "An error occurred while creating the order. Please retry later."
+  },
+  "hooks.useEnrollments.errorDelete": {
+    "description": "Error message shown to the user when order deletion request fails.",
+    "message": "An error occurred while deleting the order. Please retry later."
+  },
+  "hooks.useEnrollments.errorGet": {
+    "description": "Error message shown to the user when orders fetch request fails.",
+    "message": "An error occurred while fetching orders. Please retry later."
+  },
+  "hooks.useEnrollments.errorNotFound": {
+    "description": "Error message shown to the user when no order matches.",
+    "message": "Cannot find the order"
+  },
+  "hooks.useEnrollments.errorUpdate": {
+    "description": "Error message shown to the user when order update request fails.",
+    "message": "An error occurred while updating the order. Please retry later."
   },
   "hooks.useOrders.errorCreate": {
     "description": "Error message shown to the user when order creation request fails.",
@@ -1347,6 +1483,10 @@
     "description": "Title for the Courses runs nav item",
     "message": "Sessions de cours"
   },
+  "layouts.dashboard.nav.config.enrollmentsNavTitle": {
+    "description": "Title for the Enrollment nav item",
+    "message": "Inscriptions"
+  },
   "layouts.dashboard.nav.config.managementSubHeader": {
     "description": "Subheader for the nav management section",
     "message": "Gestion"
@@ -1470,6 +1610,26 @@
   "pages.admin.coursesRuns.list.pageTitle": {
     "description": "Label for the courses runs list page title",
     "message": "Sessions de cours"
+  },
+  "pages.admin.enrollments.breadcrumbsTranslations.listBreadcrumb": {
+    "description": "Breadcrumb label for the enrollment list page",
+    "message": "Liste"
+  },
+  "pages.admin.enrollments.breadcrumbsTranslations.rootBreadcrumb": {
+    "description": "Breadcrumb label for the enrollment root page",
+    "message": "Inscriptions"
+  },
+  "pages.admin.enrollments.breadcrumbsTranslations.viewBreadcrumb": {
+    "description": "Breadcrumb label for the enrollment view page",
+    "message": "Afficher"
+  },
+  "pages.admin.enrollments.list.pageTitle": {
+    "description": "Label for the enrollment list page title",
+    "message": "Inscriptions"
+  },
+  "pages.admin.enrollments.view.pageTitle": {
+    "description": "Label for the enrollment page title",
+    "message": "Inscription"
   },
   "pages.admin.home.cardHomePagesTranslation.certificateDefinitionBadge": {
     "description": "Label for the badge inside certificate definition card",
@@ -1750,6 +1910,14 @@
   "translations.courseRuns.priorityState.toBeScheduled": {
     "description": "Label for the TO_BE_SCHEDULED priority",
     "message": "À planifier"
+  },
+  "translations.enrollment.state.failed": {
+    "description": "Label for the FAILED enrollment state",
+    "message": "Échouée"
+  },
+  "translations.enrollment.state.set": {
+    "description": "Label for the SET enrollment state",
+    "message": "Définie"
   },
   "translations.products.productTypesMessages.certificate": {
     "description": "Label for the CERTIFICATE product type",
