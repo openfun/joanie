@@ -1,6 +1,5 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
-import Box from "@mui/material/Box";
 import { Accesses, DTOAccesses } from "@/services/api/models/Accesses";
 import { BasicSelect } from "@/components/presentational/inputs/select/BasicSelect";
 import { SelectOption } from "@/components/presentational/hook-form/RHFSelect";
@@ -37,19 +36,17 @@ export function SelectAccess(props: Props) {
   };
 
   return (
-    <Box padding={1} width="100%">
-      <BasicSelect
-        options={props.availableAccesses}
-        value={access}
-        onSelect={handleChange}
-        size="small"
-        loading={isLoading}
-        inputProps={{
-          "aria-label": "User role",
-        }}
-        data-testid={`change-user-role-select-${props.access.user.id}`}
-        label=""
-      />
-    </Box>
+    <BasicSelect
+      options={props.availableAccesses}
+      value={access}
+      onSelect={handleChange}
+      size="small"
+      loading={isLoading}
+      inputProps={{
+        "aria-label": "User role",
+      }}
+      data-testid={`change-user-role-select-${props.access.user.id}`}
+      label=""
+    />
   );
 }

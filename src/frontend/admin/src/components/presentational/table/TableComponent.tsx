@@ -198,10 +198,10 @@ export function TableComponent<T extends GridValidRowModel>({
 
         <DataGrid
           {...props}
-          paginationMode={paginationMode}
           getRowHeight={() => {
-            return 40;
+            return props.rowHeight ?? 40;
           }}
+          paginationMode={paginationMode}
           sx={{
             border: "none",
             borderRadius: 0,
