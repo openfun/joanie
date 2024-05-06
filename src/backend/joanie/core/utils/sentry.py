@@ -77,7 +77,11 @@ def encrypt_data(data):
     except TypeError:
         return data
 
-    cipher_suite = Fernet(key)
+    try:
+        cipher_suite = Fernet(key)
+    except ValueError:
+        return {"error": "Log context encryption failed. The secret key is invalid."}
+
     cipher_text = cipher_suite.encrypt(data)
     return cipher_text.decode()
 

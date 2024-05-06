@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Fixed
+
+- Manage invalid logging secret key
+
 ## [2.1.0] - 2024-05-02
 
 ### Added
