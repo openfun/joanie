@@ -8,6 +8,7 @@ import { useIntl } from "react-intl";
 import Alert from "@mui/material/Alert";
 import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
+import Box from "@mui/material/Box";
 import { DndList } from "@/components/presentational/dnd/DndList";
 import { useModal } from "@/components/presentational/modal/useModal";
 import { productFormMessages } from "@/components/templates/products/form/translations";
@@ -161,88 +162,94 @@ export function ProductFormTargetCoursesSection(props: Props) {
   };
 
   return (
-    <RHFProvider
-      id="product-target-courses-form"
-      showSubmit={false}
-      methods={methods}
-    >
-      <Grid container spacing={2} padding={2}>
-        <Grid xs={12}>
-          <Alert severity="info">
-            {intl.formatMessage(productFormMessages.targetCoursesHelperSection)}
-          </Alert>
-        </Grid>
-        <Grid xs={12}>
-          <Typography variant="subtitle2">
-            {intl.formatMessage(productFormMessages.targetCoursesTitle)}
-          </Typography>
-        </Grid>
-
-        <Grid xs={12}>
-          <DndList<ProductTargetCourseRelation, ProductTargetCourseDummy>
-            creatingRows={creatingList}
-            emptyLabel={intl.formatMessage(productFormMessages.noTargetCourses)}
-            addButtonLabel={intl.formatMessage(
-              productFormMessages.addTargetCourseButtonLabel,
-            )}
-            onSorted={handleReorder}
-            addButtonClick={() => {
-              setEditRelationState(undefined);
-              modal.handleOpen();
-            }}
-            droppableId="course-sections"
-            rows={targetCourses.fields}
-            renderRow={(data) => {
-              const { item, index } = data;
-              return (
-                <ProductFormTargetCourseRow
-                  item={item}
-                  key={`row-${item.course.id}`}
-                  onDelete={() => handleRemove(item, index)}
-                  onEdit={() => {
-                    setEditRelationState({ item, arrayIndex: index });
-                    modal.handleOpen();
-                  }}
-                />
-              );
-            }}
-            renderCreatingRow={(renderProps) => {
-              return (
-                <ProductFormTargetCourseRow
-                  item={renderProps.item}
-                  key={`creating-row-${renderProps.item.course.id}`}
-                />
-              );
-            }}
-          />
-        </Grid>
-      </Grid>
-      <CustomModal
-        fullWidth={true}
-        maxWidth="lg"
-        data-testid="add-target-course-modal"
-        title={intl.formatMessage(
-          productFormMessages.addTargetCourseRelationModalTitle,
-        )}
-        {...modal}
-        handleClose={() => {
-          setEditRelationState(undefined);
-          modal.handleClose();
-        }}
+    <Box padding={2}>
+      <RHFProvider
+        id="product-target-courses-form"
+        showSubmit={false}
+        methods={methods}
       >
-        <ProductTargetCourseRelationForm
-          targetCourse={editRelationState?.item}
-          onSubmit={(item) => {
-            if (editRelationState) {
-              handleUpdate(item, editRelationState.arrayIndex);
-            } else {
-              handleCreate(item);
-            }
+        <Grid container spacing={2} padding={2}>
+          <Grid xs={12}>
+            <Alert severity="info">
+              {intl.formatMessage(
+                productFormMessages.targetCoursesHelperSection,
+              )}
+            </Alert>
+          </Grid>
+          <Grid xs={12}>
+            <Typography variant="subtitle2">
+              {intl.formatMessage(productFormMessages.targetCoursesTitle)}
+            </Typography>
+          </Grid>
 
+          <Grid xs={12}>
+            <DndList<ProductTargetCourseRelation, ProductTargetCourseDummy>
+              creatingRows={creatingList}
+              emptyLabel={intl.formatMessage(
+                productFormMessages.noTargetCourses,
+              )}
+              addButtonLabel={intl.formatMessage(
+                productFormMessages.addTargetCourseButtonLabel,
+              )}
+              onSorted={handleReorder}
+              addButtonClick={() => {
+                setEditRelationState(undefined);
+                modal.handleOpen();
+              }}
+              droppableId="course-sections"
+              rows={targetCourses.fields}
+              renderRow={(data) => {
+                const { item, index } = data;
+                return (
+                  <ProductFormTargetCourseRow
+                    item={item}
+                    key={`row-${item.course.id}`}
+                    onDelete={() => handleRemove(item, index)}
+                    onEdit={() => {
+                      setEditRelationState({ item, arrayIndex: index });
+                      modal.handleOpen();
+                    }}
+                  />
+                );
+              }}
+              renderCreatingRow={(renderProps) => {
+                return (
+                  <ProductFormTargetCourseRow
+                    item={renderProps.item}
+                    key={`creating-row-${renderProps.item.course.id}`}
+                  />
+                );
+              }}
+            />
+          </Grid>
+        </Grid>
+        <CustomModal
+          fullWidth={true}
+          maxWidth="lg"
+          data-testid="add-target-course-modal"
+          title={intl.formatMessage(
+            productFormMessages.addTargetCourseRelationModalTitle,
+          )}
+          {...modal}
+          handleClose={() => {
+            setEditRelationState(undefined);
             modal.handleClose();
           }}
-        />
-      </CustomModal>
-    </RHFProvider>
+        >
+          <ProductTargetCourseRelationForm
+            targetCourse={editRelationState?.item}
+            onSubmit={(item) => {
+              if (editRelationState) {
+                handleUpdate(item, editRelationState.arrayIndex);
+              } else {
+                handleCreate(item);
+              }
+
+              modal.handleClose();
+            }}
+          />
+        </CustomModal>
+      </RHFProvider>
+    </Box>
   );
 }

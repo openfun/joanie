@@ -15,6 +15,9 @@ and this project adheres to
 ### Fixed
 
 - Manage invalid logging secret key
+- Accesses list layout
+- Product target course layout
+
 
 ## [2.1.0] - 2024-05-02
 
