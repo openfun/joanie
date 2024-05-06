@@ -70,6 +70,19 @@ class UtilsSentryTestCase(TestCase):
                         continue
                     self.assertEqual(decrypted_data, obj)
 
+    @override_settings(LOGGING_SECRET_KEY="invalid_secret_key")
+    def test_encrypt_data_with_invalid_secret_key(self):
+        """
+        If the logging secret key is invalid, encrypt_data method should return
+        a dictionary with an error message.
+        """
+        context = encrypt_data({"username": "johndoe"})
+
+        self.assertEqual(
+            context,
+            {"error": "Log context encryption failed. The secret key is invalid."},
+        )
+
     def test_encrypt_organization(self):
         """
         Test the encryption of an organization
