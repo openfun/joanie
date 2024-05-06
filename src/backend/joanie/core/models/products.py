@@ -1063,11 +1063,11 @@ class Order(BaseModel):
 
         self.save()
 
-    def set_installment_payed(self, due_date):
+    def set_installment_paid(self, due_date):
         """
-        Set the state of an installment to payed in the payment schedule.
+        Set the state of an installment to paid in the payment schedule.
         """
-        self._set_installment_state(due_date, enums.PAYMENT_STATE_PAYED)
+        self._set_installment_state(due_date, enums.PAYMENT_STATE_PAID)
 
     def set_installment_refused(self, due_date):
         """

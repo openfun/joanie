@@ -16,7 +16,7 @@ from stockholm import Money
 
 from joanie.core import factories
 from joanie.core.enums import (
-    PAYMENT_STATE_PAYED,
+    PAYMENT_STATE_PAID,
     PAYMENT_STATE_PENDING,
     PAYMENT_STATE_REFUSED,
 )
@@ -300,7 +300,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
                 {
                     "amount": "200.00",
                     "due_date": "2024-01-17T00:00:00+00:00",
-                    "state": PAYMENT_STATE_PAYED,
+                    "state": PAYMENT_STATE_PAID,
                 },
                 {
                     "amount": "300.00",
@@ -322,7 +322,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
 
         order._set_installment_state(
             due_date=datetime(2024, 2, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
-            state=PAYMENT_STATE_PAYED,
+            state=PAYMENT_STATE_PAID,
         )
 
         order.refresh_from_db()
@@ -332,12 +332,12 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
                 {
                     "amount": "200.00",
                     "due_date": "2024-01-17T00:00:00+00:00",
-                    "state": PAYMENT_STATE_PAYED,
+                    "state": PAYMENT_STATE_PAID,
                 },
                 {
                     "amount": "300.00",
                     "due_date": "2024-02-17T00:00:00+00:00",
-                    "state": PAYMENT_STATE_PAYED,
+                    "state": PAYMENT_STATE_PAID,
                 },
                 {
                     "amount": "300.00",
@@ -364,12 +364,12 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
                 {
                     "amount": "200.00",
                     "due_date": "2024-01-17T00:00:00+00:00",
-                    "state": PAYMENT_STATE_PAYED,
+                    "state": PAYMENT_STATE_PAID,
                 },
                 {
                     "amount": "300.00",
                     "due_date": "2024-02-17T00:00:00+00:00",
-                    "state": PAYMENT_STATE_PAYED,
+                    "state": PAYMENT_STATE_PAID,
                 },
                 {
                     "amount": "300.00",
@@ -390,14 +390,14 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
                 state=PAYMENT_STATE_REFUSED,
             )
 
-    def test_models_order_schedule_set_installment_payed(self):
-        """Check that the state of an installment can be set to payed"""
+    def test_models_order_schedule_set_installment_paid(self):
+        """Check that the state of an installment can be set to paid"""
         order = factories.OrderFactory(
             payment_schedule=[
                 {
                     "amount": "200.00",
                     "due_date": "2024-01-17T00:00:00+00:00",
-                    "state": PAYMENT_STATE_PAYED,
+                    "state": PAYMENT_STATE_PAID,
                 },
                 {
                     "amount": "300.00",
@@ -417,7 +417,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             ]
         )
 
-        order.set_installment_payed(
+        order.set_installment_paid(
             due_date=datetime(2024, 2, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
         )
 
@@ -428,12 +428,12 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
                 {
                     "amount": "200.00",
                     "due_date": "2024-01-17T00:00:00+00:00",
-                    "state": PAYMENT_STATE_PAYED,
+                    "state": PAYMENT_STATE_PAID,
                 },
                 {
                     "amount": "300.00",
                     "due_date": "2024-02-17T00:00:00+00:00",
-                    "state": PAYMENT_STATE_PAYED,
+                    "state": PAYMENT_STATE_PAID,
                 },
                 {
                     "amount": "300.00",
@@ -455,7 +455,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
                 {
                     "amount": "200.00",
                     "due_date": "2024-01-17T00:00:00+00:00",
-                    "state": PAYMENT_STATE_PAYED,
+                    "state": PAYMENT_STATE_PAID,
                 },
                 {
                     "amount": "300.00",
@@ -486,7 +486,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
                 {
                     "amount": "200.00",
                     "due_date": "2024-01-17T00:00:00+00:00",
-                    "state": PAYMENT_STATE_PAYED,
+                    "state": PAYMENT_STATE_PAID,
                 },
                 {
                     "amount": "300.00",
