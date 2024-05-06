@@ -2,6 +2,7 @@ import * as React from "react";
 import { useMemo } from "react";
 import { GridColDef } from "@mui/x-data-grid";
 import { defineMessages, useIntl } from "react-intl";
+import Box from "@mui/material/Box";
 import { TableComponent } from "../../../presentational/table/TableComponent";
 import { Accesses, DTOAccesses } from "@/services/api/models/Accesses";
 import { SelectAccess } from "@/components/templates/accesses/list/SelectAccess";
@@ -53,11 +54,19 @@ export function AccessesList(props: Props) {
         field: "role",
         headerName: intl.formatMessage(messages.roleHeader),
         renderCell: (params) => (
-          <SelectAccess
-            onUpdateAccess={props.onUpdateAccess}
-            availableAccesses={props.availableAccesses}
-            access={params.row}
-          />
+          <Box
+            width="100%"
+            height="100%"
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+          >
+            <SelectAccess
+              onUpdateAccess={props.onUpdateAccess}
+              availableAccesses={props.availableAccesses}
+              access={params.row}
+            />
+          </Box>
         ),
       },
     ];
@@ -65,6 +74,7 @@ export function AccessesList(props: Props) {
 
   return (
     <TableComponent
+      rowHeight={55}
       paginationMode="client"
       rows={props.accesses}
       columns={columns}
