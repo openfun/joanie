@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Allow to filter enrollment through `is_active` field on the client API
+
 ### Fixed
 
 - Manage invalid logging secret key

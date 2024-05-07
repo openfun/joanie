@@ -570,6 +570,41 @@ class EnrollmentApiTest(BaseAPITestCase):
             response.json(), {"course_run_id": ["Enter a valid UUID."]}
         )
 
+    def test_api_enrollments_filter_by_is_active(self):
+        """
+        Authenticated user should be able to filter its existing enrollments by
+        their active state.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        inactive_enrollment = factories.EnrollmentFactory(is_active=False, user=user)
+        active_enrollment = factories.EnrollmentFactory(is_active=True, user=user)
+
+        response = self.client.get(
+            "/api/v1.0/enrollments/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(response.json()["count"], 2)
+
+        response = self.client.get(
+            "/api/v1.0/enrollments/?is_active=false",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+        self.assertEqual(content["results"][0]["id"], str(inactive_enrollment.id))
+
+        response = self.client.get(
+            "/api/v1.0/enrollments/?is_active=true",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+        self.assertEqual(content["results"][0]["id"], str(active_enrollment.id))
+
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
     def test_api_enrollment_read_list_filtered_by_was_created_by_order(self, _mock_set):
         """
