@@ -2394,6 +2394,13 @@
                         }
                     },
                     {
+                        "in": "query",
+                        "name": "is_active",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
                         "name": "page",
                         "required": false,
                         "in": "query",
