@@ -16,19 +16,24 @@ from stockholm import Money
 
 from joanie.core import factories
 from joanie.core.enums import (
+    ORDER_STATE_COMPLETED,
+    ORDER_STATE_FAILED_PAYMENT,
+    ORDER_STATE_NO_PAYMENT,
+    ORDER_STATE_PENDING,
+    ORDER_STATE_PENDING_PAYMENT,
     PAYMENT_STATE_PAID,
     PAYMENT_STATE_PENDING,
     PAYMENT_STATE_REFUSED,
 )
 from joanie.core.models import Order
-from joanie.tests.base import BaseLogMixinTestCase
+from joanie.tests.base import ActivityLogMixingTestCase, BaseLogMixinTestCase
 
 
 @override_settings(
     PAYMENT_SCHEDULE_LIMITS={5: (30, 70), 10: (30, 45, 45), 100: (20, 30, 30, 20)},
     DEFAULT_CURRENCY="EUR",
 )
-class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
+class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestCase):
     """
     Test suite for order payment schedule
     """
@@ -292,13 +297,13 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         self.assertIn(order_2, found_orders)
 
     def test_models_order_schedule_set_installment_state(self):
-        """Check that the state of an installment can be set"""
+        """Check that the state of an installment can be set."""
         order = factories.OrderFactory(
             payment_schedule=[
                 {
                     "amount": "200.00",
                     "due_date": "2024-01-17",
-                    "state": PAYMENT_STATE_PAID,
+                    "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "300.00",
@@ -318,8 +323,8 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             ]
         )
 
-        order._set_installment_state(
-            due_date=date(2024, 2, 17),
+        is_first, is_last = order._set_installment_state(
+            due_date="2024-01-17",
             state=PAYMENT_STATE_PAID,
         )
 
@@ -335,7 +340,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
                 {
                     "amount": "300.00",
                     "due_date": "2024-02-17",
-                    "state": PAYMENT_STATE_PAID,
+                    "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "300.00",
@@ -349,9 +354,11 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
                 },
             ],
         )
+        self.assertTrue(is_first)
+        self.assertFalse(is_last)
 
-        order._set_installment_state(
-            due_date=date(2024, 3, 17),
+        is_first, is_last = order._set_installment_state(
+            due_date="2024-04-17",
             state=PAYMENT_STATE_REFUSED,
         )
 
@@ -367,30 +374,37 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
                 {
                     "amount": "300.00",
                     "due_date": "2024-02-17",
-                    "state": PAYMENT_STATE_PAID,
+                    "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "300.00",
                     "due_date": "2024-03-17",
-                    "state": PAYMENT_STATE_REFUSED,
+                    "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "199.99",
                     "due_date": "2024-04-17",
-                    "state": PAYMENT_STATE_PENDING,
+                    "state": PAYMENT_STATE_REFUSED,
                 },
             ],
         )
+        self.assertFalse(is_first)
+        self.assertTrue(is_last)
 
         with self.assertRaises(ValueError):
             order._set_installment_state(
-                due_date=date(2024, 3, 18),
+                due_date="2024-03-18",
                 state=PAYMENT_STATE_REFUSED,
             )
 
     def test_models_order_schedule_set_installment_paid(self):
-        """Check that the state of an installment can be set to paid"""
+        """
+        Check that the state of an installment can be set to paid.
+        If the paid installment is not the last one, the order state
+        should be set to pending payment.
+        """
         order = factories.OrderFactory(
+            state=ORDER_STATE_PENDING,
             payment_schedule=[
                 {
                     "amount": "200.00",
@@ -412,11 +426,11 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
                     "due_date": "2024-04-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
-            ]
+            ],
         )
 
         order.set_installment_paid(
-            due_date=date(2024, 2, 17),
+            due_date="2024-02-17",
         )
 
         order.refresh_from_db()
@@ -445,10 +459,182 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
                 },
             ],
         )
+        self.assertEqual(order.state, ORDER_STATE_PENDING_PAYMENT)
+        self.assertPaymentSuccessActivityLog(order)
+
+    def test_models_order_schedule_set_installment_paid_first(self):
+        """
+        Check that the state of an installment can be set to paid.
+        If the first installment is paid, the order state should be
+        set to pending payment.
+        """
+        order = factories.OrderFactory(
+            state=ORDER_STATE_PENDING,
+            payment_schedule=[
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-02-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-03-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "199.99",
+                    "due_date": "2024-04-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        order.set_installment_paid(
+            due_date="2024-01-17",
+        )
+
+        order.refresh_from_db()
+        self.assertEqual(
+            order.payment_schedule,
+            [
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-02-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-03-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "199.99",
+                    "due_date": "2024-04-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+        self.assertEqual(order.state, ORDER_STATE_PENDING_PAYMENT)
+        self.assertPaymentSuccessActivityLog(order)
+
+    def test_models_order_schedule_set_installment_paid_last(self):
+        """
+        Check that the state of an installment can be set to paid.
+        If the last installment is paid, the order state should be
+        set to completed.
+        """
+        order = factories.OrderFactory(
+            state=ORDER_STATE_PENDING,
+            payment_schedule=[
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-02-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-03-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+                {
+                    "amount": "199.99",
+                    "due_date": "2024-04-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        order.set_installment_paid(
+            due_date="2024-04-17",
+        )
+
+        order.refresh_from_db()
+        self.assertEqual(
+            order.payment_schedule,
+            [
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-02-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-03-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+                {
+                    "amount": "199.99",
+                    "due_date": "2024-04-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+            ],
+        )
+        self.assertEqual(order.state, ORDER_STATE_COMPLETED)
+        self.assertPaymentSuccessActivityLog(order)
+
+    def test_models_order_schedule_set_installment_paid_unique(self):
+        """
+        Check that the state of an installment can be set to paid.
+        If there is only one installment, the order state should be
+        set to completed.
+        """
+        order = factories.OrderFactory(
+            state=ORDER_STATE_PENDING,
+            payment_schedule=[
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        order.set_installment_paid(
+            due_date="2024-01-17",
+        )
+
+        order.refresh_from_db()
+        self.assertEqual(
+            order.payment_schedule,
+            [
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+            ],
+        )
+        self.assertEqual(order.state, ORDER_STATE_COMPLETED)
+        self.assertPaymentSuccessActivityLog(order)
 
     def test_models_order_schedule_set_installment_refused(self):
-        """Check that the state of an installment can be set to refused"""
+        """
+        Check that the state of an installment can be set to refused.
+        If the refused installment is not the last one, the order state
+        should be set to failed payment.
+        """
         order = factories.OrderFactory(
+            state=ORDER_STATE_PENDING_PAYMENT,
             payment_schedule=[
                 {
                     "amount": "200.00",
@@ -470,11 +656,11 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
                     "due_date": "2024-04-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
-            ]
+            ],
         )
 
         order.set_installment_refused(
-            due_date=date(2024, 3, 17),
+            due_date="2024-02-17",
         )
 
         order.refresh_from_db()
@@ -489,12 +675,12 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
                 {
                     "amount": "300.00",
                     "due_date": "2024-02-17",
-                    "state": PAYMENT_STATE_PENDING,
+                    "state": PAYMENT_STATE_REFUSED,
                 },
                 {
                     "amount": "300.00",
                     "due_date": "2024-03-17",
-                    "state": PAYMENT_STATE_REFUSED,
+                    "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "199.99",
@@ -503,6 +689,173 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
                 },
             ],
         )
+        self.assertEqual(order.state, ORDER_STATE_FAILED_PAYMENT)
+        self.assertPaymentFailedActivityLog(order)
+
+    def test_models_order_schedule_set_installment_refused_first(self):
+        """
+        Check that the state of an installment can be set to refused.
+        If the refused installment is the first one, the order state
+        should be set to no payment.
+        """
+        order = factories.OrderFactory(
+            state=ORDER_STATE_PENDING,
+            payment_schedule=[
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-02-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-03-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "199.99",
+                    "due_date": "2024-04-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        order.set_installment_refused(
+            due_date="2024-01-17",
+        )
+
+        order.refresh_from_db()
+        self.assertEqual(
+            order.payment_schedule,
+            [
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_REFUSED,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-02-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-03-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "199.99",
+                    "due_date": "2024-04-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+        self.assertEqual(order.state, ORDER_STATE_NO_PAYMENT)
+        self.assertPaymentFailedActivityLog(order)
+
+    def test_models_order_schedule_set_installment_refused_last(self):
+        """
+        Check that the state of an installment can be set to refused.
+        If the refused installment is the last one, the order state
+        should be set to failed payment.
+        """
+        order = factories.OrderFactory(
+            state=ORDER_STATE_PENDING_PAYMENT,
+            payment_schedule=[
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-02-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-03-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+                {
+                    "amount": "199.99",
+                    "due_date": "2024-04-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        order.set_installment_refused(
+            due_date="2024-04-17",
+        )
+
+        order.refresh_from_db()
+        self.assertEqual(
+            order.payment_schedule,
+            [
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-02-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-03-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+                {
+                    "amount": "199.99",
+                    "due_date": "2024-04-17",
+                    "state": PAYMENT_STATE_REFUSED,
+                },
+            ],
+        )
+        self.assertEqual(order.state, ORDER_STATE_FAILED_PAYMENT)
+        self.assertPaymentFailedActivityLog(order)
+
+    def test_models_order_schedule_set_installment_refused_unique(self):
+        """
+        Check that the state of an installment can be set to refused.
+        If there is only one installment, the order state should be
+        set to no payment.
+        """
+        order = factories.OrderFactory(
+            state=ORDER_STATE_PENDING,
+            payment_schedule=[
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        order.set_installment_refused(
+            due_date="2024-01-17",
+        )
+
+        order.refresh_from_db()
+        self.assertEqual(
+            order.payment_schedule,
+            [
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_REFUSED,
+                },
+            ],
+        )
+        self.assertEqual(order.state, ORDER_STATE_NO_PAYMENT)
+        self.assertPaymentFailedActivityLog(order)
 
     def test_models_order_schedule_withdraw(self):
         """Check that the order can be withdrawn"""

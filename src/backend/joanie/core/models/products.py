@@ -22,6 +22,7 @@ from joanie.core.exceptions import CertificateGenerationError
 from joanie.core.fields.schedule import OrderPaymentScheduleEncoder
 from joanie.core.flows.order import OrderFlow
 from joanie.core.models.accounts import User
+from joanie.core.models.activity_logs import ActivityLog
 from joanie.core.models.base import BaseModel
 from joanie.core.models.certifications import Certificate
 from joanie.core.models.contracts import Contract
@@ -1046,30 +1047,42 @@ class Order(BaseModel):
     def _set_installment_state(self, due_date, state):
         """
         Set the state of an installment in the payment schedule.
+
+        Returns a set of boolean values to indicate if the installment is the first one, and if it
+        is the last one.
         """
-        installment_found = False
+        first_installment_found = True
         for installment in self.payment_schedule:
-            if installment["due_date"] == due_date.isoformat():
-                installment_found = True
+            if installment["due_date"] == due_date:
                 installment["state"] = state
-                break
+                self.save(update_fields=["payment_schedule"])
+                return first_installment_found, installment == self.payment_schedule[-1]
+            first_installment_found = False
 
-        if not installment_found:
-            raise ValueError(f"Installment with due date {due_date} not found")
-
-        self.save()
+        raise ValueError(f"Installment with due date {due_date} not found")
 
     def set_installment_paid(self, due_date):
         """
         Set the state of an installment to paid in the payment schedule.
         """
-        self._set_installment_state(due_date, enums.PAYMENT_STATE_PAID)
+        ActivityLog.create_payment_succeeded_activity_log(self)
+        _, is_last = self._set_installment_state(due_date, enums.PAYMENT_STATE_PAID)
+        if is_last:
+            self.flow.complete()
+        else:
+            self.flow.pending_payment()
 
     def set_installment_refused(self, due_date):
         """
         Set the state of an installment to refused in the payment schedule.
         """
-        self._set_installment_state(due_date, enums.PAYMENT_STATE_REFUSED)
+        ActivityLog.create_payment_failed_activity_log(self)
+        is_first, _ = self._set_installment_state(due_date, enums.PAYMENT_STATE_REFUSED)
+
+        if is_first:
+            self.flow.no_payment()
+        else:
+            self.flow.failed_payment()
 
     def withdraw(self):
         """
