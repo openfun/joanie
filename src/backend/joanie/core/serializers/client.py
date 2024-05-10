@@ -1159,7 +1159,7 @@ class OrderPaymentSerializer(serializers.Serializer):
         min_value=D(0.00),
         required=True,
     )
-    due_date = serializers.DateTimeField(required=True)
+    due_date = serializers.DateField(required=True)
     state = serializers.ChoiceField(
         choices=enums.PAYMENT_STATE_CHOICES,
         required=True,

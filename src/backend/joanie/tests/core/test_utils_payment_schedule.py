@@ -2,7 +2,7 @@
 Test suite for payment schedule util
 """
 
-from datetime import datetime
+from datetime import date, datetime
 from zoneinfo import ZoneInfo
 
 from django.conf import settings
@@ -39,33 +39,33 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
         """
         Check that the withdrawal date is a business day
         """
-        start_date = datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC"))
+        start_date = date(2024, 1, 1)
 
         self.assertEqual(
             _withdrawal_limit_date(start_date),
-            datetime(2024, 1, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+            date(2024, 1, 17),
         )
 
     def test_utils_payment_schedule_withdrawal_limit_date_weekend(self):
         """
         Check that the withdrawal date is next business day
         """
-        start_date = datetime(2024, 2, 1, 14, tzinfo=ZoneInfo("UTC"))
+        start_date = date(2024, 2, 1)
 
         self.assertEqual(
             _withdrawal_limit_date(start_date),
-            datetime(2024, 2, 19, 0, 0, tzinfo=ZoneInfo("UTC")),
+            date(2024, 2, 19),
         )
 
     def test_utils_payment_schedule_withdrawal_limit_date_new_year_eve(self):
         """
         Check that the withdrawal date is next business day after the New Year's Eve
         """
-        start_date = datetime(2023, 12, 14, 14, tzinfo=ZoneInfo("UTC"))
+        start_date = date(2023, 12, 14)
 
         self.assertEqual(
             _withdrawal_limit_date(start_date),
-            datetime(2024, 1, 2, 0, 0, tzinfo=ZoneInfo("UTC")),
+            date(2024, 1, 2),
         )
 
     def test_utils_payment_schedule_get_installments_percentages(self):
@@ -86,8 +86,8 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
         """
         Check that the due dates are correctly calculated
         """
-        start_date = datetime(2024, 1, 1, 0, tzinfo=ZoneInfo("UTC"))
-        end_date = datetime(2024, 3, 20, 8, tzinfo=ZoneInfo("UTC"))
+        start_date = date(2024, 1, 1)
+        end_date = date(2024, 3, 20)
         percentages_count = 2
 
         due_dates = _calculate_due_dates(start_date, end_date, percentages_count)
@@ -95,8 +95,8 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
         self.assertEqual(
             due_dates,
             [
-                datetime(2024, 1, 1, 0, 0, tzinfo=ZoneInfo("UTC")),
-                datetime(2024, 2, 1, 0, 0, tzinfo=ZoneInfo("UTC")),
+                date(2024, 1, 1),
+                date(2024, 2, 1),
             ],
         )
 
@@ -106,8 +106,8 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
         when the end date is before the second part.
         No further due date should be calculated.
         """
-        start_date = datetime(2024, 1, 1, 0, tzinfo=ZoneInfo("UTC"))
-        end_date = datetime(2024, 1, 20, 8, tzinfo=ZoneInfo("UTC"))
+        start_date = date(2024, 1, 1)
+        end_date = date(2024, 1, 20)
         percentages_count = 3
 
         due_dates = _calculate_due_dates(start_date, end_date, percentages_count)
@@ -120,8 +120,8 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
         """
         total = 3
         due_dates = [
-            datetime(2024, 1, 1, 0, 0, tzinfo=ZoneInfo("UTC")),
-            datetime(2024, 2, 1, 0, 0, tzinfo=ZoneInfo("UTC")),
+            date(2024, 1, 1),
+            date(2024, 2, 1),
         ]
         percentages = (30, 70)
         installments = _calculate_installments(total, due_dates, percentages)
@@ -131,12 +131,12 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
             [
                 {
                     "amount": Money(0.90, settings.DEFAULT_CURRENCY),
-                    "due_date": datetime(2024, 1, 1, 0, 0, tzinfo=ZoneInfo("UTC")),
+                    "due_date": date(2024, 1, 1),
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": Money(2.10, settings.DEFAULT_CURRENCY),
-                    "due_date": datetime(2024, 2, 1, 0, 0, tzinfo=ZoneInfo("UTC")),
+                    "due_date": date(2024, 2, 1),
                     "state": PAYMENT_STATE_PENDING,
                 },
             ],
@@ -157,12 +157,12 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
             [
                 {
                     "amount": Money(0.90, settings.DEFAULT_CURRENCY),
-                    "due_date": datetime(2024, 1, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+                    "due_date": date(2024, 1, 17),
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": Money(2.10, settings.DEFAULT_CURRENCY),
-                    "due_date": datetime(2024, 2, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+                    "due_date": date(2024, 2, 17),
                     "state": PAYMENT_STATE_PENDING,
                 },
             ],
@@ -183,17 +183,17 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
             [
                 {
                     "amount": Money(3.00, settings.DEFAULT_CURRENCY),
-                    "due_date": datetime(2024, 1, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+                    "due_date": date(2024, 1, 17),
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": Money(4.50, settings.DEFAULT_CURRENCY),
-                    "due_date": datetime(2024, 2, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+                    "due_date": date(2024, 2, 17),
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": Money(2.50, settings.DEFAULT_CURRENCY),
-                    "due_date": datetime(2024, 3, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+                    "due_date": date(2024, 3, 17),
                     "state": PAYMENT_STATE_PENDING,
                 },
             ],
@@ -214,22 +214,22 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
             [
                 {
                     "amount": Money(20.00, settings.DEFAULT_CURRENCY),
-                    "due_date": datetime(2024, 1, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+                    "due_date": date(2024, 1, 17),
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": Money(30.00, settings.DEFAULT_CURRENCY),
-                    "due_date": datetime(2024, 2, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+                    "due_date": date(2024, 2, 17),
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": Money(30.00, settings.DEFAULT_CURRENCY),
-                    "due_date": datetime(2024, 3, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+                    "due_date": date(2024, 3, 17),
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": Money(20.00, settings.DEFAULT_CURRENCY),
-                    "due_date": datetime(2024, 4, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+                    "due_date": date(2024, 4, 17),
                     "state": PAYMENT_STATE_PENDING,
                 },
             ],
@@ -251,12 +251,12 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
             [
                 {
                     "amount": Money(20.00, settings.DEFAULT_CURRENCY),
-                    "due_date": datetime(2024, 1, 17, 0, tzinfo=ZoneInfo("UTC")),
+                    "due_date": date(2024, 1, 17),
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": Money(80.00, settings.DEFAULT_CURRENCY),
-                    "due_date": end_date,
+                    "due_date": end_date.date(),
                     "state": PAYMENT_STATE_PENDING,
                 },
             ],
@@ -277,22 +277,22 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
             [
                 {
                     "amount": Money(200.00, settings.DEFAULT_CURRENCY),
-                    "due_date": datetime(2024, 1, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+                    "due_date": date(2024, 1, 17),
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": Money(300.0, settings.DEFAULT_CURRENCY),
-                    "due_date": datetime(2024, 2, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+                    "due_date": date(2024, 2, 17),
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": Money(300.00, settings.DEFAULT_CURRENCY),
-                    "due_date": datetime(2024, 3, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+                    "due_date": date(2024, 3, 17),
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": Money(199.99, settings.DEFAULT_CURRENCY),
-                    "due_date": datetime(2024, 4, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+                    "due_date": date(2024, 4, 17),
                     "state": PAYMENT_STATE_PENDING,
                 },
             ],

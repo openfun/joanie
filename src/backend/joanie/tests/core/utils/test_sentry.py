@@ -131,12 +131,12 @@ class UtilsSentryTestCase(TestCase):
             payment_schedule=[
                 {
                     "amount": "200.00",
-                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
             ]

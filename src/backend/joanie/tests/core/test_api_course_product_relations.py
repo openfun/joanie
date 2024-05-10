@@ -1477,12 +1477,12 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                 "payment_schedule": [
                     {
                         "amount": 0.90,
-                        "due_date": "2024-01-17T00:00:00Z",
+                        "due_date": "2024-01-17",
                         "state": enums.PAYMENT_STATE_PENDING,
                     },
                     {
                         "amount": 2.10,
-                        "due_date": "2024-02-17T00:00:00Z",
+                        "due_date": "2024-02-17",
                         "state": enums.PAYMENT_STATE_PENDING,
                     },
                 ]

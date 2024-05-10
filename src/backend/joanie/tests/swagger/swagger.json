@@ -6100,7 +6100,7 @@
                     },
                     "due_date": {
                         "type": "string",
-                        "format": "date-time"
+                        "format": "date"
                     },
                     "state": {
                         "$ref": "#/components/schemas/OrderPaymentStateEnum"

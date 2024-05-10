@@ -3,7 +3,7 @@
 Test suite for order payment schedule models
 """
 
-from datetime import datetime
+from datetime import date, datetime
 from unittest import mock
 from zoneinfo import ZoneInfo
 
@@ -131,12 +131,12 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             [
                 {
                     "amount": Money(0.90, settings.DEFAULT_CURRENCY),
-                    "due_date": datetime(2024, 1, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+                    "due_date": date(2024, 1, 17),
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": Money(2.10, settings.DEFAULT_CURRENCY),
-                    "due_date": datetime(2024, 2, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+                    "due_date": date(2024, 2, 17),
                     "state": PAYMENT_STATE_PENDING,
                 },
             ],
@@ -148,12 +148,12 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             [
                 {
                     "amount": "0.90",
-                    "due_date": "2024-01-17T00:00:00Z",
+                    "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "2.10",
-                    "due_date": "2024-02-17T00:00:00Z",
+                    "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
             ],
@@ -165,22 +165,22 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             payment_schedule=[
                 {
                     "amount": "200.00",
-                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-03-17T00:00:00+00:00",
+                    "due_date": "2024-03-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "199.99",
-                    "due_date": "2024-04-17T00:00:00+00:00",
+                    "due_date": "2024-04-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
             ]
@@ -189,30 +189,28 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             payment_schedule=[
                 {
                     "amount": "200.00",
-                    "due_date": "2024-01-18T00:00:00+00:00",
+                    "due_date": "2024-01-18",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-02-18T00:00:00+00:00",
+                    "due_date": "2024-02-18",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-03-18T00:00:00+00:00",
+                    "due_date": "2024-03-18",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "199.99",
-                    "due_date": "2024-04-18T00:00:00+00:00",
+                    "due_date": "2024-04-18",
                     "state": PAYMENT_STATE_PENDING,
                 },
             ]
         )
 
-        found_orders = Order.objects.find_installments(
-            due_date=datetime(2024, 2, 17, 0, 0, tzinfo=ZoneInfo("UTC"))
-        )
+        found_orders = Order.objects.find_installments(due_date=date(2024, 2, 17))
         self.assertEqual(len(found_orders), 1)
         self.assertIn(order, found_orders)
 
@@ -223,12 +221,12 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             payment_schedule=[
                 {
                     "amount": "200.00",
-                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
             ],
@@ -238,12 +236,12 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             payment_schedule=[
                 {
                     "amount": "300.00",
-                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "199.99",
-                    "due_date": "2024-03-17T00:00:00+00:00",
+                    "due_date": "2024-03-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
             ],
@@ -253,12 +251,12 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             payment_schedule=[
                 {
                     "amount": "200.00",
-                    "due_date": "2024-01-18T00:00:00+00:00",
+                    "due_date": "2024-01-18",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-02-18T00:00:00+00:00",
+                    "due_date": "2024-02-18",
                     "state": PAYMENT_STATE_REFUSED,
                 },
             ],
@@ -268,8 +266,8 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             payment_schedule=[
                 {
                     "amount": "300.00",
-                    "due_date": "2024-03-18T00:00:00+00:00",
-                    "state": PAYMENT_STATE_PAYED,
+                    "due_date": "2024-03-18",
+                    "state": PAYMENT_STATE_PAID,
                 },
             ],
         )
@@ -279,7 +277,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             payment_schedule=[
                 {
                     "amount": "199.99",
-                    "due_date": "2024-04-18T00:00:00+00:00",
+                    "due_date": "2024-04-18",
                     "state": PAYMENT_STATE_PENDING,
                 },
             ],
@@ -299,29 +297,29 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             payment_schedule=[
                 {
                     "amount": "200.00",
-                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_PAID,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-03-17T00:00:00+00:00",
+                    "due_date": "2024-03-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "199.99",
-                    "due_date": "2024-04-17T00:00:00+00:00",
+                    "due_date": "2024-04-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
             ]
         )
 
         order._set_installment_state(
-            due_date=datetime(2024, 2, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+            due_date=date(2024, 2, 17),
             state=PAYMENT_STATE_PAID,
         )
 
@@ -331,29 +329,29 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             [
                 {
                     "amount": "200.00",
-                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_PAID,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PAID,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-03-17T00:00:00+00:00",
+                    "due_date": "2024-03-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "199.99",
-                    "due_date": "2024-04-17T00:00:00+00:00",
+                    "due_date": "2024-04-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
             ],
         )
 
         order._set_installment_state(
-            due_date=datetime(2024, 3, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+            due_date=date(2024, 3, 17),
             state=PAYMENT_STATE_REFUSED,
         )
 
@@ -363,22 +361,22 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             [
                 {
                     "amount": "200.00",
-                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_PAID,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PAID,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-03-17T00:00:00+00:00",
+                    "due_date": "2024-03-17",
                     "state": PAYMENT_STATE_REFUSED,
                 },
                 {
                     "amount": "199.99",
-                    "due_date": "2024-04-17T00:00:00+00:00",
+                    "due_date": "2024-04-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
             ],
@@ -386,7 +384,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
 
         with self.assertRaises(ValueError):
             order._set_installment_state(
-                due_date=datetime(2024, 3, 18, 0, 0, tzinfo=ZoneInfo("UTC")),
+                due_date=date(2024, 3, 18),
                 state=PAYMENT_STATE_REFUSED,
             )
 
@@ -396,29 +394,29 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             payment_schedule=[
                 {
                     "amount": "200.00",
-                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_PAID,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-03-17T00:00:00+00:00",
+                    "due_date": "2024-03-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "199.99",
-                    "due_date": "2024-04-17T00:00:00+00:00",
+                    "due_date": "2024-04-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
             ]
         )
 
         order.set_installment_paid(
-            due_date=datetime(2024, 2, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+            due_date=date(2024, 2, 17),
         )
 
         order.refresh_from_db()
@@ -427,22 +425,22 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             [
                 {
                     "amount": "200.00",
-                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_PAID,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PAID,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-03-17T00:00:00+00:00",
+                    "due_date": "2024-03-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "199.99",
-                    "due_date": "2024-04-17T00:00:00+00:00",
+                    "due_date": "2024-04-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
             ],
@@ -454,29 +452,29 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             payment_schedule=[
                 {
                     "amount": "200.00",
-                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_PAID,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-03-17T00:00:00+00:00",
+                    "due_date": "2024-03-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "199.99",
-                    "due_date": "2024-04-17T00:00:00+00:00",
+                    "due_date": "2024-04-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
             ]
         )
 
         order.set_installment_refused(
-            due_date=datetime(2024, 3, 17, 0, 0, tzinfo=ZoneInfo("UTC")),
+            due_date=date(2024, 3, 17),
         )
 
         order.refresh_from_db()
@@ -485,22 +483,22 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             [
                 {
                     "amount": "200.00",
-                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_PAID,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-03-17T00:00:00+00:00",
+                    "due_date": "2024-03-17",
                     "state": PAYMENT_STATE_REFUSED,
                 },
                 {
                     "amount": "199.99",
-                    "due_date": "2024-04-17T00:00:00+00:00",
+                    "due_date": "2024-04-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
             ],
@@ -512,12 +510,12 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             payment_schedule=[
                 {
                     "amount": "200.00",
-                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
             ]
@@ -545,12 +543,12 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             payment_schedule=[
                 {
                     "amount": "200.00",
-                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
             ]
