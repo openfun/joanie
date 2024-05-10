@@ -47,9 +47,7 @@ def _withdrawal_limit_date(start_date):
     So, the withdrawal limit date is the start date + 16 days.
     """
     calendar = France()
-    withdrawal_date = start_date.replace(
-        hour=0, minute=0, second=0, microsecond=0
-    ) + timedelta(days=16)
+    withdrawal_date = start_date + timedelta(days=16)
     if not calendar.is_working_day(withdrawal_date):
         return calendar.add_working_days(withdrawal_date, 1, keep_datetime=True)
     return withdrawal_date
@@ -99,6 +97,8 @@ def generate(total, start_date, end_date):
     """
     Generate payment schedule for the order.
     """
+    start_date = start_date.date()
+    end_date = end_date.date()
     withdrawal_date = _withdrawal_limit_date(start_date)
     percentages = _get_installments_percentages(total)
     due_dates = _calculate_due_dates(withdrawal_date, end_date, len(percentages))

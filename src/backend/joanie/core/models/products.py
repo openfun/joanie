@@ -376,11 +376,7 @@ class OrderManager(models.Manager):
 
     def find_today_installments(self):
         """Retrieve orders with a payment due today."""
-        due_date = (
-            timezone.now()
-            .replace(hour=0, minute=0, second=0, microsecond=0)
-            .isoformat()
-        )
+        due_date = timezone.now().date().isoformat()
         return (
             super()
             .get_queryset()
