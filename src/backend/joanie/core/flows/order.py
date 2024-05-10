@@ -112,6 +112,84 @@ class OrderFlow:
             payment_backend = get_payment_backend()
             payment_backend.abort_payment(payment_id)
 
+    def _can_be_state_pending_payment(self):
+        """
+        An order state can be set to pending_payment if no installment
+        is refused.
+        """
+        return any(
+            installment.get("state") not in [enums.PAYMENT_STATE_REFUSED]
+            for installment in self.instance.payment_schedule
+        )
+
+    def _can_be_state_completed(self):
+        """
+        An order state can be set to completed if all installments
+        are completed.
+        """
+        return all(
+            installment.get("state") in [enums.PAYMENT_STATE_PAID]
+            for installment in self.instance.payment_schedule
+        )
+
+    def _can_be_state_no_payment(self):
+        """
+        An order state can be set to no_payment if the first installment is refused.
+        """
+        return self.instance.payment_schedule[0].get("state") in [
+            enums.PAYMENT_STATE_REFUSED
+        ]
+
+    def _can_be_state_failed_payment(self):
+        """
+        An order state can be set to failed_payment if any installment except the first
+        is refused.
+        """
+        return any(
+            installment.get("state") in [enums.PAYMENT_STATE_REFUSED]
+            for installment in self.instance.payment_schedule[1:]
+        )
+
+    @state.transition(
+        source=[enums.ORDER_STATE_PENDING, enums.ORDER_STATE_PENDING_PAYMENT],
+        target=enums.ORDER_STATE_COMPLETED,
+        conditions=[_can_be_state_completed],
+    )
+    def complete(self):
+        """
+        Complete the order.
+        """
+
+    @state.transition(
+        source=[enums.ORDER_STATE_PENDING, enums.ORDER_STATE_PENDING_PAYMENT],
+        target=enums.ORDER_STATE_PENDING_PAYMENT,
+        conditions=[_can_be_state_pending_payment],
+    )
+    def pending_payment(self):
+        """
+        Mark order instance as "pending_payment".
+        """
+
+    @state.transition(
+        source=enums.ORDER_STATE_PENDING,
+        target=enums.ORDER_STATE_NO_PAYMENT,
+        conditions=[_can_be_state_no_payment],
+    )
+    def no_payment(self):
+        """
+        Mark order instance as "no_payment".
+        """
+
+    @state.transition(
+        source=enums.ORDER_STATE_PENDING_PAYMENT,
+        target=enums.ORDER_STATE_FAILED_PAYMENT,
+        conditions=[_can_be_state_failed_payment],
+    )
+    def failed_payment(self):
+        """
+        Mark order instance as "failed_payment".
+        """
+
     @state.on_success()
     def _post_transition_success(self, descriptor, source, target):  # pylint: disable=unused-argument
         """Post transition actions"""
