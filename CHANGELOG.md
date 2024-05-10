@@ -12,6 +12,7 @@ and this project adheres to
 
 - Allow to filter enrollment through `is_active` field on the client API
 - Add the possibility to add a syllabus inside the product form
+- Add a command to trigger the daily due payments
 
 ### Changed
 

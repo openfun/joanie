@@ -9,6 +9,8 @@ from joanie.celery_app import app
 from joanie.core import helpers
 from joanie.core.utils.contract import update_signatories_for_contracts
 
+from .payment_schedule import *
+
 logger = getLogger(__name__)
 
 
