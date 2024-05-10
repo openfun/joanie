@@ -1433,7 +1433,11 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertEqual(content["count"], 0)
 
     @override_settings(
-        PAYMENT_SCHEDULE_LIMITS={5: (30, 70), 10: (30, 45, 45), 100: (20, 30, 30, 20)},
+        JOANIE_PAYMENT_SCHEDULE_LIMITS={
+            5: (30, 70),
+            10: (30, 45, 45),
+            100: (20, 30, 30, 20),
+        },
         DEFAULT_CURRENCY="EUR",
     )
     def test_api_course_product_relation_payment_schedule_with_product_id_anonymous(

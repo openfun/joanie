@@ -21,7 +21,7 @@ def _get_installments_percentages(total):
     Return the payment installments percentages for the order.
     """
     percentages = None
-    for limit, percentages in settings.PAYMENT_SCHEDULE_LIMITS.items():
+    for limit, percentages in settings.JOANIE_PAYMENT_SCHEDULE_LIMITS.items():
         if total <= limit:
             return percentages
     return percentages

@@ -30,7 +30,11 @@ from joanie.tests.base import ActivityLogMixingTestCase, BaseLogMixinTestCase
 
 
 @override_settings(
-    PAYMENT_SCHEDULE_LIMITS={5: (30, 70), 10: (30, 45, 45), 100: (20, 30, 30, 20)},
+    JOANIE_PAYMENT_SCHEDULE_LIMITS={
+        5: (30, 70),
+        10: (30, 45, 45),
+        100: (20, 30, 30, 20),
+    },
     DEFAULT_CURRENCY="EUR",
 )
 class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestCase):

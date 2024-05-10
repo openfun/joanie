@@ -420,6 +420,11 @@ class Base(Configuration):
             environ_name="JOANIE_PAYMENT_CONFIGURATION", environ_prefix=None
         ),
     }
+    JOANIE_PAYMENT_SCHEDULE_LIMITS = values.DictValue(
+        {200: (30, 70), 500: (30, 35, 35), 1000: (30, 25, 25, 20)},
+        environ_name="JOANIE_PAYMENT_SCHEDULE_LIMITS",
+        environ_prefix=None,
+    )
 
     # CORS
 
