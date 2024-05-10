@@ -2884,13 +2884,17 @@
                             "type": "string",
                             "enum": [
                                 "canceled",
+                                "completed",
                                 "draft",
+                                "failed_payment",
+                                "no_payment",
                                 "pending",
+                                "pending_payment",
                                 "submitted",
                                 "validated"
                             ]
                         },
-                        "description": "* `draft` - Draft\n* `submitted` - Submitted\n* `pending` - Pending\n* `canceled` - Canceled\n* `validated` - Validated"
+                        "description": "* `draft` - Draft\n* `submitted` - Submitted\n* `pending` - Pending\n* `canceled` - Canceled\n* `validated` - Validated\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed"
                     }
                 ],
                 "tags": [
@@ -6912,10 +6916,14 @@
                     "submitted",
                     "pending",
                     "canceled",
-                    "validated"
+                    "validated",
+                    "pending_payment",
+                    "failed_payment",
+                    "no_payment",
+                    "completed"
                 ],
                 "type": "string",
-                "description": "* `draft` - Draft\n* `submitted` - Submitted\n* `pending` - Pending\n* `canceled` - Canceled\n* `validated` - Validated"
+                "description": "* `draft` - Draft\n* `submitted` - Submitted\n* `pending` - Pending\n* `canceled` - Canceled\n* `validated` - Validated\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed"
             },
             "OrganizationAccessRoleChoiceEnum": {
                 "enum": [

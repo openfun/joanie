@@ -62,6 +62,10 @@ ORDER_STATE_SUBMITTED = "submitted"  # order information have been validated
 ORDER_STATE_PENDING = "pending"  # payment has failed but can be retried
 ORDER_STATE_CANCELED = "canceled"  # has been canceled
 ORDER_STATE_VALIDATED = "validated"  # is free or has an invoice linked
+ORDER_STATE_PENDING_PAYMENT = "pending_payment"  # payment is pending
+ORDER_STATE_FAILED_PAYMENT = "failed_payment"  # last payment has failed
+ORDER_STATE_NO_PAYMENT = "no_payment"  # no payment has been made
+ORDER_STATE_COMPLETED = "completed"  # is completed
 
 ORDER_STATE_CHOICES = (
     (ORDER_STATE_DRAFT, _("Draft")),  # default
@@ -71,6 +75,22 @@ ORDER_STATE_CHOICES = (
     (
         ORDER_STATE_VALIDATED,
         pgettext_lazy("As in: the order is validated.", "Validated"),
+    ),
+    (
+        ORDER_STATE_PENDING_PAYMENT,
+        pgettext_lazy("As in: the order payment is pending.", "Pending payment"),
+    ),
+    (
+        ORDER_STATE_FAILED_PAYMENT,
+        pgettext_lazy("As in: the last order payment has failed.", "Failed payment"),
+    ),
+    (
+        ORDER_STATE_NO_PAYMENT,
+        pgettext_lazy("As in: the first order payment has failed.", "No payment"),
+    ),
+    (
+        ORDER_STATE_COMPLETED,
+        pgettext_lazy("As in: the order is completed.", "Completed"),
     ),
 )
 BINDING_ORDER_STATES = (
