@@ -11,9 +11,7 @@ from django.test.utils import override_settings
 
 from stockholm import Money
 
-from joanie.core.enums import (
-    PAYMENT_STATE_PENDING,
-)
+from joanie.core.enums import PAYMENT_STATE_PENDING
 from joanie.core.utils.payment_schedule import (
     _calculate_due_dates,
     _calculate_installments,
