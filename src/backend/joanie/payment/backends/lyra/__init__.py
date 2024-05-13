@@ -148,6 +148,15 @@ class LyraBackend(BasePaymentBackend):
 
         return response_json
 
+    def _get_configuration(self):
+        """
+        Return the form configuration for the frontend
+        """
+        return {
+            "public_key": self.public_key,
+            "base_url": self.configuration["api_base_url"],
+        }
+
     def _get_form_token(self, url, payload):
         """
         Get the form token from the API
@@ -162,6 +171,21 @@ class LyraBackend(BasePaymentBackend):
 
         return response_json.get("answer", {}).get("formToken")
 
+    def _get_payment_info(self, url, payload):
+        """
+        Prepare the payment info payload to return on payment creation.
+        """
+        token = self._get_form_token(url, payload)
+
+        if not token:
+            return None
+
+        return {
+            "provider_name": self.name,
+            "form_token": token,
+            "configuration": self._get_configuration(),
+        }
+
     def create_payment(self, order, billing_address):
         """
         Create a payment object for a given order
@@ -172,7 +196,8 @@ class LyraBackend(BasePaymentBackend):
         url = f"{self.api_url}Charge/CreatePayment"
         payload = self._get_common_payload_data(order, billing_address)
         payload["formAction"] = "ASK_REGISTER_PAY"
-        return self._get_form_token(url, payload)
+
+        return self._get_payment_info(url, payload)
 
     def create_one_click_payment(self, order, billing_address, credit_card_token):
         """
@@ -185,7 +210,8 @@ class LyraBackend(BasePaymentBackend):
         payload = self._get_common_payload_data(order, billing_address)
         payload["formAction"] = "PAYMENT"
         payload["paymentMethodToken"] = credit_card_token
-        return self._get_form_token(url, payload)
+
+        return self._get_payment_info(url, payload)
 
     def _check_hash(self, post_data):
         """Verify IPN authenticity"""
