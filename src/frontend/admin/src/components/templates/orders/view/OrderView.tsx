@@ -89,12 +89,16 @@ export function OrderView({ order }: Props) {
                 fullWidth={true}
                 disabled={true}
                 InputProps={{
-                  endAdornment: getViewIcon(
-                    PATH_ADMIN.organizations.edit(order.organization.id),
-                  ),
+                  ...(order.organization
+                    ? {
+                        endAdornment: getViewIcon(
+                          PATH_ADMIN.organizations.edit(order.organization.id),
+                        ),
+                      }
+                    : {}),
                 }}
                 label={intl.formatMessage(orderViewMessages.organization)}
-                value={order.organization.title}
+                value={order.organization?.title ?? ""}
               />
             </Grid>
             <Grid xs={12} sm={6}>
@@ -116,9 +120,13 @@ export function OrderView({ order }: Props) {
                   fullWidth={true}
                   disabled={true}
                   InputProps={{
-                    endAdornment: getViewIcon(
-                      PATH_ADMIN.courses.edit(order.course.id),
-                    ),
+                    ...(order.course
+                      ? {
+                          endAdornment: getViewIcon(
+                            PATH_ADMIN.courses.edit(order.course.id),
+                          ),
+                        }
+                      : {}),
                   }}
                   label={intl.formatMessage(orderViewMessages.course)}
                   value={order.course.title}

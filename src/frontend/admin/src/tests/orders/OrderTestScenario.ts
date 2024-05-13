@@ -14,7 +14,9 @@ export const getOrdersScenarioStore = (itemsNumber: number = 30) => {
   list.forEach((order) => {
     products.push(order.product);
     users.push(order.owner);
-    organizations.push(order.organization);
+    if (order.organization) {
+      organizations.push(order.organization);
+    }
     if (order.course) {
       courses.push(order.course);
     }
