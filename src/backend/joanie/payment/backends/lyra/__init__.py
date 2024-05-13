@@ -270,11 +270,14 @@ class LyraBackend(BasePaymentBackend):
         card_token = answer["transactions"][0]["paymentMethodToken"]
         card_details = answer["transactions"][0]["transactionDetails"]["cardDetails"]
         card_pan = card_details["pan"]
+        payment_method_source = card_details["paymentMethodSource"]
+
         # Register card if user has requested it
-        if card_token is not None and card_pan is not None:
-            # In the case of a one click payment, card.id is not None but other
-            # attributes are empty. So to know if a user wants to save its card,
-            # we check if card.id and one other card attribute are not None.
+        if card_token is not None and payment_method_source != "TOKEN":
+            # In the case of a one click payment, card.id is not None and
+            # paymentMethodSource is set to TOKEN. So to know if a user wants to save
+            # its card, we check if card.id is set paymentMethodSource has another value
+            # than TOKEN (e.g: NEW).
             # - User asks to store its card
             CreditCard.objects.create(
                 brand=card_details["effectiveBrand"],

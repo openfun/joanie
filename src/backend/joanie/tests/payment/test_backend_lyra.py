@@ -658,6 +658,9 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
             },
         )
 
+        # No credit card should have been created
+        self.assertEqual(CreditCard.objects.count(), 0)
+
     @responses.activate(assert_all_requests_are_fired=True)
     def test_payment_backend_lyra_delete_credit_card(self):
         """
