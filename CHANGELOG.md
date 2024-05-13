@@ -24,7 +24,7 @@ and this project adheres to
 - Accesses list layout
 - Product target course layout
 - Update DatePicker with keyboard
-
+- Order view when organization is not defined
 
 ## [2.1.0] - 2024-05-02
 

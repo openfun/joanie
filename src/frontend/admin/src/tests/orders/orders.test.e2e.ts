@@ -74,7 +74,7 @@ test.describe("Order view", () => {
 
     await page.getByRole("heading", { name: "Order informations" }).click();
     await expect(page.getByLabel("Organization", { exact: true })).toHaveValue(
-      order.organization.title,
+      order.organization?.title ?? "",
     );
     await expect(page.getByLabel("Product")).toHaveValue(order.product.title);
     if (order.course) {
@@ -112,6 +112,38 @@ test.describe("Order view", () => {
         order.certificate.definition_title,
       );
     }
+  });
+
+  test("Check when organization is undefined", async ({ page }) => {
+    const order = store.list[0];
+    order.main_invoice.created_on = new Date(
+      Date.UTC(2024, 0, 23, 19, 30),
+    ).toLocaleString();
+    order.main_invoice.updated_on = new Date(
+      Date.UTC(2024, 0, 23, 20, 30),
+    ).toLocaleString();
+    order.organization = undefined;
+    await page.unroute(catchIdRegex);
+    await page.route(catchIdRegex, async (route, request) => {
+      const methods = request.method();
+      if (methods === "GET") {
+        await route.fulfill({ json: store.list[0] });
+      }
+    });
+    await page.goto(PATH_ADMIN.orders.list);
+    await page.getByRole("heading", { name: "Orders" }).click();
+    await page.getByRole("link", { name: order.product.title }).click();
+
+    await page.getByRole("heading", { name: "Order informations" }).click();
+    await expect(page.getByLabel("Organization", { exact: true })).toHaveValue(
+      "",
+    );
+    await expect(
+      page
+        .locator("div")
+        .filter({ hasText: /^Organization$/ })
+        .getByLabel("Click to view"),
+    ).not.toBeVisible();
   });
 
   test("Check all field are in this view", async ({ page }) => {

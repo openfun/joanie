@@ -27,7 +27,7 @@ export type OrderListItem = AbstractOrder & {
 export type Order = AbstractOrder & {
   owner: User;
   product: ProductSimple;
-  organization: Organization;
+  organization?: Organization;
   order_group?: OrderGroup;
   course: Nullable<Course>;
   enrollment: Nullable<Enrollment>;
@@ -101,7 +101,7 @@ export const transformOrderToOrderListItem = (order: Order): OrderListItem => {
     course_code: order.course?.code ?? null,
     created_on: order.created_on,
     enrollment_id: order.enrollment?.id ?? null,
-    organization_title: order.organization.title,
+    organization_title: order.organization?.title ?? "",
     owner_name: order.owner.full_name ?? order.owner.username,
     product_title: order.product.title,
     state: order.state,
