@@ -43,7 +43,6 @@ export function RHFDateTimePicker({ label, name, ...props }: Props) {
               },
             }}
             onChange={(newValue: Date | null) => {
-              console.log(newValue);
               if (newValue === null) {
                 setValue(name, undefined);
               } else {
