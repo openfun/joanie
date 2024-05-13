@@ -19,6 +19,7 @@ and this project adheres to
 
 ### Fixed
 
+- Lyra backend save card logic
 - Manage invalid logging secret key
 - Accesses list layout
 - Product target course layout
