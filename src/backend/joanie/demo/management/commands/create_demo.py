@@ -1,4 +1,4 @@
-# ruff: noqa: S311, S106, PLR0915
+# ruff: noqa: S311, S106, PLR0915, PLR0912
 """Create_demo management command."""
 
 import logging
