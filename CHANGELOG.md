@@ -13,8 +13,13 @@ and this project adheres to
 - Allow to filter enrollment through `is_active` field on the client API
 - Add the possibility to add a syllabus inside the product form
 
+### Changed
+
+- Complete Lyra payment creation payload
+
 ### Fixed
 
+- Lyra backend save card logic
 - Manage invalid logging secret key
 - Accesses list layout
 - Product target course layout

@@ -323,7 +323,17 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
 
         response = backend.create_payment(order, billing_address)
 
-        self.assertEqual(response, json_response.get("answer").get("formToken"))
+        self.assertEqual(
+            response,
+            {
+                "provider_name": "lyra",
+                "form_token": json_response.get("answer").get("formToken"),
+                "configuration": {
+                    "public_key": self.configuration.get("public_key"),
+                    "base_url": self.configuration.get("api_base_url"),
+                },
+            },
+        )
 
     @responses.activate(assert_all_requests_are_fired=True)
     def test_payment_backend_lyra_create_one_click_payment(self):
@@ -390,7 +400,17 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
             order, billing_address, credit_card.token
         )
 
-        self.assertEqual(response, json_response.get("answer").get("formToken"))
+        self.assertEqual(
+            response,
+            {
+                "provider_name": "lyra",
+                "form_token": json_response.get("answer").get("formToken"),
+                "configuration": {
+                    "public_key": self.configuration.get("public_key"),
+                    "base_url": self.configuration.get("api_base_url"),
+                },
+            },
+        )
 
     def test_payment_backend_lyra_handle_notification_unknown_resource(self):
         """
@@ -637,6 +657,9 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
                 },
             },
         )
+
+        # No credit card should have been created
+        self.assertEqual(CreditCard.objects.count(), 0)
 
     @responses.activate(assert_all_requests_are_fired=True)
     def test_payment_backend_lyra_delete_credit_card(self):

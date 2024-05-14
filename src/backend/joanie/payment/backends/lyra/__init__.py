@@ -148,6 +148,15 @@ class LyraBackend(BasePaymentBackend):
 
         return response_json
 
+    def _get_configuration(self):
+        """
+        Return the form configuration for the frontend
+        """
+        return {
+            "public_key": self.public_key,
+            "base_url": self.configuration["api_base_url"],
+        }
+
     def _get_form_token(self, url, payload):
         """
         Get the form token from the API
@@ -162,6 +171,21 @@ class LyraBackend(BasePaymentBackend):
 
         return response_json.get("answer", {}).get("formToken")
 
+    def _get_payment_info(self, url, payload):
+        """
+        Prepare the payment info payload to return on payment creation.
+        """
+        token = self._get_form_token(url, payload)
+
+        if not token:
+            return None
+
+        return {
+            "provider_name": self.name,
+            "form_token": token,
+            "configuration": self._get_configuration(),
+        }
+
     def create_payment(self, order, billing_address):
         """
         Create a payment object for a given order
@@ -172,7 +196,8 @@ class LyraBackend(BasePaymentBackend):
         url = f"{self.api_url}Charge/CreatePayment"
         payload = self._get_common_payload_data(order, billing_address)
         payload["formAction"] = "ASK_REGISTER_PAY"
-        return self._get_form_token(url, payload)
+
+        return self._get_payment_info(url, payload)
 
     def create_one_click_payment(self, order, billing_address, credit_card_token):
         """
@@ -185,7 +210,8 @@ class LyraBackend(BasePaymentBackend):
         payload = self._get_common_payload_data(order, billing_address)
         payload["formAction"] = "PAYMENT"
         payload["paymentMethodToken"] = credit_card_token
-        return self._get_form_token(url, payload)
+
+        return self._get_payment_info(url, payload)
 
     def _check_hash(self, post_data):
         """Verify IPN authenticity"""
@@ -244,11 +270,14 @@ class LyraBackend(BasePaymentBackend):
         card_token = answer["transactions"][0]["paymentMethodToken"]
         card_details = answer["transactions"][0]["transactionDetails"]["cardDetails"]
         card_pan = card_details["pan"]
+        payment_method_source = card_details["paymentMethodSource"]
+
         # Register card if user has requested it
-        if card_token is not None and card_pan is not None:
-            # In the case of a one click payment, card.id is not None but other
-            # attributes are empty. So to know if a user wants to save its card,
-            # we check if card.id and one other card attribute are not None.
+        if card_token is not None and payment_method_source != "TOKEN":
+            # In the case of a one click payment, card.id is not None and
+            # paymentMethodSource is set to TOKEN. So to know if a user wants to save
+            # its card, we check if card.id is set paymentMethodSource has another value
+            # than TOKEN (e.g: NEW).
             # - User asks to store its card
             CreditCard.objects.create(
                 brand=card_details["effectiveBrand"],

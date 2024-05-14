@@ -74,3 +74,8 @@ src/backend/joanie/static/joanie/
 .vscode/
 *.iml
 /src/frontend/admin/out/
+
+# Payment debug files
+src/backend/answer.json
+src/backend/request.json
+src/backend/response.json
