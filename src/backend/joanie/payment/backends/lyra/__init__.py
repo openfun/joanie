@@ -13,10 +13,10 @@ from django.conf import settings
 import requests
 from rest_framework.parsers import FormParser, JSONParser
 
-from joanie.core.models import Order
+from joanie.core.models import ActivityLog, Address, Order
 from joanie.payment import exceptions
 from joanie.payment.backends.base import BasePaymentBackend
-from joanie.payment.models import CreditCard
+from joanie.payment.models import CreditCard, Invoice, Transaction
 
 logger = logging.getLogger(__name__)
 

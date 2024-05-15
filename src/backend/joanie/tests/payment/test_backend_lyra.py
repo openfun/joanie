@@ -6,6 +6,7 @@ from decimal import Decimal as D
 from os.path import dirname, join, realpath
 from unittest.mock import patch
 
+from django.core import mail
 from django.test import override_settings
 from django.urls import reverse
 
@@ -19,7 +20,7 @@ from joanie.payment.backends.base import BasePaymentBackend
 from joanie.payment.backends.lyra import LyraBackend
 from joanie.payment.exceptions import ParseNotificationFailed, RegisterPaymentFailed
 from joanie.payment.factories import BillingAddressDictFactory, CreditCardFactory
-from joanie.payment.models import CreditCard
+from joanie.payment.models import CreditCard, Transaction
 from joanie.tests.base import BaseLogMixinTestCase
 from joanie.tests.payment.base_payment import BasePaymentTestCase
 
@@ -498,6 +499,9 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
             language="en-us",
         )
         product = ProductFactory(price=D("123.45"))
+        first_installment_amount = product.price / 3
+        second_installment_amount = product.price - first_installment_amount
+
         order = OrderFactory(owner=owner, product=product, state=ORDER_STATE_PENDING)
         credit_card = CreditCardFactory(
             owner=owner,
@@ -507,6 +511,11 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
 
         with self.open("lyra/responses/create_zero_click_payment.json") as file:
             json_response = json.loads(file.read())
+
+        json_response["answer"]["transactions"][0]["uuid"] = "first_transaction_id"
+        json_response["answer"]["orderDetails"]["orderTotalAmount"] = int(
+            first_installment_amount * 100
+        )
 
         responses.add(
             responses.POST,
@@ -523,7 +532,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
                 ),
                 responses.matchers.json_params_matcher(
                     {
-                        "amount": 12345,
+                        "amount": int(first_installment_amount * 100),
                         "currency": "EUR",
                         "customer": {
                             "email": "john.doe@acme.org",
@@ -549,18 +558,102 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         )
 
         response = backend.create_zero_click_payment(
-            order, credit_card.token, order.total
+            order, credit_card.token, first_installment_amount
         )
 
         self.assertTrue(response)
 
-        # Invoice is created
-        self.assertEqual(order.invoices.count(), 1)
+        # Invoices are created
+        self.assertEqual(order.invoices.count(), 2)
+        self.assertIsNotNone(order.main_invoice)
+        self.assertEqual(order.main_invoice.children.count(), 1)
+
         # Transaction is created
-        self.assertEqual(order.invoices.first().transactions.count(), 1)
+        self.assertTrue(
+            Transaction.objects.filter(
+                invoice__parent__order=order,
+                total=first_installment_amount,
+                reference="first_transaction_id",
+            ).exists()
+        )
+
         # With 0 click payment, order state is not changed
         order.refresh_from_db()
         self.assertEqual(order.state, ORDER_STATE_PENDING)
+
+        # Mail is sent
+        self._check_order_validated_email_sent(
+            owner.email, owner.get_full_name(), order
+        )
+
+        mail.outbox.clear()
+
+        json_response["answer"]["transactions"][0]["uuid"] = "second_transaction_id"
+        json_response["answer"]["orderDetails"]["orderTotalAmount"] = int(
+            second_installment_amount * 100
+        )
+
+        responses.add(
+            responses.POST,
+            "https://api.lyra.com/api-payment/V4/Charge/CreatePayment",
+            headers={
+                "Content-Type": "application/json",
+            },
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        "content-type": "application/json",
+                        "authorization": "Basic Njk4NzYzNTc6dGVzdHBhc3N3b3JkX0RFTU9QUklWQVRFS0VZMjNHNDQ3NXpYWlEyVUE1eDdN",
+                    }
+                ),
+                responses.matchers.json_params_matcher(
+                    {
+                        "amount": int(second_installment_amount * 100),
+                        "currency": "EUR",
+                        "customer": {
+                            "email": "john.doe@acme.org",
+                            "reference": str(owner.id),
+                            "shippingDetails": {
+                                "shippingMethod": "DIGITAL_GOOD",
+                            },
+                        },
+                        "orderId": str(order.id),
+                        "formAction": "SILENT",
+                        "paymentMethodToken": credit_card.token,
+                        "transactionOptions": {
+                            "cardOptions": {
+                                "initialIssuerTransactionIdentifier": credit_card.initial_issuer_transaction_identifier,
+                            }
+                        },
+                        "ipnTargetUrl": "https://example.com/api/v1.0/payments/notifications",
+                    }
+                ),
+            ],
+            status=200,
+            json=json_response,
+        )
+
+        backend.create_zero_click_payment(
+            order, credit_card.token, second_installment_amount
+        )
+
+        # Children invoice is created
+        self.assertEqual(order.invoices.count(), 3)
+        self.assertEqual(order.main_invoice.children.count(), 2)
+
+        # Transaction is created
+        self.assertTrue(
+            Transaction.objects.filter(
+                invoice__parent__order=order,
+                total=second_installment_amount,
+                reference="second_transaction_id",
+            ).exists()
+        )
+
+        # With 0 click payment, order state is not changed
+        order.refresh_from_db()
+        self.assertEqual(order.state, ORDER_STATE_PENDING)
+
         # Mail is sent
         self._check_order_validated_email_sent(
             owner.email, owner.get_full_name(), order

@@ -12,7 +12,7 @@ from joanie.core.factories import OrderFactory, UserAddressFactory, UserFactory
 from joanie.core.models import Address
 from joanie.payment.backends.base import BasePaymentBackend
 from joanie.payment.factories import BillingAddressDictFactory
-from joanie.payment.models import Invoice, Transaction
+from joanie.payment.models import Transaction
 from joanie.tests.base import ActivityLogMixingTestCase
 from joanie.tests.payment.base_payment import BasePaymentTestCase
 
@@ -167,7 +167,9 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         self.assertEqual(address.owner, owner)
 
         # - Invoice has been created
-        self.assertEqual(Invoice.objects.filter(order=order).count(), 1)
+        self.assertEqual(order.invoices.count(), 2)
+        self.assertIsNotNone(order.main_invoice)
+        self.assertEqual(order.main_invoice.children.count(), 1)
 
         # - Order has been validated
         self.assertEqual(order.state, "validated")
@@ -216,12 +218,14 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         )
 
         # - Invoice has been created
-        self.assertEqual(Invoice.objects.filter(order=order).count(), 1)
+        self.assertEqual(order.invoices.count(), 2)
+        self.assertIsNotNone(order.main_invoice)
+        self.assertEqual(order.main_invoice.children.count(), 1)
 
         # - No new address should have been created and the existing one should be
         #   reused
         self.assertEqual(Address.objects.count(), 1)
-        invoice = Invoice.objects.get(order=order)
+        invoice = order.main_invoice
         self.assertEqual(invoice.recipient_address, billing_address)
 
         # - Order has been validated
@@ -278,7 +282,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         # - Refund entirely the order
         backend.call_do_on_refund(
             amount=order.total,
-            invoice=payment.invoice,
+            invoice=order.main_invoice,
             refund_reference="ref_0",
         )
 
@@ -331,7 +335,9 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         )
 
         # Invoice has been created
-        self.assertEqual(Invoice.objects.filter(order=order).count(), 1)
+        self.assertEqual(order.invoices.count(), 2)
+        self.assertIsNotNone(order.main_invoice)
+        self.assertEqual(order.main_invoice.children.count(), 1)
 
         # Order has been validated
         self.assertEqual(order.state, "validated")
@@ -377,7 +383,9 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         )
 
         # - Invoice has been created
-        self.assertEqual(Invoice.objects.filter(order=order).count(), 1)
+        self.assertEqual(order.invoices.count(), 2)
+        self.assertIsNotNone(order.main_invoice)
+        self.assertEqual(order.main_invoice.children.count(), 1)
 
         # - Order has been validated
         self.assertEqual(order.state, "validated")
@@ -417,7 +425,9 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         )
 
         # - Invoice has been created
-        self.assertEqual(Invoice.objects.filter(order=order).count(), 1)
+        self.assertEqual(order.invoices.count(), 2)
+        self.assertIsNotNone(order.main_invoice)
+        self.assertEqual(order.main_invoice.children.count(), 1)
 
         # - Order has been validated
         self.assertEqual(order.state, "validated")
