@@ -48,9 +48,16 @@ class BasePaymentBackend:
             },
         )
 
-        invoice = Invoice.objects.create(
+        main_invoice, _ = Invoice.objects.get_or_create(
             order=order,
             total=order.total,
+            recipient_address=address,
+        )
+
+        invoice = Invoice.objects.create(
+            order=order,
+            parent=main_invoice,
+            total=0,
             recipient_address=address,
         )
 
