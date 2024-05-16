@@ -314,30 +314,34 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
         order = factories.OrderFactory(
             payment_schedule=[
                 {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
                     "amount": "200.00",
                     "due_date": "2024-01-17",
-                    "state": PAYMENT_STATE_PENDING,
+                    "state": PAYMENT_STATE_PAID,
                 },
                 {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
                     "amount": "300.00",
                     "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
                     "amount": "300.00",
                     "due_date": "2024-03-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
                     "amount": "199.99",
                     "due_date": "2024-04-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
-            ]
+            ],
         )
 
         is_first, is_last = order._set_installment_state(
-            due_date="2024-01-17",
+            installment_id="d9356dd7-19a6-4695-b18e-ad93af41424a",
             state=PAYMENT_STATE_PAID,
         )
 
@@ -346,21 +350,25 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
             order.payment_schedule,
             [
                 {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
                     "amount": "200.00",
                     "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_PAID,
                 },
                 {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
                     "amount": "300.00",
                     "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
                     "amount": "300.00",
                     "due_date": "2024-03-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
                     "amount": "199.99",
                     "due_date": "2024-04-17",
                     "state": PAYMENT_STATE_PENDING,
@@ -371,7 +379,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
         self.assertFalse(is_last)
 
         is_first, is_last = order._set_installment_state(
-            due_date="2024-04-17",
+            installment_id="9fcff723-7be4-4b77-87c6-2865e000f879",
             state=PAYMENT_STATE_REFUSED,
         )
 
@@ -380,21 +388,25 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
             order.payment_schedule,
             [
                 {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
                     "amount": "200.00",
                     "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_PAID,
                 },
                 {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
                     "amount": "300.00",
                     "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
                     "amount": "300.00",
                     "due_date": "2024-03-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
                     "amount": "199.99",
                     "due_date": "2024-04-17",
                     "state": PAYMENT_STATE_REFUSED,
@@ -406,7 +418,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
 
         with self.assertRaises(ValueError):
             order._set_installment_state(
-                due_date="2024-03-18",
+                installment_id="eb402e70-53da-4d67-81a9-b50dd04f571b",
                 state=PAYMENT_STATE_REFUSED,
             )
 
@@ -420,21 +432,25 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
             state=ORDER_STATE_PENDING,
             payment_schedule=[
                 {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
                     "amount": "200.00",
                     "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_PAID,
                 },
                 {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
                     "amount": "300.00",
                     "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
                     "amount": "300.00",
                     "due_date": "2024-03-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
                     "amount": "199.99",
                     "due_date": "2024-04-17",
                     "state": PAYMENT_STATE_PENDING,
@@ -443,7 +459,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
         )
 
         order.set_installment_paid(
-            due_date="2024-02-17",
+            installment_id="1932fbc5-d971-48aa-8fee-6d637c3154a5",
         )
 
         order.refresh_from_db()
@@ -451,21 +467,25 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
             order.payment_schedule,
             [
                 {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
                     "amount": "200.00",
                     "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_PAID,
                 },
                 {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
                     "amount": "300.00",
                     "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PAID,
                 },
                 {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
                     "amount": "300.00",
                     "due_date": "2024-03-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
                     "amount": "199.99",
                     "due_date": "2024-04-17",
                     "state": PAYMENT_STATE_PENDING,
@@ -485,21 +505,25 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
             state=ORDER_STATE_PENDING,
             payment_schedule=[
                 {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
                     "amount": "200.00",
                     "due_date": "2024-01-17",
-                    "state": PAYMENT_STATE_PENDING,
+                    "state": PAYMENT_STATE_PAID,
                 },
                 {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
                     "amount": "300.00",
                     "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
                     "amount": "300.00",
                     "due_date": "2024-03-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
                     "amount": "199.99",
                     "due_date": "2024-04-17",
                     "state": PAYMENT_STATE_PENDING,
@@ -508,7 +532,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
         )
 
         order.set_installment_paid(
-            due_date="2024-01-17",
+            installment_id="d9356dd7-19a6-4695-b18e-ad93af41424a",
         )
 
         order.refresh_from_db()
@@ -516,21 +540,25 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
             order.payment_schedule,
             [
                 {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
                     "amount": "200.00",
                     "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_PAID,
                 },
                 {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
                     "amount": "300.00",
                     "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
                     "amount": "300.00",
                     "due_date": "2024-03-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
                     "amount": "199.99",
                     "due_date": "2024-04-17",
                     "state": PAYMENT_STATE_PENDING,
@@ -550,21 +578,25 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
             state=ORDER_STATE_PENDING,
             payment_schedule=[
                 {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
                     "amount": "200.00",
                     "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_PAID,
                 },
                 {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
                     "amount": "300.00",
                     "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PAID,
                 },
                 {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
                     "amount": "300.00",
                     "due_date": "2024-03-17",
                     "state": PAYMENT_STATE_PAID,
                 },
                 {
+                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
                     "amount": "199.99",
                     "due_date": "2024-04-17",
                     "state": PAYMENT_STATE_PENDING,
@@ -573,7 +605,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
         )
 
         order.set_installment_paid(
-            due_date="2024-04-17",
+            installment_id="9fcff723-7be4-4b77-87c6-2865e000f879",
         )
 
         order.refresh_from_db()
@@ -581,21 +613,25 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
             order.payment_schedule,
             [
                 {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
                     "amount": "200.00",
                     "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_PAID,
                 },
                 {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
                     "amount": "300.00",
                     "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PAID,
                 },
                 {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
                     "amount": "300.00",
                     "due_date": "2024-03-17",
                     "state": PAYMENT_STATE_PAID,
                 },
                 {
+                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
                     "amount": "199.99",
                     "due_date": "2024-04-17",
                     "state": PAYMENT_STATE_PAID,
@@ -615,6 +651,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
             state=ORDER_STATE_PENDING,
             payment_schedule=[
                 {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
                     "amount": "200.00",
                     "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_PENDING,
@@ -623,7 +660,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
         )
 
         order.set_installment_paid(
-            due_date="2024-01-17",
+            installment_id="d9356dd7-19a6-4695-b18e-ad93af41424a",
         )
 
         order.refresh_from_db()
@@ -631,6 +668,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
             order.payment_schedule,
             [
                 {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
                     "amount": "200.00",
                     "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_PAID,
@@ -650,21 +688,25 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
             state=ORDER_STATE_PENDING_PAYMENT,
             payment_schedule=[
                 {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
                     "amount": "200.00",
                     "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_PAID,
                 },
                 {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
                     "amount": "300.00",
                     "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
                     "amount": "300.00",
                     "due_date": "2024-03-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
                     "amount": "199.99",
                     "due_date": "2024-04-17",
                     "state": PAYMENT_STATE_PENDING,
@@ -673,7 +715,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
         )
 
         order.set_installment_refused(
-            due_date="2024-02-17",
+            installment_id="1932fbc5-d971-48aa-8fee-6d637c3154a5"
         )
 
         order.refresh_from_db()
@@ -681,21 +723,25 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
             order.payment_schedule,
             [
                 {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
                     "amount": "200.00",
                     "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_PAID,
                 },
                 {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
                     "amount": "300.00",
                     "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_REFUSED,
                 },
                 {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
                     "amount": "300.00",
                     "due_date": "2024-03-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
                     "amount": "199.99",
                     "due_date": "2024-04-17",
                     "state": PAYMENT_STATE_PENDING,
@@ -715,21 +761,25 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
             state=ORDER_STATE_PENDING,
             payment_schedule=[
                 {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
                     "amount": "200.00",
                     "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
                     "amount": "300.00",
                     "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
                     "amount": "300.00",
                     "due_date": "2024-03-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
                     "amount": "199.99",
                     "due_date": "2024-04-17",
                     "state": PAYMENT_STATE_PENDING,
@@ -738,7 +788,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
         )
 
         order.set_installment_refused(
-            due_date="2024-01-17",
+            installment_id="d9356dd7-19a6-4695-b18e-ad93af41424a",
         )
 
         order.refresh_from_db()
@@ -746,21 +796,25 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
             order.payment_schedule,
             [
                 {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
                     "amount": "200.00",
                     "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_REFUSED,
                 },
                 {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
                     "amount": "300.00",
                     "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
                     "amount": "300.00",
                     "due_date": "2024-03-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
                     "amount": "199.99",
                     "due_date": "2024-04-17",
                     "state": PAYMENT_STATE_PENDING,
@@ -780,21 +834,25 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
             state=ORDER_STATE_PENDING_PAYMENT,
             payment_schedule=[
                 {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
                     "amount": "200.00",
                     "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_PAID,
                 },
                 {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
                     "amount": "300.00",
                     "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PAID,
                 },
                 {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
                     "amount": "300.00",
                     "due_date": "2024-03-17",
                     "state": PAYMENT_STATE_PAID,
                 },
                 {
+                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
                     "amount": "199.99",
                     "due_date": "2024-04-17",
                     "state": PAYMENT_STATE_PENDING,
@@ -803,7 +861,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
         )
 
         order.set_installment_refused(
-            due_date="2024-04-17",
+            installment_id="9fcff723-7be4-4b77-87c6-2865e000f879",
         )
 
         order.refresh_from_db()
@@ -811,21 +869,25 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
             order.payment_schedule,
             [
                 {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
                     "amount": "200.00",
                     "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_PAID,
                 },
                 {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
                     "amount": "300.00",
                     "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PAID,
                 },
                 {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
                     "amount": "300.00",
                     "due_date": "2024-03-17",
                     "state": PAYMENT_STATE_PAID,
                 },
                 {
+                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
                     "amount": "199.99",
                     "due_date": "2024-04-17",
                     "state": PAYMENT_STATE_REFUSED,
@@ -845,6 +907,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
             state=ORDER_STATE_PENDING,
             payment_schedule=[
                 {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
                     "amount": "200.00",
                     "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_PENDING,
@@ -853,7 +916,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
         )
 
         order.set_installment_refused(
-            due_date="2024-01-17",
+            installment_id="d9356dd7-19a6-4695-b18e-ad93af41424a",
         )
 
         order.refresh_from_db()
@@ -861,6 +924,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
             order.payment_schedule,
             [
                 {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
                     "amount": "200.00",
                     "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_REFUSED,
@@ -875,11 +939,13 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
         order = factories.OrderFactory(
             payment_schedule=[
                 {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
                     "amount": "200.00",
                     "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
                     "amount": "300.00",
                     "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PENDING,
@@ -908,11 +974,13 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
         order = factories.OrderFactory(
             payment_schedule=[
                 {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
                     "amount": "200.00",
                     "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
                     "amount": "300.00",
                     "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PENDING,

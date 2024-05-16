@@ -30,7 +30,7 @@ def process_today_installment(order_id):
             try:
                 credit_card = CreditCard.objects.get(owner=order.owner, is_main=True)
             except CreditCard.DoesNotExist:
-                order.set_installment_refused(installment["due_date"])
+                order.set_installment_refused(installment["id"])
                 continue
             payment_succeeded = payment_backend.create_zero_click_payment(
                 order=order,
@@ -38,6 +38,6 @@ def process_today_installment(order_id):
                 amount=installment["amount"],
             )
             if payment_succeeded:
-                order.set_installment_paid(installment["due_date"])
+                order.set_installment_paid(installment["id"])
             else:
-                order.set_installment_refused(installment["due_date"])
+                order.set_installment_refused(installment["id"])
