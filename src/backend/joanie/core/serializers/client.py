@@ -672,124 +672,6 @@ class EnrollmentSerializer(serializers.ModelSerializer):
         ).data
 
 
-class OrderSerializer(serializers.ModelSerializer):
-    """
-    Order model serializer
-    """
-
-    id = serializers.CharField(read_only=True, required=False)
-    owner = serializers.CharField(
-        source="owner.username", read_only=True, required=False
-    )
-    course = CourseLightSerializer(
-        read_only=True, exclude_abilities=True, required=False
-    )
-    enrollment = EnrollmentLightSerializer(read_only=True, required=False)
-    total = serializers.DecimalField(
-        coerce_to_string=False,
-        decimal_places=2,
-        max_digits=9,
-        min_value=D(0.00),
-        read_only=True,
-        required=False,
-    )
-    total_currency = serializers.SerializerMethodField(read_only=True)
-    organization = OrganizationSerializer(read_only=True, exclude_abilities=True)
-    product_id = serializers.SlugRelatedField(
-        queryset=models.Product.objects.all(), slug_field="id", source="product"
-    )
-    target_enrollments = serializers.SerializerMethodField(read_only=True)
-    order_group_id = serializers.SlugRelatedField(
-        queryset=models.OrderGroup.objects.all(),
-        slug_field="id",
-        required=False,
-        source="order_group",
-    )
-    target_courses = OrderTargetCourseRelationSerializer(
-        read_only=True, many=True, source="course_relations"
-    )
-    main_invoice_reference = serializers.SlugRelatedField(
-        read_only=True, slug_field="reference", source="main_invoice"
-    )
-    certificate_id = serializers.SlugRelatedField(
-        read_only=True, slug_field="id", source="certificate"
-    )
-    contract = ContractSerializer(read_only=True, exclude_abilities=True)
-    has_consent_to_terms = serializers.BooleanField(write_only=True)
-
-    class Meta:
-        model = models.Order
-        fields = [
-            "certificate_id",
-            "contract",
-            "course",
-            "created_on",
-            "enrollment",
-            "id",
-            "main_invoice_reference",
-            "order_group_id",
-            "organization",
-            "owner",
-            "product_id",
-            "state",
-            "target_courses",
-            "target_enrollments",
-            "total",
-            "total_currency",
-            "has_consent_to_terms",
-        ]
-        read_only_fields = fields
-
-    def get_target_enrollments(self, order) -> list[dict]:
-        """
-        For the current order, retrieve its related enrollments.
-        """
-        return EnrollmentSerializer(
-            instance=order.get_target_enrollments(),
-            many=True,
-            context=self.context,
-        ).data
-
-    def validate_has_consent_to_terms(self, value):
-        """Check that user has accepted terms and conditions."""
-        if not value:
-            message = _("You must accept the terms and conditions to proceed.")
-            raise serializers.ValidationError(message)
-
-        return value
-
-    def create(self, validated_data):
-        """
-        Create a new order and set the organization if provided.
-        """
-        organization_id = self.initial_data.get("organization_id")
-
-        if organization_id:
-            organization = get_object_or_404(models.Organization, id=organization_id)
-            validated_data["organization"] = organization
-
-        return super().create(validated_data)
-
-    def update(self, instance, validated_data):
-        """
-        Make the "course", "organization", "order_group" and "product" fields read_only
-        only on update.
-        """
-        validated_data.pop("course", None)
-        validated_data.pop("enrollment", None)
-        validated_data.pop("organization", None)
-        validated_data.pop("product", None)
-        validated_data.pop("order_group", None)
-        validated_data.pop("has_consent_to_terms", None)
-        return super().update(instance, validated_data)
-
-    def get_total_currency(self, *args, **kwargs) -> str:
-        """
-        Return the currency used
-        """
-        return settings.DEFAULT_CURRENCY
-
-
 class OrderLightSerializer(serializers.ModelSerializer):
     """Order model light serializer."""
 
@@ -1194,3 +1076,123 @@ class OrderPaymentScheduleSerializer(serializers.Serializer):
 
     def update(self, instance, validated_data):
         """Only there to avoid a NotImplementedError"""
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    """
+    Order model serializer
+    """
+
+    id = serializers.CharField(read_only=True, required=False)
+    owner = serializers.CharField(
+        source="owner.username", read_only=True, required=False
+    )
+    course = CourseLightSerializer(
+        read_only=True, exclude_abilities=True, required=False
+    )
+    enrollment = EnrollmentLightSerializer(read_only=True, required=False)
+    total = serializers.DecimalField(
+        coerce_to_string=False,
+        decimal_places=2,
+        max_digits=9,
+        min_value=D(0.00),
+        read_only=True,
+        required=False,
+    )
+    total_currency = serializers.SerializerMethodField(read_only=True)
+    organization = OrganizationSerializer(read_only=True, exclude_abilities=True)
+    product_id = serializers.SlugRelatedField(
+        queryset=models.Product.objects.all(), slug_field="id", source="product"
+    )
+    target_enrollments = serializers.SerializerMethodField(read_only=True)
+    order_group_id = serializers.SlugRelatedField(
+        queryset=models.OrderGroup.objects.all(),
+        slug_field="id",
+        required=False,
+        source="order_group",
+    )
+    target_courses = OrderTargetCourseRelationSerializer(
+        read_only=True, many=True, source="course_relations"
+    )
+    main_invoice_reference = serializers.SlugRelatedField(
+        read_only=True, slug_field="reference", source="main_invoice"
+    )
+    certificate_id = serializers.SlugRelatedField(
+        read_only=True, slug_field="id", source="certificate"
+    )
+    contract = ContractSerializer(read_only=True, exclude_abilities=True)
+    has_consent_to_terms = serializers.BooleanField(write_only=True)
+    payment_schedule = OrderPaymentSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = models.Order
+        fields = [
+            "certificate_id",
+            "contract",
+            "course",
+            "created_on",
+            "enrollment",
+            "id",
+            "main_invoice_reference",
+            "order_group_id",
+            "organization",
+            "owner",
+            "product_id",
+            "state",
+            "target_courses",
+            "target_enrollments",
+            "total",
+            "total_currency",
+            "has_consent_to_terms",
+            "payment_schedule",
+        ]
+        read_only_fields = fields
+
+    def get_target_enrollments(self, order) -> list[dict]:
+        """
+        For the current order, retrieve its related enrollments.
+        """
+        return EnrollmentSerializer(
+            instance=order.get_target_enrollments(),
+            many=True,
+            context=self.context,
+        ).data
+
+    def validate_has_consent_to_terms(self, value):
+        """Check that user has accepted terms and conditions."""
+        if not value:
+            message = _("You must accept the terms and conditions to proceed.")
+            raise serializers.ValidationError(message)
+
+        return value
+
+    def create(self, validated_data):
+        """
+        Create a new order and set the organization if provided.
+        """
+        organization_id = self.initial_data.get("organization_id")
+
+        if organization_id:
+            organization = get_object_or_404(models.Organization, id=organization_id)
+            validated_data["organization"] = organization
+
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        """
+        Make the "course", "organization", "order_group" and "product" fields read_only
+        only on update.
+        """
+        validated_data.pop("course", None)
+        validated_data.pop("enrollment", None)
+        validated_data.pop("organization", None)
+        validated_data.pop("product", None)
+        validated_data.pop("order_group", None)
+        validated_data.pop("has_consent_to_terms", None)
+        return super().update(instance, validated_data)
+
+    def get_total_currency(self, *args, **kwargs) -> str:
+        """
+        Return the currency used
+        """
+        return settings.DEFAULT_CURRENCY

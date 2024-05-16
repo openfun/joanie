@@ -99,8 +99,9 @@ class OrderAbortApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        order = models.Order.objects.get(id=response.json()["id"])
+
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        order = models.Order.objects.get(id=response.json()["id"])
         response = self.client.patch(
             f"/api/v1.0/orders/{order.id}/submit/",
             data=data,

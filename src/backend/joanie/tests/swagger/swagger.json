@@ -6034,6 +6034,13 @@
                         "type": "string",
                         "description": "Return the currency used",
                         "readOnly": true
+                    },
+                    "payment_schedule": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/OrderPayment"
+                        },
+                        "readOnly": true
                     }
                 },
                 "required": [
@@ -6046,6 +6053,7 @@
                     "main_invoice_reference",
                     "organization",
                     "owner",
+                    "payment_schedule",
                     "product_id",
                     "state",
                     "target_courses",
@@ -6088,6 +6096,31 @@
                 ]
             },
             "OrderPayment": {
+                "type": "object",
+                "description": "Serializer for the order payment",
+                "properties": {
+                    "amount": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000000,
+                        "minimum": 0.0,
+                        "exclusiveMaximum": true
+                    },
+                    "due_date": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "state": {
+                        "$ref": "#/components/schemas/OrderPaymentStateEnum"
+                    }
+                },
+                "required": [
+                    "amount",
+                    "due_date",
+                    "state"
+                ]
+            },
+            "OrderPaymentRequest": {
                 "type": "object",
                 "description": "Serializer for the order payment",
                 "properties": {
