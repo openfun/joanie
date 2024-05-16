@@ -1044,7 +1044,7 @@ class Order(BaseModel):
 
         return installments
 
-    def _set_installment_state(self, due_date, state):
+    def _set_installment_state(self, installment_id, state):
         """
         Set the state of an installment in the payment schedule.
 
@@ -1053,31 +1053,35 @@ class Order(BaseModel):
         """
         first_installment_found = True
         for installment in self.payment_schedule:
-            if installment["due_date"] == due_date:
+            if installment["id"] == installment_id:
                 installment["state"] = state
                 self.save(update_fields=["payment_schedule"])
                 return first_installment_found, installment == self.payment_schedule[-1]
             first_installment_found = False
 
-        raise ValueError(f"Installment with due date {due_date} not found")
+        raise ValueError(f"Installment with id {installment_id} not found")
 
-    def set_installment_paid(self, due_date):
+    def set_installment_paid(self, installment_id):
         """
         Set the state of an installment to paid in the payment schedule.
         """
         ActivityLog.create_payment_succeeded_activity_log(self)
-        _, is_last = self._set_installment_state(due_date, enums.PAYMENT_STATE_PAID)
+        _, is_last = self._set_installment_state(
+            installment_id, enums.PAYMENT_STATE_PAID
+        )
         if is_last:
             self.flow.complete()
         else:
             self.flow.pending_payment()
 
-    def set_installment_refused(self, due_date):
+    def set_installment_refused(self, installment_id):
         """
         Set the state of an installment to refused in the payment schedule.
         """
         ActivityLog.create_payment_failed_activity_log(self)
-        is_first, _ = self._set_installment_state(due_date, enums.PAYMENT_STATE_REFUSED)
+        is_first, _ = self._set_installment_state(
+            installment_id, enums.PAYMENT_STATE_REFUSED
+        )
 
         if is_first:
             self.flow.no_payment()

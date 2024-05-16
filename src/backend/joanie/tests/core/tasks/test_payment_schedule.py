@@ -37,21 +37,25 @@ class PaymentScheduleTasksTestCase(TestCase, BaseLogMixinTestCase):
             owner=credit_card.owner,
             payment_schedule=[
                 {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
                     "amount": "200.00",
                     "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
                     "amount": "300.00",
                     "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
                     "amount": "300.00",
                     "due_date": "2024-03-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
                     "amount": "199.99",
                     "due_date": "2024-04-17",
                     "state": PAYMENT_STATE_PENDING,
@@ -68,21 +72,25 @@ class PaymentScheduleTasksTestCase(TestCase, BaseLogMixinTestCase):
             order.payment_schedule,
             [
                 {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
                     "amount": "200.00",
                     "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_PAID,
                 },
                 {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
                     "amount": "300.00",
                     "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
                     "amount": "300.00",
                     "due_date": "2024-03-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
                     "amount": "199.99",
                     "due_date": "2024-04-17",
                     "state": PAYMENT_STATE_PENDING,
@@ -97,21 +105,25 @@ class PaymentScheduleTasksTestCase(TestCase, BaseLogMixinTestCase):
             state=ORDER_STATE_PENDING,
             payment_schedule=[
                 {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
                     "amount": "200.00",
                     "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
                     "amount": "300.00",
                     "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
                     "amount": "300.00",
                     "due_date": "2024-03-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
                     "amount": "199.99",
                     "due_date": "2024-04-17",
                     "state": PAYMENT_STATE_PENDING,
@@ -128,21 +140,25 @@ class PaymentScheduleTasksTestCase(TestCase, BaseLogMixinTestCase):
             order.payment_schedule,
             [
                 {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
                     "amount": "200.00",
                     "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_REFUSED,
                 },
                 {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
                     "amount": "300.00",
                     "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
                     "amount": "300.00",
                     "due_date": "2024-03-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
                     "amount": "199.99",
                     "due_date": "2024-04-17",
                     "state": PAYMENT_STATE_PENDING,
