@@ -591,6 +591,33 @@ class Order(BaseModel):
         except ObjectDoesNotExist:
             return None
 
+    @property
+    def is_free(self):
+        """
+        Return True if the order is free.
+        """
+        return not self.total
+
+    @property
+    def has_payment_method(self):
+        """
+        Return True if the order has a payment method.
+        """
+        return self.owner.credit_cards.filter(
+            is_main=True,
+            initial_issuer_transaction_identifier__isnull=False,
+        ).exists()
+
+    @property
+    def has_contract(self):
+        """
+        Return True if the order has a contract.
+        """
+        try:
+            return self.contract is not None  # pylint: disable=no-member
+        except Contract.DoesNotExist:
+            return False
+
     # pylint: disable=too-many-branches
     # ruff: noqa: PLR0912
     def clean(self):

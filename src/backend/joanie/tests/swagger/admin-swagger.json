@@ -2883,6 +2883,7 @@
                         "schema": {
                             "type": "string",
                             "enum": [
+                                "assigned",
                                 "canceled",
                                 "completed",
                                 "draft",
@@ -2891,10 +2892,13 @@
                                 "pending",
                                 "pending_payment",
                                 "submitted",
+                                "to_save_payment_method",
+                                "to_sign",
+                                "to_sign_and_to_save_payment_method",
                                 "validated"
                             ]
                         },
-                        "description": "* `draft` - Draft\n* `submitted` - Submitted\n* `pending` - Pending\n* `canceled` - Canceled\n* `validated` - Validated\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed"
+                        "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `to_sign_and_to_save_payment_method` - To sign and to save payment method\n* `submitted` - Submitted\n* `pending` - Pending\n* `canceled` - Canceled\n* `validated` - Validated\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed"
                     }
                 ],
                 "tags": [
@@ -6913,6 +6917,10 @@
             "OrderStateEnum": {
                 "enum": [
                     "draft",
+                    "assigned",
+                    "to_save_payment_method",
+                    "to_sign",
+                    "to_sign_and_to_save_payment_method",
                     "submitted",
                     "pending",
                     "canceled",
@@ -6923,7 +6931,7 @@
                     "completed"
                 ],
                 "type": "string",
-                "description": "* `draft` - Draft\n* `submitted` - Submitted\n* `pending` - Pending\n* `canceled` - Canceled\n* `validated` - Validated\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed"
+                "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `to_sign_and_to_save_payment_method` - To sign and to save payment method\n* `submitted` - Submitted\n* `pending` - Pending\n* `canceled` - Canceled\n* `validated` - Validated\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed"
             },
             "OrganizationAccessRoleChoiceEnum": {
                 "enum": [

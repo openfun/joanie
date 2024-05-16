@@ -18,7 +18,11 @@ from joanie.core import enums, exceptions, factories
 from joanie.core.models import CourseState, Enrollment
 from joanie.lms_handler import LMSHandler
 from joanie.lms_handler.backends.dummy import DummyLMSBackend
-from joanie.payment.factories import BillingAddressDictFactory, InvoiceFactory
+from joanie.payment.factories import (
+    BillingAddressDictFactory,
+    CreditCardFactory,
+    InvoiceFactory,
+)
 from joanie.tests.base import BaseLogMixinTestCase
 
 
@@ -927,3 +931,133 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         order.flow.failed_payment()
 
         self.assertEqual(order.state, enums.ORDER_STATE_FAILED_PAYMENT)
+
+    def test_flows_order_update_not_free_no_card_with_contract(self):
+        """
+        Test that the order state is set to `to_sign_and_to_save_payment_method`
+        when the order is not free, owner has no card and the order has a contract.
+        """
+        order = factories.OrderFactory(
+            state=enums.ORDER_STATE_ASSIGNED,
+        )
+        factories.ContractFactory(
+            order=order,
+            definition=factories.ContractDefinitionFactory(),
+        )
+
+        order.flow.update()
+
+        order.refresh_from_db()
+        self.assertEqual(
+            order.state, enums.ORDER_STATE_TO_SIGN_AND_TO_SAVE_PAYMENT_METHOD
+        )
+
+    def test_flows_order_update_not_free_no_card_no_contract(self):
+        """
+        Test that the order state is set to `to_save_payment_method` when the order is not free,
+        owner has no card and the order has no contract.
+        """
+        order = factories.OrderFactory(
+            state=enums.ORDER_STATE_ASSIGNED,
+        )
+
+        order.flow.update()
+
+        order.refresh_from_db()
+        self.assertEqual(order.state, enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD)
+
+        order = factories.OrderFactory(
+            state=enums.ORDER_STATE_TO_SIGN_AND_TO_SAVE_PAYMENT_METHOD,
+        )
+
+        order.flow.update()
+
+        order.refresh_from_db()
+        self.assertEqual(order.state, enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD)
+
+    def test_flows_order_update_not_free_with_card_no_contract(self):
+        """
+        Test that the order state is set to `pending` when the order is not free,
+        owner has a card and the order has no contract.
+        """
+        credit_card = CreditCardFactory(
+            initial_issuer_transaction_identifier="4575676657929351"
+        )
+        order = factories.OrderFactory(
+            state=enums.ORDER_STATE_ASSIGNED, owner=credit_card.owner
+        )
+
+        order.flow.update()
+
+        order.refresh_from_db()
+        self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
+
+    def test_flows_order_update_not_free_with_card_with_contract(self):
+        """
+        Test that the order state is set to `to_sign` when the order is not free,
+        owner has a card and the order has a contract.
+        """
+        credit_card = CreditCardFactory(
+            initial_issuer_transaction_identifier="4575676657929351"
+        )
+        order = factories.OrderFactory(
+            state=enums.ORDER_STATE_ASSIGNED, owner=credit_card.owner
+        )
+        factories.ContractFactory(
+            order=order,
+            definition=factories.ContractDefinitionFactory(),
+        )
+
+        order.flow.update()
+
+        order.refresh_from_db()
+        self.assertEqual(order.state, enums.ORDER_STATE_TO_SIGN)
+
+        credit_card = CreditCardFactory(
+            initial_issuer_transaction_identifier="4575676657929351"
+        )
+        order = factories.OrderFactory(
+            state=enums.ORDER_STATE_TO_SIGN_AND_TO_SAVE_PAYMENT_METHOD,
+            owner=credit_card.owner,
+        )
+        factories.ContractFactory(
+            order=order,
+            definition=factories.ContractDefinitionFactory(),
+        )
+
+        order.flow.update()
+
+        order.refresh_from_db()
+        self.assertEqual(order.state, enums.ORDER_STATE_TO_SIGN)
+
+    def test_flows_order_update_free_no_contract(self):
+        """
+        Test that the order state is set to `completed` when the order is free and has no contract.
+        """
+        order = factories.OrderFactory(
+            state=enums.ORDER_STATE_ASSIGNED,
+            product=factories.ProductFactory(price="0.00"),
+        )
+
+        order.flow.update()
+
+        order.refresh_from_db()
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
+
+    def test_flows_order_update_free_with_contract(self):
+        """
+        Test that the order state is set to `to_sign` when the order is free and has a contract.
+        """
+        order = factories.OrderFactory(
+            state=enums.ORDER_STATE_ASSIGNED,
+            product=factories.ProductFactory(price="0.00"),
+        )
+        factories.ContractFactory(
+            order=order,
+            definition=factories.ContractDefinitionFactory(),
+        )
+
+        order.flow.update()
+
+        order.refresh_from_db()
+        self.assertEqual(order.state, enums.ORDER_STATE_TO_SIGN)
