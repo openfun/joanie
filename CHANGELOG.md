@@ -16,6 +16,7 @@ and this project adheres to
 
 ### Added
 
+- Allow to pay failed installment on a payment schedule of an order
 - BO : Highlight graded target courses in product detail view
 - Add `payment_schedule` property to `OrderSerializer`
 - Allow to filter enrollment through `is_active` field on the client API

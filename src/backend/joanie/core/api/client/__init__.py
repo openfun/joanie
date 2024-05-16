@@ -34,7 +34,8 @@ from joanie.core.utils import contract_definition, issuers
 from joanie.core.utils.payment_schedule import generate as generate_payment_schedule
 from joanie.core.utils.signature import check_signature
 from joanie.payment import enums as payment_enums
-from joanie.payment.models import Invoice
+from joanie.payment import get_payment_backend
+from joanie.payment.models import CreditCard, Invoice
 
 UUID_REGEX = (
     "[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}"
@@ -540,6 +541,62 @@ class OrderViewSet(
             )
 
         return Response(status=HTTPStatus.NO_CONTENT)
+
+    @extend_schema(
+        request=None,
+        responses={
+            (200, "application/json"): OpenApiTypes.OBJECT,
+            404: serializers.ErrorResponseSerializer,
+            422: serializers.ErrorResponseSerializer,
+        },
+    )
+    @action(detail=True, methods=["POST"])
+    def submit_installment_payment(self, request, pk=None):  # pylint: disable=unused-argument
+        """
+        Submit a payment for a failed installment that was scheduled for a given order.
+        """
+        order = self.get_object()
+        if order.state != enums.ORDER_STATE_FAILED_PAYMENT:
+            return Response(
+                {"detail": "The order is not in failed payment state."},
+                status=HTTPStatus.UNPROCESSABLE_ENTITY,
+            )
+
+        installment = order.get_first_installment_refused()
+        if not installment:
+            return Response(
+                {"detail": "No installment found with a refused payment state."},
+                status=HTTPStatus.BAD_REQUEST,
+            )
+
+        payment_backend = get_payment_backend()
+        credit_card_id = request.data.get("credit_card_id")
+        if not credit_card_id:
+            payment_infos = payment_backend.create_payment(
+                order=order,
+                billing_address=order.main_invoice.recipient_address,
+                installment=installment,
+            )
+            return Response(payment_infos, status=HTTPStatus.OK)
+
+        try:
+            credit_card = CreditCard.objects.get_card_for_owner(
+                pk=credit_card_id, owner_id=order.owner.id
+            )
+        except CreditCard.DoesNotExist:
+            return Response(
+                {"detail": "Credit card does not exist."},
+                status=HTTPStatus.NOT_FOUND,
+            )
+
+        payment_infos = payment_backend.create_one_click_payment(
+            order=order,
+            billing_address=order.main_invoice.recipient_address,
+            credit_card_token=credit_card.token,
+            installment=installment,
+        )
+
+        return Response(payment_infos, status=HTTPStatus.OK)
 
 
 class AddressViewSet(

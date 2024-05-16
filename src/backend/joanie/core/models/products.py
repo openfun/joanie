@@ -1088,6 +1088,19 @@ class Order(BaseModel):
         else:
             self.flow.failed_payment()
 
+    def get_first_installment_refused(self):
+        """
+        Retrieve the first installment that is refused in payment schedule of an order.
+        """
+        return next(
+            (
+                installment
+                for installment in self.payment_schedule
+                if installment["state"] == enums.PAYMENT_STATE_REFUSED
+            ),
+            None,
+        )
+
     def withdraw(self):
         """
         Withdraw the order.
