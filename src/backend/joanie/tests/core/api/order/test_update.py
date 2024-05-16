@@ -69,6 +69,7 @@ class OrderUpdateApiTest(BaseAPITestCase):
                 "target_enrollments",
                 "total",
                 "total_currency",
+                "payment_schedule",
             ],
         )
         headers = (

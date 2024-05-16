@@ -82,6 +82,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "id": str(order.id),
                         "main_invoice_reference": None,
                         "order_group_id": None,
+                        "payment_schedule": None,
                         "organization": {
                             "id": str(order.organization.id),
                             "code": order.organization.code,
@@ -184,6 +185,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "product_id": str(other_order.product.id),
                         "state": other_order.state,
                         "target_courses": [],
+                        "payment_schedule": None,
                     }
                 ],
             },
@@ -270,6 +272,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "id": str(order.id),
                         "certificate_id": None,
                         "contract": None,
+                        "payment_schedule": None,
                         "course": {
                             "code": order.course.code,
                             "id": str(order.course.id),
@@ -392,6 +395,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "created_on": order.created_on.strftime(
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
+                        "payment_schedule": None,
                         "enrollment": {
                             "course_run": {
                                 "course": {
@@ -559,6 +563,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "created_on": order.created_on.strftime(
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
+                        "payment_schedule": None,
                         "enrollment": None,
                         "target_enrollments": [],
                         "main_invoice_reference": None,
@@ -648,6 +653,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "certificate_id": None,
                         "contract": None,
                         "course": None,
+                        "payment_schedule": None,
                         "created_on": order.created_on.strftime(
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
@@ -904,6 +910,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "id": str(order.id),
                         "certificate_id": None,
                         "contract": None,
+                        "payment_schedule": None,
                         "course": {
                             "code": order.course.code,
                             "id": str(order.course.id),
@@ -990,6 +997,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "id": str(order.id),
                         "certificate_id": None,
                         "contract": None,
+                        "payment_schedule": None,
                         "course": {
                             "code": order.course.code,
                             "id": str(order.course.id),
@@ -1080,6 +1088,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "id": str(order.id),
                         "certificate_id": None,
                         "contract": None,
+                        "payment_schedule": None,
                         "course": {
                             "code": order.course.code,
                             "id": str(order.course.id),

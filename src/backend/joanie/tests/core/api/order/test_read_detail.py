@@ -1,13 +1,18 @@
 """Tests for the Order read detail API."""
 
+from datetime import datetime
 from http import HTTPStatus
 from unittest import mock
+from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.core.cache import cache
 
 from joanie.core import factories
+from joanie.core.enums import ORDER_STATE_VALIDATED
+from joanie.core.models import CourseState
 from joanie.core.serializers import fields
+from joanie.tests import format_date
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -42,14 +47,32 @@ class OrderReadApiTest(BaseAPITestCase):
         """Authenticated users should be allowed to retrieve an order they own."""
         owner = factories.UserFactory()
         *target_courses, _other_course = factories.CourseFactory.create_batch(3)
-        product = factories.ProductFactory(target_courses=target_courses)
-        order = factories.OrderFactory(
-            product=product, owner=owner, contract=factories.ContractFactory()
+        factories.CourseRunFactory(
+            course=target_courses[0], state=CourseState.ONGOING_CLOSED
         )
+        factories.CourseRunFactory(
+            course=target_courses[1], state=CourseState.ONGOING_OPEN
+        )
+        product = factories.ProductFactory(target_courses=target_courses, price=1000)
+        order = factories.OrderFactory(
+            product=product,
+            owner=owner,
+            contract=factories.ContractFactory(
+                submitted_for_signature_on=datetime(
+                    2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")
+                ),
+                student_signed_on=datetime(2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")),
+            ),
+            state=ORDER_STATE_VALIDATED,
+        )
+        # Generate payment schedule
+        # breakpoint()
+        order.generate_schedule()
+
         organization_address = order.organization.addresses.filter(is_main=True).first()
         token = self.generate_token_from_user(owner)
 
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(9):
             response = self.client.get(
                 f"/api/v1.0/orders/{order.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -68,10 +91,20 @@ class OrderReadApiTest(BaseAPITestCase):
                     "title": order.course.title,
                     "cover": "_this_field_is_mocked",
                 },
+                "payment_schedule": [
+                    {
+                        "amount": float(installment["amount"]),
+                        "due_date": format_date(installment["due_date"]),
+                        "state": installment["state"],
+                    }
+                    for installment in order.payment_schedule
+                ]
+                if order.payment_schedule
+                else None,
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "enrollment": None,
                 "state": order.state,
-                "main_invoice_reference": None,
+                "main_invoice_reference": order.main_invoice.reference,
                 "order_group_id": None,
                 "organization": {
                     "id": str(order.organization.id),
@@ -107,31 +140,28 @@ class OrderReadApiTest(BaseAPITestCase):
                         "code": target_course.code,
                         "course_runs": [
                             {
-                                "id": course_run.id,
+                                "id": str(course_run.id),
                                 "title": course_run.title,
                                 "resource_link": course_run.resource_link,
                                 "state": {
                                     "priority": course_run.state["priority"],
-                                    "datetime": course_run.state["datetime"]
-                                    .isoformat()
-                                    .replace("+00:00", "Z"),
+                                    "datetime": format_date(
+                                        course_run.state["datetime"]
+                                    ),
                                     "call_to_action": course_run.state[
                                         "call_to_action"
                                     ],
                                     "text": course_run.state["text"],
                                 },
-                                "start": course_run.start.isoformat().replace(
-                                    "+00:00", "Z"
+                                "start": format_date(course_run.start),
+                                "end": format_date(course_run.end),
+                                "enrollment_start": format_date(
+                                    course_run.enrollment_start
                                 ),
-                                "end": course_run.end.isoformat().replace(
-                                    "+00:00", "Z"
+                                "enrollment_end": format_date(
+                                    course_run.enrollment_end
                                 ),
-                                "enrollment_start": course_run.enrollment_start.isoformat().replace(  # pylint: disable=line-too-long
-                                    "+00:00", "Z"
-                                ),
-                                "enrollment_end": course_run.enrollment_end.isoformat().replace(  # pylint: disable=line-too-long
-                                    "+00:00", "Z"
-                                ),
+                                "languages": course_run.languages,
                             }
                             for course_run in target_course.course_runs.all().order_by(
                                 "start"
