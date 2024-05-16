@@ -2,7 +2,9 @@
 Test suite for payment schedule util
 """
 
+import uuid
 from datetime import date, datetime
+from unittest import mock
 from zoneinfo import ZoneInfo
 
 from django.conf import settings
@@ -12,14 +14,10 @@ from django.test.utils import override_settings
 from stockholm import Money
 
 from joanie.core.enums import PAYMENT_STATE_PENDING
-from joanie.core.utils.payment_schedule import (
-    _calculate_due_dates,
-    _calculate_installments,
-    _get_installments_percentages,
-    _withdrawal_limit_date,
-    generate,
-)
+from joanie.core.utils import payment_schedule
 from joanie.tests.base import BaseLogMixinTestCase
+
+# pylint: disable=protected-access
 
 
 @override_settings(
@@ -44,7 +42,7 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
         start_date = date(2024, 1, 1)
 
         self.assertEqual(
-            _withdrawal_limit_date(start_date),
+            payment_schedule._withdrawal_limit_date(start_date),
             date(2024, 1, 17),
         )
 
@@ -55,7 +53,7 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
         start_date = date(2024, 2, 1)
 
         self.assertEqual(
-            _withdrawal_limit_date(start_date),
+            payment_schedule._withdrawal_limit_date(start_date),
             date(2024, 2, 19),
         )
 
@@ -66,7 +64,7 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
         start_date = date(2023, 12, 14)
 
         self.assertEqual(
-            _withdrawal_limit_date(start_date),
+            payment_schedule._withdrawal_limit_date(start_date),
             date(2024, 1, 2),
         )
 
@@ -74,15 +72,25 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
         """
         Check that the correct payment limits are returned for different amounts
         """
-        self.assertEqual(_get_installments_percentages(3), (30, 70))
-        self.assertEqual(_get_installments_percentages(5), (30, 70))
+        self.assertEqual(payment_schedule._get_installments_percentages(3), (30, 70))
+        self.assertEqual(payment_schedule._get_installments_percentages(5), (30, 70))
 
-        self.assertEqual(_get_installments_percentages(7), (30, 45, 45))
-        self.assertEqual(_get_installments_percentages(10), (30, 45, 45))
+        self.assertEqual(
+            payment_schedule._get_installments_percentages(7), (30, 45, 45)
+        )
+        self.assertEqual(
+            payment_schedule._get_installments_percentages(10), (30, 45, 45)
+        )
 
-        self.assertEqual(_get_installments_percentages(80), (20, 30, 30, 20))
-        self.assertEqual(_get_installments_percentages(100), (20, 30, 30, 20))
-        self.assertEqual(_get_installments_percentages(150), (20, 30, 30, 20))
+        self.assertEqual(
+            payment_schedule._get_installments_percentages(80), (20, 30, 30, 20)
+        )
+        self.assertEqual(
+            payment_schedule._get_installments_percentages(100), (20, 30, 30, 20)
+        )
+        self.assertEqual(
+            payment_schedule._get_installments_percentages(150), (20, 30, 30, 20)
+        )
 
     def test_utils_payment_schedule_calculate_due_dates(self):
         """
@@ -92,7 +100,9 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
         end_date = date(2024, 3, 20)
         percentages_count = 2
 
-        due_dates = _calculate_due_dates(start_date, end_date, percentages_count)
+        due_dates = payment_schedule._calculate_due_dates(
+            start_date, end_date, percentages_count
+        )
 
         self.assertEqual(
             due_dates,
@@ -112,7 +122,9 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
         end_date = date(2024, 1, 20)
         percentages_count = 3
 
-        due_dates = _calculate_due_dates(start_date, end_date, percentages_count)
+        due_dates = payment_schedule._calculate_due_dates(
+            start_date, end_date, percentages_count
+        )
 
         self.assertEqual(due_dates, [start_date, end_date])
 
@@ -126,17 +138,25 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
             date(2024, 2, 1),
         ]
         percentages = (30, 70)
-        installments = _calculate_installments(total, due_dates, percentages)
+        first_uuid = uuid.UUID("1932fbc5-d971-48aa-8fee-6d637c3154a5")
+        second_uuid = uuid.UUID("a1cf9f39-594f-4528-a657-a0b9018b90ad")
+        with mock.patch.object(payment_schedule.uuid, "uuid4") as uuid4_mock:
+            uuid4_mock.side_effect = [first_uuid, second_uuid]
+            installments = payment_schedule._calculate_installments(
+                total, due_dates, percentages
+            )
 
         self.assertEqual(
             installments,
             [
                 {
+                    "id": first_uuid,
                     "amount": Money(0.90, settings.DEFAULT_CURRENCY),
                     "due_date": date(2024, 1, 1),
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": second_uuid,
                     "amount": Money(2.10, settings.DEFAULT_CURRENCY),
                     "due_date": date(2024, 2, 1),
                     "state": PAYMENT_STATE_PENDING,
@@ -152,17 +172,23 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
         start_date = datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC"))
         end_date = datetime(2024, 5, 1, 14, tzinfo=ZoneInfo("UTC"))
 
-        schedule = generate(total, start_date, end_date)
+        first_uuid = uuid.UUID("1932fbc5-d971-48aa-8fee-6d637c3154a5")
+        second_uuid = uuid.UUID("a1cf9f39-594f-4528-a657-a0b9018b90ad")
+        with mock.patch.object(payment_schedule.uuid, "uuid4") as uuid4_mock:
+            uuid4_mock.side_effect = [first_uuid, second_uuid]
+            schedule = payment_schedule.generate(total, start_date, end_date)
 
         self.assertEqual(
             schedule,
             [
                 {
+                    "id": first_uuid,
                     "amount": Money(0.90, settings.DEFAULT_CURRENCY),
                     "due_date": date(2024, 1, 17),
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": second_uuid,
                     "amount": Money(2.10, settings.DEFAULT_CURRENCY),
                     "due_date": date(2024, 2, 17),
                     "state": PAYMENT_STATE_PENDING,
@@ -178,22 +204,30 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
         start_date = datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC"))
         end_date = datetime(2024, 5, 1, 14, tzinfo=ZoneInfo("UTC"))
 
-        schedule = generate(total, start_date, end_date)
+        first_uuid = uuid.UUID("1932fbc5-d971-48aa-8fee-6d637c3154a5")
+        second_uuid = uuid.UUID("a1cf9f39-594f-4528-a657-a0b9018b90ad")
+        third_uuid = uuid.UUID("d727a139-be3b-4b7d-bbae-dacbe90f1c37")
+        with mock.patch.object(payment_schedule.uuid, "uuid4") as uuid4_mock:
+            uuid4_mock.side_effect = [first_uuid, second_uuid, third_uuid]
+            schedule = payment_schedule.generate(total, start_date, end_date)
 
         self.assertEqual(
             schedule,
             [
                 {
+                    "id": first_uuid,
                     "amount": Money(3.00, settings.DEFAULT_CURRENCY),
                     "due_date": date(2024, 1, 17),
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": second_uuid,
                     "amount": Money(4.50, settings.DEFAULT_CURRENCY),
                     "due_date": date(2024, 2, 17),
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": third_uuid,
                     "amount": Money(2.50, settings.DEFAULT_CURRENCY),
                     "due_date": date(2024, 3, 17),
                     "state": PAYMENT_STATE_PENDING,
@@ -209,27 +243,37 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
         start_date = datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC"))
         end_date = datetime(2024, 5, 1, 14, tzinfo=ZoneInfo("UTC"))
 
-        schedule = generate(total, start_date, end_date)
+        first_uuid = uuid.UUID("1932fbc5-d971-48aa-8fee-6d637c3154a5")
+        second_uuid = uuid.UUID("a1cf9f39-594f-4528-a657-a0b9018b90ad")
+        third_uuid = uuid.UUID("d727a139-be3b-4b7d-bbae-dacbe90f1c37")
+        fourth_uuid = uuid.UUID("8d327896-f397-44f4-953e-996e43ac4040")
+        with mock.patch.object(payment_schedule.uuid, "uuid4") as uuid4_mock:
+            uuid4_mock.side_effect = [first_uuid, second_uuid, third_uuid, fourth_uuid]
+            schedule = payment_schedule.generate(total, start_date, end_date)
 
         self.assertEqual(
             schedule,
             [
                 {
+                    "id": first_uuid,
                     "amount": Money(20.00, settings.DEFAULT_CURRENCY),
                     "due_date": date(2024, 1, 17),
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": second_uuid,
                     "amount": Money(30.00, settings.DEFAULT_CURRENCY),
                     "due_date": date(2024, 2, 17),
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": third_uuid,
                     "amount": Money(30.00, settings.DEFAULT_CURRENCY),
                     "due_date": date(2024, 3, 17),
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": fourth_uuid,
                     "amount": Money(20.00, settings.DEFAULT_CURRENCY),
                     "due_date": date(2024, 4, 17),
                     "state": PAYMENT_STATE_PENDING,
@@ -246,17 +290,23 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
         start_date = datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC"))
         end_date = datetime(2024, 1, 20, 8, tzinfo=ZoneInfo("UTC"))
 
-        schedule = generate(total, start_date, end_date)
+        first_uuid = uuid.UUID("1932fbc5-d971-48aa-8fee-6d637c3154a5")
+        second_uuid = uuid.UUID("a1cf9f39-594f-4528-a657-a0b9018b90ad")
+        with mock.patch.object(payment_schedule.uuid, "uuid4") as uuid4_mock:
+            uuid4_mock.side_effect = [first_uuid, second_uuid]
+            schedule = payment_schedule.generate(total, start_date, end_date)
 
         self.assertEqual(
             schedule,
             [
                 {
+                    "id": first_uuid,
                     "amount": Money(20.00, settings.DEFAULT_CURRENCY),
                     "due_date": date(2024, 1, 17),
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": second_uuid,
                     "amount": Money(80.00, settings.DEFAULT_CURRENCY),
                     "due_date": end_date.date(),
                     "state": PAYMENT_STATE_PENDING,
@@ -272,27 +322,37 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
         start_date = datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC"))
         end_date = datetime(2024, 5, 1, 14, tzinfo=ZoneInfo("UTC"))
 
-        schedule = generate(total, start_date, end_date)
+        first_uuid = uuid.UUID("1932fbc5-d971-48aa-8fee-6d637c3154a5")
+        second_uuid = uuid.UUID("a1cf9f39-594f-4528-a657-a0b9018b90ad")
+        third_uuid = uuid.UUID("d727a139-be3b-4b7d-bbae-dacbe90f1c37")
+        fourth_uuid = uuid.UUID("8d327896-f397-44f4-953e-996e43ac4040")
+        with mock.patch.object(payment_schedule.uuid, "uuid4") as uuid4_mock:
+            uuid4_mock.side_effect = [first_uuid, second_uuid, third_uuid, fourth_uuid]
+            schedule = payment_schedule.generate(total, start_date, end_date)
 
         self.assertEqual(
             schedule,
             [
                 {
+                    "id": first_uuid,
                     "amount": Money(200.00, settings.DEFAULT_CURRENCY),
                     "due_date": date(2024, 1, 17),
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": second_uuid,
                     "amount": Money(300.0, settings.DEFAULT_CURRENCY),
                     "due_date": date(2024, 2, 17),
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": third_uuid,
                     "amount": Money(300.00, settings.DEFAULT_CURRENCY),
                     "due_date": date(2024, 3, 17),
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": fourth_uuid,
                     "amount": Money(199.99, settings.DEFAULT_CURRENCY),
                     "due_date": date(2024, 4, 17),
                     "state": PAYMENT_STATE_PENDING,

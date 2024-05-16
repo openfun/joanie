@@ -3,6 +3,7 @@ Payment schedule utility functions.
 """
 
 import logging
+import uuid
 from datetime import timedelta
 
 from django.conf import settings
@@ -85,6 +86,7 @@ def _calculate_installments(total, due_dates, percentages):
             amount = total_amount - amount_sum
         installments.append(
             {
+                "id": uuid.uuid4(),
                 "due_date": due_date,
                 "amount": amount,
                 "state": enums.PAYMENT_STATE_PENDING,
