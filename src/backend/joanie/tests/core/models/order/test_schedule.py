@@ -1,4 +1,4 @@
-# pylint: disable=protected-access
+# pylint: disable=protected-access, too-many-lines
 """
 Test suite for order payment schedule models
 """
@@ -995,3 +995,91 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
                 "Cannot withdraw order after the first installment due date",
             ):
                 order.withdraw()
+
+    def test_models_order_get_first_installment_refused_returns_installment_object(
+        self,
+    ):
+        """
+        The method `get_first_installment_refused` should return the first installment found
+        that is in state `PAYMENT_STATE_REFUSED` in the payment schedule of an order.
+        """
+        order = factories.OrderFactory(
+            state=ORDER_STATE_FAILED_PAYMENT,
+            payment_schedule=[
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+                {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
+                    "amount": "300.00",
+                    "due_date": "2024-02-17",
+                    "state": PAYMENT_STATE_REFUSED,
+                },
+                {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
+                    "amount": "300.00",
+                    "due_date": "2024-03-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
+                    "amount": "199.99",
+                    "due_date": "2024-04-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        installment = order.get_first_installment_refused()
+
+        self.assertDictEqual(
+            installment,
+            {
+                "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
+                "amount": "300.00",
+                "due_date": "2024-02-17",
+                "state": PAYMENT_STATE_REFUSED,
+            },
+        )
+
+    def test_models_order_get_first_installment_refused_returns_none(self):
+        """
+        The method `get_first_installment_refused` should return `None` if there is no installment
+        in payment schedule found for the order with the state `PAYMENT_STATE_REFUSED`.
+        """
+        order = factories.OrderFactory(
+            state=ORDER_STATE_PENDING_PAYMENT,
+            payment_schedule=[
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+                {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
+                    "amount": "300.00",
+                    "due_date": "2024-02-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+                {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
+                    "amount": "300.00",
+                    "due_date": "2024-03-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+                {
+                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
+                    "amount": "199.99",
+                    "due_date": "2024-04-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        installment = order.get_first_installment_refused()
+
+        self.assertIsNone(installment)

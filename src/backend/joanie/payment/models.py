@@ -344,12 +344,24 @@ class Transaction(BaseModel):
         super().save(*args, **kwargs)
 
 
+class CreditCardManager(models.Manager):
+    """Custom manager for `CreditCard` model"""
+
+    def get_card_for_owner(self, pk, owner_id):
+        """
+        Retrieve a credit card for a given owner. If no such card exists, a
+        CreditCard.DoesNotExist is raised.
+        """
+        return self.get(pk=pk, owner_id=owner_id)
+
+
 class CreditCard(BaseModel):
     """
     Credit card model stores credit card information in order to allow
     one click payment.
     """
 
+    objects = CreditCardManager()
     token = models.CharField(
         max_length=50,
         unique=True,
