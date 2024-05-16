@@ -19,7 +19,11 @@ from django.utils import timezone as django_timezone
 from joanie.core import enums, factories
 from joanie.core.models import Contract, CourseState
 from joanie.core.utils import contract_definition
-from joanie.payment.factories import BillingAddressDictFactory, InvoiceFactory
+from joanie.payment.factories import (
+    BillingAddressDictFactory,
+    CreditCardFactory,
+    InvoiceFactory,
+)
 from joanie.tests.base import BaseLogMixinTestCase
 
 
@@ -1007,3 +1011,82 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         self.assertIsInstance(contract.context["course"]["price"], str)
         self.assertEqual(order.total, Decimal("1202.99"))
         self.assertEqual(contract.context["course"]["price"], "1202.99")
+
+    def test_models_order_is_free(self):
+        """
+        Check that the `is_free` property returns True if the order total is 0.
+        """
+        order = factories.OrderFactory(product__price=0)
+        self.assertTrue(order.is_free)
+
+    def test_models_order_is_free_product_price(self):
+        """
+        Check that the `is_free` property returns False if the order total is not 0.
+        """
+        order = factories.OrderFactory(product__price=1)
+        self.assertFalse(order.is_free)
+
+    def test_models_order_has_payment_method(self):
+        """
+        Check that the `has_payment_method` property returns True if the order owner credit
+        card has an initial issuer transaction identifier.
+        """
+        credit_card = CreditCardFactory(
+            initial_issuer_transaction_identifier="4575676657929351"
+        )
+        order = factories.OrderFactory(owner=credit_card.owner)
+        self.assertTrue(order.has_payment_method)
+
+    def test_models_order_has_payment_method_no_transaction_identifier(self):
+        """
+        Check that the `has_payment_method` property returns False if the order owner credit
+        card has no initial issuer transaction identifier.
+        """
+        credit_card = CreditCardFactory(initial_issuer_transaction_identifier=None)
+        order = factories.OrderFactory(owner=credit_card.owner)
+        self.assertFalse(order.has_payment_method)
+
+    def test_models_order_has_unsigned_contract(self):
+        """
+        Check that the `has_unsigned_contract` property returns True
+        if the order's contract is not signed by student.
+        """
+        order = factories.OrderFactory()
+        factories.ContractFactory(
+            order=order,
+            definition=factories.ContractDefinitionFactory(),
+        )
+        self.assertTrue(order.has_unsigned_contract)
+
+    def test_models_order_has_unsigned_contract_no_contract(self):
+        """
+        Check that the `has_unsigned_contract` property returns False if the order has no contract.
+        """
+        order = factories.OrderFactory()
+        self.assertFalse(order.has_unsigned_contract)
+
+    def test_models_order_has_unsigned_contract_no_signature(self):
+        """
+        Check that the `has_unsigned_contract` property returns True
+        if the order has an unsigned contract.
+        """
+        order = factories.OrderFactory()
+        factories.ContractFactory(
+            order=order,
+            definition=factories.ContractDefinitionFactory(),
+        )
+        self.assertTrue(order.has_unsigned_contract)
+
+    def test_models_order_has_unsigned_contract_signature(self):
+        """
+        Check that the `has_unsigned_contract` property returns False
+        if the order has a signed contract.
+        """
+        order = factories.OrderFactory()
+        factories.ContractFactory(
+            order=order,
+            definition=factories.ContractDefinitionFactory(),
+            student_signed_on=datetime(2023, 9, 20, 8, 0, tzinfo=timezone.utc),
+            submitted_for_signature_on=datetime(2023, 9, 20, 8, 0, tzinfo=timezone.utc),
+        )
+        self.assertFalse(order.has_unsigned_contract)
