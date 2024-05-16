@@ -20,6 +20,8 @@ import {
   ContractDefinition,
   DTOContractDefinition,
 } from "@/services/api/models/ContractDefinition";
+import { ProductTargetCourseRelationFactory } from "@/services/api/models/ProductTargetCourseRelation";
+import { delay } from "@/components/testing/utils";
 
 const searchPlaceholder = "Search by title";
 
@@ -319,6 +321,65 @@ test.describe("Product form", () => {
       targetCourseLocator.getByText("All selected course_runs."),
     ).toBeVisible();
   });
+
+  test("Check is graded target course", async ({ page }) => {
+    const product = store.products[0];
+    product.target_courses = ProductTargetCourseRelationFactory(2);
+    product.target_courses[0].is_graded = false;
+    await mockPlaywrightCrud<Product, DTOProduct>({
+      data: store.products,
+      routeUrl: "http://localhost:8071/api/v1.0/admin/products/",
+      page,
+      createCallback: store.postUpdate,
+    });
+    await page.goto(PATH_ADMIN.products.list);
+    await expect(page.getByRole("heading", { name: "Products" })).toBeVisible();
+
+    await page.getByRole("link", { name: product.title }).click();
+    await page.getByRole("button", { name: "Next" }).click();
+    await expect(
+      page
+        .locator("#product-target-courses-form")
+        .getByRole("alert")
+        .getByText(
+          "In this part, you can choose the courses contained in the product, as well as all the associated course sessions",
+        ),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Product target courses" }),
+    ).toBeVisible();
+
+    await expect(
+      page
+        .getByTestId(
+          `item-product-target-course-${product.target_courses[0].course.id}`,
+        )
+        .getByTestId("SchoolIcon"),
+    ).not.toBeVisible();
+
+    await expect(
+      page
+        .getByTestId(
+          `item-product-target-course-${product.target_courses[1].course.id}`,
+        )
+        .getByTestId("SchoolIcon"),
+    ).toBeVisible();
+
+    await page
+      .getByTestId(
+        `item-product-target-course-${product.target_courses[1].course.id}`,
+      )
+      .getByTestId("SchoolIcon")
+      .hover();
+
+    await delay(210);
+    await expect(
+      page.getByRole("tooltip", {
+        name: "Taken into account for certification",
+      }),
+    ).toBeVisible();
+  });
+
   test("Check all course product relations", async ({ page }) => {
     const product = store.products[0];
     product.target_courses = [];

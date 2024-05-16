@@ -1,5 +1,7 @@
 import * as React from "react";
-import { useIntl } from "react-intl";
+import { defineMessages, useIntl } from "react-intl";
+import SchoolIcon from "@mui/icons-material/School";
+import Tooltip from "@mui/material/Tooltip";
 import {
   ProductTargetCourseRelation,
   ProductTargetCourseRelationOptionalId,
@@ -9,6 +11,14 @@ import { DndDefaultRowProps } from "@/components/presentational/dnd/DndDefaultRo
 import { DefaultRow } from "@/components/presentational/list/DefaultRow";
 import { CustomLink } from "@/components/presentational/link/CustomLink";
 import { PATH_ADMIN } from "@/utils/routes/path";
+
+const messages = defineMessages({
+  isGradedTooltip: {
+    id: "components.templates.products.form.sections.targetCourses.ProductFormTargetCourseRow.isGradedTooltip",
+    description: "Label for the is graded tooltip",
+    defaultMessage: "Taken into account for certification",
+  },
+});
 
 type Props = Omit<DndDefaultRowProps, "mainTitle"> & {
   item: ProductTargetCourseRelation | ProductTargetCourseRelationOptionalId;
@@ -36,6 +46,13 @@ export function ProductFormTargetCourseRow({ item, ...props }: Props) {
         <CustomLink href={PATH_ADMIN.courses.edit(item.course.id)}>
           {item.course.title}
         </CustomLink>
+      }
+      permanentRightActions={
+        item.is_graded ? (
+          <Tooltip title={intl.formatMessage(messages.isGradedTooltip)}>
+            <SchoolIcon />
+          </Tooltip>
+        ) : undefined
       }
       subTitle={intl.formatMessage(
         productFormMessages.targetCourseRowSubTitle,
