@@ -3,6 +3,7 @@
 Test suite for order payment schedule models
 """
 
+import uuid
 from datetime import date, datetime
 from unittest import mock
 from zoneinfo import ZoneInfo
@@ -26,6 +27,7 @@ from joanie.core.enums import (
     PAYMENT_STATE_REFUSED,
 )
 from joanie.core.models import Order
+from joanie.core.utils import payment_schedule
 from joanie.tests.base import ActivityLogMixingTestCase, BaseLogMixinTestCase
 
 
@@ -132,18 +134,23 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
             order__product__price=3,
             order__product__target_courses=[course_run.course],
         )
-
-        schedule = contract.order.generate_schedule()
+        first_uuid = uuid.UUID("1932fbc5-d971-48aa-8fee-6d637c3154a5")
+        second_uuid = uuid.UUID("a1cf9f39-594f-4528-a657-a0b9018b90ad")
+        with mock.patch.object(payment_schedule.uuid, "uuid4") as uuid4_mock:
+            uuid4_mock.side_effect = [first_uuid, second_uuid]
+            schedule = contract.order.generate_schedule()
 
         self.assertEqual(
             schedule,
             [
                 {
+                    "id": first_uuid,
                     "amount": Money(0.90, settings.DEFAULT_CURRENCY),
                     "due_date": date(2024, 1, 17),
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": second_uuid,
                     "amount": Money(2.10, settings.DEFAULT_CURRENCY),
                     "due_date": date(2024, 2, 17),
                     "state": PAYMENT_STATE_PENDING,
@@ -156,11 +163,13 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
             contract.order.payment_schedule,
             [
                 {
+                    "id": str(first_uuid),
                     "amount": "0.90",
                     "due_date": "2024-01-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
+                    "id": str(second_uuid),
                     "amount": "2.10",
                     "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PENDING,
