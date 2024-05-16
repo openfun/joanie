@@ -1063,3 +1063,28 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         """
         order = factories.OrderFactory()
         self.assertFalse(order.has_contract)
+
+    def test_models_order_has_unsigned_contract(self):
+        """
+        Check that the `has_unsigned_contract` property returns True
+        if the order has an unsigned contract.
+        """
+        order = factories.OrderFactory()
+        factories.ContractFactory(
+            order=order,
+            definition=factories.ContractDefinitionFactory(),
+        )
+        self.assertTrue(order.has_unsigned_contract)
+
+    def test_models_order_has_unsigned_contract_false(self):
+        """
+        Check that the `has_contract` property returns True if the order has a contract.
+        """
+        order = factories.OrderFactory()
+        factories.ContractFactory(
+            order=order,
+            definition=factories.ContractDefinitionFactory(),
+            student_signed_on=datetime(2023, 9, 20, 8, 0, tzinfo=timezone.utc),
+            submitted_for_signature_on=datetime(2023, 9, 20, 8, 0, tzinfo=timezone.utc),
+        )
+        self.assertFalse(order.has_unsigned_contract)

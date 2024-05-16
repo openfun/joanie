@@ -28,47 +28,45 @@ class OrderFlow:
     def _can_be_state_completed_from_assigned(self):
         """
         An order state can be set to completed if all installments
-        are completed.
+        are completed or if the order is free and has no unsigned contract
         """
-        return self.instance.is_free and (
-            not self.instance.has_contract or self.instance.contract.student_signed_on
-        )
+        return self.instance.is_free and not self.instance.has_unsigned_contract
 
     def _can_be_state_to_sign_and_to_save_payment_method(self):
         """
-        An order state can be set to to_sign_and_to_save_payment_method if the order is free
-        and has a contract but no payment method.
+        An order state can be set to to_sign_and_to_save_payment_method if the order is not free
+        and has no payment method and an unsigned contract
         """
         return (
             not self.instance.is_free
             and not self.instance.has_payment_method
-            and self.instance.has_contract
+            and self.instance.has_unsigned_contract
         )
 
     def _can_be_state_to_save_payment_method(self):
         """
-        An order state can be set to to_save_payment_method if the order is not free
-        and has no payment method and no contract.
+        An order state can be set to_save_payment_method if the order is not free
+        and has no payment method and no unsigned contract.
         """
         return (
             not self.instance.is_free
             and not self.instance.has_payment_method
-            and not self.instance.has_contract
+            and not self.instance.has_unsigned_contract
         )
 
     def _can_be_state_to_sign(self):
         """
         An order state can be set to to_sign if the order is free
-        or has a payment method and a contract.
+        or has a payment method and an unsigned contract.
         """
         return (
             self.instance.is_free or self.instance.has_payment_method
-        ) and self.instance.has_contract
+        ) and self.instance.has_unsigned_contract
 
     def _can_be_state_pending_from_assigned(self):
         """
-        An order state can be set to pending if the order is free
-        or has a payment method but no contract.
+        An order state can be set to pending if the order is not free
+        and has a payment method and no contract.
         """
         return (
             self.instance.is_free or self.instance.has_payment_method

@@ -618,6 +618,16 @@ class Order(BaseModel):
         except Contract.DoesNotExist:
             return False
 
+    @property
+    def has_unsigned_contract(self):
+        """
+        Return True if the order has an unsigned contract.
+        """
+        try:
+            return self.contract.student_signed_on is None  # pylint: disable=no-member
+        except Contract.DoesNotExist:
+            return False
+
     # pylint: disable=too-many-branches
     # ruff: noqa: PLR0912
     def clean(self):
