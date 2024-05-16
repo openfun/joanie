@@ -25,6 +25,149 @@ class OrderFlow:
     def _get_order_state(self):
         return self.instance.state
 
+    def _can_be_assigned(self):
+        """
+        An order can be assigned if it has an organization.
+        """
+        return self.instance.organization is not None
+
+    @state.transition(
+        source=enums.ORDER_STATE_DRAFT,
+        target=enums.ORDER_STATE_ASSIGNED,
+        conditions=[_can_be_assigned],
+    )
+    def assign(self):
+        """
+        Transition order to assigned state.
+        """
+
+    def _can_be_state_completed_from_assigned(self):
+        """
+        An order state can be set to completed if the order is free
+        and has no unsigned contract
+        """
+        return self.instance.is_free and not self.instance.has_unsigned_contract
+
+    def _can_be_state_to_sign_and_to_save_payment_method(self):
+        """
+        An order state can be set to to_sign_and_to_save_payment_method if the order is not free
+        and has no payment method and an unsigned contract
+        """
+        return (
+            not self.instance.is_free
+            and not self.instance.has_payment_method
+            and self.instance.has_unsigned_contract
+        )
+
+    def _can_be_state_to_save_payment_method(self):
+        """
+        An order state can be set to_save_payment_method if the order is not free
+        and has no payment method and no unsigned contract.
+        """
+        return (
+            not self.instance.is_free
+            and not self.instance.has_payment_method
+            and not self.instance.has_unsigned_contract
+        )
+
+    def _can_be_state_to_sign(self):
+        """
+        An order state can be set to to_sign if the order is free
+        or has a payment method and an unsigned contract.
+        """
+        return (
+            self.instance.is_free or self.instance.has_payment_method
+        ) and self.instance.has_unsigned_contract
+
+    def _can_be_state_pending_from_assigned(self):
+        """
+        An order state can be set to pending if the order is not free
+        and has a payment method and no contract to sign.
+        """
+        return (
+            self.instance.is_free or self.instance.has_payment_method
+        ) and not self.instance.has_unsigned_contract
+
+    @state.transition(
+        source=enums.ORDER_STATE_ASSIGNED,
+        target=enums.ORDER_STATE_COMPLETED,
+        conditions=[_can_be_state_completed_from_assigned],
+    )
+    def complete_from_assigned(self):
+        """
+        Transition order to completed state.
+        """
+
+    @state.transition(
+        source=enums.ORDER_STATE_ASSIGNED,
+        target=enums.ORDER_STATE_TO_SIGN_AND_TO_SAVE_PAYMENT_METHOD,
+        conditions=[_can_be_state_to_sign_and_to_save_payment_method],
+    )
+    def to_sign_and_to_save_payment_method(self):
+        """
+        Transition order to to_sign_and_to_save_payment_method state.
+        """
+
+    @state.transition(
+        source=[
+            enums.ORDER_STATE_ASSIGNED,
+            enums.ORDER_STATE_TO_SIGN_AND_TO_SAVE_PAYMENT_METHOD,
+        ],
+        target=enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
+        conditions=[_can_be_state_to_save_payment_method],
+    )
+    def to_save_payment_method(self):
+        """
+        Transition order to to_save_payment_method state.
+        """
+
+    @state.transition(
+        source=[
+            enums.ORDER_STATE_ASSIGNED,
+            enums.ORDER_STATE_TO_SIGN_AND_TO_SAVE_PAYMENT_METHOD,
+        ],
+        target=enums.ORDER_STATE_TO_SIGN,
+        conditions=[_can_be_state_to_sign],
+    )
+    def to_sign(self):
+        """
+        Transition order to to_sign state.
+        """
+
+    @state.transition(
+        source=enums.ORDER_STATE_ASSIGNED,
+        target=enums.ORDER_STATE_PENDING,
+        conditions=[_can_be_state_pending_from_assigned],
+    )
+    def pending_from_assigned(self):
+        """
+        Transition order to pending state.
+        """
+
+    def update(self):
+        """
+        Update the order state.
+        """
+        if self._can_be_state_completed_from_assigned():
+            self.complete_from_assigned()
+            return
+
+        if self._can_be_state_to_sign_and_to_save_payment_method():
+            self.to_sign_and_to_save_payment_method()
+            return
+
+        if self._can_be_state_to_save_payment_method():
+            self.to_save_payment_method()
+            return
+
+        if self._can_be_state_to_sign():
+            self.to_sign()
+            return
+
+        if self._can_be_state_pending_from_assigned():
+            self.pending_from_assigned()
+            return
+
     def _can_be_state_submitted(self):
         """
         An order can be submitted if the order has a course, an organization,
