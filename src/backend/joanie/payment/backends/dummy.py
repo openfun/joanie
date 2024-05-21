@@ -74,13 +74,15 @@ class DummyPaymentBackend(BasePaymentBackend):
                 f"Payment {resource['id']} relies on a non-existing order."
             ) from error
 
+        installment_id = resource["metadata"].get("installment_id")
         if data.get("state") == DUMMY_PAYMENT_BACKEND_PAYMENT_STATE_FAILED:
-            self._do_on_payment_failure(order)
+            self._do_on_payment_failure(order, installment_id=installment_id)
         elif data.get("state") == DUMMY_PAYMENT_BACKEND_PAYMENT_STATE_SUCCESS:
             payment = {
                 "id": resource.get("id"),
                 "amount": D(f"{resource.get('amount') / 100:.2f}"),
                 "billing_address": resource.get("billing_address"),
+                "installment_id": installment_id,
             }
             self._do_on_payment_success(order, payment)
 
@@ -116,18 +118,22 @@ class DummyPaymentBackend(BasePaymentBackend):
         logger.info("Mail is sent to %s from dummy payment", order.owner.email)
         super()._send_mail_payment_success(order)
 
-    def create_payment(
-        self, order, billing_address=None, credit_card_token=None, amount=None
+    def _get_payment_data(
+        self,
+        order,
+        billing_address,
+        credit_card_token=None,
+        installment=None,
     ):
-        """
-        Generate a payment object then store it in the cache.
-        """
+        """Build the generic payment object."""
         order_id = str(order.id)
         payment_id = self.get_payment_id(order_id)
         notification_url = self.get_notification_url()
         payment_info = {
             "id": payment_id,
-            "amount": amount * 100 if amount else int(order.total * 100),
+            "amount": int(float(installment["amount"]) * 100)
+            if installment
+            else int(order.total * 100),
             "notification_url": notification_url,
             "metadata": {"order_id": order_id},
         }
@@ -135,6 +141,8 @@ class DummyPaymentBackend(BasePaymentBackend):
             payment_info["billing_address"] = billing_address
         if credit_card_token:
             payment_info["credit_card_token"] = credit_card_token
+        if installment:
+            payment_info["metadata"]["installment_id"] = installment["id"]
         cache.set(payment_id, payment_info)
 
         return {
@@ -143,11 +151,26 @@ class DummyPaymentBackend(BasePaymentBackend):
             "url": notification_url,
         }
 
-    def create_one_click_payment(self, order, billing_address, credit_card_token=None):
+    def create_payment(
+        self,
+        order,
+        billing_address=None,
+        installment=None,
+    ):
+        """
+        Generate a payment object then store it in the cache.
+        """
+        return self._get_payment_data(order, billing_address, installment=installment)
+
+    def create_one_click_payment(
+        self, order, billing_address, credit_card_token=None, installment=None
+    ):
         """
         Call create_payment method and bind a `is_paid` property to payment information.
         """
-        payment_info = self.create_payment(order, billing_address)
+        payment_info = self._get_payment_data(
+            order, billing_address, installment=installment
+        )
         notification_request = APIRequestFactory().post(
             reverse("payment_webhook"),
             data={
@@ -166,11 +189,15 @@ class DummyPaymentBackend(BasePaymentBackend):
             "is_paid": True,
         }
 
-    def create_zero_click_payment(self, order, credit_card_token=None, amount=None):
+    def create_zero_click_payment(
+        self, order, credit_card_token=None, installment=None
+    ):
         """
         Call create_payment method and bind a `is_paid` property to payment information.
         """
-        payment_info = self.create_payment(order, credit_card_token, amount=amount)
+        payment_info = self._get_payment_data(
+            order, credit_card_token, installment=installment
+        )
         notification_request = APIRequestFactory().post(
             reverse("payment_webhook"),
             data={

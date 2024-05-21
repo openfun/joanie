@@ -37,11 +37,13 @@ class PayplugBackend(BasePaymentBackend):
         payplug.set_secret_key(self.configuration["secret_key"])
         payplug.set_api_version(self.api_version)
 
-    def _get_payment_data(self, order, billing_address):
+    def _get_payment_data(self, order, billing_address, installment=None):
         """Build the generic payment object"""
 
         payment_data = {
-            "amount": int(order.total * 100),
+            "amount": int(float(installment["amount"]) * 100)
+            if installment
+            else int(order.total * 100),
             "currency": settings.DEFAULT_CURRENCY,
             "billing": {
                 "first_name": billing_address["first_name"],
@@ -60,6 +62,9 @@ class PayplugBackend(BasePaymentBackend):
                 "order_id": str(order.id),
             },
         }
+
+        if installment:
+            payment_data["metadata"]["installment_id"] = installment["id"]
 
         return payment_data
 
@@ -101,9 +106,9 @@ class PayplugBackend(BasePaymentBackend):
                 owner=order.owner,
                 token=resource.card.id,
             )
-
+        installment_id = resource.metadata.get("installment_id")
         if resource.failure is not None:
-            self._do_on_payment_failure(order)
+            self._do_on_payment_failure(order, installment_id=installment_id)
         elif resource.is_refunded is False and resource.is_paid is True:
             payment = {
                 "id": resource.id,
@@ -116,7 +121,9 @@ class PayplugBackend(BasePaymentBackend):
                     "last_name": resource.billing.last_name,
                     "postcode": resource.billing.postcode,
                 },
+                "installment_id": installment_id,
             }
+
             self._do_on_payment_success(order=order, payment=payment)
 
     def _treat_refund(self, resource):
@@ -138,11 +145,13 @@ class PayplugBackend(BasePaymentBackend):
             refund_reference=resource.id,
         )
 
-    def create_payment(self, order, billing_address):
+    def create_payment(self, order, billing_address, installment=None):
         """
         Create a payment object for a given order
         """
-        payment_data = self._get_payment_data(order, billing_address)
+        payment_data = self._get_payment_data(
+            order, billing_address, installment=installment
+        )
         payment_data["allow_save_card"] = True
 
         try:
@@ -156,7 +165,9 @@ class PayplugBackend(BasePaymentBackend):
             "url": payment.hosted_payment.payment_url,
         }
 
-    def create_one_click_payment(self, order, billing_address, credit_card_token):
+    def create_one_click_payment(
+        self, order, billing_address, credit_card_token, installment=None
+    ):
         """
         Create a one click payment
 
@@ -164,7 +175,9 @@ class PayplugBackend(BasePaymentBackend):
         and we have to notify frontend that payment has not been paid.
         """
         # - Build the payment object
-        payment_data = self._get_payment_data(order, billing_address)
+        payment_data = self._get_payment_data(
+            order, billing_address, installment=installment
+        )
         payment_data["allow_save_card"] = False
         payment_data["initiator"] = "PAYER"
         payment_data["payment_method"] = credit_card_token
@@ -180,6 +193,12 @@ class PayplugBackend(BasePaymentBackend):
             "url": payment.hosted_payment.payment_url,
             "is_paid": payment.is_paid,
         }
+
+    def create_zero_click_payment(self, order, credit_card_token, installment=None):
+        """
+        Method used to create a zero click payment from payplug.
+        """
+        raise NotImplementedError("Not supported by payplug provider")
 
     def handle_notification(self, request):
         """

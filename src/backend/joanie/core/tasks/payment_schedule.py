@@ -32,12 +32,9 @@ def process_today_installment(order_id):
             except CreditCard.DoesNotExist:
                 order.set_installment_refused(installment["id"])
                 continue
-            payment_succeeded = payment_backend.create_zero_click_payment(
+
+            payment_backend.create_zero_click_payment(
                 order=order,
                 credit_card_token=credit_card.token,
-                amount=installment["amount"],
+                installment=installment,
             )
-            if payment_succeeded:
-                order.set_installment_paid(installment["id"])
-            else:
-                order.set_installment_refused(installment["id"])

@@ -26,9 +26,9 @@ class TestBasePaymentBackend(BasePaymentBackend):
         """call private method _do_on_payment_success"""
         self._do_on_payment_success(order, payment)
 
-    def call_do_on_payment_failure(self, order):
+    def call_do_on_payment_failure(self, order, installment_id=None):
         """call private method _do_on_payment_failure"""
-        self._do_on_payment_failure(order)
+        self._do_on_payment_failure(order, installment_id=installment_id)
 
     def call_do_on_refund(self, amount, invoice, refund_reference):
         """call private method _do_on_refund"""
@@ -37,10 +37,15 @@ class TestBasePaymentBackend(BasePaymentBackend):
     def abort_payment(self, payment_id):
         pass
 
-    def create_one_click_payment(self, order, billing_address, credit_card_token):
+    def create_one_click_payment(
+        self, order, billing_address, credit_card_token, installment=None
+    ):
         pass
 
-    def create_payment(self, order, billing_address):
+    def create_payment(self, order, billing_address, installment=None):
+        pass
+
+    def create_zero_click_payment(self, order, credit_card_token, installment=None):
         pass
 
     def delete_credit_card(self, credit_card):
@@ -92,6 +97,18 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         self.assertEqual(
             str(context.exception),
             "subclasses of BasePaymentBackend must provide a create_one_click_payment() method.",
+        )
+
+    def test_payment_backend_base_create_zero_click_payment_not_implemented(self):
+        """Invoke create_zero_click_payment should raise a Not ImplementedError"""
+        backend = BasePaymentBackend()
+
+        with self.assertRaises(NotImplementedError) as context:
+            backend.create_zero_click_payment(None, None, None)
+
+        self.assertEqual(
+            str(context.exception),
+            "subclasses of BasePaymentBackend must provide a create_zero_click_payment() method.",
         )
 
     def test_payment_backend_base_handle_notification_not_implemented(self):
@@ -182,6 +199,118 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         # - An event has been created
         self.assertPaymentSuccessActivityLog(order)
 
+    def test_payment_backend_base_do_on_payment_success_with_installment(self):
+        """
+        Base backend contains a method _do_on_payment_success which aims to be
+        call by subclasses when a payment succeeded. It should create
+        an invoice related to the provided order, create a non-reusable billing address,
+        create a transaction from payment information provided
+        then mark the installment as paid
+        """
+        backend = TestBasePaymentBackend()
+        owner = UserFactory(email="sam@fun-test.fr", language="en-us")
+        order = OrderFactory(
+            owner=owner,
+            state=enums.ORDER_STATE_PENDING,
+            payment_schedule=[
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
+                    "amount": "300.00",
+                    "due_date": "2024-02-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
+                    "amount": "300.00",
+                    "due_date": "2024-03-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
+                    "amount": "199.99",
+                    "due_date": "2024-04-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+        billing_address = BillingAddressDictFactory()
+        payment = {
+            "id": "pay_0",
+            "amount": 20000,
+            "billing_address": billing_address,
+            "installment_id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+        }
+
+        backend.call_do_on_payment_success(order, payment)
+
+        # - Payment transaction has been registered
+        self.assertEqual(
+            Transaction.objects.filter(reference="pay_0", total=20000).count(),
+            1,
+        )
+
+        # - Billing address has been registered, it should be non-reusable and
+        #   the title should be the same as the owner's full name
+        address = Address.objects.get(**billing_address)
+        self.assertEqual(
+            address.title,
+            f"Billing address of order {order.id}",
+        )
+        self.assertEqual(address.is_reusable, False)
+        self.assertEqual(address.owner, owner)
+
+        # - Invoice has been created
+        self.assertEqual(order.invoices.count(), 2)
+        self.assertIsNotNone(order.main_invoice)
+        self.assertEqual(order.main_invoice.children.count(), 1)
+
+        # - Order has been validated
+        self.assertEqual(order.state, enums.ORDER_STATE_PENDING_PAYMENT)
+
+        self.assertEqual(
+            order.payment_schedule,
+            [
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": enums.PAYMENT_STATE_PAID,
+                },
+                {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
+                    "amount": "300.00",
+                    "due_date": "2024-02-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
+                    "amount": "300.00",
+                    "due_date": "2024-03-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
+                    "amount": "199.99",
+                    "due_date": "2024-04-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        # - Email has been sent
+        self._check_order_validated_email_sent(
+            "sam@fun-test.fr", owner.get_full_name(), order
+        )
+
+        # - An event has been created
+        self.assertPaymentSuccessActivityLog(order)
+
     def test_payment_backend_base_do_on_payment_success_with_existing_billing_address(
         self,
     ):
@@ -249,6 +378,86 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
 
         # - Payment has failed gracefully and changed order state to pending
         self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
+
+        # - No email has been sent
+        self.assertEqual(len(mail.outbox), 0)
+
+        # - An event has been created
+        self.assertPaymentFailedActivityLog(order)
+
+    def test_payment_backend_base_do_on_payment_failure_with_installment(self):
+        """
+        Base backend contains a method _do_on_payment_failure which aims to be
+        call by subclasses when a payment failed. It should cancel the related
+        order.
+        """
+        backend = TestBasePaymentBackend()
+        order = OrderFactory(
+            state=enums.ORDER_STATE_PENDING,
+            payment_schedule=[
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
+                    "amount": "300.00",
+                    "due_date": "2024-02-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
+                    "amount": "300.00",
+                    "due_date": "2024-03-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
+                    "amount": "199.99",
+                    "due_date": "2024-04-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        backend.call_do_on_payment_failure(
+            order, installment_id=order.payment_schedule[0]["id"]
+        )
+
+        # - Payment has failed gracefully and changed order state to no payment
+        self.assertEqual(order.state, enums.ORDER_STATE_NO_PAYMENT)
+
+        self.assertEqual(
+            order.payment_schedule,
+            [
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": enums.PAYMENT_STATE_REFUSED,
+                },
+                {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
+                    "amount": "300.00",
+                    "due_date": "2024-02-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
+                    "amount": "300.00",
+                    "due_date": "2024-03-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
+                    "amount": "199.99",
+                    "due_date": "2024-04-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
 
         # - No email has been sent
         self.assertEqual(len(mail.outbox), 0)
