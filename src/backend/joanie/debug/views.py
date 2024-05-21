@@ -318,6 +318,8 @@ class DebugPaymentTemplateView(TemplateView):
         tokenize_card = "tokenize-card" in self.request.GET
         zero_click = "zero-click" in self.request.GET
 
+        payment_infos = None
+        response = None
         if zero_click and credit_card:
             response = backend.create_zero_click_payment(
                 order, credit_card.token, order.total
