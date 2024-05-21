@@ -31,7 +31,7 @@ class BasePaymentBackend:
         self.configuration = configuration
 
     @classmethod
-    def _do_on_payment_success(cls, order, payment, validate_order=True):
+    def _do_on_payment_success(cls, order, payment):
         """
         Generic actions triggered when a succeeded payment has been received.
         It creates an invoice and registers the debit transaction,
@@ -68,13 +68,15 @@ class BasePaymentBackend:
             reference=payment["id"],
         )
 
-        if validate_order:
+        if payment.get("installment_id"):
+            order.set_installment_paid(payment["installment_id"])
+        else:
             # - Mark order as validated
             order.flow.validate()
+            ActivityLog.create_payment_succeeded_activity_log(order)
 
         # send mail
         cls._send_mail_payment_success(order)
-        ActivityLog.create_payment_succeeded_activity_log(order)
 
     @classmethod
     def _send_mail_payment_success(cls, order):
@@ -112,14 +114,17 @@ class BasePaymentBackend:
             )
 
     @staticmethod
-    def _do_on_payment_failure(order):
+    def _do_on_payment_failure(order, installment_id=None):
         """
         Generic actions triggered when a failed payment has been received.
         Mark the invoice as pending.
         """
-        # - Unvalidate order
-        order.flow.pending()
-        ActivityLog.create_payment_failed_activity_log(order)
+        if installment_id:
+            order.set_installment_refused(installment_id)
+        else:
+            # - Unvalidate order
+            order.flow.pending()
+            ActivityLog.create_payment_failed_activity_log(order)
 
     @staticmethod
     def _do_on_refund(amount, invoice, refund_reference):
@@ -156,7 +161,7 @@ class BasePaymentBackend:
         path = reverse("payment_webhook")
         return f"https://{site.domain}{path}"
 
-    def create_payment(self, order, billing_address):
+    def create_payment(self, order, billing_address, installment=None):
         """
         Method used to create a payment from the payment provider.
         """
@@ -164,12 +169,22 @@ class BasePaymentBackend:
             "subclasses of BasePaymentBackend must provide a create_payment() method."
         )
 
-    def create_one_click_payment(self, order, billing_address, credit_card_token):
+    def create_one_click_payment(
+        self, order, billing_address, credit_card_token, installment=None
+    ):
         """
         Method used to create a one click payment from the payment provider.
         """
         raise NotImplementedError(
             "subclasses of BasePaymentBackend must provide a create_one_click_payment() method."
+        )
+
+    def create_zero_click_payment(self, order, credit_card_token, installment=None):
+        """
+        Method used to create a zero click payment from the payment provider.
+        """
+        raise NotImplementedError(
+            "subclasses of BasePaymentBackend must provide a create_zero_click_payment() method."
         )
 
     def handle_notification(self, request):

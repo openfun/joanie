@@ -14,7 +14,13 @@ import responses
 from requests import HTTPError, RequestException
 from rest_framework.test import APIRequestFactory
 
-from joanie.core.enums import ORDER_STATE_PENDING
+from joanie.core.enums import (
+    ORDER_STATE_COMPLETED,
+    ORDER_STATE_PENDING,
+    ORDER_STATE_PENDING_PAYMENT,
+    PAYMENT_STATE_PAID,
+    PAYMENT_STATE_PENDING,
+)
 from joanie.core.factories import OrderFactory, ProductFactory, UserFactory
 from joanie.payment.backends.base import BasePaymentBackend
 from joanie.payment.backends.lyra import LyraBackend
@@ -342,6 +348,111 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         )
 
     @responses.activate(assert_all_requests_are_fired=True)
+    def test_payment_backend_lyra_create_payment_accepted_with_installment(self):
+        """
+        When backend creates a payment, it should return a form token.
+        """
+        backend = LyraBackend(self.configuration)
+        owner = UserFactory(email="john.doe@acme.org")
+        product = ProductFactory(price=D("123.45"))
+        order = OrderFactory(
+            owner=owner,
+            product=product,
+            payment_schedule=[
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
+                    "amount": "300.00",
+                    "due_date": "2024-02-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
+                    "amount": "300.00",
+                    "due_date": "2024-03-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
+                    "amount": "199.99",
+                    "due_date": "2024-04-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+        billing_address = BillingAddressDictFactory()
+
+        with self.open("lyra/responses/create_payment.json") as file:
+            json_response = json.loads(file.read())
+
+        responses.add(
+            responses.POST,
+            "https://api.lyra.com/api-payment/V4/Charge/CreatePayment",
+            headers={
+                "Content-Type": "application/json",
+            },
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        "content-type": "application/json",
+                        "authorization": "Basic Njk4NzYzNTc6dGVzdHBhc3N3b3JkX0RFTU9QUklWQVRFS0VZMjNHNDQ3NXpYWlEyVUE1eDdN",
+                    }
+                ),
+                responses.matchers.json_params_matcher(
+                    {
+                        "amount": 20000,
+                        "currency": "EUR",
+                        "customer": {
+                            "email": "john.doe@acme.org",
+                            "reference": str(owner.id),
+                            "billingDetails": {
+                                "firstName": billing_address["first_name"],
+                                "lastName": billing_address["last_name"],
+                                "address": billing_address["address"],
+                                "zipCode": billing_address["postcode"],
+                                "city": billing_address["city"],
+                                "country": billing_address["country"],
+                                "language": owner.language,
+                            },
+                            "shippingDetails": {
+                                "shippingMethod": "DIGITAL_GOOD",
+                            },
+                        },
+                        "orderId": str(order.id),
+                        "formAction": "ASK_REGISTER_PAY",
+                        "ipnTargetUrl": "https://example.com/api/v1.0/payments/notifications",
+                        "metadata": {
+                            "installment_id": "d9356dd7-19a6-4695-b18e-ad93af41424a"
+                        },
+                    }
+                ),
+            ],
+            status=200,
+            json=json_response,
+        )
+
+        response = backend.create_payment(
+            order, billing_address, installment=order.payment_schedule[0]
+        )
+
+        self.assertEqual(
+            response,
+            {
+                "provider_name": "lyra",
+                "form_token": json_response.get("answer").get("formToken"),
+                "configuration": {
+                    "public_key": self.configuration.get("public_key"),
+                    "base_url": self.configuration.get("api_base_url"),
+                },
+            },
+        )
+
+    @responses.activate(assert_all_requests_are_fired=True)
     def test_payment_backend_lyra_tokenize_card(self):
         """
         When backend tokenizes a card, it should return a form token.
@@ -487,6 +598,118 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         )
 
     @responses.activate(assert_all_requests_are_fired=True)
+    def test_payment_backend_lyra_create_one_click_payment_with_installment(self):
+        """
+        When backend creates a one click payment, it should return payment information.
+        """
+        backend = LyraBackend(self.configuration)
+        owner = UserFactory(email="john.doe@acme.org")
+        product = ProductFactory(price=D("123.45"))
+        order = OrderFactory(
+            owner=owner,
+            product=product,
+            payment_schedule=[
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
+                    "amount": "300.00",
+                    "due_date": "2024-02-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
+                    "amount": "300.00",
+                    "due_date": "2024-03-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
+                    "amount": "199.99",
+                    "due_date": "2024-04-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+        billing_address = BillingAddressDictFactory()
+        credit_card = CreditCardFactory(
+            owner=owner, token="854d630f17f54ee7bce03fb4fcf764e9"
+        )
+
+        with self.open("lyra/responses/create_one_click_payment.json") as file:
+            json_response = json.loads(file.read())
+
+        responses.add(
+            responses.POST,
+            "https://api.lyra.com/api-payment/V4/Charge/CreatePayment",
+            headers={
+                "Content-Type": "application/json",
+            },
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        "content-type": "application/json",
+                        "authorization": "Basic Njk4NzYzNTc6dGVzdHBhc3N3b3JkX0RFTU9QUklWQVRFS0VZMjNHNDQ3NXpYWlEyVUE1eDdN",
+                    }
+                ),
+                responses.matchers.json_params_matcher(
+                    {
+                        "amount": 20000,
+                        "currency": "EUR",
+                        "customer": {
+                            "email": "john.doe@acme.org",
+                            "reference": str(owner.id),
+                            "billingDetails": {
+                                "firstName": billing_address["first_name"],
+                                "lastName": billing_address["last_name"],
+                                "address": billing_address["address"],
+                                "zipCode": billing_address["postcode"],
+                                "city": billing_address["city"],
+                                "country": billing_address["country"],
+                                "language": owner.language,
+                            },
+                            "shippingDetails": {
+                                "shippingMethod": "DIGITAL_GOOD",
+                            },
+                        },
+                        "orderId": str(order.id),
+                        "formAction": "PAYMENT",
+                        "paymentMethodToken": credit_card.token,
+                        "ipnTargetUrl": "https://example.com/api/v1.0/payments/notifications",
+                        "metadata": {
+                            "installment_id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                        },
+                    }
+                ),
+            ],
+            status=200,
+            json=json_response,
+        )
+
+        response = backend.create_one_click_payment(
+            order,
+            billing_address,
+            credit_card.token,
+            installment=order.payment_schedule[0],
+        )
+
+        self.assertEqual(
+            response,
+            {
+                "provider_name": "lyra",
+                "form_token": json_response.get("answer").get("formToken"),
+                "configuration": {
+                    "public_key": self.configuration.get("public_key"),
+                    "base_url": self.configuration.get("api_base_url"),
+                },
+            },
+        )
+
+    @responses.activate(assert_all_requests_are_fired=True)
     def test_payment_backend_lyra_create_zero_click_payment(self):
         """
         When backend creates a zero click payment, it should return payment information.
@@ -502,7 +725,25 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         first_installment_amount = product.price / 3
         second_installment_amount = product.price - first_installment_amount
 
-        order = OrderFactory(owner=owner, product=product, state=ORDER_STATE_PENDING)
+        order = OrderFactory(
+            owner=owner,
+            product=product,
+            state=ORDER_STATE_PENDING,
+            payment_schedule=[
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": f"{first_installment_amount}",
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
+                    "amount": f"{second_installment_amount}",
+                    "due_date": "2024-02-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
         credit_card = CreditCardFactory(
             owner=owner,
             token="854d630f17f54ee7bce03fb4fcf764e9",
@@ -550,6 +791,9 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
                             }
                         },
                         "ipnTargetUrl": "https://example.com/api/v1.0/payments/notifications",
+                        "metadata": {
+                            "installment_id": order.payment_schedule[0]["id"],
+                        },
                     }
                 ),
             ],
@@ -558,7 +802,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         )
 
         response = backend.create_zero_click_payment(
-            order, credit_card.token, first_installment_amount
+            order, credit_card.token, installment=order.payment_schedule[0]
         )
 
         self.assertTrue(response)
@@ -577,9 +821,11 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
             ).exists()
         )
 
-        # With 0 click payment, order state is not changed
+        # If the installment payment is success, the order state chenges to pending payment
         order.refresh_from_db()
-        self.assertEqual(order.state, ORDER_STATE_PENDING)
+        self.assertEqual(order.state, ORDER_STATE_PENDING_PAYMENT)
+        # First installment is paid
+        self.assertEqual(order.payment_schedule[0]["state"], PAYMENT_STATE_PAID)
 
         # Mail is sent
         self._check_order_validated_email_sent(
@@ -626,6 +872,9 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
                             }
                         },
                         "ipnTargetUrl": "https://example.com/api/v1.0/payments/notifications",
+                        "metadata": {
+                            "installment_id": order.payment_schedule[1]["id"],
+                        },
                     }
                 ),
             ],
@@ -634,7 +883,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         )
 
         backend.create_zero_click_payment(
-            order, credit_card.token, second_installment_amount
+            order, credit_card.token, installment=order.payment_schedule[1]
         )
 
         # Children invoice is created
@@ -650,9 +899,11 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
             ).exists()
         )
 
-        # With 0 click payment, order state is not changed
+        # It is the last installment paid, the order is complete
         order.refresh_from_db()
-        self.assertEqual(order.state, ORDER_STATE_PENDING)
+        self.assertEqual(order.state, ORDER_STATE_COMPLETED)
+        # Second installment is paid
+        self.assertEqual(order.payment_schedule[1]["state"], PAYMENT_STATE_PAID)
 
         # Mail is sent
         self._check_order_validated_email_sent(
@@ -730,7 +981,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
 
         backend.handle_notification(request)
 
-        mock_do_on_payment_failure.assert_called_once_with(order)
+        mock_do_on_payment_failure.assert_called_once_with(order, installment_id=None)
 
     @patch.object(BasePaymentBackend, "_do_on_payment_success")
     def test_payment_backend_lyra_handle_notification_payment(
@@ -776,6 +1027,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
                     "last_name": billing_details["lastName"],
                     "postcode": billing_details["zipCode"],
                 },
+                "installment_id": None,
             },
         )
 
@@ -854,6 +1106,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
                     "last_name": billing_details["lastName"],
                     "postcode": billing_details["zipCode"],
                 },
+                "installment_id": None,
             },
         )
 
@@ -902,6 +1155,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
                     "last_name": billing_details["lastName"],
                     "postcode": billing_details["zipCode"],
                 },
+                "installment_id": None,
             },
         )
 
@@ -951,6 +1205,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
                     "last_name": billing_details["lastName"],
                     "postcode": billing_details["zipCode"],
                 },
+                "installment_id": None,
             },
         )
 
