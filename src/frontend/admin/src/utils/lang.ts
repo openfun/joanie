@@ -1,4 +1,3 @@
-import * as process from "process";
 import cookie from "@boiseitguru/cookie-cutter";
 import {
   DJANGO_LANGUAGE_COOKIE_NAME,
