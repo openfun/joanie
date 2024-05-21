@@ -36,7 +36,8 @@
       "matchPackageNames": [
         "node",
         "undici",
-        "date-fns"
+        "date-fns",
+        "eslint"
       ]
     }
   ]
