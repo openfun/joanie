@@ -20,6 +20,7 @@ def on_change_course_runs_to_product_target_course_relation(
     Some checks are processed before course runs are linked to product / target course relation :
         1. Check that course runs linked are related to the relation course
     """
+    serialized_course_runs = []
     if action == "pre_add":
         # Instance can be a `ProductTargetCourseRelation` or a `CourseRun`. In the case instance
         # is a CourseRun, we have to retrieve manually product course relations instances.

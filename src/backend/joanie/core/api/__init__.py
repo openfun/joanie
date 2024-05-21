@@ -18,6 +18,7 @@ def exception_handler(exc, context):
 
     Handle TransitionNotAllowed from viewflow to avoid getting a 500
     """
+    detail = None
     if isinstance(exc, DjangoValidationError):
         if hasattr(exc, "message_dict"):
             detail = exc.message_dict
