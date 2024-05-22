@@ -35,6 +35,10 @@
     "description": "Label for the search input",
     "message": "Rechercher..."
   },
+  "components.presentational.hookForm.RHFDateTimePicker.invalidDate": {
+    "description": "Message displayed when a date entered is not a date",
+    "message": "Date invalide"
+  },
   "components.presentational.hookForm.provider.dirtyModalMessage": {
     "description": "Message for the dirty alert modal",
     "message": "Des modifications dans le formulaire ont été détectées. Veuillez sauvegarder ou vos modifications seront perdues."
@@ -399,6 +403,10 @@
     "description": "Title for the edit order group modal",
     "message": "Modifier un groupe de commandes"
   },
+  "components.templates.courses.form.productRelation.row.alreadyCertificateGenerationInProgress": {
+    "description": "Text when hovering over the action to generate certificates, but a generation is already in progress",
+    "message": "Une génération de certificats est déjà en cours"
+  },
   "components.templates.courses.form.productRelation.row.deleteOrderGroupModal": {
     "description": "Title for the delete order group modal",
     "message": "Supprimer un groupe de commandes"
@@ -406,6 +414,10 @@
   "components.templates.courses.form.productRelation.row.deleteOrderGroupModalContent": {
     "description": "Content for the delete order group modal",
     "message": "Êtes-vous sûr de vouloir supprimer ce groupe de commandes ?"
+  },
+  "components.templates.courses.form.productRelation.row.generateCertificate": {
+    "description": "Label for the generate certificate action",
+    "message": "Générer les certificats"
   },
   "components.templates.courses.form.productRelation.row.mainTitleOrderGroup": {
     "description": "Title for the order group row",
@@ -983,6 +995,10 @@
     "description": "Title for the credential product type",
     "message": "Micro-certification"
   },
+  "components.templates.products.form.sections.targetCourses.ProductFormTargetCourseRow.isGradedTooltip": {
+    "description": "Label for the is graded tooltip",
+    "message": "Pris en compte pour la certification"
+  },
   "components.templates.products.form.translations.addRelatedCourseButtonLabel": {
     "description": "Label for the add related courses button",
     "message": "Associer à un cours"
@@ -1309,7 +1325,7 @@
   },
   "hooks.useEnrollments.errorCreate": {
     "description": "Error message shown to the user when order creation request fails.",
-    "message": "An error occurred while creating the order. Please retry later."
+    "message": "Une erreur s'est produite lors de l'inscription. Veuillez réessayer plus tard."
   },
   "hooks.useEnrollments.errorDelete": {
     "description": "Error message shown to the user when order deletion request fails.",
