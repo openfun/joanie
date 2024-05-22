@@ -733,11 +733,13 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         payment_id = "pay_00000"
         product = ProductFactory()
         owner = UserFactory(language="en-us")
-        order = OrderFactory(
-            product=product, owner=owner, state=enums.ORDER_STATE_SUBMITTED
-        )
+        order = OrderFactory(product=product, owner=owner)
         backend = PayplugBackend(self.configuration)
         billing_address = BillingAddressDictFactory()
+        CreditCardFactory(
+            owner=order.owner, is_main=True, initial_issuer_transaction_identifier="1"
+        )
+        order.flow.assign(billing_address=billing_address)
         payplug_billing_address = billing_address.copy()
         payplug_billing_address["address1"] = payplug_billing_address["address"]
         del payplug_billing_address["address"]
