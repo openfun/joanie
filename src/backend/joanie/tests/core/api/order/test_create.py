@@ -13,11 +13,7 @@ from joanie.core.api.client import OrderViewSet
 from joanie.core.serializers import fields
 from joanie.payment.backends.dummy import DummyPaymentBackend
 from joanie.payment.exceptions import CreatePaymentFailed
-from joanie.payment.factories import (
-    BillingAddressDictFactory,
-    CreditCardFactory,
-    InvoiceFactory,
-)
+from joanie.payment.factories import BillingAddressDictFactory, CreditCardFactory
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -29,11 +25,13 @@ class OrderCreateApiTest(BaseAPITestCase):
     def _get_fee_order_data(self, **kwargs):
         """Return a fee order linked to a course."""
         product = factories.ProductFactory(price=10.00)
+        billing_address = BillingAddressDictFactory()
         return {
             **kwargs,
             "has_consent_to_terms": True,
             "product_id": str(product.id),
             "course_code": product.courses.first().code,
+            "billing_address": billing_address,
         }
 
     def _get_free_order_data(self, **kwargs):
@@ -55,12 +53,14 @@ class OrderCreateApiTest(BaseAPITestCase):
         enrollment = factories.EnrollmentFactory(
             user=user, course_run__course=relation.course
         )
+        billing_address = BillingAddressDictFactory()
 
         return {
             **kwargs,
             "has_consent_to_terms": True,
             "enrollment_id": str(enrollment.id),
             "product_id": str(relation.product.id),
+            "billing_address": billing_address,
         }
 
     def test_api_order_create_anonymous(self):
@@ -674,6 +674,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         organizations = factories.OrganizationFactory.create_batch(2)
 
         relation = factories.CourseProductRelationFactory(organizations=organizations)
+        billing_address = BillingAddressDictFactory()
 
         organization_with_least_active_orders, other_organization = organizations
 
@@ -709,6 +710,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             "course_code": relation.course.code,
             "product_id": str(relation.product.id),
             "has_consent_to_terms": True,
+            "billing_address": billing_address,
         }
 
         response = self.client.post(
@@ -1018,10 +1020,12 @@ class OrderCreateApiTest(BaseAPITestCase):
         """
         relation = factories.CourseProductRelationFactory()
         token = self.get_user_token("panoramix")
+        billing_address = BillingAddressDictFactory()
 
         data = {
             "product_id": str(relation.product.id),
             "course_code": relation.course.code,
+            "billing_address": billing_address,
         }
 
         # - `has_consent_to_terms` is required
@@ -1106,10 +1110,10 @@ class OrderCreateApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
 
-    def test_api_order_create_authenticated_billing_address_not_required(self):
+    def test_api_order_create_authenticated_billing_address_required(self):
         """
         When creating an order related to a fee product, if no billing address is
-        given, the order is created as draft.
+        given, the order is not created.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -1131,13 +1135,8 @@ class OrderCreateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(models.Order.objects.count(), 1)
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
-        self.assertEqual(
-            response.json()["state"], enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD
-        )
-        order = models.Order.objects.get()
-        self.assertEqual(order.state, enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD)
+        self.assertEqual(models.Order.objects.count(), 0)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
 
     @mock.patch.object(
         fields.ThumbnailDetailField,
@@ -1172,7 +1171,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             "has_consent_to_terms": True,
         }
 
-        with self.assertNumQueries(43):
+        with self.assertNumQueries(63):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -1201,7 +1200,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 },
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "enrollment": None,
-                "main_invoice_reference": None,
+                "main_invoice_reference": order.main_invoice.reference,
                 "order_group_id": None,
                 "organization": {
                     "id": str(order.organization.id),
@@ -1366,7 +1365,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             },
             "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             "enrollment": None,
-            "main_invoice_reference": None,
+            "main_invoice_reference": order.main_invoice.reference,
             "order_group_id": None,
             "organization": {
                 "id": str(order.organization.id),
@@ -1550,7 +1549,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         }
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(94):
+        with self.assertNumQueries(114):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -1609,12 +1608,14 @@ class OrderCreateApiTest(BaseAPITestCase):
         course = factories.CourseFactory()
         product = factories.ProductFactory(courses=[course])
         organization = product.course_relations.first().organizations.first()
+        billing_address = BillingAddressDictFactory()
 
         data = {
             "course_code": course.code,
             "organization_id": str(organization.id),
             "product_id": str(product.id),
             "has_consent_to_terms": True,
+            "billing_address": billing_address,
         }
 
         response = self.client.post(
@@ -1640,7 +1641,6 @@ class OrderCreateApiTest(BaseAPITestCase):
         order = models.Order.objects.get(id=order_id)
         self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
 
-        InvoiceFactory(order=order)
         order.flow.validate()
         order.refresh_from_db()
         self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
