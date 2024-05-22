@@ -2,8 +2,8 @@
 Client API endpoints
 """
 
-# pylint: disable=too-many-ancestors, too-many-lines
-# ruff: noqa: PLR0912
+# pylint: disable=too-many-ancestors, too-many-lines, too-many-branches
+# ruff: noqa: PLR0911,PLR0912
 import io
 import uuid
 from http import HTTPStatus
@@ -29,6 +29,7 @@ from rest_framework.response import Response
 from joanie.core import enums, filters, models, permissions, serializers
 from joanie.core.api.base import NestedGenericViewSet
 from joanie.core.exceptions import NoContractToSignError
+from joanie.core.models import Address
 from joanie.core.tasks import generate_zip_archive_task
 from joanie.core.utils import contract as contract_utility
 from joanie.core.utils import contract_definition, issuers
@@ -405,6 +406,12 @@ class OrderViewSet(
             if organization:
                 serializer.initial_data["organization_id"] = organization.id
 
+        if product.price != 0 and not request.data.get("billing_address"):
+            return Response(
+                {"billing_address": "This field is required."},
+                status=HTTPStatus.BAD_REQUEST,
+            )
+
         # - Validate data then create an order
         try:
             self.perform_create(serializer)
@@ -417,7 +424,9 @@ class OrderViewSet(
                 status=HTTPStatus.BAD_REQUEST,
             )
 
-        serializer.instance.flow.assign()
+        serializer.instance.flow.assign(
+            billing_address=request.data.get("billing_address")
+        )
 
         # Else return the fresh new order
         return Response(serializer.data, status=HTTPStatus.CREATED)
