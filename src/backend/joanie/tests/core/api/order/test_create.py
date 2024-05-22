@@ -157,7 +157,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 },
                 "owner": "panoramix",
                 "product_id": str(product.id),
-                "state": enums.ORDER_STATE_ASSIGNED,
+                "state": enums.ORDER_STATE_COMPLETED,
                 "total": float(product.price),
                 "total_currency": settings.DEFAULT_CURRENCY,
                 "target_enrollments": [],
@@ -211,7 +211,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             },
         )
 
-        with self.assertNumQueries(28):
+        with self.assertNumQueries(11):
             response = self.client.patch(
                 f"/api/v1.0/orders/{order.id}/submit/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -356,7 +356,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 },
                 "owner": enrollment.user.username,
                 "product_id": str(product.id),
-                "state": enums.ORDER_STATE_ASSIGNED,
+                "state": enums.ORDER_STATE_COMPLETED,
                 "total": float(product.price),
                 "total_currency": settings.DEFAULT_CURRENCY,
                 "target_enrollments": [],
@@ -1133,9 +1133,11 @@ class OrderCreateApiTest(BaseAPITestCase):
 
         self.assertEqual(models.Order.objects.count(), 1)
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
-        self.assertEqual(response.json()["state"], enums.ORDER_STATE_ASSIGNED)
+        self.assertEqual(
+            response.json()["state"], enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD
+        )
         order = models.Order.objects.get()
-        self.assertEqual(order.state, enums.ORDER_STATE_ASSIGNED)
+        self.assertEqual(order.state, enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD)
 
     @mock.patch.object(
         fields.ThumbnailDetailField,
@@ -1170,7 +1172,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             "has_consent_to_terms": True,
         }
 
-        with self.assertNumQueries(31):
+        with self.assertNumQueries(43):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -1229,7 +1231,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "product_id": str(product.id),
                 "total": float(product.price),
                 "total_currency": settings.DEFAULT_CURRENCY,
-                "state": enums.ORDER_STATE_ASSIGNED,
+                "state": enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
                 "target_enrollments": [],
                 "target_courses": [
                     {
@@ -1284,7 +1286,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 ],
             },
         )
-        with self.assertNumQueries(11):
+        with self.assertNumQueries(10):
             response = self.client.patch(
                 f"/api/v1.0/orders/{order.id}/submit/",
                 data=data,
@@ -1394,7 +1396,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             "product_id": str(product.id),
             "total": float(product.price),
             "total_currency": settings.DEFAULT_CURRENCY,
-            "state": enums.ORDER_STATE_ASSIGNED,
+            "state": enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
             "target_enrollments": [],
             "target_courses": [],
         }
@@ -1456,7 +1458,10 @@ class OrderCreateApiTest(BaseAPITestCase):
         )
 
         self.assertEqual(
-            models.Order.objects.exclude(state=enums.ORDER_STATE_ASSIGNED).count(), 0
+            models.Order.objects.exclude(
+                state=enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD
+            ).count(),
+            0,
         )
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
 
@@ -1545,7 +1550,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         }
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(80):
+        with self.assertNumQueries(94):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -1581,7 +1586,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
-        self.assertEqual(response.json()["state"], enums.ORDER_STATE_ASSIGNED)
+        self.assertEqual(response.json()["state"], enums.ORDER_STATE_COMPLETED)
         order = models.Order.objects.get(id=response.json()["id"])
         response = self.client.patch(
             f"/api/v1.0/orders/{order.id}/submit/",
@@ -1619,7 +1624,9 @@ class OrderCreateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
-        self.assertEqual(response.json()["state"], enums.ORDER_STATE_ASSIGNED)
+        self.assertEqual(
+            response.json()["state"], enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD
+        )
         order_id = response.json()["id"]
         billing_address = BillingAddressDictFactory()
         data["billing_address"] = billing_address
