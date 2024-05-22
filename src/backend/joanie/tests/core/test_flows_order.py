@@ -39,7 +39,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
 
         order.flow.assign()
 
-        self.assertEqual(order.state, enums.ORDER_STATE_ASSIGNED)
+        self.assertEqual(order.state, enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD)
 
     def test_flow_order_assign_no_organization(self):
         """
@@ -75,6 +75,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             product=product,
             course=course,
         )
+        order.flow.assign()
         order.submit(billing_address=BillingAddressDictFactory())
 
         self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
@@ -158,6 +159,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             product=product,
             course=course,
         )
+        order.flow.assign()
         order.submit(billing_address=BillingAddressDictFactory())
 
         # - Create an inactive enrollment for related course run
@@ -205,6 +207,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             product=product,
             course=course,
         )
+        order.flow.assign()
         order.submit()
 
         # - As target_course has several course runs, user should not be enrolled automatically
@@ -251,6 +254,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             product=product_1,
             course=course,
         )
+        order.flow.assign()
         order.submit()
         factories.OrderFactory(owner=owner, product=product_2, course=course)
 
@@ -329,6 +333,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             product=factories.ProductFactory(price="0.00"),
             state=enums.ORDER_STATE_DRAFT,
         )
+        order_free.flow.assign()
         order_free.submit()
         self.assertEqual(order_free.flow._can_be_state_validated(), True)  # pylint: disable=protected-access
         # order free are automatically validated without calling the validate method
@@ -538,6 +543,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         # Create a pre-existing free enrollment
         enrollment = factories.EnrollmentFactory(course_run=course_run, is_active=True)
         order = factories.OrderFactory(product=product, owner=enrollment.user)
+        order.flow.assign()
         order.submit()
 
         self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
@@ -671,6 +677,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         )
         order = factories.OrderFactory(product=product, owner__username="student")
 
+        order.flow.assign()
         order.submit()
 
         self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
