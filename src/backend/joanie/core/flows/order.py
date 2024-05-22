@@ -40,6 +40,8 @@ class OrderFlow:
         """
         Transition order to assigned state.
         """
+        self.instance.freeze_target_courses()
+        self.update()
 
     def _can_be_state_completed_from_assigned(self):
         """
@@ -194,6 +196,7 @@ class OrderFlow:
         source=[
             enums.ORDER_STATE_DRAFT,
             enums.ORDER_STATE_ASSIGNED,
+            enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
             enums.ORDER_STATE_PENDING,
         ],
         target=enums.ORDER_STATE_SUBMITTED,
@@ -229,6 +232,7 @@ class OrderFlow:
             enums.ORDER_STATE_DRAFT,
             enums.ORDER_STATE_ASSIGNED,
             enums.ORDER_STATE_SUBMITTED,
+            enums.ORDER_STATE_COMPLETED,
         ],
         target=enums.ORDER_STATE_VALIDATED,
         conditions=[_can_be_state_validated],
