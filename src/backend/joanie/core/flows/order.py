@@ -191,7 +191,11 @@ class OrderFlow:
         )
 
     @state.transition(
-        source=[enums.ORDER_STATE_DRAFT, enums.ORDER_STATE_PENDING],
+        source=[
+            enums.ORDER_STATE_DRAFT,
+            enums.ORDER_STATE_ASSIGNED,
+            enums.ORDER_STATE_PENDING,
+        ],
         target=enums.ORDER_STATE_SUBMITTED,
         conditions=[_can_be_state_submitted],
     )
@@ -224,6 +228,7 @@ class OrderFlow:
     @state.transition(
         source=[
             enums.ORDER_STATE_DRAFT,
+            enums.ORDER_STATE_ASSIGNED,
             enums.ORDER_STATE_SUBMITTED,
         ],
         target=enums.ORDER_STATE_VALIDATED,
