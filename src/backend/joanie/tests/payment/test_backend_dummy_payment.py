@@ -12,7 +12,6 @@ from django.urls import reverse
 from rest_framework.test import APIRequestFactory
 
 from joanie.core.enums import (
-    ORDER_STATE_PENDING,
     ORDER_STATE_PENDING_PAYMENT,
     ORDER_STATE_SUBMITTED,
     ORDER_STATE_VALIDATED,
@@ -28,7 +27,7 @@ from joanie.payment.exceptions import (
     RefundPaymentFailed,
     RegisterPaymentFailed,
 )
-from joanie.payment.factories import BillingAddressDictFactory
+from joanie.payment.factories import BillingAddressDictFactory, CreditCardFactory
 from joanie.payment.models import CreditCard
 from joanie.tests.payment.base_payment import BasePaymentTestCase
 
@@ -180,8 +179,12 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
             first_name="",
             last_name="",
         )
-        order = OrderFactory(owner=owner, state=ORDER_STATE_SUBMITTED)
+        order = OrderFactory(owner=owner)
+        CreditCardFactory(
+            owner=owner, is_main=True, initial_issuer_transaction_identifier="1"
+        )
         billing_address = BillingAddressDictFactory()
+        order.flow.assign(billing_address=billing_address)
         payment_id = f"pay_{order.id}"
 
         payment_payload = backend.create_one_click_payment(order, billing_address)
@@ -253,7 +256,6 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         )
         order = OrderFactory(
             owner=owner,
-            state=ORDER_STATE_PENDING,
             payment_schedule=[
                 {
                     "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
@@ -281,7 +283,11 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
                 },
             ],
         )
+        CreditCardFactory(
+            owner=owner, is_main=True, initial_issuer_transaction_identifier="1"
+        )
         billing_address = BillingAddressDictFactory()
+        order.flow.assign(billing_address=billing_address)
         payment_id = f"pay_{order.id}"
 
         payment_payload = backend.create_one_click_payment(
@@ -304,6 +310,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
             format="json",
         )
         request.data = json.loads(request.body.decode("utf-8"))
+
         backend.handle_notification(request)
         payment = cache.get(payment_id)
         self.assertEqual(
@@ -726,8 +733,12 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         request_factory = APIRequestFactory()
 
         # Create a payment
-        order = OrderFactory(state=ORDER_STATE_SUBMITTED)
+        order = OrderFactory()
+        CreditCardFactory(
+            owner=order.owner, is_main=True, initial_issuer_transaction_identifier="1"
+        )
         billing_address = BillingAddressDictFactory()
+        order.flow.assign(billing_address=billing_address)
         payment_id = backend.create_payment(order, billing_address)["payment_id"]
 
         # Notify that payment has been paid

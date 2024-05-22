@@ -34,7 +34,7 @@ from joanie.payment.exceptions import (
     PaymentProviderAPIException,
     RegisterPaymentFailed,
 )
-from joanie.payment.factories import CreditCardFactory
+from joanie.payment.factories import BillingAddressDictFactory, CreditCardFactory
 from joanie.payment.models import CreditCard, Transaction
 from joanie.tests.base import BaseLogMixinTestCase
 from joanie.tests.payment.base_payment import BasePaymentTestCase
@@ -818,7 +818,6 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         order = OrderFactory(
             owner=owner,
             product=product,
-            state=ORDER_STATE_PENDING,
             payment_schedule=[
                 {
                     "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
@@ -839,6 +838,8 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
             token="854d630f17f54ee7bce03fb4fcf764e9",
             initial_issuer_transaction_identifier="4575676657929351",
         )
+        billing_address = BillingAddressDictFactory()
+        order.flow.assign(billing_address=billing_address)
 
         with self.open("lyra/responses/create_zero_click_payment.json") as file:
             json_response = json.loads(file.read())
@@ -1133,6 +1134,11 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         order = OrderFactory(
             id="514070fe-c12c-48b8-97cf-5262708673a3", owner=owner, product=product
         )
+        CreditCardFactory(
+            owner=order.owner, is_main=True, initial_issuer_transaction_identifier="1"
+        )
+        billing_address = BillingAddressDictFactory()
+        order.flow.assign(billing_address=billing_address)
 
         with self.open("lyra/requests/payment_accepted_no_store_card.json") as file:
             json_request = json.loads(file.read())

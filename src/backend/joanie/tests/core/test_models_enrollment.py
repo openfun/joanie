@@ -346,6 +346,7 @@ class EnrollmentModelsTestCase(TestCase):
         course_relation.course_runs.set([cr1, cr2])
 
         order = factories.OrderFactory(owner=user, product=product)
+        order.flow.assign()
         order.submit()
 
         # - Enroll to cr2 should fail

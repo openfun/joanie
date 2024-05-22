@@ -36,10 +36,29 @@ class OrderFlow:
         target=enums.ORDER_STATE_ASSIGNED,
         conditions=[_can_be_assigned],
     )
-    def assign(self):
+    def assign(self, billing_address=None):
         """
         Transition order to assigned state.
         """
+        if not self.instance.is_free and billing_address:
+            Address = apps.get_model("core", "Address")  # pylint: disable=invalid-name
+            address, _ = Address.objects.get_or_create(
+                **billing_address,
+                owner=self.instance.owner,
+                defaults={
+                    "is_reusable": False,
+                    "title": f"Billing address of order {self.instance.id}",
+                },
+            )
+
+            # Create the main invoice
+            Invoice = apps.get_model("payment", "Invoice")  # pylint: disable=invalid-name
+            Invoice.objects.get_or_create(
+                order=self.instance,
+                total=self.instance.total,
+                recipient_address=address,
+            )
+
         self.instance.freeze_target_courses()
         self.update()
 
@@ -232,6 +251,7 @@ class OrderFlow:
             enums.ORDER_STATE_DRAFT,
             enums.ORDER_STATE_ASSIGNED,
             enums.ORDER_STATE_SUBMITTED,
+            enums.ORDER_STATE_PENDING,
             enums.ORDER_STATE_COMPLETED,
         ],
         target=enums.ORDER_STATE_VALIDATED,
@@ -352,7 +372,7 @@ class OrderFlow:
         """
 
     @state.on_success()
-    def _post_transition_success(self, descriptor, source, target):  # pylint: disable=unused-argument
+    def _post_transition_success(self, descriptor, source, target, **kwargs):  # pylint: disable=unused-argument
         """Post transition actions"""
         self.instance.save()
 
