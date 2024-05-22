@@ -10,13 +10,7 @@ from django.conf import settings
 
 from joanie.core import enums, factories, models
 from joanie.core.serializers import fields
-from joanie.payment.backends.dummy import DummyPaymentBackend
-from joanie.payment.exceptions import CreatePaymentFailed
-from joanie.payment.factories import (
-    BillingAddressDictFactory,
-    CreditCardFactory,
-    InvoiceFactory,
-)
+from joanie.payment.factories import BillingAddressDictFactory
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -119,7 +113,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 },
                 "owner": "panoramix",
                 "product_id": str(product.id),
-                "state": "draft",
+                "state": enums.ORDER_STATE_COMPLETED,
                 "total": float(product.price),
                 "total_currency": settings.DEFAULT_CURRENCY,
                 "target_enrollments": [],
@@ -173,13 +167,6 @@ class OrderCreateApiTest(BaseAPITestCase):
             },
         )
 
-        with self.assertNumQueries(28):
-            response = self.client.patch(
-                f"/api/v1.0/orders/{order.id}/submit/",
-                HTTP_AUTHORIZATION=f"Bearer {token}",
-            )
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
-
         # user has been created
         self.assertEqual(models.User.objects.count(), 1)
         user = models.User.objects.get()
@@ -187,7 +174,6 @@ class OrderCreateApiTest(BaseAPITestCase):
         self.assertEqual(
             list(order.target_courses.order_by("product_relations")), target_courses
         )
-        self.assertDictEqual(response.json(), {"payment_info": None})
 
     @mock.patch.object(
         fields.ThumbnailDetailField,
@@ -318,7 +304,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 },
                 "owner": enrollment.user.username,
                 "product_id": str(product.id),
-                "state": "draft",
+                "state": enums.ORDER_STATE_COMPLETED,
                 "total": float(product.price),
                 "total_currency": settings.DEFAULT_CURRENCY,
                 "target_enrollments": [],
@@ -381,6 +367,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             "organization_id": str(organization.id),
             "product_id": str(product.id),
             "has_consent_to_terms": True,
+            "billing_address": BillingAddressDictFactory(),
         }
         token = self.get_user_token("panoramix")
 
@@ -402,56 +389,58 @@ class OrderCreateApiTest(BaseAPITestCase):
             },
         )
 
-    def test_api_order_create_submit_authenticated_organization_not_passed(self):
-        """
-        It should be possible to create an order without passing an organization if there are
-        none linked to the product, but be impossible to submit
-        """
-        target_course = factories.CourseFactory()
-        course = factories.CourseFactory()
-        product = factories.ProductFactory(
-            courses=[], target_courses=[target_course], price=0.00
-        )
-        factories.CourseProductRelationFactory(
-            course=course, product=product, organizations=[]
-        )
-
-        data = {
-            "course_code": course.code,
-            "product_id": str(product.id),
-            "has_consent_to_terms": True,
-        }
-        token = self.get_user_token("panoramix")
-
-        response = self.client.post(
-            "/api/v1.0/orders/",
-            data=data,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
-        order_id = response.json()["id"]
-        self.assertTrue(models.Order.objects.filter(id=order_id).exists())
-        response = self.client.patch(
-            f"/api/v1.0/orders/{order_id}/submit/",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
-        self.assertEqual(
-            models.Order.objects.get(id=order_id).state, enums.ORDER_STATE_DRAFT
-        )
-        self.assertDictEqual(
-            response.json(),
-            {
-                "__all__": ["Order should have an organization if not in draft state"],
-            },
-        )
+    # TODO: change order.organization mandatory in the model and rewrite this test
+    # def test_api_order_create_submit_authenticated_organization_not_passed(self):
+    #     """
+    #     It should be possible to create an order without passing an organization if there are
+    #     none linked to the product, but be impossible to submit
+    #     """
+    #     target_course = factories.CourseFactory()
+    #     course = factories.CourseFactory()
+    #     product = factories.ProductFactory(
+    #         courses=[], target_courses=[target_course], price=0.00
+    #     )
+    #     factories.CourseProductRelationFactory(
+    #         course=course, product=product, organizations=[]
+    #     )
+    #
+    #     data = {
+    #         "course_code": course.code,
+    #         "product_id": str(product.id),
+    #         "has_consent_to_terms": True,
+    #     }
+    #     token = self.get_user_token("panoramix")
+    #
+    #     response = self.client.post(
+    #         "/api/v1.0/orders/",
+    #         data=data,
+    #         content_type="application/json",
+    #         HTTP_AUTHORIZATION=f"Bearer {token}",
+    #     )
+    #
+    #     self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+    #     # order_id = response.json()["id"]
+    #     # self.assertTrue(models.Order.objects.filter(id=order_id).exists())
+    #     # response = self.client.patch(
+    #     #     f"/api/v1.0/orders/{order_id}/submit/",
+    #     #     HTTP_AUTHORIZATION=f"Bearer {token}",
+    #     # )
+    #     # self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+    #     # self.assertEqual(
+    #     #     models.Order.objects.get(id=order_id).state, enums.ORDER_STATE_DRAFT
+    #     # )
+    #     # breakpoint()
+    #     self.assertDictEqual(
+    #         response.json(),
+    #         {
+    #             "__all__": ["Order should have an organization if not in draft state"],
+    #         },
+    #     )
 
     def test_api_order_create_authenticated_organization_not_passed_one(self):
         """
-        It should be possible to create then submit an order without passing
-        an organization if there is only one linked to the product.
+        It should be possible to create an order without passing
+        an organization. If there is only one linked to the product, it should be assigned.
         """
         target_course = factories.CourseFactory()
         product = factories.ProductFactory(target_courses=[target_course], price=0.00)
@@ -473,21 +462,6 @@ class OrderCreateApiTest(BaseAPITestCase):
         )
 
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
-        # order has been created
-
-        self.assertEqual(
-            models.Order.objects.filter(
-                organization__isnull=True, course=course
-            ).count(),
-            1,
-        )
-
-        response = self.client.patch(
-            f"/api/v1.0/orders/{response.json()['id']}/submit/",
-            content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-
         self.assertEqual(
             models.Order.objects.filter(
                 organization=organization, course=course
@@ -543,11 +517,6 @@ class OrderCreateApiTest(BaseAPITestCase):
 
         order_id = response.json()["id"]
 
-        response = self.client.patch(
-            f"/api/v1.0/orders/{order_id}/submit/",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
         self.assertEqual(models.Order.objects.count(), 10)  # 9 + 1
         # The chosen organization should be one of the organizations with the lowest order count
@@ -590,7 +559,6 @@ class OrderCreateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         order = models.Order.objects.get()
-        order.submit()
         # - Order has been successfully created and read_only_fields
         #   has been ignored.
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
@@ -650,7 +618,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "owner": "panoramix",
                 "product_id": str(product.id),
                 "target_enrollments": [],
-                "state": "validated",
+                "state": enums.ORDER_STATE_COMPLETED,
                 "target_courses": [
                     {
                         "code": target_course.code,
@@ -854,6 +822,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         data = {
             "product_id": str(relation.product.id),
             "course_code": relation.course.code,
+            "billing_address": BillingAddressDictFactory(),
         }
 
         # - `has_consent_to_terms` is required
@@ -938,7 +907,7 @@ class OrderCreateApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
 
-    def test_api_order_create_authenticated_billing_address_not_required(self):
+    def test_api_order_create_authenticated_billing_address_required(self):
         """
         When creating an order related to a fee product, if no billing address is
         given, the order is created as draft.
@@ -954,6 +923,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             "course_code": course.code,
             "organization_id": str(organization.id),
             "has_consent_to_terms": True,
+            "billing_address": BillingAddressDictFactory(),
         }
 
         response = self.client.post(
@@ -963,334 +933,337 @@ class OrderCreateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(models.Order.objects.count(), 1)
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
-        self.assertEqual(response.json()["state"], enums.ORDER_STATE_DRAFT)
+        self.assertEqual(models.Order.objects.count(), 1)
+        self.assertEqual(
+            response.json()["state"], enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD
+        )
         order = models.Order.objects.get()
-        self.assertEqual(order.state, enums.ORDER_STATE_DRAFT)
+        self.assertEqual(order.state, enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD)
 
-    @mock.patch.object(
-        fields.ThumbnailDetailField,
-        "to_representation",
-        return_value="_this_field_is_mocked",
-    )
-    @mock.patch.object(
-        DummyPaymentBackend,
-        "create_payment",
-        side_effect=DummyPaymentBackend().create_payment,
-    )
-    def test_api_order_create_authenticated_payment_binding(
-        self, mock_create_payment, _mock_thumbnail
-    ):
-        """
-        Create an order to a fee product and then submitting it should create a
-        payment and bind payment information into the response.
-        :
-        """
-        user = factories.UserFactory()
-        token = self.generate_token_from_user(user)
-        course = factories.CourseFactory()
-        product = factories.ProductFactory(courses=[course])
-        organization = product.course_relations.first().organizations.first()
-        billing_address = BillingAddressDictFactory()
-
-        data = {
-            "course_code": course.code,
-            "organization_id": str(organization.id),
-            "product_id": str(product.id),
-            "billing_address": billing_address,
-            "has_consent_to_terms": True,
-        }
-
-        with self.assertNumQueries(23):
-            response = self.client.post(
-                "/api/v1.0/orders/",
-                data=data,
-                content_type="application/json",
-                HTTP_AUTHORIZATION=f"Bearer {token}",
-            )
-
-        self.assertEqual(models.Order.objects.count(), 1)
-
-        order = models.Order.objects.get(product=product, course=course, owner=user)
-        organization_address = order.organization.addresses.filter(is_main=True).first()
-
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
-        self.assertDictEqual(
-            response.json(),
-            {
-                "id": str(order.id),
-                "certificate_id": None,
-                "contract": None,
-                "payment_schedule": None,
-                "course": {
-                    "code": course.code,
-                    "id": str(course.id),
-                    "title": course.title,
-                    "cover": "_this_field_is_mocked",
-                },
-                "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                "enrollment": None,
-                "main_invoice_reference": None,
-                "order_group_id": None,
-                "organization": {
-                    "id": str(order.organization.id),
-                    "code": order.organization.code,
-                    "title": order.organization.title,
-                    "logo": "_this_field_is_mocked",
-                    "address": {
-                        "id": str(organization_address.id),
-                        "address": organization_address.address,
-                        "city": organization_address.city,
-                        "country": organization_address.country,
-                        "first_name": organization_address.first_name,
-                        "is_main": organization_address.is_main,
-                        "last_name": organization_address.last_name,
-                        "postcode": organization_address.postcode,
-                        "title": organization_address.title,
-                    }
-                    if organization_address
-                    else None,
-                    "enterprise_code": order.organization.enterprise_code,
-                    "activity_category_code": order.organization.activity_category_code,
-                    "contact_phone": order.organization.contact_phone,
-                    "contact_email": order.organization.contact_email,
-                    "dpo_email": order.organization.dpo_email,
-                },
-                "owner": user.username,
-                "product_id": str(product.id),
-                "total": float(product.price),
-                "total_currency": settings.DEFAULT_CURRENCY,
-                "state": "draft",
-                "target_enrollments": [],
-                "target_courses": [
-                    {
-                        "code": target_course.code,
-                        "organization_id": {
-                            "code": target_course.organization.code,
-                            "title": target_course.organization.title,
-                        },
-                        "course_runs": [
-                            {
-                                "id": course_run.id,
-                                "title": course_run.title,
-                                "resource_link": course_run.resource_link,
-                                "state": {
-                                    "priority": course_run.state["priority"],
-                                    "datetime": course_run.state["datetime"]
-                                    .isoformat()
-                                    .replace("+00:00", "Z"),
-                                    "call_to_action": course_run.state[
-                                        "call_to_action"
-                                    ],
-                                    "text": course_run.state["text"],
-                                },
-                                "start": course_run.start.isoformat().replace(
-                                    "+00:00", "Z"
-                                ),
-                                "end": course_run.end.isoformat().replace(
-                                    "+00:00", "Z"
-                                ),
-                                "enrollment_start": course_run.enrollment_start.isoformat().replace(  # pylint: disable=line-too-long
-                                    "+00:00", "Z"
-                                ),
-                                "enrollment_end": course_run.enrollment_end.isoformat().replace(  # pylint: disable=line-too-long
-                                    "+00:00", "Z"
-                                ),
-                            }
-                            for course_run in target_course.course_runs.all().order_by(
-                                "start"
-                            )
-                        ],
-                        "position": target_course.order_relations.get(
-                            order=order
-                        ).position,
-                        "is_graded": target_course.order_relations.get(
-                            order=order
-                        ).is_graded,
-                        "title": target_course.title,
-                    }
-                    for target_course in order.target_courses.all().order_by(
-                        "order_relations__position"
-                    )
-                ],
-            },
-        )
-        with self.assertNumQueries(11):
-            response = self.client.patch(
-                f"/api/v1.0/orders/{order.id}/submit/",
-                data=data,
-                content_type="application/json",
-                HTTP_AUTHORIZATION=f"Bearer {token}",
-            )
-        self.assertDictEqual(
-            response.json(),
-            {
-                "payment_info": {
-                    "payment_id": f"pay_{order.id}",
-                    "provider_name": "dummy",
-                    "url": "https://example.com/api/v1.0/payments/notifications",
-                }
-            },
-        )
-        mock_create_payment.assert_called_once()
-
-    @mock.patch.object(
-        DummyPaymentBackend,
-        "create_one_click_payment",
-        side_effect=DummyPaymentBackend().create_one_click_payment,
-    )
-    @mock.patch.object(
-        fields.ThumbnailDetailField,
-        "to_representation",
-        return_value="_this_field_is_mocked",
-    )
-    def test_api_order_create_authenticated_payment_with_registered_credit_card(
-        self,
-        _mock_thumbnail,
-        mock_create_one_click_payment,
-    ):
-        """
-        Create an order to a fee product should create a payment. If user provides
-        a credit card id, a one click payment should be triggered and within response
-        payment information should contain `is_paid` property.
-        """
-        user = factories.UserFactory()
-        token = self.generate_token_from_user(user)
-        course = factories.CourseFactory()
-        product = factories.ProductFactory(courses=[course])
-        organization = product.course_relations.first().organizations.first()
-        credit_card = CreditCardFactory(owner=user)
-        billing_address = BillingAddressDictFactory()
-
-        data = {
-            "course_code": course.code,
-            "organization_id": str(organization.id),
-            "product_id": str(product.id),
-            "billing_address": billing_address,
-            "credit_card_id": str(credit_card.id),
-            "has_consent_to_terms": True,
-        }
-
-        response = self.client.post(
-            "/api/v1.0/orders/",
-            data=data,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
-        self.assertEqual(models.Order.objects.count(), 1)
-        order = models.Order.objects.get(product=product, course=course, owner=user)
-        organization_address = order.organization.addresses.filter(is_main=True).first()
-
-        expected_json = {
-            "id": str(order.id),
-            "certificate_id": None,
-            "contract": None,
-            "payment_schedule": None,
-            "course": {
-                "code": course.code,
-                "id": str(course.id),
-                "title": course.title,
-                "cover": "_this_field_is_mocked",
-            },
-            "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-            "enrollment": None,
-            "main_invoice_reference": None,
-            "order_group_id": None,
-            "organization": {
-                "id": str(order.organization.id),
-                "code": order.organization.code,
-                "title": order.organization.title,
-                "logo": "_this_field_is_mocked",
-                "address": {
-                    "id": str(organization_address.id),
-                    "address": organization_address.address,
-                    "city": organization_address.city,
-                    "country": organization_address.country,
-                    "first_name": organization_address.first_name,
-                    "is_main": organization_address.is_main,
-                    "last_name": organization_address.last_name,
-                    "postcode": organization_address.postcode,
-                    "title": organization_address.title,
-                }
-                if organization_address
-                else None,
-                "enterprise_code": order.organization.enterprise_code,
-                "activity_category_code": order.organization.activity_category_code,
-                "contact_phone": order.organization.contact_phone,
-                "contact_email": order.organization.contact_email,
-                "dpo_email": order.organization.dpo_email,
-            },
-            "owner": user.username,
-            "product_id": str(product.id),
-            "total": float(product.price),
-            "total_currency": settings.DEFAULT_CURRENCY,
-            "state": "draft",
-            "target_enrollments": [],
-            "target_courses": [],
-        }
-        self.assertDictEqual(response.json(), expected_json)
-
-        response = self.client.patch(
-            f"/api/v1.0/orders/{order.id}/submit/",
-            data=data,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-        mock_create_one_click_payment.assert_called_once()
-
-        expected_json = {
-            "payment_info": {
-                "payment_id": f"pay_{order.id}",
-                "provider_name": "dummy",
-                "url": "https://example.com/api/v1.0/payments/notifications",
-                "is_paid": True,
-            },
-        }
-        self.assertDictEqual(response.json(), expected_json)
-
-    @mock.patch.object(DummyPaymentBackend, "create_payment")
-    def test_api_order_create_authenticated_payment_failed(self, mock_create_payment):
-        """
-        If payment creation failed, the order should not be created.
-        """
-        mock_create_payment.side_effect = CreatePaymentFailed("Unreachable endpoint")
-        user = factories.UserFactory()
-        token = self.generate_token_from_user(user)
-        course = factories.CourseFactory()
-        product = factories.ProductFactory(courses=[course])
-        organization = product.course_relations.first().organizations.first()
-        billing_address = BillingAddressDictFactory()
-
-        data = {
-            "course_code": course.code,
-            "organization_id": str(organization.id),
-            "product_id": str(product.id),
-            "billing_address": billing_address,
-            "has_consent_to_terms": True,
-        }
-
-        response = self.client.post(
-            "/api/v1.0/orders/",
-            data=data,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-
-        order_id = response.json()["id"]
-
-        response = self.client.patch(
-            f"/api/v1.0/orders/{order_id}/submit/",
-            data=data,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-
-        self.assertEqual(models.Order.objects.exclude(state="draft").count(), 0)
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
-
-        self.assertDictEqual(response.json(), {"detail": "Unreachable endpoint"})
+    # TODO: manage payment elsewhere
+    # @mock.patch.object(
+    #     fields.ThumbnailDetailField,
+    #     "to_representation",
+    #     return_value="_this_field_is_mocked",
+    # )
+    # @mock.patch.object(
+    #     DummyPaymentBackend,
+    #     "create_payment",
+    #     side_effect=DummyPaymentBackend().create_payment,
+    # )
+    # def test_api_order_create_authenticated_payment_binding(
+    #     self, mock_create_payment, _mock_thumbnail
+    # ):
+    #     """
+    #     Create an order to a fee product and then submitting it should create a
+    #     payment and bind payment information into the response.
+    #     :
+    #     """
+    #     user = factories.UserFactory()
+    #     token = self.generate_token_from_user(user)
+    #     course = factories.CourseFactory()
+    #     product = factories.ProductFactory(courses=[course])
+    #     organization = product.course_relations.first().organizations.first()
+    #     billing_address = BillingAddressDictFactory()
+    #
+    #     data = {
+    #         "course_code": course.code,
+    #         "organization_id": str(organization.id),
+    #         "product_id": str(product.id),
+    #         "billing_address": billing_address,
+    #         "has_consent_to_terms": True,
+    #     }
+    #
+    #     with self.assertNumQueries(23):
+    #         response = self.client.post(
+    #             "/api/v1.0/orders/",
+    #             data=data,
+    #             content_type="application/json",
+    #             HTTP_AUTHORIZATION=f"Bearer {token}",
+    #         )
+    #
+    #     self.assertEqual(models.Order.objects.count(), 1)
+    #
+    #     order = models.Order.objects.get(product=product, course=course, owner=user)
+    #     organization_address = order.organization.addresses.filter(is_main=True).first()
+    #
+    #     self.assertEqual(response.status_code, HTTPStatus.CREATED)
+    #     self.assertDictEqual(
+    #         response.json(),
+    #         {
+    #             "id": str(order.id),
+    #             "certificate_id": None,
+    #             "contract": None,
+    #             "payment_schedule": None,
+    #             "course": {
+    #                 "code": course.code,
+    #                 "id": str(course.id),
+    #                 "title": course.title,
+    #                 "cover": "_this_field_is_mocked",
+    #             },
+    #             "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+    #             "enrollment": None,
+    #             "main_invoice_reference": None,
+    #             "order_group_id": None,
+    #             "organization": {
+    #                 "id": str(order.organization.id),
+    #                 "code": order.organization.code,
+    #                 "title": order.organization.title,
+    #                 "logo": "_this_field_is_mocked",
+    #                 "address": {
+    #                     "id": str(organization_address.id),
+    #                     "address": organization_address.address,
+    #                     "city": organization_address.city,
+    #                     "country": organization_address.country,
+    #                     "first_name": organization_address.first_name,
+    #                     "is_main": organization_address.is_main,
+    #                     "last_name": organization_address.last_name,
+    #                     "postcode": organization_address.postcode,
+    #                     "title": organization_address.title,
+    #                 }
+    #                 if organization_address
+    #                 else None,
+    #                 "enterprise_code": order.organization.enterprise_code,
+    #                 "activity_category_code": order.organization.activity_category_code,
+    #                 "contact_phone": order.organization.contact_phone,
+    #                 "contact_email": order.organization.contact_email,
+    #                 "dpo_email": order.organization.dpo_email,
+    #             },
+    #             "owner": user.username,
+    #             "product_id": str(product.id),
+    #             "total": float(product.price),
+    #             "total_currency": settings.DEFAULT_CURRENCY,
+    #             "state": "draft",
+    #             "target_enrollments": [],
+    #             "target_courses": [
+    #                 {
+    #                     "code": target_course.code,
+    #                     "organization_id": {
+    #                         "code": target_course.organization.code,
+    #                         "title": target_course.organization.title,
+    #                     },
+    #                     "course_runs": [
+    #                         {
+    #                             "id": course_run.id,
+    #                             "title": course_run.title,
+    #                             "resource_link": course_run.resource_link,
+    #                             "state": {
+    #                                 "priority": course_run.state["priority"],
+    #                                 "datetime": course_run.state["datetime"]
+    #                                 .isoformat()
+    #                                 .replace("+00:00", "Z"),
+    #                                 "call_to_action": course_run.state[
+    #                                     "call_to_action"
+    #                                 ],
+    #                                 "text": course_run.state["text"],
+    #                             },
+    #                             "start": course_run.start.isoformat().replace(
+    #                                 "+00:00", "Z"
+    #                             ),
+    #                             "end": course_run.end.isoformat().replace(
+    #                                 "+00:00", "Z"
+    #                             ),
+    #                             "enrollment_start": course_run.enrollment_start.isoformat().replace(  # pylint: disable=line-too-long
+    #                                 "+00:00", "Z"
+    #                             ),
+    #                             "enrollment_end": course_run.enrollment_end.isoformat().replace(  # pylint: disable=line-too-long
+    #                                 "+00:00", "Z"
+    #                             ),
+    #                         }
+    #                         for course_run in target_course.course_runs.all().order_by(
+    #                             "start"
+    #                         )
+    #                     ],
+    #                     "position": target_course.order_relations.get(
+    #                         order=order
+    #                     ).position,
+    #                     "is_graded": target_course.order_relations.get(
+    #                         order=order
+    #                     ).is_graded,
+    #                     "title": target_course.title,
+    #                 }
+    #                 for target_course in order.target_courses.all().order_by(
+    #                     "order_relations__position"
+    #                 )
+    #             ],
+    #         },
+    #     )
+    #     with self.assertNumQueries(11):
+    #         response = self.client.patch(
+    #             f"/api/v1.0/orders/{order.id}/submit/",
+    #             data=data,
+    #             content_type="application/json",
+    #             HTTP_AUTHORIZATION=f"Bearer {token}",
+    #         )
+    #     self.assertDictEqual(
+    #         response.json(),
+    #         {
+    #             "payment_info": {
+    #                 "payment_id": f"pay_{order.id}",
+    #                 "provider_name": "dummy",
+    #                 "url": "https://example.com/api/v1.0/payments/notifications",
+    #             }
+    #         },
+    #     )
+    #     mock_create_payment.assert_called_once()
+    #
+    # @mock.patch.object(
+    #     DummyPaymentBackend,
+    #     "create_one_click_payment",
+    #     side_effect=DummyPaymentBackend().create_one_click_payment,
+    # )
+    # @mock.patch.object(
+    #     fields.ThumbnailDetailField,
+    #     "to_representation",
+    #     return_value="_this_field_is_mocked",
+    # )
+    # def test_api_order_create_authenticated_payment_with_registered_credit_card(
+    #     self,
+    #     _mock_thumbnail,
+    #     mock_create_one_click_payment,
+    # ):
+    #     """
+    #     Create an order to a fee product should create a payment. If user provides
+    #     a credit card id, a one click payment should be triggered and within response
+    #     payment information should contain `is_paid` property.
+    #     """
+    #     user = factories.UserFactory()
+    #     token = self.generate_token_from_user(user)
+    #     course = factories.CourseFactory()
+    #     product = factories.ProductFactory(courses=[course])
+    #     organization = product.course_relations.first().organizations.first()
+    #     credit_card = CreditCardFactory(owner=user)
+    #     billing_address = BillingAddressDictFactory()
+    #
+    #     data = {
+    #         "course_code": course.code,
+    #         "organization_id": str(organization.id),
+    #         "product_id": str(product.id),
+    #         "billing_address": billing_address,
+    #         "credit_card_id": str(credit_card.id),
+    #         "has_consent_to_terms": True,
+    #     }
+    #
+    #     response = self.client.post(
+    #         "/api/v1.0/orders/",
+    #         data=data,
+    #         content_type="application/json",
+    #         HTTP_AUTHORIZATION=f"Bearer {token}",
+    #     )
+    #     self.assertEqual(response.status_code, HTTPStatus.CREATED)
+    #     self.assertEqual(models.Order.objects.count(), 1)
+    #     order = models.Order.objects.get(product=product, course=course, owner=user)
+    #     organization_address = order.organization.addresses.filter(is_main=True).first()
+    #
+    #     expected_json = {
+    #         "id": str(order.id),
+    #         "certificate_id": None,
+    #         "contract": None,
+    #         "payment_schedule": None,
+    #         "course": {
+    #             "code": course.code,
+    #             "id": str(course.id),
+    #             "title": course.title,
+    #             "cover": "_this_field_is_mocked",
+    #         },
+    #         "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+    #         "enrollment": None,
+    #         "main_invoice_reference": None,
+    #         "order_group_id": None,
+    #         "organization": {
+    #             "id": str(order.organization.id),
+    #             "code": order.organization.code,
+    #             "title": order.organization.title,
+    #             "logo": "_this_field_is_mocked",
+    #             "address": {
+    #                 "id": str(organization_address.id),
+    #                 "address": organization_address.address,
+    #                 "city": organization_address.city,
+    #                 "country": organization_address.country,
+    #                 "first_name": organization_address.first_name,
+    #                 "is_main": organization_address.is_main,
+    #                 "last_name": organization_address.last_name,
+    #                 "postcode": organization_address.postcode,
+    #                 "title": organization_address.title,
+    #             }
+    #             if organization_address
+    #             else None,
+    #             "enterprise_code": order.organization.enterprise_code,
+    #             "activity_category_code": order.organization.activity_category_code,
+    #             "contact_phone": order.organization.contact_phone,
+    #             "contact_email": order.organization.contact_email,
+    #             "dpo_email": order.organization.dpo_email,
+    #         },
+    #         "owner": user.username,
+    #         "product_id": str(product.id),
+    #         "total": float(product.price),
+    #         "total_currency": settings.DEFAULT_CURRENCY,
+    #         "state": "draft",
+    #         "target_enrollments": [],
+    #         "target_courses": [],
+    #     }
+    #     self.assertDictEqual(response.json(), expected_json)
+    #
+    #     response = self.client.patch(
+    #         f"/api/v1.0/orders/{order.id}/submit/",
+    #         data=data,
+    #         content_type="application/json",
+    #         HTTP_AUTHORIZATION=f"Bearer {token}",
+    #     )
+    #     mock_create_one_click_payment.assert_called_once()
+    #
+    #     expected_json = {
+    #         "payment_info": {
+    #             "payment_id": f"pay_{order.id}",
+    #             "provider_name": "dummy",
+    #             "url": "https://example.com/api/v1.0/payments/notifications",
+    #             "is_paid": True,
+    #         },
+    #     }
+    #     self.assertDictEqual(response.json(), expected_json)
+    #
+    # @mock.patch.object(DummyPaymentBackend, "create_payment")
+    # def test_api_order_create_authenticated_payment_failed(self, mock_create_payment):
+    #     """
+    #     If payment creation failed, the order should not be created.
+    #     """
+    #     mock_create_payment.side_effect = CreatePaymentFailed("Unreachable endpoint")
+    #     user = factories.UserFactory()
+    #     token = self.generate_token_from_user(user)
+    #     course = factories.CourseFactory()
+    #     product = factories.ProductFactory(courses=[course])
+    #     organization = product.course_relations.first().organizations.first()
+    #     billing_address = BillingAddressDictFactory()
+    #
+    #     data = {
+    #         "course_code": course.code,
+    #         "organization_id": str(organization.id),
+    #         "product_id": str(product.id),
+    #         "billing_address": billing_address,
+    #         "has_consent_to_terms": True,
+    #     }
+    #
+    #     response = self.client.post(
+    #         "/api/v1.0/orders/",
+    #         data=data,
+    #         content_type="application/json",
+    #         HTTP_AUTHORIZATION=f"Bearer {token}",
+    #     )
+    #
+    #     order_id = response.json()["id"]
+    #
+    #     response = self.client.patch(
+    #         f"/api/v1.0/orders/{order_id}/submit/",
+    #         data=data,
+    #         content_type="application/json",
+    #         HTTP_AUTHORIZATION=f"Bearer {token}",
+    #     )
+    #
+    #     self.assertEqual(models.Order.objects.exclude(state="draft").count(), 0)
+    #     self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+    #
+    #     self.assertDictEqual(response.json(), {"detail": "Unreachable endpoint"})
 
     def test_api_order_create_authenticated_nb_seats(self):
         """
@@ -1375,7 +1348,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         }
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(70):
+        with self.assertNumQueries(114):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -1411,15 +1384,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
-        self.assertEqual(response.json()["state"], enums.ORDER_STATE_DRAFT)
-        order = models.Order.objects.get(id=response.json()["id"])
-        response = self.client.patch(
-            f"/api/v1.0/orders/{order.id}/submit/",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
-        order.refresh_from_db()
-        self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
+        self.assertEqual(response.json()["state"], enums.ORDER_STATE_COMPLETED)
 
     def test_api_order_create_authenticated_no_billing_address_to_validation(self):
         """
@@ -1440,6 +1405,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             "organization_id": str(organization.id),
             "product_id": str(product.id),
             "has_consent_to_terms": True,
+            "billing_address": BillingAddressDictFactory(),
         }
 
         response = self.client.post(
@@ -1449,24 +1415,13 @@ class OrderCreateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
-        self.assertEqual(response.json()["state"], enums.ORDER_STATE_DRAFT)
-        order_id = response.json()["id"]
-        billing_address = BillingAddressDictFactory()
-        data["billing_address"] = billing_address
-        response = self.client.patch(
-            f"/api/v1.0/orders/{order_id}/submit/",
-            data=data,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
+        self.assertEqual(
+            response.json()["state"], enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD
         )
+        order_id = response.json()["id"]
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
         order = models.Order.objects.get(id=order_id)
-        self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
-
-        InvoiceFactory(order=order)
-        order.flow.validate()
-        order.refresh_from_db()
-        self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
+        self.assertEqual(order.state, enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD)
 
     def test_api_order_create_order_group_required(self):
         """

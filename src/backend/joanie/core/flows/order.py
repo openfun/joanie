@@ -25,6 +25,22 @@ class OrderFlow:
     def _get_order_state(self):
         return self.instance.state
 
+    def _can_be_assigned(self):
+        """
+        An order can be assigned if it has an organization.
+        """
+        return self.instance.organization is not None
+
+    @state.transition(
+        source=enums.ORDER_STATE_DRAFT,
+        target=enums.ORDER_STATE_ASSIGNED,
+        conditions=[_can_be_assigned],
+    )
+    def assign(self):
+        """
+        Transition order to assigned state.
+        """
+
     def _can_be_state_completed_from_assigned(self):
         """
         An order state can be set to completed if all installments
@@ -174,6 +190,7 @@ class OrderFlow:
             or self.instance.invoices.count() > 0
         )
 
+    # TODO: remove submit transition
     @state.transition(
         source=[enums.ORDER_STATE_DRAFT, enums.ORDER_STATE_PENDING],
         target=enums.ORDER_STATE_SUBMITTED,

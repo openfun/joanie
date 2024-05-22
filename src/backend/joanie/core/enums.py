@@ -66,9 +66,11 @@ ORDER_STATE_TO_SIGN = "to_sign"  # order needs a contract signature
 ORDER_STATE_TO_SIGN_AND_TO_SAVE_PAYMENT_METHOD = (
     "to_sign_and_to_save_payment_method"  # order needs a contract signature and a payment method
 )  # fmt: skip
+# TODO: remove ORDER_STATE_SUBMITTED
 ORDER_STATE_SUBMITTED = "submitted"  # order information have been validated
 ORDER_STATE_PENDING = "pending"  # payment has failed but can be retried
 ORDER_STATE_CANCELED = "canceled"  # has been canceled
+# TODO: remove ORDER_STATE_VALIDATED
 ORDER_STATE_VALIDATED = "validated"  # is free or has an invoice linked
 ORDER_STATE_PENDING_PAYMENT = "pending_payment"  # payment is pending
 ORDER_STATE_FAILED_PAYMENT = "failed_payment"  # last payment has failed

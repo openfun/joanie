@@ -527,6 +527,7 @@ class Order(BaseModel):
     def __str__(self):
         return f"Order {self.product} for user {self.owner}"
 
+    # TODO: remove order submit method
     def submit(self, billing_address=None, credit_card_id=None):
         """
         Transition order to submitted state and to validate if order is free

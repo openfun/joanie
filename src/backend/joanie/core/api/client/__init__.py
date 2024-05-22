@@ -2,7 +2,8 @@
 Client API endpoints
 """
 
-# pylint: disable=too-many-ancestors, too-many-lines
+# pylint: disable=too-many-ancestors, too-many-lines, too-many-branches
+# ruff: noqa: PLR0911, PLR0912
 import io
 import uuid
 from http import HTTPStatus
@@ -28,6 +29,7 @@ from rest_framework.response import Response
 from joanie.core import enums, filters, models, permissions, serializers
 from joanie.core.api.base import NestedGenericViewSet
 from joanie.core.exceptions import NoContractToSignError
+from joanie.core.models import Address
 from joanie.core.tasks import generate_zip_archive_task
 from joanie.core.utils import contract as contract_utility
 from joanie.core.utils import contract_definition, issuers
@@ -403,9 +405,60 @@ class OrderViewSet(
                 status=HTTPStatus.BAD_REQUEST,
             )
 
+        # TODO: store the credit card id in the order
+
+        # taken from submit endpoint
+        if serializer.instance.organization is None:
+            serializer.instance.organization = (
+                self._get_organization_with_least_active_orders(
+                    serializer.instance.product,
+                    serializer.instance.course,
+                    serializer.instance.enrollment,
+                )
+            )
+            serializer.instance.save()
+        serializer.instance.flow.assign()
+
+        # taken from BasePaymentBackend._do_on_payment_success
+        if product.price != 0:
+            if billing_address := request.data.get("billing_address"):
+                address, _ = Address.objects.get_or_create(
+                    **billing_address,
+                    owner=request.user,
+                    defaults={
+                        "is_reusable": False,
+                        "title": f"Billing address of order {request.data.get('id')}",
+                    },
+                )
+            else:
+                return Response(
+                    {"billing_address": "This field is required."},
+                    status=HTTPStatus.BAD_REQUEST,
+                )
+
+            Invoice.objects.get_or_create(
+                order=serializer.instance,
+                total=serializer.instance.total,
+                recipient_address=address,
+            )
+
+        # taken from order.submit
+        for relation in models.ProductTargetCourseRelation.objects.filter(
+            product=serializer.instance.product
+        ):
+            order_relation = models.OrderTargetCourseRelation.objects.create(
+                order=serializer.instance,
+                course=relation.course,
+                position=relation.position,
+                is_graded=relation.is_graded,
+            )
+            order_relation.course_runs.set(relation.course_runs.all())
+
+        serializer.instance.flow.update()
         # Else return the fresh new order
         return Response(serializer.data, status=HTTPStatus.CREATED)
 
+    # TODO: remove order submit endpoint
     @action(detail=True, methods=["PATCH"])
     def submit(self, request, pk=None):  # pylint: disable=no-self-use, invalid-name, unused-argument
         """
@@ -426,6 +479,7 @@ class OrderViewSet(
             status=HTTPStatus.CREATED,
         )
 
+    # TODO: remove order abort endpoint
     @action(detail=True, methods=["POST"])
     def abort(self, request, pk=None):  # pylint: disable=no-self-use, invalid-name, unused-argument
         """Change the state of the order to pending"""

@@ -48,6 +48,7 @@ class BasePaymentBackend:
             },
         )
 
+        # TODO: delete main_invoice creation, it's done in OrderViewSet.create
         main_invoice, _ = Invoice.objects.get_or_create(
             order=order,
             total=order.total,
