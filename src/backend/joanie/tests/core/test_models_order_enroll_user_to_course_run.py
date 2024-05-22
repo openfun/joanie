@@ -17,6 +17,7 @@ class EnrollUserToCourseRunOrderModelsTestCase(TestCase):
 
     def _create_validated_order(self, **kwargs):
         order = factories.OrderFactory(**kwargs)
+        order.flow.assign()
         order.submit(billing_address=BillingAddressDictFactory())
 
         self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
