@@ -11,7 +11,7 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.utils.translation import override
 
-from joanie.core.models import ActivityLog, Address
+from joanie.core.models import ActivityLog
 from joanie.payment.enums import INVOICE_STATE_REFUNDED
 from joanie.payment.models import Invoice, Transaction
 
@@ -38,27 +38,11 @@ class BasePaymentBackend:
         then mark invoice as paid if transaction amount is equal to the invoice amount
         then mark the order as validated
         """
-        # - Create an invoice
-        address, _ = Address.objects.get_or_create(
-            **payment["billing_address"],
-            owner=order.owner,
-            defaults={
-                "is_reusable": False,
-                "title": f"Billing address of order {order.id}",
-            },
-        )
-
-        main_invoice, _ = Invoice.objects.get_or_create(
-            order=order,
-            total=order.total,
-            recipient_address=address,
-        )
-
         invoice = Invoice.objects.create(
             order=order,
-            parent=main_invoice,
+            parent=order.main_invoice,
             total=0,
-            recipient_address=address,
+            recipient_address=order.main_invoice.recipient_address,
         )
 
         # - Store the payment transaction

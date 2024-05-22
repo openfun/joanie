@@ -11,7 +11,7 @@ from joanie.core import enums
 from joanie.core.factories import OrderFactory, UserAddressFactory, UserFactory
 from joanie.core.models import Address
 from joanie.payment.backends.base import BasePaymentBackend
-from joanie.payment.factories import BillingAddressDictFactory
+from joanie.payment.factories import BillingAddressDictFactory, CreditCardFactory
 from joanie.payment.models import Transaction
 from joanie.tests.base import ActivityLogMixingTestCase
 from joanie.tests.payment.base_payment import BasePaymentTestCase
@@ -172,8 +172,12 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         """
         backend = TestBasePaymentBackend()
         owner = UserFactory(email="sam@fun-test.fr", language="en-us")
-        order = OrderFactory(owner=owner, state=enums.ORDER_STATE_SUBMITTED)
+        order = OrderFactory(owner=owner)
+        CreditCardFactory(
+            owner=owner, is_main=True, initial_issuer_transaction_identifier="1"
+        )
         billing_address = BillingAddressDictFactory()
+        order.flow.assign(billing_address=billing_address)
         payment = {
             "id": "pay_0",
             "amount": order.total,
@@ -224,9 +228,11 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         """
         backend = TestBasePaymentBackend()
         owner = UserFactory(email="sam@fun-test.fr", language="en-us")
+        CreditCardFactory(
+            owner=owner, is_main=True, initial_issuer_transaction_identifier="1"
+        )
         order = OrderFactory(
             owner=owner,
-            state=enums.ORDER_STATE_PENDING,
             payment_schedule=[
                 {
                     "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
@@ -261,6 +267,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
             "billing_address": billing_address,
             "installment_id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
         }
+        order.flow.assign(billing_address=billing_address)
 
         backend.call_do_on_payment_success(order, payment)
 
@@ -335,7 +342,10 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         """
         backend = TestBasePaymentBackend()
         owner = UserFactory(email="sam@fun-test.fr", language="en-us")
-        order = OrderFactory(owner=owner, state=enums.ORDER_STATE_SUBMITTED)
+        order = OrderFactory(owner=owner)
+        CreditCardFactory(
+            owner=owner, is_main=True, initial_issuer_transaction_identifier="1"
+        )
         billing_address = UserAddressFactory(owner=owner, is_reusable=True)
         payment = {
             "id": "pay_0",
@@ -349,6 +359,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
                 "postcode": billing_address.postcode,
             },
         }
+        order.flow.assign(billing_address=payment.get("billing_address"))
 
         # Only one address should exist
         self.assertEqual(Address.objects.count(), 1)
@@ -408,7 +419,6 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         """
         backend = TestBasePaymentBackend()
         order = OrderFactory(
-            state=enums.ORDER_STATE_PENDING,
             payment_schedule=[
                 {
                     "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
@@ -436,6 +446,10 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
                 },
             ],
         )
+        CreditCardFactory(
+            owner=order.owner, is_main=True, initial_issuer_transaction_identifier="1"
+        )
+        order.flow.assign()
 
         backend.call_do_on_payment_failure(
             order, installment_id=order.payment_schedule[0]["id"]
@@ -487,8 +501,12 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         transaction.
         """
         backend = TestBasePaymentBackend()
-        order = OrderFactory(state=enums.ORDER_STATE_SUBMITTED)
+        order = OrderFactory()
         billing_address = BillingAddressDictFactory()
+        CreditCardFactory(
+            owner=order.owner, is_main=True, initial_issuer_transaction_identifier="1"
+        )
+        order.flow.assign(billing_address=billing_address)
 
         # Create payment and register it
         payment = {
@@ -542,8 +560,12 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         """Check error is raised if send_mails fails"""
         backend = TestBasePaymentBackend()
         owner = UserFactory(email="sam@fun-test.fr", username="Samantha")
-        order = OrderFactory(owner=owner, state=enums.ORDER_STATE_SUBMITTED)
+        order = OrderFactory(owner=owner)
         billing_address = BillingAddressDictFactory()
+        CreditCardFactory(
+            owner=order.owner, is_main=True, initial_issuer_transaction_identifier="1"
+        )
+        order.flow.assign(billing_address=billing_address)
         payment = {
             "id": "pay_0",
             "amount": order.total,
@@ -590,8 +612,12 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
             last_name="Smith",
             language="en-us",
         )
-        order = OrderFactory(owner=owner, state=enums.ORDER_STATE_SUBMITTED)
+        order = OrderFactory(owner=owner)
+        CreditCardFactory(
+            owner=owner, is_main=True, initial_issuer_transaction_identifier="1"
+        )
         billing_address = BillingAddressDictFactory()
+        order.flow.assign(billing_address=billing_address)
         payment = {
             "id": "pay_0",
             "amount": order.total,
@@ -632,8 +658,12 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
             first_name="Dave",
             last_name="Bowman",
         )
-        order = OrderFactory(owner=owner, state=enums.ORDER_STATE_SUBMITTED)
+        CreditCardFactory(
+            owner=owner, is_main=True, initial_issuer_transaction_identifier="1"
+        )
+        order = OrderFactory(owner=owner)
         billing_address = BillingAddressDictFactory()
+        order.flow.assign(billing_address=billing_address)
         payment = {
             "id": "pay_0",
             "amount": order.total,
