@@ -41,6 +41,7 @@ class CredentialProductGetOrGenerateCertificateOrderModelsTestCase(TestCase):
             ],
         )
         order = factories.OrderFactory(product=product)
+        order.flow.assign()
         order.submit()
 
         new_certificate, created = order.get_or_generate_certificate()
@@ -205,6 +206,7 @@ class CredentialProductGetOrGenerateCertificateOrderModelsTestCase(TestCase):
             target_courses=[course_run.course],
         )
         order = factories.OrderFactory(product=product)
+        order.flow.assign()
         order.submit()
         enrollment = Enrollment.objects.get()
         enrollment.is_active = False

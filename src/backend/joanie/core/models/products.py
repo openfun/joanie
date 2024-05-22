@@ -534,18 +534,6 @@ class Order(BaseModel):
         if self.total != enums.MIN_ORDER_TOTAL_AMOUNT and billing_address is None:
             raise ValidationError({"billing_address": ["This field is required."]})
 
-        if self.state in [enums.ORDER_STATE_DRAFT, enums.ORDER_STATE_ASSIGNED]:
-            for relation in ProductTargetCourseRelation.objects.filter(
-                product=self.product
-            ):
-                order_relation = OrderTargetCourseRelation.objects.create(
-                    order=self,
-                    course=relation.course,
-                    position=relation.position,
-                    is_graded=relation.is_graded,
-                )
-                order_relation.course_runs.set(relation.course_runs.all())
-
         if self.total == enums.MIN_ORDER_TOTAL_AMOUNT:
             self.flow.validate()
             return None
@@ -740,6 +728,21 @@ class Order(BaseModel):
             filters.update({"is_active": is_active})
 
         return Enrollment.objects.filter(**filters)
+
+    def freeze_target_courses(self):
+        """
+        Freeze target courses of the order.
+        """
+        for relation in ProductTargetCourseRelation.objects.filter(
+            product=self.product
+        ):
+            order_relation = OrderTargetCourseRelation.objects.create(
+                order=self,
+                course=relation.course,
+                position=relation.position,
+                is_graded=relation.is_graded,
+            )
+            order_relation.course_runs.set(relation.course_runs.all())
 
     def enroll_user_to_course_run(self):
         """
