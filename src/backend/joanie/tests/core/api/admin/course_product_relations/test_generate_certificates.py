@@ -209,6 +209,7 @@ class AdminCourseProductRelationApiTest(TestCase):
             course=cpr.course,
         )
         for order in orders:
+            order.flow.assign()
             order.submit()
 
         self.assertFalse(Certificate.objects.exists())
@@ -650,6 +651,7 @@ class AdminCourseProductRelationApiTest(TestCase):
             course=cpr.course,
         )
         for order in orders:
+            order.flow.assign()
             order.submit()
 
         self.assertFalse(Certificate.objects.exists())

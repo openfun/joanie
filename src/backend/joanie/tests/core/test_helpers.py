@@ -60,6 +60,7 @@ class HelpersTestCase(TestCase):
         )
         course = factories.CourseFactory(products=[product])
         order = factories.OrderFactory(product=product, course=course)
+        order.flow.assign()
         order.submit()
         certificate_qs = models.Certificate.objects.filter(order=order)
         self.assertEqual(certificate_qs.count(), 0)
@@ -101,6 +102,7 @@ class HelpersTestCase(TestCase):
         )
         course = factories.CourseFactory(products=[product])
         order = factories.OrderFactory(product=product, course=course)
+        order.flow.assign()
         order.submit()
         certificate_qs = models.Certificate.objects.filter(order=order)
         enrollment = models.Enrollment.objects.get(course_run_id=course_run.id)
@@ -148,6 +150,7 @@ class HelpersTestCase(TestCase):
         )
         course = factories.CourseFactory(products=[product])
         order = factories.OrderFactory(product=product, course=course)
+        order.flow.assign()
         order.submit()
         certificate_qs = models.Certificate.objects.filter(order=order)
 
@@ -201,6 +204,7 @@ class HelpersTestCase(TestCase):
         ]
 
         for order in orders[0:-1]:
+            order.flow.assign()
             order.submit()
 
         certificate_qs = models.Certificate.objects.filter(order__in=orders)

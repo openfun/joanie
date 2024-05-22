@@ -49,6 +49,7 @@ class CreateCertificatesTestCase(TestCase):
             target_courses=[course_run.course],
         )
         order = factories.OrderFactory(product=product)
+        order.flow.assign()
         order.submit()
         certificate_qs = models.Certificate.objects.filter(order=order)
 
@@ -82,6 +83,7 @@ class CreateCertificatesTestCase(TestCase):
         order = factories.OrderFactory(
             product=product, course=None, enrollment=enrollment, owner=enrollment.user
         )
+        order.flow.assign()
         order.submit()
         certificate_qs = models.Certificate.objects.filter(order=order)
 
@@ -112,6 +114,7 @@ class CreateCertificatesTestCase(TestCase):
         course = factories.CourseFactory(products=[product])
         orders = factories.OrderFactory.create_batch(2, product=product, course=course)
         for order in orders:
+            order.flow.assign()
             order.submit()
         certificate_qs = models.Certificate.objects.filter(order__in=orders)
 
@@ -148,6 +151,7 @@ class CreateCertificatesTestCase(TestCase):
             factories.OrderFactory(product=product, course=course_2),
         ]
         for order in orders:
+            order.flow.assign()
             order.submit()
         certificate_qs = models.Certificate.objects.filter(order__in=orders)
 
@@ -187,6 +191,7 @@ class CreateCertificatesTestCase(TestCase):
             factories.OrderFactory(course=course, product=product_2),
         ]
         for order in orders:
+            order.flow.assign()
             order.submit()
         certificate_qs = models.Certificate.objects.filter(order__in=orders)
 
@@ -235,6 +240,7 @@ class CreateCertificatesTestCase(TestCase):
             factories.OrderFactory(course=course_2, product=product_2),
         ]
         for order in orders:
+            order.flow.assign()
             order.submit()
         certificate_qs = models.Certificate.objects.filter(order__in=orders)
 
@@ -290,6 +296,7 @@ class CreateCertificatesTestCase(TestCase):
             factories.OrderFactory(course=course, product=product_2),
         ]
         for order in orders:
+            order.flow.assign()
             order.submit()
         certificate_qs = models.Certificate.objects.filter(order__in=orders)
 

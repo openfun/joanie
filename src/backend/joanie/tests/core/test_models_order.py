@@ -74,6 +74,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         # Create a free product
         product = factories.ProductFactory(courses=courses, price=0)
         order = factories.OrderFactory(product=product, total=0.00)
+        order.flow.assign()
         order.submit()
 
         self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
@@ -299,14 +300,16 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
 
         factories.OrderFactory(owner=order.owner, product=product, course=order.course)
 
-    def test_models_order_course_runs_relation_sorted_by_position(self):
+    def test_models_order_freeze_target_courses_course_runs_relation_sorted_by_position(
+        self,
+    ):
         """The product/course relation should be sorted by position."""
         courses = factories.CourseFactory.create_batch(5)
         product = factories.ProductFactory(target_courses=courses)
 
         # Create an order link to the product
         order = factories.OrderFactory(product=product)
-        order.submit(billing_address=BillingAddressDictFactory())
+        order.freeze_target_courses()
 
         target_courses = order.target_courses.order_by("product_target_relations")
         self.assertCountEqual(target_courses, courses)
@@ -391,6 +394,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             price="0.00", target_courses=[cr1.course, cr2.course]
         )
         order = factories.OrderFactory(product=product)
+        order.flow.assign()
         order.submit()
 
         # - As the two product's target courses have only one course run, order owner
@@ -422,6 +426,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
 
         # - Create an order link to the product
         order = factories.OrderFactory(product=product)
+        order.flow.assign()
         order.submit(billing_address=BillingAddressDictFactory())
 
         # - Update product course relation, order course relation should not be impacted
@@ -454,6 +459,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         self.assertEqual(order.target_courses.count(), 0)
 
         # Then we submit the order
+        order.flow.assign()
         order.submit(billing_address=BillingAddressDictFactory())
 
         self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
@@ -473,6 +479,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         self.assertEqual(order.target_courses.count(), 0)
 
         # Then we submit the order
+        order.flow.assign()
         order.submit(billing_address=BillingAddressDictFactory())
 
         self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
