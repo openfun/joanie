@@ -534,7 +534,7 @@ class Order(BaseModel):
         if self.total != enums.MIN_ORDER_TOTAL_AMOUNT and billing_address is None:
             raise ValidationError({"billing_address": ["This field is required."]})
 
-        if self.state == enums.ORDER_STATE_DRAFT:
+        if self.state in [enums.ORDER_STATE_DRAFT, enums.ORDER_STATE_ASSIGNED]:
             for relation in ProductTargetCourseRelation.objects.filter(
                 product=self.product
             ):
