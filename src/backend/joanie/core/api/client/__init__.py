@@ -3,6 +3,7 @@ Client API endpoints
 """
 
 # pylint: disable=too-many-ancestors, too-many-lines
+# ruff: noqa: PLR0912
 import io
 import uuid
 from http import HTTPStatus
@@ -397,6 +398,13 @@ class OrderViewSet(
                 )
             course = enrollment.course_run.course
 
+        if not serializer.initial_data.get("organization_id"):
+            organization = self._get_organization_with_least_active_orders(
+                product, course, enrollment
+            )
+            if organization:
+                serializer.initial_data["organization_id"] = organization.id
+
         # - Validate data then create an order
         try:
             self.perform_create(serializer)
@@ -408,6 +416,8 @@ class OrderViewSet(
                 ),
                 status=HTTPStatus.BAD_REQUEST,
             )
+
+        serializer.instance.flow.assign()
 
         # Else return the fresh new order
         return Response(serializer.data, status=HTTPStatus.CREATED)
@@ -424,12 +434,6 @@ class OrderViewSet(
         )
         credit_card_id = request.data.get("credit_card_id")
         order = self.get_object()
-
-        if order.organization is None:
-            order.organization = self._get_organization_with_least_active_orders(
-                order.product, order.course, order.enrollment
-            )
-            order.save()
 
         return Response(
             {"payment_info": order.submit(billing_address, credit_card_id)},
