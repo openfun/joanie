@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Changed
+
+- Rework order statuses
+
 ## [2.7.1] - 2024-10-02
 
 ### Fixed
