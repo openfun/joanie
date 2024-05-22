@@ -9,6 +9,7 @@ from unittest import mock
 from django.conf import settings
 
 from joanie.core import enums, factories, models
+from joanie.core.api.client import OrderViewSet
 from joanie.core.serializers import fields
 from joanie.payment.backends.dummy import DummyPaymentBackend
 from joanie.payment.exceptions import CreatePaymentFailed
@@ -24,6 +25,43 @@ class OrderCreateApiTest(BaseAPITestCase):
     """Test the API of the Order create endpoint."""
 
     maxDiff = None
+
+    def _get_fee_order_data(self, **kwargs):
+        """Return a fee order linked to a course."""
+        product = factories.ProductFactory(price=10.00)
+        return {
+            **kwargs,
+            "has_consent_to_terms": True,
+            "product_id": str(product.id),
+            "course_code": product.courses.first().code,
+        }
+
+    def _get_free_order_data(self, **kwargs):
+        """Return a free order."""
+        product = factories.ProductFactory(price=0.00)
+
+        return {
+            **kwargs,
+            "has_consent_to_terms": True,
+            "product_id": str(product.id),
+            "course_code": product.courses.first().code,
+        }
+
+    def _get_fee_enrollment_order_data(self, user, **kwargs):
+        """Return a fee order linked to an enrollment."""
+        relation = factories.CourseProductRelationFactory(
+            product__type=enums.PRODUCT_TYPE_CERTIFICATE
+        )
+        enrollment = factories.EnrollmentFactory(
+            user=user, course_run__course=relation.course
+        )
+
+        return {
+            **kwargs,
+            "has_consent_to_terms": True,
+            "enrollment_id": str(enrollment.id),
+            "product_id": str(relation.product.id),
+        }
 
     def test_api_order_create_anonymous(self):
         """Anonymous users should not be able to create an order."""
@@ -119,7 +157,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 },
                 "owner": "panoramix",
                 "product_id": str(product.id),
-                "state": "draft",
+                "state": enums.ORDER_STATE_ASSIGNED,
                 "total": float(product.price),
                 "total_currency": settings.DEFAULT_CURRENCY,
                 "target_enrollments": [],
@@ -318,7 +356,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 },
                 "owner": enrollment.user.username,
                 "product_id": str(product.id),
-                "state": "draft",
+                "state": enums.ORDER_STATE_ASSIGNED,
                 "total": float(product.price),
                 "total_currency": settings.DEFAULT_CURRENCY,
                 "target_enrollments": [],
@@ -404,8 +442,8 @@ class OrderCreateApiTest(BaseAPITestCase):
 
     def test_api_order_create_submit_authenticated_organization_not_passed(self):
         """
-        It should be possible to create an order without passing an organization if there are
-        none linked to the product, but be impossible to submit
+        It should not be possible to create an order without passing an organization if there are
+        none linked to the product.
         """
         target_course = factories.CourseFactory()
         course = factories.CourseFactory()
@@ -430,28 +468,16 @@ class OrderCreateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
-        order_id = response.json()["id"]
-        self.assertTrue(models.Order.objects.filter(id=order_id).exists())
-        response = self.client.patch(
-            f"/api/v1.0/orders/{order_id}/submit/",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(
-            models.Order.objects.get(id=order_id).state, enums.ORDER_STATE_DRAFT
-        )
-        self.assertDictEqual(
             response.json(),
-            {
-                "__all__": ["Order should have an organization if not in draft state"],
-            },
+            [" 'Assign' transition conditions have not been met"],
         )
 
     def test_api_order_create_authenticated_organization_not_passed_one(self):
         """
-        It should be possible to create then submit an order without passing
-        an organization if there is only one linked to the product.
+        It should be possible to create an order without passing
+        an organization. If there is only one linked to the product, it should be assigned.
         """
         target_course = factories.CourseFactory()
         product = factories.ProductFactory(target_courses=[target_course], price=0.00)
@@ -479,7 +505,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             models.Order.objects.filter(
                 organization__isnull=True, course=course
             ).count(),
-            1,
+            0,
         )
 
         response = self.client.patch(
@@ -488,6 +514,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
         self.assertEqual(
             models.Order.objects.filter(
                 organization=organization, course=course
@@ -556,6 +583,147 @@ class OrderCreateApiTest(BaseAPITestCase):
         # The chosen organization should be one of the organizations with the lowest order count
         organization_id = models.Order.objects.get(id=order_id).organization.id
         self.assertEqual(counter[str(organization_id)], min(counter.values()))
+
+    def test_api_order_create_should_auto_assign_organization(self):
+        """
+        On create request, if the related order has no organization linked yet, the one
+        implied in the course product organization with the least order should be
+        assigned.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        orders_data = [
+            self._get_free_order_data(),
+            self._get_fee_order_data(),
+            self._get_fee_enrollment_order_data(user),
+        ]
+
+        for data in orders_data:
+            response = self.client.post(
+                "/api/v1.0/orders/",
+                data=data,
+                content_type="application/json",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+            order_id = response.json()["id"]
+            order = models.Order.objects.get(id=order_id)
+            self.assertEqual(response.status_code, HTTPStatus.CREATED)
+            # Now order should have an organization set
+            self.assertIsNotNone(order.organization)
+
+    @mock.patch.object(
+        OrderViewSet, "_get_organization_with_least_active_orders", return_value=None
+    )
+    def test_api_order_create_should_auto_assign_organization_if_needed(
+        self, mocked_round_robin
+    ):
+        """
+        Order should have organization auto assigned only on submit if it has
+        not already one linked.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        # Auto assignment should have been triggered if order has no organization linked
+        # order = factories.OrderFactory(owner=user, organization=None)
+        # self.client.patch(
+        #     f"/api/v1.0/orders/{order.id}/submit/",
+        #     content_type="application/json",
+        #     data={"billing_address": BillingAddressDictFactory()},
+        #     HTTP_AUTHORIZATION=f"Bearer {token}",
+        # )
+        data = self._get_free_order_data()
+        self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        mocked_round_robin.assert_called_once()
+
+        mocked_round_robin.reset_mock()
+
+        # Auto assignment should not have been
+        # triggered if order already has an organization linked
+        # order = factories.OrderFactory(owner=user)
+        # self.client.patch(
+        #     f"/api/v1.0/orders/{order.id}/submit/",
+        #     content_type="application/json",
+        #     data={"billing_address": BillingAddressDictFactory()},
+        #     HTTP_AUTHORIZATION=f"Bearer {token}",
+        # )
+        organization = models.Organization.objects.get()
+        data.update(organization_id=str(organization.id))
+        self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        mocked_round_robin.assert_not_called()
+
+    def test_api_order_create_auto_assign_organization_with_least_orders(self):
+        """
+        Order auto-assignment logic should always return the organization with the least
+        active orders count for the given product course relation.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        organizations = factories.OrganizationFactory.create_batch(2)
+
+        relation = factories.CourseProductRelationFactory(organizations=organizations)
+
+        organization_with_least_active_orders, other_organization = organizations
+
+        # Create two draft orders for the first organization
+        factories.OrderFactory.create_batch(
+            2,
+            organization=organization_with_least_active_orders,
+            product=relation.product,
+            course=relation.course,
+            state=enums.ORDER_STATE_DRAFT,
+        )
+
+        # Create three draft orders for the second organization
+        factories.OrderFactory.create_batch(
+            3,
+            organization=other_organization,
+            product=relation.product,
+            course=relation.course,
+            state=enums.ORDER_STATE_DRAFT,
+        )
+
+        # Cancelled orders should not be taken into account
+        factories.OrderFactory.create_batch(
+            4,
+            organization=organization_with_least_active_orders,
+            product=relation.product,
+            course=relation.course,
+            state=enums.ORDER_STATE_CANCELED,
+        )
+
+        # Then create an order without organization
+        data = {
+            "course_code": relation.course.code,
+            "product_id": str(relation.product.id),
+            "has_consent_to_terms": True,
+        }
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        order_id = response.json()["id"]
+        order = models.Order.objects.get(id=order_id)
+        self.assertEqual(order.organization, organization_with_least_active_orders)
 
     @mock.patch.object(
         fields.ThumbnailDetailField,
@@ -968,9 +1136,9 @@ class OrderCreateApiTest(BaseAPITestCase):
 
         self.assertEqual(models.Order.objects.count(), 1)
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
-        self.assertEqual(response.json()["state"], enums.ORDER_STATE_DRAFT)
+        self.assertEqual(response.json()["state"], enums.ORDER_STATE_ASSIGNED)
         order = models.Order.objects.get()
-        self.assertEqual(order.state, enums.ORDER_STATE_DRAFT)
+        self.assertEqual(order.state, enums.ORDER_STATE_ASSIGNED)
 
     @mock.patch.object(
         fields.ThumbnailDetailField,
@@ -1005,7 +1173,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             "has_consent_to_terms": True,
         }
 
-        with self.assertNumQueries(23):
+        with self.assertNumQueries(31):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -1064,7 +1232,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "product_id": str(product.id),
                 "total": float(product.price),
                 "total_currency": settings.DEFAULT_CURRENCY,
-                "state": "draft",
+                "state": enums.ORDER_STATE_ASSIGNED,
                 "target_enrollments": [],
                 "target_courses": [
                     {
@@ -1229,7 +1397,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             "product_id": str(product.id),
             "total": float(product.price),
             "total_currency": settings.DEFAULT_CURRENCY,
-            "state": "draft",
+            "state": enums.ORDER_STATE_ASSIGNED,
             "target_enrollments": [],
             "target_courses": [],
         }
@@ -1290,7 +1458,9 @@ class OrderCreateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(models.Order.objects.exclude(state="draft").count(), 0)
+        self.assertEqual(
+            models.Order.objects.exclude(state=enums.ORDER_STATE_ASSIGNED).count(), 0
+        )
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
 
         self.assertDictEqual(response.json(), {"detail": "Unreachable endpoint"})
@@ -1378,7 +1548,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         }
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(70):
+        with self.assertNumQueries(80):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -1414,7 +1584,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
-        self.assertEqual(response.json()["state"], enums.ORDER_STATE_DRAFT)
+        self.assertEqual(response.json()["state"], enums.ORDER_STATE_ASSIGNED)
         order = models.Order.objects.get(id=response.json()["id"])
         response = self.client.patch(
             f"/api/v1.0/orders/{order.id}/submit/",
@@ -1452,7 +1622,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
-        self.assertEqual(response.json()["state"], enums.ORDER_STATE_DRAFT)
+        self.assertEqual(response.json()["state"], enums.ORDER_STATE_ASSIGNED)
         order_id = response.json()["id"]
         billing_address = BillingAddressDictFactory()
         data["billing_address"] = billing_address
