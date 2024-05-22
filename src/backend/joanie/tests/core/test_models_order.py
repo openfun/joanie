@@ -450,7 +450,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         )
         order = factories.OrderFactory(product=product)
 
-        self.assertEqual(order.state, enums.ORDER_STATE_DRAFT)
+        self.assertEqual(order.state, enums.ORDER_STATE_ASSIGNED)
         self.assertEqual(order.target_courses.count(), 0)
 
         # Then we submit the order
@@ -469,7 +469,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         )
         order = factories.OrderFactory(product=product)
 
-        self.assertEqual(order.state, enums.ORDER_STATE_DRAFT)
+        self.assertEqual(order.state, enums.ORDER_STATE_ASSIGNED)
         self.assertEqual(order.target_courses.count(), 0)
 
         # Then we submit the order
@@ -573,7 +573,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
                 [
                     enums.ORDER_STATE_CANCELED,
                     enums.ORDER_STATE_SUBMITTED,
-                    enums.ORDER_STATE_DRAFT,
+                    enums.ORDER_STATE_ASSIGNED,
                     enums.ORDER_STATE_PENDING,
                 ]
             ),
@@ -841,13 +841,13 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             ],
         )
 
-    def test_models_order_organization_required_if_not_draft_constraint(self):
+    def test_models_order_organization_required_if_not_assigned_constraint(self):
         """
-        Check the db constraint forbidding a non draft order to not have a linked
+        Check the db constraint forbidding a non assigned order to not have a linked
         organization
         """
         for order_state in enums.ORDER_STATE_CHOICES:
-            if order_state[0] not in enums.ORDER_STATE_DRAFT:
+            if order_state[0] not in enums.ORDER_STATE_ASSIGNED:
                 order = factories.OrderFactory()
                 order.organization = None
                 order.state = order_state[0]

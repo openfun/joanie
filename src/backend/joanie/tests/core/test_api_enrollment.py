@@ -778,7 +778,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                     "id": str(order.id),
                     "certificate_id": str(certificate.id),
                     "product_id": str(product.id),
-                    "state": "draft",
+                    "state": enums.ORDER_STATE_ASSIGNED,
                 }
             ],
         )

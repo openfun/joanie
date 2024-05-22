@@ -282,7 +282,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         self.assertEqual(Enrollment.objects.filter(is_active=True).count(), 1)
 
         # - When order is canceled, user should not be unenrolled to related enrollments
-        with self.assertNumQueries(10):
+        with self.assertNumQueries(11):
             order.flow.cancel()
 
         self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
@@ -306,7 +306,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
 
         order_free = factories.OrderFactory(
             product=factories.ProductFactory(price="0.00"),
-            state=enums.ORDER_STATE_DRAFT,
+            state=enums.ORDER_STATE_ASSIGNED,
         )
         order_free.submit()
         self.assertEqual(order_free.flow._can_be_state_validated(), True)  # pylint: disable=protected-access

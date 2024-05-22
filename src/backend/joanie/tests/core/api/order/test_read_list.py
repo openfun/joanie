@@ -877,8 +877,8 @@ class OrderListApiTest(BaseAPITestCase):
         "to_representation",
         return_value="_this_field_is_mocked",
     )
-    def test_api_order_read_list_filtered_by_state_draft(self, _mock_thumbnail):
-        """Authenticated user should be able to retrieve its draft orders."""
+    def test_api_order_read_list_filtered_by_state_assigned(self, _mock_thumbnail):
+        """Authenticated user should be able to retrieve its assigned orders."""
         [product_1, product_2] = factories.ProductFactory.create_batch(2)
         user = factories.UserFactory()
 
@@ -894,7 +894,7 @@ class OrderListApiTest(BaseAPITestCase):
 
         # Retrieve user's order related to the product 1
         response = self.client.get(
-            "/api/v1.0/orders/?state=draft", HTTP_AUTHORIZATION=f"Bearer {token}"
+            "/api/v1.0/orders/?state=assigned", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
 
         organization_address = order.organization.addresses.filter(is_main=True).first()

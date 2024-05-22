@@ -65,7 +65,7 @@ class OrderWithdrawApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
         order.refresh_from_db()
-        self.assertEqual(order.state, enums.ORDER_STATE_DRAFT)
+        self.assertEqual(order.state, enums.ORDER_STATE_ASSIGNED)
 
     def test_api_order_withdraw_authenticated_owned(self):
         """
@@ -136,7 +136,7 @@ class OrderWithdrawApiTest(BaseAPITestCase):
             status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
         )
         order.refresh_from_db()
-        self.assertEqual(order.state, enums.ORDER_STATE_DRAFT)
+        self.assertEqual(order.state, enums.ORDER_STATE_ASSIGNED)
 
     def test_api_order_withdraw_authenticated_no_payment_schedule(self):
         """
@@ -157,4 +157,4 @@ class OrderWithdrawApiTest(BaseAPITestCase):
             status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
         )
         order.refresh_from_db()
-        self.assertEqual(order.state, enums.ORDER_STATE_DRAFT)
+        self.assertEqual(order.state, enums.ORDER_STATE_ASSIGNED)

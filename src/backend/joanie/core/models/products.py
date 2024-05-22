@@ -405,8 +405,6 @@ class Order(BaseModel):
         to=Organization,
         verbose_name=_("organization"),
         on_delete=models.PROTECT,
-        blank=True,
-        null=True,
     )
     product = models.ForeignKey(
         to=Product,
@@ -472,7 +470,7 @@ class Order(BaseModel):
         help_text=_("User has consented to the platform terms and conditions."),
     )
     state = models.CharField(
-        default=enums.ORDER_STATE_DRAFT,
+        default=enums.ORDER_STATE_ASSIGNED,
         choices=enums.ORDER_STATE_CHOICES,
         db_index=True,
     )
@@ -508,12 +506,12 @@ class Order(BaseModel):
                 name="either_course_or_enrollment",
                 violation_error_message="Order should have either a course or an enrollment",
             ),
-            models.CheckConstraint(
-                check=models.Q(state=enums.ORDER_STATE_DRAFT)
-                | models.Q(organization__isnull=False),
-                name="organization_required_if_not_draft",
-                violation_error_message="Order should have an organization if not in draft state",
-            ),
+            # models.CheckConstraint(
+            #     check=models.Q(state=enums.ORDER_STATE_DRAFT)
+            #     | models.Q(organization__isnull=False),
+            #     name="organization_required_if_not_draft",
+            #     violation_error_message="Order should have an organization if not in draft state",
+            # ),
         ]
         verbose_name = _("Order")
         verbose_name_plural = _("Orders")
@@ -535,7 +533,7 @@ class Order(BaseModel):
         if self.total != enums.MIN_ORDER_TOTAL_AMOUNT and billing_address is None:
             raise ValidationError({"billing_address": ["This field is required."]})
 
-        if self.state == enums.ORDER_STATE_DRAFT:
+        if self.state == enums.ORDER_STATE_ASSIGNED:
             for relation in ProductTargetCourseRelation.objects.filter(
                 product=self.product
             ):

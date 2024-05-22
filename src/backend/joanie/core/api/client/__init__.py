@@ -393,6 +393,15 @@ class OrderViewSet(
                 )
             course = enrollment.course_run.course
 
+        # TODO: store the credit card id in the order
+
+        if not serializer.validated_data.get("organization"):
+            serializer.validated_data["organization"] = (
+                self._get_organization_with_least_active_orders(
+                    product, course, enrollment
+                )
+            )
+
         # - Validate data then create an order
         try:
             self.perform_create(serializer)
@@ -404,20 +413,6 @@ class OrderViewSet(
                 ),
                 status=HTTPStatus.BAD_REQUEST,
             )
-
-        # TODO: store the credit card id in the order
-
-        # taken from submit endpoint
-        if serializer.instance.organization is None:
-            serializer.instance.organization = (
-                self._get_organization_with_least_active_orders(
-                    serializer.instance.product,
-                    serializer.instance.course,
-                    serializer.instance.enrollment,
-                )
-            )
-            serializer.instance.save()
-        serializer.instance.flow.assign()
 
         # taken from BasePaymentBackend._do_on_payment_success
         if product.price != 0:
