@@ -14,6 +14,7 @@ and this project adheres to
 
 ### Changed
 
+- Rework order statuses
 - Add `currency` field to `OrderPaymentSerializer` serializer
 - Allow an order with `no_payment` state to pay for failed installment
   on a payment schedule
