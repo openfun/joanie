@@ -262,6 +262,7 @@ class EnrollmentModelsTestCase(TestCase):
 
         # - Once the product purchased, enrollment should be allowed
         order = factories.OrderFactory(owner=user, product=product)
+        order.flow.assign()
         order.submit()
         factories.EnrollmentFactory(
             course_run=course_run, user=user, was_created_by_order=True
@@ -518,6 +519,7 @@ class EnrollmentModelsTestCase(TestCase):
 
         # Then if user purchases the product, the flag should not have been updated
         order = factories.OrderFactory(owner=user, product=product)
+        order.flow.assign()
         order.submit()
         order_enrollment = order.get_target_enrollments().first()
         self.assertEqual(enrollment, order_enrollment)
@@ -550,6 +552,7 @@ class EnrollmentModelsTestCase(TestCase):
 
         # Then if user purchases the product, the flag should not have been updated
         order = factories.OrderFactory(owner=user, product=product)
+        order.flow.assign()
         order.submit()
         order_enrollment = order.get_target_enrollments().first()
         self.assertEqual(enrollment, order_enrollment)
@@ -638,6 +641,7 @@ class EnrollmentModelsTestCase(TestCase):
             course=relation.course,
             organization=relation.organizations.first(),
         )
+        order.flow.assign()
         order.submit()
 
         factories.ContractFactory(
