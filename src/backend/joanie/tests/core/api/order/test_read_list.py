@@ -51,7 +51,7 @@ class OrderListApiTest(BaseAPITestCase):
         # The owner can see his/her order
         token = self.generate_token_from_user(order.owner)
 
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(7):
             response = self.client.get(
                 "/api/v1.0/orders/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -78,6 +78,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "created_on": order.created_on.strftime(
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
+                        "credit_card_id": str(order.credit_card.id),
                         "enrollment": None,
                         "id": str(order.id),
                         "main_invoice_reference": None,
@@ -151,6 +152,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "created_on": other_order.created_on.strftime(
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
+                        "credit_card_id": str(other_order.credit_card.id),
                         "enrollment": None,
                         "target_enrollments": [],
                         "main_invoice_reference": None,
@@ -282,6 +284,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "created_on": order.created_on.strftime(
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
+                        "credit_card_id": str(order.credit_card.id),
                         "enrollment": None,
                         "target_enrollments": [],
                         "main_invoice_reference": None,
@@ -395,6 +398,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "created_on": order.created_on.strftime(
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
+                        "credit_card_id": str(order.credit_card.id),
                         "payment_schedule": None,
                         "enrollment": {
                             "course_run": {
@@ -535,7 +539,7 @@ class OrderListApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
 
         # Retrieve user's order related to the first course linked to the product 1
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(8):
             response = self.client.get(
                 f"/api/v1.0/orders/?course_code={product_1.courses.first().code}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -563,6 +567,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "created_on": order.created_on.strftime(
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
+                        "credit_card_id": str(order.credit_card.id),
                         "payment_schedule": None,
                         "enrollment": None,
                         "target_enrollments": [],
@@ -633,7 +638,7 @@ class OrderListApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
 
         # Retrieve user's order related to the first course linked to the product 1
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(7):
             response = self.client.get(
                 f"/api/v1.0/orders/?product_type={enums.PRODUCT_TYPE_CERTIFICATE}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -657,6 +662,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "created_on": order.created_on.strftime(
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
+                        "credit_card_id": str(order.credit_card.id),
                         "enrollment": {
                             "course_run": {
                                 "course": {
@@ -786,7 +792,7 @@ class OrderListApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
 
         # Retrieve user's orders without any filter
-        with self.assertNumQueries(146):
+        with self.assertNumQueries(149):
             response = self.client.get(
                 "/api/v1.0/orders/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -797,7 +803,7 @@ class OrderListApiTest(BaseAPITestCase):
         self.assertEqual(content["count"], 3)
 
         # Retrieve user's orders filtered to limit to 2 product types
-        with self.assertNumQueries(10):
+        with self.assertNumQueries(12):
             response = self.client.get(
                 (
                     f"/api/v1.0/orders/?product_type={enums.PRODUCT_TYPE_CERTIFICATE}"
@@ -920,6 +926,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "created_on": order.created_on.strftime(
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
+                        "credit_card_id": str(order.credit_card.id),
                         "enrollment": None,
                         "target_enrollments": [],
                         "main_invoice_reference": None,
@@ -1007,6 +1014,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "created_on": order.created_on.strftime(
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
+                        "credit_card_id": str(order.credit_card.id),
                         "enrollment": None,
                         "target_enrollments": [],
                         "main_invoice_reference": None,
@@ -1098,6 +1106,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "created_on": order.created_on.strftime(
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
+                        "credit_card_id": None,
                         "enrollment": None,
                         "target_enrollments": [],
                         "main_invoice_reference": order.main_invoice.reference,
