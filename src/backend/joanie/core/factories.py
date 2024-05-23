@@ -615,6 +615,17 @@ class OrderFactory(factory.django.DjangoModelFactory):
             course_relations = course_relations.filter(course=self.course)
         return course_relations.first().organizations.order_by("?").first()
 
+    @factory.lazy_attribute
+    def credit_card(self):
+        """Create a credit card for the order."""
+        if self.product.price == 0:
+            return None
+        from joanie.payment.factories import (  # pylint: disable=import-outside-toplevel, cyclic-import
+            CreditCardFactory,
+        )
+
+        return CreditCardFactory(owner=self.owner)
+
     @factory.post_generation
     # pylint: disable=unused-argument,no-member
     def target_courses(self, create, extracted, **kwargs):
