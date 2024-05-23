@@ -6076,6 +6076,11 @@
                         "readOnly": true,
                         "description": "date and time at which a record was created"
                     },
+                    "credit_card_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID"
+                    },
                     "enrollment": {
                         "allOf": [
                             {
@@ -6305,6 +6310,11 @@
                 "type": "object",
                 "description": "Order model serializer",
                 "properties": {
+                    "credit_card_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID"
+                    },
                     "order_group_id": {
                         "type": "string",
                         "format": "uuid",
@@ -7055,6 +7065,11 @@
                 "type": "object",
                 "description": "Order model serializer",
                 "properties": {
+                    "credit_card_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID"
+                    },
                     "order_group_id": {
                         "type": "string",
                         "format": "uuid",
