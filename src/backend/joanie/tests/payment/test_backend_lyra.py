@@ -1225,7 +1225,10 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         owner = UserFactory(email="john.doe@acme.org")
         product = ProductFactory(price=D("123.45"))
         order = OrderFactory(
-            id="93e64f3a-6b60-475a-91e3-f4b8a364a844", owner=owner, product=product
+            id="93e64f3a-6b60-475a-91e3-f4b8a364a844",
+            owner=owner,
+            product=product,
+            credit_card=None,
         )
 
         with self.open("lyra/requests/one_click_payment_accepted.json") as file:

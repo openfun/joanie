@@ -16,6 +16,7 @@ from rest_framework.generics import get_object_or_404
 from joanie.core import enums, models
 from joanie.core.serializers.base import CachedModelSerializer
 from joanie.core.serializers.fields import ISO8601DurationField, ThumbnailDetailField
+from joanie.payment.models import CreditCard
 
 
 class AbilitiesModelSerializer(serializers.ModelSerializer):
@@ -1131,6 +1132,12 @@ class OrderSerializer(serializers.ModelSerializer):
     contract = ContractSerializer(read_only=True, exclude_abilities=True)
     has_consent_to_terms = serializers.BooleanField(write_only=True)
     payment_schedule = OrderPaymentSerializer(many=True, read_only=True)
+    credit_card_id = serializers.SlugRelatedField(
+        queryset=CreditCard.objects.all(),
+        slug_field="id",
+        source="credit_card",
+        required=False,
+    )
 
     class Meta:
         model = models.Order
@@ -1139,6 +1146,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "contract",
             "course",
             "created_on",
+            "credit_card_id",
             "enrollment",
             "id",
             "main_invoice_reference",

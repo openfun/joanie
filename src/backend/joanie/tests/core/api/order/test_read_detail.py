@@ -71,7 +71,7 @@ class OrderReadApiTest(BaseAPITestCase):
         organization_address = order.organization.addresses.filter(is_main=True).first()
         token = self.generate_token_from_user(owner)
 
-        with self.assertNumQueries(9):
+        with self.assertNumQueries(10):
             response = self.client.get(
                 f"/api/v1.0/orders/{order.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -103,6 +103,7 @@ class OrderReadApiTest(BaseAPITestCase):
                 if order.payment_schedule
                 else None,
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                "credit_card_id": str(order.credit_card.id),
                 "enrollment": None,
                 "state": order.state,
                 "main_invoice_reference": order.main_invoice.reference,
