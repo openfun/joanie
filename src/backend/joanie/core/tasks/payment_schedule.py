@@ -8,7 +8,6 @@ from joanie.celery_app import app
 from joanie.core import enums
 from joanie.core.models import Order
 from joanie.payment import get_payment_backend
-from joanie.payment.models import CreditCard
 
 logger = getLogger(__name__)
 
@@ -27,14 +26,12 @@ def process_today_installment(order_id):
             and installment["state"] == enums.PAYMENT_STATE_PENDING
         ):
             payment_backend = get_payment_backend()
-            try:
-                credit_card = CreditCard.objects.get(owner=order.owner, is_main=True)
-            except CreditCard.DoesNotExist:
+            if not order.credit_card or not order.credit_card.token:
                 order.set_installment_refused(installment["id"])
                 continue
 
             payment_backend.create_zero_click_payment(
                 order=order,
-                credit_card_token=credit_card.token,
+                credit_card_token=order.credit_card.token,
                 installment=installment,
             )
