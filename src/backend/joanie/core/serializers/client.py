@@ -1041,6 +1041,7 @@ class OrderPaymentSerializer(serializers.Serializer):
         min_value=D(0.00),
         required=True,
     )
+    currency = serializers.SerializerMethodField(read_only=True)
     due_date = serializers.DateField(required=True)
     state = serializers.ChoiceField(
         choices=enums.PAYMENT_STATE_CHOICES,
@@ -1056,6 +1057,10 @@ class OrderPaymentSerializer(serializers.Serializer):
                 "state": data.get("state"),
             }
         )
+
+    def get_currency(self, *args, **kwargs) -> str:
+        """Return the code of currency used by the instance"""
+        return settings.DEFAULT_CURRENCY
 
     def create(self, validated_data):
         """Only there to avoid a NotImplementedError"""

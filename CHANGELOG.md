@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Changed
+
+- Add `currency` field to `OrderPaymentSerializer` serializer
+
 ## [2.2.0] - 2024-05-22
 
 ### Added
