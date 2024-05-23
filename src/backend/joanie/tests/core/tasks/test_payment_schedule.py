@@ -17,7 +17,6 @@ from joanie.core.enums import (
 from joanie.core.factories import OrderFactory
 from joanie.core.tasks.payment_schedule import process_today_installment
 from joanie.payment.backends.dummy import DummyPaymentBackend
-from joanie.payment.factories import CreditCardFactory
 from joanie.tests.base import BaseLogMixinTestCase
 
 
@@ -37,11 +36,9 @@ class PaymentScheduleTasksTestCase(TestCase, BaseLogMixinTestCase):
         self, mock_create_zero_click_payment
     ):
         """Check today's installment is processed"""
-        credit_card = CreditCardFactory()
         order = OrderFactory(
             id="6134df5e-a7eb-4cb3-aceb-d0abfe330af6",
             state=ORDER_STATE_PENDING,
-            owner=credit_card.owner,
             payment_schedule=[
                 {
                     "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
@@ -76,7 +73,7 @@ class PaymentScheduleTasksTestCase(TestCase, BaseLogMixinTestCase):
 
         mock_create_zero_click_payment.assert_called_once_with(
             order=order,
-            credit_card_token=credit_card.token,
+            credit_card_token=order.credit_card.token,
             installment={
                 "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
                 "amount": "200.00",
@@ -89,6 +86,7 @@ class PaymentScheduleTasksTestCase(TestCase, BaseLogMixinTestCase):
         """Check today's installment is processed"""
         order = OrderFactory(
             state=ORDER_STATE_PENDING,
+            credit_card=None,
             payment_schedule=[
                 {
                     "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",

@@ -35,7 +35,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         """
         Test that the assign method is successful
         """
-        order = factories.OrderFactory()
+        order = factories.OrderFactory(credit_card=None)
 
         order.flow.assign()
 
@@ -85,7 +85,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         InvoiceFactory(order=order, total=order.total)
 
         # - Validate the order should automatically enroll user to course run
-        with self.assertNumQueries(23):
+        with self.assertNumQueries(24):
             order.flow.validate()
 
         self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
@@ -127,7 +127,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         InvoiceFactory(order=order, total=order.total)
 
         # - Validate the order should not have automatically enrolled user to course run
-        with self.assertNumQueries(10):
+        with self.assertNumQueries(11):
             order.flow.validate()
 
         self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
@@ -174,7 +174,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         InvoiceFactory(order=order, total=order.total)
 
         # - Validate the order should automatically enroll user to course run
-        with self.assertNumQueries(21):
+        with self.assertNumQueries(22):
             order.flow.validate()
 
         enrollment.refresh_from_db()
@@ -1072,6 +1072,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         """
         order = factories.OrderFactory(
             state=enums.ORDER_STATE_ASSIGNED,
+            credit_card=None,
         )
         factories.ContractFactory(
             order=order,
@@ -1092,6 +1093,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         """
         order = factories.OrderFactory(
             state=enums.ORDER_STATE_ASSIGNED,
+            credit_card=None,
         )
 
         order.flow.update()
@@ -1101,6 +1103,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
 
         order = factories.OrderFactory(
             state=enums.ORDER_STATE_TO_SIGN_AND_TO_SAVE_PAYMENT_METHOD,
+            credit_card=None,
         )
 
         order.flow.update()
@@ -1130,12 +1133,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         Test that the order state is set to `to_sign` when the order is not free,
         owner has a card and the order has a contract.
         """
-        credit_card = CreditCardFactory(
-            initial_issuer_transaction_identifier="4575676657929351"
-        )
-        order = factories.OrderFactory(
-            state=enums.ORDER_STATE_ASSIGNED, owner=credit_card.owner
-        )
+        order = factories.OrderFactory(state=enums.ORDER_STATE_ASSIGNED)
         factories.ContractFactory(
             order=order,
             definition=factories.ContractDefinitionFactory(),
@@ -1146,12 +1144,8 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         order.refresh_from_db()
         self.assertEqual(order.state, enums.ORDER_STATE_TO_SIGN)
 
-        credit_card = CreditCardFactory(
-            initial_issuer_transaction_identifier="4575676657929351"
-        )
         order = factories.OrderFactory(
-            state=enums.ORDER_STATE_TO_SIGN_AND_TO_SAVE_PAYMENT_METHOD,
-            owner=credit_card.owner,
+            state=enums.ORDER_STATE_TO_SIGN_AND_TO_SAVE_PAYMENT_METHOD
         )
         factories.ContractFactory(
             order=order,

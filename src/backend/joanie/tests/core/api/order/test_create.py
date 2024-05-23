@@ -128,6 +128,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                     "cover": "_this_field_is_mocked",
                 },
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                "credit_card_id": None,
                 "enrollment": None,
                 "main_invoice_reference": None,
                 "order_group_id": None,
@@ -281,6 +282,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "course": None,
                 "payment_schedule": None,
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                "credit_card_id": None,
                 "enrollment": {
                     "course_run": {
                         "course": {
@@ -760,7 +762,6 @@ class OrderCreateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         order = models.Order.objects.get()
-        order.submit()
         # - Order has been successfully created and read_only_fields
         #   has been ignored.
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
@@ -790,6 +791,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                     "cover": "_this_field_is_mocked",
                 },
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                "credit_card_id": None,
                 "enrollment": None,
                 "main_invoice_reference": None,
                 "order_group_id": None,
@@ -820,7 +822,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "owner": "panoramix",
                 "product_id": str(product.id),
                 "target_enrollments": [],
-                "state": "validated",
+                "state": enums.ORDER_STATE_COMPLETED,
                 "target_courses": [
                     {
                         "code": target_course.code,
@@ -1171,7 +1173,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             "has_consent_to_terms": True,
         }
 
-        with self.assertNumQueries(63):
+        with self.assertNumQueries(60):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -1199,6 +1201,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                     "cover": "_this_field_is_mocked",
                 },
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                "credit_card_id": None,
                 "enrollment": None,
                 "main_invoice_reference": order.main_invoice.reference,
                 "order_group_id": None,
@@ -1364,6 +1367,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "cover": "_this_field_is_mocked",
             },
             "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+            "credit_card_id": str(credit_card.id),
             "enrollment": None,
             "main_invoice_reference": order.main_invoice.reference,
             "order_group_id": None,
@@ -1395,7 +1399,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             "product_id": str(product.id),
             "total": float(product.price),
             "total_currency": settings.DEFAULT_CURRENCY,
-            "state": enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
+            "state": enums.ORDER_STATE_PENDING,
             "target_enrollments": [],
             "target_courses": [],
         }
@@ -1549,7 +1553,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         }
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(114):
+        with self.assertNumQueries(111):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,

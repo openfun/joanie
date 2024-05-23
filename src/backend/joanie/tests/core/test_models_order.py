@@ -1049,8 +1049,9 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         Check that the `has_payment_method` property returns False if the order owner credit
         card has no initial issuer transaction identifier.
         """
-        credit_card = CreditCardFactory(initial_issuer_transaction_identifier=None)
-        order = factories.OrderFactory(owner=credit_card.owner)
+        order = factories.OrderFactory(
+            credit_card=CreditCardFactory(initial_issuer_transaction_identifier=None)
+        )
         self.assertFalse(order.has_payment_method)
 
     def test_models_order_has_unsigned_contract(self):
