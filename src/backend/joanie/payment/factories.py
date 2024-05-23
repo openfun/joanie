@@ -26,6 +26,7 @@ class CreditCardFactory(factory.django.DjangoModelFactory):
     owner = factory.SubFactory(UserFactory)
     title = factory.Faker("name")
     token = factory.Sequence(lambda k: f"card_{k:022d}")
+    initial_issuer_transaction_identifier = factory.Faker("uuid4")
 
 
 class InvoiceFactory(factory.django.DjangoModelFactory):
