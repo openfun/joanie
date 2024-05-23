@@ -94,6 +94,7 @@ class OrderReadApiTest(BaseAPITestCase):
                 "payment_schedule": [
                     {
                         "amount": float(installment["amount"]),
+                        "currency": settings.DEFAULT_CURRENCY,
                         "due_date": format_date(installment["due_date"]),
                         "state": installment["state"],
                     }

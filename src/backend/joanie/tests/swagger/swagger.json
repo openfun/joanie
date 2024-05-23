@@ -6106,6 +6106,11 @@
                         "minimum": 0.0,
                         "exclusiveMaximum": true
                     },
+                    "currency": {
+                        "type": "string",
+                        "description": "Return the code of currency used by the instance",
+                        "readOnly": true
+                    },
                     "due_date": {
                         "type": "string",
                         "format": "date"
@@ -6116,6 +6121,7 @@
                 },
                 "required": [
                     "amount",
+                    "currency",
                     "due_date",
                     "state"
                 ]

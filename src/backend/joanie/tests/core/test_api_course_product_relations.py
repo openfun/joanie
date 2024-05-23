@@ -1481,11 +1481,13 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                 "payment_schedule": [
                     {
                         "amount": 0.90,
+                        "currency": settings.DEFAULT_CURRENCY,
                         "due_date": "2024-01-17",
                         "state": enums.PAYMENT_STATE_PENDING,
                     },
                     {
                         "amount": 2.10,
+                        "currency": settings.DEFAULT_CURRENCY,
                         "due_date": "2024-02-17",
                         "state": enums.PAYMENT_STATE_PENDING,
                     },
