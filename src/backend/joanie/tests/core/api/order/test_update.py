@@ -57,6 +57,7 @@ class OrderUpdateApiTest(BaseAPITestCase):
                 "contract",
                 "course",
                 "created_on",
+                "credit_card_id",
                 "enrollment",
                 "id",
                 "main_invoice_reference",
