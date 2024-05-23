@@ -484,6 +484,17 @@ class Order(BaseModel):
         null=True,
         encoder=OrderPaymentScheduleEncoder,
     )
+    # TODO: The entire lifecycle of a credit card should be refactored
+    #  https://github.com/openfun/joanie/pull/801#discussion_r1622036245
+    #  https://github.com/openfun/joanie/pull/801#discussion_r1622040609
+    credit_card = models.ForeignKey(
+        to="payment.CreditCard",
+        verbose_name=_("credit card"),
+        related_name="orders",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
 
     class Meta:
         db_table = "joanie_order"
@@ -591,10 +602,10 @@ class Order(BaseModel):
         """
         Return True if the order has a payment method.
         """
-        return self.owner.credit_cards.filter(
-            is_main=True,
-            initial_issuer_transaction_identifier__isnull=False,
-        ).exists()
+        return (
+            self.credit_card is not None
+            and self.credit_card.initial_issuer_transaction_identifier is not None
+        )
 
     @property
     def has_unsigned_contract(self):
