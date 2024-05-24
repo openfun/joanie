@@ -486,15 +486,6 @@ class OrderViewSet(
 
         return response
 
-    @action(detail=True, methods=["PUT"])
-    def validate(self, request, pk=None):  # pylint: disable=no-self-use, invalid-name, unused-argument
-        """
-        Validate the order
-        """
-        order = self.get_object()
-        order.flow.validate()
-        return Response(status=HTTPStatus.OK)
-
     @extend_schema(request=None)
     @action(detail=True, methods=["POST"])
     def submit_for_signature(self, request, pk=None):  # pylint: disable=no-self-use, unused-argument, invalid-name
