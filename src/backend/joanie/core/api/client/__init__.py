@@ -450,23 +450,6 @@ class OrderViewSet(
         )
 
     @action(detail=True, methods=["POST"])
-    def abort(self, request, pk=None):  # pylint: disable=no-self-use, invalid-name, unused-argument
-        """Change the state of the order to pending"""
-        payment_id = request.data.get("payment_id")
-
-        order = self.get_object()
-
-        if order.state == enums.ORDER_STATE_VALIDATED:
-            return Response(
-                "Cannot abort a validated order.",
-                status=HTTPStatus.UNPROCESSABLE_ENTITY,
-            )
-
-        order.flow.pending(payment_id)
-
-        return Response(status=HTTPStatus.NO_CONTENT)
-
-    @action(detail=True, methods=["POST"])
     def cancel(self, request, pk=None):  # pylint: disable=no-self-use, invalid-name, unused-argument
         """Change the state of the order to cancelled"""
         order = self.get_object()
