@@ -53,16 +53,13 @@ class OrderCancelApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         order = factories.OrderFactory()
-        order.submit(
-            billing_address=BillingAddressDictFactory(),
-        )
         response = self.client.post(
             f"/api/v1.0/orders/{order.id}/cancel/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         order.refresh_from_db()
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
-        self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
+        self.assertEqual(order.state, enums.ORDER_STATE_DRAFT)
 
     def test_api_order_cancel_authenticated_owned(self):
         """
