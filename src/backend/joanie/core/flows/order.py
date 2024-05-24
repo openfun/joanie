@@ -226,25 +226,25 @@ class OrderFlow:
         Transition order to submitted state.
         Create a payment if the product is fee
         """
-        CreditCard = apps.get_model("payment", "CreditCard")  # pylint: disable=invalid-name
-        payment_backend = get_payment_backend()
-        if credit_card_id:
-            try:
-                credit_card = CreditCard.objects.get(
-                    owner=self.instance.owner, id=credit_card_id
-                )
-                return payment_backend.create_one_click_payment(
-                    order=self.instance,
-                    billing_address=billing_address,
-                    credit_card_token=credit_card.token,
-                )
-            except (CreditCard.DoesNotExist, NotImplementedError):
-                pass
-        payment_info = payment_backend.create_payment(
-            order=self.instance, billing_address=billing_address
-        )
-
-        return payment_info
+        # CreditCard = apps.get_model("payment", "CreditCard")  # pylint: disable=invalid-name
+        # payment_backend = get_payment_backend()
+        # if credit_card_id:
+        #     try:
+        #         credit_card = CreditCard.objects.get(
+        #             owner=self.instance.owner, id=credit_card_id
+        #         )
+        #         return payment_backend.create_one_click_payment(
+        #             order=self.instance,
+        #             billing_address=billing_address,
+        #             credit_card_token=credit_card.token,
+        #         )
+        #     except (CreditCard.DoesNotExist, NotImplementedError):
+        #         pass
+        # payment_info = payment_backend.create_payment(
+        #     order=self.instance, billing_address=billing_address
+        # )
+        #
+        # return payment_info
 
     @state.transition(
         source=[
