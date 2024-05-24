@@ -11,8 +11,6 @@ from django.conf import settings
 from joanie.core import enums, factories, models
 from joanie.core.api.client import OrderViewSet
 from joanie.core.serializers import fields
-from joanie.payment.backends.dummy import DummyPaymentBackend
-from joanie.payment.exceptions import CreatePaymentFailed
 from joanie.payment.factories import BillingAddressDictFactory, CreditCardFactory
 from joanie.tests.base import BaseAPITestCase
 
@@ -212,13 +210,6 @@ class OrderCreateApiTest(BaseAPITestCase):
             },
         )
 
-        with self.assertNumQueries(11):
-            response = self.client.patch(
-                f"/api/v1.0/orders/{order.id}/submit/",
-                HTTP_AUTHORIZATION=f"Bearer {token}",
-            )
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
-
         # user has been created
         self.assertEqual(models.User.objects.count(), 1)
         user = models.User.objects.get()
@@ -226,7 +217,6 @@ class OrderCreateApiTest(BaseAPITestCase):
         self.assertEqual(
             list(order.target_courses.order_by("product_relations")), target_courses
         )
-        self.assertDictEqual(response.json(), {"payment_info": None})
 
     @mock.patch.object(
         fields.ThumbnailDetailField,
@@ -509,14 +499,6 @@ class OrderCreateApiTest(BaseAPITestCase):
             ).count(),
             0,
         )
-
-        response = self.client.patch(
-            f"/api/v1.0/orders/{response.json()['id']}/submit/",
-            content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
         self.assertEqual(
             models.Order.objects.filter(
                 organization=organization, course=course
@@ -571,13 +553,6 @@ class OrderCreateApiTest(BaseAPITestCase):
         )
 
         order_id = response.json()["id"]
-
-        response = self.client.patch(
-            f"/api/v1.0/orders/{order_id}/submit/",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
         self.assertEqual(models.Order.objects.count(), 10)  # 9 + 1
         # The chosen organization should be one of the organizations with the lowest order count
         organization_id = models.Order.objects.get(id=order_id).organization.id
@@ -1145,14 +1120,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         "to_representation",
         return_value="_this_field_is_mocked",
     )
-    @mock.patch.object(
-        DummyPaymentBackend,
-        "create_payment",
-        side_effect=DummyPaymentBackend().create_payment,
-    )
-    def test_api_order_create_authenticated_payment_binding(
-        self, mock_create_payment, _mock_thumbnail
-    ):
+    def test_api_order_create_authenticated_payment_binding(self, _mock_thumbnail):
         """
         Create an order to a fee product and then submitting it should create a
         payment and bind payment information into the response.
@@ -1288,187 +1256,6 @@ class OrderCreateApiTest(BaseAPITestCase):
                 ],
             },
         )
-        with self.assertNumQueries(10):
-            response = self.client.patch(
-                f"/api/v1.0/orders/{order.id}/submit/",
-                data=data,
-                content_type="application/json",
-                HTTP_AUTHORIZATION=f"Bearer {token}",
-            )
-        self.assertDictEqual(
-            response.json(),
-            {
-                "payment_info": {
-                    "payment_id": f"pay_{order.id}",
-                    "provider_name": "dummy",
-                    "url": "https://example.com/api/v1.0/payments/notifications",
-                }
-            },
-        )
-        mock_create_payment.assert_called_once()
-
-    @mock.patch.object(
-        DummyPaymentBackend,
-        "create_one_click_payment",
-        side_effect=DummyPaymentBackend().create_one_click_payment,
-    )
-    @mock.patch.object(
-        fields.ThumbnailDetailField,
-        "to_representation",
-        return_value="_this_field_is_mocked",
-    )
-    def test_api_order_create_authenticated_payment_with_registered_credit_card(
-        self,
-        _mock_thumbnail,
-        mock_create_one_click_payment,
-    ):
-        """
-        Create an order to a fee product should create a payment. If user provides
-        a credit card id, a one click payment should be triggered and within response
-        payment information should contain `is_paid` property.
-        """
-        user = factories.UserFactory()
-        token = self.generate_token_from_user(user)
-        course = factories.CourseFactory()
-        product = factories.ProductFactory(courses=[course])
-        organization = product.course_relations.first().organizations.first()
-        credit_card = CreditCardFactory(owner=user)
-        billing_address = BillingAddressDictFactory()
-
-        data = {
-            "course_code": course.code,
-            "organization_id": str(organization.id),
-            "product_id": str(product.id),
-            "billing_address": billing_address,
-            "credit_card_id": str(credit_card.id),
-            "has_consent_to_terms": True,
-        }
-
-        response = self.client.post(
-            "/api/v1.0/orders/",
-            data=data,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
-        self.assertEqual(models.Order.objects.count(), 1)
-        order = models.Order.objects.get(product=product, course=course, owner=user)
-        organization_address = order.organization.addresses.filter(is_main=True).first()
-
-        expected_json = {
-            "id": str(order.id),
-            "certificate_id": None,
-            "contract": None,
-            "payment_schedule": None,
-            "course": {
-                "code": course.code,
-                "id": str(course.id),
-                "title": course.title,
-                "cover": "_this_field_is_mocked",
-            },
-            "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-            "credit_card_id": str(credit_card.id),
-            "enrollment": None,
-            "main_invoice_reference": order.main_invoice.reference,
-            "order_group_id": None,
-            "organization": {
-                "id": str(order.organization.id),
-                "code": order.organization.code,
-                "title": order.organization.title,
-                "logo": "_this_field_is_mocked",
-                "address": {
-                    "id": str(organization_address.id),
-                    "address": organization_address.address,
-                    "city": organization_address.city,
-                    "country": organization_address.country,
-                    "first_name": organization_address.first_name,
-                    "is_main": organization_address.is_main,
-                    "last_name": organization_address.last_name,
-                    "postcode": organization_address.postcode,
-                    "title": organization_address.title,
-                }
-                if organization_address
-                else None,
-                "enterprise_code": order.organization.enterprise_code,
-                "activity_category_code": order.organization.activity_category_code,
-                "contact_phone": order.organization.contact_phone,
-                "contact_email": order.organization.contact_email,
-                "dpo_email": order.organization.dpo_email,
-            },
-            "owner": user.username,
-            "product_id": str(product.id),
-            "total": float(product.price),
-            "total_currency": settings.DEFAULT_CURRENCY,
-            "state": enums.ORDER_STATE_PENDING,
-            "target_enrollments": [],
-            "target_courses": [],
-        }
-        self.assertDictEqual(response.json(), expected_json)
-
-        response = self.client.patch(
-            f"/api/v1.0/orders/{order.id}/submit/",
-            data=data,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-        mock_create_one_click_payment.assert_called_once()
-
-        expected_json = {
-            "payment_info": {
-                "payment_id": f"pay_{order.id}",
-                "provider_name": "dummy",
-                "url": "https://example.com/api/v1.0/payments/notifications",
-                "is_paid": True,
-            },
-        }
-        self.assertDictEqual(response.json(), expected_json)
-
-    @mock.patch.object(DummyPaymentBackend, "create_payment")
-    def test_api_order_create_authenticated_payment_failed(self, mock_create_payment):
-        """
-        If payment creation failed, the order should not be created.
-        """
-        mock_create_payment.side_effect = CreatePaymentFailed("Unreachable endpoint")
-        user = factories.UserFactory()
-        token = self.generate_token_from_user(user)
-        course = factories.CourseFactory()
-        product = factories.ProductFactory(courses=[course])
-        organization = product.course_relations.first().organizations.first()
-        billing_address = BillingAddressDictFactory()
-
-        data = {
-            "course_code": course.code,
-            "organization_id": str(organization.id),
-            "product_id": str(product.id),
-            "billing_address": billing_address,
-            "has_consent_to_terms": True,
-        }
-
-        response = self.client.post(
-            "/api/v1.0/orders/",
-            data=data,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-
-        order_id = response.json()["id"]
-
-        response = self.client.patch(
-            f"/api/v1.0/orders/{order_id}/submit/",
-            data=data,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-
-        self.assertEqual(
-            models.Order.objects.exclude(
-                state=enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD
-            ).count(),
-            0,
-        )
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
-
-        self.assertDictEqual(response.json(), {"detail": "Unreachable endpoint"})
 
     def test_api_order_create_authenticated_nb_seats(self):
         """
@@ -1590,22 +1377,10 @@ class OrderCreateApiTest(BaseAPITestCase):
         )
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
         self.assertEqual(response.json()["state"], enums.ORDER_STATE_COMPLETED)
-        order = models.Order.objects.get(id=response.json()["id"])
-        response = self.client.patch(
-            f"/api/v1.0/orders/{order.id}/submit/",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
-        order.refresh_from_db()
-        self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
 
-    def test_api_order_create_authenticated_no_billing_address_to_validation(self):
+    def test_api_order_create_authenticated_to_pending(self):
         """
-        Create an order on a fee product should be done in 3 steps.
-        First create the order in draft state. Then submit the order by
-        providing a billing address should pass the order state to `submitted`
-        and return payment information. Once the payment has been done, the order
-        should be validated.
+        Create an order on a fee product with billing address and credit card.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -1613,6 +1388,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         product = factories.ProductFactory(courses=[course])
         organization = product.course_relations.first().organizations.first()
         billing_address = BillingAddressDictFactory()
+        credit_card = CreditCardFactory(owner=user)
 
         data = {
             "course_code": course.code,
@@ -1620,6 +1396,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             "product_id": str(product.id),
             "has_consent_to_terms": True,
             "billing_address": billing_address,
+            "credit_card_id": str(credit_card.id),
         }
 
         response = self.client.post(
@@ -1629,25 +1406,10 @@ class OrderCreateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
-        self.assertEqual(
-            response.json()["state"], enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD
-        )
+        self.assertEqual(response.json()["state"], enums.ORDER_STATE_PENDING)
         order_id = response.json()["id"]
-        billing_address = BillingAddressDictFactory()
-        data["billing_address"] = billing_address
-        response = self.client.patch(
-            f"/api/v1.0/orders/{order_id}/submit/",
-            data=data,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
         order = models.Order.objects.get(id=order_id)
-        self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
-
-        order.flow.validate()
-        order.refresh_from_db()
-        self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
+        self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
 
     def test_api_order_create_order_group_required(self):
         """
