@@ -549,7 +549,7 @@ class Order(BaseModel):
             self.flow.validate()
             return None
 
-        return self.flow.submit(billing_address, credit_card_id)
+        # return self.flow.submit(billing_address, credit_card_id)
 
     @property
     def target_course_runs(self):
