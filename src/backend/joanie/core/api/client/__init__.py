@@ -431,24 +431,6 @@ class OrderViewSet(
         # Else return the fresh new order
         return Response(serializer.data, status=HTTPStatus.CREATED)
 
-    @action(detail=True, methods=["PATCH"])
-    def submit(self, request, pk=None):  # pylint: disable=no-self-use, invalid-name, unused-argument
-        """
-        Submit a draft order if the conditions are filled
-        """
-        billing_address = (
-            models.Address(**request.data.get("billing_address"))
-            if request.data.get("billing_address")
-            else None
-        )
-        credit_card_id = request.data.get("credit_card_id")
-        order = self.get_object()
-
-        return Response(
-            {"payment_info": order.submit(billing_address, credit_card_id)},
-            status=HTTPStatus.CREATED,
-        )
-
     @action(detail=True, methods=["POST"])
     def cancel(self, request, pk=None):  # pylint: disable=no-self-use, invalid-name, unused-argument
         """Change the state of the order to cancelled"""
