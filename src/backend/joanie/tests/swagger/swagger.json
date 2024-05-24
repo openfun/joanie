@@ -3009,58 +3009,6 @@
                 }
             }
         },
-        "/api/v1.0/orders/{id}/submit/": {
-            "patch": {
-                "operationId": "orders_submit_partial_update",
-                "description": "Submit a draft order if the conditions are filled",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid",
-                            "description": "primary key for the record as UUID"
-                        },
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "orders"
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/PatchedOrderRequest"
-                            }
-                        },
-                        "multipart/form-data": {
-                            "schema": {
-                                "$ref": "#/components/schemas/PatchedOrderRequest"
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "DelegatedJWTAuthentication": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Order"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            }
-        },
         "/api/v1.0/orders/{id}/submit_for_signature/": {
             "post": {
                 "operationId": "orders_submit_for_signature_create",
@@ -6996,31 +6944,6 @@
                     },
                     "was_created_by_order": {
                         "type": "boolean"
-                    }
-                }
-            },
-            "PatchedOrderRequest": {
-                "type": "object",
-                "description": "Order model serializer",
-                "properties": {
-                    "credit_card_id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "primary key for the record as UUID"
-                    },
-                    "order_group_id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "primary key for the record as UUID"
-                    },
-                    "product_id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "primary key for the record as UUID"
-                    },
-                    "has_consent_to_terms": {
-                        "type": "boolean",
-                        "writeOnly": true
                     }
                 }
             },
