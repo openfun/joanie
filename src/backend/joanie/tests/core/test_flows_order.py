@@ -80,9 +80,8 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             course=course,
         )
         order.flow.assign()
-        order.submit(billing_address=BillingAddressDictFactory())
 
-        self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
+        self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
         self.assertEqual(Enrollment.objects.count(), 0)
 
         # - Create an invoice to mark order as validated
@@ -122,9 +121,8 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             product=product,
             course=course,
         )
-        order.submit(billing_address=BillingAddressDictFactory())
 
-        self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
+        self.assertEqual(order.state, enums.ORDER_STATE_DRAFT)
         self.assertEqual(Enrollment.objects.count(), 0)
 
         # - Create an invoice to mark order as validated
@@ -164,14 +162,13 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             course=course,
         )
         order.flow.assign()
-        order.submit(billing_address=BillingAddressDictFactory())
 
         # - Create an inactive enrollment for related course run
         enrollment = factories.EnrollmentFactory(
             user=owner, course_run=course_run, is_active=False
         )
 
-        self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
+        self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
         self.assertEqual(Enrollment.objects.count(), 1)
 
         # - Create an invoice to mark order as validated
