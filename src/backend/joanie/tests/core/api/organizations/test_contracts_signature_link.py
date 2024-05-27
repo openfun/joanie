@@ -9,6 +9,7 @@ from django.utils import timezone
 
 from joanie.core import enums, factories
 from joanie.core.models import OrganizationAccess
+from joanie.payment.factories import BillingAddressDictFactory
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -27,8 +28,14 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
             is_superuser=random.choice([True, False]),
         )
         order = factories.OrderFactory(
-            state=enums.ORDER_STATE_VALIDATED,
             product__contract_definition=factories.ContractDefinitionFactory(),
+            payment_schedule=[
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "state": enums.PAYMENT_STATE_PAID,
+                }
+            ],
         )
         organization_roles_not_owner = [
             role[0]
@@ -41,10 +48,12 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
             role=random.choice(organization_roles_not_owner),
         )
 
-        order.submit_for_signature(order.owner)
-        order.contract.submitted_for_signature_on = timezone.now()
-        order.contract.student_signed_on = timezone.now()
-        order.contract.save()
+        factories.ContractFactory(
+            order=order,
+            student_signed_on=timezone.now(),
+            submitted_for_signature_on=timezone.now(),
+        )
+        order.flow.assign(billing_address=BillingAddressDictFactory())
         token = self.generate_token_from_user(user)
 
         response = self.client.get(
@@ -63,16 +72,24 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
         Authenticated users with the owner role should be able to sign contracts in bulk.
         """
         order = factories.OrderFactory(
-            state=enums.ORDER_STATE_VALIDATED,
             product__contract_definition=factories.ContractDefinitionFactory(),
+            payment_schedule=[
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "state": enums.PAYMENT_STATE_PAID,
+                }
+            ],
         )
         access = factories.UserOrganizationAccessFactory(
             organization=order.organization, role="owner"
         )
-        order.submit_for_signature(order.owner)
-        order.contract.submitted_for_signature_on = timezone.now()
-        order.contract.student_signed_on = timezone.now()
-        order.contract.save()
+        factories.ContractFactory(
+            order=order,
+            student_signed_on=timezone.now(),
+            submitted_for_signature_on=timezone.now(),
+        )
+        order.flow.assign(billing_address=BillingAddressDictFactory())
         token = self.generate_token_from_user(access.user)
 
         response = self.client.get(
@@ -96,7 +113,6 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
         When passing a list of contract ids,
         only the contracts with these ids should be signed.
         """
-
         organization = factories.OrganizationFactory()
         relation = factories.CourseProductRelationFactory(
             organizations=[organization],
@@ -107,18 +123,26 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
             product=relation.product,
             course=relation.course,
             organization=organization,
-            state=enums.ORDER_STATE_VALIDATED,
             product__contract_definition=factories.ContractDefinitionFactory(),
+            payment_schedule=[
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "state": enums.PAYMENT_STATE_PAID,
+                }
+            ],
         )
         access = factories.UserOrganizationAccessFactory(
             organization=organization, role="owner"
         )
 
         for order in orders:
-            order.submit_for_signature(order.owner)
-            order.contract.submitted_for_signature_on = timezone.now()
-            order.contract.student_signed_on = timezone.now()
-            order.contract.save()
+            factories.ContractFactory(
+                order=order,
+                student_signed_on=timezone.now(),
+                submitted_for_signature_on=timezone.now(),
+            )
+            order.flow.assign(billing_address=BillingAddressDictFactory())
 
         token = self.generate_token_from_user(access.user)
 
@@ -127,7 +151,6 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
             data={"contract_ids": [orders[0].contract.id]},
         )
-
         self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertIn(
@@ -143,12 +166,13 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
         not validated orders should be excluded.
         """
         order = factories.OrderFactory(
-            state=enums.ORDER_STATE_VALIDATED,
             product__contract_definition=factories.ContractDefinitionFactory(),
+            contract=factories.ContractFactory(),
         )
         access = factories.UserOrganizationAccessFactory(
             organization=order.organization, role="owner"
         )
+        order.flow.assign(billing_address=BillingAddressDictFactory())
         order.submit_for_signature(order.owner)
         order.contract.submitted_for_signature_on = timezone.now()
         order.contract.student_signed_on = timezone.now()
@@ -216,7 +240,13 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
             product=relation.product,
             course=relation.course,
             organization=organization,
-            state=enums.ORDER_STATE_VALIDATED,
+            payment_schedule=[
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "state": enums.PAYMENT_STATE_PAID,
+                }
+            ],
         )
 
         contracts = []
@@ -229,6 +259,7 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
                     signature_backend_reference=f"wlf_{timezone.now()}",
                 )
             )
+            order.flow.assign()
 
         # Create a contract linked to the same course product relation
         # but for another organization
@@ -251,7 +282,13 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
             product=relation_2.product,
             course=relation_2.course,
             organization=organization,
-            state=enums.ORDER_STATE_VALIDATED,
+            payment_schedule=[
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "state": enums.PAYMENT_STATE_PAID,
+                }
+            ],
         )
 
         for order in other_orders:
@@ -261,6 +298,7 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
                 submitted_for_signature_on=timezone.now(),
                 signature_backend_reference=f"wlf_{timezone.now()}",
             )
+            order.flow.assign()
 
         token = self.generate_token_from_user(access.user)
 
@@ -302,7 +340,13 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
             product=relation.product,
             course=relation.course,
             organization=organization,
-            state=enums.ORDER_STATE_VALIDATED,
+            payment_schedule=[
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "state": enums.PAYMENT_STATE_PAID,
+                }
+            ],
         )
         contract = None
         for order in orders:
@@ -312,6 +356,7 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
                 submitted_for_signature_on=timezone.now(),
                 signature_backend_reference=f"wlf_{timezone.now()}",
             )
+            order.flow.assign()
 
         token = self.generate_token_from_user(access.user)
 
