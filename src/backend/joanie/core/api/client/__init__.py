@@ -208,7 +208,8 @@ class CourseProductRelationViewSet(
 
         serializer = self.get_serializer(data={"payment_schedule": payment_schedule})
         serializer.is_valid(raise_exception=True)
-        return Response(serializer.data)
+
+        return Response(serializer.data.get("payment_schedule"))
 
 
 class EnrollmentViewSet(

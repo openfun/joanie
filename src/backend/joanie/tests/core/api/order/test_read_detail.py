@@ -66,7 +66,6 @@ class OrderReadApiTest(BaseAPITestCase):
             state=ORDER_STATE_VALIDATED,
         )
         # Generate payment schedule
-        # breakpoint()
         order.generate_schedule()
 
         organization_address = order.organization.addresses.filter(is_main=True).first()
@@ -93,6 +92,7 @@ class OrderReadApiTest(BaseAPITestCase):
                 },
                 "payment_schedule": [
                     {
+                        "id": str(installment["id"]),
                         "amount": float(installment["amount"]),
                         "currency": settings.DEFAULT_CURRENCY,
                         "due_date": format_date(installment["due_date"]),

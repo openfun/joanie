@@ -1462,9 +1462,12 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             organizations=factories.OrganizationFactory.create_batch(2),
         )
 
-        with mock.patch(
-            "django.utils.timezone.now",
-            return_value=datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+        with (
+            mock.patch("uuid.uuid4", return_value=uuid.UUID(int=1)),
+            mock.patch(
+                "django.utils.timezone.now",
+                return_value=datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            ),
         ):
             response = self.client.get(
                 f"/api/v1.0/courses/{course_run.course.code}/"
@@ -1477,22 +1480,22 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
-            {
-                "payment_schedule": [
-                    {
-                        "amount": 0.90,
-                        "currency": settings.DEFAULT_CURRENCY,
-                        "due_date": "2024-01-17",
-                        "state": enums.PAYMENT_STATE_PENDING,
-                    },
-                    {
-                        "amount": 2.10,
-                        "currency": settings.DEFAULT_CURRENCY,
-                        "due_date": "2024-02-17",
-                        "state": enums.PAYMENT_STATE_PENDING,
-                    },
-                ]
-            },
+            [
+                {
+                    "id": "00000000-0000-0000-0000-000000000001",
+                    "amount": 0.90,
+                    "currency": settings.DEFAULT_CURRENCY,
+                    "due_date": "2024-01-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "00000000-0000-0000-0000-000000000001",
+                    "amount": 2.10,
+                    "currency": settings.DEFAULT_CURRENCY,
+                    "due_date": "2024-02-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
         )
 
         self.assertEqual(response_relation_path.status_code, HTTPStatus.OK)

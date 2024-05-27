@@ -6158,6 +6158,10 @@
                 "type": "object",
                 "description": "Serializer for the order payment",
                 "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
                     "amount": {
                         "type": "number",
                         "format": "double",
@@ -6182,6 +6186,7 @@
                     "amount",
                     "currency",
                     "due_date",
+                    "id",
                     "state"
                 ]
             },
@@ -6189,6 +6194,10 @@
                 "type": "object",
                 "description": "Serializer for the order payment",
                 "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
                     "amount": {
                         "type": "number",
                         "format": "double",
@@ -6207,6 +6216,7 @@
                 "required": [
                     "amount",
                     "due_date",
+                    "id",
                     "state"
                 ]
             },

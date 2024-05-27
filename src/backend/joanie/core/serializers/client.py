@@ -1034,6 +1034,7 @@ class OrderPaymentSerializer(serializers.Serializer):
     Serializer for the order payment
     """
 
+    id = serializers.UUIDField(required=True)
     amount = serializers.DecimalField(
         coerce_to_string=False,
         decimal_places=2,
@@ -1052,6 +1053,7 @@ class OrderPaymentSerializer(serializers.Serializer):
         """Used to format the amount and the due_date before validation."""
         return super().to_internal_value(
             {
+                "id": str(data.get("id")),
                 "amount": data.get("amount").amount_as_string(),
                 "due_date": data.get("due_date").isoformat(),
                 "state": data.get("state"),
