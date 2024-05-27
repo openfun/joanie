@@ -545,12 +545,6 @@ class Order(BaseModel):
         if self.total != enums.MIN_ORDER_TOTAL_AMOUNT and billing_address is None:
             raise ValidationError({"billing_address": ["This field is required."]})
 
-        if self.total == enums.MIN_ORDER_TOTAL_AMOUNT:
-            self.flow.validate()
-            return None
-
-        # return self.flow.submit(billing_address, credit_card_id)
-
     @property
     def target_course_runs(self):
         """
@@ -971,7 +965,10 @@ class Order(BaseModel):
             )
             raise ValidationError(message)
 
-        if self.state != enums.ORDER_STATE_VALIDATED:
+        if self.state not in [
+            enums.ORDER_STATE_TO_SIGN,
+            enums.ORDER_STATE_TO_SIGN_AND_TO_SAVE_PAYMENT_METHOD,
+        ]:
             message = "Cannot submit an order that is not yet validated."
             logger.error(message, extra={"context": {"order": self.to_dict()}})
             raise ValidationError(message)
