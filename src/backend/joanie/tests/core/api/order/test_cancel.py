@@ -5,7 +5,6 @@ from http import HTTPStatus
 from django.core.cache import cache
 
 from joanie.core import enums, factories
-from joanie.payment.factories import BillingAddressDictFactory
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -110,7 +109,7 @@ class OrderCancelApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         order_validated = factories.OrderFactory(
-            owner=user, state=enums.ORDER_STATE_VALIDATED
+            owner=user, state=enums.ORDER_STATE_COMPLETED
         )
         response = self.client.post(
             f"/api/v1.0/orders/{order_validated.id}/cancel/",
@@ -118,4 +117,4 @@ class OrderCancelApiTest(BaseAPITestCase):
         )
         order_validated.refresh_from_db()
         self.assertEqual(response.status_code, HTTPStatus.UNPROCESSABLE_ENTITY)
-        self.assertEqual(order_validated.state, enums.ORDER_STATE_VALIDATED)
+        self.assertEqual(order_validated.state, enums.ORDER_STATE_COMPLETED)

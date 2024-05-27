@@ -533,7 +533,7 @@ class OrdersAdminApiTestCase(TestCase):
             product=relation.product,
             order_group=order_group,
             organization=relation.organizations.first(),
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
 
         # Create certificate
@@ -692,7 +692,7 @@ class OrdersAdminApiTestCase(TestCase):
             course=None,
             product=relation.product,
             organization=relation.organizations.first(),
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
 
         # Create certificate
@@ -859,7 +859,7 @@ class OrdersAdminApiTestCase(TestCase):
                     enums.ORDER_STATE_SUBMITTED,
                     enums.ORDER_STATE_DRAFT,
                     enums.ORDER_STATE_PENDING,
-                    enums.ORDER_STATE_VALIDATED,
+                    enums.ORDER_STATE_COMPLETED,
                 ]
             )
         )
@@ -901,7 +901,7 @@ class OrdersAdminApiTestCase(TestCase):
         order_is_draft = factories.OrderFactory(state=enums.ORDER_STATE_DRAFT)
         order_is_pending = factories.OrderFactory(state=enums.ORDER_STATE_PENDING)
         order_is_submitted = factories.OrderFactory(state=enums.ORDER_STATE_SUBMITTED)
-        order_is_validated = factories.OrderFactory(state=enums.ORDER_STATE_VALIDATED)
+        order_is_completed = factories.OrderFactory(state=enums.ORDER_STATE_COMPLETED)
 
         # Canceling draft order
         response = self.client.delete(
@@ -929,11 +929,11 @@ class OrdersAdminApiTestCase(TestCase):
 
         # Canceling validated order
         response = self.client.delete(
-            f"/api/v1.0/admin/orders/{order_is_validated.id}/",
+            f"/api/v1.0/admin/orders/{order_is_completed.id}/",
         )
-        order_is_validated.refresh_from_db()
+        order_is_completed.refresh_from_db()
         self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
-        self.assertEqual(order_is_validated.state, enums.ORDER_STATE_CANCELED)
+        self.assertEqual(order_is_completed.state, enums.ORDER_STATE_CANCELED)
 
     def test_api_admin_orders_generate_certificate_anonymous_user(self):
         """
@@ -1102,7 +1102,7 @@ class OrdersAdminApiTestCase(TestCase):
                 type=enums.PRODUCT_TYPE_ENROLLMENT,
                 target_courses=[course_run.course],
             ),
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
 
         response = self.client.post(
@@ -1157,7 +1157,7 @@ class OrdersAdminApiTestCase(TestCase):
             product=product,
             course=None,
             enrollment=enrollment,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
 
         # Simulate that enrollment is not passed
@@ -1335,7 +1335,7 @@ class OrdersAdminApiTestCase(TestCase):
             product=product,
             course=None,
             enrollment=enrollment,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
 
         # Simulate that enrollment is passed

@@ -205,7 +205,6 @@ class HelpersTestCase(TestCase):
 
         for order in orders[0:-1]:
             order.flow.assign()
-            order.submit()
 
         certificate_qs = models.Certificate.objects.filter(order__in=orders)
 

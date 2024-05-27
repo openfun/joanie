@@ -12,6 +12,7 @@ from django.utils import timezone as django_timezone
 
 from joanie.core import enums, factories
 from joanie.core.models import CourseState
+from joanie.payment.factories import BillingAddressDictFactory
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -156,10 +157,11 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         )
         order = factories.OrderFactory(
             owner=user,
-            state=enums.ORDER_STATE_VALIDATED,
             product__contract_definition=factories.ContractDefinitionFactory(),
             product__target_courses=target_courses,
+            contract=factories.ContractFactory(),
         )
+        order.flow.assign(billing_address=BillingAddressDictFactory())
         token = self.get_user_token(user.username)
         expected_substring_invite_url = (
             "https://dummysignaturebackend.fr/?requestToken="
@@ -170,6 +172,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
+        order.refresh_from_db()
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertIsNotNone(order.contract)
         self.assertIsNotNone(order.contract.context)
@@ -202,7 +205,6 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         )
         order = factories.OrderFactory(
             owner=user,
-            state=enums.ORDER_STATE_VALIDATED,
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
         token = self.get_user_token(user.username)
@@ -214,6 +216,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
             context="content",
             submitted_for_signature_on=django_timezone.now() - timedelta(days=16),
         )
+        order.flow.assign(billing_address=BillingAddressDictFactory())
         expected_substring_invite_url = (
             "https://dummysignaturebackend.fr/?requestToken="
         )
@@ -252,7 +255,6 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         )
         order = factories.OrderFactory(
             owner=user,
-            state=enums.ORDER_STATE_VALIDATED,
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
         token = self.get_user_token(user.username)
@@ -264,6 +266,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
             context="content",
             submitted_for_signature_on=django_timezone.now() - timedelta(days=2),
         )
+        order.flow.assign(billing_address=BillingAddressDictFactory())
         contract.definition.body = "a new content"
         expected_substring_invite_url = (
             "https://dummysignaturebackend.fr/?requestToken="

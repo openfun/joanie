@@ -38,6 +38,6 @@ def get_course_run_metrics(resource_link: str):
         "nb_validated_certificate_orders": Order.objects.filter(
             enrollment__course_run=course_run,
             product__type=enums.PRODUCT_TYPE_CERTIFICATE,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         ).count(),
     }
