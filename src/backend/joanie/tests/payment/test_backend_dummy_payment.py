@@ -12,9 +12,9 @@ from django.urls import reverse
 from rest_framework.test import APIRequestFactory
 
 from joanie.core.enums import (
+    ORDER_STATE_COMPLETED,
     ORDER_STATE_PENDING_PAYMENT,
     ORDER_STATE_SUBMITTED,
-    ORDER_STATE_VALIDATED,
     PAYMENT_STATE_PAID,
     PAYMENT_STATE_PENDING,
 )
@@ -166,7 +166,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
     ):
         """
         Dummy backend `one_click_payment` calls the `create_payment` method then after
-        we trigger the `handle_notification` with payment info to validate the order.
+        we trigger the `handle_notification` with payment info to complete the order.
         It returns payment information with `is_paid` property sets to True to simulate
         that a one click payment has succeeded.
         """
@@ -179,7 +179,17 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
             first_name="",
             last_name="",
         )
-        order = OrderFactory(owner=owner)
+        order = OrderFactory(
+            owner=owner,
+            payment_schedule=[
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": 200.00,
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
         CreditCardFactory(
             owner=owner, is_main=True, initial_issuer_transaction_identifier="1"
         )
@@ -187,7 +197,9 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         order.flow.assign(billing_address=billing_address)
         payment_id = f"pay_{order.id}"
 
-        payment_payload = backend.create_one_click_payment(order, billing_address)
+        payment_payload = backend.create_one_click_payment(
+            order, billing_address, installment=order.payment_schedule[0]
+        )
 
         self.assertEqual(
             payment_payload,
@@ -211,16 +223,19 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
             payment,
             {
                 "id": payment_id,
-                "amount": int(order.total * 100),
+                "amount": int(order.payment_schedule[0]["amount"] * 100),
                 "billing_address": billing_address,
                 "notification_url": "https://example.com/api/v1.0/payments/notifications",
-                "metadata": {"order_id": str(order.id)},
+                "metadata": {
+                    "order_id": str(order.id),
+                    "installment_id": order.payment_schedule[0]["id"],
+                },
             },
         )
 
         mock_handle_notification.assert_called_once()
         order.refresh_from_db()
-        self.assertEqual(order.state, ORDER_STATE_VALIDATED)
+        self.assertEqual(order.state, ORDER_STATE_COMPLETED)
         # check email has been sent
         self._check_order_validated_email_sent("sam@fun-test.fr", "Samantha", order)
 

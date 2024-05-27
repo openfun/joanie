@@ -36,7 +36,7 @@ class BasePaymentBackend:
         Generic actions triggered when a succeeded payment has been received.
         It creates an invoice and registers the debit transaction,
         then mark invoice as paid if transaction amount is equal to the invoice amount
-        then mark the order as validated
+        then mark the order as completed
         """
         invoice = Invoice.objects.create(
             order=order,
@@ -55,8 +55,10 @@ class BasePaymentBackend:
         if payment.get("installment_id"):
             order.set_installment_paid(payment["installment_id"])
         else:
-            # - Mark order as validated
-            order.flow.validate()
+            # TODO: to be removed with the new sale tunnel,
+            #  as we will always use installments
+            # - Mark order as completed
+            # order.flow.complete()
             ActivityLog.create_payment_succeeded_activity_log(order)
 
         # send mail
