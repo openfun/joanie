@@ -163,7 +163,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         for relation in relations:
             contracts_to_sign.append(
                 factories.ContractFactory(
-                    order__state=enums.ORDER_STATE_VALIDATED,
+                    order__state=enums.ORDER_STATE_COMPLETED,
                     order__product=relation.product,
                     order__course=relation.course,
                     order__organization=organization,
@@ -176,7 +176,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
             )
             other_contracts.append(
                 factories.ContractFactory(
-                    order__state=enums.ORDER_STATE_VALIDATED,
+                    order__state=enums.ORDER_STATE_COMPLETED,
                     order__product=relation.product,
                     order__course=relation.course,
                     order__organization=organization,
@@ -187,7 +187,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
             )
             signed_contracts.append(
                 factories.ContractFactory(
-                    order__state=enums.ORDER_STATE_VALIDATED,
+                    order__state=enums.ORDER_STATE_COMPLETED,
                     order__product=relation.product,
                     order__course=relation.course,
                     order__organization=organization,
@@ -228,7 +228,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         for relation in relations:
             contracts_to_sign.append(
                 factories.ContractFactory(
-                    order__state=enums.ORDER_STATE_VALIDATED,
+                    order__state=enums.ORDER_STATE_COMPLETED,
                     order__product=relation.product,
                     order__course=relation.course,
                     order__organization=organization,
@@ -241,7 +241,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
             )
             other_contracts.append(
                 factories.ContractFactory(
-                    order__state=enums.ORDER_STATE_VALIDATED,
+                    order__state=enums.ORDER_STATE_COMPLETED,
                     order__product=relation.product,
                     order__course=relation.course,
                     order__organization=organization,
@@ -252,7 +252,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
             )
             signed_contracts.append(
                 factories.ContractFactory(
-                    order__state=enums.ORDER_STATE_VALIDATED,
+                    order__state=enums.ORDER_STATE_COMPLETED,
                     order__product=relation.product,
                     order__course=relation.course,
                     order__organization=organization,
@@ -366,7 +366,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         contracts = []
         for relation in relations:
             contract = factories.ContractFactory(
-                order__state=enums.ORDER_STATE_VALIDATED,
+                order__state=enums.ORDER_STATE_COMPLETED,
                 order__product=relation.product,
                 order__course=relation.course,
                 order__organization=organization,
@@ -398,7 +398,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         contracts = []
         for relation in relations:
             contract = factories.ContractFactory(
-                order__state=enums.ORDER_STATE_VALIDATED,
+                order__state=enums.ORDER_STATE_COMPLETED,
                 order__product=relation.product,
                 order__course=relation.course,
                 order__organization=organization,

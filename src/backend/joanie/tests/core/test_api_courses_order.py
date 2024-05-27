@@ -165,7 +165,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
             owner=user_learner,
             product=relation.product,
             course=relation.course,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
         token = self.get_user_token(user.username)
 
@@ -269,28 +269,28 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
             owner=user_learners[0],
             product=product,
             course=relation_1.course,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
         factories.OrderFactory(
             organization=organizations[1],
             owner=user_learners[1],
             product=product,
             course=relation_2.course,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
         factories.OrderFactory(
             organization=organizations[1],
             owner=user_learners[2],
             product=product,
             course=relation_2.course,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
         factories.OrderFactory(
             organization=organizations[2],
             owner=user_learners[3],
             product=product,
             course=relation_3.course,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
         factories.UserOrganizationAccessFactory(
             organization=organizations[0], user=user
@@ -345,7 +345,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
                 owner=user_learners[i],
                 product=relation.product,
                 course=relation.course,
-                state=enums.ORDER_STATE_VALIDATED,
+                state=enums.ORDER_STATE_COMPLETED,
             )
             factories.ContractFactory(order=order)
             factories.OrderCertificateFactory(order=order)
@@ -467,14 +467,14 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
             owner=user_learners[0],
             product=product,
             course=courses[0],
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
         factories.OrderFactory(
             organization=organization,
             owner=user_learners[1],
             product=product,
             course=courses[0],
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
         # Third order with the same product and another course
         factories.OrderFactory(
@@ -482,7 +482,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
             owner=user_learners[2],
             product=product,
             course=courses[1],
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
         factories.UserOrganizationAccessFactory(organization=organization, user=user)
         token = self.get_user_token(user.username)
@@ -561,14 +561,14 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
             owner=user_learners[0],
             product=product,
             course=courses[0],
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
         factories.OrderFactory(
             organization=organizations[0],
             owner=user_learners[1],
             product=product,
             course=courses[0],
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
         # Make Order with product number 2 and with the common course
         factories.OrderFactory(
@@ -576,7 +576,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
             owner=user_learners[2],
             product=product,
             course=courses[1],
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
         factories.UserOrganizationAccessFactory(
             organization=organizations[0], user=user
@@ -667,21 +667,21 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
             owner=user_learners[0],
             product=product,
             course=relation_1.course,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
         factories.OrderFactory(
             organization=organizations[0],
             owner=user_learners[1],
             product=product,
             course=relation_1.course,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
         factories.OrderFactory(
             organization=organizations[1],
             owner=user_learners[2],
             product=product,
             course=relation_2.course,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
         factories.UserOrganizationAccessFactory(
             organization=organizations[0], user=user
@@ -770,21 +770,21 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
             owner=user_learners[0],
             product=product,
             course=relation_1.course,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
         factories.OrderFactory(
             organization=organizations[0],
             owner=user_learners[1],
             product=product,
             course=relation_1.course,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
         factories.OrderFactory(
             organization=organizations[1],
             owner=user_learners[2],
             product=product,
             course=relation_2.course,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
         for organization in organizations:
             factories.UserOrganizationAccessFactory(
@@ -833,7 +833,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
             owner=user_learner,
             product=product,
             course=relation.course,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
 
         token = self.get_user_token(user.username)

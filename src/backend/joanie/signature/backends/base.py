@@ -68,12 +68,13 @@ class BaseSignatureBackend:
 
         # The student has signed the contract, we can now try to automatically enroll
         # it to single course runs opened for enrollment.
-        try:
-            # ruff : noqa : BLE001
-            # pylint: disable=broad-exception-caught
-            contract.order.enroll_user_to_course_run()
-        except Exception as error:
-            capture_exception(error)
+        # TODO: we should remove this
+        # try:
+        #     # ruff : noqa : BLE001
+        #     # pylint: disable=broad-exception-caught
+        #     contract.order.enroll_user_to_course_run()
+        # except Exception as error:
+        #     capture_exception(error)
 
         logger.info("Student signed the contract '%s'", contract.id)
 

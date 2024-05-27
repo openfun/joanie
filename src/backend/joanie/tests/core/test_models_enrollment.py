@@ -263,7 +263,6 @@ class EnrollmentModelsTestCase(TestCase):
         # - Once the product purchased, enrollment should be allowed
         order = factories.OrderFactory(owner=user, product=product)
         order.flow.assign()
-        order.submit()
         factories.EnrollmentFactory(
             course_run=course_run, user=user, was_created_by_order=True
         )
@@ -347,7 +346,6 @@ class EnrollmentModelsTestCase(TestCase):
 
         order = factories.OrderFactory(owner=user, product=product)
         order.flow.assign()
-        order.submit()
 
         # - Enroll to cr2 should fail
         with self.assertRaises(ValidationError) as context:
@@ -643,7 +641,6 @@ class EnrollmentModelsTestCase(TestCase):
             organization=relation.organizations.first(),
         )
         order.flow.assign()
-        order.submit()
 
         factories.ContractFactory(
             order=order,

@@ -1,6 +1,6 @@
 """Utility methods to get all orders and/or certificates from a course product relation."""
 
-from joanie.core.enums import ORDER_STATE_VALIDATED, PRODUCT_TYPE_CERTIFICATE_ALLOWED
+from joanie.core.enums import ORDER_STATE_COMPLETED, PRODUCT_TYPE_CERTIFICATE_ALLOWED
 from joanie.core.models import Certificate, Order
 
 
@@ -14,7 +14,7 @@ def get_orders(course_product_relation):
             course=course_product_relation.course,
             product=course_product_relation.product,
             product__type__in=PRODUCT_TYPE_CERTIFICATE_ALLOWED,
-            state=ORDER_STATE_VALIDATED,
+            state=ORDER_STATE_COMPLETED,
             certificate__isnull=True,
         )
         .values_list("pk", flat=True)
@@ -30,5 +30,5 @@ def get_generated_certificates(course_product_relation):
         order__product=course_product_relation.product,
         order__course=course_product_relation.course,
         order__certificate__isnull=False,
-        order__state=ORDER_STATE_VALIDATED,
+        order__state=ORDER_STATE_COMPLETED,
     )
