@@ -66,7 +66,8 @@ class BaseSignatureBackend:
 
         # The student has signed the contract, we can now try to automatically enroll
         # it to single course runs opened for enrollment.
-        contract.order.enroll_user_to_course_run()
+        # TODO: we should remove this
+        # contract.order.enroll_user_to_course_run()
 
         logger.info("Student signed the contract '%s'", contract.id)
 

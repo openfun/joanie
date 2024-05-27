@@ -660,7 +660,7 @@ class OrderFactory(factory.django.DjangoModelFactory):
                 extracted.save()
                 return extracted
 
-            if self.state == enums.ORDER_STATE_VALIDATED:
+            if self.state == enums.ORDER_STATE_COMPLETED:
                 # If the order is not fee and its state is validated, create
                 # a main invoice with related transaction.
                 from joanie.payment.factories import (  # pylint: disable=import-outside-toplevel, cyclic-import
@@ -770,7 +770,7 @@ class ContractFactory(factory.django.DjangoModelFactory):
 
     order = factory.SubFactory(
         OrderFactory,
-        state=enums.ORDER_STATE_VALIDATED,
+        state=enums.ORDER_STATE_COMPLETED,
         product__type=enums.PRODUCT_TYPE_CREDENTIAL,
         product__contract_definition=factory.SubFactory(ContractDefinitionFactory),
     )

@@ -9,7 +9,7 @@ from django.conf import settings
 from django.core.cache import cache
 
 from joanie.core import factories
-from joanie.core.enums import ORDER_STATE_VALIDATED
+from joanie.core.enums import ORDER_STATE_COMPLETED
 from joanie.core.models import CourseState
 from joanie.core.serializers import fields
 from joanie.tests import format_date
@@ -63,7 +63,7 @@ class OrderReadApiTest(BaseAPITestCase):
                 ),
                 student_signed_on=datetime(2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")),
             ),
-            state=ORDER_STATE_VALIDATED,
+            state=ORDER_STATE_COMPLETED,
         )
         # Generate payment schedule
         order.generate_schedule()

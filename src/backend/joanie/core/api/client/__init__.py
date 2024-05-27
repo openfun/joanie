@@ -432,7 +432,7 @@ class OrderViewSet(
         """Change the state of the order to cancelled"""
         order = self.get_object()
 
-        if order.state == enums.ORDER_STATE_VALIDATED:
+        if order.state == enums.ORDER_STATE_COMPLETED:
             return Response(
                 "Cannot cancel a validated order.",
                 status=HTTPStatus.UNPROCESSABLE_ENTITY,
@@ -1140,7 +1140,7 @@ class GenericContractViewSet(
     filterset_class = filters.ContractViewSetFilter
     ordering = ["-student_signed_on", "-created_on"]
     queryset = models.Contract.objects.filter(
-        order__state=enums.ORDER_STATE_VALIDATED
+        order__state=enums.ORDER_STATE_COMPLETED
     ).select_related(
         "definition",
         "order__organization",
@@ -1200,7 +1200,7 @@ class ContractViewSet(GenericContractViewSet):
         """
         contract = self.get_object()
 
-        if contract.order.state != enums.ORDER_STATE_VALIDATED:
+        if contract.order.state != enums.ORDER_STATE_COMPLETED:
             raise ValidationError(
                 "Cannot get contract when an order is not yet validated."
             )
@@ -1490,7 +1490,7 @@ class NestedOrderCourseViewSet(NestedGenericViewSet, mixins.ListModelMixin):
     filterset_class = filters.NestedOrderCourseViewSetFilter
     ordering = ["-created_on"]
     queryset = (
-        models.Order.objects.filter(state=enums.ORDER_STATE_VALIDATED)
+        models.Order.objects.filter(state=enums.ORDER_STATE_COMPLETED)
         .select_related(
             "contract",
             "certificate",

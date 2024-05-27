@@ -169,6 +169,10 @@ class OrderFlow:
         """
         Update the order state.
         """
+        if self._can_be_state_completed():
+            self.complete()
+            return
+
         if self._can_be_state_completed_from_assigned():
             self.complete_from_assigned()
             return
@@ -246,21 +250,21 @@ class OrderFlow:
         #
         # return payment_info
 
-    @state.transition(
-        source=[
-            enums.ORDER_STATE_DRAFT,
-            enums.ORDER_STATE_ASSIGNED,
-            enums.ORDER_STATE_SUBMITTED,
-            enums.ORDER_STATE_PENDING,
-            enums.ORDER_STATE_COMPLETED,
-        ],
-        target=enums.ORDER_STATE_VALIDATED,
-        conditions=[_can_be_state_validated],
-    )
-    def validate(self):
-        """
-        Transition order to validated state.
-        """
+    # @state.transition(
+    #     source=[
+    #         enums.ORDER_STATE_DRAFT,
+    #         enums.ORDER_STATE_ASSIGNED,
+    #         enums.ORDER_STATE_SUBMITTED,
+    #         enums.ORDER_STATE_PENDING,
+    #         enums.ORDER_STATE_COMPLETED,
+    #     ],
+    #     target=enums.ORDER_STATE_VALIDATED,
+    #     conditions=[_can_be_state_validated],
+    # )
+    # def validate(self):
+    #     """
+    #     Transition order to validated state.
+    #     """
 
     @state.transition(
         source=fsm.State.ANY,
@@ -299,10 +303,13 @@ class OrderFlow:
         An order state can be set to completed if all installments
         are completed.
         """
-        return all(
-            installment.get("state") in [enums.PAYMENT_STATE_PAID]
-            for installment in self.instance.payment_schedule
-        )
+        fully_paid = self.instance.is_free
+        if not fully_paid and self.instance.payment_schedule:
+            fully_paid = all(
+                installment.get("state") in [enums.PAYMENT_STATE_PAID]
+                for installment in self.instance.payment_schedule
+            )
+        return fully_paid and not self.instance.has_unsigned_contract
 
     def _can_be_state_no_payment(self):
         """
@@ -324,6 +331,7 @@ class OrderFlow:
 
     @state.transition(
         source=[
+            enums.ORDER_STATE_ASSIGNED,
             enums.ORDER_STATE_PENDING_PAYMENT,
             enums.ORDER_STATE_FAILED_PAYMENT,
             enums.ORDER_STATE_PENDING,
@@ -379,7 +387,7 @@ class OrderFlow:
         # When an order is validated, if the user was previously enrolled for free in any of the
         # course runs targeted by the purchased product, we should change their enrollment mode on
         # these course runs to "verified".
-        if target in [enums.ORDER_STATE_VALIDATED, enums.ORDER_STATE_CANCELED]:
+        if target in [enums.ORDER_STATE_COMPLETED, enums.ORDER_STATE_CANCELED]:
             Enrollment = apps.get_model("core", "Enrollment")  # pylint: disable=invalid-name
             for enrollment in Enrollment.objects.filter(
                 course_run__course__target_orders=self.instance, is_active=True
@@ -389,7 +397,12 @@ class OrderFlow:
         # Only enroll user if the product has no contract to sign, otherwise we should wait
         # for the contract to be signed before enrolling the user.
         if (
-            target == enums.ORDER_STATE_VALIDATED
+            target
+            in [
+                enums.ORDER_STATE_COMPLETED,
+                enums.ORDER_STATE_FAILED_PAYMENT,
+                enums.ORDER_STATE_PENDING_PAYMENT,
+            ]
             and self.instance.product.contract_definition is None
         ):
             self.instance.enroll_user_to_course_run()
