@@ -317,6 +317,8 @@ class OrderCreateApiTest(BaseAPITestCase):
                     ),
                     "id": str(enrollment.id),
                     "is_active": enrollment.is_active,
+                    # TODO: fix this flaky test:
+                    #  enrollment state is sometimes "failed" instead of "set"
                     "state": enrollment.state,
                     "was_created_by_order": enrollment.was_created_by_order,
                 },
@@ -1280,7 +1282,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         factories.OrderFactory(
             product=product,
             course=course,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
             order_group=order_group,
         )
         data = {
@@ -1520,7 +1522,9 @@ class OrderCreateApiTest(BaseAPITestCase):
             product=product,
             course=course,
             order_group=order_group1,
-            state=random.choice(["submitted", "validated"]),
+            state=random.choice(
+                [enums.ORDER_STATE_SUBMITTED, enums.ORDER_STATE_COMPLETED]
+            ),
         )
         data = {
             "course_code": course.code,
