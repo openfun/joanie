@@ -230,6 +230,34 @@ class Command(BaseCommand):
         )
         return factories.OrderCertificateFactory(order=order)
 
+    def create_order_with_installment_payment_failed(
+        self, user, course_user, organization
+    ):
+        """
+        Create an order with an installment payment failed.
+        """
+
+        order = self.create_product_purchased(
+            user,
+            course_user,
+            organization,
+            enums.PRODUCT_TYPE_CREDENTIAL,
+            enums.ORDER_STATE_PENDING,
+            factories.ContractDefinitionFactory(),
+        )
+
+        factories.ContractFactory(
+            order=order,
+            definition=order.product.contract_definition,
+            submitted_for_signature_on=django_timezone.now(),
+            student_signed_on=django_timezone.now(),
+        )
+
+        order.generate_schedule()
+        installment = order.payment_schedule[0]
+        order.set_installment_refused(installment["id"])
+        order.save()
+
     def create_enrollment_certificate(self, user, course_user, organization):
         """create an enrollment and it's linked certificate."""
         course = self.create_course(course_user, organization, 1, True)
@@ -454,6 +482,19 @@ class Command(BaseCommand):
         self.stdout.write(
             self.style.SUCCESS(
                 "Successfully create an order for a PRODUCT_CREDENTIAL with a generated certificate"
+            )
+        )
+
+        # Order for a PRODUCT_CREDENTIAL with an installment payment failed
+        self.create_order_with_installment_payment_failed(
+            student_user,
+            organization_owner,
+            organization,
+        )
+        self.stdout.write(
+            self.style.SUCCESS(
+                "Successfully create an order for a PRODUCT_CREDENTIAL "
+                "with an installment payment failed"
             )
         )
 
