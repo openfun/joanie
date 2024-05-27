@@ -34,7 +34,7 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
     def test_submit_for_signature_success(self):
         """valid test submit for signature"""
         user = factories.UserFactory(email="johnnydo@example.fr")
-        order = factories.OrderFactory(owner=user, state=enums.ORDER_STATE_VALIDATED)
+        order = factories.OrderFactory(owner=user, state=enums.ORDER_STATE_COMPLETED)
         accesses = factories.UserOrganizationAccessFactory.create_batch(
             3, organization=order.organization, role="owner"
         )
@@ -281,7 +281,7 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
         """
 
         user = factories.UserFactory(email="johnnydo@example.fr")
-        order = factories.OrderFactory(owner=user, state=enums.ORDER_STATE_VALIDATED)
+        order = factories.OrderFactory(owner=user, state=enums.ORDER_STATE_COMPLETED)
         factories.UserOrganizationAccessFactory.create_batch(
             3, organization=order.organization, role="owner"
         )
@@ -331,7 +331,7 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
         Upload Document Failed.
         """
         user = factories.UserFactory(email="johnnydo@example.fr")
-        order = factories.OrderFactory(owner=user, state=enums.ORDER_STATE_VALIDATED)
+        order = factories.OrderFactory(owner=user, state=enums.ORDER_STATE_COMPLETED)
         factories.UserOrganizationAccessFactory.create_batch(
             3, organization=order.organization, role="owner"
         )
@@ -460,7 +460,7 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
         raise the exception Start Signature Procedure Failed.
         """
         user = factories.UserFactory(email="johnnydo@example.fr")
-        order = factories.OrderFactory(owner=user, state=enums.ORDER_STATE_VALIDATED)
+        order = factories.OrderFactory(owner=user, state=enums.ORDER_STATE_COMPLETED)
         factories.UserOrganizationAccessFactory.create_batch(
             3, organization=order.organization, role="owner"
         )
@@ -636,7 +636,7 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
         and an error must be raised.
         """
         user = factories.UserFactory(email="johnnydo@example.fr")
-        order = factories.OrderFactory(owner=user, state=enums.ORDER_STATE_VALIDATED)
+        order = factories.OrderFactory(owner=user, state=enums.ORDER_STATE_COMPLETED)
         file_bytes = b"Some fake content"
         title = "Contract Definition"
         lex_persona_backend = get_signature_backend()

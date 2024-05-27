@@ -761,7 +761,11 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             course_product_relation=relation, nb_seats=random.randint(10, 100)
         )
         order_group2 = factories.OrderGroupFactory(course_product_relation=relation)
-        binding_states = ["pending", "submitted", "validated"]
+        binding_states = [
+            enums.ORDER_STATE_PENDING,
+            enums.ORDER_STATE_SUBMITTED,
+            enums.ORDER_STATE_COMPLETED,
+        ]
         for _ in range(3):
             factories.OrderFactory(
                 course=course,
@@ -844,9 +848,9 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             ],
         )
 
-        # Submitting order should impact the number of seat availabilities in the
+        # Starting order state flow should impact the number of seat availabilities in the
         # representation of the product
-        order.submit()
+        order.flow.assign()
 
         response = self.client.get(
             f"/api/v1.0/course-product-relations/{relation.id}/",

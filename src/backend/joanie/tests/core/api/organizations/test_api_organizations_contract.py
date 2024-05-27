@@ -120,7 +120,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         contracts = models.Contract.objects.filter(
             order__organization=organizations[0],
-            order__state=enums.ORDER_STATE_VALIDATED,
+            order__state=enums.ORDER_STATE_COMPLETED,
         )
         expected_contracts = sorted(contracts, key=lambda x: x.created_on, reverse=True)
         assert response.json() == {

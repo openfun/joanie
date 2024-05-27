@@ -210,7 +210,6 @@ class AdminCourseProductRelationApiTest(TestCase):
         )
         for order in orders:
             order.flow.assign()
-            order.submit()
 
         self.assertFalse(Certificate.objects.exists())
 
@@ -279,7 +278,7 @@ class AdminCourseProductRelationApiTest(TestCase):
             course=cpr.course,
         )
         for order in orders_in_past:
-            order.submit()
+            order.flow.assign()
             factories.OrderCertificateFactory(order=order)
 
         self.assertEqual(Certificate.objects.count(), 5)
@@ -291,7 +290,7 @@ class AdminCourseProductRelationApiTest(TestCase):
             course=cpr.course,
         )
         for order in orders:
-            order.submit()
+            order.flow.assign()
 
         mock_generate_certificates_task.delay.return_value = ""
 
@@ -364,7 +363,7 @@ class AdminCourseProductRelationApiTest(TestCase):
             course=cpr.course,
         )
         for order in orders:
-            order.submit()
+            order.flow.assign()
 
         mock_generate_certificates_task.delay.side_effect = Exception(
             "Some error occured with Celery"
@@ -580,7 +579,7 @@ class AdminCourseProductRelationApiTest(TestCase):
             course=cpr.course,
         )
         for order in orders:
-            order.submit()
+            order.flow.assign()
 
         self.assertFalse(Certificate.objects.exists())
 
@@ -652,7 +651,6 @@ class AdminCourseProductRelationApiTest(TestCase):
         )
         for order in orders:
             order.flow.assign()
-            order.submit()
 
         self.assertFalse(Certificate.objects.exists())
 
