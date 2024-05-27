@@ -1067,7 +1067,7 @@ class OrderListApiTest(BaseAPITestCase):
         # User purchases the product 1 as its price is equal to 0.00€,
         # the order is directly validated
         order = factories.OrderFactory(
-            owner=user, product=product_1, state=enums.ORDER_STATE_VALIDATED
+            owner=user, product=product_1, state=enums.ORDER_STATE_COMPLETED
         )
 
         # User purchases the product 2 then cancels it
@@ -1079,7 +1079,7 @@ class OrderListApiTest(BaseAPITestCase):
 
         # Retrieve user's order related to the product 1
         response = self.client.get(
-            "/api/v1.0/orders/?state=validated",
+            "/api/v1.0/orders/?state=completed",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -1157,7 +1157,7 @@ class OrderListApiTest(BaseAPITestCase):
 
         # User purchases products as their price are equal to 0.00€,
         # the orders are directly validated
-        factories.OrderFactory(owner=user, state=enums.ORDER_STATE_VALIDATED)
+        factories.OrderFactory(owner=user, state=enums.ORDER_STATE_COMPLETED)
         factories.OrderFactory(owner=user, state=enums.ORDER_STATE_PENDING)
         factories.OrderFactory(owner=user, state=enums.ORDER_STATE_SUBMITTED)
         # User purchases a product then cancels it
@@ -1178,7 +1178,7 @@ class OrderListApiTest(BaseAPITestCase):
 
         # Retrieve user's orders filtered to limit to 3 states
         response = self.client.get(
-            "/api/v1.0/orders/?state=validated&state=submitted&state=pending",
+            "/api/v1.0/orders/?state=completed&state=submitted&state=pending",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -1191,15 +1191,15 @@ class OrderListApiTest(BaseAPITestCase):
         self.assertEqual(
             order_states,
             [
+                enums.ORDER_STATE_COMPLETED,
                 enums.ORDER_STATE_PENDING,
                 enums.ORDER_STATE_SUBMITTED,
-                enums.ORDER_STATE_VALIDATED,
             ],
         )
 
         # Retrieve user's orders filtered to exclude 2 states
         response = self.client.get(
-            "/api/v1.0/orders/?state_exclude=validated&state_exclude=pending",
+            "/api/v1.0/orders/?state_exclude=completed&state_exclude=pending",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 

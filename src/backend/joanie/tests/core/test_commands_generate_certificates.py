@@ -50,7 +50,6 @@ class CreateCertificatesTestCase(TestCase):
         )
         order = factories.OrderFactory(product=product)
         order.flow.assign()
-        order.submit()
         certificate_qs = models.Certificate.objects.filter(order=order)
 
         self.assertEqual(certificate_qs.count(), 0)
@@ -84,7 +83,6 @@ class CreateCertificatesTestCase(TestCase):
             product=product, course=None, enrollment=enrollment, owner=enrollment.user
         )
         order.flow.assign()
-        order.submit()
         certificate_qs = models.Certificate.objects.filter(order=order)
 
         self.assertEqual(certificate_qs.count(), 0)
@@ -115,7 +113,6 @@ class CreateCertificatesTestCase(TestCase):
         orders = factories.OrderFactory.create_batch(2, product=product, course=course)
         for order in orders:
             order.flow.assign()
-            order.submit()
         certificate_qs = models.Certificate.objects.filter(order__in=orders)
 
         self.assertEqual(certificate_qs.count(), 0)
@@ -152,7 +149,6 @@ class CreateCertificatesTestCase(TestCase):
         ]
         for order in orders:
             order.flow.assign()
-            order.submit()
         certificate_qs = models.Certificate.objects.filter(order__in=orders)
 
         self.assertEqual(certificate_qs.count(), 0)
@@ -192,7 +188,6 @@ class CreateCertificatesTestCase(TestCase):
         ]
         for order in orders:
             order.flow.assign()
-            order.submit()
         certificate_qs = models.Certificate.objects.filter(order__in=orders)
 
         self.assertEqual(certificate_qs.count(), 0)
@@ -241,7 +236,6 @@ class CreateCertificatesTestCase(TestCase):
         ]
         for order in orders:
             order.flow.assign()
-            order.submit()
         certificate_qs = models.Certificate.objects.filter(order__in=orders)
 
         self.assertEqual(certificate_qs.count(), 0)
@@ -297,7 +291,6 @@ class CreateCertificatesTestCase(TestCase):
         ]
         for order in orders:
             order.flow.assign()
-            order.submit()
         certificate_qs = models.Certificate.objects.filter(order__in=orders)
 
         self.assertEqual(certificate_qs.count(), 0)
