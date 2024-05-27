@@ -682,7 +682,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         factories.OrderFactory(
             owner=user,
             product__target_courses=target_courses,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
 
         enrollment = factories.EnrollmentFactory(
@@ -952,7 +952,6 @@ class EnrollmentApiTest(BaseAPITestCase):
         product = factories.ProductFactory(target_courses=[target_course], price="0.00")
         order = factories.OrderFactory(owner=user, product=product)
         order.flow.assign()
-        order.submit()
 
         # Create a pre-existing enrollment and try to enroll to this course's second course run
         factories.EnrollmentFactory(
@@ -1733,7 +1732,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         factories.OrderFactory(
             owner=other_user,
             product=enrollment.course_run.course.targeted_by_products.first(),
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
 
         # Try modifying the enrollment on each field with our alternative data
@@ -1788,7 +1787,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         )
         product = factories.ProductFactory(target_courses=[target_course])
         order = factories.OrderFactory(
-            product=product, state=enums.ORDER_STATE_VALIDATED
+            product=product, state=enums.ORDER_STATE_COMPLETED
         )
         enrollment = factories.EnrollmentFactory(
             course_run=course_run1,
@@ -1815,7 +1814,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         )
         product = factories.ProductFactory(target_courses=[target_course])
         order = factories.OrderFactory(
-            product=product, state=enums.ORDER_STATE_VALIDATED
+            product=product, state=enums.ORDER_STATE_COMPLETED
         )
 
         enrollment = factories.EnrollmentFactory(
@@ -1842,7 +1841,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         factories.OrderFactory(
             owner=user,
             product__target_courses=[target_course],
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
 
         enrollment = factories.EnrollmentFactory(
@@ -2016,13 +2015,22 @@ class EnrollmentApiTest(BaseAPITestCase):
         # tries to update to was_created_by_order field again.
         product = factories.ProductFactory(target_courses=[course_run.course])
         order = factories.OrderFactory(
-            owner=user, product=product, state=enums.ORDER_STATE_SUBMITTED
+            owner=user,
+            product=product,
+            state=enums.ORDER_STATE_PENDING,
+            payment_schedule=[
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "state": enums.PAYMENT_STATE_PAID,
+                },
+            ],
         )
+        order.flow.complete()
 
         # - Create an invoice related to the order to mark it as validated and trigger the
         #   auto enrollment logic on validate transition
         InvoiceFactory(order=order, total=order.total)
-        order.flow.validate()
 
         # The enrollment should have been activated automatically
         enrollment.refresh_from_db()
@@ -2115,7 +2123,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         factories.OrderFactory(
             owner=user,
             product__target_courses=[target_course],
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
 
         enrollment = factories.EnrollmentFactory(
@@ -2190,7 +2198,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         factories.OrderFactory(
             owner=user,
             product__target_courses=[course_run.course],
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
 
         response = self.client.put(
