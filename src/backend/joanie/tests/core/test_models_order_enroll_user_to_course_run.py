@@ -8,7 +8,6 @@ from django.test import TestCase
 
 from joanie.core import enums, factories
 from joanie.core.models import CourseState, Enrollment
-from joanie.payment.factories import BillingAddressDictFactory, InvoiceFactory
 
 
 # pylint: disable=too-many-public-methods
@@ -16,19 +15,14 @@ class EnrollUserToCourseRunOrderModelsTestCase(TestCase):
     """Test suite for `enroll_user_to_course_run` method on the Order model."""
 
     def _create_validated_order(self, **kwargs):
+        kwargs["product"].price = 0
         order = factories.OrderFactory(**kwargs)
-        order.flow.assign()
-
-        self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
         self.assertEqual(Enrollment.objects.count(), 0)
 
-        # - Create an invoice to mark order as validated
-        InvoiceFactory(order=order, total=order.total)
+        # - Completing the order should automatically enroll user to course run
+        order.flow.assign()
 
-        # - Validate the order should automatically enroll user to course run
-        order.flow.validate()
-
-        self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
     def test_models_order_enroll_user_to_course_run_one_open(self):
         """

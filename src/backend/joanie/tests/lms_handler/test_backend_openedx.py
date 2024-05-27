@@ -12,7 +12,7 @@ from django.utils import timezone
 import responses
 from requests import RequestException
 
-from joanie.core import factories, models
+from joanie.core import enums, factories, models
 from joanie.core.exceptions import EnrollmentError, GradeError
 from joanie.lms_handler import LMSHandler
 from joanie.lms_handler.backends.openedx import OpenEdXLMSBackend
@@ -324,7 +324,7 @@ class OpenEdXLMSBackendTestCase(TestCase):
             enrollment=enrollment,
             product__type="certificate",
             product__courses=[course_run.course],
-            state="validated",
+            state=enums.ORDER_STATE_COMPLETED,
         )
         result = backend.set_enrollment(enrollment)
 
