@@ -52,7 +52,7 @@ class UtilsContractTestCase(TestCase):
                         enums.ORDER_STATE_DRAFT,
                         enums.ORDER_STATE_PENDING,
                         enums.ORDER_STATE_SUBMITTED,
-                        enums.ORDER_STATE_VALIDATED,
+                        enums.ORDER_STATE_COMPLETED,
                     ]
                 ),
                 signature_backend_reference=signature_reference,
@@ -94,7 +94,7 @@ class UtilsContractTestCase(TestCase):
                 order__owner=users[index],
                 order__product=relation.product,
                 order__course=relation.course,
-                order__state=enums.ORDER_STATE_VALIDATED,
+                order__state=enums.ORDER_STATE_COMPLETED,
                 signature_backend_reference=signature_reference,
                 definition_checksum="1234",
                 context={"foo": "bar"},
@@ -143,7 +143,7 @@ class UtilsContractTestCase(TestCase):
                         enums.ORDER_STATE_DRAFT,
                         enums.ORDER_STATE_PENDING,
                         enums.ORDER_STATE_SUBMITTED,
-                        enums.ORDER_STATE_VALIDATED,
+                        enums.ORDER_STATE_COMPLETED,
                     ]
                 ),
                 signature_backend_reference=signature_reference,
@@ -185,7 +185,7 @@ class UtilsContractTestCase(TestCase):
                 order__owner=users[index],
                 order__product=relation.product,
                 order__course=relation.course,
-                order__state=enums.ORDER_STATE_VALIDATED,
+                order__state=enums.ORDER_STATE_COMPLETED,
                 signature_backend_reference=signature_reference,
                 definition_checksum="1234",
                 context={"foo": "bar"},
@@ -242,7 +242,7 @@ class UtilsContractTestCase(TestCase):
                         enums.ORDER_STATE_DRAFT,
                         enums.ORDER_STATE_PENDING,
                         enums.ORDER_STATE_SUBMITTED,
-                        enums.ORDER_STATE_VALIDATED,
+                        enums.ORDER_STATE_COMPLETED,
                     ]
                 ),
                 signature_backend_reference=signature_reference,
@@ -291,7 +291,7 @@ class UtilsContractTestCase(TestCase):
                 order__product=relation.product,
                 order__course=None,
                 order__enrollment=enrollment,
-                order__state=enums.ORDER_STATE_VALIDATED,
+                order__state=enums.ORDER_STATE_COMPLETED,
                 signature_backend_reference=signature_reference,
                 definition_checksum="1234",
                 context={"foo": "bar"},
@@ -349,7 +349,7 @@ class UtilsContractTestCase(TestCase):
                 order__product=relation.product,
                 order__course=None,
                 order__enrollment=enrollment,
-                order__state=enums.ORDER_STATE_VALIDATED,
+                order__state=enums.ORDER_STATE_COMPLETED,
                 signature_backend_reference=signature_reference,
                 definition_checksum="1234",
                 context={"foo": "bar"},
@@ -409,7 +409,7 @@ class UtilsContractTestCase(TestCase):
                 order__product=relation.product,
                 order__course=None,
                 order__enrollment=enrollment,
-                order__state=enums.ORDER_STATE_VALIDATED,
+                order__state=enums.ORDER_STATE_COMPLETED,
                 signature_backend_reference=signature_reference,
                 definition_checksum="1234",
                 context={"foo": "bar"},
@@ -541,7 +541,7 @@ class UtilsContractTestCase(TestCase):
                 owner=users[index],
                 product=relation.product,
                 course=relation.course,
-                state=enums.ORDER_STATE_VALIDATED,
+                state=enums.ORDER_STATE_COMPLETED,
                 main_invoice=InvoiceFactory(
                     recipient_address__address="1 Rue de L'Exemple",
                     recipient_address__postcode=75000,
@@ -623,7 +623,7 @@ class UtilsContractTestCase(TestCase):
                 order__owner=learners[index],
                 order__product=relation.product,
                 order__course=relation.course,
-                order__state=enums.ORDER_STATE_VALIDATED,
+                order__state=enums.ORDER_STATE_COMPLETED,
                 signature_backend_reference=signature_reference,
                 definition_checksum="1234",
                 context={"foo": "bar"},
@@ -656,7 +656,7 @@ class UtilsContractTestCase(TestCase):
         order = factories.OrderFactory(
             owner=user,
             product__contract_definition=factories.ContractDefinitionFactory(),
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
         factories.ContractFactory(
             order=order, definition=order.product.contract_definition
@@ -675,7 +675,7 @@ class UtilsContractTestCase(TestCase):
         order = factories.OrderFactory(
             owner=user,
             product__contract_definition=factories.ContractDefinitionFactory(),
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
         factories.ContractFactory(
             order=order, definition=order.product.contract_definition
@@ -697,7 +697,7 @@ class UtilsContractTestCase(TestCase):
         order = factories.OrderFactory(
             owner=user,
             product__contract_definition=factories.ContractDefinitionFactory(),
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
         factories.ContractFactory(
             order=order,
@@ -724,7 +724,7 @@ class UtilsContractTestCase(TestCase):
         order = factories.OrderFactory(
             owner=user,
             product__contract_definition=factories.ContractDefinitionFactory(),
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
         factories.ContractFactory(
             order=order,
@@ -751,7 +751,7 @@ class UtilsContractTestCase(TestCase):
         order = factories.OrderFactory(
             owner=user,
             product__contract_definition=factories.ContractDefinitionFactory(),
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
         contract = factories.ContractFactory(
             order=order,
@@ -799,7 +799,7 @@ class UtilsContractTestCase(TestCase):
         order = factories.OrderFactory(
             product=relation.product,
             course=relation.course,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
             organization=organization,
         )
         factories.ContractFactory(
@@ -820,7 +820,7 @@ class UtilsContractTestCase(TestCase):
         self.assertEqual(
             models.Contract.objects.filter(
                 submitted_for_signature_on__isnull=False,
-                order__state=enums.ORDER_STATE_VALIDATED,
+                order__state=enums.ORDER_STATE_COMPLETED,
                 order__organization_id=organization.id,
                 organization_signed_on__isnull=False,
                 student_signed_on__isnull=False,
@@ -845,7 +845,7 @@ class UtilsContractTestCase(TestCase):
                 owner=learners[index],
                 product=relation.product,
                 course=relation.course,
-                state=enums.ORDER_STATE_VALIDATED,
+                state=enums.ORDER_STATE_COMPLETED,
                 organization=organization,
             )
             factories.ContractFactory(
@@ -861,7 +861,7 @@ class UtilsContractTestCase(TestCase):
             owner=learners[2],
             product=relation.product,
             course=relation.course,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
             organization=organization,
         )
         # This contract will need a full update for student and organization
@@ -901,7 +901,7 @@ class UtilsContractTestCase(TestCase):
         self.assertEqual(
             models.Contract.objects.filter(
                 submitted_for_signature_on__isnull=False,
-                order__state=enums.ORDER_STATE_VALIDATED,
+                order__state=enums.ORDER_STATE_COMPLETED,
                 order__organization_id=organization.id,
                 organization_signed_on__isnull=True,
                 student_signed_on__isnull=True,
@@ -911,7 +911,7 @@ class UtilsContractTestCase(TestCase):
         self.assertEqual(
             models.Contract.objects.filter(
                 submitted_for_signature_on__isnull=False,
-                order__state=enums.ORDER_STATE_VALIDATED,
+                order__state=enums.ORDER_STATE_COMPLETED,
                 order__organization_id=organization.id,
                 organization_signed_on__isnull=True,
                 student_signed_on__isnull=False,

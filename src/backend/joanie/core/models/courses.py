@@ -323,7 +323,9 @@ class Organization(parler_models.TranslatableModel, BaseModel):
                 submitted_for_signature_on__isnull=False,
                 student_signed_on__isnull=False,
                 order__organization=self,
-                order__state=enums.ORDER_STATE_VALIDATED,
+                # TODO: invert the lookup for the order state
+                #  order__state=~Q(enums.ORDER_STATE_CANCELED),
+                order__state=enums.ORDER_STATE_COMPLETED,
             ).values_list("id", "signature_backend_reference")
         )
 
@@ -1138,7 +1140,11 @@ class Enrollment(BaseModel):
                             product__contract_definition__isnull=True,
                         )
                     ),
-                    state=enums.ORDER_STATE_VALIDATED,
+                    state__in=[
+                        enums.ORDER_STATE_COMPLETED,
+                        enums.ORDER_STATE_FAILED_PAYMENT,
+                        enums.ORDER_STATE_PENDING_PAYMENT,
+                    ],
                 )
                 if validated_user_orders.count() == 0:
                     message = _(
