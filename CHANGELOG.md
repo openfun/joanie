@@ -11,6 +11,8 @@ and this project adheres to
 ### Changed
 
 - Add `currency` field to `OrderPaymentSerializer` serializer
+- Allow an order with `no_payment` state to pay for failed installment
+  on a payment schedule
 
 ## [2.2.0] - 2024-05-22
 

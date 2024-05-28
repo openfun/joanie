@@ -256,31 +256,6 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
             {"detail": "The order is not in failed payment state."},
         )
 
-    def test_api_order_submit_installment_payment_order_is_in_no_payment_state(
-        self,
-    ):
-        """
-        Authenticated user should not be able to pay for a failed installment payment
-        if its order is in state 'no_payment'.
-        """
-        user = UserFactory()
-        token = self.generate_token_from_user(user)
-        payload = {"credit_card_id": uuid.uuid4()}
-        order_no_payment = OrderFactory(owner=user, state=ORDER_STATE_NO_PAYMENT)
-
-        response = self.client.post(
-            f"/api/v1.0/orders/{order_no_payment.id}/submit_installment_payment/",
-            data=payload,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-
-        self.assertEqual(response.status_code, HTTPStatus.UNPROCESSABLE_ENTITY)
-        self.assertEqual(
-            response.json(),
-            {"detail": "The order is not in failed payment state."},
-        )
-
     def test_api_order_submit_installment_payment_order_is_in_completed_state(self):
         """
         Authenticated user should not be able to pay for a failed installment payment
@@ -346,7 +321,6 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
                 },
             ],
         )
-
         payload = {"credit_card_id": credit_card.id}
         token = self.generate_token_from_user(user)
 
@@ -371,7 +345,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
         side_effect=DummyPaymentBackend().create_payment,
     )
     def test_api_order_submit_installment_payment_without_passing_credit_credit_card_id_in_payload(
-        self, _mock_create_payment, _mock_create_one_click_payment
+        self, mock_create_payment, _mock_create_one_click_payment
     ):
         """
         Authenticated user should be able to pay for a failed installment payment
@@ -420,7 +394,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        _mock_create_payment.assert_called_once_with(
+        mock_create_payment.assert_called_once_with(
             order=order,
             billing_address=order.main_invoice.recipient_address,
             installment={
@@ -431,7 +405,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
             },
         )
 
-        self.assertTrue(_mock_create_payment.called)
+        self.assertTrue(mock_create_payment.called)
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertFalse(_mock_create_one_click_payment.called)
 
@@ -446,7 +420,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
         side_effect=DummyPaymentBackend().create_one_click_payment,
     )
     def test_api_order_submit_installment_payment_with_credit_card_id_payload(
-        self, _mock_create_one_click_payment, _mock_create_payment
+        self, mock_create_one_click_payment, _mock_create_payment
     ):
         """
         Authenticated user should be able to pay for a failed installment
@@ -500,7 +474,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        _mock_create_one_click_payment.assert_called_once_with(
+        mock_create_one_click_payment.assert_called_once_with(
             order=order,
             billing_address=order.main_invoice.recipient_address,
             credit_card_token=credit_card.token,
@@ -512,7 +486,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
             },
         )
 
-        self.assertTrue(_mock_create_one_click_payment.called)
+        self.assertTrue(mock_create_one_click_payment.called)
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertTrue(response.json()["is_paid"])
         self.assertFalse(_mock_create_payment.called)
@@ -573,3 +547,142 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
             response.json(),
             {"detail": "No installment found with a refused payment state."},
         )
+
+    @mock.patch.object(
+        DummyPaymentBackend,
+        "create_one_click_payment",
+        side_effect=DummyPaymentBackend().create_one_click_payment,
+    )
+    def test_api_order_submit_installment_payment_order_no_payment_state_with_credit_card_id(
+        self, mock_create_one_click_payment
+    ):
+        """
+        Authenticated user should be able to pay for the first failed installment payment
+        when its order is in state 'no_payment' by passing his `credit_card.id` in the payload
+        of the request. It will call the `create_one_click_payment` method of the payment backend.
+        """
+        user = UserFactory()
+        credit_card = CreditCardFactory(owner=user)
+        order = OrderFactory(
+            owner=user,
+            state=ORDER_STATE_NO_PAYMENT,
+            payment_schedule=[
+                {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_REFUSED,
+                },
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "300.00",
+                    "due_date": "2024-02-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
+                    "amount": "300.00",
+                    "due_date": "2024-03-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
+                    "amount": "199.99",
+                    "due_date": "2024-04-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+        InvoiceFactory(order=order)
+        payload = {"credit_card_id": credit_card.id}
+        token = self.generate_token_from_user(user)
+
+        response = self.client.post(
+            f"/api/v1.0/orders/{order.id}/submit_installment_payment/",
+            data=payload,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        mock_create_one_click_payment.assert_called_once_with(
+            order=order,
+            billing_address=order.main_invoice.recipient_address,
+            credit_card_token=credit_card.token,
+            installment={
+                "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
+                "amount": "200.00",
+                "due_date": "2024-01-17",
+                "state": PAYMENT_STATE_REFUSED,
+            },
+        )
+
+        self.assertTrue(mock_create_one_click_payment.called)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertTrue(response.json()["is_paid"])
+
+    @mock.patch.object(
+        DummyPaymentBackend,
+        "create_payment",
+        side_effect=DummyPaymentBackend().create_payment,
+    )
+    def test_api_order_submit_installment_payment_order_no_payment_state_without_credit_card_id(
+        self, mock_create_payment
+    ):
+        """
+        Authenticated user should be able to pay for the first failed installment payment
+        when its order is in state 'no_payment' by passing his `credit_card.id` in the payload
+        of the request. It will call the `create_payment` method of the payment backend.
+        """
+        user = UserFactory()
+        order = OrderFactory(
+            owner=user,
+            state=ORDER_STATE_NO_PAYMENT,
+            payment_schedule=[
+                {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_REFUSED,
+                },
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "300.00",
+                    "due_date": "2024-02-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
+                    "amount": "300.00",
+                    "due_date": "2024-03-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
+                    "amount": "199.99",
+                    "due_date": "2024-04-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+        InvoiceFactory(order=order)
+        token = self.generate_token_from_user(user)
+
+        response = self.client.post(
+            f"/api/v1.0/orders/{order.id}/submit_installment_payment/",
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        mock_create_payment.assert_called_once_with(
+            order=order,
+            billing_address=order.main_invoice.recipient_address,
+            installment={
+                "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
+                "amount": "200.00",
+                "due_date": "2024-01-17",
+                "state": PAYMENT_STATE_REFUSED,
+            },
+        )
+
+        self.assertTrue(mock_create_payment.called)
+        self.assertEqual(response.status_code, HTTPStatus.OK)

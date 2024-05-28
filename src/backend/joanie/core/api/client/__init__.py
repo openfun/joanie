@@ -413,7 +413,11 @@ class OrderViewSet(
         """
         Submit a draft order if the conditions are filled
         """
-        billing_address = request.data.get("billing_address")
+        billing_address = (
+            models.Address(**request.data.get("billing_address"))
+            if request.data.get("billing_address")
+            else None
+        )
         credit_card_id = request.data.get("credit_card_id")
         order = self.get_object()
 
@@ -557,7 +561,10 @@ class OrderViewSet(
         Submit a payment for a failed installment that was scheduled for a given order.
         """
         order = self.get_object()
-        if order.state != enums.ORDER_STATE_FAILED_PAYMENT:
+        if order.state not in [
+            enums.ORDER_STATE_NO_PAYMENT,
+            enums.ORDER_STATE_FAILED_PAYMENT,
+        ]:
             return Response(
                 {"detail": "The order is not in failed payment state."},
                 status=HTTPStatus.UNPROCESSABLE_ENTITY,
