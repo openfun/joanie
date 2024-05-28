@@ -177,7 +177,7 @@ class Command(BaseCommand):
         course_user,
         organization,
         product_type=enums.PRODUCT_TYPE_CERTIFICATE,
-        order_status=enums.ORDER_STATE_VALIDATED,
+        order_status=enums.ORDER_STATE_COMPLETED,
         contract_definition=None,
         product=None,
     ):  # pylint: disable=too-many-arguments, too-many-positional-arguments
@@ -223,7 +223,7 @@ class Command(BaseCommand):
             course_user,
             organization,
             options["product_type"],
-            enums.ORDER_STATE_VALIDATED,
+            enums.ORDER_STATE_COMPLETED,
             options["contract_definition"]
             if "contract_definition" in options
             else None,
@@ -508,7 +508,7 @@ class Command(BaseCommand):
             organization_owner,
             organization,
             enums.PRODUCT_TYPE_CREDENTIAL,
-            enums.ORDER_STATE_VALIDATED,
+            enums.ORDER_STATE_COMPLETED,
             factories.ContractDefinitionFactory(),
         )
         factories.ContractFactory(
@@ -528,7 +528,7 @@ class Command(BaseCommand):
             organization_owner,
             organization,
             enums.PRODUCT_TYPE_CREDENTIAL,
-            enums.ORDER_STATE_VALIDATED,
+            enums.ORDER_STATE_COMPLETED,
             factories.ContractDefinitionFactory(),
         )
 
@@ -545,7 +545,7 @@ class Command(BaseCommand):
             organization_owner,
             organization,
             enums.PRODUCT_TYPE_CREDENTIAL,
-            enums.ORDER_STATE_VALIDATED,
+            enums.ORDER_STATE_COMPLETED,
             factories.ContractDefinitionFactory(),
             product=learner_signed_order.product,
         )
@@ -569,7 +569,7 @@ class Command(BaseCommand):
             organization_owner,
             organization,
             enums.PRODUCT_TYPE_CREDENTIAL,
-            enums.ORDER_STATE_VALIDATED,
+            enums.ORDER_STATE_COMPLETED,
             factories.ContractDefinitionFactory(),
         )
 
@@ -604,7 +604,7 @@ class Command(BaseCommand):
             enums.ORDER_STATE_SUBMITTED,
             enums.ORDER_STATE_PENDING,
             enums.ORDER_STATE_CANCELED,
-            enums.ORDER_STATE_VALIDATED,
+            enums.ORDER_STATE_COMPLETED,
         ]:
             self.create_product_purchased(
                 student_user,
