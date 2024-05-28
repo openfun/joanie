@@ -906,12 +906,12 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         [o0, *_] = factories.OrderFactory.create_batch(
             5,
             product=p0,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
         [o1, *_] = factories.OrderFactory.create_batch(
             5,
             product=p1,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
 
         self.assertEqual(o0.target_course_runs.count(), 1)
