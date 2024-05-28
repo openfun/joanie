@@ -13,7 +13,6 @@ from joanie.core.enums import (
     ORDER_STATE_NO_PAYMENT,
     ORDER_STATE_PENDING,
     ORDER_STATE_PENDING_PAYMENT,
-    ORDER_STATE_SUBMITTED,
     PAYMENT_STATE_PAID,
     PAYMENT_STATE_PENDING,
     PAYMENT_STATE_REFUSED,
@@ -126,29 +125,6 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
 
         response = self.client.post(
             f"/api/v1.0/orders/{order_draft.id}/submit-installment-payment/",
-            data=payload,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-
-        self.assertEqual(response.status_code, HTTPStatus.UNPROCESSABLE_ENTITY)
-        self.assertEqual(
-            response.json(),
-            {"detail": "The order is not in failed payment state."},
-        )
-
-    def test_api_order_submit_installment_payment_order_is_in_submitted_state(self):
-        """
-        Authenticated user should not be able to pay for a failed installment payment
-        if its order is in state 'submitted'.
-        """
-        user = UserFactory()
-        token = self.generate_token_from_user(user)
-        payload = {"credit_card_id": uuid.uuid4()}
-        order_submitted = OrderFactory(owner=user, state=ORDER_STATE_SUBMITTED)
-
-        response = self.client.post(
-            f"/api/v1.0/orders/{order_submitted.id}/submit-installment-payment/",
             data=payload,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",

@@ -51,7 +51,6 @@ class UtilsContractTestCase(TestCase):
                         enums.ORDER_STATE_CANCELED,
                         enums.ORDER_STATE_DRAFT,
                         enums.ORDER_STATE_PENDING,
-                        enums.ORDER_STATE_SUBMITTED,
                         enums.ORDER_STATE_COMPLETED,
                     ]
                 ),
@@ -142,7 +141,6 @@ class UtilsContractTestCase(TestCase):
                         enums.ORDER_STATE_CANCELED,
                         enums.ORDER_STATE_DRAFT,
                         enums.ORDER_STATE_PENDING,
-                        enums.ORDER_STATE_SUBMITTED,
                         enums.ORDER_STATE_COMPLETED,
                     ]
                 ),
@@ -241,7 +239,6 @@ class UtilsContractTestCase(TestCase):
                         enums.ORDER_STATE_CANCELED,
                         enums.ORDER_STATE_DRAFT,
                         enums.ORDER_STATE_PENDING,
-                        enums.ORDER_STATE_SUBMITTED,
                         enums.ORDER_STATE_COMPLETED,
                     ]
                 ),
