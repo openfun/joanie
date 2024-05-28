@@ -856,7 +856,6 @@ class OrdersAdminApiTestCase(TestCase):
             state=random.choice(
                 [
                     enums.ORDER_STATE_CANCELED,
-                    enums.ORDER_STATE_SUBMITTED,
                     enums.ORDER_STATE_DRAFT,
                     enums.ORDER_STATE_PENDING,
                     enums.ORDER_STATE_COMPLETED,
@@ -874,7 +873,7 @@ class OrdersAdminApiTestCase(TestCase):
         """
         admin = factories.UserFactory(is_staff=False, is_superuser=False)
         self.client.login(username=admin.username, password="password")
-        order = factories.OrderFactory(state=enums.ORDER_STATE_SUBMITTED)
+        order = factories.OrderFactory(state=enums.ORDER_STATE_PENDING)
 
         response = self.client.delete(f"/api/v1.0/admin/orders/{order.id}/")
 
@@ -898,42 +897,12 @@ class OrdersAdminApiTestCase(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        order_is_draft = factories.OrderFactory(state=enums.ORDER_STATE_DRAFT)
-        order_is_pending = factories.OrderFactory(state=enums.ORDER_STATE_PENDING)
-        order_is_submitted = factories.OrderFactory(state=enums.ORDER_STATE_SUBMITTED)
-        order_is_completed = factories.OrderFactory(state=enums.ORDER_STATE_COMPLETED)
-
-        # Canceling draft order
-        response = self.client.delete(
-            f"/api/v1.0/admin/orders/{order_is_draft.id}/",
-        )
-        order_is_draft.refresh_from_db()
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
-        self.assertEqual(order_is_draft.state, enums.ORDER_STATE_CANCELED)
-
-        # Canceling pending order
-        response = self.client.delete(
-            f"/api/v1.0/admin/orders/{order_is_pending.id}/",
-        )
-        order_is_pending.refresh_from_db()
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
-        self.assertEqual(order_is_pending.state, enums.ORDER_STATE_CANCELED)
-
-        # Canceling submitted order
-        response = self.client.delete(
-            f"/api/v1.0/admin/orders/{order_is_submitted.id}/",
-        )
-        order_is_submitted.refresh_from_db()
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
-        self.assertEqual(order_is_submitted.state, enums.ORDER_STATE_CANCELED)
-
-        # Canceling validated order
-        response = self.client.delete(
-            f"/api/v1.0/admin/orders/{order_is_completed.id}/",
-        )
-        order_is_completed.refresh_from_db()
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
-        self.assertEqual(order_is_completed.state, enums.ORDER_STATE_CANCELED)
+        for state, _ in enums.ORDER_STATE_CHOICES:
+            order = factories.OrderFactory(state=state)
+            response = self.client.delete(f"/api/v1.0/admin/orders/{order.id}/")
+            order.refresh_from_db()
+            self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+            self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
 
     def test_api_admin_orders_generate_certificate_anonymous_user(self):
         """

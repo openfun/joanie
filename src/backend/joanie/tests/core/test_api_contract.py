@@ -1012,7 +1012,6 @@ class ContractApiTest(BaseAPITestCase):
                     enums.ORDER_STATE_PENDING,
                     enums.ORDER_STATE_DRAFT,
                     enums.ORDER_STATE_CANCELED,
-                    enums.ORDER_STATE_SUBMITTED,
                 ]
             ),
             product__contract_definition=factories.ContractDefinitionFactory(),

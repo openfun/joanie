@@ -763,7 +763,6 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         order_group2 = factories.OrderGroupFactory(course_product_relation=relation)
         binding_states = [
             enums.ORDER_STATE_PENDING,
-            enums.ORDER_STATE_SUBMITTED,
             enums.ORDER_STATE_COMPLETED,
         ]
         for _ in range(3):
