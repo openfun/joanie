@@ -150,7 +150,7 @@ class OrderUpdateApiTest(BaseAPITestCase):
         self._check_api_order_update_detail(order, owner, HTTPStatus.METHOD_NOT_ALLOWED)
         models.Order.objects.all().delete()
         order = factories.OrderFactory(
-            owner=owner, product=product, state=enums.ORDER_STATE_VALIDATED
+            owner=owner, product=product, state=enums.ORDER_STATE_COMPLETED
         )
         self._check_api_order_update_detail(order, owner, HTTPStatus.METHOD_NOT_ALLOWED)
         Transaction.objects.all().delete()
