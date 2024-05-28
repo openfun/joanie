@@ -79,7 +79,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
     ):
         """
         Authenticated users should not be able to submit for signature an order that is
-        not state equal to 'validated'.
+        not state equal to 'completed'.
         """
         user = factories.UserFactory(
             email="student_do@example.fr", first_name="John Doe", last_name=""
@@ -89,10 +89,9 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
             owner=user,
             state=random.choice(
                 [
-                    enums.ORDER_STATE_CANCELED,
-                    enums.ORDER_STATE_PENDING,
-                    enums.ORDER_STATE_SUBMITTED,
-                    enums.ORDER_STATE_DRAFT,
+                    state
+                    for state, _ in enums.ORDER_STATE_CHOICES
+                    if state != enums.ORDER_STATE_COMPLETED
                 ]
             ),
             product__contract_definition=factories.ContractDefinitionFactory(),
