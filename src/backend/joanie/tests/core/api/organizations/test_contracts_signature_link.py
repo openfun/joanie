@@ -268,7 +268,7 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
                 product=relation.product,
                 course=relation.course,
                 organization=other_organization,
-                state=enums.ORDER_STATE_VALIDATED,
+                state=enums.ORDER_STATE_COMPLETED,
             ),
             student_signed_on=timezone.now(),
             submitted_for_signature_on=timezone.now(),
