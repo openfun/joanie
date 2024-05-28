@@ -392,3 +392,97 @@ class CreditCardAPITestCase(BaseAPITestCase):
         )
 
         self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+
+    def test_api_credit_card_tokenize_card_anonymous(self):
+        """
+        Anonymous user should not be able to tokenize a credit card
+        """
+        response = self.client.post("/api/v1.0/credit-cards/tokenize-card/")
+
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+
+    def test_api_credit_card_tokenize_card_get_method_not_allowed(self):
+        """
+        Authenticated user should not be able to GET method to tokenize his credit card
+        """
+        user = UserFactory()
+        token = self.get_user_token(user.username)
+
+        response = self.client.get(
+            "/api/v1.0/credit-cards/tokenize-card/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+
+    def test_api_credit_card_tokenize_card_put_method_not_allowed(self):
+        """
+        Authenticated user should not be able to PUT method to update a tokenize credit card
+        """
+        user = UserFactory()
+        token = self.get_user_token(user.username)
+
+        response = self.client.put(
+            "/api/v1.0/credit-cards/tokenize-card/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+
+    def test_api_credit_card_tokenize_card_patch_method_not_allowed(self):
+        """
+        Authenticated user should not be able to PATCH method to partially update tokenized
+        credit card
+        """
+        user = UserFactory()
+        token = self.get_user_token(user.username)
+
+        response = self.client.patch(
+            "/api/v1.0/credit-cards/tokenize-card/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+
+    def test_api_credit_card_tokenize_card_delete_method_not_allowed(self):
+        """
+        Authenticated user should not be able to DELETE method to tokenize his credit card
+        """
+        user = UserFactory()
+        token = self.get_user_token(user.username)
+
+        response = self.client.delete(
+            "/api/v1.0/credit-cards/tokenize-card/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+
+    @override_settings(
+        JOANIE_PAYMENT_BACKEND={
+            "backend": "joanie.payment.backends.dummy.DummyPaymentBackend",
+            "configuration": None,
+        }
+    )
+    def test_api_credit_card_tokenize_card(self):
+        """
+        Authenticated user should be able to tokenize a credit card.
+        """
+        user = UserFactory()
+        token = self.get_user_token(user.username)
+
+        response = self.client.post(
+            "/api/v1.0/credit-cards/tokenize-card/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(
+            response.json(),
+            {
+                "provider": "dummy",
+                "type": "tokenize_card",
+                "customer": str(user.id),
+                "card_token": f"card_{user.id}",
+            },
+        )

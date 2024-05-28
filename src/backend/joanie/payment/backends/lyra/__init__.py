@@ -190,19 +190,46 @@ class LyraBackend(BasePaymentBackend):
             "configuration": self._get_configuration(),
         }
 
-    def tokenize_card(self, order, billing_address):
+    def _tokenize_card_for_user(self, user):
         """
-        Tokenize a card for a given order
-
-        https://docs.lyra.com/fr/rest/V4.0/api/playground/Charge/CreateToken
+        Tokenize a card using only user information.
         """
         url = f"{self.api_url}Charge/CreateToken"
+
+        payload = {
+            "currency": settings.DEFAULT_CURRENCY,
+            "customer": {
+                "reference": str(user.id),
+                "email": user.email,
+            },
+            "ipnTargetUrl": self.get_notification_url(),
+        }
+
+        return self._get_payment_info(url, payload)
+
+    def _tokenize_card_for_order(self, order, billing_address):
+        """
+        Tokenize a card using order and billing address information.
+        """
+        url = f"{self.api_url}Charge/CreateToken"
+
         payload = self._get_common_payload_data(order, billing_address)
         payload["formAction"] = "REGISTER"
         payload["strongAuthentication"] = "CHALLENGE_REQUESTED"
         del payload["amount"]
         del payload["customer"]["shippingDetails"]
+
         return self._get_payment_info(url, payload)
+
+    def tokenize_card(self, order=None, billing_address=None, user=None):
+        """
+        Tokenize a card based on the provided arguments.
+
+        https://docs.lyra.com/fr/rest/V4.0/api/playground/Charge/CreateToken
+        """
+        if user:
+            return self._tokenize_card_for_user(user)
+        return self._tokenize_card_for_order(order, billing_address)
 
     def create_payment(self, order, billing_address, installment=None):
         """

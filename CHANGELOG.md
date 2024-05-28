@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Allow to tokenize a card endpoint for a user
+
 ### Changed
 
 - Add `currency` field to `OrderPaymentSerializer` serializer

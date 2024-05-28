@@ -8,7 +8,7 @@ from http import HTTPStatus
 from django.db import transaction
 
 from rest_framework import mixins, permissions, viewsets
-from rest_framework.decorators import api_view
+from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 
 from joanie.payment import exceptions, get_payment_backend, models, serializers
@@ -68,3 +68,18 @@ class CreditCardViewSet(
             else self.request.user.username
         )
         return models.CreditCard.objects.filter(owner__username=username)
+
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="tokenize-card",
+    )
+    def tokenize_card(self, request):
+        """
+        Tokenize a credit card for a user with payment backend. It returns a form token
+        from the payment backend provider.
+        """
+        payment_backend = get_payment_backend()
+        payment_infos = payment_backend.tokenize_card(user=self.request.user)
+
+        return Response(payment_infos, status=HTTPStatus.OK)

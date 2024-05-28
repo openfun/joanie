@@ -526,6 +526,60 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         )
 
     @responses.activate(assert_all_requests_are_fired=True)
+    def test_payment_backend_lyra_tokenize_card_passing_user_in_parameter_only(self):
+        """
+        When backend tokenizes a card by only passing the user when calling the method,
+        it should return a form token.
+        """
+        backend = LyraBackend(self.configuration)
+        owner = UserFactory(email="john.doe@acme.org")
+
+        with self.open("lyra/responses/tokenize_card.json") as file:
+            json_response = json.loads(file.read())
+
+        responses.add(
+            responses.POST,
+            "https://api.lyra.com/api-payment/V4/Charge/CreateToken",
+            headers={
+                "Content-Type": "application/json",
+            },
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        "content-type": "application/json",
+                        "authorization": "Basic Njk4NzYzNTc6dGVzdHBhc3N3b3JkX0RFTU9QUklWQVRFS0VZMjNHNDQ3NXpYWlEyVUE1eDdN",
+                    }
+                ),
+                responses.matchers.json_params_matcher(
+                    {
+                        "currency": "EUR",
+                        "customer": {
+                            "reference": str(owner.id),
+                            "email": "john.doe@acme.org",
+                        },
+                        "ipnTargetUrl": "https://example.com/api/v1.0/payments/notifications",
+                    }
+                ),
+            ],
+            status=200,
+            json=json_response,
+        )
+
+        response = backend.tokenize_card(user=owner)
+
+        self.assertEqual(
+            response,
+            {
+                "provider_name": "lyra",
+                "form_token": json_response.get("answer").get("formToken"),
+                "configuration": {
+                    "public_key": self.configuration.get("public_key"),
+                    "base_url": self.configuration.get("api_base_url"),
+                },
+            },
+        )
+
+    @responses.activate(assert_all_requests_are_fired=True)
     def test_payment_backend_lyra_create_one_click_payment(self):
         """
         When backend creates a one click payment, it should return payment information.

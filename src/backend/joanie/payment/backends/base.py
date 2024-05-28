@@ -210,3 +210,11 @@ class BasePaymentBackend:
         raise NotImplementedError(
             "subclasses of BasePaymentBackend must provide a abort_payment() method."
         )
+
+    def tokenize_card(self, order=None, billing_address=None, user=None):
+        """
+        Method called to tokenize a credit card.
+        """
+        raise NotImplementedError(
+            "subclasses of BasePaymentBackend must provide a tokenize_card() method."
+        )

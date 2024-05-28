@@ -2380,6 +2380,46 @@
                 }
             }
         },
+        "/api/v1.0/credit-cards/tokenize-card/": {
+            "post": {
+                "operationId": "credit_cards_tokenize_card_create",
+                "description": "Tokenize a credit card for a user with payment backend. It returns a form token\nfrom the payment backend provider.",
+                "tags": [
+                    "credit-cards"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreditCardRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreditCardRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "DelegatedJWTAuthentication": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CreditCard"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1.0/enrollments/": {
             "get": {
                 "operationId": "enrollments_list",
