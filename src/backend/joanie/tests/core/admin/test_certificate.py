@@ -9,7 +9,7 @@ from http import HTTPStatus
 from django.test import TestCase
 from django.urls import reverse
 
-from joanie.core.enums import ORDER_STATE_VALIDATED
+from joanie.core.enums import ORDER_STATE_COMPLETED
 from joanie.core.factories import (
     CourseProductRelationFactory,
     EnrollmentCertificateFactory,
@@ -47,7 +47,7 @@ class CertificateAdminTestCase(TestCase):
             owner=self.learner_1,
             product=cpr.product,
             course=cpr.course,
-            state=ORDER_STATE_VALIDATED,
+            state=ORDER_STATE_COMPLETED,
         )
         self.certificate_order = OrderCertificateFactory(order=order)
 
