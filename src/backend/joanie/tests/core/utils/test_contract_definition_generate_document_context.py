@@ -109,7 +109,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             owner=user,
             product=relation.product,
             course=relation.course,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
             main_invoice=InvoiceFactory(recipient_address=user_address),
         )
         factories.OrderTargetCourseRelationFactory(
@@ -501,7 +501,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             owner=user,
             product=relation.product,
             course=relation.course,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
             main_invoice=InvoiceFactory(recipient_address=user_address),
         )
         factories.OrderTargetCourseRelationFactory(
