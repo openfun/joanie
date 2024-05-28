@@ -519,7 +519,6 @@ class EnrollmentModelsTestCase(TestCase):
         # Then if user purchases the product, the flag should not have been updated
         order = factories.OrderFactory(owner=user, product=product)
         order.flow.assign()
-        order.submit()
         order_enrollment = order.get_target_enrollments().first()
         self.assertEqual(enrollment, order_enrollment)
         self.assertFalse(order_enrollment.was_created_by_order)
@@ -552,7 +551,6 @@ class EnrollmentModelsTestCase(TestCase):
         # Then if user purchases the product, the flag should not have been updated
         order = factories.OrderFactory(owner=user, product=product)
         order.flow.assign()
-        order.submit()
         order_enrollment = order.get_target_enrollments().first()
         self.assertEqual(enrollment, order_enrollment)
         self.assertFalse(order_enrollment.was_created_by_order)

@@ -279,7 +279,6 @@ class OpenEdXLMSBackendTestCase(TestCase):
         self.assertEqual(len(responses.calls), 0)
 
         order.flow.assign()
-        order.submit()
 
         self.assertEqual(len(responses.calls), 2)
         self.assertEqual(responses.calls[1].request.url, url)

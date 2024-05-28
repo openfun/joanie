@@ -1253,7 +1253,6 @@ class OrdersAdminApiTestCase(TestCase):
             product=product,
         )
         order.flow.assign()
-        order.submit()
         enrollment = Enrollment.objects.get(course_run=course_run_1)
 
         # Simulate that all enrollments for graded courses made by the order are not passed
@@ -1406,7 +1405,6 @@ class OrdersAdminApiTestCase(TestCase):
         )
         order = factories.OrderFactory(product=product)
         order.flow.assign()
-        order.submit()
 
         self.assertFalse(Certificate.objects.exists())
 
@@ -1476,7 +1474,6 @@ class OrdersAdminApiTestCase(TestCase):
             is_graded=False,  # grades are not yet enabled on this course
         )
         order = factories.OrderFactory(product=product)
-        order.submit()
 
         response = self.client.post(
             f"/api/v1.0/admin/orders/{order.id}/generate_certificate/",
