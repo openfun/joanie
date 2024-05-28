@@ -538,11 +538,11 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             ],
         )
 
-    def test_models_order_submit_for_signature_fails_because_order_is_not_state_validate(
+    def test_models_order_submit_for_signature_fails_because_order_is_not_state_completed(
         self,
     ):
         """
-        When the order is not in state 'validated', it should not be possible to submit for
+        When the order is not in state 'completed', it should not be possible to submit for
         signature.
         """
         user = factories.UserFactory()
@@ -552,7 +552,6 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             state=random.choice(
                 [
                     enums.ORDER_STATE_CANCELED,
-                    enums.ORDER_STATE_SUBMITTED,
                     enums.ORDER_STATE_DRAFT,
                     enums.ORDER_STATE_PENDING,
                 ]
