@@ -1520,7 +1520,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             course=course,
             order_group=order_group1,
             state=random.choice(
-                [enums.ORDER_STATE_SUBMITTED, enums.ORDER_STATE_COMPLETED]
+                [enums.ORDER_STATE_PENDING, enums.ORDER_STATE_COMPLETED]
             ),
         )
         data = {
