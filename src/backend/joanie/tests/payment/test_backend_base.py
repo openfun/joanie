@@ -420,12 +420,24 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         order.
         """
         backend = TestBasePaymentBackend()
-        order = OrderFactory(state=enums.ORDER_STATE_SUBMITTED)
+        order = OrderFactory(
+            state=enums.ORDER_STATE_PENDING,
+            payment_schedule=[
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
 
-        backend.call_do_on_payment_failure(order)
+        backend.call_do_on_payment_failure(
+            order, installment_id="d9356dd7-19a6-4695-b18e-ad93af41424a"
+        )
 
-        # - Payment has failed gracefully and changed order state to pending
-        self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
+        # - Payment has failed gracefully and changed order state to no payment
+        self.assertEqual(order.state, enums.ORDER_STATE_NO_PAYMENT)
 
         # - No email has been sent
         self.assertEqual(len(mail.outbox), 0)
