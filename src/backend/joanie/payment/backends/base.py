@@ -108,8 +108,10 @@ class BasePaymentBackend:
         if installment_id:
             order.set_installment_refused(installment_id)
         else:
+            # TODO: to be removed with the new sale tunnel,
+            #  as we will always use installments
             # - Unvalidate order
-            order.flow.pending()
+            # order.flow.pending()
             ActivityLog.create_payment_failed_activity_log(order)
 
     @staticmethod
