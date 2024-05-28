@@ -599,13 +599,7 @@ class Command(BaseCommand):
         )
 
         # Order for all existing status on PRODUCT_CREDENTIAL
-        for order_status in [
-            enums.ORDER_STATE_DRAFT,
-            enums.ORDER_STATE_SUBMITTED,
-            enums.ORDER_STATE_PENDING,
-            enums.ORDER_STATE_CANCELED,
-            enums.ORDER_STATE_COMPLETED,
-        ]:
+        for order_status, _ in enums.ORDER_STATE_CHOICES:
             self.create_product_purchased(
                 student_user,
                 organization_owner,
