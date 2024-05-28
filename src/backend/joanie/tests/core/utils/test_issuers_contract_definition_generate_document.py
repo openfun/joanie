@@ -95,7 +95,7 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
             product=relation.product,
             course=relation.course,
             organization=organization,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
             main_invoice=InvoiceFactory(
                 recipient_address=factories.UserAddressFactory(
                     owner=user,

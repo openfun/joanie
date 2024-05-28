@@ -580,7 +580,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             course=None,
             product=product,
             enrollment=enrollment,
-            state="validated",
+            state=enums.ORDER_STATE_COMPLETED,
         )
 
         url = "http://openedx.test/api/enrollment/v1/enrollment"
@@ -655,7 +655,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             course=None,
             product=product,
             enrollment=enrollment,
-            state="validated",
+            state=enums.ORDER_STATE_COMPLETED,
         )
 
         backend = LMSHandler.select_lms(resource_link)
@@ -764,7 +764,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             course=None,
             product=product,
             enrollment=enrollment,
-            state="validated",
+            state=enums.ORDER_STATE_COMPLETED,
         )
 
         def enrollment_error(*args, **kwargs):
