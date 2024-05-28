@@ -1159,7 +1159,7 @@ class OrderListApiTest(BaseAPITestCase):
         # the orders are directly validated
         factories.OrderFactory(owner=user, state=enums.ORDER_STATE_COMPLETED)
         factories.OrderFactory(owner=user, state=enums.ORDER_STATE_PENDING)
-        factories.OrderFactory(owner=user, state=enums.ORDER_STATE_SUBMITTED)
+        factories.OrderFactory(owner=user, state=enums.ORDER_STATE_PENDING_PAYMENT)
         # User purchases a product then cancels it
         factories.OrderFactory(owner=user, state=enums.ORDER_STATE_CANCELED)
 
@@ -1178,7 +1178,7 @@ class OrderListApiTest(BaseAPITestCase):
 
         # Retrieve user's orders filtered to limit to 3 states
         response = self.client.get(
-            "/api/v1.0/orders/?state=completed&state=submitted&state=pending",
+            "/api/v1.0/orders/?state=completed&state=pending_payment&state=pending",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -1193,7 +1193,7 @@ class OrderListApiTest(BaseAPITestCase):
             [
                 enums.ORDER_STATE_COMPLETED,
                 enums.ORDER_STATE_PENDING,
-                enums.ORDER_STATE_SUBMITTED,
+                enums.ORDER_STATE_PENDING_PAYMENT,
             ],
         )
 
@@ -1213,7 +1213,7 @@ class OrderListApiTest(BaseAPITestCase):
             order_states,
             [
                 enums.ORDER_STATE_CANCELED,
-                enums.ORDER_STATE_SUBMITTED,
+                enums.ORDER_STATE_PENDING_PAYMENT,
             ],
         )
 
