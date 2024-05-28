@@ -7,7 +7,6 @@ from sentry_sdk import capture_exception
 from viewflow import fsm
 
 from joanie.core import enums
-from joanie.payment import get_payment_backend
 
 
 class OrderFlow:
@@ -202,19 +201,6 @@ class OrderFlow:
         """
         Mark order instance as "canceled".
         """
-
-    @state.transition(
-        source=[enums.ORDER_STATE_SUBMITTED, enums.ORDER_STATE_VALIDATED],
-        target=enums.ORDER_STATE_PENDING,
-    )
-    def pending(self, payment_id=None):
-        """
-        Mark order instance as "pending" and abort the related
-        payment if there is one
-        """
-        if payment_id:
-            payment_backend = get_payment_backend()
-            payment_backend.abort_payment(payment_id)
 
     def _can_be_state_pending_payment(self):
         """
