@@ -59,7 +59,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         factories.UserAddressFactory(owner=owner)
         order = factories.OrderFactory(
             owner=owner,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
             product=factories.ProductFactory(),
         )
         token = self.get_user_token(not_owner_user.username)
@@ -124,7 +124,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         factories.UserAddressFactory(owner=user)
         order = factories.OrderFactory(
             owner=user,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
             product=factories.ProductFactory(contract_definition=None),
         )
         token = self.get_user_token(user.username)
