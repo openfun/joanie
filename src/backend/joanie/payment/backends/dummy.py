@@ -13,7 +13,7 @@ from rest_framework.test import APIRequestFactory
 from joanie.core.models import Order
 from joanie.payment import exceptions
 from joanie.payment.backends.base import BasePaymentBackend
-from joanie.payment.models import Transaction
+from joanie.payment.models import CreditCard, Transaction
 
 DUMMY_PAYMENT_BACKEND_EVENT_TYPE_PAYMENT = "payment"
 DUMMY_PAYMENT_BACKEND_EVENT_TYPE_REFUND = "refund"
@@ -240,6 +240,18 @@ class DummyPaymentBackend(BasePaymentBackend):
         event_type = request.data.get("type")
         payment_id = request.data.get("id")
 
+        if event_type == "tokenize_card":
+            card_token = request.data["card_token"]
+            user_id = request.data["customer"]
+            CreditCard.objects.create(
+                owner_id=user_id,
+                token=card_token,
+                expiration_month=2,
+                expiration_year=30,
+                last_numbers="1234",
+            )
+            return
+
         if event_type is None:
             raise exceptions.ParseNotificationFailed("Field `type` is required.")
         if payment_id is None:
@@ -273,3 +285,15 @@ class DummyPaymentBackend(BasePaymentBackend):
             )
 
         cache.delete(payment_id)
+
+    def tokenize_card(self, order=None, billing_address=None, user=None):  # pylint: disable=unused-argument
+        """
+        Dummy method to tokenize a card for a given order.
+        It returns the payment information to tokenize a card.
+        """
+        return {
+            "provider": self.__class__.name,
+            "type": "tokenize_card",
+            "customer": str(user.id),
+            "card_token": f"card_{user.id}",
+        }

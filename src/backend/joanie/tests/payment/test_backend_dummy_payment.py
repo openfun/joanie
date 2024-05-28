@@ -29,10 +29,11 @@ from joanie.payment.exceptions import (
     RegisterPaymentFailed,
 )
 from joanie.payment.factories import BillingAddressDictFactory
+from joanie.payment.models import CreditCard
 from joanie.tests.payment.base_payment import BasePaymentTestCase
 
 
-class DummyPaymentBackendTestCase(BasePaymentTestCase):
+class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-many-public-methods
     """Test case for the Dummy Payment Backend"""
 
     def setUp(self):
@@ -793,3 +794,44 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):
         # Abort payment
         backend.abort_payment(payment_id)
         self.assertIsNone(cache.get(payment_id))
+
+    def test_payment_backend_dummy_tokenize_card(self):
+        """
+        When calling the dummy method to tokenize a card, it should return a dictionary with the
+        information of the `provider`, the `type` of event, the `status`, the `user.id` and the
+        created `card_token` information. Once the request is done, the method `handle_notification`
+        of the dummy backend should create the credit card with the token for the user.
+        """
+        backend = DummyPaymentBackend()
+        request_factory = APIRequestFactory()
+        user = UserFactory()
+
+        tokenization_infos = backend.tokenize_card(user=user)
+
+        self.assertEqual(
+            tokenization_infos,
+            {
+                "provider": "dummy",
+                "type": "tokenize_card",
+                "customer": str(user.id),
+                "card_token": f"card_{user.id}",
+            },
+        )
+
+        # Notify that a card has been tokenized for a user
+        request = request_factory.post(
+            reverse("payment_webhook"),
+            data={
+                "provider": "dummy",
+                "type": "tokenize_card",
+                "customer": str(user.id),
+                "card_token": f"card_{user.id}",
+            },
+            format="json",
+        )
+        request.data = json.loads(request.body.decode("utf-8"))
+        backend.handle_notification(request)
+
+        credit_card = CreditCard.objects.get(owner=user)
+
+        self.assertEqual(credit_card.token, f"card_{user.id}")

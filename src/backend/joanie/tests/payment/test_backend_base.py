@@ -54,6 +54,9 @@ class TestBasePaymentBackend(BasePaymentBackend):
     def handle_notification(self, request):
         pass
 
+    def tokenize_card(self, order=None, billing_address=None, user=None):
+        pass
+
 
 @override_settings(JOANIE_CATALOG_NAME="Test Catalog")
 @override_settings(JOANIE_CATALOG_BASE_URL="https://richie.education")
@@ -145,6 +148,18 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         self.assertEqual(
             str(context.exception),
             "subclasses of BasePaymentBackend must provide a abort_payment() method.",
+        )
+
+    def test_payment_backend_base_tokenize_card_not_implemented(self):
+        """Invoke tokenize card should raise a Not ImplementedError"""
+        backend = BasePaymentBackend()
+
+        with self.assertRaises(NotImplementedError) as context:
+            backend.tokenize_card(None)
+
+        self.assertEqual(
+            str(context.exception),
+            "subclasses of BasePaymentBackend must provide a tokenize_card() method.",
         )
 
     def test_payment_backend_base_do_on_payment_success(self):
