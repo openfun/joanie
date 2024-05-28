@@ -401,7 +401,6 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         )
         order = factories.OrderFactory(product=product)
         order.flow.assign()
-        order.submit()
 
         # - As the two product's target courses have only one course run, order owner
         #   should have been automatically enrolled to those course runs.
@@ -433,7 +432,6 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         # - Create an order link to the product
         order = factories.OrderFactory(product=product)
         order.flow.assign()
-        order.submit(billing_address=BillingAddressDictFactory())
 
         # - Update product course relation, order course relation should not be impacted
         relation.course_runs.set([])
@@ -466,7 +464,6 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
 
         # Then we launch the order flow
         order.flow.assign()
-        # order.submit(billing_address=BillingAddressDictFactory())
 
         self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
         self.assertEqual(order.target_courses.count(), 2)

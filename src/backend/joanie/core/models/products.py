@@ -538,13 +538,6 @@ class Order(BaseModel):
     def __str__(self):
         return f"Order {self.product} for user {self.owner}"
 
-    def submit(self, billing_address=None, credit_card_id=None):
-        """
-        Transition order to submitted state and to validate if order is free
-        """
-        if self.total != enums.MIN_ORDER_TOTAL_AMOUNT and billing_address is None:
-            raise ValidationError({"billing_address": ["This field is required."]})
-
     @property
     def target_course_runs(self):
         """
