@@ -13,8 +13,8 @@ from rest_framework.test import APIRequestFactory
 
 from joanie.core.enums import (
     ORDER_STATE_COMPLETED,
+    ORDER_STATE_PENDING,
     ORDER_STATE_PENDING_PAYMENT,
-    ORDER_STATE_SUBMITTED,
     PAYMENT_STATE_PAID,
     PAYMENT_STATE_PENDING,
 )
@@ -466,7 +466,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         backend = DummyPaymentBackend()
 
         # Create a payment
-        order = OrderFactory(state=ORDER_STATE_SUBMITTED)
+        order = OrderFactory(state=ORDER_STATE_PENDING)
         billing_address = BillingAddressDictFactory()
         payment_id = backend.create_payment(order, billing_address)["payment_id"]
 
@@ -480,7 +480,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
 
         backend.handle_notification(request)
         order.refresh_from_db()
-        self.assertEqual(order.state, ORDER_STATE_SUBMITTED)
+        self.assertEqual(order.state, ORDER_STATE_PENDING)
 
         mock_payment_failure.assert_called_once_with(order, installment_id=None)
 
@@ -496,7 +496,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
 
         # Create a payment
         order = OrderFactory(
-            state=ORDER_STATE_SUBMITTED,
+            state=ORDER_STATE_PENDING,
             payment_schedule=[
                 {
                     "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
@@ -539,7 +539,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
 
         backend.handle_notification(request)
         order.refresh_from_db()
-        self.assertEqual(order.state, ORDER_STATE_SUBMITTED)
+        self.assertEqual(order.state, ORDER_STATE_PENDING)
 
         mock_payment_failure.assert_called_once_with(
             order, installment_id="d9356dd7-19a6-4695-b18e-ad93af41424a"
