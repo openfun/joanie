@@ -281,26 +281,39 @@ class OrderFlow:
         """Post transition actions"""
         self.instance.save()
 
-        # When an order is validated, if the user was previously enrolled for free in any of the
+        # When an order is completed, if the user was previously enrolled for free in any of the
         # course runs targeted by the purchased product, we should change their enrollment mode on
         # these course runs to "verified".
-        if target in [enums.ORDER_STATE_COMPLETED, enums.ORDER_STATE_CANCELED]:
+        if (
+            source
+            in [
+                enums.ORDER_STATE_ASSIGNED,
+                enums.ORDER_STATE_PENDING,
+                enums.ORDER_STATE_NO_PAYMENT,
+            ]
+            and target
+            in [enums.ORDER_STATE_PENDING_PAYMENT, enums.ORDER_STATE_COMPLETED]
+        ) or target == enums.ORDER_STATE_CANCELED:
             Enrollment = apps.get_model("core", "Enrollment")  # pylint: disable=invalid-name
             for enrollment in Enrollment.objects.filter(
                 course_run__course__target_orders=self.instance, is_active=True
             ).select_related("course_run", "user"):
                 enrollment.set()
 
-        # Only enroll user if the product has no contract to sign, otherwise we should wait
-        # for the contract to be signed before enrolling the user.
+        # Enroll user if the order is assigned, pending or no payment and the target is
+        # completed or pending payment.
+        # assign -> completed : free product without contract
+        # pending -> pending_payment : first installment paid
+        # no_payment -> pending_payment : first installment paid
+        # pending -> completed : fully paid order
+        # no_payment -> completed : fully paid order
         if (
-            target
-            in [
-                enums.ORDER_STATE_COMPLETED,
-                enums.ORDER_STATE_FAILED_PAYMENT,
-                enums.ORDER_STATE_PENDING_PAYMENT,
-            ]
-            and self.instance.product.contract_definition is None
+            source == enums.ORDER_STATE_ASSIGNED
+            and target == enums.ORDER_STATE_COMPLETED
+        ) or (
+            source in [enums.ORDER_STATE_PENDING, enums.ORDER_STATE_NO_PAYMENT]
+            and target
+            in [enums.ORDER_STATE_PENDING_PAYMENT, enums.ORDER_STATE_COMPLETED]
         ):
             self.instance.enroll_user_to_course_run()
 
