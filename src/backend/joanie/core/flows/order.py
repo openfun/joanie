@@ -151,7 +151,11 @@ class OrderFlow:
         )
 
     @state.transition(
-        source=[enums.ORDER_STATE_PENDING, enums.ORDER_STATE_PENDING_PAYMENT],
+        source=[
+            enums.ORDER_STATE_PENDING_PAYMENT,
+            enums.ORDER_STATE_FAILED_PAYMENT,
+            enums.ORDER_STATE_PENDING,
+        ],
         target=enums.ORDER_STATE_COMPLETED,
         conditions=[_can_be_state_completed],
     )
@@ -161,7 +165,12 @@ class OrderFlow:
         """
 
     @state.transition(
-        source=[enums.ORDER_STATE_PENDING, enums.ORDER_STATE_PENDING_PAYMENT],
+        source=[
+            enums.ORDER_STATE_PENDING_PAYMENT,
+            enums.ORDER_STATE_FAILED_PAYMENT,
+            enums.ORDER_STATE_NO_PAYMENT,
+            enums.ORDER_STATE_PENDING,
+        ],
         target=enums.ORDER_STATE_PENDING_PAYMENT,
         conditions=[_can_be_state_pending_payment],
     )
