@@ -251,6 +251,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
+        enrollment.refresh_from_db()
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
         # order has been created
         self.assertEqual(models.Order.objects.count(), 1)
@@ -317,8 +318,6 @@ class OrderCreateApiTest(BaseAPITestCase):
                     ),
                     "id": str(enrollment.id),
                     "is_active": enrollment.is_active,
-                    # TODO: fix this flaky test:
-                    #  enrollment state is sometimes "failed" instead of "set"
                     "state": enrollment.state,
                     "was_created_by_order": enrollment.was_created_by_order,
                 },
