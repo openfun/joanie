@@ -1178,3 +1178,20 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
 
         order.refresh_from_db()
         self.assertEqual(order.state, enums.ORDER_STATE_TO_SIGN)
+
+    def test_flows_order_pending(self):
+        """
+        Test that the pending transition is successful if the order is
+        in the ASSIGNED, TO_SIGN_AND_TO_SAVE_PAYMENT_METHOD, TO_SAVE_PAYMENT_METHOD,
+        or TO_SIGN state.
+        """
+        for state in [
+            enums.ORDER_STATE_ASSIGNED,
+            enums.ORDER_STATE_TO_SIGN_AND_TO_SAVE_PAYMENT_METHOD,
+            enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
+            enums.ORDER_STATE_TO_SIGN,
+        ]:
+            with self.subTest(state=state):
+                order = factories.OrderFactory(state=state)
+                order.flow.pending()
+                self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
