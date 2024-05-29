@@ -146,12 +146,15 @@ class OrderUpdateApiTest(BaseAPITestCase):
         product = factories.ProductFactory(target_courses=target_courses)
 
         for state, _ in enums.ORDER_STATE_CHOICES:
-            order = factories.OrderFactory(owner=owner, product=product, state=state)
+            with self.subTest(state=state):
+                order = factories.OrderFactory(
+                    owner=owner, product=product, state=state
+                )
 
-            self._check_api_order_update_detail(
-                order, owner, HTTPStatus.METHOD_NOT_ALLOWED
-            )
+                self._check_api_order_update_detail(
+                    order, owner, HTTPStatus.METHOD_NOT_ALLOWED
+                )
 
-            Transaction.objects.all().delete()
-            Invoice.objects.all().delete()
-            models.Order.objects.all().delete()
+                Transaction.objects.all().delete()
+                Invoice.objects.all().delete()
+                models.Order.objects.all().delete()

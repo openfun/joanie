@@ -4,7 +4,6 @@ Test suite for order models
 
 # pylint: disable=too-many-lines,too-many-public-methods
 import json
-import random
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from unittest import mock
@@ -542,44 +541,47 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         self,
     ):
         """
-        When the order is not in state 'completed', it should not be possible to submit for
-        signature.
+        When the order is not in state 'to sign' or 'to sign and to save payment method',
+        it should not be possible to submit for signature.
         """
         user = factories.UserFactory()
         factories.UserAddressFactory(owner=user)
-        order = factories.OrderFactory(
-            owner=user,
-            state=random.choice(
-                [
-                    enums.ORDER_STATE_CANCELED,
-                    enums.ORDER_STATE_DRAFT,
-                    enums.ORDER_STATE_PENDING,
-                ]
-            ),
-            product__contract_definition=factories.ContractDefinitionFactory(),
-        )
+        for state, _ in enums.ORDER_STATE_CHOICES:
+            with self.subTest(state=state):
+                order = factories.OrderFactory(
+                    owner=user,
+                    state=state,
+                    product__contract_definition=factories.ContractDefinitionFactory(),
+                    main_invoice=InvoiceFactory(),
+                )
 
-        with (
-            self.assertRaises(ValidationError) as context,
-            self.assertLogs("joanie") as logger,
-        ):
-            order.submit_for_signature(user=user)
+                if state in [
+                    enums.ORDER_STATE_TO_SIGN,
+                    enums.ORDER_STATE_TO_SIGN_AND_TO_SAVE_PAYMENT_METHOD,
+                ]:
+                    order.submit_for_signature(user=user)
+                else:
+                    with (
+                        self.assertRaises(ValidationError) as context,
+                        self.assertLogs("joanie") as logger,
+                    ):
+                        order.submit_for_signature(user=user)
 
-        self.assertEqual(
-            str(context.exception),
-            "['Cannot submit an order that is not yet validated.']",
-        )
+                    self.assertEqual(
+                        str(context.exception),
+                        "['Cannot submit an order that is not yet validated.']",
+                    )
 
-        self.assertLogsEquals(
-            logger.records,
-            [
-                (
-                    "ERROR",
-                    "Cannot submit an order that is not yet validated.",
-                    {"order": dict},
-                ),
-            ],
-        )
+                    self.assertLogsEquals(
+                        logger.records,
+                        [
+                            (
+                                "ERROR",
+                                "Cannot submit an order that is not yet validated.",
+                                {"order": dict},
+                            ),
+                        ],
+                    )
 
     def test_models_order_submit_for_signature_with_a_brand_new_contract(
         self,
