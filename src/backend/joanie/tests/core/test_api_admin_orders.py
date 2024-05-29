@@ -1,6 +1,5 @@
 """Test suite for the admin orders API endpoints."""
 
-import random
 import uuid
 from datetime import timedelta
 from decimal import Decimal as D
@@ -852,20 +851,11 @@ class OrdersAdminApiTestCase(TestCase):
 
     def test_api_admin_orders_cancel_anonymous(self):
         """An anonymous user cannot cancel an order."""
-        order = factories.OrderFactory(
-            state=random.choice(
-                [
-                    enums.ORDER_STATE_CANCELED,
-                    enums.ORDER_STATE_DRAFT,
-                    enums.ORDER_STATE_PENDING,
-                    enums.ORDER_STATE_COMPLETED,
-                ]
-            )
-        )
-
-        response = self.client.delete(f"/api/v1.0/admin/orders/{order.id}/")
-
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        for state, _ in enums.ORDER_STATE_CHOICES:
+            with self.subTest(state=state):
+                order = factories.OrderFactory(state=state)
+                response = self.client.delete(f"/api/v1.0/admin/orders/{order.id}/")
+                self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
     def test_api_admin_orders_cancel_authenticated_with_lambda_user(self):
         """
@@ -898,11 +888,12 @@ class OrdersAdminApiTestCase(TestCase):
         self.client.login(username=admin.username, password="password")
 
         for state, _ in enums.ORDER_STATE_CHOICES:
-            order = factories.OrderFactory(state=state)
-            response = self.client.delete(f"/api/v1.0/admin/orders/{order.id}/")
-            order.refresh_from_db()
-            self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
-            self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
+            with self.subTest(state=state):
+                order = factories.OrderFactory(state=state)
+                response = self.client.delete(f"/api/v1.0/admin/orders/{order.id}/")
+                order.refresh_from_db()
+                self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+                self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
 
     def test_api_admin_orders_generate_certificate_anonymous_user(self):
         """
