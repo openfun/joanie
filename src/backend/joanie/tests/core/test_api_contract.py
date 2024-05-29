@@ -1001,30 +1001,29 @@ class ContractApiTest(BaseAPITestCase):
         user = factories.UserFactory(
             email="student_do@example.fr", first_name="John Doe", last_name=""
         )
-        order = factories.OrderFactory(
-            owner=user,
-            state=random.choice(
-                [
-                    enums.ORDER_STATE_PENDING,
-                    enums.ORDER_STATE_DRAFT,
-                    enums.ORDER_STATE_CANCELED,
-                ]
-            ),
-            product__contract_definition=factories.ContractDefinitionFactory(),
-        )
-        contract = factories.ContractFactory(order=order)
-        token = self.get_user_token(user.username)
+        for state, _ in enums.ORDER_STATE_CHOICES:
+            if state == enums.ORDER_STATE_COMPLETED:
+                continue
 
-        response = self.client.get(
-            f"/api/v1.0/contracts/{str(contract.id)}/download/",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
+            with self.subTest(state=state):
+                order = factories.OrderFactory(
+                    owner=user,
+                    state=state,
+                    product__contract_definition=factories.ContractDefinitionFactory(),
+                )
+                contract = factories.ContractFactory(order=order)
+                token = self.get_user_token(user.username)
 
-        self.assertContains(
-            response,
-            "No Contract matches the given query.",
-            status_code=HTTPStatus.NOT_FOUND,
-        )
+                response = self.client.get(
+                    f"/api/v1.0/contracts/{str(contract.id)}/download/",
+                    HTTP_AUTHORIZATION=f"Bearer {token}",
+                )
+
+                self.assertContains(
+                    response,
+                    "No Contract matches the given query.",
+                    status_code=HTTPStatus.NOT_FOUND,
+                )
 
     def test_api_contract_download_authenticated_cannot_create(self):
         """
