@@ -32,6 +32,9 @@ def _get_base_signature_backend_references(
         extra_filters = {}
 
     base_query = Contract.objects.filter(
+        # TODO: change to:
+        #  ~Q(order__state=enums.ORDER_STATE_CANCELED),
+        #  https://github.com/openfun/joanie/pull/801#discussion_r1618636400
         order__state=enums.ORDER_STATE_COMPLETED,
         student_signed_on__isnull=False,
         organization_signed_on__isnull=False,
@@ -177,6 +180,8 @@ def get_signature_references(organization_id: str, student_has_not_signed: bool)
             submitted_for_signature_on__isnull=False,
             # TODO: invert the lookup for the order state
             #  order__state=~Q(enums.ORDER_STATE_CANCELED),
+            #  https://github.com/openfun/joanie/pull/801#discussion_r1618636400
+            #  https://github.com/openfun/joanie/pull/801#discussion_r1616916784
             order__state=enums.ORDER_STATE_COMPLETED,
             order__organization_id=organization_id,
             organization_signed_on__isnull=True,
