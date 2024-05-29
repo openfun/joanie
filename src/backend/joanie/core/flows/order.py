@@ -139,7 +139,12 @@ class OrderFlow:
         ) and not self.instance.has_unsigned_contract
 
     @state.transition(
-        source=enums.ORDER_STATE_ASSIGNED,
+        source=[
+            enums.ORDER_STATE_ASSIGNED,
+            enums.ORDER_STATE_TO_SIGN_AND_TO_SAVE_PAYMENT_METHOD,
+            enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
+            enums.ORDER_STATE_TO_SIGN,
+        ],
         target=enums.ORDER_STATE_PENDING,
         conditions=[_can_be_state_pending],
     )
