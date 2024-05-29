@@ -604,6 +604,7 @@ class Order(BaseModel):
         except Contract.DoesNotExist:
             # TODO: return this:
             #  return self.product.contract_definition is None
+            #  https://github.com/openfun/joanie/pull/801#discussion_r1618553557
             return False
 
     # pylint: disable=too-many-branches

@@ -323,8 +323,9 @@ class Organization(parler_models.TranslatableModel, BaseModel):
                 submitted_for_signature_on__isnull=False,
                 student_signed_on__isnull=False,
                 order__organization=self,
-                # TODO: invert the lookup for the order state
-                #  order__state=~Q(enums.ORDER_STATE_CANCELED),
+                # TODO: change to:
+                #  ~Q(order__state=enums.ORDER_STATE_CANCELED),
+                #  https://github.com/openfun/joanie/pull/801#discussion_r1616874278
                 order__state=enums.ORDER_STATE_COMPLETED,
             ).values_list("id", "signature_backend_reference")
         )
