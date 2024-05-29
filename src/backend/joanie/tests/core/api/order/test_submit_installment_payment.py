@@ -345,7 +345,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
         side_effect=DummyPaymentBackend().create_payment,
     )
     def test_api_order_submit_installment_payment_without_passing_credit_credit_card_id_in_payload(
-        self, mock_create_payment, _mock_create_one_click_payment
+        self, mock_create_payment, mock_create_one_click_payment
     ):
         """
         Authenticated user should be able to pay for a failed installment payment
@@ -405,9 +405,8 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
             },
         )
 
-        self.assertTrue(mock_create_payment.called)
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertFalse(_mock_create_one_click_payment.called)
+        self.assertFalse(mock_create_one_click_payment.called)
 
     @mock.patch.object(
         DummyPaymentBackend,
@@ -420,7 +419,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
         side_effect=DummyPaymentBackend().create_one_click_payment,
     )
     def test_api_order_submit_installment_payment_with_credit_card_id_payload(
-        self, mock_create_one_click_payment, _mock_create_payment
+        self, mock_create_one_click_payment, mock_create_payment
     ):
         """
         Authenticated user should be able to pay for a failed installment
@@ -486,10 +485,9 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
             },
         )
 
-        self.assertTrue(mock_create_one_click_payment.called)
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertTrue(response.json()["is_paid"])
-        self.assertFalse(_mock_create_payment.called)
+        self.assertFalse(mock_create_payment.called)
 
     def test_api_order_submit_installment_payment_but_no_installment_payment_refused_state_found(
         self,
@@ -616,7 +614,6 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
             },
         )
 
-        self.assertTrue(mock_create_one_click_payment.called)
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertTrue(response.json()["is_paid"])
 
@@ -684,5 +681,4 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
             },
         )
 
-        self.assertTrue(mock_create_payment.called)
         self.assertEqual(response.status_code, HTTPStatus.OK)

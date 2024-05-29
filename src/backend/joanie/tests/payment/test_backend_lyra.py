@@ -21,11 +21,16 @@ from joanie.core.enums import (
     PAYMENT_STATE_PAID,
     PAYMENT_STATE_PENDING,
 )
-from joanie.core.factories import OrderFactory, ProductFactory, UserFactory
+from joanie.core.factories import (
+    OrderFactory,
+    ProductFactory,
+    UserAddressFactory,
+    UserFactory,
+)
 from joanie.payment.backends.base import BasePaymentBackend
 from joanie.payment.backends.lyra import LyraBackend
 from joanie.payment.exceptions import ParseNotificationFailed, RegisterPaymentFailed
-from joanie.payment.factories import BillingAddressDictFactory, CreditCardFactory
+from joanie.payment.factories import CreditCardFactory
 from joanie.payment.models import CreditCard, Transaction
 from joanie.tests.base import BaseLogMixinTestCase
 from joanie.tests.payment.base_payment import BasePaymentTestCase
@@ -109,7 +114,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         owner = UserFactory(email="john.doe@acme.org")
         product = ProductFactory(price=D("123.45"))
         order = OrderFactory(owner=owner, product=product)
-        billing_address = BillingAddressDictFactory()
+        billing_address = UserAddressFactory(owner=owner)
 
         responses.add(
             responses.POST,
@@ -152,7 +157,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         owner = UserFactory(email="john.doe@acme.org")
         product = ProductFactory(price=D("123.45"))
         order = OrderFactory(owner=owner, product=product)
-        billing_address = BillingAddressDictFactory()
+        billing_address = UserAddressFactory(owner=owner)
 
         responses.add(
             responses.POST,
@@ -199,7 +204,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         owner = UserFactory(email="john.doe@acme.org")
         product = ProductFactory(price=D("123.45"))
         order = OrderFactory(owner=owner, product=product)
-        billing_address = BillingAddressDictFactory()
+        billing_address = UserAddressFactory(owner=owner)
 
         with self.open("lyra/responses/create_payment_failed.json") as file:
             json_response = json.loads(file.read())
@@ -225,12 +230,12 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
                             "email": "john.doe@acme.org",
                             "reference": str(owner.id),
                             "billingDetails": {
-                                "firstName": billing_address["first_name"],
-                                "lastName": billing_address["last_name"],
-                                "address": billing_address["address"],
-                                "zipCode": billing_address["postcode"],
-                                "city": billing_address["city"],
-                                "country": billing_address["country"],
+                                "firstName": billing_address.first_name,
+                                "lastName": billing_address.last_name,
+                                "address": billing_address.address,
+                                "zipCode": billing_address.postcode,
+                                "city": billing_address.city,
+                                "country": billing_address.country.code,
                                 "language": owner.language,
                             },
                             "shippingDetails": {
@@ -285,7 +290,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         owner = UserFactory(email="john.doe@acme.org")
         product = ProductFactory(price=D("123.45"))
         order = OrderFactory(owner=owner, product=product)
-        billing_address = BillingAddressDictFactory()
+        billing_address = UserAddressFactory(owner=owner)
 
         with self.open("lyra/responses/create_payment.json") as file:
             json_response = json.loads(file.read())
@@ -311,12 +316,12 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
                             "email": "john.doe@acme.org",
                             "reference": str(owner.id),
                             "billingDetails": {
-                                "firstName": billing_address["first_name"],
-                                "lastName": billing_address["last_name"],
-                                "address": billing_address["address"],
-                                "zipCode": billing_address["postcode"],
-                                "city": billing_address["city"],
-                                "country": billing_address["country"],
+                                "firstName": billing_address.first_name,
+                                "lastName": billing_address.last_name,
+                                "address": billing_address.address,
+                                "zipCode": billing_address.postcode,
+                                "city": billing_address.city,
+                                "country": billing_address.country.code,
                                 "language": owner.language,
                             },
                             "shippingDetails": {
@@ -385,7 +390,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
                 },
             ],
         )
-        billing_address = BillingAddressDictFactory()
+        billing_address = UserAddressFactory(owner=owner)
 
         with self.open("lyra/responses/create_payment.json") as file:
             json_response = json.loads(file.read())
@@ -411,12 +416,12 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
                             "email": "john.doe@acme.org",
                             "reference": str(owner.id),
                             "billingDetails": {
-                                "firstName": billing_address["first_name"],
-                                "lastName": billing_address["last_name"],
-                                "address": billing_address["address"],
-                                "zipCode": billing_address["postcode"],
-                                "city": billing_address["city"],
-                                "country": billing_address["country"],
+                                "firstName": billing_address.first_name,
+                                "lastName": billing_address.last_name,
+                                "address": billing_address.address,
+                                "zipCode": billing_address.postcode,
+                                "city": billing_address.city,
+                                "country": billing_address.country.code,
                                 "language": owner.language,
                             },
                             "shippingDetails": {
@@ -461,7 +466,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         owner = UserFactory(email="john.doe@acme.org")
         product = ProductFactory(price=D("123.45"))
         order = OrderFactory(owner=owner, product=product)
-        billing_address = BillingAddressDictFactory()
+        billing_address = UserAddressFactory(owner=owner)
 
         with self.open("lyra/responses/tokenize_card.json") as file:
             json_response = json.loads(file.read())
@@ -486,12 +491,12 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
                             "email": "john.doe@acme.org",
                             "reference": str(owner.id),
                             "billingDetails": {
-                                "firstName": billing_address["first_name"],
-                                "lastName": billing_address["last_name"],
-                                "address": billing_address["address"],
-                                "zipCode": billing_address["postcode"],
-                                "city": billing_address["city"],
-                                "country": billing_address["country"],
+                                "firstName": billing_address.first_name,
+                                "lastName": billing_address.last_name,
+                                "address": billing_address.address,
+                                "zipCode": billing_address.postcode,
+                                "city": billing_address.city,
+                                "country": billing_address.country.code,
                                 "language": owner.language,
                             },
                         },
@@ -529,7 +534,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         owner = UserFactory(email="john.doe@acme.org")
         product = ProductFactory(price=D("123.45"))
         order = OrderFactory(owner=owner, product=product)
-        billing_address = BillingAddressDictFactory()
+        billing_address = UserAddressFactory(owner=owner)
         credit_card = CreditCardFactory(
             owner=owner, token="854d630f17f54ee7bce03fb4fcf764e9"
         )
@@ -558,12 +563,12 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
                             "email": "john.doe@acme.org",
                             "reference": str(owner.id),
                             "billingDetails": {
-                                "firstName": billing_address["first_name"],
-                                "lastName": billing_address["last_name"],
-                                "address": billing_address["address"],
-                                "zipCode": billing_address["postcode"],
-                                "city": billing_address["city"],
-                                "country": billing_address["country"],
+                                "firstName": billing_address.first_name,
+                                "lastName": billing_address.last_name,
+                                "address": billing_address.address,
+                                "zipCode": billing_address.postcode,
+                                "city": billing_address.city,
+                                "country": billing_address.country.code,
                                 "language": owner.language,
                             },
                             "shippingDetails": {
@@ -635,7 +640,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
                 },
             ],
         )
-        billing_address = BillingAddressDictFactory()
+        billing_address = UserAddressFactory(owner=owner)
         credit_card = CreditCardFactory(
             owner=owner, token="854d630f17f54ee7bce03fb4fcf764e9"
         )
@@ -664,12 +669,12 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
                             "email": "john.doe@acme.org",
                             "reference": str(owner.id),
                             "billingDetails": {
-                                "firstName": billing_address["first_name"],
-                                "lastName": billing_address["last_name"],
-                                "address": billing_address["address"],
-                                "zipCode": billing_address["postcode"],
-                                "city": billing_address["city"],
-                                "country": billing_address["country"],
+                                "firstName": billing_address.first_name,
+                                "lastName": billing_address.last_name,
+                                "address": billing_address.address,
+                                "zipCode": billing_address.postcode,
+                                "city": billing_address.city,
+                                "country": billing_address.country.code,
                                 "language": owner.language,
                             },
                             "shippingDetails": {

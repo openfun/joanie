@@ -87,12 +87,12 @@ class LyraBackend(BasePaymentBackend):
 
         if billing_address:
             payload["customer"]["billingDetails"] = {
-                "firstName": billing_address["first_name"],
-                "lastName": billing_address["last_name"],
-                "address": billing_address["address"],
-                "zipCode": billing_address["postcode"],
-                "city": billing_address["city"],
-                "country": billing_address["country"],
+                "firstName": billing_address.first_name,
+                "lastName": billing_address.last_name,
+                "address": billing_address.address,
+                "zipCode": billing_address.postcode,
+                "city": billing_address.city,
+                "country": billing_address.country.code,
                 "language": order.owner.language,
             }
 
