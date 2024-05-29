@@ -243,6 +243,8 @@ class LyraBackend(BasePaymentBackend):
         payload = self._get_common_payload_data(
             order, billing_address, installment=installment
         )
+        # TODO: replace ASK_REGISTER_PAY by REGISTER_PAY
+        #  https://github.com/openfun/joanie/pull/801#discussion_r1618946916
         payload["formAction"] = "ASK_REGISTER_PAY"
 
         return self._get_payment_info(url, payload)

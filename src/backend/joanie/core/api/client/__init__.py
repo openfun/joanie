@@ -1140,6 +1140,8 @@ class GenericContractViewSet(
     filterset_class = filters.ContractViewSetFilter
     ordering = ["-student_signed_on", "-created_on"]
     queryset = models.Contract.objects.filter(
+        # TODO: change to:
+        #  ~Q(order__state=enums.ORDER_STATE_CANCELED),
         order__state=enums.ORDER_STATE_COMPLETED
     ).select_related(
         "definition",
@@ -1490,7 +1492,15 @@ class NestedOrderCourseViewSet(NestedGenericViewSet, mixins.ListModelMixin):
     filterset_class = filters.NestedOrderCourseViewSetFilter
     ordering = ["-created_on"]
     queryset = (
-        models.Order.objects.filter(state=enums.ORDER_STATE_COMPLETED)
+        models.Order.objects.filter(
+            # TODO: change to:
+            #  state__in=[
+            #      enums.ORDER_STATE_COMPLETED,
+            #      enums.ORDER_STATE_PENDING_PAYMENT,
+            #      enums.ORDER_STATE_FAILED_PAYMENT
+            #  ],
+            state=enums.ORDER_STATE_COMPLETED
+        )
         .select_related(
             "contract",
             "certificate",
