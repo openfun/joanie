@@ -1144,10 +1144,8 @@ class GenericContractViewSet(
     serializer_class = serializers.ContractSerializer
     filterset_class = filters.ContractViewSetFilter
     ordering = ["-student_signed_on", "-created_on"]
-    queryset = models.Contract.objects.filter(
-        # TODO: change to:
-        #  ~Q(order__state=enums.ORDER_STATE_CANCELED),
-        order__state=enums.ORDER_STATE_COMPLETED
+    queryset = models.Contract.objects.exclude(
+        order__state=enums.ORDER_STATE_CANCELED
     ).select_related(
         "definition",
         "order__organization",
@@ -1207,10 +1205,8 @@ class ContractViewSet(GenericContractViewSet):
         """
         contract = self.get_object()
 
-        if contract.order.state != enums.ORDER_STATE_COMPLETED:
-            raise ValidationError(
-                "Cannot get contract when an order is not yet validated."
-            )
+        if contract.order.state == enums.ORDER_STATE_CANCELED:
+            raise ValidationError("Cannot get contract when an order is cancelled.")
 
         if not contract.is_fully_signed:
             raise ValidationError(
