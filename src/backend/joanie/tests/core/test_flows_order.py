@@ -788,6 +788,41 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
 
         self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
+    def test_flows_order_failed_payment_to_complete(self):
+        """
+        Test that the complete transition sets complete state
+        when all installments are paid and source state is "failed payment".
+        """
+        order = factories.OrderFactory(
+            state=enums.ORDER_STATE_FAILED_PAYMENT,
+            payment_schedule=[
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "state": enums.PAYMENT_STATE_PAID,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "state": enums.PAYMENT_STATE_PAID,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-03-17T00:00:00+00:00",
+                    "state": enums.PAYMENT_STATE_PAID,
+                },
+                {
+                    "amount": "199.99",
+                    "due_date": "2024-04-17T00:00:00+00:00",
+                    "state": enums.PAYMENT_STATE_PAID,
+                },
+            ],
+        )
+
+        order.flow.complete()
+
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
+
     def test_flows_order_complete_first_paid(self):
         """
         Test that the complete transition sets pending_payment state
@@ -927,3 +962,73 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         order.flow.failed_payment()
 
         self.assertEqual(order.state, enums.ORDER_STATE_FAILED_PAYMENT)
+
+    def test_flows_order_no_payment_to_pending_payment(self):
+        """
+        Test that the pending payment transition sets pending payment state
+        when the first installment is paid and source state is "no payment".
+        """
+        order = factories.OrderFactory(
+            state=enums.ORDER_STATE_NO_PAYMENT,
+            payment_schedule=[
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "state": enums.PAYMENT_STATE_PAID,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-03-17T00:00:00+00:00",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "199.99",
+                    "due_date": "2024-04-17T00:00:00+00:00",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        order.flow.pending_payment()
+
+        self.assertEqual(order.state, enums.ORDER_STATE_PENDING_PAYMENT)
+
+    def test_flows_order_failed_payment_to_pending_payment(self):
+        """
+        Test that the pending payment transition sets pending payment state
+        when an installment is paid and source state is "failed payment".
+        """
+        order = factories.OrderFactory(
+            state=enums.ORDER_STATE_FAILED_PAYMENT,
+            payment_schedule=[
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "state": enums.PAYMENT_STATE_PAID,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "state": enums.PAYMENT_STATE_PAID,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-03-17T00:00:00+00:00",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "199.99",
+                    "due_date": "2024-04-17T00:00:00+00:00",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        order.flow.pending_payment()
+
+        self.assertEqual(order.state, enums.ORDER_STATE_PENDING_PAYMENT)
