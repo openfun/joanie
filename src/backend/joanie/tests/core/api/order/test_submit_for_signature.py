@@ -1,18 +1,16 @@
 """Tests for the Order submit for signature API."""
 
 import json
-import random
 from datetime import timedelta
 from http import HTTPStatus
 
 from django.core.cache import cache
 from django.test.utils import override_settings
-from django.urls import reverse
 from django.utils import timezone as django_timezone
 
 from joanie.core import enums, factories
 from joanie.core.models import CourseState
-from joanie.payment.factories import BillingAddressDictFactory
+from joanie.payment.factories import BillingAddressDictFactory, InvoiceFactory
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -35,7 +33,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         factories.ContractFactory(order=order)
 
         response = self.client.post(
-            reverse("orders-submit-for-signature", kwargs={"pk": order.id}),
+            f"/api/v1.0/orders/{order.id}/submit_for_signature/",
             HTTP_AUTHORIZATION="Bearer fake",
         )
 
@@ -65,7 +63,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         token = self.get_user_token(not_owner_user.username)
 
         response = self.client.post(
-            reverse("orders-submit-for-signature", kwargs={"pk": order.id}),
+            f"/api/v1.0/orders/{order.id}/submit_for_signature/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -74,41 +72,42 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         content = response.json()
         self.assertEqual(content["detail"], "No Order matches the given query.")
 
-    def test_api_order_submit_for_signature_authenticated_but_order_is_not_validate(
+    def test_api_order_submit_for_signature_authenticated_but_order_is_not_to_sign(
         self,
     ):
         """
         Authenticated users should not be able to submit for signature an order that is
-        not state equal to 'completed'.
+        not state equal to 'to sign' or 'to sign and to save payment method'.
         """
-        user = factories.UserFactory(
-            email="student_do@example.fr", first_name="John Doe", last_name=""
-        )
+        user = factories.UserFactory()
         factories.UserAddressFactory(owner=user)
-        order = factories.OrderFactory(
-            owner=user,
-            state=random.choice(
-                [
-                    state
-                    for state, _ in enums.ORDER_STATE_CHOICES
-                    if state != enums.ORDER_STATE_COMPLETED
-                ]
-            ),
-            product__contract_definition=factories.ContractDefinitionFactory(),
-        )
-        token = self.get_user_token(user.username)
+        for state, _ in enums.ORDER_STATE_CHOICES:
+            with self.subTest(state=state):
+                order = factories.OrderFactory(
+                    owner=user,
+                    state=state,
+                    product__contract_definition=factories.ContractDefinitionFactory(),
+                    main_invoice=InvoiceFactory(),
+                )
+                token = self.get_user_token(user.username)
 
-        response = self.client.post(
-            reverse("orders-submit-for-signature", kwargs={"pk": order.id}),
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
+                response = self.client.post(
+                    f"/api/v1.0/orders/{order.id}/submit_for_signature/",
+                    HTTP_AUTHORIZATION=f"Bearer {token}",
+                )
+                content = response.json()
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
-
-        content = response.json()
-        self.assertEqual(
-            content[0], "Cannot submit an order that is not yet validated."
-        )
+                if state in [
+                    enums.ORDER_STATE_TO_SIGN,
+                    enums.ORDER_STATE_TO_SIGN_AND_TO_SAVE_PAYMENT_METHOD,
+                ]:
+                    self.assertEqual(response.status_code, HTTPStatus.OK)
+                    self.assertIsNotNone(content.get("invitation_link"))
+                else:
+                    self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+                    self.assertEqual(
+                        content[0], "Cannot submit an order that is not yet validated."
+                    )
 
     def test_api_order_submit_for_signature_order_without_product_contract_definition(
         self,
@@ -129,7 +128,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         response = self.client.post(
-            reverse("orders-submit-for-signature", kwargs={"pk": order.id}),
+            f"/api/v1.0/orders/{order.id}/submit_for_signature/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -167,7 +166,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         )
 
         response = self.client.post(
-            reverse("orders-submit-for-signature", kwargs={"pk": order.id}),
+            f"/api/v1.0/orders/{order.id}/submit_for_signature/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -221,7 +220,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         )
 
         response = self.client.post(
-            reverse("orders-submit-for-signature", kwargs={"pk": order.id}),
+            f"/api/v1.0/orders/{order.id}/submit_for_signature/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -272,7 +271,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         )
 
         response = self.client.post(
-            reverse("orders-submit-for-signature", kwargs={"pk": order.id}),
+            f"/api/v1.0/orders/{order.id}/submit_for_signature/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
