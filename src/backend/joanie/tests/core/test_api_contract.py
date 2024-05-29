@@ -1006,9 +1006,6 @@ class ContractApiTest(BaseAPITestCase):
             email="student_do@example.fr", first_name="John Doe", last_name=""
         )
         for state, _ in enums.ORDER_STATE_CHOICES:
-            if state == enums.ORDER_STATE_COMPLETED:
-                continue
-
             with self.subTest(state=state):
                 order = factories.OrderFactory(
                     owner=user,
@@ -1023,11 +1020,18 @@ class ContractApiTest(BaseAPITestCase):
                     HTTP_AUTHORIZATION=f"Bearer {token}",
                 )
 
-                self.assertContains(
-                    response,
-                    "No Contract matches the given query.",
-                    status_code=HTTPStatus.NOT_FOUND,
-                )
+                if state == enums.ORDER_STATE_CANCELED:
+                    self.assertContains(
+                        response,
+                        "No Contract matches the given query.",
+                        status_code=HTTPStatus.NOT_FOUND,
+                    )
+                else:
+                    self.assertContains(
+                        response,
+                        "Cannot download a contract when it is not yet fully signed.",
+                        status_code=HTTPStatus.BAD_REQUEST,
+                    )
 
     def test_api_contract_download_authenticated_cannot_create(self):
         """
