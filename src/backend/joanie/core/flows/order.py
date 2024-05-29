@@ -40,6 +40,8 @@ class OrderFlow:
         """
         Transition order to assigned state.
         """
+        # TODO: check that billing_address is set when order is not free
+        #  https://github.com/openfun/joanie/pull/801#discussion_r1620622480
         if not self.instance.is_free and billing_address:
             Address = apps.get_model("core", "Address")  # pylint: disable=invalid-name
             address, _ = Address.objects.get_or_create(
@@ -285,6 +287,7 @@ class OrderFlow:
         # When an order is completed, if the user was previously enrolled for free in any of the
         # course runs targeted by the purchased product, we should change their enrollment mode on
         # these course runs to "verified".
+        # TODO: Should we keep the enrollment.set() call for the canceled state?
         if (
             source
             in [
