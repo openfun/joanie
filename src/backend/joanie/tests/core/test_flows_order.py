@@ -4,7 +4,6 @@ Test suite for order flows.
 
 # pylint: disable=too-many-lines,too-many-public-methods
 import json
-import random
 from http import HTTPStatus
 from unittest import mock
 
@@ -550,13 +549,11 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
 
     def test_flows_order_cancel_success(self):
         """Test that the cancel transition is successful from any state"""
-
-        order = factories.OrderFactory(
-            product=factories.ProductFactory(price="0.00"),
-            state=random.choice(enums.ORDER_STATE_CHOICES)[0],
-        )
-        order.flow.cancel()
-        self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
+        for state, _ in enums.ORDER_STATE_CHOICES:
+            with self.subTest(state=state):
+                order = factories.OrderFactory(state=state)
+                order.flow.cancel()
+                self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
 
     @responses.activate
     def test_flows_order_cancel_certificate_product_openedx_enrollment_mode(self):
