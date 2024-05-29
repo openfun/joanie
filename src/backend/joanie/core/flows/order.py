@@ -62,13 +62,6 @@ class OrderFlow:
         self.instance.freeze_target_courses()
         self.update()
 
-    def _can_be_state_completed_from_assigned(self):
-        """
-        An order state can be set to completed if the order is free
-        and has no unsigned contract
-        """
-        return self.instance.is_free and not self.instance.has_unsigned_contract
-
     def _can_be_state_to_sign_and_to_save_payment_method(self):
         """
         An order state can be set to to_sign_and_to_save_payment_method if the order is not free
@@ -80,6 +73,16 @@ class OrderFlow:
             and self.instance.has_unsigned_contract
         )
 
+    @state.transition(
+        source=enums.ORDER_STATE_ASSIGNED,
+        target=enums.ORDER_STATE_TO_SIGN_AND_TO_SAVE_PAYMENT_METHOD,
+        conditions=[_can_be_state_to_sign_and_to_save_payment_method],
+    )
+    def to_sign_and_to_save_payment_method(self):
+        """
+        Transition order to to_sign_and_to_save_payment_method state.
+        """
+
     def _can_be_state_to_save_payment_method(self):
         """
         An order state can be set to_save_payment_method if the order is not free
@@ -90,44 +93,6 @@ class OrderFlow:
             and not self.instance.has_payment_method
             and not self.instance.has_unsigned_contract
         )
-
-    def _can_be_state_to_sign(self):
-        """
-        An order state can be set to to_sign if the order is free
-        or has a payment method and an unsigned contract.
-        """
-        return (
-            self.instance.is_free or self.instance.has_payment_method
-        ) and self.instance.has_unsigned_contract
-
-    def _can_be_state_pending_from_assigned(self):
-        """
-        An order state can be set to pending if the order is not free
-        and has a payment method and no contract to sign.
-        """
-        return (
-            self.instance.is_free or self.instance.has_payment_method
-        ) and not self.instance.has_unsigned_contract
-
-    @state.transition(
-        source=enums.ORDER_STATE_ASSIGNED,
-        target=enums.ORDER_STATE_COMPLETED,
-        conditions=[_can_be_state_completed_from_assigned],
-    )
-    def complete_from_assigned(self):
-        """
-        Transition order to completed state.
-        """
-
-    @state.transition(
-        source=enums.ORDER_STATE_ASSIGNED,
-        target=enums.ORDER_STATE_TO_SIGN_AND_TO_SAVE_PAYMENT_METHOD,
-        conditions=[_can_be_state_to_sign_and_to_save_payment_method],
-    )
-    def to_sign_and_to_save_payment_method(self):
-        """
-        Transition order to to_sign_and_to_save_payment_method state.
-        """
 
     @state.transition(
         source=[
@@ -142,6 +107,15 @@ class OrderFlow:
         Transition order to to_save_payment_method state.
         """
 
+    def _can_be_state_to_sign(self):
+        """
+        An order state can be set to to_sign if the order is free
+        or has a payment method and an unsigned contract.
+        """
+        return (
+            self.instance.is_free or self.instance.has_payment_method
+        ) and self.instance.has_unsigned_contract
+
     @state.transition(
         source=[
             enums.ORDER_STATE_ASSIGNED,
@@ -155,43 +129,24 @@ class OrderFlow:
         Transition order to to_sign state.
         """
 
+    def _can_be_state_pending(self):
+        """
+        An order state can be set to pending if the order is not free
+        and has a payment method and no contract to sign.
+        """
+        return (
+            self.instance.is_free or self.instance.has_payment_method
+        ) and not self.instance.has_unsigned_contract
+
     @state.transition(
         source=enums.ORDER_STATE_ASSIGNED,
         target=enums.ORDER_STATE_PENDING,
-        conditions=[_can_be_state_pending_from_assigned],
+        conditions=[_can_be_state_pending],
     )
-    def pending_from_assigned(self):
+    def pending(self):
         """
         Transition order to pending state.
         """
-
-    def update(self):
-        """
-        Update the order state.
-        """
-        if self._can_be_state_completed():
-            self.complete()
-            return
-
-        if self._can_be_state_completed_from_assigned():
-            self.complete_from_assigned()
-            return
-
-        if self._can_be_state_to_sign_and_to_save_payment_method():
-            self.to_sign_and_to_save_payment_method()
-            return
-
-        if self._can_be_state_to_save_payment_method():
-            self.to_save_payment_method()
-            return
-
-        if self._can_be_state_to_sign():
-            self.to_sign()
-            return
-
-        if self._can_be_state_pending_from_assigned():
-            self.pending_from_assigned()
-            return
 
     @state.transition(
         source=fsm.State.ANY,
@@ -201,16 +156,6 @@ class OrderFlow:
         """
         Mark order instance as "canceled".
         """
-
-    def _can_be_state_pending_payment(self):
-        """
-        An order state can be set to pending_payment if no installment
-        is refused.
-        """
-        return any(
-            installment.get("state") not in [enums.PAYMENT_STATE_REFUSED]
-            for installment in self.instance.payment_schedule
-        )
 
     def _can_be_state_completed(self):
         """
@@ -224,24 +169,6 @@ class OrderFlow:
                 for installment in self.instance.payment_schedule
             )
         return fully_paid and not self.instance.has_unsigned_contract
-
-    def _can_be_state_no_payment(self):
-        """
-        An order state can be set to no_payment if the first installment is refused.
-        """
-        return self.instance.payment_schedule[0].get("state") in [
-            enums.PAYMENT_STATE_REFUSED
-        ]
-
-    def _can_be_state_failed_payment(self):
-        """
-        An order state can be set to failed_payment if any installment except the first
-        is refused.
-        """
-        return any(
-            installment.get("state") in [enums.PAYMENT_STATE_REFUSED]
-            for installment in self.instance.payment_schedule[1:]
-        )
 
     @state.transition(
         source=[
@@ -258,6 +185,16 @@ class OrderFlow:
         Complete the order.
         """
 
+    def _can_be_state_pending_payment(self):
+        """
+        An order state can be set to pending_payment if no installment
+        is refused.
+        """
+        return any(
+            installment.get("state") not in [enums.PAYMENT_STATE_REFUSED]
+            for installment in self.instance.payment_schedule
+        )
+
     @state.transition(
         source=[
             enums.ORDER_STATE_PENDING_PAYMENT,
@@ -273,6 +210,14 @@ class OrderFlow:
         Mark order instance as "pending_payment".
         """
 
+    def _can_be_state_no_payment(self):
+        """
+        An order state can be set to no_payment if the first installment is refused.
+        """
+        return self.instance.payment_schedule[0].get("state") in [
+            enums.PAYMENT_STATE_REFUSED
+        ]
+
     @state.transition(
         source=enums.ORDER_STATE_PENDING,
         target=enums.ORDER_STATE_NO_PAYMENT,
@@ -283,6 +228,16 @@ class OrderFlow:
         Mark order instance as "no_payment".
         """
 
+    def _can_be_state_failed_payment(self):
+        """
+        An order state can be set to failed_payment if any installment except the first
+        is refused.
+        """
+        return any(
+            installment.get("state") in [enums.PAYMENT_STATE_REFUSED]
+            for installment in self.instance.payment_schedule[1:]
+        )
+
     @state.transition(
         source=enums.ORDER_STATE_PENDING_PAYMENT,
         target=enums.ORDER_STATE_FAILED_PAYMENT,
@@ -292,6 +247,30 @@ class OrderFlow:
         """
         Mark order instance as "failed_payment".
         """
+
+    def update(self):
+        """
+        Update the order state.
+        """
+        if self._can_be_state_completed():
+            self.complete()
+            return
+
+        if self._can_be_state_to_sign_and_to_save_payment_method():
+            self.to_sign_and_to_save_payment_method()
+            return
+
+        if self._can_be_state_to_save_payment_method():
+            self.to_save_payment_method()
+            return
+
+        if self._can_be_state_to_sign():
+            self.to_sign()
+            return
+
+        if self._can_be_state_pending():
+            self.pending()
+            return
 
     @state.on_success()
     def _post_transition_success(self, descriptor, source, target, **kwargs):  # pylint: disable=unused-argument
