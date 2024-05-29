@@ -1250,36 +1250,34 @@ class EnrollmentApiTest(BaseAPITestCase):
         product = factories.ProductFactory(
             target_courses=[cr.course for cr in target_course_runs]
         )
-        order = factories.OrderFactory(
-            product=product,
-            state=random.choice(
-                [enums.ORDER_STATE_PENDING, enums.ORDER_STATE_CANCELED]
-            ),
-        )
-        data = {
-            "course_run_id": target_course_runs[0].id,
-            "is_active": True,
-            "was_created_by_order": True,
-        }
-        token = self.generate_token_from_user(order.owner)
 
-        response = self.client.post(
-            "/api/v1.0/enrollments/",
-            data=data,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        for state in [enums.ORDER_STATE_PENDING, enums.ORDER_STATE_CANCELED]:
+            with self.subTest(state=state):
+                order = factories.OrderFactory(product=product, state=state)
+                data = {
+                    "course_run_id": target_course_runs[0].id,
+                    "is_active": True,
+                    "was_created_by_order": True,
+                }
+                token = self.generate_token_from_user(order.owner)
 
-        course_run_id = target_course_runs[0].id
-        self.assertDictEqual(
-            response.json(),
-            {
-                "__all__": [
-                    f'Course run "{course_run_id}" requires a valid order to enroll.'
-                ]
-            },
-        )
+                response = self.client.post(
+                    "/api/v1.0/enrollments/",
+                    data=data,
+                    content_type="application/json",
+                    HTTP_AUTHORIZATION=f"Bearer {token}",
+                )
+                self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+
+                course_run_id = target_course_runs[0].id
+                self.assertDictEqual(
+                    response.json(),
+                    {
+                        "__all__": [
+                            f'Course run "{course_run_id}" requires a valid order to enroll.'
+                        ]
+                    },
+                )
 
     def test_api_enrollment_create_authenticated_matching_no_order(self):
         """
