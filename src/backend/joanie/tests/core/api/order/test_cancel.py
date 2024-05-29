@@ -68,20 +68,21 @@ class OrderCancelApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         for state, _ in enums.ORDER_STATE_CHOICES:
-            order = factories.OrderFactory(owner=user, state=state)
-            response = self.client.post(
-                f"/api/v1.0/orders/{order.id}/cancel/",
-                HTTP_AUTHORIZATION=f"Bearer {token}",
-            )
-            order.refresh_from_db()
-            if state == enums.ORDER_STATE_COMPLETED:
-                self.assertEqual(
-                    response.status_code, HTTPStatus.UNPROCESSABLE_ENTITY, state
+            with self.subTest(state=state):
+                order = factories.OrderFactory(owner=user, state=state)
+                response = self.client.post(
+                    f"/api/v1.0/orders/{order.id}/cancel/",
+                    HTTP_AUTHORIZATION=f"Bearer {token}",
                 )
-                self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
-            else:
-                self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT, state)
-                self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
+                order.refresh_from_db()
+                if state == enums.ORDER_STATE_COMPLETED:
+                    self.assertEqual(
+                        response.status_code, HTTPStatus.UNPROCESSABLE_ENTITY
+                    )
+                    self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
+                else:
+                    self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+                    self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
 
     def test_api_order_cancel_authenticated_validated(self):
         """
