@@ -253,6 +253,10 @@ class Command(BaseCommand):
             student_signed_on=django_timezone.now(),
         )
 
+        payment_factories.InvoiceFactory(
+            order=order, recipient_address__owner=order.owner, total=order.total
+        )
+
         order.generate_schedule()
         installment = order.payment_schedule[0]
         order.set_installment_refused(installment["id"])
