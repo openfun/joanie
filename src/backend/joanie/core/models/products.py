@@ -961,7 +961,7 @@ class Order(BaseModel):
             enums.ORDER_STATE_TO_SIGN,
             enums.ORDER_STATE_TO_SIGN_AND_TO_SAVE_PAYMENT_METHOD,
         ]:
-            message = "Cannot submit an order that is not yet validated."
+            message = "Cannot submit an order that is not to sign."
             logger.error(message, extra={"context": {"order": self.to_dict()}})
             raise ValidationError(message)
 
