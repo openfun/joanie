@@ -12,7 +12,7 @@ generate-version-file: &generate-version-file
         "$CIRCLE_PROJECT_REPONAME" \
         "$CIRCLE_BUILD_URL" > src/backend/joanie/version.json
 
-version: 2
+version: 2.1
 jobs:
   # Git jobs
   # Check that the git history is clean and complies with our expectations
@@ -158,9 +158,21 @@ jobs:
       - run:
           name: Lint code with ruff
           command: ~/.local/bin/ruff check joanie
-      - run:
-          name: Lint code with pylint
-          command: ~/.local/bin/pylint joanie
+      - when:
+          condition:
+            not:
+                matches: { pattern: "^develop.+$", value: << pipeline.git.branch >> }
+          steps:
+            - run:
+                name: Lint code with pylint
+                command: ~/.local/bin/pylint joanie
+      - when:
+          condition:
+            matches: { pattern: "^develop.+$", value: << pipeline.git.branch >> }
+          steps:
+            - run:
+                name: Lint code with pylint, ignoring TODOs
+                command: ~/.local/bin/pylint joanie --disable=fixme
 
   test-back:
     docker:
