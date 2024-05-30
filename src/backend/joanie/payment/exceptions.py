@@ -45,3 +45,11 @@ class ParseNotificationFailed(APIException):
     status_code = HTTPStatus.BAD_REQUEST
     default_detail = _("Cannot parse notification.")
     default_code = "parse_notification_failed"
+
+
+class PaymentProviderAPIException(APIException):
+    """Exception triggered when the payment provider API to create payment failed"""
+
+    status_code = HTTPStatus.BAD_REQUEST
+    default_detail = _("Payment provider API error.")
+    default_code = "payment_provider_api_error"

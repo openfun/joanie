@@ -29,7 +29,11 @@ from joanie.core.factories import (
 )
 from joanie.payment.backends.base import BasePaymentBackend
 from joanie.payment.backends.lyra import LyraBackend
-from joanie.payment.exceptions import ParseNotificationFailed, RegisterPaymentFailed
+from joanie.payment.exceptions import (
+    ParseNotificationFailed,
+    PaymentProviderAPIException,
+    RegisterPaymentFailed,
+)
 from joanie.payment.factories import CreditCardFactory
 from joanie.payment.models import CreditCard, Transaction
 from joanie.tests.base import BaseLogMixinTestCase
@@ -108,7 +112,8 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
     @responses.activate(assert_all_requests_are_fired=True)
     def test_payment_backend_lyra_create_payment_server_request_exception(self):
         """
-        When a request exception occurs, an error is logged, and None is returned.
+        When a request exception occurs, an error is logged, and a PaymentProviderAPIException
+        is raised.
         """
         backend = LyraBackend(self.configuration)
         owner = UserFactory(email="john.doe@acme.org")
@@ -122,10 +127,16 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
             body=RequestException("Connection error"),
         )
 
-        with self.assertLogs() as logger:
-            response = backend.create_payment(order, billing_address)
+        with (
+            self.assertRaises(PaymentProviderAPIException) as context,
+            self.assertLogs() as logger,
+        ):
+            backend.create_payment(order, billing_address)
 
-        self.assertIsNone(response)
+        self.assertEqual(
+            str(context.exception),
+            "Error when calling Lyra API - RequestException : Connection error",
+        )
 
         expected_logs = [
             (
@@ -152,7 +163,10 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
 
     @responses.activate(assert_all_requests_are_fired=True)
     def test_payment_backend_lyra_create_payment_server_error(self):
-        """When a server error occurs, an error is logged, and None is returned."""
+        """
+        When a server error occurs, an error is logged, and PaymentProviderAPIException is raised
+        with some information about the source of the error.
+        """
         backend = LyraBackend(self.configuration)
         owner = UserFactory(email="john.doe@acme.org")
         product = ProductFactory(price=D("123.45"))
@@ -166,10 +180,20 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
             body="Internal Server Error",
         )
 
-        with self.assertLogs() as logger:
-            response = backend.create_payment(order, billing_address)
+        with (
+            self.assertRaises(PaymentProviderAPIException) as context,
+            self.assertLogs() as logger,
+        ):
+            backend.create_payment(order, billing_address)
 
-        self.assertIsNone(response)
+        self.assertEqual(
+            str(context.exception),
+            (
+                "Error when calling Lyra API - "
+                "HTTPError : 500 Server Error: Internal Server Error "
+                "for url: https://api.lyra.com/api-payment/V4/Charge/CreatePayment"
+            ),
+        )
 
         expected_logs = [
             (
@@ -198,7 +222,8 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
     @responses.activate(assert_all_requests_are_fired=True)
     def test_payment_backend_lyra_create_payment_failed(self):
         """
-        When backend creates a payment, it should return None if the payment failed.
+        When backend creates a payment, it should raise a PaymentProviderAPIException
+        if the payment failed.
         """
         backend = LyraBackend(self.configuration)
         owner = UserFactory(email="john.doe@acme.org")
@@ -252,10 +277,16 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
             json=json_response,
         )
 
-        with self.assertLogs() as logger:
-            response = backend.create_payment(order, billing_address)
+        with (
+            self.assertRaises(PaymentProviderAPIException) as context,
+            self.assertLogs() as logger,
+        ):
+            backend.create_payment(order, billing_address)
 
-        self.assertIsNone(response)
+        self.assertEqual(
+            str(context.exception),
+            "Error when calling Lyra API - INT_902 : web-service input data validation error.",
+        )
 
         expected_logs = [
             (
@@ -1315,3 +1346,173 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
 
         response = backend.delete_credit_card(credit_card)
         self.assertEqual(response, json_response.get("answer"))
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_payment_backend_lyra_create_zero_click_payment_request_exception_error(
+        self,
+    ):
+        """
+        When an error occurs on a request when calling `create_zero_click_payment`, an error is
+        logged and PaymentProviderAPIException is raised with some information about the source
+        of the error.
+        """
+        backend = LyraBackend(self.configuration)
+        owner = UserFactory(
+            email="john.doe@acme.org",
+            first_name="John",
+            last_name="Doe",
+            language="en-us",
+        )
+        product = ProductFactory(price=D("134.45"))
+        first_installment_amount = product.price / 3
+        second_installment_amount = product.price - first_installment_amount
+        order = OrderFactory(
+            owner=owner,
+            product=product,
+            state=ORDER_STATE_PENDING,
+            payment_schedule=[
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": f"{first_installment_amount}",
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
+                    "amount": f"{second_installment_amount}",
+                    "due_date": "2024-02-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+        credit_card = CreditCardFactory(
+            owner=owner,
+            token="854d630f17f54ee7bce03fb4fcf764e9",
+            initial_issuer_transaction_identifier="4575676657929351",
+        )
+
+        responses.add(
+            responses.POST,
+            "https://api.lyra.com/api-payment/V4/Charge/CreatePayment",
+            body=RequestException("Connection error"),
+        )
+
+        with (
+            self.assertRaises(PaymentProviderAPIException) as context,
+            self.assertLogs() as logger,
+        ):
+            backend.create_zero_click_payment(
+                order, credit_card.token, installment=order.payment_schedule[1]
+            )
+
+        self.assertEqual(
+            str(context.exception),
+            "Error when calling Lyra API - RequestException : Connection error",
+        )
+
+        expected_logs = [
+            (
+                "INFO",
+                "Calling Lyra API https://api.lyra.com/api-payment/V4/Charge/CreatePayment",
+                {
+                    "url": str,
+                    "headers": dict,
+                    "payload": dict,
+                },
+            ),
+            (
+                "ERROR",
+                "Error calling Lyra API | RequestException: Connection error",
+                {
+                    "url": str,
+                    "headers": dict,
+                    "payload": dict,
+                    "exception": RequestException,
+                },
+            ),
+        ]
+        self.assertLogsEquals(logger.records, expected_logs)
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_lyra_create_zero_click_payment_server_error(self):
+        """
+        When an error occur on the server, the error is logged and the exception
+        PaymentProviderAPIException is raised with information about the source of the error.
+        """
+        backend = LyraBackend(self.configuration)
+        owner = UserFactory(email="john.doe@acme.org")
+        product = ProductFactory(price=D("134.45"))
+        first_installment_amount = product.price / 3
+        second_installment_amount = product.price - first_installment_amount
+        order = OrderFactory(
+            owner=owner,
+            product=product,
+            state=ORDER_STATE_PENDING,
+            payment_schedule=[
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": f"{first_installment_amount}",
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
+                    "amount": f"{second_installment_amount}",
+                    "due_date": "2024-02-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+        credit_card = CreditCardFactory(
+            owner=owner,
+            token="854d630f17f54ee7bce03fb4fcf764e9",
+            initial_issuer_transaction_identifier="4575676657929351",
+        )
+
+        responses.add(
+            responses.POST,
+            "https://api.lyra.com/api-payment/V4/Charge/CreatePayment",
+            status=500,
+            body="Internal Server Error",
+        )
+
+        with (
+            self.assertRaises(PaymentProviderAPIException) as context,
+            self.assertLogs() as logger,
+        ):
+            backend.create_zero_click_payment(
+                order, credit_card.token, installment=order.payment_schedule[0]
+            )
+
+        self.assertEqual(
+            str(context.exception),
+            (
+                "Error when calling Lyra API - "
+                "HTTPError : 500 Server Error: Internal Server Error "
+                "for url: https://api.lyra.com/api-payment/V4/Charge/CreatePayment"
+            ),
+        )
+
+        expected_logs = [
+            (
+                "INFO",
+                "Calling Lyra API https://api.lyra.com/api-payment/V4/Charge/CreatePayment",
+                {
+                    "url": str,
+                    "headers": dict,
+                    "payload": dict,
+                },
+            ),
+            (
+                "ERROR",
+                "Error calling Lyra API | HTTPError: 500 Server Error: Internal Server Error "
+                "for url: https://api.lyra.com/api-payment/V4/Charge/CreatePayment",
+                {
+                    "url": str,
+                    "headers": dict,
+                    "payload": dict,
+                    "exception": HTTPError,
+                },
+            ),
+        ]
+        self.assertLogsEquals(logger.records, expected_logs)
