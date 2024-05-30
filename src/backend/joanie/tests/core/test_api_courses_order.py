@@ -904,3 +904,45 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
             response.json()["results"][0]["product"]["id"], str(product.id)
         )
         self.assertEqual(response.json()["results"][0]["course_id"], str(course.id))
+
+    def test_api_courses_order_get_list_filters_order_states(self):
+        """
+        Only orders with the states 'completed', 'pending_payment' and 'failed_payment' should
+        be returned.
+        """
+        for state, _ in enums.ORDER_STATE_CHOICES:
+            with self.subTest(state=state):
+                user = factories.UserFactory()
+                course_product_relation = factories.CourseProductRelationFactory()
+                organization = course_product_relation.organizations.first()
+                product = course_product_relation.product
+                course = course_product_relation.course
+                order = factories.OrderFactory(
+                    organization=organization,
+                    product=product,
+                    course=course,
+                    state=state,
+                )
+                factories.UserOrganizationAccessFactory(
+                    organization=organization, user=user
+                )
+                token = self.get_user_token(user.username)
+
+                response = self.client.get(
+                    f"/api/v1.0/courses/{course.id}/orders/"
+                    f"?product_id={product.id}",
+                    HTTP_AUTHORIZATION=f"Bearer {token}",
+                )
+
+                self.assertEqual(response.status_code, HTTPStatus.OK)
+                if state in [
+                    enums.ORDER_STATE_COMPLETED,
+                    enums.ORDER_STATE_PENDING_PAYMENT,
+                    enums.ORDER_STATE_FAILED_PAYMENT,
+                ]:
+                    self.assertEqual(response.json()["count"], 1)
+                    self.assertEqual(
+                        response.json().get("results")[0].get("id"), str(order.id)
+                    )
+                else:
+                    self.assertEqual(response.json()["count"], 0)
