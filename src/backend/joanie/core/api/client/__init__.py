@@ -555,7 +555,7 @@ class OrderViewSet(
             422: serializers.ErrorResponseSerializer,
         },
     )
-    @action(detail=True, methods=["POST"])
+    @action(detail=True, methods=["POST"], url_path="submit-installment-payment")
     def submit_installment_payment(self, request, pk=None):  # pylint: disable=unused-argument
         """
         Submit a payment for a failed installment that was scheduled for a given order.
@@ -585,6 +585,7 @@ class OrderViewSet(
                 billing_address=order.main_invoice.recipient_address,
                 installment=installment,
             )
+
             return Response(payment_infos, status=HTTPStatus.OK)
 
         try:

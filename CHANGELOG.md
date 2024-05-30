@@ -19,6 +19,12 @@ and this project adheres to
 - Allow an order with `no_payment` state to pay for failed installment
   on a payment schedule
 
+### Fixed
+
+- Ensure when API requests fails with payment provider, it raises
+  an error for `create_payment`, `create_one_click_payment` and
+  `create_zero_click_payment`
+
 ## [2.2.0] - 2024-05-22
 
 ### Added

@@ -129,26 +129,27 @@ class LyraBackend(BasePaymentBackend):
                 e,
                 extra={"context": context},
             )
-            return None
+            raise exceptions.PaymentProviderAPIException(
+                f"Error when calling Lyra API - {e.__class__.__name__} : {e}"
+            ) from e
 
         response_json = response.json()
 
         if response_json.get("status") == "ERROR":
             context = context.copy()
             context["response_json"] = response_json
-
+            error_code = response_json.get("answer").get("errorCode")
+            error_msg = response_json.get("answer").get("errorMessage")
             logger.error(
                 "Error calling Lyra API %s | %s: %s",
                 url,
-                response_json.get("answer").get("errorCode"),
-                response_json.get("answer").get("errorMessage"),
+                error_code,
+                error_msg,
                 extra={"context": context},
             )
-            return None
-
-        if settings.DEBUG:
-            with open("response.json", "w", encoding="utf-8") as f:
-                json.dump(response_json, f, indent=4)
+            raise exceptions.PaymentProviderAPIException(
+                "Error when calling Lyra API - " f"{error_code} : {error_msg}."
+            )
 
         return response_json
 
@@ -289,16 +290,11 @@ class LyraBackend(BasePaymentBackend):
             }
 
         response_json = self._call_api(url, payload)
-
-        if not response_json:
+        if response_json.get("status") != "SUCCESS":
             return False
 
-        success = response_json.get("status") == "SUCCESS"
         answer = response_json.get("answer")
         billing_details = answer["customer"]["billingDetails"]
-
-        if not success:
-            return False
 
         payment = {
             "id": answer["transactions"][0]["uuid"],
@@ -342,15 +338,7 @@ class LyraBackend(BasePaymentBackend):
         if not self._check_hash(post_data):
             raise exceptions.ParseNotificationFailed()
 
-        if settings.DEBUG:
-            with open("request.json", "w", encoding="utf-8") as f:
-                json.dump(post_data, f, indent=4)
-
         answer = json.loads(post_data.get("kr-answer"))
-
-        if settings.DEBUG:
-            with open("answer.json", "w", encoding="utf-8") as f:
-                json.dump(answer, f, indent=4)
 
         transaction_id = answer["transactions"][0]["uuid"]
         try:

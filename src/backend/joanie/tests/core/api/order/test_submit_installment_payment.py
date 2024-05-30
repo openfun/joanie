@@ -21,6 +21,7 @@ from joanie.core.enums import (
 )
 from joanie.core.factories import OrderFactory, ProductFactory, UserFactory
 from joanie.payment.backends.dummy import DummyPaymentBackend
+from joanie.payment.exceptions import PaymentProviderAPIException
 from joanie.payment.factories import (
     CreditCardFactory,
     InvoiceFactory,
@@ -38,7 +39,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
         order = OrderFactory()
 
         response = self.client.post(
-            f"/api/v1.0/orders/{order.id}/submit_installment_payment/"
+            f"/api/v1.0/orders/{order.id}/submit-installment-payment/"
         )
 
         self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
@@ -55,7 +56,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
         order = OrderFactory()
 
         response = self.client.get(
-            f"/api/v1.0/orders/{order.id}/submit_installment_payment/",
+            f"/api/v1.0/orders/{order.id}/submit-installment-payment/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -72,7 +73,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
         order = OrderFactory()
 
         response = self.client.put(
-            f"/api/v1.0/orders/{order.id}/submit_installment_payment/",
+            f"/api/v1.0/orders/{order.id}/submit-installment-payment/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -90,7 +91,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
         order = OrderFactory()
 
         response = self.client.patch(
-            f"/api/v1.0/orders/{order.id}/submit_installment_payment/",
+            f"/api/v1.0/orders/{order.id}/submit-installment-payment/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -106,7 +107,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
         order = OrderFactory()
 
         response = self.client.delete(
-            f"/api/v1.0/orders/{order.id}/submit_installment_payment/",
+            f"/api/v1.0/orders/{order.id}/submit-installment-payment/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -125,7 +126,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
         order_draft = OrderFactory(owner=user, state=ORDER_STATE_DRAFT)
 
         response = self.client.post(
-            f"/api/v1.0/orders/{order_draft.id}/submit_installment_payment/",
+            f"/api/v1.0/orders/{order_draft.id}/submit-installment-payment/",
             data=payload,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -148,7 +149,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
         order_submitted = OrderFactory(owner=user, state=ORDER_STATE_SUBMITTED)
 
         response = self.client.post(
-            f"/api/v1.0/orders/{order_submitted.id}/submit_installment_payment/",
+            f"/api/v1.0/orders/{order_submitted.id}/submit-installment-payment/",
             data=payload,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -171,7 +172,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
         order_pending = OrderFactory(owner=user, state=ORDER_STATE_PENDING)
 
         response = self.client.post(
-            f"/api/v1.0/orders/{order_pending.id}/submit_installment_payment/",
+            f"/api/v1.0/orders/{order_pending.id}/submit-installment-payment/",
             data=payload,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -194,7 +195,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
         order_cancelled = OrderFactory(owner=user, state=ORDER_STATE_CANCELED)
 
         response = self.client.post(
-            f"/api/v1.0/orders/{order_cancelled.id}/submit_installment_payment/",
+            f"/api/v1.0/orders/{order_cancelled.id}/submit-installment-payment/",
             data=payload,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -217,7 +218,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
         order_validated = OrderFactory(owner=user, state=ORDER_STATE_VALIDATED)
 
         response = self.client.post(
-            f"/api/v1.0/orders/{order_validated.id}/submit_installment_payment/",
+            f"/api/v1.0/orders/{order_validated.id}/submit-installment-payment/",
             data=payload,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -244,7 +245,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
         )
 
         response = self.client.post(
-            f"/api/v1.0/orders/{order_pending_payment.id}/submit_installment_payment/",
+            f"/api/v1.0/orders/{order_pending_payment.id}/submit-installment-payment/",
             data=payload,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -267,7 +268,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
         order_completed = OrderFactory(owner=user, state=ORDER_STATE_COMPLETED)
 
         response = self.client.post(
-            f"/api/v1.0/orders/{order_completed.id}/submit_installment_payment/",
+            f"/api/v1.0/orders/{order_completed.id}/submit-installment-payment/",
             data=payload,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -325,7 +326,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
 
         response = self.client.post(
-            f"/api/v1.0/orders/{order_with_failed_payment.id}/submit_installment_payment/",
+            f"/api/v1.0/orders/{order_with_failed_payment.id}/submit-installment-payment/",
             data=payload,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -389,7 +390,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
 
         response = self.client.post(
-            f"/api/v1.0/orders/{order.id}/submit_installment_payment/",
+            f"/api/v1.0/orders/{order.id}/submit-installment-payment/",
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
@@ -467,7 +468,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
 
         response = self.client.post(
-            f"/api/v1.0/orders/{order.id}/submit_installment_payment/",
+            f"/api/v1.0/orders/{order.id}/submit-installment-payment/",
             data=payload,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -535,7 +536,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
 
         response = self.client.post(
-            f"/api/v1.0/orders/{order.id}/submit_installment_payment/",
+            f"/api/v1.0/orders/{order.id}/submit-installment-payment/",
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
@@ -596,7 +597,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
 
         response = self.client.post(
-            f"/api/v1.0/orders/{order.id}/submit_installment_payment/",
+            f"/api/v1.0/orders/{order.id}/submit-installment-payment/",
             data=payload,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -665,7 +666,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
 
         response = self.client.post(
-            f"/api/v1.0/orders/{order.id}/submit_installment_payment/",
+            f"/api/v1.0/orders/{order.id}/submit-installment-payment/",
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
@@ -682,3 +683,155 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
         )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
+
+    @mock.patch.object(
+        DummyPaymentBackend,
+        "create_payment",
+        side_effect=PaymentProviderAPIException(
+            "Error when calling Lyra API - PSP_030: payment token not found"
+        ),
+    )
+    def test_api_order_submit_installment_payment_without_credit_card_data_raise_exception(
+        self, mock_create_payment
+    ):
+        """
+        When a request fails with the payment provider, we want an exception to be raised when
+        an authenticated user request to submit for an installment payment.
+        The method `create_payment` should trigger the exception.
+        """
+        user = UserFactory()
+        order = OrderFactory(
+            owner=user,
+            state=ORDER_STATE_NO_PAYMENT,
+            payment_schedule=[
+                {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "300.00",
+                    "due_date": "2024-02-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+                {
+                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
+                    "amount": "300.00",
+                    "due_date": "2024-03-17",
+                    "state": PAYMENT_STATE_REFUSED,
+                },
+                {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
+                    "amount": "199.99",
+                    "due_date": "2024-04-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+        InvoiceFactory(order=order)
+        token = self.generate_token_from_user(user)
+
+        response = self.client.post(
+            f"/api/v1.0/orders/{order.id}/submit-installment-payment/",
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        mock_create_payment.assert_called_once_with(
+            order=order,
+            billing_address=order.main_invoice.recipient_address,
+            installment={
+                "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
+                "amount": "300.00",
+                "due_date": "2024-03-17",
+                "state": PAYMENT_STATE_REFUSED,
+            },
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(
+            response.json(),
+            {
+                "detail": "Error when calling Lyra API - PSP_030: payment token not found"
+            },
+        )
+
+    @mock.patch.object(
+        DummyPaymentBackend,
+        "create_one_click_payment",
+        side_effect=PaymentProviderAPIException(
+            "Error when calling Lyra API - PSP_030: payment token not found"
+        ),
+    )
+    def test_api_order_submit_installment_payment_with_credit_card_data_raises_exception(
+        self, mock_create_one_click_payment
+    ):
+        """
+        When a request fails with the payment provider, we want an exception to be raised when
+        an authenticated user request to submit for an installment payment with his
+        credit card in payload. The method `create_one_click_payment` should trigger the exception.
+        """
+        user = UserFactory()
+        order = OrderFactory(
+            owner=user,
+            state=ORDER_STATE_NO_PAYMENT,
+            payment_schedule=[
+                {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "300.00",
+                    "due_date": "2024-02-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+                {
+                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
+                    "amount": "300.00",
+                    "due_date": "2024-03-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+                {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
+                    "amount": "199.99",
+                    "due_date": "2024-04-17",
+                    "state": PAYMENT_STATE_REFUSED,
+                },
+            ],
+        )
+        InvoiceFactory(order=order)
+        credit_card = CreditCardFactory(owner=user)
+        payload = {"credit_card_id": credit_card.id}
+        token = self.generate_token_from_user(user)
+
+        response = self.client.post(
+            f"/api/v1.0/orders/{order.id}/submit-installment-payment/",
+            data=payload,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        mock_create_one_click_payment.assert_called_once_with(
+            order=order,
+            billing_address=order.main_invoice.recipient_address,
+            credit_card_token=credit_card.token,
+            installment={
+                "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
+                "amount": "199.99",
+                "due_date": "2024-04-17",
+                "state": PAYMENT_STATE_REFUSED,
+            },
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(
+            response.json(),
+            {
+                "detail": "Error when calling Lyra API - PSP_030: payment token not found"
+            },
+        )
