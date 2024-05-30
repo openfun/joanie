@@ -62,7 +62,7 @@ class OrderCancelApiTest(BaseAPITestCase):
 
     def test_api_order_cancel_authenticated_owned(self):
         """
-        User should able to cancel owned orders as long as they are not
+        User should be able to cancel owned orders as long as they are not
         completed
         """
         user = factories.UserFactory()
@@ -76,8 +76,10 @@ class OrderCancelApiTest(BaseAPITestCase):
                 )
                 order.refresh_from_db()
                 if state == enums.ORDER_STATE_COMPLETED:
-                    self.assertEqual(
-                        response.status_code, HTTPStatus.UNPROCESSABLE_ENTITY
+                    self.assertContains(
+                        response,
+                        "Cannot cancel a completed order",
+                        status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
                     )
                     self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
                 else:
@@ -86,7 +88,7 @@ class OrderCancelApiTest(BaseAPITestCase):
 
     def test_api_order_cancel_authenticated_validated(self):
         """
-        User should not able to cancel already validated order
+        User should not able to cancel already completed order
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -98,5 +100,9 @@ class OrderCancelApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         order_validated.refresh_from_db()
-        self.assertEqual(response.status_code, HTTPStatus.UNPROCESSABLE_ENTITY)
+        self.assertContains(
+            response,
+            "Cannot cancel a completed order",
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+        )
         self.assertEqual(order_validated.state, enums.ORDER_STATE_COMPLETED)
