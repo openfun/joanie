@@ -438,7 +438,7 @@ class OrderViewSet(
 
         if order.state == enums.ORDER_STATE_COMPLETED:
             return Response(
-                "Cannot cancel a validated order.",
+                "Cannot cancel a completed order.",
                 status=HTTPStatus.UNPROCESSABLE_ENTITY,
             )
 
