@@ -106,7 +106,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
                 else:
                     self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
                     self.assertEqual(
-                        content[0], "Cannot submit an order that is not yet validated."
+                        content[0], "Cannot submit an order that is not to sign."
                     )
 
     def test_api_order_submit_for_signature_order_without_product_contract_definition(
