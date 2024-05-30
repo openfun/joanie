@@ -537,7 +537,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             ],
         )
 
-    def test_models_order_submit_for_signature_fails_because_order_is_not_state_completed(
+    def test_models_order_submit_for_signature_fails_because_order_is_not_to_sign(
         self,
     ):
         """
@@ -569,7 +569,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
 
                     self.assertEqual(
                         str(context.exception),
-                        "['Cannot submit an order that is not yet validated.']",
+                        "['Cannot submit an order that is not to sign.']",
                     )
 
                     self.assertLogsEquals(
@@ -577,7 +577,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
                         [
                             (
                                 "ERROR",
-                                "Cannot submit an order that is not yet validated.",
+                                "Cannot submit an order that is not to sign.",
                                 {"order": dict},
                             ),
                         ],
