@@ -39,26 +39,31 @@ class OrderFlow:
         """
         Transition order to assigned state.
         """
-        # TODO: check that billing_address is set when order is not free
-        #  https://github.com/openfun/joanie/pull/801#discussion_r1620622480
-        if not self.instance.is_free and billing_address:
-            Address = apps.get_model("core", "Address")  # pylint: disable=invalid-name
-            address, _ = Address.objects.get_or_create(
-                **billing_address,
-                owner=self.instance.owner,
-                defaults={
-                    "is_reusable": False,
-                    "title": f"Billing address of order {self.instance.id}",
-                },
-            )
+        if not self.instance.is_free:
+            if billing_address:
+                Address = apps.get_model("core", "Address")  # pylint: disable=invalid-name
+                address, _ = Address.objects.get_or_create(
+                    **billing_address,
+                    defaults={
+                        "owner": self.instance.owner,
+                        "is_reusable": False,
+                        "title": f"Billing address of order {self.instance.id}",
+                    },
+                )
 
-            # Create the main invoice
-            Invoice = apps.get_model("payment", "Invoice")  # pylint: disable=invalid-name
-            Invoice.objects.get_or_create(
-                order=self.instance,
-                total=self.instance.total,
-                recipient_address=address,
-            )
+                # Create the main invoice
+                Invoice = apps.get_model("payment", "Invoice")  # pylint: disable=invalid-name
+                Invoice.objects.get_or_create(
+                    order=self.instance,
+                    defaults={
+                        "total": self.instance.total,
+                        "recipient_address": address,
+                    },
+                )
+            else:
+                raise fsm.TransitionNotAllowed(
+                    "Billing address is required for non-free orders."
+                )
 
         self.instance.freeze_target_courses()
         self.update()
