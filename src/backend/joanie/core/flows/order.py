@@ -278,6 +278,18 @@ class OrderFlow:
             self.pending()
             return
 
+        # TODO: Try to add the following transitions
+        #  if self._can_be_state_pending_payment():
+        #      self.pending_payment()
+        #      return
+        #  if self._can_be_state_no_payment():
+        #      self.no_payment()
+        #      return
+        #  if self._can_be_state_failed_payment():
+        #      self.failed_payment()
+        #      return
+        #  https://github.com/openfun/joanie/pull/801#discussion_r1620640987
+
     @state.on_success()
     def _post_transition_success(self, descriptor, source, target, **kwargs):  # pylint: disable=unused-argument
         """Post transition actions"""
