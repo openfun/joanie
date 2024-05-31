@@ -483,7 +483,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         CreditCardFactory(
             owner=order.owner, is_main=True, initial_issuer_transaction_identifier="1"
         )
-        order.flow.assign()
+        order.flow.assign(billing_address=BillingAddressDictFactory())
 
         backend.call_do_on_payment_failure(
             order, installment_id=order.payment_schedule[0]["id"]
