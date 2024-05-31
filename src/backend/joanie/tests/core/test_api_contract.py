@@ -1362,6 +1362,7 @@ class ContractApiTest(BaseAPITestCase):
         # Create our Course Product Relation shared by the 2 organizations above
         relation = factories.CourseProductRelationFactory(
             product__contract_definition=factories.ContractDefinitionFactory(),
+            product__price=0,
             organizations=[organizations[0], organizations[1]],
         )
         # Create learners who sign the contract definition
@@ -1452,6 +1453,7 @@ class ContractApiTest(BaseAPITestCase):
         )
         relation = factories.CourseProductRelationFactory(
             product__contract_definition=factories.ContractDefinitionFactory(),
+            product__price=0,
             organizations=[organization],
         )
         learners = factories.UserFactory.create_batch(3)
