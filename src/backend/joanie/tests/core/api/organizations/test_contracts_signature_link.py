@@ -226,10 +226,12 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
         relation = factories.CourseProductRelationFactory(
             organizations=[organization, other_organization],
             product__contract_definition=factories.ContractDefinitionFactory(),
+            product__price=0,
         )
         relation_2 = factories.CourseProductRelationFactory(
             organizations=[organization],
             product__contract_definition=factories.ContractDefinitionFactory(),
+            product__price=0,
         )
         access = factories.UserOrganizationAccessFactory(
             organization=organization, role="owner"
@@ -329,6 +331,7 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
             2,
             organizations=[organization],
             product__contract_definition=factories.ContractDefinitionFactory(),
+            product__price=0,
         )
         access = factories.UserOrganizationAccessFactory(
             organization=organization, role="owner"
