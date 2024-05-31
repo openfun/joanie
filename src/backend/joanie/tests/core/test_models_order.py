@@ -422,7 +422,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         [course1, course2] = factories.CourseFactory.create_batch(2)
         [cr1, cr2] = factories.CourseRunFactory.create_batch(2, course=course1)
         [cr3, cr4] = factories.CourseRunFactory.create_batch(2, course=course2)
-        product = factories.ProductFactory(target_courses=[course1, course2])
+        product = factories.ProductFactory(target_courses=[course1, course2], price=0)
 
         # - Link cr3 to the product course relations
         relation = product.target_course_relations.get(course=course2)
@@ -454,7 +454,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         When an order is submitted, product target courses should be copied to the order
         """
         product = factories.ProductFactory(
-            target_courses=factories.CourseFactory.create_batch(2)
+            target_courses=factories.CourseFactory.create_batch(2),
         )
         order = factories.OrderFactory(product=product)
 
@@ -462,7 +462,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         self.assertEqual(order.target_courses.count(), 0)
 
         # Then we launch the order flow
-        order.flow.assign()
+        order.flow.assign(billing_address=BillingAddressDictFactory())
 
         self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
         self.assertEqual(order.target_courses.count(), 2)
@@ -644,7 +644,8 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             context=context,
             submitted_for_signature_on=django_timezone.now(),
         )
-        order.flow.assign()
+        billing_address = order.main_invoice.recipient_address.to_dict()
+        order.flow.assign(billing_address=billing_address)
 
         invitation_url = order.submit_for_signature(user=user)
 
@@ -963,7 +964,6 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             owner=user,
             product=relation.product,
             course=relation.course,
-            main_invoice=InvoiceFactory(recipient_address=user_address),
             payment_schedule=[
                 {
                     "amount": "200.00",
@@ -973,7 +973,9 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             ],
         )
         factories.ContractFactory(order=order)
-        order.flow.assign()
+        billing_address = user_address.to_dict()
+        billing_address.pop("owner")
+        order.flow.assign(billing_address=billing_address)
         factories.OrderTargetCourseRelationFactory(
             course=relation.course, order=order, position=1
         )
