@@ -17,7 +17,11 @@ from joanie.core import enums, exceptions, factories
 from joanie.core.models import CourseState, Enrollment
 from joanie.lms_handler import LMSHandler
 from joanie.lms_handler.backends.dummy import DummyLMSBackend
-from joanie.payment.factories import CreditCardFactory, InvoiceFactory
+from joanie.payment.factories import (
+    BillingAddressDictFactory,
+    CreditCardFactory,
+    InvoiceFactory,
+)
 from joanie.tests.base import BaseLogMixinTestCase
 
 
@@ -28,17 +32,42 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
 
     def test_flow_order_assign(self):
         """
-        Test that the assign method is successful
+        It should set the order state to ORDER_STATE_TO_SAVE_PAYMENT_METHOD
+        when the order has no credit card.
         """
         order = factories.OrderFactory(credit_card=None)
 
-        order.flow.assign()
+        order.flow.assign(billing_address=BillingAddressDictFactory())
 
         self.assertEqual(order.state, enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD)
 
+    def test_flow_order_assign_free_product(self):
+        """
+        It should set the order state to ORDER_STATE_COMPLETED
+        when the order has a free product.
+        """
+        order = factories.OrderFactory(product__price=0)
+
+        order.flow.assign()
+
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
+
+    def test_flow_order_assign_no_billing_address(self):
+        """
+        It should raise a TransitionNotAllowed exception
+        when the order has no billing address and the order is not free.
+        """
+        order = factories.OrderFactory()
+
+        with self.assertRaises(TransitionNotAllowed):
+            order.flow.assign()
+
+        self.assertEqual(order.state, enums.ORDER_STATE_DRAFT)
+
     def test_flow_order_assign_no_organization(self):
         """
-        Test that the assign method is successful
+        It should raise a TransitionNotAllowed exception
+        when the order has no organization.
         """
         order = factories.OrderFactory(organization=None)
 
