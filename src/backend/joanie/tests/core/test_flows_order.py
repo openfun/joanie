@@ -1258,12 +1258,19 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
 
     def test_flows_order_update_not_free_no_card_with_contract(self):
         """
-        Test that the order state is set to `to_sign_and_to_save_payment_method`
+        Test that the order state is set to `to_sign`
         when the order is not free, owner has no card and the order has a contract.
         """
         order = factories.OrderFactory(
             state=enums.ORDER_STATE_ASSIGNED,
             credit_card=None,
+            payment_schedule=[
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
         )
         factories.ContractFactory(
             order=order,
@@ -1273,9 +1280,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         order.flow.update()
 
         order.refresh_from_db()
-        self.assertEqual(
-            order.state, enums.ORDER_STATE_TO_SIGN_AND_TO_SAVE_PAYMENT_METHOD
-        )
+        self.assertEqual(order.state, enums.ORDER_STATE_TO_SIGN)
 
     def test_flows_order_update_not_free_no_card_no_contract(self):
         """
@@ -1284,16 +1289,6 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         """
         order = factories.OrderFactory(
             state=enums.ORDER_STATE_ASSIGNED,
-            credit_card=None,
-        )
-
-        order.flow.update()
-
-        order.refresh_from_db()
-        self.assertEqual(order.state, enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD)
-
-        order = factories.OrderFactory(
-            state=enums.ORDER_STATE_TO_SIGN_AND_TO_SAVE_PAYMENT_METHOD,
             credit_card=None,
         )
 
@@ -1325,19 +1320,6 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         owner has a card and the order has a contract.
         """
         order = factories.OrderFactory(state=enums.ORDER_STATE_ASSIGNED)
-        factories.ContractFactory(
-            order=order,
-            definition=factories.ContractDefinitionFactory(),
-        )
-
-        order.flow.update()
-
-        order.refresh_from_db()
-        self.assertEqual(order.state, enums.ORDER_STATE_TO_SIGN)
-
-        order = factories.OrderFactory(
-            state=enums.ORDER_STATE_TO_SIGN_AND_TO_SAVE_PAYMENT_METHOD
-        )
         factories.ContractFactory(
             order=order,
             definition=factories.ContractDefinitionFactory(),
@@ -1388,7 +1370,6 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         """
         for state in [
             enums.ORDER_STATE_ASSIGNED,
-            enums.ORDER_STATE_TO_SIGN_AND_TO_SAVE_PAYMENT_METHOD,
             enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
             enums.ORDER_STATE_TO_SIGN,
         ]:
