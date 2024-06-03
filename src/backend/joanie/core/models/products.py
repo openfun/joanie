@@ -1085,13 +1085,12 @@ class Order(BaseModel):
         Returns a set of boolean values to indicate if the installment is the first one, and if it
         is the last one.
         """
-        first_installment_found = True
         for installment in self.payment_schedule:
             if installment["id"] == installment_id:
                 installment["state"] = state
                 self.save(update_fields=["payment_schedule"])
-                return first_installment_found, installment == self.payment_schedule[-1]
-            first_installment_found = False
+                self.flow.update()
+                return
 
         raise ValueError(f"Installment with id {installment_id} not found")
 
@@ -1101,7 +1100,6 @@ class Order(BaseModel):
         """
         ActivityLog.create_payment_succeeded_activity_log(self)
         self._set_installment_state(installment_id, enums.PAYMENT_STATE_PAID)
-        self.flow.update()
 
     def set_installment_refused(self, installment_id):
         """
@@ -1109,7 +1107,6 @@ class Order(BaseModel):
         """
         ActivityLog.create_payment_failed_activity_log(self)
         self._set_installment_state(installment_id, enums.PAYMENT_STATE_REFUSED)
-        self.flow.update()
 
     def get_first_installment_refused(self):
         """
