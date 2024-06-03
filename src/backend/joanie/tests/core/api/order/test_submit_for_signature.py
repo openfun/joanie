@@ -159,7 +159,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
             product__target_courses=target_courses,
             contract=factories.ContractFactory(),
         )
-        order.flow.assign(billing_address=BillingAddressDictFactory())
+        order.flow.init(billing_address=BillingAddressDictFactory())
         token = self.get_user_token(user.username)
         expected_substring_invite_url = (
             "https://dummysignaturebackend.fr/?requestToken="
@@ -214,7 +214,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
             context="content",
             submitted_for_signature_on=django_timezone.now() - timedelta(days=16),
         )
-        order.flow.assign(billing_address=BillingAddressDictFactory())
+        order.flow.init(billing_address=BillingAddressDictFactory())
         expected_substring_invite_url = (
             "https://dummysignaturebackend.fr/?requestToken="
         )
@@ -264,7 +264,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
             context="content",
             submitted_for_signature_on=django_timezone.now() - timedelta(days=2),
         )
-        order.flow.assign(billing_address=BillingAddressDictFactory())
+        order.flow.init(billing_address=BillingAddressDictFactory())
         contract.definition.body = "a new content"
         expected_substring_invite_url = (
             "https://dummysignaturebackend.fr/?requestToken="
