@@ -1100,27 +1100,16 @@ class Order(BaseModel):
         Set the state of an installment to paid in the payment schedule.
         """
         ActivityLog.create_payment_succeeded_activity_log(self)
-        _, is_last = self._set_installment_state(
-            installment_id, enums.PAYMENT_STATE_PAID
-        )
-        if is_last:
-            self.flow.complete()
-        else:
-            self.flow.pending_payment()
+        self._set_installment_state(installment_id, enums.PAYMENT_STATE_PAID)
+        self.flow.update()
 
     def set_installment_refused(self, installment_id):
         """
         Set the state of an installment to refused in the payment schedule.
         """
         ActivityLog.create_payment_failed_activity_log(self)
-        is_first, _ = self._set_installment_state(
-            installment_id, enums.PAYMENT_STATE_REFUSED
-        )
-
-        if is_first:
-            self.flow.no_payment()
-        else:
-            self.flow.failed_payment()
+        self._set_installment_state(installment_id, enums.PAYMENT_STATE_REFUSED)
+        self.flow.update()
 
     def get_first_installment_refused(self):
         """

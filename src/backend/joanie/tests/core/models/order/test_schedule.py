@@ -429,7 +429,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
         should be set to pending payment.
         """
         order = factories.OrderFactory(
-            state=ORDER_STATE_PENDING,
+            state=ORDER_STATE_PENDING_PAYMENT,
             payment_schedule=[
                 {
                     "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
