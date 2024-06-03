@@ -194,7 +194,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
             owner=owner, is_main=True, initial_issuer_transaction_identifier="1"
         )
         billing_address = BillingAddressDictFactory()
-        order.flow.assign(billing_address=billing_address)
+        order.flow.init(billing_address=billing_address)
         payment_id = f"pay_{order.id}"
 
         payment_payload = backend.create_one_click_payment(
@@ -302,7 +302,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
             owner=owner, is_main=True, initial_issuer_transaction_identifier="1"
         )
         billing_address = BillingAddressDictFactory()
-        order.flow.assign(billing_address=billing_address)
+        order.flow.init(billing_address=billing_address)
         payment_id = f"pay_{order.id}"
 
         payment_payload = backend.create_one_click_payment(
@@ -753,7 +753,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
             owner=order.owner, is_main=True, initial_issuer_transaction_identifier="1"
         )
         billing_address = BillingAddressDictFactory()
-        order.flow.assign(billing_address=billing_address)
+        order.flow.init(billing_address=billing_address)
         payment_id = backend.create_payment(order, billing_address)["payment_id"]
 
         # Notify that payment has been paid

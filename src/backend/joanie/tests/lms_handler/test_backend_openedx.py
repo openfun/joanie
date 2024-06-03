@@ -252,7 +252,7 @@ class OpenEdXLMSBackendTestCase(TestCase):
         order = factories.OrderFactory(product=product, owner=user)
         self.assertEqual(len(responses.calls), 0)
 
-        order.flow.assign()
+        order.flow.init()
 
         self.assertEqual(len(responses.calls), 1)
         self.assertEqual(responses.calls[0].request.url, url)

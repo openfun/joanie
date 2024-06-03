@@ -53,7 +53,7 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
             student_signed_on=timezone.now(),
             submitted_for_signature_on=timezone.now(),
         )
-        order.flow.assign(billing_address=BillingAddressDictFactory())
+        order.flow.init(billing_address=BillingAddressDictFactory())
         token = self.generate_token_from_user(user)
 
         response = self.client.get(
@@ -89,7 +89,7 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
             student_signed_on=timezone.now(),
             submitted_for_signature_on=timezone.now(),
         )
-        order.flow.assign(billing_address=BillingAddressDictFactory())
+        order.flow.init(billing_address=BillingAddressDictFactory())
         token = self.generate_token_from_user(access.user)
 
         response = self.client.get(
@@ -142,7 +142,7 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
                 student_signed_on=timezone.now(),
                 submitted_for_signature_on=timezone.now(),
             )
-            order.flow.assign(billing_address=BillingAddressDictFactory())
+            order.flow.init(billing_address=BillingAddressDictFactory())
 
         token = self.generate_token_from_user(access.user)
 
@@ -172,7 +172,7 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
         access = factories.UserOrganizationAccessFactory(
             organization=order.organization, role="owner"
         )
-        order.flow.assign(billing_address=BillingAddressDictFactory())
+        order.flow.init(billing_address=BillingAddressDictFactory())
         order.submit_for_signature(order.owner)
         order.contract.submitted_for_signature_on = timezone.now()
         order.contract.student_signed_on = timezone.now()
@@ -261,7 +261,7 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
                     signature_backend_reference=f"wlf_{timezone.now()}",
                 )
             )
-            order.flow.assign()
+            order.flow.init()
 
         # Create a contract linked to the same course product relation
         # but for another organization
@@ -300,7 +300,7 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
                 submitted_for_signature_on=timezone.now(),
                 signature_backend_reference=f"wlf_{timezone.now()}",
             )
-            order.flow.assign()
+            order.flow.init()
 
         token = self.generate_token_from_user(access.user)
 
@@ -359,7 +359,7 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
                 submitted_for_signature_on=timezone.now(),
                 signature_backend_reference=f"wlf_{timezone.now()}",
             )
-            order.flow.assign()
+            order.flow.init()
 
         token = self.generate_token_from_user(access.user)
 

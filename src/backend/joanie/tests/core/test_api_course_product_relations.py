@@ -849,7 +849,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
 
         # Starting order state flow should impact the number of seat availabilities in the
         # representation of the product
-        order.flow.assign()
+        order.flow.init()
 
         response = self.client.get(
             f"/api/v1.0/course-product-relations/{relation.id}/",
