@@ -63,9 +63,6 @@ ORDER_STATE_TO_SAVE_PAYMENT_METHOD = (
     "to_save_payment_method"  # order needs a payment method
 )
 ORDER_STATE_TO_SIGN = "to_sign"  # order needs a contract signature
-ORDER_STATE_TO_SIGN_AND_TO_SAVE_PAYMENT_METHOD = (
-    "to_sign_and_to_save_payment_method"  # order needs a contract signature and a payment method
-)  # fmt: skip
 ORDER_STATE_PENDING = "pending"  # payment has failed but can be retried
 ORDER_STATE_CANCELED = "canceled"  # has been canceled
 ORDER_STATE_PENDING_PAYMENT = "pending_payment"  # payment is pending
@@ -78,10 +75,6 @@ ORDER_STATE_CHOICES = (
     (ORDER_STATE_ASSIGNED, _("Assigned")),
     (ORDER_STATE_TO_SAVE_PAYMENT_METHOD, _("To save payment method")),
     (ORDER_STATE_TO_SIGN, _("To sign")),
-    (
-        ORDER_STATE_TO_SIGN_AND_TO_SAVE_PAYMENT_METHOD,
-        _("To sign and to save payment method"),
-    ),
     (ORDER_STATE_PENDING, _("Pending")),
     (ORDER_STATE_CANCELED, pgettext_lazy("As in: the order is canceled.", "Canceled")),
     (
