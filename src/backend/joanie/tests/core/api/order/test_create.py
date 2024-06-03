@@ -464,7 +464,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(
             response.json(),
-            [" 'Assign' transition conditions have not been met"],
+            [" 'Init' transition conditions have not been met"],
         )
 
     def test_api_order_create_authenticated_organization_not_passed_one(self):

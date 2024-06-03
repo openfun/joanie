@@ -1212,7 +1212,7 @@ class OrdersAdminApiTestCase(TestCase):
         order = factories.OrderFactory(
             product=product,
         )
-        order.flow.assign()
+        order.flow.init()
         enrollment = Enrollment.objects.get(course_run=course_run_1)
 
         # Simulate that all enrollments for graded courses made by the order are not passed
@@ -1364,7 +1364,7 @@ class OrdersAdminApiTestCase(TestCase):
             is_graded=True,
         )
         order = factories.OrderFactory(product=product)
-        order.flow.assign()
+        order.flow.init()
 
         self.assertFalse(Certificate.objects.exists())
 

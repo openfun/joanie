@@ -839,7 +839,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
             initial_issuer_transaction_identifier="4575676657929351",
         )
         billing_address = BillingAddressDictFactory()
-        order.flow.assign(billing_address=billing_address)
+        order.flow.init(billing_address=billing_address)
 
         with self.open("lyra/responses/create_zero_click_payment.json") as file:
             json_response = json.loads(file.read())
@@ -1138,7 +1138,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
             owner=order.owner, is_main=True, initial_issuer_transaction_identifier="1"
         )
         billing_address = BillingAddressDictFactory()
-        order.flow.assign(billing_address=billing_address)
+        order.flow.init(billing_address=billing_address)
 
         with self.open("lyra/requests/payment_accepted_no_store_card.json") as file:
             json_request = json.loads(file.read())
