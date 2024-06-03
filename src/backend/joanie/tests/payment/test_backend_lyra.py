@@ -1203,6 +1203,10 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         # - After payment notification has been handled, a credit card exists
         self.assertEqual(CreditCard.objects.filter(token=card_id).count(), 1)
 
+        credit_card = CreditCard.objects.get(token=card_id)
+        # Check that the `credit_card.payment_provider` has in value the payment backend name
+        self.assertEqual(credit_card.payment_provider, backend.name)
+
     @patch.object(BasePaymentBackend, "_do_on_payment_success")
     def test_payment_backend_lyra_handle_notification_one_click_payment(
         self, mock_do_on_payment_success
@@ -1305,6 +1309,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         ]["cardDetails"]["initialIssuerTransactionIdentifier"]
         card = CreditCard.objects.get(token=card_id)
         self.assertEqual(card.owner, owner)
+        self.assertEqual(card.payment_provider, backend.name)
         self.assertEqual(
             card.initial_issuer_transaction_identifier,
             initial_issuer_transaction_identifier,

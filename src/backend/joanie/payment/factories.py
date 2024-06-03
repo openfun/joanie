@@ -26,6 +26,7 @@ class CreditCardFactory(factory.django.DjangoModelFactory):
     owner = factory.SubFactory(UserFactory)
     title = factory.Faker("name")
     token = factory.Sequence(lambda k: f"card_{k:022d}")
+    payment_provider = "dummy"
 
 
 class InvoiceFactory(factory.django.DjangoModelFactory):

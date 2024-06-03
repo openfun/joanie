@@ -105,6 +105,7 @@ class PayplugBackend(BasePaymentBackend):
                 last_numbers=resource.card.last4,
                 owner=order.owner,
                 token=resource.card.id,
+                payment_provider=self.name,
             )
         installment_id = resource.metadata.get("installment_id")
         if resource.failure is not None:

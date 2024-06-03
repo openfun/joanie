@@ -182,6 +182,7 @@ class CreditCardAdmin(admin.ModelAdmin):
         "is_main",
         "has_token",
         "has_initial_issuer_transaction_identifier",
+        "payment_provider",
     )
     list_filter = [RequiredOwnerFilter, "is_main"]
     list_select_related = ["owner"]

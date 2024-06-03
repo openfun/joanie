@@ -347,12 +347,16 @@ class Transaction(BaseModel):
 class CreditCardManager(models.Manager):
     """Custom manager for `CreditCard` model"""
 
-    def get_card_for_owner(self, pk, owner_id):
+    def get_card_for_owner(self, pk, username):
         """
         Retrieve a credit card for a given owner. If no such card exists, a
         CreditCard.DoesNotExist is raised.
         """
-        return self.get(pk=pk, owner_id=owner_id)
+        payment_provider = get_payment_backend()
+
+        return self.get(
+            pk=pk, owner__username=username, payment_provider=payment_provider.name
+        )
 
 
 class CreditCard(BaseModel):
@@ -390,6 +394,9 @@ class CreditCard(BaseModel):
         on_delete=models.CASCADE,
     )
     is_main = models.BooleanField(_("main"), default=False)
+    payment_provider = models.CharField(
+        _("payment provider"), max_length=50, null=True, blank=True
+    )
 
     class Meta:
         db_table = "joanie_credit_card"
@@ -410,6 +417,8 @@ class CreditCard(BaseModel):
         Else if we are promoting an credit card as main, we demote the existing main credit card
         Finally prevent to demote the main credit card directly.
         """
+        if not self.payment_provider:
+            raise ValidationError(_("Payment provider field cannot be None."))
         if not self.owner.credit_cards.exists():
             self.is_main = True
         elif self.is_main is True:
