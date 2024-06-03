@@ -36,9 +36,9 @@ class OrderFlow:
         target=enums.ORDER_STATE_ASSIGNED,
         conditions=[_can_be_assigned],
     )
-    def assign(self, billing_address=None):
+    def init(self, billing_address=None):
         """
-        Transition order to assigned state.
+        Transition order to assigned state, creates an invoice if needed and call the flow update.
         """
         if not self.instance.is_free:
             if billing_address:
