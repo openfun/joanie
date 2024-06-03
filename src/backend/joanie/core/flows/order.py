@@ -202,8 +202,8 @@ class OrderFlow:
         An order state can be set to pending_payment if no installment
         is refused.
         """
-        return any(
-            installment.get("state") not in [enums.PAYMENT_STATE_REFUSED]
+        return not any(
+            installment.get("state") in [enums.PAYMENT_STATE_REFUSED]
             for installment in self.instance.payment_schedule
         )
 
@@ -260,6 +260,8 @@ class OrderFlow:
         Mark order instance as "failed_payment".
         """
 
+    # ruff: noqa: PLR0911
+    # pylint: disable=too-many-return-statements
     def update(self):
         """
         Update the order state.
@@ -268,33 +270,39 @@ class OrderFlow:
             self.complete()
             return
 
-        if self._can_be_state_to_sign_and_to_save_payment_method():
-            self.to_sign_and_to_save_payment_method()
+        if self.instance.state in [
+            enums.ORDER_STATE_ASSIGNED,
+            enums.ORDER_STATE_TO_SIGN,
+            enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
+            enums.ORDER_STATE_TO_SIGN_AND_TO_SAVE_PAYMENT_METHOD,
+        ]:
+            if self._can_be_state_to_sign_and_to_save_payment_method():
+                self.to_sign_and_to_save_payment_method()
+                return
+
+            if self._can_be_state_to_save_payment_method():
+                self.to_save_payment_method()
+                return
+
+            if self._can_be_state_to_sign():
+                self.to_sign()
+                return
+
+            if self._can_be_state_pending():
+                self.pending()
+                return
+
+        if self._can_be_state_pending_payment():
+            self.pending_payment()
             return
 
-        if self._can_be_state_to_save_payment_method():
-            self.to_save_payment_method()
+        if self._can_be_state_no_payment():
+            self.no_payment()
             return
 
-        if self._can_be_state_to_sign():
-            self.to_sign()
+        if self._can_be_state_failed_payment():
+            self.failed_payment()
             return
-
-        if self._can_be_state_pending():
-            self.pending()
-            return
-
-        # TODO: Try to add the following transitions
-        #  if self._can_be_state_pending_payment():
-        #      self.pending_payment()
-        #      return
-        #  if self._can_be_state_no_payment():
-        #      self.no_payment()
-        #      return
-        #  if self._can_be_state_failed_payment():
-        #      self.failed_payment()
-        #      return
-        #  https://github.com/openfun/joanie/pull/801#discussion_r1620640987
 
     @state.on_success()
     def _post_transition_success(self, descriptor, source, target, **kwargs):  # pylint: disable=unused-argument
