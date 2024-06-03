@@ -41,7 +41,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         """
         order = factories.OrderFactory(credit_card=None)
 
-        order.flow.assign(billing_address=BillingAddressDictFactory())
+        order.flow.init(billing_address=BillingAddressDictFactory())
 
         self.assertEqual(order.state, enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD)
 
@@ -52,7 +52,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         """
         order = factories.OrderFactory(product__price=0)
 
-        order.flow.assign()
+        order.flow.init()
 
         self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
@@ -64,7 +64,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         order = factories.OrderFactory()
 
         with self.assertRaises(TransitionNotAllowed):
-            order.flow.assign()
+            order.flow.init()
 
         self.assertEqual(order.state, enums.ORDER_STATE_DRAFT)
 
@@ -76,7 +76,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         order = factories.OrderFactory(organization=None)
 
         with self.assertRaises(TransitionNotAllowed):
-            order.flow.assign()
+            order.flow.init()
 
         self.assertEqual(order.state, enums.ORDER_STATE_DRAFT)
 
@@ -104,7 +104,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             product=product,
             course=course,
         )
-        order.flow.assign()
+        order.flow.init()
 
         # - As target_course has several course runs, user should not be enrolled automatically
         self.assertEqual(Enrollment.objects.count(), 0)
@@ -150,7 +150,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             product=product_1,
             course=course,
         )
-        order.flow.assign()
+        order.flow.init()
         factories.OrderFactory(owner=owner, product=product_2, course=course)
 
         # - As target_course has several course runs, user should not be enrolled automatically
@@ -235,7 +235,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             product=factories.ProductFactory(price="0.00"),
             state=enums.ORDER_STATE_DRAFT,
         )
-        order_free.flow.assign()
+        order_free.flow.init()
 
         self.assertEqual(order_free.flow._can_be_state_completed(), True)  # pylint: disable=protected-access
         # order free are automatically completed without calling the complete method
@@ -510,7 +510,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             course_run=course_run, is_active=True, user=user
         )
         order = factories.OrderFactory(product=product, owner=user)
-        order.flow.assign()
+        order.flow.init()
         order.submit()
 
         self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
@@ -644,7 +644,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         )
         order = factories.OrderFactory(product=product, owner__username="student")
 
-        order.flow.assign()
+        order.flow.init()
 
         self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
