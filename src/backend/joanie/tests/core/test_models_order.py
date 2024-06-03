@@ -555,10 +555,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
                     main_invoice=InvoiceFactory(),
                 )
 
-                if state in [
-                    enums.ORDER_STATE_TO_SIGN,
-                    enums.ORDER_STATE_TO_SIGN_AND_TO_SAVE_PAYMENT_METHOD,
-                ]:
+                if state == enums.ORDER_STATE_TO_SIGN:
                     order.submit_for_signature(user=user)
                 else:
                     with (
