@@ -300,6 +300,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
     def test_models_order_schedule_set_installment_state(self):
         """Check that the state of an installment can be set."""
         order = factories.OrderFactory(
+            state=ORDER_STATE_PENDING_PAYMENT,
             payment_schedule=[
                 {
                     "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
@@ -328,7 +329,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
             ],
         )
 
-        is_first, is_last = order._set_installment_state(
+        order._set_installment_state(
             installment_id="d9356dd7-19a6-4695-b18e-ad93af41424a",
             state=PAYMENT_STATE_PAID,
         )
@@ -363,10 +364,8 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
                 },
             ],
         )
-        self.assertTrue(is_first)
-        self.assertFalse(is_last)
 
-        is_first, is_last = order._set_installment_state(
+        order._set_installment_state(
             installment_id="9fcff723-7be4-4b77-87c6-2865e000f879",
             state=PAYMENT_STATE_REFUSED,
         )
@@ -401,8 +400,6 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
                 },
             ],
         )
-        self.assertFalse(is_first)
-        self.assertTrue(is_last)
 
         with self.assertRaises(ValueError):
             order._set_installment_state(
