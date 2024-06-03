@@ -303,7 +303,6 @@ class OrderFlow:
         # When an order is completed, if the user was previously enrolled for free in any of the
         # course runs targeted by the purchased product, we should change their enrollment mode on
         # these course runs to "verified".
-        # TODO: Should we keep the enrollment.set() call for the canceled state?
         if (
             source
             in [
