@@ -249,6 +249,7 @@ class DummyPaymentBackend(BasePaymentBackend):
                 expiration_month=2,
                 expiration_year=30,
                 last_numbers="1234",
+                payment_provider=self.name,
             )
             return
 

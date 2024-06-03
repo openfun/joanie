@@ -61,8 +61,9 @@ class OrderFlow:
         payment_backend = get_payment_backend()
         if credit_card_id:
             try:
-                credit_card = CreditCard.objects.get(
-                    owner=self.instance.owner, id=credit_card_id
+                credit_card = CreditCard.objects.get_card_for_owner(
+                    pk=credit_card_id,
+                    username=self.instance.owner.username,
                 )
                 return payment_backend.create_one_click_payment(
                     order=self.instance,

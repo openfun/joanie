@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Add `payment_provider` attribute to `CreditCard` model
 - Allow to tokenize a card endpoint for a user
 - Add `state` field to NestedOrderSerializer
 
