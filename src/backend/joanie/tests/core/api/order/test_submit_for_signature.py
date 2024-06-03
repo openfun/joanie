@@ -97,10 +97,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
                 )
                 content = response.json()
 
-                if state in [
-                    enums.ORDER_STATE_TO_SIGN,
-                    enums.ORDER_STATE_TO_SIGN_AND_TO_SAVE_PAYMENT_METHOD,
-                ]:
+                if state == enums.ORDER_STATE_TO_SIGN:
                     self.assertEqual(response.status_code, HTTPStatus.OK)
                     self.assertIsNotNone(content.get("invitation_link"))
                 else:

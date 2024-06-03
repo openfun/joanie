@@ -69,42 +69,17 @@ class OrderFlow:
         self.instance.freeze_target_courses()
         self.update()
 
-    def _can_be_state_to_sign_and_to_save_payment_method(self):
-        """
-        An order state can be set to to_sign_and_to_save_payment_method if the order is not free
-        and has no payment method and an unsigned contract
-        """
-        return (
-            not self.instance.is_free
-            and not self.instance.has_payment_method
-            and self.instance.has_unsigned_contract
-        )
-
-    @state.transition(
-        source=enums.ORDER_STATE_ASSIGNED,
-        target=enums.ORDER_STATE_TO_SIGN_AND_TO_SAVE_PAYMENT_METHOD,
-        conditions=[_can_be_state_to_sign_and_to_save_payment_method],
-    )
-    def to_sign_and_to_save_payment_method(self):
-        """
-        Transition order to to_sign_and_to_save_payment_method state.
-        """
-
     def _can_be_state_to_save_payment_method(self):
         """
         An order state can be set to_save_payment_method if the order is not free
-        and has no payment method and no unsigned contract.
+        and has no payment method.
         """
-        return (
-            not self.instance.is_free
-            and not self.instance.has_payment_method
-            and not self.instance.has_unsigned_contract
-        )
+        return not self.instance.is_free and not self.instance.has_payment_method
 
     @state.transition(
         source=[
             enums.ORDER_STATE_ASSIGNED,
-            enums.ORDER_STATE_TO_SIGN_AND_TO_SAVE_PAYMENT_METHOD,
+            enums.ORDER_STATE_TO_SIGN,
         ],
         target=enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
         conditions=[_can_be_state_to_save_payment_method],
@@ -116,18 +91,12 @@ class OrderFlow:
 
     def _can_be_state_to_sign(self):
         """
-        An order state can be set to to_sign if the order is free
-        or has a payment method and an unsigned contract.
+        An order state can be set to to_sign if the order has an unsigned contract.
         """
-        return (
-            self.instance.is_free or self.instance.has_payment_method
-        ) and self.instance.has_unsigned_contract
+        return self.instance.has_unsigned_contract
 
     @state.transition(
-        source=[
-            enums.ORDER_STATE_ASSIGNED,
-            enums.ORDER_STATE_TO_SIGN_AND_TO_SAVE_PAYMENT_METHOD,
-        ],
+        source=enums.ORDER_STATE_ASSIGNED,
         target=enums.ORDER_STATE_TO_SIGN,
         conditions=[_can_be_state_to_sign],
     )
@@ -148,7 +117,6 @@ class OrderFlow:
     @state.transition(
         source=[
             enums.ORDER_STATE_ASSIGNED,
-            enums.ORDER_STATE_TO_SIGN_AND_TO_SAVE_PAYMENT_METHOD,
             enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
             enums.ORDER_STATE_TO_SIGN,
         ],
@@ -274,18 +242,13 @@ class OrderFlow:
             enums.ORDER_STATE_ASSIGNED,
             enums.ORDER_STATE_TO_SIGN,
             enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
-            enums.ORDER_STATE_TO_SIGN_AND_TO_SAVE_PAYMENT_METHOD,
         ]:
-            if self._can_be_state_to_sign_and_to_save_payment_method():
-                self.to_sign_and_to_save_payment_method()
+            if self._can_be_state_to_sign():
+                self.to_sign()
                 return
 
             if self._can_be_state_to_save_payment_method():
                 self.to_save_payment_method()
-                return
-
-            if self._can_be_state_to_sign():
-                self.to_sign()
                 return
 
             if self._can_be_state_pending():
