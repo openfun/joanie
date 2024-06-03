@@ -187,7 +187,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
             owner=owner, is_main=True, initial_issuer_transaction_identifier="1"
         )
         billing_address = BillingAddressDictFactory()
-        order.flow.assign(billing_address=billing_address)
+        order.flow.init(billing_address=billing_address)
         payment = {
             "id": "pay_0",
             "amount": order.total,
@@ -278,7 +278,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
             "billing_address": billing_address,
             "installment_id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
         }
-        order.flow.assign(billing_address=billing_address)
+        order.flow.init(billing_address=billing_address)
 
         backend.call_do_on_payment_success(order, payment)
 
@@ -381,7 +381,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
             },
             "installment_id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
         }
-        order.flow.assign(billing_address=payment.get("billing_address"))
+        order.flow.init(billing_address=payment.get("billing_address"))
 
         # Only one address should exist
         self.assertEqual(Address.objects.count(), 1)
@@ -483,7 +483,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         CreditCardFactory(
             owner=order.owner, is_main=True, initial_issuer_transaction_identifier="1"
         )
-        order.flow.assign(billing_address=BillingAddressDictFactory())
+        order.flow.init(billing_address=BillingAddressDictFactory())
 
         backend.call_do_on_payment_failure(
             order, installment_id=order.payment_schedule[0]["id"]
@@ -549,7 +549,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         CreditCardFactory(
             owner=order.owner, is_main=True, initial_issuer_transaction_identifier="1"
         )
-        order.flow.assign(billing_address=billing_address)
+        order.flow.init(billing_address=billing_address)
 
         # Create payment and register it
         payment = {
@@ -619,7 +619,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         CreditCardFactory(
             owner=order.owner, is_main=True, initial_issuer_transaction_identifier="1"
         )
-        order.flow.assign(billing_address=billing_address)
+        order.flow.init(billing_address=billing_address)
         payment = {
             "id": "pay_0",
             "amount": order.total,
@@ -682,7 +682,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
             owner=owner, is_main=True, initial_issuer_transaction_identifier="1"
         )
         billing_address = BillingAddressDictFactory()
-        order.flow.assign(billing_address=billing_address)
+        order.flow.init(billing_address=billing_address)
         payment = {
             "id": "pay_0",
             "amount": order.total,
@@ -739,7 +739,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
             ],
         )
         billing_address = BillingAddressDictFactory()
-        order.flow.assign(billing_address=billing_address)
+        order.flow.init(billing_address=billing_address)
         payment = {
             "id": "pay_0",
             "amount": order.total,

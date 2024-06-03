@@ -262,7 +262,7 @@ class EnrollmentModelsTestCase(TestCase):
 
         # - Once the product purchased, enrollment should be allowed
         order = factories.OrderFactory(owner=user, product=product)
-        order.flow.assign()
+        order.flow.init()
         factories.EnrollmentFactory(
             course_run=course_run, user=user, was_created_by_order=True
         )
@@ -345,7 +345,7 @@ class EnrollmentModelsTestCase(TestCase):
         course_relation.course_runs.set([cr1, cr2])
 
         order = factories.OrderFactory(owner=user, product=product)
-        order.flow.assign()
+        order.flow.init()
 
         # - Enroll to cr2 should fail
         with self.assertRaises(ValidationError) as context:
@@ -518,7 +518,7 @@ class EnrollmentModelsTestCase(TestCase):
 
         # Then if user purchases the product, the flag should not have been updated
         order = factories.OrderFactory(owner=user, product=product)
-        order.flow.assign()
+        order.flow.init()
         order_enrollment = order.get_target_enrollments().first()
         self.assertEqual(enrollment, order_enrollment)
         self.assertFalse(order_enrollment.was_created_by_order)
@@ -550,7 +550,7 @@ class EnrollmentModelsTestCase(TestCase):
 
         # Then if user purchases the product, the flag should not have been updated
         order = factories.OrderFactory(owner=user, product=product)
-        order.flow.assign()
+        order.flow.init()
         order_enrollment = order.get_target_enrollments().first()
         self.assertEqual(enrollment, order_enrollment)
         self.assertFalse(order_enrollment.was_created_by_order)
@@ -638,7 +638,7 @@ class EnrollmentModelsTestCase(TestCase):
             course=relation.course,
             organization=relation.organizations.first(),
         )
-        order.flow.assign()
+        order.flow.init()
 
         factories.ContractFactory(
             order=order,
