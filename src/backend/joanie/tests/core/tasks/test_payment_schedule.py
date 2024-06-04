@@ -9,8 +9,8 @@ from zoneinfo import ZoneInfo
 from django.test import TestCase
 
 from joanie.core.enums import (
-    ORDER_STATE_NO_PAYMENT,
     ORDER_STATE_PENDING,
+    ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
     PAYMENT_STATE_PENDING,
     PAYMENT_STATE_REFUSED,
 )
@@ -149,4 +149,4 @@ class PaymentScheduleTasksTestCase(TestCase, BaseLogMixinTestCase):
                 },
             ],
         )
-        self.assertEqual(order.state, ORDER_STATE_NO_PAYMENT)
+        self.assertEqual(order.state, ORDER_STATE_TO_SAVE_PAYMENT_METHOD)
