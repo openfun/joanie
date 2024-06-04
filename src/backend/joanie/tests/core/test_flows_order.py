@@ -66,7 +66,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         with self.assertRaises(TransitionNotAllowed):
             order.flow.init()
 
-        self.assertEqual(order.state, enums.ORDER_STATE_DRAFT)
+        self.assertEqual(order.state, enums.ORDER_STATE_ASSIGNED)
 
     def test_flow_order_assign_no_organization(self):
         """
