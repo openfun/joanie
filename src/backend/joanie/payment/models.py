@@ -358,6 +358,17 @@ class CreditCardManager(models.Manager):
             pk=pk, owner__username=username, payment_provider=payment_provider.name
         )
 
+    def get_cards_for_owner(self, username):
+        """
+        Retrieve all the credit cards for a given owner that are tokenized by the
+        active payment provider
+        """
+        payment_provider = get_payment_backend()
+
+        return self.filter(
+            owner__username=username, payment_provider=payment_provider.name
+        )
+
 
 class CreditCard(BaseModel):
     """

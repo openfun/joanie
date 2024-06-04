@@ -21,8 +21,7 @@ class CreditCardModelTestCase(TestCase):
         CreditCard.DoesNotExist.
         """
         user = UserFactory()
-        payment_provider = "dummy"
-        credit_card = CreditCardFactory(owner=user, payment_provider=payment_provider)
+        credit_card = CreditCardFactory(owner=user)
         another_user = UserFactory()
         another_credit_card = CreditCardFactory(owner=another_user)
 
@@ -63,3 +62,25 @@ class CreditCardModelTestCase(TestCase):
             str(context.exception),
             "{'__all__': ['Payment provider field cannot be None.']}",
         )
+
+    def test_models_credit_card_get_cards_for_owner(self):
+        """
+        The manager method `get_cards_for_owner` should retrieve the credit cards of a given
+        user by passing their username to the method parameter.
+        Only the cards with the active payment backend should be retrieved.
+        """
+        owner = UserFactory()
+        CreditCardFactory.create_batch(3, owner=owner)
+        CreditCardFactory(owner=owner, payment_provider="lyra")
+        another_owner = UserFactory()
+        CreditCardFactory(owner=another_owner)
+
+        results = CreditCard.objects.get_cards_for_owner(username=owner.username)
+
+        # There should be 4 existing cards for the owner overall
+        self.assertEqual(CreditCard.objects.filter(owner=owner).count(), 4)
+        # But only 3 cards should be retrieve because of the active payment backend
+        self.assertEqual(results.count(), 3)
+        for card in results:
+            self.assertEqual(card.payment_provider, "dummy")
+            self.assertEqual(card.owner.id, owner.id)

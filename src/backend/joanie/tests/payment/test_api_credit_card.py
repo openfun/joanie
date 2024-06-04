@@ -66,14 +66,21 @@ class CreditCardAPITestCase(BaseAPITestCase):
         self.assertTrue(User.objects.filter(username=username).exists())
 
     def test_api_credit_card_get_credit_cards_list(self):
-        """Retrieve all authenticated user's credit cards is allowed."""
+        """
+        Authenticated user should be able to retrieve all his credit cards
+        with the active payment backend.
+        """
         user = UserFactory()
         token = self.generate_token_from_user(user)
+        # Create 2 cards for the user with the active payment_provider name
         cards = CreditCardFactory.create_batch(2, owner=user)
+        # Create 1 card for the user with another payment_provider name
+        CreditCardFactory(owner=user, payment_provider="lyra")
 
         response = self.client.get(
             "/api/v1.0/credit-cards/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
+
         self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         results = content.pop("results")
@@ -81,6 +88,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         self.assertEqual(
             [result["id"] for result in results], [str(card.id) for card in cards]
         )
+        # We should find 2 credit cards in count out of 3 for the user
         self.assertEqual(
             content,
             {
