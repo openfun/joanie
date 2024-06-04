@@ -38,38 +38,10 @@ class OrderFlow:
         target=enums.ORDER_STATE_ASSIGNED,
         conditions=[_can_be_assigned],
     )
-    def init(self, billing_address=None):
+    def assign(self):
         """
-        Transition order to assigned state, creates an invoice if needed and call the flow update.
+        Transition order to assigned state.
         """
-        if not self.instance.is_free:
-            if billing_address:
-                Address = apps.get_model("core", "Address")  # pylint: disable=invalid-name
-                address, _ = Address.objects.get_or_create(
-                    **billing_address,
-                    defaults={
-                        "owner": self.instance.owner,
-                        "is_reusable": False,
-                        "title": f"Billing address of order {self.instance.id}",
-                    },
-                )
-
-                # Create the main invoice
-                Invoice = apps.get_model("payment", "Invoice")  # pylint: disable=invalid-name
-                Invoice.objects.get_or_create(
-                    order=self.instance,
-                    defaults={
-                        "total": self.instance.total,
-                        "recipient_address": address,
-                    },
-                )
-            else:
-                raise fsm.TransitionNotAllowed(
-                    "Billing address is required for non-free orders."
-                )
-
-        self.instance.freeze_target_courses()
-        self.update()
 
     def _can_be_state_to_save_payment_method(self):
         """
@@ -230,6 +202,41 @@ class OrderFlow:
         """
         Mark order instance as "failed_payment".
         """
+
+    # TODO: move this method to order model
+    def init(self, billing_address=None):
+        """
+        Transition order to assigned state, creates an invoice if needed and call the flow update.
+        """
+        self.assign()
+        if not self.instance.is_free:
+            if billing_address:
+                Address = apps.get_model("core", "Address")  # pylint: disable=invalid-name
+                address, _ = Address.objects.get_or_create(
+                    **billing_address,
+                    defaults={
+                        "owner": self.instance.owner,
+                        "is_reusable": False,
+                        "title": f"Billing address of order {self.instance.id}",
+                    },
+                )
+
+                # Create the main invoice
+                Invoice = apps.get_model("payment", "Invoice")  # pylint: disable=invalid-name
+                Invoice.objects.get_or_create(
+                    order=self.instance,
+                    defaults={
+                        "total": self.instance.total,
+                        "recipient_address": address,
+                    },
+                )
+            else:
+                raise fsm.TransitionNotAllowed(
+                    "Billing address is required for non-free orders."
+                )
+
+        self.instance.freeze_target_courses()
+        self.update()
 
     def update(self):
         """
