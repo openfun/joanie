@@ -1,5 +1,7 @@
 """Order flows."""
 
+from contextlib import suppress
+
 from django.apps import apps
 from django.utils import timezone
 
@@ -80,6 +82,7 @@ class OrderFlow:
         source=[
             enums.ORDER_STATE_ASSIGNED,
             enums.ORDER_STATE_TO_SIGN,
+            enums.ORDER_STATE_PENDING,
         ],
         target=enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
         conditions=[_can_be_state_to_save_payment_method],
@@ -228,44 +231,22 @@ class OrderFlow:
         Mark order instance as "failed_payment".
         """
 
-    # ruff: noqa: PLR0911
-    # pylint: disable=too-many-return-statements
     def update(self):
         """
         Update the order state.
         """
-        if self._can_be_state_completed():
-            self.complete()
-            return
-
-        if self.instance.state in [
-            enums.ORDER_STATE_ASSIGNED,
-            enums.ORDER_STATE_TO_SIGN,
-            enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
+        for transition in [
+            self.complete,
+            self.to_sign,
+            self.to_save_payment_method,
+            self.pending,
+            self.pending_payment,
+            self.no_payment,
+            self.failed_payment,
         ]:
-            if self._can_be_state_to_sign():
-                self.to_sign()
+            with suppress(fsm.TransitionNotAllowed):
+                transition()
                 return
-
-            if self._can_be_state_to_save_payment_method():
-                self.to_save_payment_method()
-                return
-
-            if self._can_be_state_pending():
-                self.pending()
-                return
-
-        if self._can_be_state_pending_payment():
-            self.pending_payment()
-            return
-
-        if self._can_be_state_no_payment():
-            self.no_payment()
-            return
-
-        if self._can_be_state_failed_payment():
-            self.failed_payment()
-            return
 
     @state.on_success()
     def _post_transition_success(self, descriptor, source, target, **kwargs):  # pylint: disable=unused-argument
