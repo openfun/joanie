@@ -424,7 +424,7 @@ class OrderViewSet(
                 status=HTTPStatus.BAD_REQUEST,
             )
 
-        serializer.instance.flow.init(
+        serializer.instance.init_flow(
             billing_address=request.data.get("billing_address")
         )
 
