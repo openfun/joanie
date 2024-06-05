@@ -235,6 +235,8 @@ class OrderFlow:
                 )
 
         self.instance.freeze_target_courses()
+        if not self.instance.is_free and self.instance.has_contract:
+            self.instance.generate_schedule()
         self.update()
 
     def update(self):

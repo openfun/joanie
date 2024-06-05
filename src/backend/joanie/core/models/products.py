@@ -595,6 +595,19 @@ class Order(BaseModel):
         )
 
     @property
+    def has_contract(self):
+        """
+        Return True if the order has an unsigned contract.
+        """
+        try:
+            return self.contract is not None  # pylint: disable=no-member
+        except Contract.DoesNotExist:
+            # TODO: return this:
+            #  return self.product.contract_definition is None
+            #  https://github.com/openfun/joanie/pull/801#discussion_r1618553557
+            return False
+
+    @property
     def has_unsigned_contract(self):
         """
         Return True if the order has an unsigned contract.

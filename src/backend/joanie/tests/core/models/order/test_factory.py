@@ -115,6 +115,9 @@ class TestOrderGeneratorFactory(TestCase):
             is_free=False,
             has_payment_method=True,
         )
+        self.assertEqual(order.payment_schedule[0]["state"], PAYMENT_STATE_PENDING)
+        self.assertEqual(order.payment_schedule[1]["state"], PAYMENT_STATE_PENDING)
+        self.assertEqual(order.payment_schedule[2]["state"], PAYMENT_STATE_PENDING)
 
     def test_factory_order_pending_payment(self):
         """Test the OrderGeneratorFactory with the state ORDER_STATE_PENDING_PAYMENT."""
@@ -126,6 +129,9 @@ class TestOrderGeneratorFactory(TestCase):
             is_free=False,
             has_payment_method=True,
         )
+        self.assertEqual(order.payment_schedule[0]["state"], PAYMENT_STATE_PAID)
+        self.assertEqual(order.payment_schedule[1]["state"], PAYMENT_STATE_PENDING)
+        self.assertEqual(order.payment_schedule[2]["state"], PAYMENT_STATE_PENDING)
 
     def test_factory_order_no_payment(self):
         """Test the OrderGeneratorFactory with the state ORDER_STATE_NO_PAYMENT."""
@@ -137,6 +143,9 @@ class TestOrderGeneratorFactory(TestCase):
             is_free=False,
             has_payment_method=True,
         )
+        self.assertEqual(order.payment_schedule[0]["state"], PAYMENT_STATE_REFUSED)
+        self.assertEqual(order.payment_schedule[1]["state"], PAYMENT_STATE_PENDING)
+        self.assertEqual(order.payment_schedule[2]["state"], PAYMENT_STATE_PENDING)
 
     def test_factory_order_failed_payment(self):
         """Test the OrderGeneratorFactory with the state ORDER_STATE_FAILED_PAYMENT."""
@@ -148,6 +157,9 @@ class TestOrderGeneratorFactory(TestCase):
             is_free=False,
             has_payment_method=True,
         )
+        self.assertEqual(order.payment_schedule[0]["state"], PAYMENT_STATE_PAID)
+        self.assertEqual(order.payment_schedule[1]["state"], PAYMENT_STATE_REFUSED)
+        self.assertEqual(order.payment_schedule[2]["state"], PAYMENT_STATE_PENDING)
 
     def test_factory_order_completed(self):
         """Test the OrderGeneratorFactory with the state ORDER_STATE_COMPLETED."""
@@ -159,6 +171,9 @@ class TestOrderGeneratorFactory(TestCase):
             is_free=False,
             has_payment_method=True,
         )
+        self.assertEqual(order.payment_schedule[0]["state"], PAYMENT_STATE_PAID)
+        self.assertEqual(order.payment_schedule[1]["state"], PAYMENT_STATE_PAID)
+        self.assertEqual(order.payment_schedule[2]["state"], PAYMENT_STATE_PAID)
 
     def test_factory_order_canceled(self):
         """Test the OrderGeneratorFactory with the state ORDER_STATE_CANCELED."""
@@ -170,3 +185,6 @@ class TestOrderGeneratorFactory(TestCase):
             is_free=False,
             has_payment_method=True,
         )
+        self.assertEqual(order.payment_schedule[0]["state"], PAYMENT_STATE_PENDING)
+        self.assertEqual(order.payment_schedule[1]["state"], PAYMENT_STATE_PENDING)
+        self.assertEqual(order.payment_schedule[2]["state"], PAYMENT_STATE_PENDING)

@@ -833,6 +833,31 @@ class OrderGeneratorFactory(factory.django.DjangoModelFactory):
             )
             self.flow.init(billing_address=extracted)
 
+        if (
+            target_state
+            in [
+                enums.ORDER_STATE_PENDING_PAYMENT,
+                enums.ORDER_STATE_NO_PAYMENT,
+                enums.ORDER_STATE_FAILED_PAYMENT,
+                enums.ORDER_STATE_COMPLETED,
+            ]
+            and not self.is_free
+        ):
+            if target_state == enums.ORDER_STATE_PENDING_PAYMENT:
+                self.payment_schedule[0]["state"] = enums.PAYMENT_STATE_PAID
+            if target_state == enums.ORDER_STATE_NO_PAYMENT:
+                self.payment_schedule[0]["state"] = enums.PAYMENT_STATE_REFUSED
+            if target_state == enums.ORDER_STATE_FAILED_PAYMENT:
+                self.flow.update()
+                self.payment_schedule[0]["state"] = enums.PAYMENT_STATE_PAID
+                self.payment_schedule[1]["state"] = enums.PAYMENT_STATE_REFUSED
+            if target_state == enums.ORDER_STATE_COMPLETED:
+                self.flow.update()
+                for payment in self.payment_schedule:
+                    payment["state"] = enums.PAYMENT_STATE_PAID
+            self.save()
+            self.flow.update()
+
         if target_state == enums.ORDER_STATE_CANCELED:
             self.flow.cancel()
 
