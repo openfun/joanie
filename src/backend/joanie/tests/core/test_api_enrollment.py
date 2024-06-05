@@ -951,7 +951,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         )
         product = factories.ProductFactory(target_courses=[target_course], price="0.00")
         order = factories.OrderFactory(owner=user, product=product)
-        order.flow.init()
+        order.init_flow()
 
         # Create a pre-existing enrollment and try to enroll to this course's second course run
         factories.EnrollmentFactory(

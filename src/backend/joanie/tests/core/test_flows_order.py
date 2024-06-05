@@ -7,6 +7,7 @@ import json
 from http import HTTPStatus
 from unittest import mock
 
+from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.test.utils import override_settings
 
@@ -41,7 +42,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         """
         order = factories.OrderFactory(credit_card=None)
 
-        order.flow.init(billing_address=BillingAddressDictFactory())
+        order.init_flow(billing_address=BillingAddressDictFactory())
 
         self.assertEqual(order.state, enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD)
 
@@ -52,7 +53,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         """
         order = factories.OrderFactory(product__price=0)
 
-        order.flow.init()
+        order.init_flow()
 
         self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
@@ -63,8 +64,8 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         """
         order = factories.OrderFactory()
 
-        with self.assertRaises(TransitionNotAllowed):
-            order.flow.init()
+        with self.assertRaises(ValidationError):
+            order.init_flow()
 
         self.assertEqual(order.state, enums.ORDER_STATE_ASSIGNED)
 
@@ -76,7 +77,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         order = factories.OrderFactory(organization=None)
 
         with self.assertRaises(TransitionNotAllowed):
-            order.flow.init()
+            order.init_flow()
 
         self.assertEqual(order.state, enums.ORDER_STATE_DRAFT)
 
@@ -104,7 +105,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             product=product,
             course=course,
         )
-        order.flow.init()
+        order.init_flow()
 
         # - As target_course has several course runs, user should not be enrolled automatically
         self.assertEqual(Enrollment.objects.count(), 0)
@@ -150,7 +151,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             product=product_1,
             course=course,
         )
-        order.flow.init()
+        order.init_flow()
         factories.OrderFactory(owner=owner, product=product_2, course=course)
 
         # - As target_course has several course runs, user should not be enrolled automatically
@@ -235,7 +236,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             product=factories.ProductFactory(price="0.00"),
             state=enums.ORDER_STATE_DRAFT,
         )
-        order_free.flow.init()
+        order_free.init_flow()
 
         self.assertEqual(order_free.flow._can_be_state_completed(), True)  # pylint: disable=protected-access
         # order free are automatically completed without calling the complete method
@@ -318,7 +319,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
 
         # Create an order
         order = factories.OrderFactory(product=product, owner=user)
-        order.flow.init()
+        order.init_flow()
 
         self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
@@ -430,7 +431,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
 
         # Create an order
         order = factories.OrderFactory(product=product, owner=user)
-        order.flow.init()
+        order.init_flow()
 
         self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
@@ -510,8 +511,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             course_run=course_run, is_active=True, user=user
         )
         order = factories.OrderFactory(product=product, owner=user)
-        order.flow.init()
-        order.submit()
+        order.init_flow()
 
         self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
@@ -644,7 +644,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         )
         order = factories.OrderFactory(product=product, owner__username="student")
 
-        order.flow.init()
+        order.init_flow()
 
         self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
@@ -732,7 +732,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
 
         # - Submit the order to trigger the validation as it is free
         order = factories.OrderFactory(product=product)
-        order.flow.init()
+        order.init_flow()
 
         order.refresh_from_db()
         self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
