@@ -20,7 +20,7 @@ class EnrollUserToCourseRunOrderModelsTestCase(TestCase):
         self.assertEqual(Enrollment.objects.count(), 0)
 
         # - Completing the order should automatically enroll user to course run
-        order.flow.init()
+        order.init_flow()
 
         self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
