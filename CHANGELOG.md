@@ -15,6 +15,8 @@ and this project adheres to
 
 ### Changed
 
+- Terms and conditions are stored into contract definition body
+  and `has_consent_to_terms` been removed from `Order` model
 - Add `currency` field to `OrderPaymentSerializer` serializer
 - Allow an order with `no_payment` state to pay for failed installment
   on a payment schedule

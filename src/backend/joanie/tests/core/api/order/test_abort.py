@@ -91,7 +91,6 @@ class OrderAbortApiTest(BaseAPITestCase):
             "product_id": str(product.id),
             "course_code": course.code,
             "billing_address": billing_address,
-            "has_consent_to_terms": True,
         }
         response = self.client.post(
             "/api/v1.0/orders/",

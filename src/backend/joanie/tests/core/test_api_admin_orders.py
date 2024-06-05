@@ -564,7 +564,6 @@ class OrdersAdminApiTestCase(TestCase):
                 "id": str(order.id),
                 "created_on": format_date(order.created_on),
                 "state": order.state,
-                "has_consent_to_terms": False,
                 "owner": {
                     "id": str(order.owner.id),
                     "username": order.owner.username,
@@ -710,7 +709,6 @@ class OrdersAdminApiTestCase(TestCase):
                 "id": str(order.id),
                 "created_on": format_date(order.created_on),
                 "state": order.state,
-                "has_consent_to_terms": False,
                 "owner": {
                     "id": str(order.owner.id),
                     "username": order.owner.username,

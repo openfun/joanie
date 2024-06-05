@@ -60,7 +60,6 @@ class OrderCreateApiTest(BaseAPITestCase):
             "course_code": course.code,
             "organization_id": str(organization.id),
             "product_id": str(product.id),
-            "has_consent_to_terms": True,
         }
         token = self.get_user_token("panoramix")
 
@@ -211,7 +210,6 @@ class OrderCreateApiTest(BaseAPITestCase):
             "enrollment_id": str(enrollment.id),
             "organization_id": str(organization.id),
             "product_id": str(product.id),
-            "has_consent_to_terms": True,
         }
         token = self.generate_token_from_user(enrollment.user)
 
@@ -380,7 +378,6 @@ class OrderCreateApiTest(BaseAPITestCase):
             "enrollment_id": str(enrollment.id),
             "organization_id": str(organization.id),
             "product_id": str(product.id),
-            "has_consent_to_terms": True,
         }
         token = self.get_user_token("panoramix")
 
@@ -419,7 +416,6 @@ class OrderCreateApiTest(BaseAPITestCase):
         data = {
             "course_code": course.code,
             "product_id": str(product.id),
-            "has_consent_to_terms": True,
         }
         token = self.get_user_token("panoramix")
 
@@ -461,7 +457,6 @@ class OrderCreateApiTest(BaseAPITestCase):
         data = {
             "course_code": course.code,
             "product_id": str(product.id),
-            "has_consent_to_terms": True,
         }
         token = self.get_user_token("panoramix")
 
@@ -530,7 +525,6 @@ class OrderCreateApiTest(BaseAPITestCase):
         data = {
             "course_code": course.code,
             "product_id": str(product.id),
-            "has_consent_to_terms": True,
         }
         token = self.get_user_token("panoramix")
 
@@ -579,7 +573,6 @@ class OrderCreateApiTest(BaseAPITestCase):
             "product_id": str(product.id),
             "id": uuid.uuid4(),
             "amount": 0.00,
-            "has_consent_to_terms": True,
         }
         token = self.get_user_token("panoramix")
 
@@ -719,7 +712,6 @@ class OrderCreateApiTest(BaseAPITestCase):
             "course_code": course.code,
             "organization_id": str(organization.id),
             "product_id": str(product.id),
-            "has_consent_to_terms": True,
         }
         token = self.get_user_token("panoramix")
 
@@ -768,7 +760,6 @@ class OrderCreateApiTest(BaseAPITestCase):
             "course_code": course.code,
             "organization_id": str(organization.id),
             "product_id": str(product.id),
-            "has_consent_to_terms": True,
         }
         token = self.get_user_token("panoramix")
 
@@ -819,7 +810,6 @@ class OrderCreateApiTest(BaseAPITestCase):
             response.json(),
             {
                 "product_id": ["This field is required."],
-                "has_consent_to_terms": ["This field is required."],
             },
         )
 
@@ -830,7 +820,6 @@ class OrderCreateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
             data={
                 "product_id": str(product.id),
-                "has_consent_to_terms": True,
             },
         )
 
@@ -842,55 +831,55 @@ class OrderCreateApiTest(BaseAPITestCase):
             {"__all__": ["Either the course or the enrollment field is required."]},
         )
 
-    def test_api_order_create_authenticated_product_with_contract_require_terms_consent(
-        self,
-    ):
-        """
-        The payload must contain has_consent_to_terms sets to True to create an order.
-        """
-        relation = factories.CourseProductRelationFactory()
-        token = self.get_user_token("panoramix")
+    # def test_api_order_create_authenticated_product_with_contract_require_terms_consent(
+    #     self,
+    # ):
+    #     """
+    #     The payload must contain has_consent_to_terms sets to True to create an order.
+    #     """
+    #     relation = factories.CourseProductRelationFactory()
+    #     token = self.get_user_token("panoramix")
 
-        data = {
-            "product_id": str(relation.product.id),
-            "course_code": relation.course.code,
-        }
+    #     data = {
+    #         "product_id": str(relation.product.id),
+    #         "course_code": relation.course.code,
+    #     }
 
-        # - `has_consent_to_terms` is required
-        response = self.client.post(
-            "/api/v1.0/orders/",
-            content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-            data=data,
-        )
-        self.assertContains(
-            response,
-            '{"has_consent_to_terms":["This field is required."]}',
-            status_code=HTTPStatus.BAD_REQUEST,
-        )
+    #     # - `has_consent_to_terms` is required
+    #     response = self.client.post(
+    #         "/api/v1.0/orders/",
+    #         content_type="application/json",
+    #         HTTP_AUTHORIZATION=f"Bearer {token}",
+    #         data=data,
+    #     )
+    #     self.assertContains(
+    #         response,
+    #         '{"has_consent_to_terms":["This field is required."]}',
+    #         status_code=HTTPStatus.BAD_REQUEST,
+    #     )
 
-        # - `has_consent_to_terms` must be set to True
-        data.update({"has_consent_to_terms": False})
-        response = self.client.post(
-            "/api/v1.0/orders/",
-            content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-            data=data,
-        )
-        self.assertContains(
-            response,
-            '{"has_consent_to_terms":["You must accept the terms and conditions to proceed."]}',
-            status_code=HTTPStatus.BAD_REQUEST,
-        )
+    #     # - `has_consent_to_terms` must be set to True
+    #     data.update({"has_consent_to_terms": False})
+    #     response = self.client.post(
+    #         "/api/v1.0/orders/",
+    #         content_type="application/json",
+    #         HTTP_AUTHORIZATION=f"Bearer {token}",
+    #         data=data,
+    #     )
+    #     self.assertContains(
+    #         response,
+    #         '{"has_consent_to_terms":["You must accept the terms and conditions to proceed."]}',
+    #         status_code=HTTPStatus.BAD_REQUEST,
+    #     )
 
-        data.update({"has_consent_to_terms": True})
-        response = self.client.post(
-            "/api/v1.0/orders/",
-            content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-            data=data,
-        )
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+    #     data.update({"has_consent_to_terms": True})
+    #     response = self.client.post(
+    #         "/api/v1.0/orders/",
+    #         content_type="application/json",
+    #         HTTP_AUTHORIZATION=f"Bearer {token}",
+    #         data=data,
+    #     )
+    #     self.assertEqual(response.status_code, HTTPStatus.CREATED)
 
     def test_api_order_create_authenticated_product_course_unicity(self):
         """
@@ -910,7 +899,6 @@ class OrderCreateApiTest(BaseAPITestCase):
             "product_id": str(product.id),
             "course_code": course.code,
             "organization_id": str(organization.id),
-            "has_consent_to_terms": True,
         }
 
         response = self.client.post(
@@ -953,7 +941,6 @@ class OrderCreateApiTest(BaseAPITestCase):
             "product_id": str(product.id),
             "course_code": course.code,
             "organization_id": str(organization.id),
-            "has_consent_to_terms": True,
         }
 
         response = self.client.post(
@@ -999,7 +986,6 @@ class OrderCreateApiTest(BaseAPITestCase):
             "organization_id": str(organization.id),
             "product_id": str(product.id),
             "billing_address": billing_address,
-            "has_consent_to_terms": True,
         }
 
         with self.assertNumQueries(23):
@@ -1169,7 +1155,6 @@ class OrderCreateApiTest(BaseAPITestCase):
             "product_id": str(product.id),
             "billing_address": billing_address,
             "credit_card_id": str(credit_card.id),
-            "has_consent_to_terms": True,
         }
 
         response = self.client.post(
@@ -1268,7 +1253,6 @@ class OrderCreateApiTest(BaseAPITestCase):
             "organization_id": str(organization.id),
             "product_id": str(product.id),
             "billing_address": billing_address,
-            "has_consent_to_terms": True,
         }
 
         response = self.client.post(
@@ -1321,7 +1305,6 @@ class OrderCreateApiTest(BaseAPITestCase):
             "order_group_id": str(order_group.id),
             "product_id": str(product.id),
             "billing_address": billing_address,
-            "has_consent_to_terms": True,
         }
         token = self.generate_token_from_user(user)
 
@@ -1371,7 +1354,6 @@ class OrderCreateApiTest(BaseAPITestCase):
             "order_group_id": str(order_group.id),
             "product_id": str(product.id),
             "billing_address": billing_address,
-            "has_consent_to_terms": True,
         }
         token = self.generate_token_from_user(user)
 
@@ -1402,7 +1384,6 @@ class OrderCreateApiTest(BaseAPITestCase):
             "course_code": course.code,
             "organization_id": str(organization.id),
             "product_id": str(product.id),
-            "has_consent_to_terms": True,
         }
         response = self.client.post(
             "/api/v1.0/orders/",
@@ -1439,7 +1420,6 @@ class OrderCreateApiTest(BaseAPITestCase):
             "course_code": course.code,
             "organization_id": str(organization.id),
             "product_id": str(product.id),
-            "has_consent_to_terms": True,
         }
 
         response = self.client.post(
@@ -1488,7 +1468,6 @@ class OrderCreateApiTest(BaseAPITestCase):
             "organization_id": str(relation.organizations.first().id),
             "product_id": str(product.id),
             "billing_address": billing_address,
-            "has_consent_to_terms": True,
         }
         token = self.generate_token_from_user(user)
 
@@ -1532,7 +1511,6 @@ class OrderCreateApiTest(BaseAPITestCase):
             "organization_id": str(organization.id),
             "product_id": str(relation.product.id),
             "billing_address": billing_address,
-            "has_consent_to_terms": True,
         }
 
         response = self.client.post(
@@ -1581,7 +1559,6 @@ class OrderCreateApiTest(BaseAPITestCase):
             "organization_id": str(relation.organizations.first().id),
             "product_id": str(product.id),
             "billing_address": billing_address,
-            "has_consent_to_terms": True,
         }
         token = self.generate_token_from_user(user)
 
@@ -1636,7 +1613,6 @@ class OrderCreateApiTest(BaseAPITestCase):
             "organization_id": str(relation.organizations.first().id),
             "product_id": str(product.id),
             "billing_address": billing_address,
-            "has_consent_to_terms": True,
         }
         token = self.generate_token_from_user(user)
 
