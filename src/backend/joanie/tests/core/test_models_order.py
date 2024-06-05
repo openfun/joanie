@@ -72,7 +72,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         # Create a free product
         product = factories.ProductFactory(courses=courses, price=0)
         order = factories.OrderFactory(product=product, total=0.00)
-        order.flow.init()
+        order.init_flow()
 
         self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
@@ -399,7 +399,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             price="0.00", target_courses=[cr1.course, cr2.course]
         )
         order = factories.OrderFactory(product=product)
-        order.flow.init()
+        order.init_flow()
 
         # - As the two product's target courses have only one course run, order owner
         #   should have been automatically enrolled to those course runs.
@@ -430,7 +430,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
 
         # - Create an order link to the product
         order = factories.OrderFactory(product=product)
-        order.flow.init()
+        order.init_flow()
 
         # - Update product course relation, order course relation should not be impacted
         relation.course_runs.set([])
@@ -462,7 +462,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         self.assertEqual(order.target_courses.count(), 0)
 
         # Then we launch the order flow
-        order.flow.init(billing_address=BillingAddressDictFactory())
+        order.init_flow(billing_address=BillingAddressDictFactory())
 
         self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
         self.assertEqual(order.target_courses.count(), 2)
@@ -485,7 +485,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
         factories.ContractFactory(order=order)
-        order.flow.init(billing_address=BillingAddressDictFactory())
+        order.init_flow(billing_address=BillingAddressDictFactory())
 
         order.submit_for_signature(user=user)
         now = django_timezone.now()
@@ -596,7 +596,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
         factories.ContractFactory(order=order)
-        order.flow.init(billing_address=BillingAddressDictFactory())
+        order.init_flow(billing_address=BillingAddressDictFactory())
 
         raw_invitation_link = order.submit_for_signature(user=user)
 
@@ -642,7 +642,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             submitted_for_signature_on=django_timezone.now(),
         )
         billing_address = order.main_invoice.recipient_address.to_dict()
-        order.flow.init(billing_address=billing_address)
+        order.init_flow(billing_address=billing_address)
 
         invitation_url = order.submit_for_signature(user=user)
 
@@ -680,7 +680,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             context="content",
             submitted_for_signature_on=django_timezone.now(),
         )
-        order.flow.init(billing_address=BillingAddressDictFactory())
+        order.init_flow(billing_address=BillingAddressDictFactory())
 
         invitation_url = order.submit_for_signature(user=user)
 
@@ -966,7 +966,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         factories.ContractFactory(order=order)
         billing_address = user_address.to_dict()
         billing_address.pop("owner")
-        order.flow.init(billing_address=billing_address)
+        order.init_flow(billing_address=billing_address)
         factories.OrderTargetCourseRelationFactory(
             course=relation.course, order=order, position=1
         )
