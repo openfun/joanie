@@ -6,6 +6,7 @@ import itertools
 import logging
 from collections import defaultdict
 
+from django.apps import apps
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -21,7 +22,7 @@ from joanie.core import enums
 from joanie.core.exceptions import CertificateGenerationError
 from joanie.core.fields.schedule import OrderPaymentScheduleEncoder
 from joanie.core.flows.order import OrderFlow
-from joanie.core.models.accounts import User
+from joanie.core.models.accounts import Address, User
 from joanie.core.models.activity_logs import ActivityLog
 from joanie.core.models.base import BaseModel
 from joanie.core.models.certifications import Certificate
@@ -1141,6 +1142,47 @@ class Order(BaseModel):
         raise DeprecationWarning(
             "Access denied to has_consent_to_terms: deprecated field"
         )
+
+    def _get_address(self, billing_address):
+        """
+        Returns an Address instance for a billing address.
+        """
+        if not billing_address:
+            raise ValidationError("Billing address is required for non-free orders.")
+
+        address, _ = Address.objects.get_or_create(
+            **billing_address,
+            defaults={
+                "owner": self.owner,
+                "is_reusable": False,
+                "title": f"Billing address of order {self.id}",
+            },
+        )
+        return address
+
+    def _create_main_invoice(self, billing_address):
+        """
+        Create the main invoice for the order.
+        """
+        address = self._get_address(billing_address)
+        Invoice = apps.get_model("payment", "Invoice")  # pylint: disable=invalid-name
+        Invoice.objects.get_or_create(
+            order=self,
+            defaults={"total": self.total, "recipient_address": address},
+        )
+
+    def init_flow(self, billing_address=None):
+        """
+        Transition order to assigned state, creates an invoice if needed and call the flow update.
+        """
+        self.flow.assign()
+        if not self.is_free:
+            self._create_main_invoice(billing_address)
+
+        self.freeze_target_courses()
+        if not self.is_free and self.has_contract:
+            self.generate_schedule()
+        self.flow.update()
 
 
 class OrderTargetCourseRelation(BaseModel):
