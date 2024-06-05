@@ -50,7 +50,7 @@ class UtilsCourseProductRelationTestCase(TestCase):
             course=course_product_relation.course,
         )
         for order in orders:
-            order.flow.init()
+            order.init_flow()
 
         result = get_orders(course_product_relation=course_product_relation)
 
@@ -96,7 +96,7 @@ class UtilsCourseProductRelationTestCase(TestCase):
             course=course_product_relation.course,
         )
         for order in orders:
-            order.flow.init()
+            order.init_flow()
             factories.OrderCertificateFactory(order=order)
 
         generated_certificates_queryset = get_generated_certificates(
