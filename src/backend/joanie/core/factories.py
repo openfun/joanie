@@ -1,3 +1,4 @@
+# pylint: disable=too-many-lines
 # ruff: noqa: S311
 """
 Core application factories
@@ -675,6 +676,165 @@ class OrderFactory(factory.django.DjangoModelFactory):
                 return transaction.invoice
 
         return None
+
+
+class OrderGeneratorFactory(factory.django.DjangoModelFactory):
+    """A factory to create an Order"""
+
+    class Meta:
+        model = models.Order
+
+    product = factory.SubFactory(ProductFactory)
+    course = factory.LazyAttribute(lambda o: o.product.courses.order_by("?").first())
+    total = factory.LazyAttribute(lambda o: o.product.price)
+    enrollment = None
+    state = enums.ORDER_STATE_DRAFT
+
+    @factory.lazy_attribute
+    def owner(self):
+        """Retrieve the user from the enrollment when available or create a new one."""
+        if self.enrollment:
+            return self.enrollment.user
+        return UserFactory()
+
+    @factory.lazy_attribute
+    def organization(self):
+        """Retrieve the organization from the product/course relation."""
+        if self.state == enums.ORDER_STATE_DRAFT:
+            return None
+
+        course_relations = self.product.course_relations
+        if self.course:
+            course_relations = course_relations.filter(course=self.course)
+        return course_relations.first().organizations.order_by("?").first()
+
+    @factory.post_generation
+    # pylint: disable=unused-argument
+    def contract(self, create, extracted, **kwargs):
+        """Create a contract for the order."""
+        if self.state in [
+            enums.ORDER_STATE_TO_SIGN,
+            enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
+            enums.ORDER_STATE_PENDING,
+            enums.ORDER_STATE_PENDING_PAYMENT,
+            enums.ORDER_STATE_NO_PAYMENT,
+            enums.ORDER_STATE_FAILED_PAYMENT,
+            enums.ORDER_STATE_COMPLETED,
+            enums.ORDER_STATE_CANCELED,
+        ]:
+            self.product.contract_definition = ContractDefinitionFactory()
+            is_signed = self.state != enums.ORDER_STATE_TO_SIGN
+            return ContractFactory(
+                order=self,
+                student_signed_on=django_timezone.now() if is_signed else None,
+                submitted_for_signature_on=django_timezone.now() if is_signed else None,
+            )
+
+        return None
+
+    @factory.lazy_attribute
+    def credit_card(self):
+        """Create a credit card for the order."""
+        if self.state in [
+            enums.ORDER_STATE_PENDING,
+            enums.ORDER_STATE_PENDING_PAYMENT,
+            enums.ORDER_STATE_NO_PAYMENT,
+            enums.ORDER_STATE_FAILED_PAYMENT,
+            enums.ORDER_STATE_COMPLETED,
+            enums.ORDER_STATE_CANCELED,
+        ]:
+            from joanie.payment.factories import (  # pylint: disable=import-outside-toplevel, cyclic-import
+                CreditCardFactory,
+            )
+
+            return CreditCardFactory(owner=self.owner)
+
+        return None
+
+    @factory.post_generation
+    # pylint: disable=unused-argument
+    def target_courses(self, create, extracted, **kwargs):
+        """
+        If the order has a state other than draft, it should have been submitted so
+        target courses should have been copied from the product target courses.
+        """
+        if extracted:
+            self.target_courses.set(extracted)
+
+        if self.state != enums.ORDER_STATE_DRAFT:
+            for relation in ProductTargetCourseRelation.objects.filter(
+                product=self.product
+            ):
+                order_relation = OrderTargetCourseRelation.objects.create(
+                    order=self,
+                    course=relation.course,
+                    position=relation.position,
+                    is_graded=relation.is_graded,
+                )
+                order_relation.course_runs.set(relation.course_runs.all())
+
+    @factory.post_generation
+    def main_invoice(self, create, extracted, **kwargs):
+        """
+        Generate invoice if needed
+        """
+        if create:
+            if extracted is not None:
+                # If a main_invoice is passed, link it to the order.
+                extracted.order = self
+                extracted.save()
+                return extracted
+
+            if self.state == enums.ORDER_STATE_COMPLETED:
+                # If the order is not fee and its state is validated, create
+                # a main invoice with related transaction.
+                from joanie.payment.factories import (  # pylint: disable=import-outside-toplevel, cyclic-import
+                    TransactionFactory,
+                )
+
+                transaction = TransactionFactory(
+                    invoice__order=self,
+                    invoice__recipient_address__owner=self.owner,
+                    total=self.total,
+                )
+                return transaction.invoice
+
+        return None
+
+    @factory.post_generation
+    # pylint: disable=unused-argument
+    def billing_address(self, create, extracted, **kwargs):
+        """
+        Create a billing address for the order.
+        This method also handles the state transitions of the order based on the target state
+        and whether the order is free or not.
+        It updates the payment schedule states accordingly.
+        """
+        target_state = self.state
+        if self.state not in [
+            enums.ORDER_STATE_DRAFT,
+            enums.ORDER_STATE_ASSIGNED,
+            enums.ORDER_STATE_TO_SIGN,
+            enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
+        ]:
+            self.state = enums.ORDER_STATE_DRAFT
+            CourseRunFactory(
+                course=self.course,
+                enrollment_end=django_timezone.now() + timedelta(hours=1),
+                enrollment_start=django_timezone.now() - timedelta(hours=1),
+                is_gradable=True,
+                start=django_timezone.now() - timedelta(hours=1),
+                end=django_timezone.now() + timedelta(days=200),
+            )
+            ProductTargetCourseRelationFactory(
+                product=self.product,
+                course=self.course,
+                is_graded=True,
+            )
+            self.flow.init(billing_address=extracted)
+
+        if target_state == enums.ORDER_STATE_CANCELED:
+            self.flow.cancel()
 
 
 class OrderTargetCourseRelationFactory(factory.django.DjangoModelFactory):
