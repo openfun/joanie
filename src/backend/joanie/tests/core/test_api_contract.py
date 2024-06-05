@@ -144,6 +144,7 @@ class ContractApiTest(BaseAPITestCase):
                     },
                     "order": {
                         "id": str(contract.order.id),
+                        "state": contract.order.state,
                         "course": {
                             "code": contract.order.course.code,
                             "cover": "_this_field_is_mocked",
@@ -719,7 +720,9 @@ class ContractApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
         organization_signatory = factories.UserFactory()
         contract = factories.ContractFactory(
-            order__owner=user, organization_signatory=organization_signatory
+            order__owner=user,
+            organization_signatory=organization_signatory,
+            order__state=enums.ORDER_STATE_VALIDATED,
         )
 
         with self.assertNumQueries(7):
@@ -769,6 +772,7 @@ class ContractApiTest(BaseAPITestCase):
             },
             "order": {
                 "id": str(contract.order.id),
+                "state": enums.ORDER_STATE_VALIDATED,
                 "course": {
                     "code": contract.order.course.code,
                     "cover": "_this_field_is_mocked",

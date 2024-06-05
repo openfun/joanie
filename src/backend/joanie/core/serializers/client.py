@@ -380,6 +380,7 @@ class NestedOrderSerializer(serializers.ModelSerializer):
             "organization",
             "owner_name",
             "product_title",
+            "state",
         ]
         read_only_fields = fields
 
