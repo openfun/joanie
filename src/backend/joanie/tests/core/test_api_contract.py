@@ -1398,7 +1398,7 @@ class ContractApiTest(BaseAPITestCase):
                 student_signed_on=timezone.now(),
                 organization_signed_on=timezone.now(),
             )
-            order.flow.init()
+            order.init_flow()
 
         # Create token for only one organization accessor
         token = self.get_user_token(user.username)
@@ -1490,7 +1490,7 @@ class ContractApiTest(BaseAPITestCase):
                 student_signed_on=timezone.now(),
                 organization_signed_on=timezone.now(),
             )
-            order.flow.init()
+            order.init_flow()
         expected_endpoint_polling = "/api/v1.0/contracts/zip-archive/"
         token = self.get_user_token(requesting_user.username)
 
