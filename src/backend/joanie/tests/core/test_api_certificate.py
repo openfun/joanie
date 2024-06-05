@@ -100,6 +100,7 @@ class CertificateApiTest(BaseAPITestCase):
                         "enrollment": None,
                         "order": {
                             "id": str(other_order.id),
+                            "state": other_order.state,
                             "course": None,
                             "enrollment": {
                                 "course_run": {
@@ -177,6 +178,7 @@ class CertificateApiTest(BaseAPITestCase):
                         "enrollment": None,
                         "order": {
                             "id": str(order.id),
+                            "state": order.state,
                             "course": {
                                 "id": str(order.course.id),
                                 "code": order.course.code,
@@ -275,6 +277,7 @@ class CertificateApiTest(BaseAPITestCase):
                         "enrollment": None,
                         "order": {
                             "id": str(other_order.id),
+                            "state": other_order.state,
                             "course": None,
                             "enrollment": {
                                 "course_run": {
@@ -352,6 +355,7 @@ class CertificateApiTest(BaseAPITestCase):
                         "enrollment": None,
                         "order": {
                             "id": str(order.id),
+                            "state": order.state,
                             "course": {
                                 "id": str(order.course.id),
                                 "code": order.course.code,
@@ -757,6 +761,7 @@ class CertificateApiTest(BaseAPITestCase):
                 "enrollment": None,
                 "order": {
                     "id": str(certificate.order.id),
+                    "state": certificate.order.state,
                     "course": {
                         "id": str(certificate.order.course.id),
                         "code": certificate.order.course.code,

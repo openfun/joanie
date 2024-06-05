@@ -5930,6 +5930,14 @@
                     "product_title": {
                         "type": "string",
                         "readOnly": true
+                    },
+                    "state": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/OrderStateEnum"
+                            }
+                        ],
+                        "readOnly": true
                     }
                 },
                 "required": [
@@ -5938,7 +5946,8 @@
                     "id",
                     "organization",
                     "owner_name",
-                    "product_title"
+                    "product_title",
+                    "state"
                 ]
             },
             "NestedOrderCourse": {

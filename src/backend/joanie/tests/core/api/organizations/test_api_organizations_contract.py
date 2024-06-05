@@ -155,6 +155,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
                     },
                     "order": {
                         "id": str(contract.order.id),
+                        "state": contract.order.state,
                         "course": {
                             "code": contract.order.course.code,
                             "cover": "_this_field_is_mocked",
@@ -541,6 +542,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
             },
             "order": {
                 "id": str(contract.order.id),
+                "state": contract.order.state,
                 "course": {
                     "code": contract.order.course.code,
                     "cover": "_this_field_is_mocked",
