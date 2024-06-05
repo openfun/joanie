@@ -739,7 +739,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         CreditCardFactory(
             owner=order.owner, is_main=True, initial_issuer_transaction_identifier="1"
         )
-        order.flow.init(billing_address=billing_address)
+        order.init_flow(billing_address=billing_address)
         payplug_billing_address = billing_address.copy()
         payplug_billing_address["address1"] = payplug_billing_address["address"]
         del payplug_billing_address["address"]
