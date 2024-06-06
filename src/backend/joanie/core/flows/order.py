@@ -202,6 +202,7 @@ class OrderFlow:
         Mark order instance as "failed_payment".
         """
 
+    # TODO: move this method to order model
     def init(self, billing_address=None):
         """
         Transition order to assigned state, creates an invoice if needed and call the flow update.
