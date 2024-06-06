@@ -18,7 +18,6 @@ from joanie.core.enums import (
     PAYMENT_STATE_REFUSED,
 )
 from joanie.core.factories import OrderGeneratorFactory
-from joanie.payment.factories import BillingAddressDictFactory
 
 
 @override_settings(
@@ -37,20 +36,13 @@ class TestOrderGeneratorFactory(TestCase):
     def check_order(
         self,
         state,
-        init_billing_address,
         has_organization,
         has_unsigned_contract,
         is_free,
         has_payment_method,
     ):
         """Check the properties of an order based on the provided parameters."""
-        order = OrderGeneratorFactory(
-            state=state,
-            billing_address=BillingAddressDictFactory()
-            if init_billing_address
-            else None,
-            product__price=100,
-        )
+        order = OrderGeneratorFactory(state=state, product__price=100)
         if has_organization:
             self.assertIsNotNone(order.organization)
         else:
@@ -65,7 +57,6 @@ class TestOrderGeneratorFactory(TestCase):
         """Test the OrderGeneratorFactory with the state ORDER_STATE_DRAFT."""
         self.check_order(
             ORDER_STATE_DRAFT,
-            init_billing_address=True,
             has_organization=False,
             has_unsigned_contract=False,
             is_free=False,
@@ -76,7 +67,6 @@ class TestOrderGeneratorFactory(TestCase):
         """Test the OrderGeneratorFactory with the state ORDER_STATE_ASSIGNED."""
         self.check_order(
             ORDER_STATE_ASSIGNED,
-            init_billing_address=True,
             has_organization=True,
             has_unsigned_contract=False,
             is_free=False,
@@ -87,7 +77,6 @@ class TestOrderGeneratorFactory(TestCase):
         """Test the OrderGeneratorFactory with the state ORDER_STATE_TO_SIGN."""
         self.check_order(
             ORDER_STATE_TO_SIGN,
-            init_billing_address=True,
             has_organization=True,
             has_unsigned_contract=True,
             is_free=False,
@@ -98,7 +87,6 @@ class TestOrderGeneratorFactory(TestCase):
         """Test the OrderGeneratorFactory with the state ORDER_STATE_TO_SAVE_PAYMENT_METHOD."""
         self.check_order(
             ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
-            init_billing_address=True,
             has_organization=True,
             has_unsigned_contract=False,
             is_free=False,
@@ -109,7 +97,6 @@ class TestOrderGeneratorFactory(TestCase):
         """Test the OrderGeneratorFactory with the state ORDER_STATE_PENDING."""
         order = self.check_order(
             ORDER_STATE_PENDING,
-            init_billing_address=True,
             has_organization=True,
             has_unsigned_contract=False,
             is_free=False,
@@ -123,7 +110,6 @@ class TestOrderGeneratorFactory(TestCase):
         """Test the OrderGeneratorFactory with the state ORDER_STATE_PENDING_PAYMENT."""
         order = self.check_order(
             ORDER_STATE_PENDING_PAYMENT,
-            init_billing_address=True,
             has_organization=True,
             has_unsigned_contract=False,
             is_free=False,
@@ -137,7 +123,6 @@ class TestOrderGeneratorFactory(TestCase):
         """Test the OrderGeneratorFactory with the state ORDER_STATE_NO_PAYMENT."""
         order = self.check_order(
             ORDER_STATE_NO_PAYMENT,
-            init_billing_address=True,
             has_organization=True,
             has_unsigned_contract=False,
             is_free=False,
@@ -151,7 +136,6 @@ class TestOrderGeneratorFactory(TestCase):
         """Test the OrderGeneratorFactory with the state ORDER_STATE_FAILED_PAYMENT."""
         order = self.check_order(
             ORDER_STATE_FAILED_PAYMENT,
-            init_billing_address=True,
             has_organization=True,
             has_unsigned_contract=False,
             is_free=False,
@@ -165,7 +149,6 @@ class TestOrderGeneratorFactory(TestCase):
         """Test the OrderGeneratorFactory with the state ORDER_STATE_COMPLETED."""
         order = self.check_order(
             ORDER_STATE_COMPLETED,
-            init_billing_address=True,
             has_organization=True,
             has_unsigned_contract=False,
             is_free=False,
@@ -179,7 +162,6 @@ class TestOrderGeneratorFactory(TestCase):
         """Test the OrderGeneratorFactory with the state ORDER_STATE_CANCELED."""
         order = self.check_order(
             ORDER_STATE_CANCELED,
-            init_billing_address=True,
             has_organization=True,
             has_unsigned_contract=False,
             is_free=False,

@@ -22,9 +22,13 @@ from faker import Faker
 from timedelta_isoformat import timedelta as timedelta_isoformat
 
 from joanie.core import enums, models
-from joanie.core.models import OrderTargetCourseRelation, ProductTargetCourseRelation
+from joanie.core.models import (
+    CourseState,
+    OrderTargetCourseRelation,
+    ProductTargetCourseRelation,
+)
 from joanie.core.serializers import AddressSerializer
-from joanie.core.utils import image_to_base64
+from joanie.core.utils import contract_definition, image_to_base64
 
 
 def generate_thumbnails_for_field(field, include_global=False):
@@ -563,6 +567,7 @@ class ProductTargetCourseRelationFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.ProductTargetCourseRelation
         skip_postgeneration_save = True
+        django_get_or_create = ("product", "course")
 
     product = factory.SubFactory(ProductFactory)
     course = factory.SubFactory(CourseFactory)
@@ -709,9 +714,31 @@ class OrderGeneratorFactory(factory.django.DjangoModelFactory):
         return course_relations.first().organizations.order_by("?").first()
 
     @factory.post_generation
+    def main_invoice(self, create, extracted, **kwargs):
+        """
+        Generate invoice if needed
+        """
+        if create:
+            if extracted is not None:
+                # If a main_invoice is passed, link it to the order.
+                extracted.order = self
+                extracted.save()
+                return extracted
+
+            from joanie.payment.factories import (  # pylint: disable=import-outside-toplevel, cyclic-import
+                InvoiceFactory,
+            )
+
+            return InvoiceFactory(order=self)
+        return None
+
+    @factory.post_generation
     # pylint: disable=unused-argument
     def contract(self, create, extracted, **kwargs):
         """Create a contract for the order."""
+        if extracted:
+            return extracted
+
         if self.state in [
             enums.ORDER_STATE_TO_SIGN,
             enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
@@ -723,11 +750,41 @@ class OrderGeneratorFactory(factory.django.DjangoModelFactory):
             enums.ORDER_STATE_CANCELED,
         ]:
             self.product.contract_definition = ContractDefinitionFactory()
+            self.product.save()
+
             is_signed = self.state != enums.ORDER_STATE_TO_SIGN
+            context = kwargs.get(
+                "context",
+                contract_definition.generate_document_context(
+                    contract_definition=self.product.contract_definition,
+                    user=self.owner,
+                    order=self,
+                )
+                if is_signed
+                else None,
+            )
+            student_signed_on = kwargs.get(
+                "student_signed_on", django_timezone.now() if is_signed else None
+            )
+            submitted_for_signature_on = kwargs.get(
+                "submitted_for_signature_on",
+                django_timezone.now() if is_signed else None,
+            )
+            definition_checksum = kwargs.get(
+                "definition_checksum", "fake_test_file_hash_1" if is_signed else None
+            )
+            signature_backend_reference = kwargs.get(
+                "signature_backend_reference",
+                f"wfl_fake_dummy_demo_dev_{uuid.uuid4()}" if is_signed else None,
+            )
             return ContractFactory(
                 order=self,
-                student_signed_on=django_timezone.now() if is_signed else None,
-                submitted_for_signature_on=django_timezone.now() if is_signed else None,
+                student_signed_on=student_signed_on,
+                submitted_for_signature_on=submitted_for_signature_on,
+                definition=self.product.contract_definition,
+                context=context,
+                definition_checksum=definition_checksum,
+                signature_backend_reference=signature_backend_reference,
             )
 
         return None
@@ -761,46 +818,6 @@ class OrderGeneratorFactory(factory.django.DjangoModelFactory):
         if extracted:
             self.target_courses.set(extracted)
 
-        if self.state != enums.ORDER_STATE_DRAFT:
-            for relation in ProductTargetCourseRelation.objects.filter(
-                product=self.product
-            ):
-                order_relation = OrderTargetCourseRelation.objects.create(
-                    order=self,
-                    course=relation.course,
-                    position=relation.position,
-                    is_graded=relation.is_graded,
-                )
-                order_relation.course_runs.set(relation.course_runs.all())
-
-    @factory.post_generation
-    def main_invoice(self, create, extracted, **kwargs):
-        """
-        Generate invoice if needed
-        """
-        if create:
-            if extracted is not None:
-                # If a main_invoice is passed, link it to the order.
-                extracted.order = self
-                extracted.save()
-                return extracted
-
-            if self.state == enums.ORDER_STATE_COMPLETED:
-                # If the order is not fee and its state is validated, create
-                # a main invoice with related transaction.
-                from joanie.payment.factories import (  # pylint: disable=import-outside-toplevel, cyclic-import
-                    TransactionFactory,
-                )
-
-                transaction = TransactionFactory(
-                    invoice__order=self,
-                    invoice__recipient_address__owner=self.owner,
-                    total=self.total,
-                )
-                return transaction.invoice
-
-        return None
-
     @factory.post_generation
     # pylint: disable=unused-argument
     def billing_address(self, create, extracted, **kwargs):
@@ -814,16 +831,16 @@ class OrderGeneratorFactory(factory.django.DjangoModelFactory):
         if self.state not in [
             enums.ORDER_STATE_DRAFT,
             enums.ORDER_STATE_ASSIGNED,
-            enums.ORDER_STATE_TO_SIGN,
-            enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
         ]:
             self.state = enums.ORDER_STATE_DRAFT
+
             CourseRunFactory(
                 course=self.course,
-                enrollment_end=django_timezone.now() + timedelta(hours=1),
-                enrollment_start=django_timezone.now() - timedelta(hours=1),
                 is_gradable=True,
-                start=django_timezone.now() - timedelta(hours=1),
+                state=CourseState.ONGOING_OPEN,
+                # enrollment_end=django_timezone.now() + timedelta(hours=1),
+                # enrollment_start=django_timezone.now() - timedelta(hours=1),
+                # start=django_timezone.now() - timedelta(hours=1),
                 end=django_timezone.now() + timedelta(days=200),
             )
             ProductTargetCourseRelationFactory(
@@ -831,7 +848,15 @@ class OrderGeneratorFactory(factory.django.DjangoModelFactory):
                 course=self.course,
                 is_graded=True,
             )
-            self.flow.init(billing_address=extracted)
+
+            if extracted:
+                self.flow.init(billing_address=extracted)
+            else:
+                from joanie.payment.factories import (  # pylint: disable=import-outside-toplevel, cyclic-import
+                    BillingAddressDictFactory,
+                )
+
+                self.flow.init(billing_address=BillingAddressDictFactory())
 
         if (
             target_state
@@ -952,6 +977,7 @@ class ContractFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = models.Contract
+        django_get_or_create = ("order",)
 
     order = factory.SubFactory(
         OrderFactory,

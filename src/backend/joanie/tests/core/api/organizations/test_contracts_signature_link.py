@@ -9,7 +9,6 @@ from django.utils import timezone
 
 from joanie.core import enums, factories
 from joanie.core.models import OrganizationAccess
-from joanie.payment.factories import BillingAddressDictFactory
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -27,16 +26,7 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
             is_staff=random.choice([True, False]),
             is_superuser=random.choice([True, False]),
         )
-        order = factories.OrderFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(),
-            payment_schedule=[
-                {
-                    "amount": "200.00",
-                    "due_date": "2024-01-17T00:00:00+00:00",
-                    "state": enums.PAYMENT_STATE_PAID,
-                }
-            ],
-        )
+        order = factories.OrderGeneratorFactory(state=enums.ORDER_STATE_PENDING)
         organization_roles_not_owner = [
             role[0]
             for role in OrganizationAccess.ROLE_CHOICES
@@ -47,13 +37,6 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
             organization=order.organization,
             role=random.choice(organization_roles_not_owner),
         )
-
-        factories.ContractFactory(
-            order=order,
-            student_signed_on=timezone.now(),
-            submitted_for_signature_on=timezone.now(),
-        )
-        order.flow.init(billing_address=BillingAddressDictFactory())
         token = self.generate_token_from_user(user)
 
         response = self.client.get(
@@ -71,25 +54,10 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
         """
         Authenticated users with the owner role should be able to sign contracts in bulk.
         """
-        order = factories.OrderFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(),
-            payment_schedule=[
-                {
-                    "amount": "200.00",
-                    "due_date": "2024-01-17T00:00:00+00:00",
-                    "state": enums.PAYMENT_STATE_PAID,
-                }
-            ],
-        )
+        order = factories.OrderGeneratorFactory(state=enums.ORDER_STATE_PENDING)
         access = factories.UserOrganizationAccessFactory(
             organization=order.organization, role="owner"
         )
-        factories.ContractFactory(
-            order=order,
-            student_signed_on=timezone.now(),
-            submitted_for_signature_on=timezone.now(),
-        )
-        order.flow.init(billing_address=BillingAddressDictFactory())
         token = self.generate_token_from_user(access.user)
 
         response = self.client.get(
@@ -118,31 +86,16 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
             organizations=[organization],
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
-        orders = factories.OrderFactory.create_batch(
+        orders = factories.OrderGeneratorFactory.create_batch(
             2,
+            state=enums.ORDER_STATE_PENDING,
             product=relation.product,
             course=relation.course,
             organization=organization,
-            product__contract_definition=factories.ContractDefinitionFactory(),
-            payment_schedule=[
-                {
-                    "amount": "200.00",
-                    "due_date": "2024-01-17T00:00:00+00:00",
-                    "state": enums.PAYMENT_STATE_PAID,
-                }
-            ],
         )
         access = factories.UserOrganizationAccessFactory(
             organization=organization, role="owner"
         )
-
-        for order in orders:
-            factories.ContractFactory(
-                order=order,
-                student_signed_on=timezone.now(),
-                submitted_for_signature_on=timezone.now(),
-            )
-            order.flow.init(billing_address=BillingAddressDictFactory())
 
         token = self.generate_token_from_user(access.user)
 
@@ -165,19 +118,12 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
         Authenticated users with owner role should be able to sign contracts in bulk but
         not validated orders should be excluded.
         """
-        order = factories.OrderFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(),
-            contract=factories.ContractFactory(),
-        )
+        # Simulate the user has signed its contract then later canceled its order
+        order = factories.OrderGeneratorFactory(state=enums.ORDER_STATE_PENDING)
+        order.flow.cancel()
         access = factories.UserOrganizationAccessFactory(
             organization=order.organization, role="owner"
         )
-        order.flow.init(billing_address=BillingAddressDictFactory())
-        order.submit_for_signature(order.owner)
-        order.contract.submitted_for_signature_on = timezone.now()
-        order.contract.student_signed_on = timezone.now()
-        # Simulate the user has signed its contract then later canceled its order
-        order.flow.cancel()
 
         token = self.generate_token_from_user(access.user)
 

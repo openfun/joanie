@@ -1059,14 +1059,7 @@ class Order(BaseModel):
         """
         Return the schedule dates for the order.
         """
-        try:
-            start_date = self.contract.student_signed_on
-        except Order.contract.RelatedObjectDoesNotExist as e:
-            logger.error(
-                "Contract does not exist, cannot retrieve withdrawal date",
-                extra={"context": {"order": self.to_dict()}},
-            )
-            raise ObjectDoesNotExist("Order has no contract") from e
+        start_date = timezone.now()
         end_date = self.get_equivalent_course_run_dates()["end"]
         if not end_date:
             logger.error(

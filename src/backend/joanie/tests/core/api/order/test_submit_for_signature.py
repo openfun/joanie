@@ -9,8 +9,7 @@ from django.test.utils import override_settings
 from django.utils import timezone as django_timezone
 
 from joanie.core import enums, factories
-from joanie.core.models import CourseState
-from joanie.payment.factories import BillingAddressDictFactory, InvoiceFactory
+from joanie.payment.factories import InvoiceFactory
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -141,23 +140,8 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         Authenticated users should be able to create a contract from an order and get in
         return the invitation url to sign the file.
         """
-        user = factories.UserFactory(
-            email="student_do@example.fr", first_name="John Doe", last_name=""
-        )
-        target_courses = factories.CourseFactory.create_batch(
-            2,
-            course_runs=factories.CourseRunFactory.create_batch(
-                2, state=CourseState.ONGOING_OPEN
-            ),
-        )
-        order = factories.OrderFactory(
-            owner=user,
-            product__contract_definition=factories.ContractDefinitionFactory(),
-            product__target_courses=target_courses,
-            contract=factories.ContractFactory(),
-        )
-        order.flow.init(billing_address=BillingAddressDictFactory())
-        token = self.get_user_token(user.username)
+        order = factories.OrderGeneratorFactory(state=enums.ORDER_STATE_TO_SIGN)
+        token = self.get_user_token(order.owner.username)
         expected_substring_invite_url = (
             "https://dummysignaturebackend.fr/?requestToken="
         )
@@ -195,23 +179,16 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         'definition_checksum', 'signature_backend_reference' and 'submitted_for_signature_on'.
         In return we must have in the response the invitation link to sign the file.
         """
-        user = factories.UserFactory(
-            email="student_do@example.fr", first_name="John Doe", last_name=""
+        order = factories.OrderGeneratorFactory(
+            state=enums.ORDER_STATE_TO_SIGN,
+            contract__submitted_for_signature_on=django_timezone.now()
+            - timedelta(days=16),
+            contract__signature_backend_reference="wfl_fake_dummy_id_will_be_updated",
+            contract__definition_checksum="fake_test_file_hash_will_be_updated",
+            contract__context="content",
         )
-        order = factories.OrderFactory(
-            owner=user,
-            product__contract_definition=factories.ContractDefinitionFactory(),
-        )
-        token = self.get_user_token(user.username)
-        contract = factories.ContractFactory(
-            order=order,
-            definition=order.product.contract_definition,
-            signature_backend_reference="wfl_fake_dummy_id_will_be_updated",
-            definition_checksum="fake_test_file_hash_will_be_updated",
-            context="content",
-            submitted_for_signature_on=django_timezone.now() - timedelta(days=16),
-        )
-        order.flow.init(billing_address=BillingAddressDictFactory())
+        contract = order.contract
+        token = self.get_user_token(order.owner.username)
         expected_substring_invite_url = (
             "https://dummysignaturebackend.fr/?requestToken="
         )
@@ -245,24 +222,17 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         after synchronizing with the signature provider. We get the invitation link in the
         response in return.
         """
-        user = factories.UserFactory(
-            email="student_do@example.fr", first_name="John Doe", last_name=""
+        order = factories.OrderGeneratorFactory(
+            state=enums.ORDER_STATE_TO_SIGN,
+            contract__submitted_for_signature_on=django_timezone.now()
+            - timedelta(days=2),
+            contract__signature_backend_reference="wfl_fake_dummy_id",
+            contract__definition_checksum="fake_test_file_hash",
+            contract__context="content",
         )
-        order = factories.OrderFactory(
-            owner=user,
-            product__contract_definition=factories.ContractDefinitionFactory(),
-        )
-        token = self.get_user_token(user.username)
-        contract = factories.ContractFactory(
-            order=order,
-            definition=order.product.contract_definition,
-            signature_backend_reference="wfl_fake_dummy_id",
-            definition_checksum="fake_test_file_hash",
-            context="content",
-            submitted_for_signature_on=django_timezone.now() - timedelta(days=2),
-        )
-        order.flow.init(billing_address=BillingAddressDictFactory())
-        contract.definition.body = "a new content"
+        contract = order.contract
+        token = self.get_user_token(order.owner.username)
+        order.contract.definition.body = "a new content"
         expected_substring_invite_url = (
             "https://dummysignaturebackend.fr/?requestToken="
         )
