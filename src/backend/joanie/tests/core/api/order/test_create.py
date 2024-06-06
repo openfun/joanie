@@ -831,56 +831,6 @@ class OrderCreateApiTest(BaseAPITestCase):
             {"__all__": ["Either the course or the enrollment field is required."]},
         )
 
-    # def test_api_order_create_authenticated_product_with_contract_require_terms_consent(
-    #     self,
-    # ):
-    #     """
-    #     The payload must contain has_consent_to_terms sets to True to create an order.
-    #     """
-    #     relation = factories.CourseProductRelationFactory()
-    #     token = self.get_user_token("panoramix")
-
-    #     data = {
-    #         "product_id": str(relation.product.id),
-    #         "course_code": relation.course.code,
-    #     }
-
-    #     # - `has_consent_to_terms` is required
-    #     response = self.client.post(
-    #         "/api/v1.0/orders/",
-    #         content_type="application/json",
-    #         HTTP_AUTHORIZATION=f"Bearer {token}",
-    #         data=data,
-    #     )
-    #     self.assertContains(
-    #         response,
-    #         '{"has_consent_to_terms":["This field is required."]}',
-    #         status_code=HTTPStatus.BAD_REQUEST,
-    #     )
-
-    #     # - `has_consent_to_terms` must be set to True
-    #     data.update({"has_consent_to_terms": False})
-    #     response = self.client.post(
-    #         "/api/v1.0/orders/",
-    #         content_type="application/json",
-    #         HTTP_AUTHORIZATION=f"Bearer {token}",
-    #         data=data,
-    #     )
-    #     self.assertContains(
-    #         response,
-    #         '{"has_consent_to_terms":["You must accept the terms and conditions to proceed."]}',
-    #         status_code=HTTPStatus.BAD_REQUEST,
-    #     )
-
-    #     data.update({"has_consent_to_terms": True})
-    #     response = self.client.post(
-    #         "/api/v1.0/orders/",
-    #         content_type="application/json",
-    #         HTTP_AUTHORIZATION=f"Bearer {token}",
-    #         data=data,
-    #     )
-    #     self.assertEqual(response.status_code, HTTPStatus.CREATED)
-
     def test_api_order_create_authenticated_product_course_unicity(self):
         """
         If a user tries to create a new order while he has already a not canceled order

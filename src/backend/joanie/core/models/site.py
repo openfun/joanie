@@ -38,6 +38,7 @@ class SiteConfig(parler_models.TranslatableModel, BaseModel):
     def __str__(self):
         return f"Site config for {self.site.name}"
 
+    # DEPRECATED : The terms and conditions will be stored into the contract definition context
     def get_terms_and_conditions_in_html(self, language=None):
         """Return the terms and conditions in html format."""
         content = self.safe_translation_getter(

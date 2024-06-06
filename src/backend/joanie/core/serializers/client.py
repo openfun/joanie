@@ -1186,7 +1186,6 @@ class OrderSerializer(serializers.ModelSerializer):
         validated_data.pop("organization", None)
         validated_data.pop("product", None)
         validated_data.pop("order_group", None)
-        # validated_data.pop("has_consent_to_terms", None)
         return super().update(instance, validated_data)
 
     def get_total_currency(self, *args, **kwargs) -> str:

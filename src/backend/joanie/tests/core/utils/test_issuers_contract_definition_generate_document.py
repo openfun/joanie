@@ -39,7 +39,12 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
         definition = factories.ContractDefinitionFactory(
             title="Contract Definition Title",
             description="Contract Definition Description",
-            body="## Contract Definition Body",
+            body="""
+            ## Contract Definition Body,
+
+            ## Terms and conditions
+            Terms and conditions content
+            """,
         )
 
         organization = factories.OrganizationFactory(
@@ -155,11 +160,12 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
 
         # - Contract content should be displayed
         self.assertIn("Contract Definition Body", document_text)
-
-        # - Appendices should be displayed
-        self.assertIn("Appendices", document_text)
         self.assertIn("Terms and conditions", document_text)
-        self.assertIn("Terms and Conditions Content", document_text)
+        self.assertIn("Terms and conditions content", document_text)
+
+        # - Appendices should not be displayed
+        self.assertNotIn("Appendices", document_text)
+        self.assertNotIn("Syllabus", document_text)
 
         # - Signature slots should be displayed
         self.assertIn("Learner's signature", document_text)
@@ -182,7 +188,12 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
         definition = factories.ContractDefinitionFactory(
             title="Contract Definition Title",
             description="Contract Definition Description",
-            body="## Contract Definition Body",
+            body="""
+            ## Contract Definition Body,
+
+            ## Terms and conditions
+            Terms and conditions content
+            """
         )
 
         context = contract_definition_utility.generate_document_context(
@@ -242,11 +253,12 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
 
         # - Contract content should be displayed
         self.assertIn("Contract Definition Body", document_text)
-
-        # - Appendices should be displayed
-        self.assertIn("Appendices", document_text)
         self.assertIn("Terms and conditions", document_text)
-        self.assertIn("Terms and Conditions Content", document_text)
+        self.assertIn("Terms and conditions content", document_text)
+
+        # - Appendices not should be displayed since it requires to fetch it from Richie syllabus
+        self.assertNotIn("Appendices", document_text)
+        self.assertNotIn("Syllabus", document_text)
 
         # - Signature slots should be displayed
         self.assertIn("Learner's signature", document_text)

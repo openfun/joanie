@@ -2,14 +2,17 @@
 
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
+from io import BytesIO
 from unittest import mock
 
 from django.contrib.sites.models import Site
 from django.test import TestCase, override_settings
 from django.utils import timezone as django_timezone
 
+from pdfminer.high_level import extract_text as pdf_extract_text
+
 from joanie.core import enums, factories
-from joanie.core.utils import contract_definition, image_to_base64
+from joanie.core.utils import contract_definition, image_to_base64, issuers
 from joanie.payment.factories import InvoiceFactory
 
 
@@ -118,7 +121,6 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         expected_context = {
             "contract": {
                 "body": "<p>Articles de la convention</p>",
-                "terms_and_conditions": "<h2>Terms and conditions</h2>",
                 "description": "Contract definition description",
                 "title": "CONTRACT DEFINITION 1",
                 "language": "en-us",
@@ -216,7 +218,6 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         expected_context = {
             "contract": {
                 "body": "<p>Articles de la convention</p>",
-                "terms_and_conditions": "",
                 "description": "Contract definition description",
                 "title": "CONTRACT DEFINITION 2",
                 "language": "fr-fr",
@@ -297,7 +298,6 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         expected_context = {
             "contract": {
                 "body": "<p>Articles de la convention</p>",
-                "terms_and_conditions": "",
                 "description": "Contract definition description",
                 "title": "CONTRACT DEFINITION 3",
                 "language": "fr-fr",
@@ -554,3 +554,137 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         self.assertIsInstance(contract.context["course"]["price"], str)
         self.assertEqual(order.total, Decimal("999.99"))
         self.assertEqual(contract.context["course"]["price"], "999.99")
+
+    @override_settings(
+        JOANIE_DOCUMENT_ISSUER_CONTEXT_PROCESSORS={
+            "contract_definition": [
+                "joanie.tests.core.utils.test_contract_definition_generate_document_context._processor_for_test_suite"  # pylint: disable=line-too-long
+            ]
+        }
+    )
+    @mock.patch(
+        "joanie.tests.core.utils.test_contract_definition_generate_document_context._processor_for_test_suite",  # pylint: disable=line-too-long
+        side_effect=_processor_for_test_suite,
+    )
+    def test_utils_contract_definition_generate_document_context_processors_with_syllabus(
+        self, mock_processor_for_test
+    ):
+        """
+        If contract definition context processors are defined through settings, those should be
+        called and their results should be merged into the final context. We should find the terms
+        and conditions within the body of the contract and the `appendices` section with the
+        syllabus context in the document.
+        """
+        user = factories.UserFactory(
+            email="johndoe@example.fr",
+            first_name="John Doe",
+            last_name="",
+            phone_number="0123456789",
+        )
+        user_address = factories.UserAddressFactory(
+            owner=user,
+            first_name="John",
+            last_name="Doe",
+            address="5 Rue de L'Exemple",
+            postcode="75000",
+            city="Paris",
+            country="FR",
+            title="Office",
+            is_main=False,
+        )
+        organization = factories.OrganizationFactory(
+            dpo_email="johnnydoes@example.fr",
+            contact_email="contact@example.fr",
+            contact_phone="0123456789",
+            enterprise_code="1234",
+            activity_category_code="abcd1234",
+            representative="Mister Example",
+            representative_profession="Educational representative",
+            signatory_representative="Big boss",
+            signatory_representative_profession="Director",
+        )
+        factories.OrganizationAddressFactory(
+            organization=organization,
+            owner=None,
+            is_main=True,
+            is_reusable=True,
+        )
+        relation = factories.CourseProductRelationFactory(
+            organizations=[organization],
+            product=factories.ProductFactory(
+                contract_definition=factories.ContractDefinitionFactory(
+                    title="CONTRACT DEFINITION 4",
+                    description="Contract definition description",
+                    body="""
+                    ## Articles de la convention
+
+                    ## Terms and conditions
+                    Terms and conditions content
+                    """,
+                    language="fr-fr",
+                ),
+                title="You will know that you know you don't know",
+                price="999.99",
+                target_courses=[
+                    factories.CourseFactory(
+                        course_runs=[
+                            factories.CourseRunFactory(
+                                start="2024-01-01T09:00:00+00:00",
+                                end="2024-03-31T18:00:00+00:00",
+                                enrollment_start="2024-01-01T12:00:00+00:00",
+                                enrollment_end="2024-02-01T12:00:00+00:00",
+                            )
+                        ]
+                    )
+                ],
+            ),
+            course=factories.CourseFactory(
+                organizations=[organization],
+                effort=timedelta(hours=10, minutes=30, seconds=12),
+            ),
+        )
+        order = factories.OrderFactory(
+            owner=user,
+            product=relation.product,
+            course=relation.course,
+            state=enums.ORDER_STATE_VALIDATED,
+            main_invoice=InvoiceFactory(recipient_address=user_address),
+        )
+        factories.ContractFactory(order=order)
+        factories.OrderTargetCourseRelationFactory(
+            course=relation.course, order=order, position=1
+        )
+        context = contract_definition.generate_document_context(
+            contract_definition=order.contract.definition,
+            user=user,
+            order=order,
+        )
+        context["syllabus"] = "Syllabus Test"
+        mock_processor_for_test.assert_called_once_with(context)
+
+        file_bytes = issuers.generate_document(
+            name=order.contract.definition.name,
+            context=context,
+        )
+        document_text = pdf_extract_text(BytesIO(file_bytes)).replace("\n", "")
+
+        self.assertEqual(
+            context["extra"],
+            {
+                "course_code": relation.course.code,
+                "language_code": "fr-fr",
+                "is_for_test": True,
+            },
+        )
+        self.assertRegex(document_text, r"John Doe")
+        self.assertRegex(document_text, r"Terms and conditions")
+        self.assertRegex(document_text, r"Session start date")
+        self.assertRegex(document_text, r"01/01/2024 9 a.m.")
+        self.assertRegex(document_text, r"Session end date")
+        self.assertRegex(document_text, r"03/31/2024 6 p.m")
+        self.assertRegex(document_text, r"Price of the course")
+        self.assertRegex(document_text, r"999.99 €")
+        self.assertRegex(document_text, r"Appendices")
+        self.assertRegex(document_text, r"Syllabus Test")
+        self.assertRegex(document_text, r"[SignatureField#1]")
+        self.assertRegex(document_text, r"[SignatureField#2]")
