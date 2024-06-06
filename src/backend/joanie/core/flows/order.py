@@ -1,5 +1,7 @@
 """Order flows."""
 
+from contextlib import suppress
+
 from django.apps import apps
 from django.utils import timezone
 
@@ -247,11 +249,9 @@ class OrderFlow:
             self.no_payment,
             self.failed_payment,
         ]:
-            try:
+            with suppress(fsm.TransitionNotAllowed):
                 transition()
                 return
-            except fsm.TransitionNotAllowed:
-                pass
 
     @state.on_success()
     def _post_transition_success(self, descriptor, source, target, **kwargs):  # pylint: disable=unused-argument
