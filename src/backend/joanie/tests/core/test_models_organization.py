@@ -148,6 +148,42 @@ class OrganizationModelsTestCase(BaseAPITestCase):
             },
         )
 
+    def test_models_organization_signature_backend_references_to_sign_states(self):
+        """Every contract with order state other than canceled should be returned."""
+        for state, _ in enums.ORDER_STATE_CHOICES:
+            with self.subTest(state=state):
+                now = timezone.now()
+                organization = factories.OrganizationFactory()
+                relation = factories.CourseProductRelationFactory(
+                    organizations=[organization],
+                    product__contract_definition=factories.ContractDefinitionFactory(),
+                )
+                contract = factories.ContractFactory(
+                    order__state=state,
+                    order__product=relation.product,
+                    order__course=relation.course,
+                    order__organization=organization,
+                    signature_backend_reference=factory.Sequence(
+                        lambda n: f"wfl_fake_dummy_id_{n!s}"
+                    ),
+                    submitted_for_signature_on=now,
+                    student_signed_on=now,
+                )
+
+                if state == enums.ORDER_STATE_CANCELED:
+                    self.assertEqual(
+                        organization.signature_backend_references_to_sign(),
+                        ((), ()),
+                    )
+                else:
+                    self.assertEqual(
+                        organization.signature_backend_references_to_sign(),
+                        (
+                            (contract.id,),
+                            (contract.signature_backend_reference,),
+                        ),
+                    )
+
     def test_models_organization_signature_backend_references_to_sign(self):
         """Should return a list of references to sign."""
         now = timezone.now()
