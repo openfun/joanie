@@ -323,11 +323,9 @@ class Organization(parler_models.TranslatableModel, BaseModel):
                 submitted_for_signature_on__isnull=False,
                 student_signed_on__isnull=False,
                 order__organization=self,
-                # TODO: change to:
-                #  ~Q(order__state=enums.ORDER_STATE_CANCELED),
-                #  https://github.com/openfun/joanie/pull/801#discussion_r1616874278
-                order__state=enums.ORDER_STATE_COMPLETED,
-            ).values_list("id", "signature_backend_reference")
+            )
+            .exclude(order__state=enums.ORDER_STATE_CANCELED)
+            .values_list("id", "signature_backend_reference")
         )
 
         if contract_ids and len(contracts_to_sign) != len(contract_ids):
