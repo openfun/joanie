@@ -1449,6 +1449,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         """
         course_run = factories.CourseRunFactory(
             enrollment_start=datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            start=datetime(2024, 3, 1, 14, tzinfo=ZoneInfo("UTC")),
             end=datetime(2024, 5, 1, 14, tzinfo=ZoneInfo("UTC")),
         )
         product = factories.ProductFactory(
@@ -1492,7 +1493,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "id": "00000000-0000-0000-0000-000000000001",
                     "amount": 2.10,
                     "currency": settings.DEFAULT_CURRENCY,
-                    "due_date": "2024-02-17",
+                    "due_date": "2024-03-01",
                     "state": enums.PAYMENT_STATE_PENDING,
                 },
             ],

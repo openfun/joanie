@@ -51,9 +51,11 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
         Check that the schedule dates are correctly calculated
         """
         student_signed_on_date = datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC"))
+        course_run_start_date = datetime(2024, 3, 1, 14, tzinfo=ZoneInfo("UTC"))
         course_run_end_date = datetime(2024, 5, 1, 14, tzinfo=ZoneInfo("UTC"))
         course_run = factories.CourseRunFactory(
             enrollment_start=datetime(2024, 1, 1, 8, tzinfo=ZoneInfo("UTC")),
+            start=course_run_start_date,
             end=course_run_end_date,
         )
         contract = factories.ContractFactory(
@@ -62,10 +64,13 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
             order__product__target_courses=[course_run.course],
         )
 
-        start_date, end_date = contract.order._get_schedule_dates()
+        signed_contract_date, course_start_date, course_end_date = (
+            contract.order._get_schedule_dates()
+        )
 
-        self.assertEqual(start_date, student_signed_on_date)
-        self.assertEqual(end_date, course_run_end_date)
+        self.assertEqual(signed_contract_date, student_signed_on_date)
+        self.assertEqual(course_start_date, course_run_start_date)
+        self.assertEqual(course_end_date, course_run_end_date)
 
     def test_models_order_schedule_get_schedule_dates_no_course_run(self):
         """
@@ -83,14 +88,14 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
             contract.order._get_schedule_dates()
 
         self.assertEqual(
-            str(context.exception), "['Cannot retrieve end date for order']"
+            str(context.exception), "['Cannot retrieve start or end date for order']"
         )
         self.assertLogsEquals(
             logger.records,
             [
                 (
                     "ERROR",
-                    "Cannot retrieve end date for order",
+                    "Cannot retrieve start or end date for order",
                     {"order": dict},
                 ),
             ],
@@ -126,6 +131,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
         """
         course_run = factories.CourseRunFactory(
             enrollment_start=datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            start=datetime(2024, 3, 1, 14, tzinfo=ZoneInfo("UTC")),
             end=datetime(2024, 5, 1, 14, tzinfo=ZoneInfo("UTC")),
         )
         contract = factories.ContractFactory(
@@ -152,7 +158,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
                 {
                     "id": second_uuid,
                     "amount": Money(2.10, settings.DEFAULT_CURRENCY),
-                    "due_date": date(2024, 2, 17),
+                    "due_date": date(2024, 3, 1),
                     "state": PAYMENT_STATE_PENDING,
                 },
             ],
@@ -171,7 +177,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
                 {
                     "id": str(second_uuid),
                     "amount": "2.10",
-                    "due_date": "2024-02-17",
+                    "due_date": "2024-03-01",
                     "state": PAYMENT_STATE_PENDING,
                 },
             ],

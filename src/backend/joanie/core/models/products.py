@@ -1016,28 +1016,35 @@ class Order(BaseModel):
         Return the schedule dates for the order.
         """
         try:
-            start_date = self.contract.student_signed_on
+            signed_contract_date = self.contract.student_signed_on
         except Order.contract.RelatedObjectDoesNotExist as e:
             logger.error(
                 "Contract does not exist, cannot retrieve withdrawal date",
                 extra={"context": {"order": self.to_dict()}},
             )
             raise ObjectDoesNotExist("Order has no contract") from e
-        end_date = self.get_equivalent_course_run_dates()["end"]
-        if not end_date:
+        course_run_dates = self.get_equivalent_course_run_dates()
+        start_date = course_run_dates["start"]
+        end_date = course_run_dates["end"]
+        if not end_date or not start_date:
+            error_message = "Cannot retrieve start or end date for order"
             logger.error(
-                "Cannot retrieve end date for order",
+                error_message,
                 extra={"context": {"order": self.to_dict()}},
             )
-            raise ValidationError("Cannot retrieve end date for order")
-        return start_date, end_date
+            raise ValidationError(error_message)
+        return signed_contract_date, start_date, end_date
 
     def generate_schedule(self):
         """
         Generate payment schedule for the order.
         """
-        start_date, end_date = self._get_schedule_dates()
-        installments = generate_payment_schedule(self.total, start_date, end_date)
+        signed_contract_date, course_start_date, course_end_date = (
+            self._get_schedule_dates()
+        )
+        installments = generate_payment_schedule(
+            self.total, signed_contract_date, course_start_date, course_end_date
+        )
 
         self.payment_schedule = installments
         self.save()
