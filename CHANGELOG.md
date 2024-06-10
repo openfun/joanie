@@ -11,6 +11,9 @@ and this project adheres to
 ### Changed
 
 - Rework order statuses
+- Update the task `process_today_installment` to catch up on late
+  payments of installments that are in the past
+- Deprecated field `has_consent_to_terms` for `Order` model
 
 ## [2.7.1] - 2024-10-02
 
