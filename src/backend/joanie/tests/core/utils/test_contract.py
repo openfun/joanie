@@ -23,6 +23,51 @@ from joanie.payment.factories import InvoiceFactory
 class UtilsContractTestCase(TestCase):
     """Test suite to generate a ZIP archive of signed contract PDF files in bytes utility"""
 
+    def test_utils_contract_get_signature_backend_references_states(
+        self,
+    ):
+        """
+        From a Course Product Relation product object, we should be able to find the
+        contract's signature backend references that are attached to the validated
+        orders only for a specific course and product. It should return an iterator with
+        signature backend references.
+        All orders but the canceled ones should be returned.
+        """
+        for state, _ in enums.ORDER_STATE_CHOICES:
+            with self.subTest(state=state):
+                relation = factories.CourseProductRelationFactory(
+                    product__contract_definition=factories.ContractDefinitionFactory()
+                )
+                contract = factories.ContractFactory(
+                    # order__owner=users[index],
+                    order__product=relation.product,
+                    order__course=relation.course,
+                    order__state=state,
+                    definition_checksum="1234",
+                    context={"foo": "bar"},
+                    student_signed_on=timezone.now(),
+                    organization_signed_on=timezone.now(),
+                )
+
+                signature_backend_references_generator = (
+                    contract_utility.get_signature_backend_references(
+                        course_product_relation=relation, organization=None
+                    )
+                )
+                signature_backend_references_list = list(
+                    signature_backend_references_generator
+                )
+
+                if state == enums.ORDER_STATE_CANCELED:
+                    self.assertEqual(len(signature_backend_references_list), 0)
+                    self.assertEqual(signature_backend_references_list, [])
+                else:
+                    self.assertEqual(len(signature_backend_references_list), 1)
+                    self.assertEqual(
+                        signature_backend_references_list,
+                        [contract.signature_backend_reference],
+                    )
+
     def test_utils_contract_get_signature_backend_references_with_no_signed_contracts_yet(
         self,
     ):
@@ -689,55 +734,67 @@ class UtilsContractTestCase(TestCase):
         """
         Should return the signature backend references of orders that are owned
         by an organization and where it still awaits the organization's signature.
+        Contracts with a cancelled order should not be returned.
         """
-        user = factories.UserFactory()
-        order = factories.OrderFactory(
-            owner=user,
-            product__contract_definition=factories.ContractDefinitionFactory(),
-            state=enums.ORDER_STATE_COMPLETED,
-        )
-        factories.ContractFactory(
-            order=order,
-            definition=order.product.contract_definition,
-            signature_backend_reference="wfl_fake_dummy_id",
-            definition_checksum="1234",
-            context="context",
-            submitted_for_signature_on=timezone.now(),
-            student_signed_on=timezone.now(),
-            organization_signed_on=None,
-        )
-        order_found = contract_utility.get_signature_references(
-            organization_id=order.organization.id, student_has_not_signed=False
-        )
+        for state, _ in enums.ORDER_STATE_CHOICES:
+            with self.subTest(state=state):
+                user = factories.UserFactory()
+                order = factories.OrderFactory(
+                    owner=user,
+                    product__contract_definition=factories.ContractDefinitionFactory(),
+                    state=state,
+                )
+                factories.ContractFactory(
+                    order=order,
+                    definition=order.product.contract_definition,
+                    signature_backend_reference="wfl_fake_dummy_id",
+                    definition_checksum="1234",
+                    context="context",
+                    submitted_for_signature_on=timezone.now(),
+                    student_signed_on=timezone.now(),
+                    organization_signed_on=None,
+                )
+                order_found = contract_utility.get_signature_references(
+                    organization_id=order.organization.id, student_has_not_signed=False
+                )
 
-        self.assertEqual(list(order_found), ["wfl_fake_dummy_id"])
+                if state == enums.ORDER_STATE_CANCELED:
+                    self.assertEqual(list(order_found), [])
+                else:
+                    self.assertEqual(list(order_found), ["wfl_fake_dummy_id"])
 
     def test_utils_contract_get_signature_references_student_has_not_signed(self):
         """
         Should return the signature backend references that are owned by an organization
         and where there is no signature yet but has been submitted for signature.
+        Contracts with a cancelled order should not be returned.
         """
-        user = factories.UserFactory()
-        order = factories.OrderFactory(
-            owner=user,
-            product__contract_definition=factories.ContractDefinitionFactory(),
-            state=enums.ORDER_STATE_COMPLETED,
-        )
-        factories.ContractFactory(
-            order=order,
-            definition=order.product.contract_definition,
-            signature_backend_reference="wfl_fake_dummy_id",
-            definition_checksum="1234",
-            context="context",
-            submitted_for_signature_on=timezone.now(),
-            student_signed_on=None,
-            organization_signed_on=None,
-        )
-        order_found = contract_utility.get_signature_references(
-            organization_id=order.organization.id, student_has_not_signed=True
-        )
+        for state, _ in enums.ORDER_STATE_CHOICES:
+            with self.subTest(state=state):
+                user = factories.UserFactory()
+                order = factories.OrderFactory(
+                    owner=user,
+                    product__contract_definition=factories.ContractDefinitionFactory(),
+                    state=state,
+                )
+                factories.ContractFactory(
+                    order=order,
+                    definition=order.product.contract_definition,
+                    signature_backend_reference="wfl_fake_dummy_id",
+                    definition_checksum="1234",
+                    context="context",
+                    submitted_for_signature_on=timezone.now(),
+                    student_signed_on=None,
+                    organization_signed_on=None,
+                )
+                order_found = contract_utility.get_signature_references(
+                    organization_id=order.organization.id, student_has_not_signed=True
+                )
 
-        self.assertEqual(list(order_found), ["wfl_fake_dummy_id"])
+                if state == enums.ORDER_STATE_CANCELED:
+                    self.assertEqual(list(order_found), [])
+                else:
+                    self.assertEqual(list(order_found), ["wfl_fake_dummy_id"])
 
     def test_utils_contract_get_signature_references_should_not_find_order(self):
         """
