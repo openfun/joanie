@@ -15,6 +15,7 @@ and this project adheres to
 
 ### Changed
 
+- Deprecated field `has_consent_to_terms` for `Order` model
 - Rework order statuses
 - Add `currency` field to `OrderPaymentSerializer` serializer
 - Allow an order with `no_payment` state to pay for failed installment

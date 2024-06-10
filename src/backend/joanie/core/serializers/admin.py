@@ -1085,7 +1085,6 @@ class AdminOrderSerializer(serializers.ModelSerializer):
             "contract",
             "certificate",
             "main_invoice",
-            "has_consent_to_terms",
         )
         read_only_fields = fields
 

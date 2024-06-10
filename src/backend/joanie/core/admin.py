@@ -583,7 +583,6 @@ class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
     readonly_fields = (
         "state",
         "total",
-        "has_consent_to_terms",
         "invoice",
         "certificate",
     )
