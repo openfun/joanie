@@ -5,9 +5,10 @@ from django.test import TestCase, override_settings
 
 from joanie.core import enums, factories
 from joanie.core.models import Certificate, DocumentImage
+from joanie.tests.base import BaseLogMixinTestCase
 
 
-class CertificateModelTestCase(TestCase):
+class CertificateModelTestCase(TestCase, BaseLogMixinTestCase):
     """Certificate model test case."""
 
     maxDiff = None
@@ -187,3 +188,40 @@ class CertificateModelTestCase(TestCase):
                 )
             else:
                 self.assertIsNone(certificate.verification_uri)
+
+    def test_models_certificate_get_document_context_missing_logo_raise_logger_error(
+        self,
+    ):
+        """
+        When getting the document context for a certificate, of type certificate or degree,
+        if the organization does not have a logo stored, it should trigger a logger error
+        with the 'id' of the organization concerned
+        """
+        organization = factories.OrganizationFactory(logo=None)
+        course = factories.CourseFactory(organizations=[organization])
+        product = factories.ProductFactory(courses=[course])
+        certificate = factories.OrderCertificateFactory(
+            order__product=product,
+            order__organization=organization,
+            certificate_definition__template="DEGREE",
+        )
+
+        with self.assertLogs() as logger:
+            certificate.get_document_context("en-us")
+
+        self.assertLogsContains(
+            logger, f"Organization {organization.id} does not have a logo."
+        )
+
+        certificate = factories.OrderCertificateFactory(
+            order__product=product,
+            order__organization=organization,
+            certificate_definition__template="CERTIFICATE",
+        )
+
+        with self.assertLogs() as logger:
+            certificate.get_document_context("en-us")
+
+        self.assertLogsContains(
+            logger, f"Organization {organization.id} does not have a logo."
+        )
