@@ -1130,7 +1130,6 @@ class OrderSerializer(serializers.ModelSerializer):
         read_only=True, slug_field="id", source="certificate"
     )
     contract = ContractSerializer(read_only=True, exclude_abilities=True)
-    has_consent_to_terms = serializers.BooleanField(write_only=True)
     payment_schedule = OrderPaymentSerializer(many=True, read_only=True)
     credit_card_id = serializers.SlugRelatedField(
         queryset=CreditCard.objects.all(),
@@ -1159,7 +1158,6 @@ class OrderSerializer(serializers.ModelSerializer):
             "target_enrollments",
             "total",
             "total_currency",
-            "has_consent_to_terms",
             "payment_schedule",
         ]
         read_only_fields = fields
@@ -1173,14 +1171,6 @@ class OrderSerializer(serializers.ModelSerializer):
             many=True,
             context=self.context,
         ).data
-
-    def validate_has_consent_to_terms(self, value):
-        """Check that user has accepted terms and conditions."""
-        if not value:
-            message = _("You must accept the terms and conditions to proceed.")
-            raise serializers.ValidationError(message)
-
-        return value
 
     def create(self, validated_data):
         """
@@ -1204,7 +1194,6 @@ class OrderSerializer(serializers.ModelSerializer):
         validated_data.pop("organization", None)
         validated_data.pop("product", None)
         validated_data.pop("order_group", None)
-        validated_data.pop("has_consent_to_terms", None)
         return super().update(instance, validated_data)
 
     def get_total_currency(self, *args, **kwargs) -> str:
