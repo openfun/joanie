@@ -30,20 +30,15 @@ class UtilsGenerateDocumentTestCase(TestCase):
 
         ## Article 3
         The student has paid in advance the whole course before the start
-        """
-        markdown_terms_and_conditions = """
+
         ## Terms and conditions
         Here are the terms and conditions of the current contract
         """
 
         body_content = markdown.markdown(textwrap.dedent(markdown_content))
-        terms_and_conditions_content = markdown.markdown(
-            textwrap.dedent(markdown_terms_and_conditions)
-        )
         context = {
             "contract": {
                 "body": body_content,
-                "terms_and_conditions": terms_and_conditions_content,
                 "title": "Contract Definition",
                 "description": "This is the contract definition",
             },
