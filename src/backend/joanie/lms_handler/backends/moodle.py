@@ -135,6 +135,8 @@ class MoodleLMSBackend(BaseLMSBackend):
             logger.error("Moodle error while creating user %s: %s", user.username, e)
             raise MoodleUserCreateException() from e
 
+    # pylint: disable=too-many-branches
+    # ruff: noqa: PLR0912
     def set_enrollment(self, enrollment):
         """Activate/deactivate an enrollment."""
         try:
@@ -143,12 +145,18 @@ class MoodleLMSBackend(BaseLMSBackend):
             logger.error("Moodle error while retrieving student role: %s", e)
             raise EnrollmentError() from e
 
+        user_id = None
         try:
             user_id = self.get_user_id(enrollment.user.username)
         except MoodleUserException as e:
             if not enrollment.is_active:
                 raise EnrollmentError() from e
-            user_created = self.create_user(enrollment.user)
+
+        if user_id is None:
+            try:
+                user_created = self.create_user(enrollment.user)
+            except MoodleUserCreateException as e:
+                raise EnrollmentError() from e
             user_id = user_created.get("id")
 
         course_id = self.extract_course_id(enrollment.course_run.resource_link)
