@@ -105,12 +105,12 @@ def _calculate_installments(total, due_dates, percentages):
     return installments
 
 
-def generate(total, signed_contract_date, course_start_date, course_end_date):
+def generate(total, beginning_contract_date, course_start_date, course_end_date):
     """
     Generate payment schedule for the order.
     """
     withdrawal_date = _withdrawal_limit_date(
-        signed_contract_date.date(), course_start_date.date()
+        beginning_contract_date.date(), course_start_date.date()
     )
     percentages = _get_installments_percentages(total)
     due_dates = _calculate_due_dates(
