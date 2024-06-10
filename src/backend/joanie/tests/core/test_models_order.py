@@ -1088,6 +1088,23 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         )
         self.assertFalse(order.has_unsigned_contract)
 
+    def test_models_order_has_consent_to_terms_should_raise_deprecation_warning(self):
+        """
+        Due to the refactoring of `has_consent_to_terms` attribute, it is now a deprecated field.
+        So when calling the field, it should raise a `DeprecationWarning` error.
+        """
+        order = factories.OrderFactory()
+
+        with self.assertRaises(DeprecationWarning) as deprecation_warning:
+            # ruff : noqa : B018
+            # pylint: disable=pointless-statement
+            order.has_consent_to_terms
+
+        self.assertEqual(
+            str(deprecation_warning.exception),
+            "Access denied to has_consent_to_terms: deprecated field",
+        )
+
     def test_models_order_avoid_to_create_with_an_archived_course_run(self):
         """
         An order cannot be generated if the course run is archived. It should raise a
