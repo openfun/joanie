@@ -465,11 +465,12 @@ class Order(BaseModel):
         on_delete=models.RESTRICT,
         db_index=True,
     )
-    has_consent_to_terms = models.BooleanField(
+    _has_consent_to_terms = models.BooleanField(
         verbose_name=_("has consent to terms"),
         editable=False,
         default=False,
         help_text=_("User has consented to the platform terms and conditions."),
+        db_column="has_consent_to_terms",
     )
     state = models.CharField(
         default=enums.ORDER_STATE_DRAFT,
@@ -1133,6 +1134,13 @@ class Order(BaseModel):
             )
 
         self.flow.cancel()
+
+    @property
+    def has_consent_to_terms(self):
+        """Redefine `has_consent_to_terms` property to raise an exception if used"""
+        raise DeprecationWarning(
+            "Access denied to has_consent_to_terms: deprecated field"
+        )
 
 
 class OrderTargetCourseRelation(BaseModel):
