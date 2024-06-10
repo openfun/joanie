@@ -24,11 +24,6 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
         """
         Issuer 'generate document' method should generate a contract definition document.
         """
-        factories.SiteConfigFactory(
-            site=Site.objects.get_current(),
-            terms_and_conditions="Terms and Conditions Content",
-        )
-
         user = factories.UserFactory(
             email="student@example.fr",
             first_name="Rooky",
@@ -39,7 +34,11 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
         definition = factories.ContractDefinitionFactory(
             title="Contract Definition Title",
             description="Contract Definition Description",
-            body="## Contract Definition Body",
+            body="""
+            ## Contract Definition Body
+            ## Terms and conditions
+            Terms and Conditions Content
+            """,
         )
 
         organization = factories.OrganizationFactory(
@@ -155,11 +154,12 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
 
         # - Contract content should be displayed
         self.assertIn("Contract Definition Body", document_text)
-
-        # - Appendices should be displayed
-        self.assertIn("Appendices", document_text)
         self.assertIn("Terms and conditions", document_text)
         self.assertIn("Terms and Conditions Content", document_text)
+
+        # - Appendices should be displayed
+        self.assertNotIn("Appendices", document_text)
+        self.assertNotIn("Syllabus", document_text)
 
         # - Signature slots should be displayed
         self.assertIn("Learner's signature", document_text)
@@ -182,7 +182,11 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
         definition = factories.ContractDefinitionFactory(
             title="Contract Definition Title",
             description="Contract Definition Description",
-            body="## Contract Definition Body",
+            body="""
+            ## Contract Definition Body,
+            ## Terms and conditions
+            Terms and Conditions Content
+            """,
         )
 
         context = contract_definition_utility.generate_document_context(
@@ -242,11 +246,12 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
 
         # - Contract content should be displayed
         self.assertIn("Contract Definition Body", document_text)
-
-        # - Appendices should be displayed
-        self.assertIn("Appendices", document_text)
         self.assertIn("Terms and conditions", document_text)
         self.assertIn("Terms and Conditions Content", document_text)
+
+        # - Appendices should be displayed
+        self.assertNotIn("Appendices", document_text)
+        self.assertNotIn("Syllabus", document_text)
 
         # - Signature slots should be displayed
         self.assertIn("Learner's signature", document_text)
