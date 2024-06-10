@@ -22,6 +22,7 @@ from joanie.tests.base import BaseLogMixinTestCase
 
 @override_settings(
     JOANIE_PAYMENT_SCHEDULE_LIMITS={
+        1: (100,),
         5: (30, 70),
         10: (30, 45, 45),
         100: (20, 30, 30, 20),
@@ -114,6 +115,26 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
         )
         self.assertEqual(
             payment_schedule._get_installments_percentages(150), (20, 30, 30, 20)
+        )
+
+    def test_utils_payment_schedule_calculate_due_dates_one_percentage_count(self):
+        """
+        Check that the due dates are correctly calculated when there is only one percentage count
+        """
+        withdrawal_date = date(2024, 1, 1)
+        course_start_date = date(2024, 2, 1)
+        course_end_date = date(2024, 3, 20)
+        percentages_count = 1
+
+        due_dates = payment_schedule._calculate_due_dates(
+            withdrawal_date, course_start_date, course_end_date, percentages_count
+        )
+
+        self.assertEqual(
+            due_dates,
+            [
+                date(2024, 1, 1),
+            ],
         )
 
     def test_utils_payment_schedule_calculate_due_dates(self):
@@ -248,6 +269,35 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
                     "id": second_uuid,
                     "amount": Money(2.10, settings.DEFAULT_CURRENCY),
                     "due_date": date(2024, 1, 10),
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+    def test_utils_payment_schedule_generate_1_part(self):
+        """
+        Check that order's schedule is correctly set for 1 part
+        """
+        total = 1
+        signed_contract_date = datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC"))
+        course_start_date = datetime(2024, 3, 1, 14, tzinfo=ZoneInfo("UTC"))
+        course_end_date = datetime(2024, 5, 1, 14, tzinfo=ZoneInfo("UTC"))
+
+        first_uuid = uuid.UUID("1932fbc5-d971-48aa-8fee-6d637c3154a5")
+        second_uuid = uuid.UUID("a1cf9f39-594f-4528-a657-a0b9018b90ad")
+        with mock.patch.object(payment_schedule.uuid, "uuid4") as uuid4_mock:
+            uuid4_mock.side_effect = [first_uuid, second_uuid]
+            schedule = payment_schedule.generate(
+                total, signed_contract_date, course_start_date, course_end_date
+            )
+
+        self.assertEqual(
+            schedule,
+            [
+                {
+                    "id": first_uuid,
+                    "amount": Money(1.00, settings.DEFAULT_CURRENCY),
+                    "due_date": date(2024, 1, 17),
                     "state": PAYMENT_STATE_PENDING,
                 },
             ],

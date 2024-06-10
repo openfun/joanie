@@ -65,6 +65,9 @@ def _calculate_due_dates(
     Then the second one can not be before the course start date
     The last one can not be after the course end date
     """
+    if percentages_count == 1:
+        return [withdrawal_date]
+
     due_dates = [withdrawal_date, course_start_date]
     for i in range(1, percentages_count - 1):
         due_date = course_start_date + relativedelta(months=i)
