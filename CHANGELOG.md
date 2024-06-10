@@ -16,6 +16,8 @@ and this project adheres to
 
 ### Changed
 
+- Update certificate template to render logo of organization if
+  it has a value.
 - Add `currency` field to `OrderPaymentSerializer` serializer
 - Allow an order with `no_payment` state to pay for failed installment
   on a payment schedule
@@ -25,7 +27,7 @@ and this project adheres to
 - Ensure when API requests fails with payment provider, it raises
   an error for `create_payment`, `create_one_click_payment` and
   `create_zero_click_payment`
-- Improve error management of `set_enrollment` method of 
+- Improve error management of `set_enrollment` method of
   MoodleBackend.
 - Bind properly organizations in a certificate template sentence
 

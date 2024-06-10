@@ -273,6 +273,10 @@ class Certificate(BaseModel):
             if logo_id:
                 if logo := self.images.filter(pk=logo_id).first():
                     logo_file = image_to_base64(logo.file)
+            else:
+                logger.error(
+                    "Organization %s does not have a logo.", self.organization.id
+                )
 
             organization["signature"] = signature_file
             organization["logo"] = logo_file
