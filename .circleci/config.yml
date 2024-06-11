@@ -161,14 +161,14 @@ jobs:
       - when:
           condition:
             not:
-                matches: { pattern: "^develop.+$", value: << pipeline.git.branch >> }
+                matches: { pattern: "^dev_/.+$", value: << pipeline.git.branch >> }
           steps:
             - run:
                 name: Lint code with pylint
                 command: ~/.local/bin/pylint joanie
       - when:
           condition:
-            matches: { pattern: "^develop.+$", value: << pipeline.git.branch >> }
+            matches: { pattern: "^dev_/.+$", value: << pipeline.git.branch >> }
           steps:
             - run:
                 name: Lint code with pylint, ignoring TODOs
