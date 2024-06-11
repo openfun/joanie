@@ -165,19 +165,12 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
         Authenticated users with owner role should be able to sign contracts in bulk but
         not validated orders should be excluded.
         """
-        order = factories.OrderFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(),
-            contract=factories.ContractFactory(),
-        )
+        # Simulate the user has signed its contract then later canceled its order
+        order = factories.OrderGeneratorFactory(state=enums.ORDER_STATE_PENDING)
+        order.flow.cancel()
         access = factories.UserOrganizationAccessFactory(
             organization=order.organization, role="owner"
         )
-        order.init_flow(billing_address=BillingAddressDictFactory())
-        order.submit_for_signature(order.owner)
-        order.contract.submitted_for_signature_on = timezone.now()
-        order.contract.student_signed_on = timezone.now()
-        # Simulate the user has signed its contract then later canceled its order
-        order.flow.cancel()
 
         token = self.generate_token_from_user(access.user)
 
