@@ -24,6 +24,8 @@ class SentryEncoder(DjangoJSONEncoder):
             return o.domain
         if o.__class__.__name__ == "Decimal" or isinstance(o, Exception):
             return str(o)
+        if o.__class__.__name__ == "Money":
+            return str(o.amount)
 
         return super().default(o)
 
