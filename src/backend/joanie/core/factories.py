@@ -567,6 +567,7 @@ class ProductTargetCourseRelationFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.ProductTargetCourseRelation
         skip_postgeneration_save = True
+        django_get_or_create = ("product", "course")
 
     product = factory.SubFactory(ProductFactory)
     course = factory.SubFactory(CourseFactory)
@@ -859,6 +860,18 @@ class OrderGeneratorFactory(factory.django.DjangoModelFactory):
                 self.init_flow(billing_address=BillingAddressDictFactory())
 
         if (
+            not self.is_free
+            and self.has_contract
+            and target_state
+            not in [
+                enums.ORDER_STATE_DRAFT,
+                enums.ORDER_STATE_ASSIGNED,
+                enums.ORDER_STATE_TO_SIGN,
+            ]
+        ):
+            self.generate_schedule()
+
+        if (
             target_state
             in [
                 enums.ORDER_STATE_PENDING_PAYMENT,
@@ -868,7 +881,6 @@ class OrderGeneratorFactory(factory.django.DjangoModelFactory):
             ]
             and not self.is_free
         ):
-            self.generate_schedule()
             if target_state == enums.ORDER_STATE_PENDING_PAYMENT:
                 self.payment_schedule[0]["state"] = enums.PAYMENT_STATE_PAID
             if target_state == enums.ORDER_STATE_NO_PAYMENT:
