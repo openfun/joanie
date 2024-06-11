@@ -51,9 +51,9 @@
                 <p><sup>*</sup>{% translate "MOOC: Massive Open Online Course" %}</p>
                 <p>
                     <strong>
-                    {% blocktranslate trimmed with organization=organization.name %}
+                    {% blocktranslate trimmed with organizations=organizations|list_key:'name'|join_and %}
                     The current document is not a degree or diploma and does not award credits (ECTS).
-                    <br />It does not certify that the learner was registered with {{ organization }}.
+                    <br />It does not certify that the learner was registered with {{ organizations }}.
                     <br />The learner's identity has not been verified.
                     {% endblocktranslate %}
                     </strong>

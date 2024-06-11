@@ -26,6 +26,7 @@ and this project adheres to
   `create_zero_click_payment`
 - Improve error management of `set_enrollment` method of 
   MoodleBackend.
+- Bind properly organizations in a certificate template sentence
 
 ## [2.2.0] - 2024-05-22
 
