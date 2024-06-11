@@ -102,10 +102,11 @@ class UtilsIssuersCertificateAndDegreeGenerateDocumentTestCase(TestCase):
         translated strings into the given code language. By default, the language is in English,
         and the fallback language as well.
         """
-        organization = factories.OrganizationFactory(title="University X")
+        org_1 = factories.OrganizationFactory(title="University X")
+        org_2 = factories.OrganizationFactory(title="University Y")
         user = factories.UserFactory(first_name="Joanie Cunningham")
         course = factories.CourseFactory(
-            title="Course with attestation", organizations=[organization]
+            title="Course with attestation", organizations=[org_1, org_2]
         )
         enrollment = factories.EnrollmentFactory(user=user, course_run__course=course)
         certificate_definition = factories.CertificateDefinitionFactory(
@@ -113,7 +114,8 @@ class UtilsIssuersCertificateAndDegreeGenerateDocumentTestCase(TestCase):
         )
 
         # - Add French translations
-        organization.translations.create(language_code="fr-fr", title="Université X")
+        org_1.translations.create(language_code="fr-fr", title="Université X")
+        org_2.translations.create(language_code="fr-fr", title="Université Y")
         course.translations.create(
             language_code="fr-fr", title="Cours avec attestation"
         )
@@ -130,7 +132,18 @@ class UtilsIssuersCertificateAndDegreeGenerateDocumentTestCase(TestCase):
         document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
         self.assertRegex(document_text, "ATTESTATION OF ACHIEVEMENT")
         self.assertRegex(
-            document_text, r"Joanie Cunningham.*Course with attestation.*University X"
+            document_text,
+            r"Joanie Cunningham.*Course with attestation.*University Y and University X",
+        )
+        self.assertRegex(
+            document_text,
+            (
+                r"The current document is not a degree or diploma and "
+                r"does not award credits \(ECTS\)\."
+                r" It does not certify that the learner was registered with "
+                r"University Y and University X\."
+                r" The learner's identity has not been verified\."
+            ),
         )
 
         with switch_language(course, "fr-fr"):
@@ -141,7 +154,7 @@ class UtilsIssuersCertificateAndDegreeGenerateDocumentTestCase(TestCase):
             document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
             self.assertRegex(
                 document_text,
-                r"Joanie Cunningham.*Cours avec attestation.*Université X",
+                r"Joanie Cunningham.*Cours avec attestation.*Université Y et Université X",
             )
 
         with switch_language(course, "de-de"):
@@ -153,5 +166,5 @@ class UtilsIssuersCertificateAndDegreeGenerateDocumentTestCase(TestCase):
             document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
             self.assertRegex(
                 document_text,
-                r"Joanie Cunningham.*Course with attestation.*University X",
+                r"Joanie Cunningham.*Course with attestation.*University Y and University X",
             )
