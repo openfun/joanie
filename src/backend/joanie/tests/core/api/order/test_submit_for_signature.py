@@ -10,7 +10,7 @@ from django.utils import timezone as django_timezone
 
 from joanie.core import enums, factories
 from joanie.core.models import CourseState
-from joanie.payment.factories import BillingAddressDictFactory, InvoiceFactory
+from joanie.payment.factories import BillingAddressDictFactory
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -76,19 +76,15 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         self,
     ):
         """
-        Authenticated users should not be able to submit for signature an order that is
-        not state equal to 'to sign' or 'to sign and to save payment method'.
+        Authenticated users should only be able to submit for signature an order that is
+        in the state 'to sign'.
+        If the order is in another state, it should raise an error.
         """
         user = factories.UserFactory()
         factories.UserAddressFactory(owner=user)
         for state, _ in enums.ORDER_STATE_CHOICES:
             with self.subTest(state=state):
-                order = factories.OrderFactory(
-                    owner=user,
-                    state=state,
-                    product__contract_definition=factories.ContractDefinitionFactory(),
-                    main_invoice=InvoiceFactory(),
-                )
+                order = factories.OrderGeneratorFactory(owner=user, state=state)
                 token = self.get_user_token(user.username)
 
                 response = self.client.post(
@@ -100,6 +96,12 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
                 if state == enums.ORDER_STATE_TO_SIGN:
                     self.assertEqual(response.status_code, HTTPStatus.OK)
                     self.assertIsNotNone(content.get("invitation_link"))
+                elif state in [enums.ORDER_STATE_DRAFT, enums.ORDER_STATE_ASSIGNED]:
+                    self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+                    self.assertEqual(
+                        content[0],
+                        "No contract definition attached to the contract's product.",
+                    )
                 else:
                     self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
                     self.assertEqual(
@@ -195,23 +197,16 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         'definition_checksum', 'signature_backend_reference' and 'submitted_for_signature_on'.
         In return we must have in the response the invitation link to sign the file.
         """
-        user = factories.UserFactory(
-            email="student_do@example.fr", first_name="John Doe", last_name=""
+        order = factories.OrderGeneratorFactory(
+            state=enums.ORDER_STATE_TO_SIGN,
+            contract__submitted_for_signature_on=django_timezone.now()
+            - timedelta(days=16),
+            contract__signature_backend_reference="wfl_fake_dummy_id_will_be_updated",
+            contract__definition_checksum="fake_test_file_hash_will_be_updated",
+            contract__context="content",
         )
-        order = factories.OrderFactory(
-            owner=user,
-            product__contract_definition=factories.ContractDefinitionFactory(),
-        )
-        token = self.get_user_token(user.username)
-        contract = factories.ContractFactory(
-            order=order,
-            definition=order.product.contract_definition,
-            signature_backend_reference="wfl_fake_dummy_id_will_be_updated",
-            definition_checksum="fake_test_file_hash_will_be_updated",
-            context="content",
-            submitted_for_signature_on=django_timezone.now() - timedelta(days=16),
-        )
-        order.init_flow(billing_address=BillingAddressDictFactory())
+        contract = order.contract
+        token = self.get_user_token(order.owner.username)
         expected_substring_invite_url = (
             "https://dummysignaturebackend.fr/?requestToken="
         )
@@ -245,24 +240,17 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         after synchronizing with the signature provider. We get the invitation link in the
         response in return.
         """
-        user = factories.UserFactory(
-            email="student_do@example.fr", first_name="John Doe", last_name=""
+        order = factories.OrderGeneratorFactory(
+            state=enums.ORDER_STATE_TO_SIGN,
+            contract__submitted_for_signature_on=django_timezone.now()
+            - timedelta(days=2),
+            contract__signature_backend_reference="wfl_fake_dummy_id",
+            contract__definition_checksum="fake_test_file_hash",
+            contract__context="content",
         )
-        order = factories.OrderFactory(
-            owner=user,
-            product__contract_definition=factories.ContractDefinitionFactory(),
-        )
-        token = self.get_user_token(user.username)
-        contract = factories.ContractFactory(
-            order=order,
-            definition=order.product.contract_definition,
-            signature_backend_reference="wfl_fake_dummy_id",
-            definition_checksum="fake_test_file_hash",
-            context="content",
-            submitted_for_signature_on=django_timezone.now() - timedelta(days=2),
-        )
-        order.init_flow(billing_address=BillingAddressDictFactory())
-        contract.definition.body = "a new content"
+        contract = order.contract
+        token = self.get_user_token(order.owner.username)
+        order.contract.definition.body = "a new content"
         expected_substring_invite_url = (
             "https://dummysignaturebackend.fr/?requestToken="
         )

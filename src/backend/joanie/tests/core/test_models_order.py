@@ -479,15 +479,9 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         to the signature backend according to the current date, the related
         course and the order pk.
         """
-        user = factories.UserFactory()
-        order = factories.OrderFactory(
-            owner=user,
-            product__contract_definition=factories.ContractDefinitionFactory(),
-        )
-        factories.ContractFactory(order=order)
-        order.init_flow(billing_address=BillingAddressDictFactory())
+        order = factories.OrderGeneratorFactory(state=enums.ORDER_STATE_TO_SIGN)
 
-        order.submit_for_signature(user=user)
+        order.submit_for_signature(user=order.owner)
         now = django_timezone.now()
 
         _mock_submit_for_signature.assert_called_once()
@@ -548,12 +542,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         factories.UserAddressFactory(owner=user)
         for state, _ in enums.ORDER_STATE_CHOICES:
             with self.subTest(state=state):
-                order = factories.OrderFactory(
-                    owner=user,
-                    state=state,
-                    product__contract_definition=factories.ContractDefinitionFactory(),
-                    main_invoice=InvoiceFactory(),
-                )
+                order = factories.OrderGeneratorFactory(owner=user, state=state)
 
                 if state == enums.ORDER_STATE_TO_SIGN:
                     order.submit_for_signature(user=user)
@@ -564,20 +553,18 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
                     ):
                         order.submit_for_signature(user=user)
 
-                    self.assertEqual(
-                        str(context.exception),
-                        "['Cannot submit an order that is not to sign.']",
-                    )
+                    if state in [enums.ORDER_STATE_DRAFT, enums.ORDER_STATE_ASSIGNED]:
+                        error_message = (
+                            "No contract definition attached to the contract's product."
+                        )
+                        error_context = {"order": dict, "product": dict}
+                    else:
+                        error_message = "Cannot submit an order that is not to sign."
+                        error_context = {"order": dict}
 
+                    self.assertEqual(str(context.exception), str([error_message]))
                     self.assertLogsEquals(
-                        logger.records,
-                        [
-                            (
-                                "ERROR",
-                                "Cannot submit an order that is not to sign.",
-                                {"order": dict},
-                            ),
-                        ],
+                        logger.records, [("ERROR", error_message, error_context)]
                     )
 
     def test_models_order_submit_for_signature_with_a_brand_new_contract(
@@ -590,15 +577,11 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         'submitted_for_signature_on', 'context', 'definition_checksum',
         'signature_backend_reference'.
         """
-        user = factories.UserFactory()
-        order = factories.OrderFactory(
-            owner=user,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+        order = factories.OrderGeneratorFactory(
+            state=enums.ORDER_STATE_TO_SIGN, contract=None
         )
-        factories.ContractFactory(order=order)
-        order.init_flow(billing_address=BillingAddressDictFactory())
 
-        raw_invitation_link = order.submit_for_signature(user=user)
+        raw_invitation_link = order.submit_for_signature(user=order.owner)
 
         order.contract.refresh_from_db()
         self.assertIsNotNone(order.contract)
@@ -622,29 +605,23 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         'submitted_for_signature_on', 'context', 'definition_checksum',
         'signature_backend_reference' of the contract.
         """
-        user = factories.UserFactory()
-        order = factories.OrderFactory(
-            owner=user,
-            product__contract_definition=factories.ContractDefinitionFactory(),
-            main_invoice=InvoiceFactory(),
+        order = factories.OrderGeneratorFactory(
+            state=enums.ORDER_STATE_TO_SIGN,
+            contract__signature_backend_reference="wfl_fake_dummy_id_1",
+            contract__definition_checksum="fake_dummy_file_hash_1",
+            contract__context="content",
+            contract__submitted_for_signature_on=django_timezone.now(),
         )
+        contract = order.contract
         context = contract_definition.generate_document_context(
             contract_definition=order.product.contract_definition,
-            user=user,
+            user=order.owner,
             order=order,
         )
-        contract = factories.ContractFactory(
-            order=order,
-            definition=order.product.contract_definition,
-            signature_backend_reference="wfl_fake_dummy_id_1",
-            definition_checksum="fake_dummy_file_hash_1",
-            context=context,
-            submitted_for_signature_on=django_timezone.now(),
-        )
-        billing_address = order.main_invoice.recipient_address.to_dict()
-        order.init_flow(billing_address=billing_address)
+        contract.context = context
+        contract.save()
 
-        invitation_url = order.submit_for_signature(user=user)
+        invitation_url = order.submit_for_signature(user=order.owner)
 
         contract.refresh_from_db()
         self.assertEqual(
@@ -667,22 +644,16 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         'submitted_for_signature_on', 'context', 'definition_checksum',
         'signature_backend_reference'
         """
-        user = factories.UserFactory()
-        order = factories.OrderFactory(
-            owner=user,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+        order = factories.OrderGeneratorFactory(
+            state=enums.ORDER_STATE_TO_SIGN,
+            contract__signature_backend_reference="wfl_fake_dummy_id_123",
+            contract__definition_checksum="fake_test_file_hash_1",
+            contract__context="content",
+            contract__submitted_for_signature_on=django_timezone.now(),
         )
-        contract = factories.ContractFactory(
-            order=order,
-            definition=order.product.contract_definition,
-            signature_backend_reference="wfl_fake_dummy_id_123",
-            definition_checksum="fake_test_file_hash_1",
-            context="content",
-            submitted_for_signature_on=django_timezone.now(),
-        )
-        order.init_flow(billing_address=BillingAddressDictFactory())
+        contract = order.contract
 
-        invitation_url = order.submit_for_signature(user=user)
+        invitation_url = order.submit_for_signature(user=order.owner)
 
         contract.refresh_from_db()
         self.assertIn("https://dummysignaturebackend.fr/?requestToken=", invitation_url)
@@ -1007,6 +978,21 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         self.assertIsInstance(contract.context["course"]["price"], str)
         self.assertEqual(order.total, Decimal("1202.99"))
         self.assertEqual(contract.context["course"]["price"], "1202.99")
+
+    def test_models_order_submit_for_signature_generate_schedule(self):
+        """
+        Order submit_for_signature should generate a schedule for the order.
+        """
+        order = factories.OrderGeneratorFactory(
+            state=enums.ORDER_STATE_TO_SIGN,
+            product__price=Decimal("100.00"),
+        )
+        self.assertIsNone(order.payment_schedule)
+
+        order.submit_for_signature(user=order.owner)
+
+        self.assertIsNotNone(order.payment_schedule)
+
 
     def test_models_order_is_free(self):
         """
