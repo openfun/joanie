@@ -8,7 +8,7 @@ from django.test import TestCase
 from django.test.utils import override_settings
 from django.utils import timezone as django_timezone
 
-from joanie.core import factories
+from joanie.core import enums, factories
 from joanie.signature.backends import get_signature_backend
 
 
@@ -71,53 +71,47 @@ class BaseSignatureBackendTestCase(TestCase):
         self.assertEqual(token_key_setting, "fake_token_id")
         self.assertEqual(consent_page_key_setting, "fake_cop_id")
 
-    # TODO: student enrollment should not be done
-    # @override_settings(
-    #     JOANIE_SIGNATURE_BACKEND=random.choice(
-    #         [
-    #             "joanie.signature.backends.base.BaseSignatureBackend",
-    #             "joanie.signature.backends.dummy.DummySignatureBackend",
-    #         ]
-    #     )
-    # )
-    # @mock.patch("joanie.core.models.Order.enroll_user_to_course_run")
-    # def test_backend_signature_base_backend_confirm_student_signature(
-    #     self, _mock_enroll_user
-    # ):
-    #     """
-    #     This test verifies that the `confirm_student_signature` method updates the contract with a
-    #     timestamps for the field 'student_signed_on', and it should not set 'None' to the field
-    #     'submitted_for_signature_on'.
-    #
-    #     Furthermore, it should call the method
-    #     `enroll_user_to_course_run` on the contract's order. In this way, when user has signed
-    #     its contract, it should be enrolled to courses with only one course run.
-    #     """
-    #     user = factories.UserFactory()
-    #     order = factories.OrderFactory(
-    #         owner=user,
-    #         product__contract_definition=factories.ContractDefinitionFactory(),
-    #         product__price=0,
-    #     )
-    #     contract = factories.ContractFactory(
-    #         order=order,
-    #         definition=order.product.contract_definition,
-    #         signature_backend_reference="wfl_fake_dummy_id",
-    #         definition_checksum="fake_test_file_hash",
-    #         context="content",
-    #         submitted_for_signature_on=django_timezone.now(),
-    #     )
-    #     order.flow.assign()
-    #     backend = get_signature_backend()
-    #
-    #     backend.confirm_student_signature(reference="wfl_fake_dummy_id")
-    #
-    #     contract.refresh_from_db()
-    #     self.assertIsNotNone(contract.submitted_for_signature_on)
-    #     self.assertIsNotNone(contract.student_signed_on)
-    #
-    #     # contract.order.enroll_user_to_course should have been called once
-    #     _mock_enroll_user.assert_called_once()
+    @override_settings(
+        JOANIE_SIGNATURE_BACKEND=random.choice(
+            [
+                "joanie.signature.backends.base.BaseSignatureBackend",
+                "joanie.signature.backends.dummy.DummySignatureBackend",
+            ]
+        )
+    )
+    def test_backend_signature_base_backend_confirm_student_signature(self):
+        """
+        This test verifies that the `confirm_student_signature` method updates the contract with a
+        timestamps for the field 'student_signed_on', and it should not set 'None' to the field
+        'submitted_for_signature_on'.
+
+        Furthermore, it should update the order state.
+        """
+        user = factories.UserFactory()
+        order = factories.OrderFactory(
+            owner=user,
+            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__price=0,
+        )
+        contract = factories.ContractFactory(
+            order=order,
+            definition=order.product.contract_definition,
+            signature_backend_reference="wfl_fake_dummy_id",
+            definition_checksum="fake_test_file_hash",
+            context="content",
+            submitted_for_signature_on=django_timezone.now(),
+        )
+        order.init_flow()
+        backend = get_signature_backend()
+
+        backend.confirm_student_signature(reference="wfl_fake_dummy_id")
+
+        contract.refresh_from_db()
+        self.assertIsNotNone(contract.submitted_for_signature_on)
+        self.assertIsNotNone(contract.student_signed_on)
+
+        order.refresh_from_db()
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
     @override_settings(
         JOANIE_SIGNATURE_BACKEND=random.choice(
