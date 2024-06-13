@@ -424,6 +424,19 @@ class Base(Configuration):
         environ_name="JOANIE_PAYMENT_SCHEDULE_LIMITS",
         environ_prefix=None,
     )
+    # The full list of countries available for use:
+    # https://github.com/workalendar/workalendar#available-calendars
+    JOANIE_CALENDAR = values.Value(
+        "workalendar.europe.France",
+        environ_name="JOANIE_CALENDAR",
+        environ_prefix=None,
+    )
+    # Number of days for the withdrawal period as required by your country's contract legislation
+    JOANIE_WITHDRAWAL_PERIOD_DAYS = values.PositiveIntegerValue(
+        16,
+        environ_name="JOANIE_WITHDRAWAL_PERIOD_DAYS",
+        environ_prefix=None,
+    )
 
     # CORS
 
