@@ -307,9 +307,9 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
 
         # Create an order
         order = factories.OrderFactory(product=product)
-        order.submit()
+        order.flow.init()
 
-        self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
         self.assertEqual(len(responses.calls), 1)
         self.assertEqual(responses.calls[0].request.url, url)
@@ -370,9 +370,9 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
 
         # Create an order
         order = factories.OrderFactory(product=product)
-        order.submit()
+        order.flow.init()
 
-        self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
         self.assertEqual(len(responses.calls), 1)
         self.assertEqual(responses.calls[0].request.url, url)
@@ -658,10 +658,10 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
 
         # - Submit the order to trigger the validation as it is free
         order = factories.OrderFactory(product=product)
-        order.submit()
+        order.flow.init()
 
         order.refresh_from_db()
-        self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
         self.assertEqual(len(responses.calls), 3)
 
