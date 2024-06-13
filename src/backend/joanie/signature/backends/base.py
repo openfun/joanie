@@ -64,10 +64,7 @@ class BaseSignatureBackend:
         contract.student_signed_on = django_timezone.now()
         contract.save()
 
-        # The student has signed the contract, we can now try to automatically enroll
-        # it to single course runs opened for enrollment.
-        # TODO: we should remove this
-        # contract.order.enroll_user_to_course_run()
+        contract.order.flow.update()
 
         logger.info("Student signed the contract '%s'", contract.id)
 
