@@ -638,12 +638,11 @@ class EnrollmentModelsTestCase(TestCase):
             course=relation.course,
             organization=relation.organizations.first(),
         )
-        order.init_flow()
-
         factories.ContractFactory(
             order=order,
             definition=product.contract_definition,
         )
+        order.init_flow()
 
         with self.assertRaises(ValidationError) as context:
             factories.EnrollmentFactory(
@@ -670,6 +669,7 @@ class EnrollmentModelsTestCase(TestCase):
             submitted_for_signature_on=timezone.now(),
             student_signed_on=timezone.now(),
         )
+        order.flow.update()
 
         # - Now the enrollment should be allowed
         factories.EnrollmentFactory(
