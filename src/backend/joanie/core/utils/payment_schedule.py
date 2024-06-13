@@ -10,9 +10,9 @@ from django.conf import settings
 
 from dateutil.relativedelta import relativedelta
 from stockholm import Money, Number
-from workalendar.europe import France
 
 from joanie.core import enums
+from joanie.payment import get_country_calendar
 
 logger = logging.getLogger(__name__)
 
@@ -47,8 +47,10 @@ def _withdrawal_limit_date(signed_contract_date, course_start_date):
     The two first rules can be simplified with adding 16 days to the start date.
     So, the withdrawal limit date is the start date + 16 days.
     """
-    calendar = France()
-    withdrawal_date = signed_contract_date + timedelta(days=16)
+    calendar = get_country_calendar()
+    withdrawal_date = signed_contract_date + timedelta(
+        days=settings.JOANIE_WITHDRAWAL_PERIOD_DAYS
+    )
     if not calendar.is_working_day(withdrawal_date):
         return calendar.add_working_days(withdrawal_date, 1, keep_datetime=True)
     return (

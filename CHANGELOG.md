@@ -8,6 +8,11 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Add settings configuration for the contract's country calendar to
+  manage the payment schedule and the withdrawal period in days
+
 ## [2.3.0] - 2024-06-18
 
 ### Added
