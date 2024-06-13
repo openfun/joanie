@@ -993,7 +993,6 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
 
         self.assertIsNotNone(order.payment_schedule)
 
-
     def test_models_order_is_free(self):
         """
         Check that the `is_free` property returns True if the order total is 0.
