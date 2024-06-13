@@ -156,7 +156,6 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
             owner=user,
             product__contract_definition=factories.ContractDefinitionFactory(),
             product__target_courses=target_courses,
-            contract=factories.ContractFactory(),
         )
         order.init_flow(billing_address=BillingAddressDictFactory())
         token = self.get_user_token(user.username)
