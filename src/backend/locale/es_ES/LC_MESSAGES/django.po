@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: joanie\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-05-22 07:36+0000\n"
-"PO-Revision-Date: 2024-05-22 09:21\n"
+"POT-Creation-Date: 2024-06-05 17:49+0000\n"
+"PO-Revision-Date: 2024-06-10 12:04\n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
 "Language: es_ES\n"
@@ -412,7 +412,7 @@ msgstr ""
 #: joanie/core/models/accounts.py:154 joanie/core/models/certifications.py:33
 #: joanie/core/models/contracts.py:29 joanie/core/models/courses.py:170
 #: joanie/core/models/courses.py:470 joanie/core/models/courses.py:783
-#: joanie/core/models/products.py:68 joanie/payment/models.py:367
+#: joanie/core/models/products.py:68 joanie/payment/models.py:379
 msgid "title"
 msgstr ""
 
@@ -442,7 +442,7 @@ msgstr ""
 
 #: joanie/core/models/accounts.py:163 joanie/core/models/courses.py:357
 #: joanie/core/models/courses.py:587 joanie/core/models/products.py:463
-#: joanie/payment/models.py:376
+#: joanie/payment/models.py:388
 msgid "owner"
 msgstr ""
 
@@ -451,7 +451,7 @@ msgstr ""
 msgid "organization"
 msgstr ""
 
-#: joanie/core/models/accounts.py:177 joanie/payment/models.py:380
+#: joanie/core/models/accounts.py:177 joanie/payment/models.py:392
 msgid "main"
 msgstr ""
 
@@ -572,7 +572,7 @@ msgid "Date of issuance"
 msgstr ""
 
 #: joanie/core/models/certifications.py:82 joanie/core/models/contracts.py:80
-#: joanie/core/models/products.py:1127 joanie/payment/models.py:54
+#: joanie/core/models/products.py:1140 joanie/payment/models.py:54
 msgid "order"
 msgstr ""
 
@@ -811,7 +811,7 @@ msgstr ""
 
 #: joanie/core/models/courses.py:705 joanie/core/models/courses.py:777
 #: joanie/core/models/products.py:275 joanie/core/models/products.py:421
-#: joanie/core/models/products.py:1115
+#: joanie/core/models/products.py:1128
 msgid "course"
 msgstr ""
 
@@ -960,7 +960,7 @@ msgstr ""
 msgid "Certificate definition is only allowed for product kinds: "
 msgstr ""
 
-#: joanie/core/models/products.py:290 joanie/core/models/products.py:1121
+#: joanie/core/models/products.py:290 joanie/core/models/products.py:1134
 msgid "course runs"
 msgstr ""
 
@@ -968,11 +968,11 @@ msgstr ""
 msgid "position in product"
 msgstr ""
 
-#: joanie/core/models/products.py:295 joanie/core/models/products.py:1133
+#: joanie/core/models/products.py:295 joanie/core/models/products.py:1146
 msgid "take into account for certification"
 msgstr ""
 
-#: joanie/core/models/products.py:296 joanie/core/models/products.py:1134
+#: joanie/core/models/products.py:296 joanie/core/models/products.py:1147
 msgid "Take into account the course grade for certification."
 msgstr ""
 
@@ -1077,15 +1077,15 @@ msgstr ""
 msgid "Course run "
 msgstr ""
 
-#: joanie/core/models/products.py:1131
+#: joanie/core/models/products.py:1144
 msgid "position in order"
 msgstr ""
 
-#: joanie/core/models/products.py:1142
+#: joanie/core/models/products.py:1155
 msgid "Course relation to an order with a position"
 msgstr ""
 
-#: joanie/core/models/products.py:1143
+#: joanie/core/models/products.py:1156
 msgid "Courses relations to orders with a position"
 msgstr ""
 
@@ -1133,7 +1133,7 @@ msgstr ""
 msgid "You are not allowed to manage accesses for this organization."
 msgstr ""
 
-#: joanie/core/serializers/client.py:1164
+#: joanie/core/serializers/client.py:1172
 msgid "You must accept the terms and conditions to proceed."
 msgstr ""
 
@@ -1639,6 +1639,10 @@ msgstr ""
 msgid "Cannot parse notification."
 msgstr ""
 
+#: joanie/payment/exceptions.py:54
+msgid "Payment provider API error."
+msgstr ""
+
 #: joanie/payment/models.py:61 joanie/payment/models.py:327
 msgid "total"
 msgstr ""
@@ -1679,27 +1683,27 @@ msgstr ""
 msgid "Transactions"
 msgstr ""
 
-#: joanie/payment/models.py:361
+#: joanie/payment/models.py:373
 msgid "initial issuer transaction identifier"
 msgstr ""
 
-#: joanie/payment/models.py:368
+#: joanie/payment/models.py:380
 msgid "brand"
 msgstr ""
 
-#: joanie/payment/models.py:370
+#: joanie/payment/models.py:382
 msgid "expiration month"
 msgstr ""
 
-#: joanie/payment/models.py:372
+#: joanie/payment/models.py:384
 msgid "expiration year"
 msgstr ""
 
-#: joanie/payment/models.py:373
+#: joanie/payment/models.py:385
 msgid "last 4 numbers"
 msgstr ""
 
-#: joanie/payment/models.py:410
+#: joanie/payment/models.py:422
 msgid "Demote a main credit card is forbidden"
 msgstr ""
 

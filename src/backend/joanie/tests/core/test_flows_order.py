@@ -280,6 +280,131 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             }
         ]
     )
+    def test_flows_order_validate_auto_enroll(self):
+        """
+        When an order is validated, if one target course contains only one course run
+        and this one is opened for enrollment, the user should be automatically enrolled
+        """
+        course = factories.CourseFactory()
+        resource_link = (
+            "http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course"
+        )
+        factories.CourseRunFactory(
+            course=course,
+            resource_link=resource_link,
+            state=CourseState.ONGOING_OPEN,
+            is_listed=False,
+        )
+        product = factories.ProductFactory(target_courses=[course], price="0.00")
+
+        url = "http://openedx.test/api/enrollment/v1/enrollment"
+        responses.add(
+            responses.POST,
+            url,
+            status=HTTPStatus.OK,
+            json={"is_active": True},
+        )
+
+        # Create an order
+        order = factories.OrderFactory(product=product)
+        order.submit()
+
+        self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
+
+        self.assertEqual(len(responses.calls), 1)
+        self.assertEqual(responses.calls[0].request.url, url)
+        self.assertEqual(
+            responses.calls[0].request.headers["X-Edx-Api-Key"], "a_secure_api_token"
+        )
+        enrollment = Enrollment.objects.get(
+            user=order.owner, course_run__resource_link=resource_link
+        )
+        self.assertEqual(enrollment.state, "set")
+        self.assertEqual(
+            json.loads(responses.calls[0].request.body),
+            {
+                "is_active": enrollment.is_active,
+                "mode": "verified",
+                "user": enrollment.user.username,
+                "course_details": {"course_id": "course-v1:edx+000001+Demo_Course"},
+            },
+        )
+
+    @responses.activate
+    @override_settings(
+        JOANIE_LMS_BACKENDS=[
+            {
+                "API_TOKEN": "a_secure_api_token",
+                "BACKEND": "joanie.lms_handler.backends.openedx.OpenEdXLMSBackend",
+                "BASE_URL": "http://openedx.test",
+                "COURSE_REGEX": r"^.*/courses/(?P<course_id>.*)/course/?$",
+                "SELECTOR_REGEX": r".*",
+            }
+        ]
+    )
+    def test_flows_order_validate_auto_enroll_failure(self):
+        """
+        When an order is validated, if one target course contains only one course run
+        and this one is opened for enrollment, the user should be automatically enrolled
+        If the enrollment request fails, the order should be validated.
+        """
+        course = factories.CourseFactory()
+        resource_link = (
+            "http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course"
+        )
+        factories.CourseRunFactory(
+            course=course,
+            resource_link=resource_link,
+            state=CourseState.ONGOING_OPEN,
+            is_listed=False,
+        )
+        product = factories.ProductFactory(target_courses=[course], price="0.00")
+
+        url = "http://openedx.test/api/enrollment/v1/enrollment"
+        responses.add(
+            responses.POST,
+            url,
+            status=HTTPStatus.BAD_REQUEST,
+            json=None,
+        )
+
+        # Create an order
+        order = factories.OrderFactory(product=product)
+        order.submit()
+
+        self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
+
+        self.assertEqual(len(responses.calls), 1)
+        self.assertEqual(responses.calls[0].request.url, url)
+        self.assertEqual(
+            responses.calls[0].request.headers["X-Edx-Api-Key"], "a_secure_api_token"
+        )
+        enrollment = Enrollment.objects.get(
+            user=order.owner, course_run__resource_link=resource_link
+        )
+        self.assertEqual(enrollment.state, "failed")
+        self.assertEqual(
+            json.loads(responses.calls[0].request.body),
+            {
+                "is_active": enrollment.is_active,
+                "mode": "verified",
+                "user": enrollment.user.username,
+                "course_details": {"course_id": "course-v1:edx+000001+Demo_Course"},
+            },
+        )
+
+    @responses.activate
+    @override_settings(
+        JOANIE_LMS_BACKENDS=[
+            {
+                "API_TOKEN": "a_secure_api_token",
+                "BACKEND": "joanie.lms_handler.backends.openedx.OpenEdXLMSBackend",
+                "BASE_URL": "http://openedx.test",
+                "COURSE_REGEX": r"^.*/courses/(?P<course_id>.*)/course/?$",
+                "SELECTOR_REGEX": r".*",
+            }
+        ]
+    )
     def test_flows_order_complete_preexisting_enrollments_targeted(self):
         """
         When an order is completed, if the user was previously enrolled for free in any of the
@@ -450,6 +575,95 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
         self.assertEqual(len(responses.calls), 6)
+
+    @responses.activate
+    @override_settings(
+        JOANIE_LMS_BACKENDS=[
+            {
+                "API_TOKEN": "a_secure_api_token",
+                "BACKEND": "joanie.lms_handler.backends.moodle.MoodleLMSBackend",
+                "BASE_URL": "http://moodle.test/webservice/rest/server.php",
+                "COURSE_REGEX": r"^.*/course/view.php\?id=.*$",
+                "SELECTOR_REGEX": r"^.*/course/view.php\?id=.*$",
+            }
+        ]
+    )
+    def test_flows_order_validate_auto_enroll_moodle_failure(self):
+        """
+        When an order is validated, if one target course contains only one course run
+        and this one is opened for enrollment, the user should be automatically enrolled
+        If the enrollment request fails, the order should be validated.
+        """
+        course = factories.CourseFactory()
+        resource_link = "http://moodle.test/course/view.php?id=2"
+        factories.CourseRunFactory(
+            course=course,
+            resource_link=resource_link,
+            state=CourseState.ONGOING_OPEN,
+            is_listed=False,
+        )
+        product = factories.ProductFactory(target_courses=[course], price="0.00")
+        backend = LMSHandler.select_lms(resource_link)
+
+        responses.add(
+            responses.POST,
+            backend.build_url("local_wsgetroles_get_roles"),
+            status=HTTPStatus.OK,
+            json=[
+                {
+                    "id": 5,
+                    "name": "",
+                    "shortname": "student",
+                    "description": "",
+                    "sortorder": 5,
+                    "archetype": "student",
+                },
+            ],
+        )
+
+        responses.add(
+            responses.POST,
+            backend.build_url("core_user_get_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "criteria[0][key]": "username",
+                        "criteria[0][value]": "student",
+                    }
+                )
+            ],
+            status=HTTPStatus.NOT_FOUND,
+        )
+
+        responses.add(
+            responses.POST,
+            backend.build_url("core_user_create_user"),
+            status=HTTPStatus.BAD_REQUEST,
+        )
+
+        responses.add(
+            responses.POST,
+            backend.build_url("enrol_manual_enrol_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "enrolments[0][courseid]": "2",
+                        "enrolments[0][userid]": "5",
+                        "enrolments[0][roleid]": "5",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+        )
+
+        # - Submit the order to trigger the validation as it is free
+        order = factories.OrderFactory(product=product)
+        order.submit()
+
+        order.refresh_from_db()
+        self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
+
+        self.assertEqual(len(responses.calls), 3)
 
     def test_flows_order_cancel_success(self):
         """Test that the cancel transition is successful from any state"""

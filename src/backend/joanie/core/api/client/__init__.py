@@ -202,10 +202,14 @@ class CourseProductRelationViewSet(
         Return the payment schedule for a course product relation.
         """
         course_product_relation = self.get_object()
+        course_run_dates = (
+            course_product_relation.product.get_equivalent_course_run_dates()
+        )
         payment_schedule = generate_payment_schedule(
             course_product_relation.product.price,
             timezone.now(),
-            course_product_relation.product.get_equivalent_course_run_dates()["end"],
+            course_run_dates["start"],
+            course_run_dates["end"],
         )
 
         serializer = self.get_serializer(data={"payment_schedule": payment_schedule})

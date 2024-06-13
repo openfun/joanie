@@ -28,7 +28,7 @@ def _get_installments_percentages(total):
     return percentages
 
 
-def _withdrawal_limit_date(start_date):
+def _withdrawal_limit_date(signed_contract_date, course_start_date):
     """
     Return the withdrawal limit date for the order.
 
@@ -48,25 +48,35 @@ def _withdrawal_limit_date(start_date):
     So, the withdrawal limit date is the start date + 16 days.
     """
     calendar = France()
-    withdrawal_date = start_date + timedelta(days=16)
+    withdrawal_date = signed_contract_date + timedelta(days=16)
     if not calendar.is_working_day(withdrawal_date):
         return calendar.add_working_days(withdrawal_date, 1, keep_datetime=True)
-    return withdrawal_date
+    return (
+        withdrawal_date if withdrawal_date < course_start_date else signed_contract_date
+    )
 
 
-def _calculate_due_dates(start_date, end_date, percentages_count):
+def _calculate_due_dates(
+    withdrawal_date, course_start_date, course_end_date, percentages_count
+):
     """
     Calculate the due dates for the order.
+    The first date is the withdrawal date
+    Then the second one can not be before the course start date
+    The last one can not be after the course end date
     """
-    due_dates = []
-    for i in range(percentages_count):
-        due_date = start_date + relativedelta(months=i)
-        if due_date > end_date:
+    if percentages_count == 1:
+        return [withdrawal_date]
+
+    due_dates = [withdrawal_date, course_start_date]
+    for i in range(1, percentages_count - 1):
+        due_date = course_start_date + relativedelta(months=i)
+        if due_date > course_end_date:
             # If due date is after end date, we should stop the loop, and add the end
             # date as the last due date
-            due_dates.append(end_date)
+            due_dates.append(course_end_date)
             break
-        due_dates.append(min(due_date, end_date))
+        due_dates.append(min(due_date, course_end_date))
     return due_dates
 
 
@@ -95,15 +105,20 @@ def _calculate_installments(total, due_dates, percentages):
     return installments
 
 
-def generate(total, start_date, end_date):
+def generate(total, beginning_contract_date, course_start_date, course_end_date):
     """
     Generate payment schedule for the order.
     """
-    start_date = start_date.date()
-    end_date = end_date.date()
-    withdrawal_date = _withdrawal_limit_date(start_date)
+    withdrawal_date = _withdrawal_limit_date(
+        beginning_contract_date.date(), course_start_date.date()
+    )
     percentages = _get_installments_percentages(total)
-    due_dates = _calculate_due_dates(withdrawal_date, end_date, len(percentages))
+    due_dates = _calculate_due_dates(
+        withdrawal_date,
+        course_start_date.date(),
+        course_end_date.date(),
+        len(percentages),
+    )
     installments = _calculate_installments(total, due_dates, percentages)
 
     return installments

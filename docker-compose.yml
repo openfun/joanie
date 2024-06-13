@@ -124,7 +124,7 @@ services:
     image: jwilder/dockerize
 
   crowdin:
-    image: crowdin/cli:3.15.0
+    image: crowdin/cli:4.0.0
     volumes:
       - ".:/app"
     env_file:
