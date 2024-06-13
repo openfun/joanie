@@ -979,12 +979,7 @@ class Order(BaseModel):
 
         contract_definition = self.product.contract_definition
 
-        try:
-            contract = self.contract
-        except Contract.DoesNotExist:
-            contract = Contract(order=self, definition=contract_definition)
-
-        if self.contract and self.contract.student_signed_on:
+        if self.contract.student_signed_on:
             message = "Contract is already signed by the student, cannot resubmit."
             logger.error(
                 message, extra={"context": {"contract": self.contract.to_dict()}}
@@ -998,22 +993,24 @@ class Order(BaseModel):
         context = contract_definition_utility.generate_document_context(
             contract_definition=contract_definition,
             user=user,
-            order=contract.order,
+            order=self.contract.order,
         )
         file_bytes = issuers.generate_document(
             name=contract_definition.name, context=context
         )
 
         was_already_submitted = (
-            contract.submitted_for_signature_on and contract.signature_backend_reference
+            self.contract.submitted_for_signature_on
+            and self.contract.signature_backend_reference
         )
         should_be_resubmitted = was_already_submitted and (
-            not contract.is_eligible_for_signing() or contract.context != context
+            not self.contract.is_eligible_for_signing()
+            or self.contract.context != context
         )
 
         if should_be_resubmitted:
             backend_signature.delete_signing_procedure(
-                contract.signature_backend_reference
+                self.contract.signature_backend_reference
             )
 
         # We want to submit or re-submit the contract for signature in three cases:
@@ -1033,10 +1030,10 @@ class Order(BaseModel):
                 file_bytes=file_bytes,
                 order=self,
             )
-            contract.tag_submission_for_signature(reference, checksum, context)
+            self.contract.tag_submission_for_signature(reference, checksum, context)
 
         return backend_signature.get_signature_invitation_link(
-            user.email, [contract.signature_backend_reference]
+            user.email, [self.contract.signature_backend_reference]
         )
 
     def get_equivalent_course_run_dates(self):
@@ -1196,6 +1193,12 @@ class Order(BaseModel):
             self._create_main_invoice(billing_address)
 
         self.freeze_target_courses()
+
+        if self.product.contract_definition and not self.has_contract:
+            Contract.objects.create(
+                order=self, definition=self.product.contract_definition
+            )
+
         self.flow.update()
 
 
