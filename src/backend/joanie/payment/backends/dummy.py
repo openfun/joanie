@@ -36,11 +36,12 @@ class DummyPaymentBackend(BasePaymentBackend):
     name = "dummy"
 
     @staticmethod
-    def get_payment_id(order_id):
+    def get_payment_id(installment_id: str):
         """
-        Process a payment id according to order id.
+        Process a dummy `payment_id` according to the given input parameter (installment id,
+        or an order id).
         """
-        return f"pay_{order_id:s}"
+        return f"pay_{installment_id}"
 
     def _treat_payment(self, resource, data):
         """
@@ -127,7 +128,7 @@ class DummyPaymentBackend(BasePaymentBackend):
     ):
         """Build the generic payment object."""
         order_id = str(order.id)
-        payment_id = self.get_payment_id(order_id)
+        payment_id = self.get_payment_id(installment.get("id"))
         notification_url = self.get_notification_url()
         payment_info = {
             "id": payment_id,
@@ -142,6 +143,7 @@ class DummyPaymentBackend(BasePaymentBackend):
             payment_info["billing_address"] = billing_address
         if credit_card_token:
             payment_info["credit_card_token"] = credit_card_token
+
         cache.set(payment_id, payment_info)
 
         return {
@@ -194,7 +196,12 @@ class DummyPaymentBackend(BasePaymentBackend):
         """
         Call create_payment method and bind a `is_paid` property to payment information.
         """
-        payment_info = self._get_payment_data(order, installment, credit_card_token)
+        payment_info = self._get_payment_data(
+            order,
+            installment,
+            credit_card_token,
+            order.main_invoice.recipient_address,
+        )
         notification_request = APIRequestFactory().post(
             reverse("payment_webhook"),
             data={
