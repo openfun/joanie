@@ -10,11 +10,14 @@ and this project adheres to
 
 ### Added
 
+- Add `payment_provider` attribute to `CreditCard` model
 - Allow to tokenize a card endpoint for a user
 - Add `state` field to NestedOrderSerializer
 
 ### Changed
 
+- Update certificate template to render logo of organization if
+  it has a value.
 - Deprecated field `has_consent_to_terms` for `Order` model
 - Rework order statuses
 - Add `currency` field to `OrderPaymentSerializer` serializer
@@ -26,7 +29,7 @@ and this project adheres to
 - Ensure when API requests fails with payment provider, it raises
   an error for `create_payment`, `create_one_click_payment` and
   `create_zero_click_payment`
-- Improve error management of `set_enrollment` method of 
+- Improve error management of `set_enrollment` method of
   MoodleBackend.
 - Bind properly organizations in a certificate template sentence
 

@@ -563,7 +563,8 @@ class OrderViewSet(
 
         try:
             credit_card = CreditCard.objects.get_card_for_owner(
-                pk=credit_card_id, owner_id=order.owner.id
+                pk=credit_card_id,
+                username=order.owner.username,
             )
         except CreditCard.DoesNotExist:
             return Response(

@@ -861,3 +861,4 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         credit_card = CreditCard.objects.get(owner=user)
 
         self.assertEqual(credit_card.token, f"card_{user.id}")
+        self.assertEqual(credit_card.payment_provider, backend.name)

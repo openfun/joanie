@@ -47,7 +47,9 @@ which is the course provider. So the organization is accessed with organizations
         <div class="signatories__column">
             <div class="signatories__column-content organization">
                 <h2 class="organization__name">{{ organizations.0.name }}</h2>
-                <img class="organization__logo" src="{{ organizations.0.logo }}" />
+                {% if organizations.0.logo %}
+                    <img class="organization__logo" src="{{ organizations.0.logo }}" />
+                {% endif %}
                 <img class="organization__signature" src="{{ organizations.0.signature }}" />
                 <p class="organization__signatory">
                     <em>{{ organizations.0.representative|default:"" }}</em>

@@ -814,6 +814,10 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         # - After payment notification has been handled, a credit card exists
         self.assertEqual(CreditCard.objects.filter(token=card_id).count(), 1)
 
+        credit_card = CreditCard.objects.get(token=card_id)
+        # Check that the `credit_card.payment_provider` has in value the payment backend name
+        self.assertEqual(credit_card.payment_provider, backend.name)
+
     @mock.patch.object(payplug.notifications, "treat")
     def test_payment_backend_payplug_handle_notification_refund_unknown_payment(
         self, mock_treat

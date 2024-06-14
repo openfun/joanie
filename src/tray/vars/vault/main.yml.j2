@@ -13,3 +13,7 @@ DJANGO_SECRET_KEY: {{ lookup('password', '/dev/null chars=ascii_lowercase,digits
 
 # JWT Token
 DJANGO_JWT_PRIVATE_SIGNING_KEY: {{ lookup('password', '/dev/null chars=ascii_lowercase,digits length=50') }}
+
+# Payment Backend
+# Use the DummyPaymentBackend to prevent issues with ci jobs
+# JOANIE_PAYMENT_BACKEND: joanie.payment.backends.dummy.DummyPaymentBackend

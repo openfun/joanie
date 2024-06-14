@@ -17,7 +17,9 @@
                 <img src="{% base64_static "joanie/images/logo_fun.png" %}" />
                 <div class="header__logos-organizations">
                     {% for organization in organizations %}
-                        <img src="{{ organization.logo }}" />
+                        {% if organization.logo %}
+                            <img src="{{ organization.logo }}" />
+                        {% endif %}
                     {% endfor %}
                 </div>
             </div>

@@ -399,6 +399,7 @@ class LyraBackend(BasePaymentBackend):
                 owner=order.owner,
                 token=card_token,
                 initial_issuer_transaction_identifier=initial_issuer_transaction_identifier,
+                payment_provider=self.name,
             )
 
         if answer["orderStatus"] == "PAID":

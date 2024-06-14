@@ -67,7 +67,8 @@ class CreditCardViewSet(
             if self.request.auth
             else self.request.user.username
         )
-        return models.CreditCard.objects.filter(owner__username=username)
+
+        return models.CreditCard.objects.get_cards_for_owner(username=username)
 
     @action(
         methods=["POST"],

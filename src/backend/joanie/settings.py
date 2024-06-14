@@ -410,7 +410,6 @@ class Base(Configuration):
     # Payment
     JOANIE_PAYMENT_BACKEND = {
         "backend": values.Value(
-            "joanie.payment.backends.payplug.PayplugBackend",
             environ_name="JOANIE_PAYMENT_BACKEND",
             environ_prefix=None,
         ),
