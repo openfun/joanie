@@ -22,7 +22,7 @@ def process_today_installment(order_id):
     today = timezone.localdate()
     for installment in order.payment_schedule:
         if (
-            installment["due_date"] == today.isoformat()
+            installment["due_date"] <= today.isoformat()
             and installment["state"] == enums.PAYMENT_STATE_PENDING
         ):
             payment_backend = get_payment_backend()

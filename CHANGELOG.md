@@ -8,6 +8,11 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Changed
+
+- Update the task `process_today_installment` to catch up on late
+  payments of installments that are in the past
+
 ## [2.5.1] - 2024-06-25
 
 ### Fixed
@@ -24,7 +29,6 @@ and this project adheres to
 
 - Do not update OpenEdX enrollment if this one is already
   up-to-date on the remote lms
-- 
 
 ## [2.4.0] - 2024-06-21
 
