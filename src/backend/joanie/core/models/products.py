@@ -486,9 +486,6 @@ class Order(BaseModel):
         null=True,
         encoder=OrderPaymentScheduleEncoder,
     )
-    # TODO: The entire lifecycle of a credit card should be refactored
-    #  https://github.com/openfun/joanie/pull/801#discussion_r1622036245
-    #  https://github.com/openfun/joanie/pull/801#discussion_r1622040609
     credit_card = models.ForeignKey(
         to="payment.CreditCard",
         verbose_name=_("credit card"),
