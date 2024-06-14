@@ -1073,6 +1073,18 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         )
         self.assertFalse(order.has_unsigned_contract)
 
+    def test_models_order_has_unsigned_contract_product_contract_definition(self):
+        """
+        Check that the `has_unsigned_contract` property returns True
+        if the order's contract is not signed by student.
+        """
+        order = factories.OrderFactory(
+            product__contract_definition=factories.ContractDefinitionFactory()
+        )
+        self.assertTrue(order.has_unsigned_contract)
+        with self.assertRaises(Contract.DoesNotExist):
+            order.contract  # pylint: disable=pointless-statement
+
     def test_models_order_has_consent_to_terms_should_raise_deprecation_warning(self):
         """
         Due to the refactoring of `has_consent_to_terms` attribute, it is now a deprecated field.
