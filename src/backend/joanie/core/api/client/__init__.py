@@ -581,6 +581,45 @@ class OrderViewSet(
 
         return Response(payment_infos, status=HTTPStatus.OK)
 
+    @extend_schema(
+        request={"credit_card_id": OpenApiTypes.UUID},
+        responses={
+            (200, "application/json"): OpenApiTypes.OBJECT,
+            400: serializers.ErrorResponseSerializer,
+            404: serializers.ErrorResponseSerializer,
+        },
+    )
+    @action(detail=True, methods=["POST"], url_path="payment-method")
+    def payment_method(self, request, *args, **kwargs):
+        """
+        Set the payment method for an order.
+        """
+        order = self.get_object()
+
+        credit_card_id = request.data.get("credit_card_id")
+        if not credit_card_id:
+            return Response(
+                {"credit_card_id": "This field is required."},
+                status=HTTPStatus.BAD_REQUEST,
+            )
+
+        try:
+            credit_card = CreditCard.objects.get_card_for_owner(
+                pk=credit_card_id,
+                username=order.owner.username,
+            )
+        except CreditCard.DoesNotExist:
+            return Response(
+                {"detail": "Credit card does not exist."},
+                status=HTTPStatus.NOT_FOUND,
+            )
+
+        order.credit_card = credit_card
+        order.save()
+        order.flow.update()
+
+        return Response(status=HTTPStatus.CREATED)
+
 
 class AddressViewSet(
     mixins.ListModelMixin,
