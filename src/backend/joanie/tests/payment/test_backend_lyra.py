@@ -268,7 +268,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
                             },
                         },
                         "orderId": str(order.id),
-                        "formAction": "ASK_REGISTER_PAY",
+                        "formAction": "REGISTER_PAY",
                         "ipnTargetUrl": "https://example.com/api/v1.0/payments/notifications",
                     }
                 ),
@@ -360,7 +360,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
                             },
                         },
                         "orderId": str(order.id),
-                        "formAction": "ASK_REGISTER_PAY",
+                        "formAction": "REGISTER_PAY",
                         "ipnTargetUrl": "https://example.com/api/v1.0/payments/notifications",
                     }
                 ),
@@ -460,7 +460,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
                             },
                         },
                         "orderId": str(order.id),
-                        "formAction": "ASK_REGISTER_PAY",
+                        "formAction": "REGISTER_PAY",
                         "ipnTargetUrl": "https://example.com/api/v1.0/payments/notifications",
                         "metadata": {
                             "installment_id": "d9356dd7-19a6-4695-b18e-ad93af41424a"
