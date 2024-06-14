@@ -69,10 +69,12 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         order = OrderGeneratorFactory(state=ORDER_STATE_PENDING)
         billing_address = order.main_invoice.recipient_address.to_dict()
         first_installment = order.payment_schedule[0]
+        installment_id = str(first_installment.get("id"))
+        payment_id = f"pay_{installment_id}"
+
         payment_payload = backend.create_payment(
             order, first_installment, billing_address
         )
-        payment_id = f"pay_{order.id}"
 
         self.assertEqual(
             payment_payload,
@@ -84,6 +86,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         )
 
         payment = cache.get(payment_id)
+
         self.assertEqual(
             payment,
             {
@@ -110,7 +113,8 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         payment_payload = backend.create_payment(
             order, order.payment_schedule[0], billing_address
         )
-        payment_id = f"pay_{order.id}"
+        installment_id = str(order.payment_schedule[0].get("id"))
+        payment_id = f"pay_{installment_id}"
 
         self.assertEqual(
             payment_payload,
@@ -162,7 +166,8 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         owner = UserFactory(language="en-us")
         order = OrderGeneratorFactory(state=ORDER_STATE_PENDING, owner=owner)
         billing_address = order.main_invoice.recipient_address.to_dict()
-        payment_id = f"pay_{order.id}"
+        installment_id = str(order.payment_schedule[0].get("id"))
+        payment_id = f"pay_{installment_id}"
 
         payment_payload = backend.create_one_click_payment(
             order, order.payment_schedule[0], order.credit_card.token, billing_address
@@ -235,7 +240,8 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         owner = UserFactory(language="en-us")
         order = OrderGeneratorFactory(state=ORDER_STATE_PENDING, owner=owner)
         billing_address = order.main_invoice.recipient_address.to_dict()
-        payment_id = f"pay_{order.id}"
+        installment_id = str(order.payment_schedule[0].get("id"))
+        payment_id = f"pay_{installment_id}"
 
         payment_payload = backend.create_one_click_payment(
             order, order.payment_schedule[0], order.credit_card.token, billing_address
