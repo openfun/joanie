@@ -604,9 +604,6 @@ class Order(BaseModel):
         try:
             return self.contract is not None  # pylint: disable=no-member
         except Contract.DoesNotExist:
-            # TODO: return this:
-            #  return self.product.contract_definition is None
-            #  https://github.com/openfun/joanie/pull/801#discussion_r1618553557
             return False
 
     @property
@@ -617,10 +614,7 @@ class Order(BaseModel):
         try:
             return self.contract.student_signed_on is None  # pylint: disable=no-member
         except Contract.DoesNotExist:
-            # TODO: return this:
-            #  return self.product.contract_definition is None
-            #  https://github.com/openfun/joanie/pull/801#discussion_r1618553557
-            return False
+            return self.product.contract_definition is not None
 
     # pylint: disable=too-many-branches
     # ruff: noqa: PLR0912
