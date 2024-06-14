@@ -57,19 +57,13 @@ class OrderLifecycle(BaseAPITestCase):
         self.assertEqual(order.state, enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD)
 
         credit_card = CreditCardFactory(owner=user)
-        # TODO: Add payment method endpoint
-        # self.client.post(
-        #     f"/api/v1.0/orders/{order.id}/payment_method/",
-        #     data={"credit_card_id": str(credit_card.id)},
-        #     HTTP_AUTHORIZATION=f"Bearer {token}",
-        # )
-        #
-        # order.refresh_from_db()
+        self.client.post(
+            f"/api/v1.0/orders/{order.id}/payment-method/",
+            data={"credit_card_id": str(credit_card.id)},
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
 
-        order.credit_card = credit_card
-        order.save()
-        order.flow.update()
-
+        order.refresh_from_db()
         self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
 
         # simulate payments
