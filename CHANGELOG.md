@@ -21,6 +21,8 @@ and this project adheres to
 - Add `currency` field to `OrderPaymentSerializer` serializer
 - Allow an order with `no_payment` state to pay for failed installment
   on a payment schedule
+- Order certificate filter now returns also legacy degree certificates
+  linked to an enrollment
 
 ### Fixed
 
