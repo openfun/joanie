@@ -2,6 +2,8 @@
 
 from typing import List
 
+from django.db.models import Q
+
 from django_filters import rest_framework as filters
 
 from joanie.core import enums, models
@@ -49,9 +51,20 @@ class CertificateViewSetFilter(filters.FilterSet):
             else self.request.user.username
         )
         if value == enums.CERTIFICATE_ORDER_TYPE:
-            return queryset.filter(order__owner__username=username)
+            # Retrieve all certificates that belong to orders of the user
+            # and also legacy degrees linked to an enrollment
+            return queryset.filter(
+                Q(order__owner__username=username)
+                | (
+                    Q(enrollment__user__username=username)
+                    & Q(certificate_definition__template=enums.DEGREE)
+                )
+            )
 
         if value == enums.CERTIFICATE_ENROLLMENT_TYPE:
-            return queryset.filter(enrollment__user__username=username)
+            return queryset.filter(
+                enrollment__user__username=username,
+                certificate_definition__template=enums.CERTIFICATE,
+            )
 
         return queryset.none()
