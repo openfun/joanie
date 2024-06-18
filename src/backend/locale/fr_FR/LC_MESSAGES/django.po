@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: joanie\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-06-05 17:49+0000\n"
-"PO-Revision-Date: 2024-06-10 12:04\n"
+"POT-Creation-Date: 2024-06-13 10:19+0000\n"
+"PO-Revision-Date: 2024-06-18 14:19\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -412,7 +412,7 @@ msgstr "Utilisateurs"
 #: joanie/core/models/accounts.py:154 joanie/core/models/certifications.py:33
 #: joanie/core/models/contracts.py:29 joanie/core/models/courses.py:170
 #: joanie/core/models/courses.py:470 joanie/core/models/courses.py:783
-#: joanie/core/models/products.py:68 joanie/payment/models.py:379
+#: joanie/core/models/products.py:68 joanie/payment/models.py:394
 msgid "title"
 msgstr "titre"
 
@@ -442,7 +442,7 @@ msgstr "nom de famille"
 
 #: joanie/core/models/accounts.py:163 joanie/core/models/courses.py:357
 #: joanie/core/models/courses.py:587 joanie/core/models/products.py:463
-#: joanie/payment/models.py:388
+#: joanie/payment/models.py:403
 msgid "owner"
 msgstr "propriétaire"
 
@@ -451,7 +451,7 @@ msgstr "propriétaire"
 msgid "organization"
 msgstr "établissement"
 
-#: joanie/core/models/accounts.py:177 joanie/payment/models.py:392
+#: joanie/core/models/accounts.py:177 joanie/payment/models.py:407
 msgid "main"
 msgstr "principal"
 
@@ -572,7 +572,7 @@ msgid "Date of issuance"
 msgstr "Date de délivrance"
 
 #: joanie/core/models/certifications.py:82 joanie/core/models/contracts.py:80
-#: joanie/core/models/products.py:1140 joanie/payment/models.py:54
+#: joanie/core/models/products.py:1141 joanie/payment/models.py:54
 msgid "order"
 msgstr "commande"
 
@@ -719,7 +719,7 @@ msgstr "Numéro Siret"
 
 #: joanie/core/models/courses.py:194
 msgid "Activity category code"
-msgstr "Code APE"
+msgstr "N° Déclaration d'Activité"
 
 #: joanie/core/models/courses.py:199
 msgid "Profession of the organization's representative"
@@ -811,7 +811,7 @@ msgstr "Droits d'accès aux cours"
 
 #: joanie/core/models/courses.py:705 joanie/core/models/courses.py:777
 #: joanie/core/models/products.py:275 joanie/core/models/products.py:421
-#: joanie/core/models/products.py:1128
+#: joanie/core/models/products.py:1129
 msgid "course"
 msgstr "cours"
 
@@ -960,7 +960,7 @@ msgstr "Produits"
 msgid "Certificate definition is only allowed for product kinds: "
 msgstr "La définition de certificat n'est autorisée que pour les produits de types : "
 
-#: joanie/core/models/products.py:290 joanie/core/models/products.py:1134
+#: joanie/core/models/products.py:290 joanie/core/models/products.py:1135
 msgid "course runs"
 msgstr "sessions de cours"
 
@@ -968,11 +968,11 @@ msgstr "sessions de cours"
 msgid "position in product"
 msgstr "position dans le produit"
 
-#: joanie/core/models/products.py:295 joanie/core/models/products.py:1146
+#: joanie/core/models/products.py:295 joanie/core/models/products.py:1147
 msgid "take into account for certification"
 msgstr "prendre en compte pour la certification"
 
-#: joanie/core/models/products.py:296 joanie/core/models/products.py:1147
+#: joanie/core/models/products.py:296 joanie/core/models/products.py:1148
 msgid "Take into account the course grade for certification."
 msgstr "Prendre en compte la note du cours pour la certification."
 
@@ -1077,15 +1077,15 @@ msgstr "Cette commande n'est pas prête à être évaluée."
 msgid "Course run "
 msgstr "Session de cours "
 
-#: joanie/core/models/products.py:1144
+#: joanie/core/models/products.py:1145
 msgid "position in order"
 msgstr "position dans la commande"
 
-#: joanie/core/models/products.py:1155
+#: joanie/core/models/products.py:1156
 msgid "Course relation to an order with a position"
 msgstr "Relation d'un cours à une commande avec une position"
 
-#: joanie/core/models/products.py:1156
+#: joanie/core/models/products.py:1157
 msgid "Courses relations to orders with a position"
 msgstr "Relations de cours à des commandes avec une position"
 
@@ -1167,7 +1167,7 @@ msgstr "Réf."
 #: joanie/core/templates/contract_definition/fragment_appendice_syllabus.html:10
 #: joanie/core/templates/issuers/contract_definition.html:95
 msgid "Total duration of the course: "
-msgstr "Durée totale du cours : "
+msgstr "Durée totale de la formation : "
 
 #: joanie/core/templates/contract_definition/fragment_appendice_syllabus.html:14
 #: joanie/core/templates/issuers/contract_definition.html:98
@@ -1203,34 +1203,34 @@ msgstr "Accessibilité"
 
 #: joanie/core/templates/contract_definition/fragment_appendice_syllabus.html:87
 msgid "Course plan"
-msgstr "Plan de cours"
+msgstr "Programme"
 
 #: joanie/core/templates/contract_definition/fragment_appendice_syllabus.html:106
 msgid "Licenses"
 msgstr "Licences"
 
-#: joanie/core/templates/issuers/certificate.html:24
+#: joanie/core/templates/issuers/certificate.html:26
 msgid "Attestation of achievement"
 msgstr "Attestation de suivi avec succès"
 
-#: joanie/core/templates/issuers/certificate.html:30
+#: joanie/core/templates/issuers/certificate.html:32
 #, python-format
 msgid "<strong class=\"details__student-name\">%(student)s</strong> <br/>has successfully completed the MOOC<sup>*</sup> <br/><strong class=\"details__course-name\">%(course)s</strong> <br/>proposed by <strong>%(organizations)s</strong> <br />and published on the platform <strong>%(site)s</strong>"
 msgstr "<strong class=\"details__student-name\">%(student)s</strong> <br/>a terminé avec succès le MOOC<sup>*</sup> <br/><strong class=\"details__course-name\">%(course)s</strong> <br/>proposé par <strong>%(organizations)s</strong> <br />et publié sur la plateforme <strong>%(site)s</strong>"
 
-#: joanie/core/templates/issuers/certificate.html:39
+#: joanie/core/templates/issuers/certificate.html:41
 #, python-format
 msgid "On the %(creation_date)s."
 msgstr "Le %(creation_date)s."
 
-#: joanie/core/templates/issuers/certificate.html:51
+#: joanie/core/templates/issuers/certificate.html:53
 msgid "MOOC: Massive Open Online Course"
 msgstr "MOOC: Cours en ligne ouvert et massif"
 
-#: joanie/core/templates/issuers/certificate.html:54
+#: joanie/core/templates/issuers/certificate.html:56
 #, python-format
-msgid "The current document is not a degree or diploma and does not award credits (ECTS). <br />It does not certify that the learner was registered with %(organization)s. <br />The learner's identity has not been verified."
-msgstr "Le document actuel n'est pas un diplôme et n'attribue pas de crédits (ECTS). <br />Il ne certifie pas que l'apprenant a été enregistré auprès de %(organization)s. <br />L'identité de l'apprenant n'a pas été vérifiée."
+msgid "The current document is not a degree or diploma and does not award credits (ECTS). <br />It does not certify that the learner was registered with %(organizations)s. <br />The learner's identity has not been verified."
+msgstr "Le document actuel n'est pas un diplôme et n'attribue pas de crédits (ECTS). <br />Il ne certifie pas que l'apprenant a été enregistré auprès de %(organizations)s. <br />L'identité de l'apprenant n'a pas été vérifiée."
 
 #: joanie/core/templates/issuers/contract_definition.html:31
 msgid "The current contract is formed between the University and the Learner, as identified below:"
@@ -1294,15 +1294,15 @@ msgstr "Numéro de téléphone : "
 
 #: joanie/core/templates/issuers/contract_definition.html:71
 msgid "Course (hereinafter \"the Course\"):"
-msgstr "Cours (ci-après \"le Cours\") :"
+msgstr "Formation (ci-après \"la Formation\") :"
 
 #: joanie/core/templates/issuers/contract_definition.html:74
 msgid "Course number: "
-msgstr "Référence du cours : "
+msgstr "Référence de la formation : "
 
 #: joanie/core/templates/issuers/contract_definition.html:75
 msgid "Name of the Course: "
-msgstr "Nom du cours : "
+msgstr "Nom de la formation : "
 
 #: joanie/core/templates/issuers/contract_definition.html:76
 msgid "Session start date: "
@@ -1326,7 +1326,7 @@ msgstr "Conditions générales de vente"
 
 #: joanie/core/templates/issuers/contract_definition.html:134
 msgid "Catalog syllabus"
-msgstr "Syllabus du catalogue de cours"
+msgstr "Syllabus de la formation"
 
 #: joanie/core/templates/issuers/contract_definition.html:140
 msgid "Learner's signature :"
@@ -1346,7 +1346,7 @@ msgstr "Émis le %(creation_date)s"
 msgid "<br> successfully completed the course <br> <strong class=\"coure-name\">%(course)s</strong>"
 msgstr "<br> a terminé avec succès le cours <br> <strong class=\"coure-name\">%(course)s</strong>"
 
-#: joanie/core/templates/issuers/degree.html:62
+#: joanie/core/templates/issuers/degree.html:64
 #, python-format
 msgid "\n"
 "                    To verify the authenticity of this certificate, please visit:\n"
@@ -1603,7 +1603,7 @@ msgstr "<TITRE_DU_CONTRAT>"
 msgid "<CONTRACT_DESCRIPTION>"
 msgstr "<DESCRIPTION_DU_CONTRAT>"
 
-#: joanie/payment/admin.py:229
+#: joanie/payment/admin.py:230
 msgid "To get results, choose an owner on the right"
 msgstr "Pour obtenir des résultats, choisissez un propriétaire sur la droite"
 
@@ -1687,27 +1687,35 @@ msgstr "Transaction"
 msgid "Transactions"
 msgstr "Transactions"
 
-#: joanie/payment/models.py:373
+#: joanie/payment/models.py:388
 msgid "initial issuer transaction identifier"
 msgstr "identifiant de transaction de l'émetteur initial"
 
-#: joanie/payment/models.py:380
+#: joanie/payment/models.py:395
 msgid "brand"
 msgstr "marque"
 
-#: joanie/payment/models.py:382
+#: joanie/payment/models.py:397
 msgid "expiration month"
 msgstr "mois d'expiration"
 
-#: joanie/payment/models.py:384
+#: joanie/payment/models.py:399
 msgid "expiration year"
 msgstr "année d'expiration"
 
-#: joanie/payment/models.py:385
+#: joanie/payment/models.py:400
 msgid "last 4 numbers"
 msgstr "4 derniers chiffres"
 
-#: joanie/payment/models.py:422
+#: joanie/payment/models.py:409
+msgid "payment provider"
+msgstr "fournisseur de paiement"
+
+#: joanie/payment/models.py:432
+msgid "Payment provider field cannot be None."
+msgstr "Le champ fournisseur de paiement ne peut pas être vide."
+
+#: joanie/payment/models.py:442
 msgid "Demote a main credit card is forbidden"
 msgstr "Rétrograder une carte bancaire principale est interdit"
 
