@@ -74,7 +74,7 @@ class DummyPaymentBackend(BasePaymentBackend):
                 f"Payment {resource['id']} relies on a non-existing order."
             ) from error
 
-        installment_id = resource["metadata"].get("installment_id")
+        installment_id = str(resource["metadata"].get("installment_id"))
         if data.get("state") == DUMMY_PAYMENT_BACKEND_PAYMENT_STATE_FAILED:
             self._do_on_payment_failure(order, installment_id=installment_id)
         elif data.get("state") == DUMMY_PAYMENT_BACKEND_PAYMENT_STATE_SUCCESS:
