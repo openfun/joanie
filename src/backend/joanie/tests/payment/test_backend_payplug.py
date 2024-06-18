@@ -12,7 +12,13 @@ from payplug.exceptions import BadRequest, Forbidden, UnknownAPIResource
 from rest_framework.test import APIRequestFactory
 
 from joanie.core import enums
-from joanie.core.factories import OrderFactory, ProductFactory, UserFactory
+from joanie.core.enums import ORDER_STATE_PENDING
+from joanie.core.factories import (
+    OrderFactory,
+    OrderGeneratorFactory,
+    ProductFactory,
+    UserFactory,
+)
 from joanie.payment.backends.base import BasePaymentBackend
 from joanie.payment.backends.payplug import PayplugBackend
 from joanie.payment.backends.payplug import factories as PayplugFactories
@@ -731,23 +737,31 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         When backend receives a payment success notification, success email is sent
         """
         payment_id = "pay_00000"
-        product = ProductFactory()
         owner = UserFactory(language="en-us")
-        order = OrderFactory(product=product, owner=owner)
         backend = PayplugBackend(self.configuration)
-        billing_address = BillingAddressDictFactory()
-        CreditCardFactory(
-            owner=order.owner, is_main=True, initial_issuer_transaction_identifier="1"
+        order = OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
+            id="514070fe-c12c-48b8-97cf-5262708673a3",
+            owner=owner,
+            credit_card__is_main=True,
+            credit_card__initial_issuer_transaction_identifier="1",
         )
-        order.init_flow(billing_address=billing_address)
-        payplug_billing_address = billing_address.copy()
+        # Force the first installment id to match the stored request
+        first_installment = order.payment_schedule[0]
+        first_installment["id"] = "d9356dd7-19a6-4695-b18e-ad93af41424a"
+        order.save()
+
+        payplug_billing_address = order.main_invoice.recipient_address.to_dict()
         payplug_billing_address["address1"] = payplug_billing_address["address"]
         del payplug_billing_address["address"]
         mock_treat.return_value = PayplugFactories.PayplugPaymentFactory(
             id=payment_id,
             amount=12345,
             billing=payplug_billing_address,
-            metadata={"order_id": str(order.id)},
+            metadata={
+                "order_id": str(order.id),
+                "installment_id": first_installment["id"],
+            },
             is_paid=True,
             is_refunded=False,
         )

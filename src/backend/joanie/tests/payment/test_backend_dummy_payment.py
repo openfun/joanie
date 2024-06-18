@@ -18,7 +18,12 @@ from joanie.core.enums import (
     PAYMENT_STATE_PAID,
     PAYMENT_STATE_PENDING,
 )
-from joanie.core.factories import OrderFactory, ProductFactory, UserFactory
+from joanie.core.factories import (
+    OrderFactory,
+    OrderGeneratorFactory,
+    ProductFactory,
+    UserFactory,
+)
 from joanie.payment.backends.base import BasePaymentBackend
 from joanie.payment.backends.dummy import DummyPaymentBackend
 from joanie.payment.exceptions import (
@@ -466,9 +471,11 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         backend = DummyPaymentBackend()
 
         # Create a payment
-        order = OrderFactory(state=ORDER_STATE_PENDING)
-        billing_address = BillingAddressDictFactory()
-        payment_id = backend.create_payment(order, billing_address)["payment_id"]
+        order = OrderGeneratorFactory(state=ORDER_STATE_PENDING)
+        first_installment = order.payment_schedule[0]
+        payment_id = backend.create_payment(
+            order, order.main_invoice.recipient_address, first_installment
+        )["payment_id"]
 
         # Notify that payment failed
         request = APIRequestFactory().post(
@@ -482,7 +489,9 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         order.refresh_from_db()
         self.assertEqual(order.state, ORDER_STATE_PENDING)
 
-        mock_payment_failure.assert_called_once_with(order, installment_id=None)
+        mock_payment_failure.assert_called_once_with(
+            order, installment_id=str(first_installment["id"])
+        )
 
     @mock.patch.object(BasePaymentBackend, "_do_on_payment_failure")
     def test_payment_backend_dummy_handle_notification_payment_failed_with_installment(
@@ -556,9 +565,11 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         backend = DummyPaymentBackend()
 
         # Create a payment
-        order = OrderFactory()
-        billing_address = BillingAddressDictFactory()
-        payment_id = backend.create_payment(order, billing_address)["payment_id"]
+        order = OrderGeneratorFactory(state=ORDER_STATE_PENDING)
+        first_installment = order.payment_schedule[0]
+        payment_id = backend.create_payment(
+            order, order.main_invoice.recipient_address, first_installment
+        )["payment_id"]
 
         # Notify that a payment succeeded
         request = APIRequestFactory().post(
@@ -572,9 +583,9 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
 
         payment = {
             "id": payment_id,
-            "amount": order.total,
-            "billing_address": billing_address,
-            "installment_id": None,
+            "amount": first_installment["amount"],
+            "billing_address": order.main_invoice.recipient_address,
+            "installment_id": str(first_installment["id"]),
         }
 
         mock_payment_success.assert_called_once_with(order, payment)
@@ -748,13 +759,11 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         request_factory = APIRequestFactory()
 
         # Create a payment
-        order = OrderFactory()
-        CreditCardFactory(
-            owner=order.owner, is_main=True, initial_issuer_transaction_identifier="1"
-        )
-        billing_address = BillingAddressDictFactory()
-        order.init_flow(billing_address=billing_address)
-        payment_id = backend.create_payment(order, billing_address)["payment_id"]
+        order = OrderGeneratorFactory(state=ORDER_STATE_PENDING)
+        first_installment = order.payment_schedule[0]
+        payment_id = backend.create_payment(
+            order, order.main_invoice.recipient_address, first_installment
+        )["payment_id"]
 
         # Notify that payment has been paid
         request = request_factory.post(
@@ -763,6 +772,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
                 "id": payment_id,
                 "type": "payment",
                 "state": "success",
+                "installment_id": first_installment["id"],
             },
             format="json",
         )
@@ -775,7 +785,8 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
             data={
                 "id": payment_id,
                 "type": "refund",
-                "amount": int(order.total * 100),
+                "amount": int(float(first_installment["amount"]) * 100),
+                "installment_id": first_installment["id"],
             },
             format="json",
         )
@@ -786,7 +797,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         args = mock_refund.call_args.kwargs
 
         self.assertEqual(len(args), 3)
-        self.assertEqual(args["amount"], order.total)
+        self.assertEqual(float(args["amount"]), float(first_installment["amount"]))
         self.assertEqual(args["invoice"], order.main_invoice)
         self.assertIsNotNone(re.fullmatch(r"ref_\d{10}", args["refund_reference"]))
 
