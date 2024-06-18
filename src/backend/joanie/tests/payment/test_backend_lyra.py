@@ -23,6 +23,7 @@ from joanie.core.enums import (
 )
 from joanie.core.factories import (
     OrderFactory,
+    OrderGeneratorFactory,
     ProductFactory,
     UserAddressFactory,
     UserFactory,
@@ -1083,11 +1084,18 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         method `_do_on_payment_success` should be called.
         """
         backend = LyraBackend(self.configuration)
-        owner = UserFactory(email="john.doe@acme.org")
-        product = ProductFactory(price=D("123.45"))
-        order = OrderFactory(
-            id="514070fe-c12c-48b8-97cf-5262708673a3", owner=owner, product=product
+        order = OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
+            id="514070fe-c12c-48b8-97cf-5262708673a3",
+            owner__email="john.doe@acme.org",
+            product__price=D("123.45"),
+            credit_card__is_main=True,
+            credit_card__initial_issuer_transaction_identifier="1",
         )
+        # Force the first installment id to match the stored request
+        first_installment = order.payment_schedule[0]
+        first_installment["id"] = "d9356dd7-19a6-4695-b18e-ad93af41424a"
+        order.save()
 
         with self.open("lyra/requests/payment_accepted_no_store_card.json") as file:
             json_request = json.loads(file.read())
@@ -1118,7 +1126,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
                     "last_name": billing_details["lastName"],
                     "postcode": billing_details["zipCode"],
                 },
-                "installment_id": None,
+                "installment_id": first_installment["id"],
             },
         )
 
@@ -1130,15 +1138,18 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         """
         backend = LyraBackend(self.configuration)
         owner = UserFactory(email="john.doe@acme.org", language="en-us")
-        product = ProductFactory(price=D("123.45"))
-        order = OrderFactory(
-            id="514070fe-c12c-48b8-97cf-5262708673a3", owner=owner, product=product
+        order = OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
+            id="514070fe-c12c-48b8-97cf-5262708673a3",
+            owner=owner,
+            product__price=D("123.45"),
+            credit_card__is_main=True,
+            credit_card__initial_issuer_transaction_identifier="1",
         )
-        CreditCardFactory(
-            owner=order.owner, is_main=True, initial_issuer_transaction_identifier="1"
-        )
-        billing_address = BillingAddressDictFactory()
-        order.init_flow(billing_address=billing_address)
+        # Force the first installment id to match the stored request
+        first_installment = order.payment_schedule[0]
+        first_installment["id"] = "d9356dd7-19a6-4695-b18e-ad93af41424a"
+        order.save()
 
         with self.open("lyra/requests/payment_accepted_no_store_card.json") as file:
             json_request = json.loads(file.read())
