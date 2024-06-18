@@ -131,14 +131,7 @@ class OpenEdXLMSBackend(BaseLMSBackend):
             if Order.objects.filter(
                 Q(target_courses=enrollment.course_run.course)
                 | Q(enrollment=enrollment),
-                # TODO: change to:
-                #  state__in=[
-                #      enums.ORDER_STATE_COMPLETED,
-                #      enums.ORDER_STATE_PENDING_PAYMENT,
-                #      enums.ORDER_STATE_FAILED_PAYMENT
-                #  ],
-                #  https://github.com/openfun/joanie/pull/801#discussion_r1618650542
-                state=enums.ORDER_STATE_COMPLETED,
+                state__in=enums.ORDER_STATE_ALLOW_ENROLLMENT,
                 owner=enrollment.user,
             ).exists()
             else OPENEDX_MODE_HONOR
