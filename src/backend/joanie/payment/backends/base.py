@@ -11,7 +11,6 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.utils.translation import override
 
-from joanie.core.models import ActivityLog
 from joanie.payment.enums import INVOICE_STATE_REFUNDED
 from joanie.payment.models import Invoice, Transaction
 
@@ -52,14 +51,7 @@ class BasePaymentBackend:
             reference=payment["id"],
         )
 
-        if payment.get("installment_id"):
-            order.set_installment_paid(payment["installment_id"])
-        else:
-            # TODO: to be removed with the new sale tunnel,
-            #  as we will always use installments
-            # - Mark order as completed
-            # order.flow.complete()
-            ActivityLog.create_payment_succeeded_activity_log(order)
+        order.set_installment_paid(payment["installment_id"])
 
         # send mail
         cls._send_mail_payment_success(order)
@@ -105,14 +97,7 @@ class BasePaymentBackend:
         Generic actions triggered when a failed payment has been received.
         Mark the invoice as pending.
         """
-        if installment_id:
-            order.set_installment_refused(installment_id)
-        else:
-            # TODO: to be removed with the new sale tunnel,
-            #  as we will always use installments
-            # - Unvalidate order
-            # order.flow.pending()
-            ActivityLog.create_payment_failed_activity_log(order)
+        order.set_installment_refused(installment_id)
 
     @staticmethod
     def _do_on_refund(amount, invoice, refund_reference):
