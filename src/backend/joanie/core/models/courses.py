@@ -1139,11 +1139,7 @@ class Enrollment(BaseModel):
                             product__contract_definition__isnull=True,
                         )
                     ),
-                    state__in=[
-                        enums.ORDER_STATE_COMPLETED,
-                        enums.ORDER_STATE_FAILED_PAYMENT,
-                        enums.ORDER_STATE_PENDING_PAYMENT,
-                    ],
+                    state__in=enums.ORDER_STATE_ALLOW_ENROLLMENT,
                 )
                 if validated_user_orders.count() == 0:
                     message = _(
