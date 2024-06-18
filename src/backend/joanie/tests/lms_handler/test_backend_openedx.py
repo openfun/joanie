@@ -14,6 +14,7 @@ from requests import RequestException
 
 from joanie.core import enums, factories, models
 from joanie.core.exceptions import EnrollmentError, GradeError
+from joanie.core.models import Order
 from joanie.lms_handler import LMSHandler
 from joanie.lms_handler.backends.openedx import (
     OPENEDX_MODE_HONOR,
@@ -421,6 +422,69 @@ class OpenEdXLMSBackendTestCase(TestCase):
                 "course_details": {"course_id": "course-v1:edx+000001+Demo_Course"},
             },
         )
+
+    @responses.activate
+    def test_backend_openedx_set_enrollment_states(self):
+        """
+        When updating a user's enrollment, the mode should be set to "verified" if the user has
+        an order in a state that allows enrollment.
+        """
+        resource_link = (
+            "http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course"
+        )
+        course_run = factories.CourseRunFactory(
+            is_listed=True,
+            resource_link=resource_link,
+            state=models.CourseState.ONGOING_OPEN,
+        )
+        user = factories.UserFactory()
+        is_active = random.choice([True, False])
+        url = "http://openedx.test/api/enrollment/v1/enrollment"
+
+        responses.add(
+            responses.POST,
+            url,
+            status=HTTPStatus.OK,
+            json={"is_active": is_active},
+        )
+
+        enrollment = factories.EnrollmentFactory(
+            course_run=course_run,
+            user=user,
+            is_active=is_active,
+        )
+
+        for state, _ in enums.ORDER_STATE_CHOICES:
+            with self.subTest(state=state):
+                responses.calls.reset()  # pylint: disable=no-member
+                Order.objects.all().delete()
+
+                backend = LMSHandler.select_lms(resource_link)
+
+                factories.OrderFactory(
+                    course=None,
+                    enrollment=enrollment,
+                    product__type="certificate",
+                    product__courses=[course_run.course],
+                    state=state,
+                )
+                result = backend.set_enrollment(enrollment)
+
+                self.assertIsNone(result)
+                self.assertEqual(len(responses.calls), 1)
+                self.assertEqual(
+                    json.loads(responses.calls[0].request.body),
+                    {
+                        "is_active": is_active,
+                        "mode": OPENEDX_MODE_VERIFIED
+                        if state in enums.ORDER_STATE_ALLOW_ENROLLMENT
+                        else OPENEDX_MODE_HONOR,
+                        "user": user.username,
+                        "course_details": {
+                            "course_id": "course-v1:edx+000001+Demo_Course"
+                        },
+                    },
+                )
 
     @responses.activate
     def test_backend_openedx_set_enrollment_without_changes(self):
