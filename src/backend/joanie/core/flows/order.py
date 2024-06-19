@@ -209,9 +209,8 @@ class OrderFlow:
         # course runs targeted by the purchased product, we should change their enrollment mode on
         # these course runs to "verified".
         if target in [enums.ORDER_STATE_VALIDATED, enums.ORDER_STATE_CANCELED]:
-            Enrollment = apps.get_model("core", "Enrollment")  # pylint: disable=invalid-name
-            for enrollment in Enrollment.objects.filter(
-                course_run__course__target_orders=self.instance, is_active=True
+            for enrollment in self.instance.get_target_enrollments(
+                is_active=True
             ).select_related("course_run", "user"):
                 enrollment.set()
 

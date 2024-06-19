@@ -506,9 +506,13 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             json={"is_active": True},
         )
 
+        # Create random enrollment on the same course
+        factories.EnrollmentFactory(course_run=course_run, is_active=True)
+        responses.reset()
+
         # Create a pre-existing free enrollment
         enrollment = factories.EnrollmentFactory(course_run=course_run, is_active=True)
-        order = factories.OrderFactory(product=product)
+        order = factories.OrderFactory(product=product, owner=enrollment.user)
         order.submit()
 
         self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
@@ -523,7 +527,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             {
                 "is_active": enrollment.is_active,
                 "mode": "verified",
-                "user": enrollment.user.username,
+                "user": order.owner.username,
                 "course_details": {"course_id": "course-v1:edx+000001+Demo_Course"},
             },
         )
@@ -640,13 +644,13 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         factories.EnrollmentFactory(
             course_run=course_run, user__username="student", is_active=True
         )
-        order = factories.OrderFactory(product=product)
+        order = factories.OrderFactory(product=product, owner__username="student")
 
         order.submit()
 
         self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
 
-        self.assertEqual(len(responses.calls), 6)
+        self.assertEqual(len(responses.calls), 3)
 
     @responses.activate
     @override_settings(
