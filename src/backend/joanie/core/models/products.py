@@ -702,7 +702,7 @@ class Order(BaseModel):
         Retrieve owner's enrollments related to the ordered target courses.
         """
         filters = {
-            "course_run__course__in": self.target_courses.all(),
+            "course_run__in": self.target_course_runs,
             "user": self.owner,
         }
         if is_active is not None:
