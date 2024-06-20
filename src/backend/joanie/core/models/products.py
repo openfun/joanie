@@ -20,7 +20,10 @@ from urllib3.util import Retry
 
 from joanie.core import enums
 from joanie.core.exceptions import CertificateGenerationError
-from joanie.core.fields.schedule import OrderPaymentScheduleEncoder
+from joanie.core.fields.schedule import (
+    OrderPaymentScheduleDecoder,
+    OrderPaymentScheduleEncoder,
+)
 from joanie.core.flows.order import OrderFlow
 from joanie.core.models.accounts import Address, User
 from joanie.core.models.activity_logs import ActivityLog
@@ -485,6 +488,7 @@ class Order(BaseModel):
         blank=True,
         null=True,
         encoder=OrderPaymentScheduleEncoder,
+        decoder=OrderPaymentScheduleDecoder,
     )
     credit_card = models.ForeignKey(
         to="payment.CreditCard",
