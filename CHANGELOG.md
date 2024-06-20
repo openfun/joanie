@@ -13,6 +13,10 @@ and this project adheres to
 - Add settings configuration for the contract's country calendar to
   manage the payment schedule and the withdrawal period in days
 
+### Changed
+
+- Catch all exceptions raised by enroll_user_to_course_run method
+
 ### Fixed
 
 - Fix enrollment mode update on order validation
