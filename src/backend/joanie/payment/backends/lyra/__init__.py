@@ -63,7 +63,7 @@ class LyraBackend(BasePaymentBackend):
         api_base_url = self.configuration["api_base_url"]
         self.api_url = api_base_url + "/api-payment/V4/"
 
-    def _get_common_payload_data(self, order, billing_address=None, installment=None):
+    def _get_common_payload_data(self, order, installment=None, billing_address=None):
         """
         Build post payload data for Lyra API
 
@@ -98,7 +98,7 @@ class LyraBackend(BasePaymentBackend):
 
         if installment:
             payload["metadata"] = {
-                "installment_id": installment["id"],
+                "installment_id": str(installment["id"]),
             }
 
         return payload
@@ -214,7 +214,7 @@ class LyraBackend(BasePaymentBackend):
         """
         url = f"{self.api_url}Charge/CreateToken"
 
-        payload = self._get_common_payload_data(order, billing_address)
+        payload = self._get_common_payload_data(order, billing_address=billing_address)
         payload["formAction"] = "REGISTER"
         payload["strongAuthentication"] = "CHALLENGE_REQUESTED"
         del payload["amount"]
@@ -232,7 +232,7 @@ class LyraBackend(BasePaymentBackend):
             return self._tokenize_card_for_user(user)
         return self._tokenize_card_for_order(order, billing_address)
 
-    def create_payment(self, order, billing_address, installment=None):
+    def create_payment(self, order, installment, billing_address):
         """
         Create a payment object for a given order
 
@@ -240,15 +240,13 @@ class LyraBackend(BasePaymentBackend):
         https://docs.lyra.com/fr/rest/V4.0/api/playground/Charge/CreatePayment
         """
         url = f"{self.api_url}Charge/CreatePayment"
-        payload = self._get_common_payload_data(
-            order, billing_address, installment=installment
-        )
+        payload = self._get_common_payload_data(order, installment, billing_address)
         payload["formAction"] = "REGISTER_PAY"
 
         return self._get_payment_info(url, payload)
 
     def create_one_click_payment(
-        self, order, billing_address, credit_card_token, installment=None
+        self, order, installment, credit_card_token, billing_address
     ):
         """
         Create a one click payment object for a given order
@@ -257,15 +255,13 @@ class LyraBackend(BasePaymentBackend):
         https://docs.lyra.com/fr/rest/V4.0/api/playground/Charge/CreatePayment
         """
         url = f"{self.api_url}Charge/CreatePayment"
-        payload = self._get_common_payload_data(
-            order, billing_address, installment=installment
-        )
+        payload = self._get_common_payload_data(order, installment, billing_address)
         payload["formAction"] = "PAYMENT"
         payload["paymentMethodToken"] = credit_card_token
 
         return self._get_payment_info(url, payload)
 
-    def create_zero_click_payment(self, order, credit_card_token, installment=None):
+    def create_zero_click_payment(self, order, installment, credit_card_token):
         """
         Create a zero click payment object for a given order
 
@@ -274,7 +270,7 @@ class LyraBackend(BasePaymentBackend):
         """
 
         url = f"{self.api_url}Charge/CreatePayment"
-        payload = self._get_common_payload_data(order, installment=installment)
+        payload = self._get_common_payload_data(order, installment)
         payload["formAction"] = "SILENT"
         payload["paymentMethodToken"] = credit_card_token
 
@@ -298,6 +294,7 @@ class LyraBackend(BasePaymentBackend):
 
         payment = {
             "id": answer["transactions"][0]["uuid"],
+            "installment_id": installment["id"],
             "amount": D(f"{answer['orderDetails']['orderTotalAmount'] / 100:.2f}"),
             "billing_address": {
                 "address": billing_details["address"],
@@ -308,9 +305,6 @@ class LyraBackend(BasePaymentBackend):
                 "postcode": billing_details["zipCode"],
             },
         }
-
-        if installment:
-            payment["installment_id"] = installment["id"]
 
         self._do_on_payment_success(
             order=order,
@@ -422,7 +416,7 @@ class LyraBackend(BasePaymentBackend):
                 payment=payment,
             )
         else:
-            self._do_on_payment_failure(order, installment_id=installment_id)
+            self._do_on_payment_failure(order, installment_id)
 
     def delete_credit_card(self, credit_card):
         """Delete a credit card from Lyra"""
