@@ -402,6 +402,48 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             },
         )
 
+    def test_flows_order_validate_auto_enroll_failure(self):
+        """
+        When an order is validated, if one target course contains only one course run
+        and this one is opened for enrollment, the user should be automatically enrolled
+        If the enrollment creation fails, the order should be validated.
+        """
+        course = factories.CourseFactory()
+        resource_link = (
+            "http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course"
+        )
+        course_run = factories.CourseRunFactory(
+            course=course,
+            resource_link=resource_link,
+            state=CourseState.ONGOING_OPEN,
+            is_listed=False,
+        )
+        product = factories.ProductFactory(price="0.00")
+        factories.ProductTargetCourseRelationFactory(
+            product=product, course=course, course_runs=[course_run]
+        )
+
+        user = factories.UserFactory()
+        # Create an enrollment on other opened course run on this course
+        factories.EnrollmentFactory(
+            course_run__course=course,
+            course_run__resource_link=(
+                "http://openedx.test/courses/course-v1:edx+000001+Demo_Course2/course"
+            ),
+            course_run__state=CourseState.ONGOING_OPEN,
+            course_run__is_listed=True,
+            is_active=True,
+            user=user,
+        )
+        self.assertEqual(Enrollment.objects.count(), 1)
+
+        # Create an order
+        order = factories.OrderFactory(product=product, owner=user)
+        order.submit()
+        self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
+
+        self.assertEqual(Enrollment.objects.count(), 1)
+
     @responses.activate
     @override_settings(
         JOANIE_LMS_BACKENDS=[
@@ -414,7 +456,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             }
         ]
     )
-    def test_flows_order_validate_auto_enroll_failure(self):
+    def test_flows_order_validate_auto_enroll_edx_failure(self):
         """
         When an order is validated, if one target course contains only one course run
         and this one is opened for enrollment, the user should be automatically enrolled

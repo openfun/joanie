@@ -3,6 +3,7 @@
 from django.apps import apps
 from django.utils import timezone
 
+from sentry_sdk import capture_exception
 from viewflow import fsm
 
 from joanie.core import enums
@@ -220,7 +221,12 @@ class OrderFlow:
             target == enums.ORDER_STATE_VALIDATED
             and self.instance.product.contract_definition is None
         ):
-            self.instance.enroll_user_to_course_run()
+            try:
+                # ruff : noqa : BLE001
+                # pylint: disable=broad-exception-caught
+                self.instance.enroll_user_to_course_run()
+            except Exception as error:
+                capture_exception(error)
 
         if target == enums.ORDER_STATE_CANCELED:
             self.instance.unenroll_user_from_course_runs()
