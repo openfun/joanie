@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [2.4.0] - 2024-06-21
+
 ### Added
 
 - Add settings configuration for the contract's country calendar to
@@ -359,7 +361,8 @@ and this project adheres to
 - First working version serving sellable micro-credentials for multiple
   organizations synchronized to a remote catalog
 
-[unreleased]: https://github.com/openfun/joanie/compare/v2.3.0...main
+[unreleased]: https://github.com/openfun/joanie/compare/v2.4.0...main
+[2.4.0]: https://github.com/openfun/joanie/compare/v2.3.0...v2.4.0
 [2.3.0]: https://github.com/openfun/joanie/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/openfun/joanie/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/openfun/joanie/compare/v2.0.1...v2.1.0
