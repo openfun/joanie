@@ -71,20 +71,22 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         return the common payload to create a payment or a one click payment.
         """
         backend = PayplugBackend(self.configuration)
-        owner = UserFactory(email="john.doe@acme.org")
-        product = ProductFactory(price=D("123.45"))
-        order = OrderFactory(owner=owner, product=product)
-        billing_address = BillingAddressDictFactory()
+        order = OrderGeneratorFactory(
+            state=enums.ORDER_STATE_PENDING,
+            product__price=D("123.45"),
+        )
+        billing_address = order.main_invoice.recipient_address.to_dict()
+        first_installment = order.payment_schedule[0]
         # pylint: disable=protected-access
-        payload = backend._get_payment_data(order, billing_address)
+        payload = backend._get_payment_data(order, first_installment, billing_address)
 
         self.assertEqual(
             payload,
             {
-                "amount": 12345,
+                "amount": 3704,
                 "currency": "EUR",
                 "billing": {
-                    "email": "john.doe@acme.org",
+                    "email": order.owner.email,
                     "first_name": billing_address["first_name"],
                     "last_name": billing_address["last_name"],
                     "address1": billing_address["address"],
@@ -94,7 +96,10 @@ class PayplugBackendTestCase(BasePaymentTestCase):
                 },
                 "shipping": {"delivery_type": "DIGITAL_GOODS"},
                 "notification_url": "https://example.com/api/v1.0/payments/notifications",
-                "metadata": {"order_id": str(order.id)},
+                "metadata": {
+                    "order_id": str(order.id),
+                    "installment_id": str(first_installment.get("id")),
+                },
             },
         )
 
@@ -106,11 +111,14 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         """
         mock_payplug_create.side_effect = BadRequest("Endpoint unreachable")
         backend = PayplugBackend(self.configuration)
-        order = OrderFactory(product=ProductFactory())
-        billing_address = BillingAddressDictFactory()
+        order = OrderGeneratorFactory(state=enums.ORDER_STATE_PENDING)
 
         with self.assertRaises(CreatePaymentFailed) as context:
-            backend.create_payment(order, billing_address)
+            backend.create_payment(
+                order,
+                order.payment_schedule[0],
+                order.main_invoice.recipient_address.to_dict(),
+            )
 
         self.assertEqual(
             str(context.exception),
@@ -124,20 +132,23 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         """
         mock_payplug_create.return_value = PayplugFactories.PayplugPaymentFactory()
         backend = PayplugBackend(self.configuration)
-        owner = UserFactory(email="john.doe@acme.org")
         product = ProductFactory(price=D("123.45"))
-        order = OrderFactory(owner=owner, product=product)
-        billing_address = BillingAddressDictFactory()
+        order = OrderGeneratorFactory(
+            state=enums.ORDER_STATE_PENDING,
+            product=product,
+        )
+        billing_address = order.main_invoice.recipient_address.to_dict()
+        installment = order.payment_schedule[0]
 
-        payload = backend.create_payment(order, billing_address)
+        payload = backend.create_payment(order, installment, billing_address)
 
         mock_payplug_create.assert_called_once_with(
             **{
-                "amount": 12345,
+                "amount": 3704,
                 "allow_save_card": True,
                 "currency": "EUR",
                 "billing": {
-                    "email": "john.doe@acme.org",
+                    "email": order.owner.email,
                     "first_name": billing_address["first_name"],
                     "last_name": billing_address["last_name"],
                     "address1": billing_address["address"],
@@ -147,7 +158,10 @@ class PayplugBackendTestCase(BasePaymentTestCase):
                 },
                 "shipping": {"delivery_type": "DIGITAL_GOODS"},
                 "notification_url": "https://example.com/api/v1.0/payments/notifications",
-                "metadata": {"order_id": str(order.id)},
+                "metadata": {
+                    "order_id": str(order.id),
+                    "installment_id": installment.get("id"),
+                },
             }
         )
         self.assertEqual(len(payload), 3)
@@ -199,7 +213,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         billing_address = BillingAddressDictFactory()
 
         payload = backend.create_payment(
-            order, billing_address, installment=order.payment_schedule[0]
+            order, order.payment_schedule[0], billing_address
         )
 
         mock_payplug_create.assert_called_once_with(
@@ -239,11 +253,12 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         failed, it should fallback to create_payment method.
         """
         backend = PayplugBackend(self.configuration)
-        owner = UserFactory(email="john.doe@acme.org")
-        product = ProductFactory(price=D("123.45"))
-        order = OrderFactory(owner=owner, product=product)
-        billing_address = BillingAddressDictFactory()
-        credit_card = CreditCardFactory()
+        order = OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
+            product__price=D("123.45"),
+        )
+        billing_address = order.main_invoice.recipient_address.to_dict()
+        first_installment = order.payment_schedule[0]
 
         mock_payplug_create.side_effect = BadRequest()
         mock_backend_create_payment.return_value = {
@@ -254,19 +269,19 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         }
 
         payload = backend.create_one_click_payment(
-            order, billing_address, credit_card.token
+            order, first_installment, order.credit_card.token, billing_address
         )
 
         # - One click payment create has been called
         mock_payplug_create.assert_called_once_with(
             **{
-                "amount": 12345,
+                "amount": 3704,
                 "allow_save_card": False,
                 "initiator": "PAYER",
-                "payment_method": credit_card.token,
+                "payment_method": order.credit_card.token,
                 "currency": "EUR",
                 "billing": {
-                    "email": "john.doe@acme.org",
+                    "email": order.owner.email,
                     "first_name": billing_address["first_name"],
                     "last_name": billing_address["last_name"],
                     "address1": billing_address["address"],
@@ -276,12 +291,17 @@ class PayplugBackendTestCase(BasePaymentTestCase):
                 },
                 "shipping": {"delivery_type": "DIGITAL_GOODS"},
                 "notification_url": "https://example.com/api/v1.0/payments/notifications",
-                "metadata": {"order_id": str(order.id)},
+                "metadata": {
+                    "order_id": str(order.id),
+                    "installment_id": first_installment.get("id"),
+                },
             }
         )
 
         # - As fallback `create_payment` has been called
-        mock_backend_create_payment.assert_called_once_with(order, billing_address)
+        mock_backend_create_payment.assert_called_once_with(
+            order, first_installment, billing_address
+        )
         self.assertEqual(
             payload,
             {
@@ -304,26 +324,28 @@ class PayplugBackendTestCase(BasePaymentTestCase):
             is_paid=False
         )
         backend = PayplugBackend(self.configuration)
-        owner = UserFactory(email="john.doe@acme.org")
-        product = ProductFactory(price=D("123.45"))
-        order = OrderFactory(owner=owner, product=product)
-        billing_address = BillingAddressDictFactory()
-        credit_card = CreditCardFactory()
+        order = OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
+            product__price=D("123.45"),
+        )
+        billing_address = order.main_invoice.recipient_address.to_dict()
+        first_installment = order.payment_schedule[0]
+        credit_card = order.credit_card
 
         payload = backend.create_one_click_payment(
-            order, billing_address, credit_card.token
+            order, first_installment, credit_card.token, billing_address
         )
 
         # - One click payment create has been called
         mock_payplug_create.assert_called_once_with(
             **{
-                "amount": 12345,
+                "amount": 3704,
                 "allow_save_card": False,
                 "initiator": "PAYER",
                 "payment_method": credit_card.token,
                 "currency": "EUR",
                 "billing": {
-                    "email": "john.doe@acme.org",
+                    "email": order.owner.email,
                     "first_name": billing_address["first_name"],
                     "last_name": billing_address["last_name"],
                     "address1": billing_address["address"],
@@ -333,7 +355,10 @@ class PayplugBackendTestCase(BasePaymentTestCase):
                 },
                 "shipping": {"delivery_type": "DIGITAL_GOODS"},
                 "notification_url": "https://example.com/api/v1.0/payments/notifications",
-                "metadata": {"order_id": str(order.id)},
+                "metadata": {
+                    "order_id": str(order.id),
+                    "installment_id": first_installment.get("id"),
+                },
             }
         )
 
@@ -355,26 +380,28 @@ class PayplugBackendTestCase(BasePaymentTestCase):
             is_paid=True
         )
         backend = PayplugBackend(self.configuration)
-        owner = UserFactory(email="john.doe@acme.org")
-        product = ProductFactory(price=D("123.45"))
-        order = OrderFactory(owner=owner, product=product)
-        billing_address = BillingAddressDictFactory()
-        credit_card = CreditCardFactory()
+        order = OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
+            product__price=D("123.45"),
+        )
+        billing_address = order.main_invoice.recipient_address.to_dict()
+        first_installment = order.payment_schedule[0]
+        credit_card = order.credit_card
 
         payload = backend.create_one_click_payment(
-            order, billing_address, credit_card.token
+            order, first_installment, credit_card.token, billing_address
         )
 
         # - One click payment create has been called
         mock_payplug_create.assert_called_once_with(
             **{
-                "amount": 12345,
+                "amount": 3704,
                 "allow_save_card": False,
                 "initiator": "PAYER",
                 "payment_method": credit_card.token,
                 "currency": "EUR",
                 "billing": {
-                    "email": "john.doe@acme.org",
+                    "email": order.owner.email,
                     "first_name": billing_address["first_name"],
                     "last_name": billing_address["last_name"],
                     "address1": billing_address["address"],
@@ -384,7 +411,10 @@ class PayplugBackendTestCase(BasePaymentTestCase):
                 },
                 "shipping": {"delivery_type": "DIGITAL_GOODS"},
                 "notification_url": "https://example.com/api/v1.0/payments/notifications",
-                "metadata": {"order_id": str(order.id)},
+                "metadata": {
+                    "order_id": str(order.id),
+                    "installment_id": first_installment.get("id"),
+                },
             }
         )
 
@@ -443,9 +473,9 @@ class PayplugBackendTestCase(BasePaymentTestCase):
 
         payload = backend.create_one_click_payment(
             order,
-            billing_address,
+            order.payment_schedule[0],
             credit_card.token,
-            installment=order.payment_schedule[0],
+            billing_address,
         )
 
         # - One click payment create has been called
