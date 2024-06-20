@@ -31,7 +31,6 @@ from joanie.payment.exceptions import (
 )
 from joanie.payment.factories import (
     BillingAddressDictFactory,
-    CreditCardFactory,
     TransactionFactory,
 )
 from joanie.payment.models import CreditCard
@@ -160,7 +159,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
                 "notification_url": "https://example.com/api/v1.0/payments/notifications",
                 "metadata": {
                     "order_id": str(order.id),
-                    "installment_id": installment.get("id"),
+                    "installment_id": str(installment.get("id")),
                 },
             }
         )
@@ -178,39 +177,12 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         """
         mock_payplug_create.return_value = PayplugFactories.PayplugPaymentFactory()
         backend = PayplugBackend(self.configuration)
-        owner = UserFactory(email="john.doe@acme.org")
-        product = ProductFactory(price=D("123.45"))
-        order = OrderFactory(
-            owner=owner,
-            product=product,
-            payment_schedule=[
-                {
-                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
-                    "amount": "200.00",
-                    "due_date": "2024-01-17",
-                    "state": enums.PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
-                    "amount": "300.00",
-                    "due_date": "2024-02-17",
-                    "state": enums.PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
-                    "amount": "300.00",
-                    "due_date": "2024-03-17",
-                    "state": enums.PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
-                    "amount": "199.99",
-                    "due_date": "2024-04-17",
-                    "state": enums.PAYMENT_STATE_PENDING,
-                },
-            ],
+        order = OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
+            product__price=D("123.45"),
         )
-        billing_address = BillingAddressDictFactory()
+        billing_address = order.main_invoice.recipient_address.to_dict()
+        first_installment = order.payment_schedule[0]
 
         payload = backend.create_payment(
             order, order.payment_schedule[0], billing_address
@@ -218,11 +190,11 @@ class PayplugBackendTestCase(BasePaymentTestCase):
 
         mock_payplug_create.assert_called_once_with(
             **{
-                "amount": 20000,
+                "amount": 3704,
                 "allow_save_card": True,
                 "currency": "EUR",
                 "billing": {
-                    "email": "john.doe@acme.org",
+                    "email": order.owner.email,
                     "first_name": billing_address["first_name"],
                     "last_name": billing_address["last_name"],
                     "address1": billing_address["address"],
@@ -234,7 +206,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
                 "notification_url": "https://example.com/api/v1.0/payments/notifications",
                 "metadata": {
                     "order_id": str(order.id),
-                    "installment_id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "installment_id": str(first_installment["id"]),
                 },
             }
         )
@@ -293,7 +265,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
                 "notification_url": "https://example.com/api/v1.0/payments/notifications",
                 "metadata": {
                     "order_id": str(order.id),
-                    "installment_id": first_installment.get("id"),
+                    "installment_id": str(first_installment.get("id")),
                 },
             }
         )
@@ -357,7 +329,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
                 "notification_url": "https://example.com/api/v1.0/payments/notifications",
                 "metadata": {
                     "order_id": str(order.id),
-                    "installment_id": first_installment.get("id"),
+                    "installment_id": str(first_installment.get("id")),
                 },
             }
         )
@@ -413,7 +385,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
                 "notification_url": "https://example.com/api/v1.0/payments/notifications",
                 "metadata": {
                     "order_id": str(order.id),
-                    "installment_id": first_installment.get("id"),
+                    "installment_id": str(first_installment.get("id")),
                 },
             }
         )
@@ -436,40 +408,13 @@ class PayplugBackendTestCase(BasePaymentTestCase):
             is_paid=True
         )
         backend = PayplugBackend(self.configuration)
-        owner = UserFactory(email="john.doe@acme.org")
-        product = ProductFactory(price=D("123.45"))
-        order = OrderFactory(
-            owner=owner,
-            product=product,
-            payment_schedule=[
-                {
-                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
-                    "amount": "200.00",
-                    "due_date": "2024-01-17",
-                    "state": enums.PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
-                    "amount": "300.00",
-                    "due_date": "2024-02-17",
-                    "state": enums.PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
-                    "amount": "300.00",
-                    "due_date": "2024-03-17",
-                    "state": enums.PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
-                    "amount": "199.99",
-                    "due_date": "2024-04-17",
-                    "state": enums.PAYMENT_STATE_PENDING,
-                },
-            ],
+        order = OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
+            product__price=D("123.45"),
         )
-        billing_address = BillingAddressDictFactory()
-        credit_card = CreditCardFactory()
+        billing_address = order.main_invoice.recipient_address.to_dict()
+        credit_card = order.credit_card
+        first_installment = order.payment_schedule[0]
 
         payload = backend.create_one_click_payment(
             order,
@@ -481,13 +426,13 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         # - One click payment create has been called
         mock_payplug_create.assert_called_once_with(
             **{
-                "amount": 20000,
+                "amount": 3704,
                 "allow_save_card": False,
                 "initiator": "PAYER",
                 "payment_method": credit_card.token,
                 "currency": "EUR",
                 "billing": {
-                    "email": "john.doe@acme.org",
+                    "email": order.owner.email,
                     "first_name": billing_address["first_name"],
                     "last_name": billing_address["last_name"],
                     "address1": billing_address["address"],
@@ -499,7 +444,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
                 "notification_url": "https://example.com/api/v1.0/payments/notifications",
                 "metadata": {
                     "order_id": str(order.id),
-                    "installment_id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "installment_id": str(first_installment["id"]),
                 },
             }
         )
