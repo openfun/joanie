@@ -2,6 +2,7 @@
 
 import json
 import re
+from decimal import Decimal as D
 from logging import Logger
 from unittest import mock
 
@@ -21,7 +22,6 @@ from joanie.core.enums import (
 from joanie.core.factories import (
     OrderFactory,
     OrderGeneratorFactory,
-    ProductFactory,
     UserFactory,
 )
 from joanie.payment.backends.base import BasePaymentBackend
@@ -67,9 +67,12 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         which aims to be embedded into the api response.
         """
         backend = DummyPaymentBackend()
-        order = OrderFactory()
-        billing_address = BillingAddressDictFactory()
-        payment_payload = backend.create_payment(order, billing_address)
+        order = OrderGeneratorFactory(state=ORDER_STATE_PENDING)
+        billing_address = order.main_invoice.recipient_address.to_dict()
+        first_installment = order.payment_schedule[0]
+        payment_payload = backend.create_payment(
+            order, first_installment, billing_address
+        )
         payment_id = f"pay_{order.id}"
 
         self.assertEqual(
@@ -86,10 +89,13 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
             payment,
             {
                 "id": payment_id,
-                "amount": int(order.total * 100),
+                "amount": first_installment.get("amount").sub_units,
                 "billing_address": billing_address,
                 "notification_url": "https://example.com/api/v1.0/payments/notifications",
-                "metadata": {"order_id": str(order.id)},
+                "metadata": {
+                    "order_id": str(order.id),
+                    "installment_id": str(first_installment.get("id")),
+                },
             },
         )
 
@@ -130,7 +136,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         )
         billing_address = BillingAddressDictFactory()
         payment_payload = backend.create_payment(
-            order, billing_address, installment=order.payment_schedule[0]
+            order, order.payment_schedule[0], billing_address
         )
         payment_id = f"pay_{order.id}"
 
@@ -153,7 +159,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
                 "notification_url": "https://example.com/api/v1.0/payments/notifications",
                 "metadata": {
                     "order_id": str(order.id),
-                    "installment_id": order.payment_schedule[0]["id"],
+                    "installment_id": str(order.payment_schedule[0]["id"]),
                 },
             },
         )
@@ -203,7 +209,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         payment_id = f"pay_{order.id}"
 
         payment_payload = backend.create_one_click_payment(
-            order, billing_address, installment=order.payment_schedule[0]
+            order, order.payment_schedule[0], order.credit_card.token, billing_address
         )
 
         self.assertEqual(
@@ -230,10 +236,11 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
                 "id": payment_id,
                 "amount": int(order.payment_schedule[0]["amount"] * 100),
                 "billing_address": billing_address,
+                "credit_card_token": order.credit_card.token,
                 "notification_url": "https://example.com/api/v1.0/payments/notifications",
                 "metadata": {
                     "order_id": str(order.id),
-                    "installment_id": order.payment_schedule[0]["id"],
+                    "installment_id": str(order.payment_schedule[0]["id"]),
                 },
             },
         )
@@ -311,7 +318,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         payment_id = f"pay_{order.id}"
 
         payment_payload = backend.create_one_click_payment(
-            order, billing_address, installment=order.payment_schedule[0]
+            order, order.payment_schedule[0], order.credit_card.token, billing_address
         )
 
         self.assertEqual(
@@ -339,10 +346,11 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
                 "id": payment_id,
                 "amount": 20000,
                 "billing_address": billing_address,
+                "credit_card_token": order.credit_card.token,
                 "notification_url": "https://example.com/api/v1.0/payments/notifications",
                 "metadata": {
                     "order_id": str(order.id),
-                    "installment_id": order.payment_schedule[0]["id"],
+                    "installment_id": str(order.payment_schedule[0]["id"]),
                 },
             },
         )
@@ -412,9 +420,12 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         backend = DummyPaymentBackend()
 
         # Create a payment
-        order = OrderFactory()
-        billing_address = BillingAddressDictFactory()
-        payment_id = backend.create_payment(order, billing_address)["payment_id"]
+        order = OrderGeneratorFactory(state=ORDER_STATE_PENDING)
+        billing_address = order.main_invoice.recipient_address.to_dict()
+        first_installment = order.payment_schedule[0]
+        payment_id = backend.create_payment(order, first_installment, billing_address)[
+            "payment_id"
+        ]
 
         # Notify a payment with a no state
         request = APIRequestFactory().post(
@@ -440,9 +451,12 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         backend = DummyPaymentBackend()
 
         # Create a payment
-        order = OrderFactory()
-        billing_address = BillingAddressDictFactory()
-        payment_id = backend.create_payment(order, billing_address)["payment_id"]
+        order = OrderGeneratorFactory(state=ORDER_STATE_PENDING)
+        billing_address = order.main_invoice.recipient_address.to_dict()
+        first_installment = order.payment_schedule[0]
+        payment_id = backend.create_payment(order, first_installment, billing_address)[
+            "payment_id"
+        ]
 
         # Notify a payment with a no state
         request = APIRequestFactory().post(
@@ -474,7 +488,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         order = OrderGeneratorFactory(state=ORDER_STATE_PENDING)
         first_installment = order.payment_schedule[0]
         payment_id = backend.create_payment(
-            order, order.main_invoice.recipient_address, first_installment
+            order, first_installment, order.main_invoice.recipient_address
         )["payment_id"]
 
         # Notify that payment failed
@@ -535,7 +549,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         )
         billing_address = BillingAddressDictFactory()
         payment_id = backend.create_payment(
-            order, billing_address, installment=order.payment_schedule[0]
+            order, order.payment_schedule[0], billing_address
         )["payment_id"]
 
         # Notify that payment failed
@@ -568,7 +582,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         order = OrderGeneratorFactory(state=ORDER_STATE_PENDING)
         first_installment = order.payment_schedule[0]
         payment_id = backend.create_payment(
-            order, order.main_invoice.recipient_address, first_installment
+            order, first_installment, order.main_invoice.recipient_address
         )["payment_id"]
 
         # Notify that a payment succeeded
@@ -631,7 +645,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         )
         billing_address = BillingAddressDictFactory()
         payment_id = backend.create_payment(
-            order, billing_address, installment=order.payment_schedule[0]
+            order, order.payment_schedule[0], billing_address
         )["payment_id"]
 
         # Notify that a payment succeeded
@@ -663,9 +677,12 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         backend = DummyPaymentBackend()
 
         # Create a payment
-        order = OrderFactory()
-        billing_address = BillingAddressDictFactory()
-        payment_id = backend.create_payment(order, billing_address)["payment_id"]
+        order = OrderGeneratorFactory(state=ORDER_STATE_PENDING)
+        billing_address = order.main_invoice.recipient_address.to_dict()
+        first_installment = order.payment_schedule[0]
+        payment_id = backend.create_payment(order, first_installment, billing_address)[
+            "payment_id"
+        ]
 
         # Notify that payment succeeded
         # Notify that payment has been refund
@@ -692,10 +709,13 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         backend = DummyPaymentBackend()
 
         # Create a payment
-        order = OrderFactory()
-        billing_address = BillingAddressDictFactory()
-        payment_id = backend.create_payment(order, billing_address)["payment_id"]
-
+        order = OrderGeneratorFactory(state=ORDER_STATE_PENDING)
+        billing_address = order.main_invoice.recipient_address.to_dict()
+        first_installment = order.payment_schedule[0]
+        first_installment_amount = first_installment.get("amount")
+        payment_id = backend.create_payment(order, first_installment, billing_address)[
+            "payment_id"
+        ]
         # Notify that payment has been refunded with an amount higher than
         # product price
         request = APIRequestFactory().post(
@@ -703,7 +723,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
             data={
                 "id": payment_id,
                 "type": "refund",
-                "amount": int(order.total * 100) + 1,
+                "amount": int(first_installment_amount * 100) + 1,
             },
             format="json",
         )
@@ -712,9 +732,10 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         with self.assertRaises(RefundPaymentFailed) as context:
             backend.handle_notification(request)
 
+        payment_amount = D(f"{first_installment_amount:.2f}")
         self.assertEqual(
             str(context.exception),
-            f"Refund amount is greater than payment amount ({order.total})",
+            f"Refund amount is greater than payment amount ({payment_amount})",
         )
 
     def test_payment_backend_dummy_handle_notification_refund_unknown_payment(self):
@@ -726,9 +747,12 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         request_factory = APIRequestFactory()
 
         # Create a payment
-        order = OrderFactory()
-        billing_address = BillingAddressDictFactory()
-        payment_id = backend.create_payment(order, billing_address)["payment_id"]
+        order = OrderGeneratorFactory(state=ORDER_STATE_PENDING)
+        billing_address = order.main_invoice.recipient_address.to_dict()
+        first_installment = order.payment_schedule[0]
+        payment_id = backend.create_payment(order, first_installment, billing_address)[
+            "payment_id"
+        ]
 
         # Notify that payment has been refunded
         request = request_factory.post(
@@ -736,7 +760,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
             data={
                 "id": payment_id,
                 "type": "refund",
-                "amount": int(order.total * 100),
+                "amount": int(first_installment.get("amount") * 100),
             },
             format="json",
         )
@@ -762,7 +786,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         order = OrderGeneratorFactory(state=ORDER_STATE_PENDING)
         first_installment = order.payment_schedule[0]
         payment_id = backend.create_payment(
-            order, order.main_invoice.recipient_address, first_installment
+            order, first_installment, order.main_invoice.recipient_address
         )["payment_id"]
 
         # Notify that payment has been paid
@@ -819,12 +843,14 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         """
         backend = DummyPaymentBackend()
 
-        order = OrderFactory(product=ProductFactory())
-        billing_address = BillingAddressDictFactory()
-        request = APIRequestFactory().post(path="/")
+        order = OrderGeneratorFactory(state=ORDER_STATE_PENDING)
 
         # Create a payment
-        payment_id = backend.create_payment(order, billing_address)["payment_id"]
+        payment_id = backend.create_payment(
+            order,
+            order.payment_schedule[0],
+            order.main_invoice.recipient_address.to_dict(),
+        )["payment_id"]
 
         self.assertIsNotNone(cache.get(payment_id))
 
