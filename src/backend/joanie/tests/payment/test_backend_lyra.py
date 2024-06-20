@@ -117,10 +117,9 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         is raised.
         """
         backend = LyraBackend(self.configuration)
-        owner = UserFactory(email="john.doe@acme.org")
-        product = ProductFactory(price=D("123.45"))
-        order = OrderFactory(owner=owner, product=product)
-        billing_address = UserAddressFactory(owner=owner)
+        order = OrderGeneratorFactory(state=ORDER_STATE_PENDING)
+        billing_address = order.main_invoice.recipient_address
+        first_installment = order.payment_schedule[0]
 
         responses.add(
             responses.POST,
@@ -132,7 +131,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
             self.assertRaises(PaymentProviderAPIException) as context,
             self.assertLogs() as logger,
         ):
-            backend.create_payment(order, billing_address)
+            backend.create_payment(order, first_installment, billing_address)
 
         self.assertEqual(
             str(context.exception),
@@ -169,10 +168,9 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         with some information about the source of the error.
         """
         backend = LyraBackend(self.configuration)
-        owner = UserFactory(email="john.doe@acme.org")
-        product = ProductFactory(price=D("123.45"))
-        order = OrderFactory(owner=owner, product=product)
-        billing_address = UserAddressFactory(owner=owner)
+        order = OrderGeneratorFactory(state=ORDER_STATE_PENDING)
+        billing_address = order.main_invoice.recipient_address
+        first_installment = order.payment_schedule[0]
 
         responses.add(
             responses.POST,
@@ -185,7 +183,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
             self.assertRaises(PaymentProviderAPIException) as context,
             self.assertLogs() as logger,
         ):
-            backend.create_payment(order, billing_address)
+            backend.create_payment(order, first_installment, billing_address)
 
         self.assertEqual(
             str(context.exception),
@@ -227,10 +225,12 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         if the payment failed.
         """
         backend = LyraBackend(self.configuration)
-        owner = UserFactory(email="john.doe@acme.org")
-        product = ProductFactory(price=D("123.45"))
-        order = OrderFactory(owner=owner, product=product)
-        billing_address = UserAddressFactory(owner=owner)
+        order = OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
+            product__price=D("123.45"),
+        )
+        billing_address = order.main_invoice.recipient_address
+        first_installment = order.payment_schedule[0]
 
         with self.open("lyra/responses/create_payment_failed.json") as file:
             json_response = json.loads(file.read())
@@ -250,11 +250,11 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
                 ),
                 responses.matchers.json_params_matcher(
                     {
-                        "amount": 12345,
+                        "amount": 3704,
                         "currency": "EUR",
                         "customer": {
-                            "email": "john.doe@acme.org",
-                            "reference": str(owner.id),
+                            "email": order.owner.email,
+                            "reference": str(order.owner.id),
                             "billingDetails": {
                                 "firstName": billing_address.first_name,
                                 "lastName": billing_address.last_name,
@@ -262,13 +262,16 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
                                 "zipCode": billing_address.postcode,
                                 "city": billing_address.city,
                                 "country": billing_address.country.code,
-                                "language": owner.language,
+                                "language": order.owner.language,
                             },
                             "shippingDetails": {
                                 "shippingMethod": "DIGITAL_GOOD",
                             },
                         },
                         "orderId": str(order.id),
+                        "metadata": {
+                            "installment_id": str(first_installment.get("id"))
+                        },
                         "formAction": "REGISTER_PAY",
                         "ipnTargetUrl": "https://example.com/api/v1.0/payments/notifications",
                     }
@@ -282,7 +285,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
             self.assertRaises(PaymentProviderAPIException) as context,
             self.assertLogs() as logger,
         ):
-            backend.create_payment(order, billing_address)
+            backend.create_payment(order, first_installment, billing_address)
 
         self.assertEqual(
             str(context.exception),
@@ -319,10 +322,12 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         When backend creates a payment, it should return a form token.
         """
         backend = LyraBackend(self.configuration)
-        owner = UserFactory(email="john.doe@acme.org")
-        product = ProductFactory(price=D("123.45"))
-        order = OrderFactory(owner=owner, product=product)
-        billing_address = UserAddressFactory(owner=owner)
+        order = OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
+            product__price=D("123.45"),
+        )
+        billing_address = order.main_invoice.recipient_address
+        first_installment = order.payment_schedule[0]
 
         with self.open("lyra/responses/create_payment.json") as file:
             json_response = json.loads(file.read())
@@ -342,11 +347,11 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
                 ),
                 responses.matchers.json_params_matcher(
                     {
-                        "amount": 12345,
+                        "amount": 3704,
                         "currency": "EUR",
                         "customer": {
-                            "email": "john.doe@acme.org",
-                            "reference": str(owner.id),
+                            "email": order.owner.email,
+                            "reference": str(order.owner.id),
                             "billingDetails": {
                                 "firstName": billing_address.first_name,
                                 "lastName": billing_address.last_name,
@@ -354,13 +359,16 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
                                 "zipCode": billing_address.postcode,
                                 "city": billing_address.city,
                                 "country": billing_address.country.code,
-                                "language": owner.language,
+                                "language": order.owner.language,
                             },
                             "shippingDetails": {
                                 "shippingMethod": "DIGITAL_GOOD",
                             },
                         },
                         "orderId": str(order.id),
+                        "metadata": {
+                            "installment_id": str(first_installment.get("id"))
+                        },
                         "formAction": "REGISTER_PAY",
                         "ipnTargetUrl": "https://example.com/api/v1.0/payments/notifications",
                     }
@@ -370,7 +378,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
             json=json_response,
         )
 
-        response = backend.create_payment(order, billing_address)
+        response = backend.create_payment(order, first_installment, billing_address)
 
         self.assertEqual(
             response,
@@ -474,7 +482,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         )
 
         response = backend.create_payment(
-            order, billing_address, installment=order.payment_schedule[0]
+            order, order.payment_schedule[0], billing_address
         )
 
         self.assertEqual(
@@ -617,10 +625,13 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         When backend creates a one click payment, it should return payment information.
         """
         backend = LyraBackend(self.configuration)
-        owner = UserFactory(email="john.doe@acme.org")
-        product = ProductFactory(price=D("123.45"))
-        order = OrderFactory(owner=owner, product=product)
-        billing_address = UserAddressFactory(owner=owner)
+        order = OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
+            product__price=D("123.45"),
+        )
+        owner = order.owner
+        billing_address = order.main_invoice.recipient_address
+        first_installment = order.payment_schedule[0]
         credit_card = CreditCardFactory(
             owner=owner, token="854d630f17f54ee7bce03fb4fcf764e9"
         )
@@ -643,10 +654,10 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
                 ),
                 responses.matchers.json_params_matcher(
                     {
-                        "amount": 12345,
+                        "amount": 3704,
                         "currency": "EUR",
                         "customer": {
-                            "email": "john.doe@acme.org",
+                            "email": order.owner.email,
                             "reference": str(owner.id),
                             "billingDetails": {
                                 "firstName": billing_address.first_name,
@@ -662,6 +673,9 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
                             },
                         },
                         "orderId": str(order.id),
+                        "metadata": {
+                            "installment_id": str(first_installment.get("id"))
+                        },
                         "formAction": "PAYMENT",
                         "paymentMethodToken": credit_card.token,
                         "ipnTargetUrl": "https://example.com/api/v1.0/payments/notifications",
@@ -673,7 +687,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         )
 
         response = backend.create_one_click_payment(
-            order, billing_address, credit_card.token
+            order, first_installment, credit_card.token, billing_address
         )
 
         self.assertEqual(
@@ -783,9 +797,9 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
 
         response = backend.create_one_click_payment(
             order,
-            billing_address,
+            order.payment_schedule[0],
             credit_card.token,
-            installment=order.payment_schedule[0],
+            billing_address,
         )
 
         self.assertEqual(
@@ -894,7 +908,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         )
 
         response = backend.create_zero_click_payment(
-            order, credit_card.token, installment=order.payment_schedule[0]
+            order, order.payment_schedule[0], credit_card.token
         )
 
         self.assertTrue(response)
@@ -975,7 +989,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         )
 
         backend.create_zero_click_payment(
-            order, credit_card.token, installment=order.payment_schedule[1]
+            order, order.payment_schedule[1], credit_card.token
         )
 
         # Children invoice is created
@@ -1058,11 +1072,16 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         method `_do_on_failure` should be called.
         """
         backend = LyraBackend(self.configuration)
-        owner = UserFactory(email="john.doe@acme.org")
-        product = ProductFactory(price=D("123.45"))
-        order = OrderFactory(
-            id="758c2570-a7af-4335-b091-340d0cc6e694", owner=owner, product=product
+        order = OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
+            id="758c2570-a7af-4335-b091-340d0cc6e694",
+            owner__email="john.doe@acme.org",
+            product__price=D("123.45"),
         )
+        # Force the first installment id to match the stored request
+        first_installment = order.payment_schedule[0]
+        first_installment["id"] = "d9356dd7-19a6-4695-b18e-ad93af41424a"
+        order.save()
 
         with self.open("lyra/requests/payment_refused.json") as file:
             json_request = json.loads(file.read())
@@ -1073,7 +1092,9 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
 
         backend.handle_notification(request)
 
-        mock_do_on_payment_failure.assert_called_once_with(order, installment_id=None)
+        mock_do_on_payment_failure.assert_called_once_with(
+            order, first_installment["id"]
+        )
 
     @patch.object(BasePaymentBackend, "_do_on_payment_success")
     def test_payment_backend_lyra_handle_notification_payment(
@@ -1427,7 +1448,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
             self.assertLogs() as logger,
         ):
             backend.create_zero_click_payment(
-                order, credit_card.token, installment=order.payment_schedule[1]
+                order, order.payment_schedule[1], credit_card.token
             )
 
         self.assertEqual(
@@ -1506,7 +1527,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
             self.assertLogs() as logger,
         ):
             backend.create_zero_click_payment(
-                order, credit_card.token, installment=order.payment_schedule[0]
+                order, order.payment_schedule[0], credit_card.token
             )
 
         self.assertEqual(
