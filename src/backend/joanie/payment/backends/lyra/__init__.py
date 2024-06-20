@@ -71,7 +71,7 @@ class LyraBackend(BasePaymentBackend):
         """
         payload = {
             "currency": settings.DEFAULT_CURRENCY,
-            "amount": int(float(installment["amount"]) * 100)
+            "amount": int(installment["amount"].sub_units)
             if installment
             else int(order.total * 100),
             "customer": {

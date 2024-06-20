@@ -19,7 +19,6 @@ from joanie.core.enums import (
     ORDER_STATE_PENDING,
     ORDER_STATE_PENDING_PAYMENT,
     PAYMENT_STATE_PAID,
-    PAYMENT_STATE_PENDING,
 )
 from joanie.core.factories import (
     OrderFactory,
@@ -35,7 +34,7 @@ from joanie.payment.exceptions import (
     PaymentProviderAPIException,
     RegisterPaymentFailed,
 )
-from joanie.payment.factories import BillingAddressDictFactory, CreditCardFactory
+from joanie.payment.factories import CreditCardFactory
 from joanie.payment.models import CreditCard, Transaction
 from joanie.tests.base import BaseLogMixinTestCase
 from joanie.tests.payment.base_payment import BasePaymentTestCase
@@ -399,38 +398,17 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         """
         backend = LyraBackend(self.configuration)
         owner = UserFactory(email="john.doe@acme.org")
-        product = ProductFactory(price=D("123.45"))
-        order = OrderFactory(
+        order = OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
             owner=owner,
-            product=product,
-            payment_schedule=[
-                {
-                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
-                    "amount": "200.00",
-                    "due_date": "2024-01-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
-                    "amount": "300.00",
-                    "due_date": "2024-02-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
-                    "amount": "300.00",
-                    "due_date": "2024-03-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
-                    "amount": "199.99",
-                    "due_date": "2024-04-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-            ],
+            product__price=D("123.45"),
         )
-        billing_address = UserAddressFactory(owner=owner)
+        # Force the first installment id to match the stored request
+        first_installment = order.payment_schedule[0]
+        first_installment["id"] = "d9356dd7-19a6-4695-b18e-ad93af41424a"
+        order.save()
+        owner = order.owner
+        billing_address = order.main_invoice.recipient_address
 
         with self.open("lyra/responses/create_payment.json") as file:
             json_response = json.loads(file.read())
@@ -450,7 +428,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
                 ),
                 responses.matchers.json_params_matcher(
                     {
-                        "amount": 20000,
+                        "amount": 3704,
                         "currency": "EUR",
                         "customer": {
                             "email": "john.doe@acme.org",
@@ -708,42 +686,22 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         When backend creates a one click payment, it should return payment information.
         """
         backend = LyraBackend(self.configuration)
-        owner = UserFactory(email="john.doe@acme.org")
-        product = ProductFactory(price=D("123.45"))
-        order = OrderFactory(
+        owner = UserFactory(email="john.doe@acme.org", language="en-us")
+        order = OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
+            id="514070fe-c12c-48b8-97cf-5262708673a3",
             owner=owner,
-            product=product,
-            payment_schedule=[
-                {
-                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
-                    "amount": "200.00",
-                    "due_date": "2024-01-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
-                    "amount": "300.00",
-                    "due_date": "2024-02-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
-                    "amount": "300.00",
-                    "due_date": "2024-03-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
-                    "amount": "199.99",
-                    "due_date": "2024-04-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-            ],
+            product__price=D("123.45"),
+            credit_card__is_main=True,
+            credit_card__initial_issuer_transaction_identifier="1",
         )
-        billing_address = UserAddressFactory(owner=owner)
-        credit_card = CreditCardFactory(
-            owner=owner, token="854d630f17f54ee7bce03fb4fcf764e9"
-        )
+        # Force the first installment id to match the stored request
+        first_installment = order.payment_schedule[0]
+        first_installment["id"] = "d9356dd7-19a6-4695-b18e-ad93af41424a"
+        order.save()
+        owner = order.owner
+        billing_address = order.main_invoice.recipient_address
+        credit_card = order.credit_card
 
         with self.open("lyra/responses/create_one_click_payment.json") as file:
             json_response = json.loads(file.read())
@@ -763,7 +721,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
                 ),
                 responses.matchers.json_params_matcher(
                     {
-                        "amount": 20000,
+                        "amount": 3704,
                         "currency": "EUR",
                         "customer": {
                             "email": "john.doe@acme.org",
@@ -815,7 +773,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         )
 
     @responses.activate(assert_all_requests_are_fired=True)
-    def test_payment_backend_lyra_create_zero_click_payment(self):
+    def test_payment_backend_lyra_create_zero_click_payment1(self):
         """
         When backend creates a zero click payment, it should return payment information.
         """
@@ -827,41 +785,27 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
             language="en-us",
         )
         product = ProductFactory(price=D("123.45"))
-        first_installment_amount = product.price / 3
-        second_installment_amount = product.price - first_installment_amount
-
-        order = OrderFactory(
+        order = OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
             owner=owner,
             product=product,
-            payment_schedule=[
-                {
-                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
-                    "amount": f"{first_installment_amount}",
-                    "due_date": "2024-01-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
-                    "amount": f"{second_installment_amount}",
-                    "due_date": "2024-02-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-            ],
         )
-        credit_card = CreditCardFactory(
-            owner=owner,
-            token="854d630f17f54ee7bce03fb4fcf764e9",
-            initial_issuer_transaction_identifier="4575676657929351",
-        )
-        billing_address = BillingAddressDictFactory()
-        order.init_flow(billing_address=billing_address)
+        # Force the installments id to match the stored request
+        first_installment = order.payment_schedule[0]
+        first_installment["id"] = "d9356dd7-19a6-4695-b18e-ad93af41424a"
+        second_installment = order.payment_schedule[1]
+        second_installment["id"] = "1932fbc5-d971-48aa-8fee-6d637c3154a5"
+        order.save()
+        first_installment_amount = order.payment_schedule[0]["amount"]
+        second_installment_amount = order.payment_schedule[1]["amount"]
+        credit_card = order.credit_card
 
         with self.open("lyra/responses/create_zero_click_payment.json") as file:
             json_response = json.loads(file.read())
 
         json_response["answer"]["transactions"][0]["uuid"] = "first_transaction_id"
         json_response["answer"]["orderDetails"]["orderTotalAmount"] = int(
-            first_installment_amount * 100
+            first_installment_amount.sub_units
         )
 
         responses.add(
@@ -922,7 +866,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         self.assertTrue(
             Transaction.objects.filter(
                 invoice__parent__order=order,
-                total=first_installment_amount,
+                total=first_installment_amount.as_decimal(),
                 reference="first_transaction_id",
             ).exists()
         )
@@ -942,7 +886,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
 
         json_response["answer"]["transactions"][0]["uuid"] = "second_transaction_id"
         json_response["answer"]["orderDetails"]["orderTotalAmount"] = int(
-            second_installment_amount * 100
+            second_installment_amount.sub_units
         )
 
         responses.add(
@@ -1000,7 +944,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         self.assertTrue(
             Transaction.objects.filter(
                 invoice__parent__order=order,
-                total=second_installment_amount,
+                total=second_installment_amount.as_decimal(),
                 reference="second_transaction_id",
             ).exists()
         )
@@ -1403,39 +1347,8 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         of the error.
         """
         backend = LyraBackend(self.configuration)
-        owner = UserFactory(
-            email="john.doe@acme.org",
-            first_name="John",
-            last_name="Doe",
-            language="en-us",
-        )
-        product = ProductFactory(price=D("134.45"))
-        first_installment_amount = product.price / 3
-        second_installment_amount = product.price - first_installment_amount
-        order = OrderFactory(
-            owner=owner,
-            product=product,
-            state=ORDER_STATE_PENDING,
-            payment_schedule=[
-                {
-                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
-                    "amount": f"{first_installment_amount}",
-                    "due_date": "2024-01-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
-                    "amount": f"{second_installment_amount}",
-                    "due_date": "2024-02-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-            ],
-        )
-        credit_card = CreditCardFactory(
-            owner=owner,
-            token="854d630f17f54ee7bce03fb4fcf764e9",
-            initial_issuer_transaction_identifier="4575676657929351",
-        )
+        order = OrderGeneratorFactory(state=ORDER_STATE_PENDING)
+        credit_card = order.credit_card
 
         responses.add(
             responses.POST,
@@ -1486,34 +1399,8 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         PaymentProviderAPIException is raised with information about the source of the error.
         """
         backend = LyraBackend(self.configuration)
-        owner = UserFactory(email="john.doe@acme.org")
-        product = ProductFactory(price=D("134.45"))
-        first_installment_amount = product.price / 3
-        second_installment_amount = product.price - first_installment_amount
-        order = OrderFactory(
-            owner=owner,
-            product=product,
-            state=ORDER_STATE_PENDING,
-            payment_schedule=[
-                {
-                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
-                    "amount": f"{first_installment_amount}",
-                    "due_date": "2024-01-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
-                    "amount": f"{second_installment_amount}",
-                    "due_date": "2024-02-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-            ],
-        )
-        credit_card = CreditCardFactory(
-            owner=owner,
-            token="854d630f17f54ee7bce03fb4fcf764e9",
-            initial_issuer_transaction_identifier="4575676657929351",
-        )
+        order = OrderGeneratorFactory(state=ORDER_STATE_PENDING)
+        credit_card = order.credit_card
 
         responses.add(
             responses.POST,
