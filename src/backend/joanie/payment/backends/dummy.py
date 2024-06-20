@@ -121,9 +121,9 @@ class DummyPaymentBackend(BasePaymentBackend):
     def _get_payment_data(
         self,
         order,
-        billing_address,
+        installment,
         credit_card_token=None,
-        installment=None,
+        billing_address=None,
     ):
         """Build the generic payment object."""
         order_id = str(order.id)
@@ -131,18 +131,17 @@ class DummyPaymentBackend(BasePaymentBackend):
         notification_url = self.get_notification_url()
         payment_info = {
             "id": payment_id,
-            "amount": int(float(installment["amount"]) * 100)
-            if installment
-            else int(order.total * 100),
+            "amount": int(installment["amount"].sub_units),
             "notification_url": notification_url,
-            "metadata": {"order_id": order_id},
+            "metadata": {
+                "order_id": order_id,
+                "installment_id": str(installment["id"]),
+            },
         }
         if billing_address:
             payment_info["billing_address"] = billing_address
         if credit_card_token:
             payment_info["credit_card_token"] = credit_card_token
-        if installment:
-            payment_info["metadata"]["installment_id"] = installment["id"]
         cache.set(payment_id, payment_info)
 
         return {
@@ -154,22 +153,24 @@ class DummyPaymentBackend(BasePaymentBackend):
     def create_payment(
         self,
         order,
+        installment,
         billing_address=None,
-        installment=None,
     ):
         """
         Generate a payment object then store it in the cache.
         """
-        return self._get_payment_data(order, billing_address, installment=installment)
+        return self._get_payment_data(
+            order, installment, billing_address=billing_address
+        )
 
     def create_one_click_payment(
-        self, order, billing_address, credit_card_token=None, installment=None
+        self, order, installment, credit_card_token, billing_address
     ):
         """
         Call create_payment method and bind a `is_paid` property to payment information.
         """
         payment_info = self._get_payment_data(
-            order, billing_address, installment=installment
+            order, installment, credit_card_token, billing_address
         )
         notification_request = APIRequestFactory().post(
             reverse("payment_webhook"),
@@ -189,15 +190,11 @@ class DummyPaymentBackend(BasePaymentBackend):
             "is_paid": True,
         }
 
-    def create_zero_click_payment(
-        self, order, credit_card_token=None, installment=None
-    ):
+    def create_zero_click_payment(self, order, installment, credit_card_token):
         """
         Call create_payment method and bind a `is_paid` property to payment information.
         """
-        payment_info = self._get_payment_data(
-            order, credit_card_token, installment=installment
-        )
+        payment_info = self._get_payment_data(order, installment, credit_card_token)
         notification_request = APIRequestFactory().post(
             reverse("payment_webhook"),
             data={
