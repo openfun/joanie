@@ -1,5 +1,8 @@
 """Utils for the order payment schedule field"""
 
+from json import JSONDecoder
+from json.decoder import WHITESPACE
+
 from django.core.serializers.json import DjangoJSONEncoder
 
 from stockholm import Money
@@ -7,7 +10,7 @@ from stockholm import Money
 
 class OrderPaymentScheduleEncoder(DjangoJSONEncoder):
     """
-    A JSON encoder for datetime objects.
+    A JSON encoder for order payment schedule objects.
     """
 
     def default(self, o):
@@ -15,3 +18,15 @@ class OrderPaymentScheduleEncoder(DjangoJSONEncoder):
             return o.amount_as_string()
 
         return super().default(o)
+
+
+class OrderPaymentScheduleDecoder(JSONDecoder):
+    """
+    A JSON decoder for order payment schedule objects.
+    """
+
+    def decode(self, s, _w=WHITESPACE.match):
+        payment_schedule = super().decode(s, _w)
+        for installment in payment_schedule:
+            installment["amount"] = Money(installment["amount"])
+        return payment_schedule
