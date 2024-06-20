@@ -92,7 +92,7 @@ class BasePaymentBackend:
             )
 
     @staticmethod
-    def _do_on_payment_failure(order, installment_id=None):
+    def _do_on_payment_failure(order, installment_id):
         """
         Generic actions triggered when a failed payment has been received.
         Mark the invoice as pending.
@@ -134,7 +134,7 @@ class BasePaymentBackend:
         path = reverse("payment_webhook")
         return f"https://{site.domain}{path}"
 
-    def create_payment(self, order, billing_address, installment=None):
+    def create_payment(self, order, installment, billing_address):
         """
         Method used to create a payment from the payment provider.
         """
@@ -143,7 +143,7 @@ class BasePaymentBackend:
         )
 
     def create_one_click_payment(
-        self, order, billing_address, credit_card_token, installment=None
+        self, order, installment, credit_card_token, billing_address
     ):
         """
         Method used to create a one click payment from the payment provider.
@@ -152,7 +152,7 @@ class BasePaymentBackend:
             "subclasses of BasePaymentBackend must provide a create_one_click_payment() method."
         )
 
-    def create_zero_click_payment(self, order, credit_card_token, installment=None):
+    def create_zero_click_payment(self, order, installment, credit_card_token):
         """
         Method used to create a zero click payment from the payment provider.
         """
