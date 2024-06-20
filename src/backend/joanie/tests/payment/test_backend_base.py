@@ -38,14 +38,14 @@ class TestBasePaymentBackend(BasePaymentBackend):
         pass
 
     def create_one_click_payment(
-        self, order, billing_address, credit_card_token, installment=None
+        self, order, installment, credit_card_token, billing_address
     ):
         pass
 
-    def create_payment(self, order, billing_address, installment=None):
+    def create_payment(self, order, installment, billing_address):
         pass
 
-    def create_zero_click_payment(self, order, credit_card_token, installment=None):
+    def create_zero_click_payment(self, order, installment, credit_card_token):
         pass
 
     def delete_credit_card(self, credit_card):
@@ -83,7 +83,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         backend = BasePaymentBackend()
 
         with self.assertRaises(NotImplementedError) as context:
-            backend.create_payment(None, None)
+            backend.create_payment(None, None, None)
 
         self.assertEqual(
             str(context.exception),
@@ -95,7 +95,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         backend = BasePaymentBackend()
 
         with self.assertRaises(NotImplementedError) as context:
-            backend.create_one_click_payment(None, None, None)
+            backend.create_one_click_payment(None, None, None, None)
 
         self.assertEqual(
             str(context.exception),
