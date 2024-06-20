@@ -32,7 +32,6 @@ from joanie.payment.exceptions import (
     RefundPaymentFailed,
     RegisterPaymentFailed,
 )
-from joanie.payment.factories import BillingAddressDictFactory, CreditCardFactory
 from joanie.payment.models import CreditCard
 from joanie.tests.payment.base_payment import BasePaymentTestCase
 
@@ -106,35 +105,8 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         which aims to be embedded into the api response.
         """
         backend = DummyPaymentBackend()
-        order = OrderFactory(
-            payment_schedule=[
-                {
-                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
-                    "amount": "200.00",
-                    "due_date": "2024-01-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
-                    "amount": "300.00",
-                    "due_date": "2024-02-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
-                    "amount": "300.00",
-                    "due_date": "2024-03-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
-                    "amount": "199.99",
-                    "due_date": "2024-04-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-            ],
-        )
-        billing_address = BillingAddressDictFactory()
+        order = OrderGeneratorFactory(state=ORDER_STATE_PENDING)
+        billing_address = order.main_invoice.recipient_address.to_dict()
         payment_payload = backend.create_payment(
             order, order.payment_schedule[0], billing_address
         )
@@ -154,7 +126,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
             payment,
             {
                 "id": payment_id,
-                "amount": 20000,
+                "amount": order.payment_schedule[0]["amount"].sub_units,
                 "billing_address": billing_address,
                 "notification_url": "https://example.com/api/v1.0/payments/notifications",
                 "metadata": {
@@ -170,8 +142,12 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         "handle_notification",
         side_effect=DummyPaymentBackend().handle_notification,
     )
-    @override_settings(JOANIE_CATALOG_NAME="Test Catalog")
-    @override_settings(JOANIE_CATALOG_BASE_URL="https://richie.education")
+    @override_settings(
+        JOANIE_PAYMENT_SCHEDULE_LIMITS={5: (100,)},
+        DEFAULT_CURRENCY="EUR",
+        JOANIE_CATALOG_NAME="Test Catalog",
+        JOANIE_CATALOG_BASE_URL="https://richie.education",
+    )
     def test_payment_backend_dummy_create_one_click_payment(
         self, mock_handle_notification, mock_logger
     ):
@@ -183,29 +159,9 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         """
 
         backend = DummyPaymentBackend()
-        owner = UserFactory(
-            email="sam@fun-test.fr",
-            language="en-us",
-            username="Samantha",
-            first_name="",
-            last_name="",
-        )
-        order = OrderFactory(
-            owner=owner,
-            payment_schedule=[
-                {
-                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
-                    "amount": 200.00,
-                    "due_date": "2024-01-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-            ],
-        )
-        CreditCardFactory(
-            owner=owner, is_main=True, initial_issuer_transaction_identifier="1"
-        )
-        billing_address = BillingAddressDictFactory()
-        order.init_flow(billing_address=billing_address)
+        owner = UserFactory(language="en-us")
+        order = OrderGeneratorFactory(state=ORDER_STATE_PENDING, owner=owner)
+        billing_address = order.main_invoice.recipient_address.to_dict()
         payment_id = f"pay_{order.id}"
 
         payment_payload = backend.create_one_click_payment(
@@ -249,10 +205,12 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         order.refresh_from_db()
         self.assertEqual(order.state, ORDER_STATE_COMPLETED)
         # check email has been sent
-        self._check_order_validated_email_sent("sam@fun-test.fr", "Samantha", order)
+        self._check_order_validated_email_sent(
+            order.owner.email, order.owner.username, order
+        )
 
         mock_logger.assert_called_with(
-            "Mail is sent to %s from dummy payment", "sam@fun-test.fr"
+            "Mail is sent to %s from dummy payment", order.owner.email
         )
 
     @mock.patch.object(Logger, "info")
@@ -274,47 +232,9 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         """
 
         backend = DummyPaymentBackend()
-        owner = UserFactory(
-            email="sam@fun-test.fr",
-            language="en-us",
-            username="Samantha",
-            first_name="",
-            last_name="",
-        )
-        order = OrderFactory(
-            owner=owner,
-            payment_schedule=[
-                {
-                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
-                    "amount": "200.00",
-                    "due_date": "2024-01-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
-                    "amount": "300.00",
-                    "due_date": "2024-02-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
-                    "amount": "300.00",
-                    "due_date": "2024-03-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
-                    "amount": "199.99",
-                    "due_date": "2024-04-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-            ],
-        )
-        CreditCardFactory(
-            owner=owner, is_main=True, initial_issuer_transaction_identifier="1"
-        )
-        billing_address = BillingAddressDictFactory()
-        order.init_flow(billing_address=billing_address)
+        owner = UserFactory(language="en-us")
+        order = OrderGeneratorFactory(state=ORDER_STATE_PENDING, owner=owner)
+        billing_address = order.main_invoice.recipient_address.to_dict()
         payment_id = f"pay_{order.id}"
 
         payment_payload = backend.create_one_click_payment(
@@ -344,7 +264,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
             payment,
             {
                 "id": payment_id,
-                "amount": 20000,
+                "amount": order.payment_schedule[0]["amount"].sub_units,
                 "billing_address": billing_address,
                 "credit_card_token": order.credit_card.token,
                 "notification_url": "https://example.com/api/v1.0/payments/notifications",
@@ -358,40 +278,19 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         mock_handle_notification.assert_called_once()
         order.refresh_from_db()
         self.assertEqual(order.state, ORDER_STATE_PENDING_PAYMENT)
-        self.assertEqual(
-            order.payment_schedule,
-            [
-                {
-                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
-                    "amount": "200.00",
-                    "due_date": "2024-01-17",
-                    "state": PAYMENT_STATE_PAID,
-                },
-                {
-                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
-                    "amount": "300.00",
-                    "due_date": "2024-02-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
-                    "amount": "300.00",
-                    "due_date": "2024-03-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
-                    "amount": "199.99",
-                    "due_date": "2024-04-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-            ],
-        )
+        for installment in order.payment_schedule:
+            if installment["id"] == order.payment_schedule[0]["id"]:
+                self.assertEqual(installment["state"], PAYMENT_STATE_PAID)
+            else:
+                self.assertEqual(installment["state"], PAYMENT_STATE_PENDING)
+
         # check email has been sent
-        self._check_order_validated_email_sent("sam@fun-test.fr", "Samantha", order)
+        self._check_order_validated_email_sent(
+            order.owner.email, order.owner.username, order
+        )
 
         mock_logger.assert_called_with(
-            "Mail is sent to %s from dummy payment", "sam@fun-test.fr"
+            "Mail is sent to %s from dummy payment", order.owner.email
         )
 
     def test_payment_backend_dummy_handle_notification_unknown_resource(self):
@@ -518,36 +417,8 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         backend = DummyPaymentBackend()
 
         # Create a payment
-        order = OrderFactory(
-            state=ORDER_STATE_PENDING,
-            payment_schedule=[
-                {
-                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
-                    "amount": "200.00",
-                    "due_date": "2024-01-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
-                    "amount": "300.00",
-                    "due_date": "2024-02-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
-                    "amount": "300.00",
-                    "due_date": "2024-03-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
-                    "amount": "199.99",
-                    "due_date": "2024-04-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-            ],
-        )
-        billing_address = BillingAddressDictFactory()
+        order = OrderGeneratorFactory(state=ORDER_STATE_PENDING)
+        billing_address = order.main_invoice.recipient_address.to_dict()
         payment_id = backend.create_payment(
             order, order.payment_schedule[0], billing_address
         )["payment_id"]
@@ -565,7 +436,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         self.assertEqual(order.state, ORDER_STATE_PENDING)
 
         mock_payment_failure.assert_called_once_with(
-            order, installment_id="d9356dd7-19a6-4695-b18e-ad93af41424a"
+            order, installment_id=order.payment_schedule[0]["id"]
         )
 
     @mock.patch.object(BasePaymentBackend, "_do_on_payment_success")
@@ -615,35 +486,8 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         backend = DummyPaymentBackend()
 
         # Create a payment
-        order = OrderFactory(
-            payment_schedule=[
-                {
-                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
-                    "amount": "200.00",
-                    "due_date": "2024-01-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
-                    "amount": "300.00",
-                    "due_date": "2024-02-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
-                    "amount": "300.00",
-                    "due_date": "2024-03-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
-                    "amount": "199.99",
-                    "due_date": "2024-04-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-            ]
-        )
-        billing_address = BillingAddressDictFactory()
+        order = OrderGeneratorFactory(state=ORDER_STATE_PENDING)
+        billing_address = order.main_invoice.recipient_address.to_dict()
         payment_id = backend.create_payment(
             order, order.payment_schedule[0], billing_address
         )["payment_id"]
@@ -660,9 +504,9 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
 
         payment = {
             "id": payment_id,
-            "amount": 200,
+            "amount": order.payment_schedule[0]["amount"].as_decimal(),
             "billing_address": billing_address,
-            "installment_id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+            "installment_id": str(order.payment_schedule[0]["id"]),
         }
 
         mock_payment_success.assert_called_once_with(order, payment)
@@ -783,7 +627,11 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         request_factory = APIRequestFactory()
 
         # Create a payment
-        order = OrderGeneratorFactory(state=ORDER_STATE_PENDING)
+        order = OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
+            # This price causes rounding issues if Money is not used
+            product__price=D("902.80"),
+        )
         first_installment = order.payment_schedule[0]
         payment_id = backend.create_payment(
             order, first_installment, order.main_invoice.recipient_address
@@ -809,7 +657,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
             data={
                 "id": payment_id,
                 "type": "refund",
-                "amount": int(float(first_installment["amount"]) * 100),
+                "amount": first_installment["amount"].sub_units,
                 "installment_id": first_installment["id"],
             },
             format="json",
