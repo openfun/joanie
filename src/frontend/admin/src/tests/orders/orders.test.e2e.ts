@@ -19,6 +19,7 @@ import {
 } from "@/services/api/models/Organization";
 import { ORGANIZATION_OPTIONS_REQUEST_RESULT } from "@/tests/mocks/organizations/organization-mock";
 import { closeAllNotification, delay } from "@/components/testing/utils";
+import { formatShortDateTest } from "@/tests/utils";
 
 const url = "http://localhost:8071/api/v1.0/admin/orders/";
 const catchIdRegex = getUrlCatchIdRegex(url);
@@ -438,6 +439,9 @@ test.describe("Order list", () => {
     await expect(
       page.getByRole("columnheader", { name: "State" }),
     ).toBeVisible();
+    await expect(
+      page.getByRole("columnheader", { name: "Created on" }),
+    ).toBeVisible();
   });
 
   test("Check all the orders are presents", async ({ page }) => {
@@ -458,6 +462,11 @@ test.describe("Order list", () => {
         ).toBeVisible();
         await expect(
           rowLocator.getByRole("gridcell", { name: order.state }),
+        ).toBeVisible();
+        await expect(
+          rowLocator.getByRole("gridcell", {
+            name: await formatShortDateTest(page, order.created_on),
+          }),
         ).toBeVisible();
       }),
     );

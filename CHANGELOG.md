@@ -12,6 +12,10 @@ and this project adheres to
 
 - Do not update OpenEdX enrollment if this one is already
   up-to-date on the remote lms
+- 
+### Added
+
+- Add `created_on` column to the `Order` list view in the backoffice
 
 ## [2.4.0] - 2024-06-21
 
