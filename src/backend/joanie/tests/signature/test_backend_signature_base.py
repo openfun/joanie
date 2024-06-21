@@ -113,6 +113,41 @@ class BaseSignatureBackendTestCase(TestCase):
         order.refresh_from_db()
         self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
+    @mock.patch(
+        "joanie.core.models.Order.enroll_user_to_course_run", side_effect=Exception
+    )
+    def test_backend_signature_base_backend_confirm_student_signature_with_auto_enroll_failure(
+        self, mock_enroll_user
+    ):
+        """
+        If the automatic enrollment fails, the `confirm_student_signature` method
+        should log an error and continue the process.
+        """
+        user = factories.UserFactory()
+        order = factories.OrderFactory(
+            owner=user,
+            product__contract_definition=factories.ContractDefinitionFactory(),
+            state=enums.ORDER_STATE_VALIDATED,
+        )
+        contract = factories.ContractFactory(
+            order=order,
+            definition=order.product.contract_definition,
+            signature_backend_reference="wfl_fake_dummy_id",
+            definition_checksum="fake_test_file_hash",
+            context="content",
+            submitted_for_signature_on=django_timezone.now(),
+        )
+        backend = get_signature_backend()
+
+        backend.confirm_student_signature(reference="wfl_fake_dummy_id")
+
+        contract.refresh_from_db()
+        self.assertIsNotNone(contract.submitted_for_signature_on)
+        self.assertIsNotNone(contract.student_signed_on)
+
+        # contract.order.enroll_user_to_course should have been called once
+        mock_enroll_user.assert_called_once()
+
     @override_settings(
         JOANIE_SIGNATURE_BACKEND=random.choice(
             [

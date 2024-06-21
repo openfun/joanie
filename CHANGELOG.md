@@ -16,6 +16,7 @@ and this project adheres to
 ### Changed
 
 - Rework order statuses
+- Catch all exceptions raised by enroll_user_to_course_run method
 
 ### Fixed
 
