@@ -368,8 +368,8 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
 
         # Create an order
         order = factories.OrderFactory(product=product, owner=user)
-        order.submit()
-        self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
+        order.init_flow()
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
         self.assertEqual(Enrollment.objects.count(), 1)
 
