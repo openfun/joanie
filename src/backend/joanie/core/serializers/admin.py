@@ -10,7 +10,7 @@ from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
 
-from joanie.core import models
+from joanie.core import enums, models
 from joanie.core.serializers.fields import (
     ImageDetailField,
     ISO8601DurationField,
@@ -1051,6 +1051,48 @@ class AdminInvoiceSerializer(BaseAdminInvoiceSerializer):
         read_only_fields = fields
 
 
+class AdminOrderPaymentSerializer(serializers.Serializer):
+    """
+    Serializer for the order payment
+    """
+
+    id = serializers.UUIDField(required=True)
+    amount = serializers.DecimalField(
+        coerce_to_string=False,
+        decimal_places=2,
+        max_digits=9,
+        min_value=D(0.00),
+        required=True,
+    )
+    currency = serializers.SerializerMethodField(read_only=True)
+    due_date = serializers.DateField(required=True)
+    state = serializers.ChoiceField(
+        choices=enums.PAYMENT_STATE_CHOICES,
+        required=True,
+    )
+
+    def to_internal_value(self, data):
+        """Used to format the amount and the due_date before validation."""
+        return super().to_internal_value(
+            {
+                "id": str(data.get("id")),
+                "amount": data.get("amount").amount_as_string(),
+                "due_date": data.get("due_date").isoformat(),
+                "state": data.get("state"),
+            }
+        )
+
+    def get_currency(self, *args, **kwargs) -> str:
+        """Return the code of currency used by the instance"""
+        return settings.DEFAULT_CURRENCY
+
+    def create(self, validated_data):
+        """Only there to avoid a NotImplementedError"""
+
+    def update(self, instance, validated_data):
+        """Only there to avoid a NotImplementedError"""
+
+
 class AdminOrderSerializer(serializers.ModelSerializer):
     """Read only Serializer for Order model."""
 
@@ -1067,6 +1109,7 @@ class AdminOrderSerializer(serializers.ModelSerializer):
     main_invoice = AdminInvoiceSerializer()
     organization = AdminOrganizationLightSerializer(read_only=True)
     order_group = AdminOrderGroupSerializer(read_only=True)
+    payment_schedule = AdminOrderPaymentSerializer(many=True, read_only=True)
 
     class Meta:
         model = models.Order
@@ -1085,6 +1128,7 @@ class AdminOrderSerializer(serializers.ModelSerializer):
             "contract",
             "certificate",
             "main_invoice",
+            "payment_schedule",
         )
         read_only_fields = fields
 
