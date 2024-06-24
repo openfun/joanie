@@ -15,7 +15,11 @@ from requests import RequestException
 from joanie.core import factories, models
 from joanie.core.exceptions import EnrollmentError, GradeError
 from joanie.lms_handler import LMSHandler
-from joanie.lms_handler.backends.openedx import OpenEdXLMSBackend
+from joanie.lms_handler.backends.openedx import (
+    OPENEDX_MODE_HONOR,
+    OPENEDX_MODE_VERIFIED,
+    OpenEdXLMSBackend,
+)
 
 
 @override_settings(
@@ -156,9 +160,8 @@ class OpenEdXLMSBackendTestCase(TestCase):
         Updating a user's enrollment to a course run should return a boolean
         corresponding to the success of the operation.
         """
-        resource_link = (
-            "http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course"
-        )
+        course_id = "course-v1:edx+000001+Demo_Course"
+        resource_link = f"http://openedx.test/courses/{course_id}/course"
         course_run = factories.CourseRunFactory(
             is_listed=True,
             resource_link=resource_link,
@@ -170,11 +173,18 @@ class OpenEdXLMSBackendTestCase(TestCase):
         enrollment = models.Enrollment(
             course_run=course_run, user=user, is_active=is_active
         )
-        url = "http://openedx.test/api/enrollment/v1/enrollment"
 
+        url_get = f"http://openedx.test/api/enrollment/v1/enrollment/{user.username},{course_id}"
+        responses.add(
+            responses.GET,
+            url_get,
+            status=HTTPStatus.OK,
+            json=None,
+        )
+        url_post = "http://openedx.test/api/enrollment/v1/enrollment"
         responses.add(
             responses.POST,
-            url,
+            url_post,
             status=HTTPStatus.OK,
             json={"is_active": is_active},
         )
@@ -185,14 +195,23 @@ class OpenEdXLMSBackendTestCase(TestCase):
         result = backend.set_enrollment(enrollment)
 
         self.assertIsNone(result)
-        self.assertEqual(len(responses.calls), 1)
-        self.assertEqual(responses.calls[0].request.url, url)
+        self.assertEqual(len(responses.calls), 2)
+
+        # A first request should retrieve the current enrollment status
+        self.assertEqual(responses.calls[0].request.url, url_get)
         self.assertEqual(
             responses.calls[0].request.headers["X-Edx-Api-Key"], "a_secure_api_token"
         )
+        self.assertIsNone(responses.calls[0].request.body)
+
+        # As enrollment change, a second request should update the enrollment status
+        self.assertEqual(responses.calls[1].request.url, url_post)
+        self.assertEqual(
+            responses.calls[1].request.headers["X-Edx-Api-Key"], "a_secure_api_token"
+        )
 
         self.assertEqual(
-            json.loads(responses.calls[0].request.body),
+            json.loads(responses.calls[1].request.body),
             {
                 "is_active": is_active,
                 "mode": "honor",
@@ -206,17 +225,8 @@ class OpenEdXLMSBackendTestCase(TestCase):
         """
         Enrolling to OpenEdX via an order should set preexisting enrollment to the "verified" mode.
         """
-        url = "http://openedx.test/api/enrollment/v1/enrollment"
-        responses.add(
-            responses.POST,
-            url,
-            status=HTTPStatus.OK,
-            json={"is_active": True},
-        )
-
-        resource_link = (
-            "http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course"
-        )
+        course_id = "course-v1:edx+000001+Demo_Course"
+        resource_link = f"http://openedx.test/courses/{course_id}/course"
         course_run = factories.CourseRunFactory(
             is_listed=True,
             resource_link=resource_link,
@@ -234,13 +244,29 @@ class OpenEdXLMSBackendTestCase(TestCase):
             # Whether the enrollment comes from an order or not
             was_created_by_order=random.choice([True, False]),
         )
-        self.assertEqual(len(responses.calls), 1)
-        self.assertEqual(responses.calls[0].request.url, url)
+
+        url = f"http://openedx.test/api/enrollment/v1/enrollment/{user.username},{course_id}"
+        responses.add(
+            responses.GET,
+            url,
+            status=HTTPStatus.OK,
+            json={"is_active": True, "mode": OPENEDX_MODE_HONOR},
+        )
+        url = "http://openedx.test/api/enrollment/v1/enrollment"
+        responses.add(
+            responses.POST,
+            url,
+            status=HTTPStatus.OK,
+            json={"is_active": True},
+        )
+
+        self.assertEqual(len(responses.calls), 2)
+        self.assertEqual(responses.calls[1].request.url, url)
         self.assertEqual(
-            responses.calls[0].request.headers["X-Edx-Api-Key"], "a_secure_api_token"
+            responses.calls[1].request.headers["X-Edx-Api-Key"], "a_secure_api_token"
         )
         self.assertEqual(
-            json.loads(responses.calls[0].request.body),
+            json.loads(responses.calls[1].request.body),
             {
                 "is_active": True,
                 "mode": "honor",
@@ -254,13 +280,13 @@ class OpenEdXLMSBackendTestCase(TestCase):
 
         order.submit()
 
-        self.assertEqual(len(responses.calls), 1)
-        self.assertEqual(responses.calls[0].request.url, url)
+        self.assertEqual(len(responses.calls), 2)
+        self.assertEqual(responses.calls[1].request.url, url)
         self.assertEqual(
-            responses.calls[0].request.headers["X-Edx-Api-Key"], "a_secure_api_token"
+            responses.calls[1].request.headers["X-Edx-Api-Key"], "a_secure_api_token"
         )
         self.assertEqual(
-            json.loads(responses.calls[0].request.body),
+            json.loads(responses.calls[1].request.body),
             {
                 "is_active": True,
                 "mode": "verified",
@@ -275,9 +301,8 @@ class OpenEdXLMSBackendTestCase(TestCase):
         Buying a certificate for a course run to which the user is enrolled should set the
         enrollment to the "verified" mode.
         """
-        resource_link = (
-            "http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course"
-        )
+        course_id = "course-v1:edx+000001+Demo_Course"
+        resource_link = f"http://openedx.test/courses/{course_id}/course"
         course_run = factories.CourseRunFactory(
             is_listed=True,
             resource_link=resource_link,
@@ -285,8 +310,15 @@ class OpenEdXLMSBackendTestCase(TestCase):
         )
         user = factories.UserFactory()
         is_active = random.choice([True, False])
-        url = "http://openedx.test/api/enrollment/v1/enrollment"
 
+        url = f"http://openedx.test/api/enrollment/v1/enrollment/{user.username},{course_id}"
+        responses.add(
+            responses.GET,
+            url,
+            status=HTTPStatus.OK,
+            json={"is_active": not is_active, "mode": OPENEDX_MODE_HONOR},
+        )
+        url = "http://openedx.test/api/enrollment/v1/enrollment"
         responses.add(
             responses.POST,
             url,
@@ -303,9 +335,9 @@ class OpenEdXLMSBackendTestCase(TestCase):
         backend = LMSHandler.select_lms(resource_link)
         self.assertIsInstance(backend, OpenEdXLMSBackend)
         if is_active is True:
-            self.assertEqual(len(responses.calls), 1)
+            self.assertEqual(len(responses.calls), 2)
             self.assertEqual(
-                json.loads(responses.calls[0].request.body),
+                json.loads(responses.calls[1].request.body),
                 {
                     "is_active": is_active,
                     "mode": "honor",
@@ -328,9 +360,9 @@ class OpenEdXLMSBackendTestCase(TestCase):
         result = backend.set_enrollment(enrollment)
 
         self.assertIsNone(result)
-        self.assertEqual(len(responses.calls), 1)
+        self.assertEqual(len(responses.calls), 2)
         self.assertEqual(
-            json.loads(responses.calls[0].request.body),
+            json.loads(responses.calls[1].request.body),
             {
                 "is_active": is_active,
                 "mode": "verified",
@@ -340,11 +372,26 @@ class OpenEdXLMSBackendTestCase(TestCase):
         )
 
         # If the order is later canceled, the enrollment should be set back to honor
+        url = f"http://openedx.test/api/enrollment/v1/enrollment/{user.username},{course_id}"
+        responses.add(
+            responses.GET,
+            url,
+            status=HTTPStatus.OK,
+            json={"is_active": is_active, "mode": OPENEDX_MODE_VERIFIED},
+        )
+        url = "http://openedx.test/api/enrollment/v1/enrollment"
+        responses.add(
+            responses.POST,
+            url,
+            status=HTTPStatus.OK,
+            json={"is_active": is_active},
+        )
+
         order.flow.cancel()
 
-        self.assertEqual(len(responses.calls), 2)
+        self.assertEqual(len(responses.calls), 4)
         self.assertEqual(
-            json.loads(responses.calls[1].request.body),
+            json.loads(responses.calls[3].request.body),
             {
                 "is_active": is_active,
                 "mode": "honor",
@@ -354,14 +401,12 @@ class OpenEdXLMSBackendTestCase(TestCase):
         )
 
     @responses.activate
-    def test_backend_openedx_set_enrollment_wrong_state(self):
+    def test_backend_openedx_set_enrollment_without_changes(self):
         """
-        When updating a user's enrollment, the LMS may return a 200 but not
-        with the enrollment status we requested. We should not fall for this.
+        Trying to update an enrollment should do nothing if the enrollment is already up-to-date.
         """
-        resource_link = (
-            "http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course"
-        )
+        course_id = "course-v1:edx+000001+Demo_Course"
+        resource_link = f"http://openedx.test/courses/{course_id}/course"
         course_run = factories.CourseRunFactory(
             start=self.now - timedelta(hours=1),
             end=self.now + timedelta(hours=2),
@@ -369,18 +414,64 @@ class OpenEdXLMSBackendTestCase(TestCase):
             is_listed=True,
             resource_link=resource_link,
         )
-        resource_link = course_run.resource_link
+        user = factories.UserFactory()
+        is_active = True
+        enrollment = models.Enrollment(
+            course_run=course_run, user=user, is_active=is_active
+        )
+
+        url = f"http://openedx.test/api/enrollment/v1/enrollment/{user.username},{course_id}"
+        responses.add(
+            responses.GET,
+            url,
+            status=HTTPStatus.OK,
+            json={"is_active": is_active, "mode": OPENEDX_MODE_HONOR},
+        )
+
+        backend = LMSHandler.select_lms(resource_link)
+        backend.set_enrollment(enrollment)
+
+        self.assertEqual(len(responses.calls), 1)
+        self.assertEqual(responses.calls[0].request.url, url)
+        self.assertEqual(
+            responses.calls[0].request.headers["X-Edx-Api-Key"], "a_secure_api_token"
+        )
+        self.assertIsNone(responses.calls[0].request.body)
+
+    @responses.activate
+    def test_backend_openedx_set_enrollment_wrong_state(self):
+        """
+        When updating a user's enrollment, the LMS may return a 200 but not
+        with the enrollment status we requested. We should not fall for this.
+        """
+        course_id = "course-v1:edx+000001+Demo_Course"
+        resource_link = f"http://openedx.test/courses/{course_id}/course"
+        course_run = factories.CourseRunFactory(
+            start=self.now - timedelta(hours=1),
+            end=self.now + timedelta(hours=2),
+            enrollment_end=self.now + timedelta(hours=1),
+            is_listed=True,
+            resource_link=resource_link,
+        )
         user = factories.UserFactory()
         is_active = random.choice([True, False])
         enrollment = models.Enrollment(
             course_run=course_run, user=user, is_active=is_active
         )
-        url = "http://openedx.test/api/enrollment/v1/enrollment"
 
         # Let the LMS return the wrong activation status
         lms_is_active = not is_active
         expected_json_response = {"is_active": lms_is_active}
 
+        url = f"http://openedx.test/api/enrollment/v1/enrollment/{user.username},{course_id}"
+        responses.add(
+            responses.GET,
+            url,
+            status=HTTPStatus.OK,
+            json={"is_active": not is_active, "mode": OPENEDX_MODE_HONOR},
+        )
+
+        url = "http://openedx.test/api/enrollment/v1/enrollment"
         responses.add(
             responses.POST,
             url,
@@ -394,14 +485,14 @@ class OpenEdXLMSBackendTestCase(TestCase):
         with self.assertRaises(EnrollmentError):
             backend.set_enrollment(enrollment)
 
-        self.assertEqual(len(responses.calls), 1)
-        self.assertEqual(responses.calls[0].request.url, url)
+        self.assertEqual(len(responses.calls), 2)
+        self.assertEqual(responses.calls[1].request.url, url)
         self.assertEqual(
-            responses.calls[0].request.headers["X-Edx-Api-Key"], "a_secure_api_token"
+            responses.calls[1].request.headers["X-Edx-Api-Key"], "a_secure_api_token"
         )
 
         self.assertEqual(
-            json.loads(responses.calls[0].request.body),
+            json.loads(responses.calls[1].request.body),
             {
                 "is_active": is_active,
                 "mode": "honor",
@@ -423,13 +514,23 @@ class OpenEdXLMSBackendTestCase(TestCase):
             is_listed=True,
         )
         resource_link = course_run.resource_link
+        course_id = LMSHandler.select_lms(resource_link).extract_course_id(
+            resource_link
+        )
         user = factories.UserFactory()
         is_active = random.choice([True, False])
         enrollment = models.Enrollment(
             course_run=course_run, user=user, is_active=is_active
         )
-        url = "http://openedx.test/api/enrollment/v1/enrollment"
 
+        url = f"http://openedx.test/api/enrollment/v1/enrollment/{user.username},{course_id}"
+        responses.add(
+            responses.GET,
+            url,
+            status=HTTPStatus.OK,
+            json={"is_active": not is_active, "mode": OPENEDX_MODE_HONOR},
+        )
+        url = "http://openedx.test/api/enrollment/v1/enrollment"
         responses.add(
             responses.POST,
             url,
@@ -445,14 +546,14 @@ class OpenEdXLMSBackendTestCase(TestCase):
         with self.assertRaises(EnrollmentError):
             backend.set_enrollment(enrollment)
 
-        self.assertEqual(len(responses.calls), 1)
-        self.assertEqual(responses.calls[0].request.url, url)
+        self.assertEqual(len(responses.calls), 2)
+        self.assertEqual(responses.calls[1].request.url, url)
         self.assertEqual(
-            responses.calls[0].request.headers["X-Edx-Api-Key"], "a_secure_api_token"
+            responses.calls[1].request.headers["X-Edx-Api-Key"], "a_secure_api_token"
         )
 
         self.assertEqual(
-            json.loads(responses.calls[0].request.body),
+            json.loads(responses.calls[1].request.body),
             {
                 "is_active": is_active,
                 "mode": "honor",
@@ -474,13 +575,18 @@ class OpenEdXLMSBackendTestCase(TestCase):
             is_listed=True,
         )
         resource_link = course_run.resource_link
+        course_id = LMSHandler.select_lms(resource_link).extract_course_id(
+            resource_link
+        )
         user = factories.UserFactory()
         is_active = random.choice([True, False])
         enrollment = models.Enrollment(
             course_run=course_run, user=user, is_active=is_active
         )
-        url = "http://openedx.test/api/enrollment/v1/enrollment"
 
+        url = f"http://openedx.test/api/enrollment/v1/enrollment/{user.username},{course_id}"
+        responses.add(responses.GET, url, body=None)
+        url = "http://openedx.test/api/enrollment/v1/enrollment"
         responses.add(responses.POST, url, body=RequestException())
 
         backend = LMSHandler.select_lms(resource_link)
@@ -491,14 +597,14 @@ class OpenEdXLMSBackendTestCase(TestCase):
         with self.assertRaises(EnrollmentError):
             backend.set_enrollment(enrollment)
 
-        self.assertEqual(len(responses.calls), 1)
-        self.assertEqual(responses.calls[0].request.url, url)
+        self.assertEqual(len(responses.calls), 2)
+        self.assertEqual(responses.calls[1].request.url, url)
         self.assertEqual(
-            responses.calls[0].request.headers["X-Edx-Api-Key"], "a_secure_api_token"
+            responses.calls[1].request.headers["X-Edx-Api-Key"], "a_secure_api_token"
         )
 
         self.assertEqual(
-            json.loads(responses.calls[0].request.body),
+            json.loads(responses.calls[1].request.body),
             {
                 "is_active": is_active,
                 "mode": "honor",

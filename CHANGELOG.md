@@ -8,6 +8,11 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Changed
+
+- Do not update OpenEdX enrollment if this one is already
+  up-to-date on the remote lms
+
 ## [2.4.0] - 2024-06-21
 
 ### Added
