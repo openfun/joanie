@@ -89,7 +89,7 @@ test.describe("Order filters", () => {
       .getByTestId("select-order-state-filter")
       .getByLabel("State")
       .click();
-    await page.getByRole("option", { name: "Submitted" }).click();
+    await page.getByRole("option", { name: "Completed" }).click();
     await page.getByTestId("custom-modal").getByLabel("Product").click();
 
     await page.getByTestId("custom-modal").getByLabel("Product").fill("p");
@@ -107,7 +107,7 @@ test.describe("Order filters", () => {
     await page.getByRole("option", { name: store.users[0].username }).click();
     await page.getByLabel("close").click();
     await expect(
-      page.getByRole("button", { name: "State: Submitted" }),
+      page.getByRole("button", { name: "State: Completed" }),
     ).toBeVisible();
     await expect(
       page.getByRole("button", { name: `Product: ${store.products[0].title}` }),
