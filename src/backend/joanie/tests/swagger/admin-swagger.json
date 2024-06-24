@@ -5506,6 +5506,13 @@
                     },
                     "main_invoice": {
                         "$ref": "#/components/schemas/AdminInvoice"
+                    },
+                    "payment_schedule": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AdminOrderPayment"
+                        },
+                        "readOnly": true
                     }
                 },
                 "required": [
@@ -5519,6 +5526,7 @@
                     "order_group",
                     "organization",
                     "owner",
+                    "payment_schedule",
                     "product",
                     "state",
                     "total",
@@ -5782,6 +5790,51 @@
                     "total",
                     "total_currency"
                 ]
+            },
+            "AdminOrderPayment": {
+                "type": "object",
+                "description": "Serializer for the order payment",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "amount": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000000,
+                        "minimum": 0.0,
+                        "exclusiveMaximum": true
+                    },
+                    "currency": {
+                        "type": "string",
+                        "description": "Return the code of currency used by the instance",
+                        "readOnly": true
+                    },
+                    "due_date": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "state": {
+                        "$ref": "#/components/schemas/AdminOrderPaymentStateEnum"
+                    }
+                },
+                "required": [
+                    "amount",
+                    "currency",
+                    "due_date",
+                    "id",
+                    "state"
+                ]
+            },
+            "AdminOrderPaymentStateEnum": {
+                "enum": [
+                    "pending",
+                    "paid",
+                    "refused"
+                ],
+                "type": "string",
+                "description": "* `pending` - Pending\n* `paid` - Paid\n* `refused` - Refused"
             },
             "AdminOrganization": {
                 "type": "object",
