@@ -14,6 +14,7 @@ import { PATH_ADMIN } from "@/utils/routes/path";
 import { commonTranslations } from "@/translations/common/commonTranslations";
 import { OrderFilters } from "@/components/templates/orders/filters/OrderFilters";
 import { formatShortDate } from "@/utils/dates";
+import { orderStatesMessages } from "@/components/templates/orders/view/translations";
 
 const messages = defineMessages({
   id: {
@@ -91,6 +92,7 @@ export function OrdersList(props: Props) {
       field: "state",
       headerName: intl.formatMessage(messages.state),
       flex: 1,
+      valueGetter: (value) => intl.formatMessage(orderStatesMessages[value]),
     },
     {
       field: "created_on",
