@@ -20,6 +20,7 @@ import {
 import { ORGANIZATION_OPTIONS_REQUEST_RESULT } from "@/tests/mocks/organizations/organization-mock";
 import { closeAllNotification, delay } from "@/components/testing/utils";
 import { formatShortDateTest } from "@/tests/utils";
+import { orderStatesMessages } from "@/components/templates/orders/view/translations";
 
 const url = "http://localhost:8071/api/v1.0/admin/orders/";
 const catchIdRegex = getUrlCatchIdRegex(url);
@@ -461,7 +462,9 @@ test.describe("Order list", () => {
           rowLocator.getByRole("gridcell", { name: order.product_title }),
         ).toBeVisible();
         await expect(
-          rowLocator.getByRole("gridcell", { name: order.state }),
+          rowLocator.getByRole("gridcell", {
+            name: orderStatesMessages[order.state].defaultMessage,
+          }),
         ).toBeVisible();
         await expect(
           rowLocator.getByRole("gridcell", {
