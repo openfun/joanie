@@ -527,7 +527,7 @@ class OrdersAdminApiTestCase(TestCase):
             product__certificate_definition=factories.CertificateDefinitionFactory(),
         )
         order_group = factories.OrderGroupFactory(course_product_relation=relation)
-        order = factories.OrderFactory(
+        order = factories.OrderGeneratorFactory(
             course=relation.course,
             product=relation.product,
             order_group=order_group,
@@ -540,20 +540,13 @@ class OrdersAdminApiTestCase(TestCase):
             order=order, certificate_definition=order.product.certificate_definition
         )
 
-        # Create signed contract
-        factories.ContractFactory(
-            order=order,
-            student_signed_on=order.created_on,
-            organization_signed_on=order.created_on,
-        )
-
         # Create a credit note
         credit_note = InvoiceFactory(
             parent=order.main_invoice,
             total=D("1.00"),
         )
 
-        with self.assertNumQueries(29):
+        with self.assertNumQueries(27):
             response = self.client.get(f"/api/v1.0/admin/orders/{order.id}/")
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -579,7 +572,7 @@ class OrdersAdminApiTestCase(TestCase):
                     "id": str(relation.product.id),
                     "price": float(relation.product.price),
                     "price_currency": "EUR",
-                    "target_courses": [],
+                    "target_courses": [str(order.course.id)],
                     "title": relation.product.title,
                     "type": "credential",
                 },
@@ -616,7 +609,7 @@ class OrdersAdminApiTestCase(TestCase):
                     "definition_title": order.contract.definition.title,
                     "student_signed_on": format_date(order.contract.student_signed_on),
                     "organization_signed_on": format_date(
-                        order.contract.student_signed_on
+                        order.contract.organization_signed_on
                     ),
                     "submitted_for_signature_on": None,
                 },
@@ -625,6 +618,16 @@ class OrdersAdminApiTestCase(TestCase):
                     "definition_title": order.certificate.certificate_definition.title,
                     "issued_on": format_date(order.certificate.issued_on),
                 },
+                "payment_schedule": [
+                    {
+                        "id": str(installment["id"]),
+                        "amount": float(installment["amount"]),
+                        "currency": "EUR",
+                        "due_date": format_date(installment["due_date"]),
+                        "state": installment["state"],
+                    }
+                    for installment in order.payment_schedule
+                ],
                 "main_invoice": {
                     "id": str(order.main_invoice.id),
                     "balance": float(order.main_invoice.balance),
@@ -778,6 +781,7 @@ class OrdersAdminApiTestCase(TestCase):
                     "definition_title": order.certificate.certificate_definition.title,
                     "issued_on": format_date(order.certificate.issued_on),
                 },
+                "payment_schedule": None,
                 "main_invoice": {
                     "id": str(order.main_invoice.id),
                     "balance": float(order.main_invoice.balance),
