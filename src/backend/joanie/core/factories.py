@@ -770,9 +770,13 @@ class OrderGeneratorFactory(factory.django.DjangoModelFactory):
             student_signed_on = kwargs.get(
                 "student_signed_on", django_timezone.now() if is_signed else None
             )
+            organization_signed_on = kwargs.get(
+                "organization_signed_on",
+                django_timezone.now() if is_signed else None,
+            )
             submitted_for_signature_on = kwargs.get(
                 "submitted_for_signature_on",
-                django_timezone.now() if is_signed else None,
+                django_timezone.now() if not organization_signed_on else None,
             )
             definition_checksum = kwargs.get(
                 "definition_checksum", "fake_test_file_hash_1" if is_signed else None
@@ -785,6 +789,7 @@ class OrderGeneratorFactory(factory.django.DjangoModelFactory):
                 order=self,
                 student_signed_on=student_signed_on,
                 submitted_for_signature_on=submitted_for_signature_on,
+                organization_signed_on=organization_signed_on,
                 definition=self.product.contract_definition,
                 context=context,
                 definition_checksum=definition_checksum,
