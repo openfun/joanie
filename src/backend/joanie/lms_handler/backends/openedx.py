@@ -106,6 +106,22 @@ class OpenEdXLMSBackend(BaseLMSBackend):
         logger.error(response.content)
         return None
 
+    def _needs_update(self, enrollment, target_mode):
+        """
+        Return True if the enrollment needs to be updated on the remote LMS.
+        An enrollment must be updated if its active status or mode has changed.
+        """
+        enrollment_state = self.get_enrollment(
+            enrollment.user.username, enrollment.course_run.resource_link
+        )
+
+        if not enrollment_state:
+            return True
+
+        has_active_changed = enrollment_state.get("is_active") != enrollment.is_active
+        has_mode_changed = enrollment_state.get("mode") != target_mode
+        return has_active_changed or has_mode_changed
+
     def set_enrollment(self, enrollment):
         """Set enrollment for a user on the remote LMS using resource link as url."""
         base_url = self.configuration["BASE_URL"]
@@ -119,6 +135,9 @@ class OpenEdXLMSBackend(BaseLMSBackend):
             ).exists()
             else OPENEDX_MODE_HONOR
         )
+
+        if not self._needs_update(enrollment, mode):
+            return
 
         payload = {
             "is_active": enrollment.is_active,
