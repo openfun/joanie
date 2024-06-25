@@ -615,6 +615,10 @@
     "description": "Text for the search input placeholder",
     "message": "Rechercher par titre du produit, propriétaire (nom complet ou e-mail), établissement (code ou titre), code du cours"
   },
+  "components.templates.orders.list.createdOn": {
+    "description": "Label for the created on header inside the table",
+    "message": "Créée le"
+  },
   "components.templates.orders.list.id": {
     "description": "Label for the id header inside the table",
     "message": "ID"

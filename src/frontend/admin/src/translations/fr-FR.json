@@ -153,6 +153,7 @@
   "components.templates.orders.buttons.orderActionsButton.generateCertificate": "Générer le certificat",
   "components.templates.orders.buttons.orderActionsButton.orderActionsLabel": "Actions",
   "components.templates.orders.filters.OrderFilters.searchPlaceholder": "Rechercher par titre du produit, propriétaire (nom complet ou e-mail), établissement (code ou titre), code du cours",
+  "components.templates.orders.list.createdOn": "Créée le",
   "components.templates.orders.list.id": "ID",
   "components.templates.orders.list.organizationTitle": "Établissement",
   "components.templates.orders.list.owner": "Propriétaire",
