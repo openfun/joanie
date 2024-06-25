@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [2.5.1] - 2024-06-25
+
 ### Fixed
 
 - Fix OpenEdX enrollment mode choice logic
@@ -377,7 +379,8 @@ and this project adheres to
 - First working version serving sellable micro-credentials for multiple
   organizations synchronized to a remote catalog
 
-[unreleased]: https://github.com/openfun/joanie/compare/v2.5.0...main
+[unreleased]: https://github.com/openfun/joanie/compare/v2.5.1...main
+[2.5.1]: https://github.com/openfun/joanie/compare/v2.5.0...v2.5.1
 [2.5.0]: https://github.com/openfun/joanie/compare/v2.4.0...v2.5.0
 [2.4.0]: https://github.com/openfun/joanie/compare/v2.3.0...v2.4.0
 [2.3.0]: https://github.com/openfun/joanie/compare/v2.2.0...v2.3.0
