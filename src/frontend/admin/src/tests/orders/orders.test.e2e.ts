@@ -19,6 +19,7 @@ import {
 } from "@/services/api/models/Organization";
 import { ORGANIZATION_OPTIONS_REQUEST_RESULT } from "@/tests/mocks/organizations/organization-mock";
 import { closeAllNotification, delay } from "@/components/testing/utils";
+import { formatShortDateTest } from "@/tests/utils";
 
 const url = "http://localhost:8071/api/v1.0/admin/orders/";
 const catchIdRegex = getUrlCatchIdRegex(url);
@@ -57,10 +58,10 @@ test.describe("Order view", () => {
     const order = store.list[0];
     order.main_invoice.created_on = new Date(
       Date.UTC(2024, 0, 23, 19, 30),
-    ).toLocaleString();
+    ).toLocaleString("en-US");
     order.main_invoice.updated_on = new Date(
       Date.UTC(2024, 0, 23, 20, 30),
-    ).toLocaleString();
+    ).toLocaleString("en-US");
     await page.unroute(catchIdRegex);
     await page.route(catchIdRegex, async (route, request) => {
       const methods = request.method();
@@ -118,10 +119,10 @@ test.describe("Order view", () => {
     const order = store.list[0];
     order.main_invoice.created_on = new Date(
       Date.UTC(2024, 0, 23, 19, 30),
-    ).toLocaleString();
+    ).toLocaleString("en-US");
     order.main_invoice.updated_on = new Date(
       Date.UTC(2024, 0, 23, 20, 30),
-    ).toLocaleString();
+    ).toLocaleString("en-US");
     order.organization = undefined;
     await page.unroute(catchIdRegex);
     await page.route(catchIdRegex, async (route, request) => {
@@ -438,6 +439,9 @@ test.describe("Order list", () => {
     await expect(
       page.getByRole("columnheader", { name: "State" }),
     ).toBeVisible();
+    await expect(
+      page.getByRole("columnheader", { name: "Created on" }),
+    ).toBeVisible();
   });
 
   test("Check all the orders are presents", async ({ page }) => {
@@ -458,6 +462,11 @@ test.describe("Order list", () => {
         ).toBeVisible();
         await expect(
           rowLocator.getByRole("gridcell", { name: order.state }),
+        ).toBeVisible();
+        await expect(
+          rowLocator.getByRole("gridcell", {
+            name: await formatShortDateTest(page, order.created_on),
+          }),
         ).toBeVisible();
       }),
     );

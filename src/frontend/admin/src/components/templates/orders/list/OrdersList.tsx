@@ -13,6 +13,7 @@ import { CustomLink } from "@/components/presentational/link/CustomLink";
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { commonTranslations } from "@/translations/common/commonTranslations";
 import { OrderFilters } from "@/components/templates/orders/filters/OrderFilters";
+import { formatShortDate } from "@/utils/dates";
 
 const messages = defineMessages({
   id: {
@@ -39,6 +40,11 @@ const messages = defineMessages({
     id: "components.templates.orders.list.state",
     defaultMessage: "State",
     description: "Label for the state header inside the table",
+  },
+  createdOn: {
+    id: "components.templates.orders.list.createdOn",
+    defaultMessage: "Created on",
+    description: "Label for the created on header inside the table",
   },
 });
 
@@ -85,6 +91,12 @@ export function OrdersList(props: Props) {
       field: "state",
       headerName: intl.formatMessage(messages.state),
       flex: 1,
+    },
+    {
+      field: "created_on",
+      headerName: intl.formatMessage(messages.createdOn),
+      flex: 1,
+      valueGetter: (value, row) => formatShortDate(row.created_on),
     },
   ];
 

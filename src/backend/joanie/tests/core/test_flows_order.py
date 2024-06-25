@@ -18,6 +18,10 @@ from joanie.core import enums, exceptions, factories
 from joanie.core.models import CourseState, Enrollment
 from joanie.lms_handler import LMSHandler
 from joanie.lms_handler.backends.dummy import DummyLMSBackend
+from joanie.lms_handler.backends.openedx import (
+    OPENEDX_MODE_HONOR,
+    OPENEDX_MODE_VERIFIED,
+)
 from joanie.payment.factories import (
     BillingAddressDictFactory,
     CreditCardFactory,
@@ -287,9 +291,9 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         and this one is opened for enrollment, the user should be automatically enrolled
         """
         course = factories.CourseFactory()
-        resource_link = (
-            "http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course"
-        )
+        course_id = "course-v1:edx+000001+Demo_Course"
+        resource_link = f"http://openedx.test/courses/{course_id}/course"
+        user = factories.UserFactory()
         factories.CourseRunFactory(
             course=course,
             resource_link=resource_link,
@@ -298,6 +302,13 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         )
         product = factories.ProductFactory(target_courses=[course], price="0.00")
 
+        url = f"http://openedx.test/api/enrollment/v1/enrollment/{user.username},{course_id}"
+        responses.add(
+            responses.GET,
+            url,
+            status=HTTPStatus.OK,
+            json={"is_active": False, "mode": OPENEDX_MODE_HONOR},
+        )
         url = "http://openedx.test/api/enrollment/v1/enrollment"
         responses.add(
             responses.POST,
@@ -307,25 +318,25 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         )
 
         # Create an order
-        order = factories.OrderFactory(product=product)
+        order = factories.OrderFactory(product=product, owner=user)
         order.init_flow()
 
         self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
-        self.assertEqual(len(responses.calls), 1)
-        self.assertEqual(responses.calls[0].request.url, url)
+        self.assertEqual(len(responses.calls), 2)
+        self.assertEqual(responses.calls[1].request.url, url)
         self.assertEqual(
-            responses.calls[0].request.headers["X-Edx-Api-Key"], "a_secure_api_token"
+            responses.calls[1].request.headers["X-Edx-Api-Key"], "a_secure_api_token"
         )
         enrollment = Enrollment.objects.get(
             user=order.owner, course_run__resource_link=resource_link
         )
         self.assertEqual(enrollment.state, "set")
         self.assertEqual(
-            json.loads(responses.calls[0].request.body),
+            json.loads(responses.calls[1].request.body),
             {
                 "is_active": enrollment.is_active,
-                "mode": "verified",
+                "mode": OPENEDX_MODE_VERIFIED,
                 "user": enrollment.user.username,
                 "course_details": {"course_id": "course-v1:edx+000001+Demo_Course"},
             },
@@ -392,9 +403,9 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         If the enrollment request fails, the order should be validated.
         """
         course = factories.CourseFactory()
-        resource_link = (
-            "http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course"
-        )
+        course_id = "course-v1:edx+000001+Demo_Course"
+        resource_link = f"http://openedx.test/courses/{course_id}/course"
+        user = factories.UserFactory()
         factories.CourseRunFactory(
             course=course,
             resource_link=resource_link,
@@ -403,6 +414,13 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         )
         product = factories.ProductFactory(target_courses=[course], price="0.00")
 
+        url = f"http://openedx.test/api/enrollment/v1/enrollment/{user.username},{course_id}"
+        responses.add(
+            responses.GET,
+            url,
+            status=HTTPStatus.OK,
+            json={"is_active": False, "mode": OPENEDX_MODE_HONOR},
+        )
         url = "http://openedx.test/api/enrollment/v1/enrollment"
         responses.add(
             responses.POST,
@@ -412,25 +430,25 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         )
 
         # Create an order
-        order = factories.OrderFactory(product=product)
+        order = factories.OrderFactory(product=product, owner=user)
         order.init_flow()
 
         self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
-        self.assertEqual(len(responses.calls), 1)
-        self.assertEqual(responses.calls[0].request.url, url)
+        self.assertEqual(len(responses.calls), 2)
+        self.assertEqual(responses.calls[1].request.url, url)
         self.assertEqual(
-            responses.calls[0].request.headers["X-Edx-Api-Key"], "a_secure_api_token"
+            responses.calls[1].request.headers["X-Edx-Api-Key"], "a_secure_api_token"
         )
         enrollment = Enrollment.objects.get(
             user=order.owner, course_run__resource_link=resource_link
         )
         self.assertEqual(enrollment.state, "failed")
         self.assertEqual(
-            json.loads(responses.calls[0].request.body),
+            json.loads(responses.calls[1].request.body),
             {
                 "is_active": enrollment.is_active,
-                "mode": "verified",
+                "mode": OPENEDX_MODE_VERIFIED,
                 "user": enrollment.user.username,
                 "course_details": {"course_id": "course-v1:edx+000001+Demo_Course"},
             },
@@ -455,9 +473,8 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         these course runs to "verified".
         """
         course = factories.CourseFactory()
-        resource_link = (
-            "http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course"
-        )
+        course_id = "course-v1:edx+000001+Demo_Course"
+        resource_link = f"http://openedx.test/courses/{course_id}/course"
         course_run = factories.CourseRunFactory(
             course=course,
             resource_link=resource_link,
@@ -468,7 +485,15 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             course=course, state=CourseState.ONGOING_OPEN, is_listed=True
         )
         product = factories.ProductFactory(target_courses=[course], price="0.00")
+        user = factories.UserFactory()
 
+        url = f"http://openedx.test/api/enrollment/v1/enrollment/{user.username},{course_id}"
+        responses.add(
+            responses.GET,
+            url,
+            status=HTTPStatus.OK,
+            json={"is_active": True, "mode": OPENEDX_MODE_HONOR},
+        )
         url = "http://openedx.test/api/enrollment/v1/enrollment"
         responses.add(
             responses.POST,
@@ -482,22 +507,24 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         responses.reset()
 
         # Create a pre-existing free enrollment
-        enrollment = factories.EnrollmentFactory(course_run=course_run, is_active=True)
-        order = factories.OrderFactory(product=product, owner=enrollment.user)
+        enrollment = factories.EnrollmentFactory(
+            course_run=course_run, is_active=True, user=user
+        )
+        order = factories.OrderFactory(product=product, owner=user)
         order.init_flow()
 
         self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
-        self.assertEqual(len(responses.calls), 2)
-        self.assertEqual(responses.calls[1].request.url, url)
+        self.assertEqual(len(responses.calls), 4)
+        self.assertEqual(responses.calls[3].request.url, url)
         self.assertEqual(
-            responses.calls[0].request.headers["X-Edx-Api-Key"], "a_secure_api_token"
+            responses.calls[3].request.headers["X-Edx-Api-Key"], "a_secure_api_token"
         )
         self.assertEqual(
-            json.loads(responses.calls[1].request.body),
+            json.loads(responses.calls[3].request.body),
             {
                 "is_active": enrollment.is_active,
-                "mode": "verified",
+                "mode": OPENEDX_MODE_VERIFIED,
                 "user": order.owner.username,
                 "course_details": {"course_id": "course-v1:edx+000001+Demo_Course"},
             },
@@ -729,22 +756,31 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         course = factories.CourseFactory()
         product = factories.ProductFactory(courses=[course], type="certificate")
 
-        resource_link = (
-            "http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course"
-        )
+        course_id = "course-v1:edx+000001+Demo_Course"
+        resource_link = f"http://openedx.test/courses/{course_id}/course"
+        user = factories.UserFactory()
         enrollment = factories.EnrollmentFactory(
             course_run__course=course,
             course_run__state=CourseState.FUTURE_OPEN,
             course_run__is_listed=True,
             course_run__resource_link=resource_link,
+            user=user,
         )
         order = factories.OrderFactory(
             course=None,
             product=product,
             enrollment=enrollment,
             state=enums.ORDER_STATE_COMPLETED,
+            owner=user,
         )
 
+        url = f"http://openedx.test/api/enrollment/v1/enrollment/{user.username},{course_id}"
+        responses.add(
+            responses.GET,
+            url,
+            status=HTTPStatus.OK,
+            json={"is_active": enrollment.is_active, "mode": OPENEDX_MODE_VERIFIED},
+        )
         url = "http://openedx.test/api/enrollment/v1/enrollment"
         responses.add(
             responses.POST,
@@ -769,16 +805,16 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         enrollment.refresh_from_db()
         self.assertEqual(enrollment.state, "set")
 
-        self.assertEqual(len(responses.calls), 1)
-        self.assertEqual(responses.calls[0].request.url, url)
+        self.assertEqual(len(responses.calls), 2)
+        self.assertEqual(responses.calls[1].request.url, url)
         self.assertEqual(
-            responses.calls[0].request.headers["X-Edx-Api-Key"], "a_secure_api_token"
+            responses.calls[1].request.headers["X-Edx-Api-Key"], "a_secure_api_token"
         )
         self.assertEqual(
-            json.loads(responses.calls[0].request.body),
+            json.loads(responses.calls[1].request.body),
             {
                 "is_active": enrollment.is_active,
-                "mode": "honor",
+                "mode": OPENEDX_MODE_HONOR,
                 "user": enrollment.user.username,
                 "course_details": {"course_id": "course-v1:edx+000001+Demo_Course"},
             },

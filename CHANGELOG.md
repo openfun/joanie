@@ -8,6 +8,26 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [2.5.1] - 2024-06-25
+
+### Fixed
+
+- Fix OpenEdX enrollment mode choice logic
+
+## [2.5.0] - 2024-06-25
+
+### Added
+
+- Add `created_on` column to the `Order` list view in the backoffice
+
+### Changed
+
+- Do not update OpenEdX enrollment if this one is already
+  up-to-date on the remote lms
+- 
+
+## [2.4.0] - 2024-06-21
+
 ### Added
 
 - Add settings configuration for the contract's country calendar to
@@ -360,7 +380,10 @@ and this project adheres to
 - First working version serving sellable micro-credentials for multiple
   organizations synchronized to a remote catalog
 
-[unreleased]: https://github.com/openfun/joanie/compare/v2.3.0...main
+[unreleased]: https://github.com/openfun/joanie/compare/v2.5.1...main
+[2.5.1]: https://github.com/openfun/joanie/compare/v2.5.0...v2.5.1
+[2.5.0]: https://github.com/openfun/joanie/compare/v2.4.0...v2.5.0
+[2.4.0]: https://github.com/openfun/joanie/compare/v2.3.0...v2.4.0
 [2.3.0]: https://github.com/openfun/joanie/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/openfun/joanie/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/openfun/joanie/compare/v2.0.1...v2.1.0
