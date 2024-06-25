@@ -132,6 +132,7 @@ class OpenEdXLMSBackend(BaseLMSBackend):
                 Q(target_courses=enrollment.course_run.course)
                 | Q(enrollment=enrollment),
                 state=enums.ORDER_STATE_VALIDATED,
+                owner=enrollment.user,
             ).exists()
             else OPENEDX_MODE_HONOR
         )

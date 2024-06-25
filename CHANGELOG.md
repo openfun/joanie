@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix OpenEdX enrollment mode choice logic
+
 ## [2.5.0] - 2024-06-25
 
 ### Added
