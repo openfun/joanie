@@ -615,6 +615,10 @@
     "description": "Text for the search input placeholder",
     "message": "Search by product title, owner (full name or email), organization (code or title), course code"
   },
+  "components.templates.orders.list.createdOn": {
+    "description": "Label for the created on header inside the table",
+    "message": "Created on"
+  },
   "components.templates.orders.list.id": {
     "description": "Label for the id header inside the table",
     "message": "ID"
