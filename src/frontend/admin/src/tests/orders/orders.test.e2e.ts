@@ -58,10 +58,10 @@ test.describe("Order view", () => {
     const order = store.list[0];
     order.main_invoice.created_on = new Date(
       Date.UTC(2024, 0, 23, 19, 30),
-    ).toLocaleString();
+    ).toLocaleString("en-US");
     order.main_invoice.updated_on = new Date(
       Date.UTC(2024, 0, 23, 20, 30),
-    ).toLocaleString();
+    ).toLocaleString("en-US");
     await page.unroute(catchIdRegex);
     await page.route(catchIdRegex, async (route, request) => {
       const methods = request.method();
@@ -119,10 +119,10 @@ test.describe("Order view", () => {
     const order = store.list[0];
     order.main_invoice.created_on = new Date(
       Date.UTC(2024, 0, 23, 19, 30),
-    ).toLocaleString();
+    ).toLocaleString("en-US");
     order.main_invoice.updated_on = new Date(
       Date.UTC(2024, 0, 23, 20, 30),
-    ).toLocaleString();
+    ).toLocaleString("en-US");
     order.organization = undefined;
     await page.unroute(catchIdRegex);
     await page.route(catchIdRegex, async (route, request) => {
