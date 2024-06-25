@@ -15,7 +15,7 @@ test.describe("Course run list", () => {
     const firstCourseRun = store.courseRuns[0];
     firstCourseRun.start = new Date(
       Date.UTC(2024, 1, 23, 7, 30),
-    ).toLocaleString();
+    ).toLocaleString("en-US");
     await mockPlaywrightCrud<CourseRun, DTOCourseRun>({
       data: store.courseRuns,
       routeUrl: "http://localhost:8071/api/v1.0/admin/course-runs/",

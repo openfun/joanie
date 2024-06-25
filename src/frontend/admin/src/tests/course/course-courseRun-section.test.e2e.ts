@@ -22,7 +22,7 @@ test.describe("Course product relation", () => {
     const firstCourseRun = store.courseRuns[0];
     firstCourseRun.start = new Date(
       Date.UTC(2024, 1, 23, 7, 30),
-    ).toLocaleString();
+    ).toLocaleString("en-US");
     store.list[0]!.courses_runs![0] = firstCourseRun;
     await mockPlaywrightCrud<User, any>({
       data: store.users,
