@@ -269,7 +269,7 @@ class OpenEdXLMSBackendTestCase(TestCase):
             json.loads(responses.calls[1].request.body),
             {
                 "is_active": True,
-                "mode": "honor",
+                "mode": OPENEDX_MODE_HONOR,
                 "user": user.username,
                 "course_details": {"course_id": "course-v1:edx+000001+Demo_Course"},
             },
@@ -289,7 +289,29 @@ class OpenEdXLMSBackendTestCase(TestCase):
             json.loads(responses.calls[1].request.body),
             {
                 "is_active": True,
-                "mode": "verified",
+                "mode": OPENEDX_MODE_VERIFIED,
+                "user": user.username,
+                "course_details": {"course_id": "course-v1:edx+000001+Demo_Course"},
+            },
+        )
+
+        # However another user without order should be enrolled in honor mode
+        responses.reset()
+        user = factories.UserFactory()
+        url = f"http://openedx.test/api/enrollment/v1/enrollment/{user.username},{course_id}"
+        responses.add(
+            responses.GET,
+            url,
+            status=HTTPStatus.OK,
+            json=None,
+        )
+        factories.EnrollmentFactory(user=user, course_run=course_run, is_active=True)
+        self.assertEqual(len(responses.calls), 2)
+        self.assertEqual(
+            json.loads(responses.calls[1].request.body),
+            {
+                "is_active": True,
+                "mode": OPENEDX_MODE_HONOR,
                 "user": user.username,
                 "course_details": {"course_id": "course-v1:edx+000001+Demo_Course"},
             },
