@@ -429,9 +429,8 @@ class OpenEdXLMSBackendTestCase(TestCase):
         When updating a user's enrollment, the mode should be set to "verified" if the user has
         an order in a state that allows enrollment.
         """
-        resource_link = (
-            "http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course"
-        )
+        course_id = "course-v1:edx+000001+Demo_Course"
+        resource_link = f"http://openedx.test/courses/{course_id}/course"
         course_run = factories.CourseRunFactory(
             is_listed=True,
             resource_link=resource_link,
@@ -439,8 +438,16 @@ class OpenEdXLMSBackendTestCase(TestCase):
         )
         user = factories.UserFactory()
         is_active = random.choice([True, False])
-        url = "http://openedx.test/api/enrollment/v1/enrollment"
 
+        url = f"http://openedx.test/api/enrollment/v1/enrollment/{user.username},{course_id}"
+        responses.add(
+            responses.GET,
+            url,
+            status=HTTPStatus.OK,
+            json={"is_active": not is_active, "mode": OPENEDX_MODE_HONOR},
+        )
+
+        url = "http://openedx.test/api/enrollment/v1/enrollment"
         responses.add(
             responses.POST,
             url,
@@ -471,9 +478,9 @@ class OpenEdXLMSBackendTestCase(TestCase):
                 result = backend.set_enrollment(enrollment)
 
                 self.assertIsNone(result)
-                self.assertEqual(len(responses.calls), 1)
+                self.assertEqual(len(responses.calls), 2)
                 self.assertEqual(
-                    json.loads(responses.calls[0].request.body),
+                    json.loads(responses.calls[1].request.body),
                     {
                         "is_active": is_active,
                         "mode": OPENEDX_MODE_VERIFIED
