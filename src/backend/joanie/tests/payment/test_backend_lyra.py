@@ -33,6 +33,7 @@ from joanie.payment.exceptions import (
     ParseNotificationFailed,
     PaymentProviderAPIException,
     RegisterPaymentFailed,
+    TokenizationCardFailed,
 )
 from joanie.payment.factories import CreditCardFactory
 from joanie.payment.models import CreditCard, Transaction
@@ -1299,6 +1300,90 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
             card.initial_issuer_transaction_identifier,
             initial_issuer_transaction_identifier,
         )
+
+    def test_payment_backend_lyra_handle_notification_tokenize_card_for_user(self):
+        """
+        When backend receives a credit card tokenization notification for a user,
+        it should not try to find a related order and create directly a card for the giver user.
+        """
+        backend = LyraBackend(self.configuration)
+        user = UserFactory(
+            email="john.doe@acme.org", id="0a920c52-7ecc-47b3-83f5-127b846ac79c"
+        )
+
+        with self.open("lyra/requests/tokenize_card_for_user.json") as file:
+            json_request = json.loads(file.read())
+
+        with self.open("lyra/requests/tokenize_card_for_user_answer.json") as file:
+            json_answer = json.loads(file.read())
+
+        self.assertFalse(CreditCard.objects.filter(owner=user).exists())
+
+        request = APIRequestFactory().post(
+            reverse("payment_webhook"), data=json_request, format="multipart"
+        )
+
+        backend.handle_notification(request)
+
+        card_id = json_answer["transactions"][0]["paymentMethodToken"]
+        initial_issuer_transaction_identifier = json_answer["transactions"][0][
+            "transactionDetails"
+        ]["cardDetails"]["initialIssuerTransactionIdentifier"]
+        card = CreditCard.objects.get(token=card_id)
+        self.assertEqual(card.owner, user)
+        self.assertEqual(card.payment_provider, backend.name)
+        self.assertEqual(
+            card.initial_issuer_transaction_identifier,
+            initial_issuer_transaction_identifier,
+        )
+
+    def test_payment_backend_lyra_handle_notification_tokenize_card_for_user_not_found(
+        self,
+    ):
+        """
+        When backend receives a credit card tokenization notification for a user,
+        and this user does not exists, it should raises a TokenizationCardFailed
+        """
+        backend = LyraBackend(self.configuration)
+        user = UserFactory(email="john.doe@acme.org")
+
+        with self.open("lyra/requests/tokenize_card_for_user.json") as file:
+            json_request = json.loads(file.read())
+
+        self.assertFalse(CreditCard.objects.filter(owner=user).exists())
+
+        request = APIRequestFactory().post(
+            reverse("payment_webhook"), data=json_request, format="multipart"
+        )
+        with self.assertRaises(TokenizationCardFailed):
+            backend.handle_notification(request)
+
+        self.assertFalse(CreditCard.objects.filter(owner=user).exists())
+
+    def test_payment_backend_lyra_handle_notification_tokenize_card_for_user_failure(
+        self,
+    ):
+        """
+        When backend receives a credit card tokenization notification for a user,
+        and the tokenization has failed, it should not create a new card
+        """
+        backend = LyraBackend(self.configuration)
+        user = UserFactory(
+            email="john.doe@acme.org", id="0a920c52-7ecc-47b3-83f5-127b846ac79c"
+        )
+
+        with self.open("lyra/requests/tokenize_card_for_user_unpaid.json") as file:
+            json_request = json.loads(file.read())
+
+        self.assertFalse(CreditCard.objects.filter(owner=user).exists())
+
+        request = APIRequestFactory().post(
+            reverse("payment_webhook"), data=json_request, format="multipart"
+        )
+
+        backend.handle_notification(request)
+
+        self.assertFalse(CreditCard.objects.filter(owner=user).exists())
 
     @responses.activate(assert_all_requests_are_fired=True)
     def test_payment_backend_lyra_delete_credit_card(self):
