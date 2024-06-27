@@ -18,6 +18,7 @@ class CreditCardFactory(factory.django.DjangoModelFactory):
         """Meta"""
 
         model = models.CreditCard
+        django_get_or_create = ("token",)
 
     brand = factory.Faker("credit_card_provider")
     expiration_month = factory.Faker("credit_card_expire", date_format="%m")
