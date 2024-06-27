@@ -13,7 +13,7 @@ from django.conf import settings
 import requests
 from rest_framework.parsers import FormParser, JSONParser
 
-from joanie.core.models import ActivityLog, Address, Order
+from joanie.core.models import ActivityLog, Address, Order, User
 from joanie.payment import exceptions
 from joanie.payment.backends.base import BasePaymentBackend
 from joanie.payment.models import CreditCard, Invoice, Transaction
@@ -343,6 +343,9 @@ class LyraBackend(BasePaymentBackend):
             )
             raise exceptions.ParseNotificationFailed() from error
 
+        if order_id is None:
+            return self._handle_notification_tokenization_card_for_user(answer)
+
         try:
             order = Order.objects.get(id=order_id)
         except Order.DoesNotExist as error:
@@ -417,6 +420,47 @@ class LyraBackend(BasePaymentBackend):
             )
         else:
             self._do_on_payment_failure(order, installment_id)
+
+        return None
+
+    def _handle_notification_tokenization_card_for_user(self, answer):
+        """
+        When the user has tokenized a card outside an order process, we have to handle it
+        separately as we have no order information.
+        """
+
+        if answer["orderStatus"] != "PAID":
+            # Tokenization has failed, nothing to do.
+            return
+
+        try:
+            user = User.objects.get(id=answer["customer"]["reference"])
+        except User.DoesNotExist as error:
+            message = (
+                "Received notification to tokenize a card for a non-existing user:"
+                f" {answer['customer']['reference']}"
+            )
+            logger.error(message)
+            raise exceptions.TokenizationCardFailed(message) from error
+
+        card_token = answer["transactions"][0]["paymentMethodToken"]
+        transaction_details = answer["transactions"][0]["transactionDetails"]
+        card_details = transaction_details["cardDetails"]
+        card_pan = card_details["pan"]
+        initial_issuer_transaction_identifier = card_details[
+            "initialIssuerTransactionIdentifier"
+        ]
+
+        CreditCard.objects.create(
+            brand=card_details["effectiveBrand"],
+            expiration_month=card_details["expiryMonth"],
+            expiration_year=card_details["expiryYear"],
+            last_numbers=card_pan[-4:],  # last 4 digits
+            owner=user,
+            token=card_token,
+            initial_issuer_transaction_identifier=initial_issuer_transaction_identifier,
+            payment_provider=self.name,
+        )
 
     def delete_credit_card(self, credit_card):
         """Delete a credit card from Lyra"""

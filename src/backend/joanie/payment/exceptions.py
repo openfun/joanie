@@ -31,6 +31,14 @@ class RegisterPaymentFailed(APIException):
     default_code = "register_payment_failed"
 
 
+class TokenizationCardFailed(APIException):
+    """Exception triggered when registering payment failed."""
+
+    status_code = HTTPStatus.BAD_REQUEST
+    default_detail = _("Cannot register this payment.")
+    default_code = "register_payment_failed"
+
+
 class RefundPaymentFailed(APIException):
     """Exception triggered when refunding payment failed."""
 
