@@ -35,7 +35,8 @@ test.describe("Order view", () => {
     await page.route(catchIdRegex, async (route, request) => {
       const methods = request.method();
       if (methods === "GET") {
-        await route.fulfill({ json: store.list[0] });
+        const id = request.url().match(catchIdRegex)?.[1];
+        await route.fulfill({ json: store.list.find((o) => o.id === id) });
       }
     });
 
@@ -63,13 +64,6 @@ test.describe("Order view", () => {
     order.main_invoice.updated_on = new Date(
       Date.UTC(2024, 0, 23, 20, 30),
     ).toLocaleString("en-US");
-    await page.unroute(catchIdRegex);
-    await page.route(catchIdRegex, async (route, request) => {
-      const methods = request.method();
-      if (methods === "GET") {
-        await route.fulfill({ json: store.list[0] });
-      }
-    });
     await page.goto(PATH_ADMIN.orders.list);
     await page.getByRole("heading", { name: "Orders" }).click();
     await page.getByRole("link", { name: order.product.title }).click();
@@ -112,6 +106,35 @@ test.describe("Order view", () => {
     if (order.certificate) {
       await expect(page.getByLabel("Certificate", { exact: true })).toHaveValue(
         order.certificate.definition_title,
+      );
+    }
+
+    await expect(
+      page.getByRole("heading", { name: "Payment schedule" }),
+    ).toBeVisible();
+    const paymentSchedule = order.payment_schedule;
+    if (paymentSchedule) {
+      await Promise.all(
+        paymentSchedule!.map(async (payment) => {
+          const paymentLocator = page.getByTestId(
+            `order-view-payment-${payment.id}`,
+          );
+          await page.pause();
+          await expect(paymentLocator).toBeVisible();
+          await expect(
+            paymentLocator.getByRole("cell", {
+              name: await formatShortDateTest(page, payment.due_date),
+            }),
+          ).toBeVisible();
+          await expect(
+            paymentLocator.getByRole("cell", {
+              name: payment.amount.toString() + " " + payment.currency,
+            }),
+          ).toBeVisible();
+          await expect(
+            paymentLocator.getByRole("cell", { name: payment.state }),
+          ).toBeVisible();
+        }),
       );
     }
   });
