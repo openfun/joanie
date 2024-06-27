@@ -14,7 +14,12 @@ import Typography from "@mui/material/Typography";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import { HighlightOff, TaskAlt } from "@mui/icons-material";
 import Stack from "@mui/material/Stack";
-import { Order } from "@/services/api/models/Order";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableRow from "@mui/material/TableRow";
+import Chip, { ChipOwnProps } from "@mui/material/Chip";
+import { Order, PaymentStatesEnum } from "@/services/api/models/Order";
 import {
   orderStatesMessages,
   orderViewMessages,
@@ -56,6 +61,16 @@ export function OrderView({ order }: Props) {
       <HighlightOff sx={{ mr: withMargin ? 1 : 0 }} color="error" />
     );
   };
+
+  const stateColorMapping: Record<PaymentStatesEnum, ChipOwnProps["color"]> = {
+    paid: "success",
+    refused: "error",
+    pending: "primary",
+  };
+
+  function stateColor(state: PaymentStatesEnum) {
+    return stateColorMapping[state] || "default";
+  }
 
   return (
     <SimpleCard>
@@ -218,6 +233,29 @@ export function OrderView({ order }: Props) {
             order={order}
           />
           <OrderViewInvoiceSection order={order} />
+          <Grid container spacing={2}>
+            <Grid xs={12} lg={6} mt={2}>
+              <Typography variant="h6">Payment schedule</Typography>
+              <Table>
+                <TableBody>
+                  {order.payment_schedule?.map((row) => (
+                    <TableRow
+                      key={row.id}
+                      data-testid={`order-view-payment-${row.id}`}
+                    >
+                      <TableCell>{formatShortDate(row.due_date)}</TableCell>
+                      <TableCell>
+                        {row.amount} {row.currency}
+                      </TableCell>
+                      <TableCell>
+                        <Chip label={row.state} color={stateColor(row.state)} />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Grid>
+          </Grid>
         </Stack>
       </Box>
     </SimpleCard>
