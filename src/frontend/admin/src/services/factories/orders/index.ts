@@ -4,7 +4,9 @@ import {
   OrderInvoiceStatusEnum,
   OrderInvoiceTypesEnum,
   OrderListItem,
+  OrderPaymentSchedule,
   OrderStatesEnum,
+  PaymentStatesEnum,
 } from "@/services/api/models/Order";
 import {
   ProductFactoryLight,
@@ -15,12 +17,26 @@ import { OrderGroupFactory } from "@/services/factories/order-group";
 import { CourseFactory } from "@/services/factories/courses";
 import { UsersFactory } from "@/services/factories/users";
 
-const build = (): Order => {
-  const totalOrder = faker.number.float({ min: 1, max: 9999 });
+const orderPayment = (
+  due_date: string,
+  amount: number,
+): OrderPaymentSchedule => {
   return {
     id: faker.string.uuid(),
+    amount,
+    currency: "EUR",
+    due_date,
+    state: PaymentStatesEnum.PAYMENT_STATE_PENDING,
+  };
+};
+
+const build = (state?: OrderStatesEnum): Order => {
+  const totalOrder = faker.number.float({ min: 1, max: 9999 });
+  state = state || faker.helpers.arrayElement(Object.values(OrderStatesEnum));
+  const order = {
+    id: faker.string.uuid(),
     created_on: faker.date.anytime().toString(),
-    state: faker.helpers.arrayElement(Object.values(OrderStatesEnum)),
+    state,
     owner: UsersFactory(),
     product: ProductSimpleFactory(),
     organization: OrganizationFactory(),
@@ -56,14 +72,35 @@ const build = (): Order => {
       type: faker.helpers.arrayElement(Object.values(OrderInvoiceTypesEnum)),
       children: [],
     },
+    payment_schedule: [
+      orderPayment("6/27/2024", totalOrder / 3),
+      orderPayment("7/27/2024", totalOrder / 3),
+      orderPayment("8/27/2024", totalOrder / 3),
+    ],
   };
+  if (state === OrderStatesEnum.ORDER_STATE_COMPLETED)
+    order.payment_schedule.forEach((installment) => {
+      installment.state = PaymentStatesEnum.PAYMENT_STATE_PAID;
+    });
+  if (state === OrderStatesEnum.ORDER_STATE_PENDING_PAYMENT)
+    order.payment_schedule[0].state = PaymentStatesEnum.PAYMENT_STATE_PAID;
+  if (state === OrderStatesEnum.ORDER_STATE_NO_PAYMENT)
+    order.payment_schedule[0].state = PaymentStatesEnum.PAYMENT_STATE_REFUSED;
+  if (state === OrderStatesEnum.ORDER_STATE_FAILED_PAYMENT) {
+    order.payment_schedule[0].state = PaymentStatesEnum.PAYMENT_STATE_PAID;
+    order.payment_schedule[1].state = PaymentStatesEnum.PAYMENT_STATE_REFUSED;
+  }
+  return order;
 };
 
 export function OrderFactory(): Order;
-export function OrderFactory(count: number): Order[];
-export function OrderFactory(count?: number): Order | Order[] {
+export function OrderFactory(count: number, state?: OrderStatesEnum): Order[];
+export function OrderFactory(
+  count?: number,
+  state?: OrderStatesEnum,
+): Order | Order[] {
   if (count) return [...Array(count)].map(build);
-  return build();
+  return build(state);
 }
 
 const buildOrderListItem = (): OrderListItem => {
