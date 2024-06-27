@@ -17,14 +17,22 @@ from django.views.generic.base import TemplateView
 from factory import random
 
 from joanie.core import factories
-from joanie.core.enums import CERTIFICATE, CONTRACT_DEFINITION, DEGREE
-from joanie.core.factories import OrderFactory, ProductFactory, UserFactory
+from joanie.core.enums import (
+    CERTIFICATE,
+    CONTRACT_DEFINITION,
+    DEGREE,
+    ORDER_STATE_PENDING_PAYMENT,
+)
+from joanie.core.factories import (
+    OrderGeneratorFactory,
+    ProductFactory,
+    UserFactory,
+)
 from joanie.core.models import Certificate, Contract
 from joanie.core.utils import contract_definition, issuers
 from joanie.core.utils.sentry import decrypt_data
 from joanie.payment import get_payment_backend
 from joanie.payment.enums import INVOICE_TYPE_INVOICE
-from joanie.payment.factories import BillingAddressDictFactory
 from joanie.payment.models import CreditCard, Invoice
 
 logger = getLogger(__name__)
@@ -311,27 +319,36 @@ class DebugPaymentTemplateView(TemplateView):
         product.set_current_language("fr-fr")
         product.title = "Test produit"
         product.save()
-        order = OrderFactory(owner=owner, product=product)
-        billing_address = BillingAddressDictFactory()
+        order = OrderGeneratorFactory(
+            owner=owner, product=product, state=ORDER_STATE_PENDING_PAYMENT
+        )
+        billing_address = order.main_invoice.recipient_address
         credit_card = CreditCard.objects.filter(owner=owner, is_main=True).first()
         one_click = "one-click" in self.request.GET
         tokenize_card = "tokenize-card" in self.request.GET
         zero_click = "zero-click" in self.request.GET
+        tokenize_card_user = "tokenize-card-user" in self.request.GET
 
         payment_infos = None
         response = None
         if zero_click and credit_card:
             response = backend.create_zero_click_payment(
-                order, credit_card.token, order.total
+                order, order.payment_schedule[0], credit_card.token
             )
         elif tokenize_card:
-            payment_infos = backend.tokenize_card(order, billing_address)
+            payment_infos = backend.tokenize_card(
+                order=order, billing_address=billing_address
+            )
+        elif tokenize_card_user:
+            payment_infos = backend.tokenize_card(user=owner)
         elif credit_card is not None and one_click:
             payment_infos = backend.create_one_click_payment(
-                order, billing_address, credit_card.token
+                order, order.payment_schedule[0], credit_card.token, billing_address
             )
         else:
-            payment_infos = backend.create_payment(order, billing_address)
+            payment_infos = backend.create_payment(
+                order, order.payment_schedule[0], billing_address
+            )
 
         form_token = payment_infos.get("form_token") if not zero_click else None
 
