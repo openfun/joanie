@@ -24,6 +24,20 @@ export type OrderListItem = AbstractOrder & {
   product_title: string;
 };
 
+export enum PaymentStatesEnum {
+  PAYMENT_STATE_PENDING = "pending",
+  PAYMENT_STATE_PAID = "paid",
+  PAYMENT_STATE_REFUSED = "refused",
+}
+
+export type OrderPaymentSchedule = {
+  id: string;
+  amount: number;
+  currency: string;
+  due_date: string;
+  state: PaymentStatesEnum;
+};
+
 export type Order = AbstractOrder & {
   owner: User;
   product: ProductSimple;
@@ -35,6 +49,7 @@ export type Order = AbstractOrder & {
   main_invoice: OrderMainInvoice;
   has_consent_to_terms: boolean;
   contract: Nullable<OrderContractDetails>;
+  payment_schedule: Nullable<OrderPaymentSchedule[]>;
 };
 
 export type OrderContractDetails = {
