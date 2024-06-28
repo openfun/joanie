@@ -10,7 +10,7 @@ from django.test import TestCase
 from django.test.utils import override_settings
 from django.utils import timezone
 
-from joanie.core import factories
+from joanie.core import enums, factories
 from joanie.core.exceptions import EnrollmentError, GradeError
 from joanie.core.models import CourseState, Enrollment
 from joanie.lms_handler.backends.moodle import MoodleLMSBackend
@@ -663,13 +663,23 @@ class EnrollmentModelsTestCase(TestCase):
 
         # - Recreate a signed contract for the order
         order.contract.delete()
+        # Generates a contract for the order
+        # Defining the student signature allows to create needed objects for further enrollment
         factories.ContractFactory(
             order=order,
             definition=product.contract_definition,
             submitted_for_signature_on=timezone.now(),
             student_signed_on=timezone.now(),
         )
+        # Sets the order to SIGNING state by removing the student signature
+        order.contract.student_signed_on = None
         order.flow.update()
+        self.assertEqual(order.state, enums.ORDER_STATE_SIGNING)
+
+        # Sets back the student signature
+        order.contract.student_signed_on = timezone.now()
+        order.flow.update()
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
         # - Now the enrollment should be allowed
         factories.EnrollmentFactory(
@@ -680,3 +690,4 @@ class EnrollmentModelsTestCase(TestCase):
         )
 
         self.assertEqual(order.owner.enrollments.count(), 1)
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)

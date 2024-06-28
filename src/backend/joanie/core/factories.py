@@ -745,6 +745,7 @@ class OrderGeneratorFactory(factory.django.DjangoModelFactory):
 
         if self.state in [
             enums.ORDER_STATE_TO_SIGN,
+            enums.ORDER_STATE_SIGNING,
             enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
             enums.ORDER_STATE_PENDING,
             enums.ORDER_STATE_PENDING_PAYMENT,
@@ -757,7 +758,10 @@ class OrderGeneratorFactory(factory.django.DjangoModelFactory):
                 self.product.contract_definition = ContractDefinitionFactory()
                 self.product.save()
 
-            is_signed = self.state != enums.ORDER_STATE_TO_SIGN
+            is_signed = self.state not in [
+                enums.ORDER_STATE_TO_SIGN,
+                enums.ORDER_STATE_SIGNING,
+            ]
             context = kwargs.get(
                 "context",
                 contract_definition.generate_document_context(
@@ -864,6 +868,9 @@ class OrderGeneratorFactory(factory.django.DjangoModelFactory):
                 )
 
                 self.init_flow(billing_address=BillingAddressDictFactory())
+
+        if target_state == enums.ORDER_STATE_SIGNING:
+            self.submit_for_signature(self.owner)
 
         if (
             not self.is_free
