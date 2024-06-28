@@ -1,5 +1,6 @@
 """Order flows."""
 
+import logging
 from contextlib import suppress
 
 from django.apps import apps
@@ -9,6 +10,8 @@ from sentry_sdk import capture_exception
 from viewflow import fsm
 
 from joanie.core import enums
+
+logger = logging.getLogger(__name__)
 
 
 class OrderFlow:
@@ -53,7 +56,7 @@ class OrderFlow:
     @state.transition(
         source=[
             enums.ORDER_STATE_ASSIGNED,
-            enums.ORDER_STATE_TO_SIGN,
+            enums.ORDER_STATE_SIGNING,
             enums.ORDER_STATE_PENDING,
         ],
         target=enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
@@ -80,6 +83,26 @@ class OrderFlow:
         Transition order to to_sign state.
         """
 
+    def _can_be_state_signing(self):
+        """
+        An order state can be set to signing if
+        we are waiting for the signature provider to validate the student's signature.
+        """
+        return (
+            self.instance.contract.submitted_for_signature_on
+            and not self.instance.contract.student_signed_on
+        )
+
+    @state.transition(
+        source=enums.ORDER_STATE_TO_SIGN,
+        target=enums.ORDER_STATE_SIGNING,
+        conditions=[_can_be_state_signing],
+    )
+    def signing(self):
+        """
+        Transition order to signing state.
+        """
+
     def _can_be_state_pending(self):
         """
         An order state can be set to pending if the order is not free
@@ -93,7 +116,7 @@ class OrderFlow:
         source=[
             enums.ORDER_STATE_ASSIGNED,
             enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
-            enums.ORDER_STATE_TO_SIGN,
+            enums.ORDER_STATE_SIGNING,
         ],
         target=enums.ORDER_STATE_PENDING,
         conditions=[_can_be_state_pending],
@@ -131,7 +154,7 @@ class OrderFlow:
             enums.ORDER_STATE_PENDING_PAYMENT,
             enums.ORDER_STATE_FAILED_PAYMENT,
             enums.ORDER_STATE_PENDING,
-            enums.ORDER_STATE_TO_SIGN,
+            enums.ORDER_STATE_SIGNING,
         ],
         target=enums.ORDER_STATE_COMPLETED,
         conditions=[_can_be_state_completed],
@@ -208,9 +231,11 @@ class OrderFlow:
         """
         Update the order state.
         """
+        logger.debug("Transitioning order %s", self.instance.id)
         for transition in [
             self.complete,
             self.to_sign,
+            self.signing,
             self.to_save_payment_method,
             self.pending,
             self.pending_payment,
@@ -218,7 +243,13 @@ class OrderFlow:
             self.failed_payment,
         ]:
             with suppress(fsm.TransitionNotAllowed):
+                logger.debug(
+                    "  %s -> %s",
+                    self.instance.state,
+                    transition.label,
+                )
                 transition()
+                logger.debug("  Done")
                 return
 
     @state.on_success()
