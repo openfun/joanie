@@ -232,6 +232,7 @@ class Contract(BaseModel):
         self.definition_checksum = checksum
         self.signature_backend_reference = reference
         self.save()
+        self.order.flow.update()
 
     def reset_submission_for_signature(self):
         """
