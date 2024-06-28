@@ -87,24 +87,17 @@ class BaseSignatureBackendTestCase(TestCase):
 
         Furthermore, it should update the order state.
         """
-        user = factories.UserFactory()
-        order = factories.OrderFactory(
-            owner=user,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+        order = factories.OrderGeneratorFactory(
+            state=enums.ORDER_STATE_TO_SIGN,
             product__price=0,
         )
-        contract = factories.ContractFactory(
-            order=order,
-            definition=order.product.contract_definition,
-            signature_backend_reference="wfl_fake_dummy_id",
-            definition_checksum="fake_test_file_hash",
-            context="content",
-            submitted_for_signature_on=django_timezone.now(),
-        )
-        order.init_flow()
+        contract = order.contract
         backend = get_signature_backend()
 
-        backend.confirm_student_signature(reference="wfl_fake_dummy_id")
+        order.submit_for_signature(order.owner)
+        backend.confirm_student_signature(
+            reference=contract.signature_backend_reference
+        )
 
         contract.refresh_from_db()
         self.assertIsNotNone(contract.submitted_for_signature_on)
