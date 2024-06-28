@@ -11,6 +11,7 @@ from joanie.core.enums import (
     ORDER_STATE_NO_PAYMENT,
     ORDER_STATE_PENDING,
     ORDER_STATE_PENDING_PAYMENT,
+    ORDER_STATE_SIGNING,
     ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
     ORDER_STATE_TO_SIGN,
     PAYMENT_STATE_PAID,
@@ -77,6 +78,16 @@ class TestOrderGeneratorFactory(TestCase):
         """Test the OrderGeneratorFactory with the state ORDER_STATE_TO_SIGN."""
         self.check_order(
             ORDER_STATE_TO_SIGN,
+            has_organization=True,
+            has_unsigned_contract=True,
+            is_free=False,
+            has_payment_method=False,
+        )
+
+    def test_factory_order_signing(self):
+        """Test the OrderGeneratorFactory with the state ORDER_STATE_SIGNING."""
+        self.check_order(
+            ORDER_STATE_SIGNING,
             has_organization=True,
             has_unsigned_contract=True,
             is_free=False,
