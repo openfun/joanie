@@ -10,6 +10,7 @@ from sentry_sdk import capture_exception
 from viewflow import fsm
 
 from joanie.core import enums
+from joanie.payment.backends.base import BasePaymentBackend
 
 logger = logging.getLogger(__name__)
 
@@ -267,6 +268,16 @@ class OrderFlow:
     def _post_transition_success(self, descriptor, source, target, **kwargs):  # pylint: disable=unused-argument
         """Post transition actions"""
         self.instance.save()
+        # When an order's subscription is confirmed, we send an email to the user about the
+        # confirmation
+        if (
+            source
+            in [enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD, enums.ORDER_STATE_SIGNING]
+            and target == enums.ORDER_STATE_PENDING
+        ):
+            # pylint: disable=protected-access
+            # ruff : noqa : SLF001
+            BasePaymentBackend._send_mail_subscription_success(order=self.instance)
 
         if (
             not self.instance.payment_schedule
