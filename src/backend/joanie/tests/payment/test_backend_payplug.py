@@ -727,6 +727,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
             owner=owner,
             credit_card__is_main=True,
             credit_card__initial_issuer_transaction_identifier="1",
+            product__price=D("123.45"),
         )
         # Force the first installment id to match the stored request
         first_installment = order.payment_schedule[0]
@@ -755,9 +756,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         backend.handle_notification(request)
 
         # Email has been sent
-        self._check_order_validated_email_sent(
-            order.owner.email, order.owner.get_full_name(), order
-        )
+        self._check_installment_paid_email_sent(order.owner.email, order)
 
     @mock.patch.object(BasePaymentBackend, "_do_on_payment_success")
     @mock.patch.object(payplug.notifications, "treat")
