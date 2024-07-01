@@ -1,6 +1,7 @@
 """Test suite of the Base Payment backend"""
 
 import smtplib
+from decimal import Decimal
 from logging import Logger
 from unittest import mock
 
@@ -8,10 +9,19 @@ from django.core import mail
 from django.test import override_settings
 
 from joanie.core import enums
-from joanie.core.factories import OrderFactory, UserAddressFactory, UserFactory
+from joanie.core.factories import (
+    OrderFactory,
+    ProductFactory,
+    UserAddressFactory,
+    UserFactory,
+)
 from joanie.core.models import Address
 from joanie.payment.backends.base import BasePaymentBackend
-from joanie.payment.factories import BillingAddressDictFactory, CreditCardFactory
+from joanie.payment.factories import (
+    BillingAddressDictFactory,
+    CreditCardFactory,
+    InvoiceFactory,
+)
 from joanie.payment.models import Transaction
 from joanie.tests.base import ActivityLogMixingTestCase
 from joanie.tests.payment.base_payment import BasePaymentTestCase
@@ -58,6 +68,7 @@ class TestBasePaymentBackend(BasePaymentBackend):
         pass
 
 
+# pylint: disable=too-many-public-methods, too-many-lines
 @override_settings(JOANIE_CATALOG_NAME="Test Catalog")
 @override_settings(JOANIE_CATALOG_BASE_URL="https://richie.education")
 class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase):
@@ -174,6 +185,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         owner = UserFactory(email="sam@fun-test.fr", language="en-us")
         order = OrderFactory(
             owner=owner,
+            product__price=Decimal("200.00"),
             payment_schedule=[
                 {
                     "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
@@ -222,9 +234,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
         # - Email has been sent
-        self._check_order_validated_email_sent(
-            "sam@fun-test.fr", owner.get_full_name(), order
-        )
+        self._check_installment_paid_email_sent("sam@fun-test.fr", order)
 
         # - An event has been created
         self.assertPaymentSuccessActivityLog(order)
@@ -244,6 +254,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         )
         order = OrderFactory(
             owner=owner,
+            product__price=Decimal("999.99"),
             payment_schedule=[
                 {
                     "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
@@ -337,9 +348,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         )
 
         # - Email has been sent
-        self._check_order_validated_email_sent(
-            "sam@fun-test.fr", owner.get_full_name(), order
-        )
+        self._check_installment_paid_email_sent("sam@fun-test.fr", order)
 
         # - An event has been created
         self.assertPaymentSuccessActivityLog(order)
@@ -355,6 +364,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         owner = UserFactory(email="sam@fun-test.fr", language="en-us")
         order = OrderFactory(
             owner=owner,
+            product__price=Decimal("200.00"),
             payment_schedule=[
                 {
                     "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
@@ -409,9 +419,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
         # - Email has been sent
-        self._check_order_validated_email_sent(
-            "sam@fun-test.fr", owner.get_full_name(), order
-        )
+        self._check_installment_paid_email_sent("sam@fun-test.fr", order)
 
     def test_payment_backend_base_do_on_payment_failure(self):
         """
@@ -645,7 +653,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
 
         # No email has been sent
         self.assertEqual(len(mail.outbox), 0)
-        mock_logger.assert_called_once()
+        mock_logger.assert_called()
         self.assertEqual(
             mock_logger.call_args.args[0],
             "%s purchase order mail %s not send",
@@ -669,6 +677,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         )
         order = OrderFactory(
             owner=owner,
+            product__price=Decimal("200.00"),
             payment_schedule=[
                 {
                     "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
@@ -708,11 +717,8 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
 
         # - Email has been sent
         email_content = " ".join(mail.outbox[0].body.split())
-        self.assertIn("Your order has been confirmed.", email_content)
+        self.assertIn("Your order is now fully paid!", email_content)
         self.assertIn("Hello Samantha Smith", email_content)
-
-        # - Check it's the right object
-        self.assertEqual(mail.outbox[0].subject, "Purchase order confirmed!")
 
     def test_payment_backend_base_payment_success_email_language(self):
         """Check language of the user is taken into account for the email"""
@@ -727,8 +733,14 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         CreditCardFactory(
             owner=owner, is_main=True, initial_issuer_transaction_identifier="1"
         )
+        product = ProductFactory(title="Product 1", price=Decimal("200.00"))
+        product.translations.create(
+            language_code="fr-fr",
+            title="Produit 1",
+        )
         order = OrderFactory(
             owner=owner,
+            product=product,
             payment_schedule=[
                 {
                     "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
@@ -740,9 +752,10 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         )
         billing_address = BillingAddressDictFactory()
         order.init_flow(billing_address=billing_address)
+        order_total = order.total * 100
         payment = {
             "id": "pay_0",
-            "amount": order.total,
+            "amount": order_total,
             "billing_address": billing_address,
             "installment_id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
         }
@@ -751,7 +764,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
 
         # - Payment transaction has been registered
         self.assertEqual(
-            Transaction.objects.filter(reference="pay_0", total=order.total).count(),
+            Transaction.objects.filter(reference="pay_0", total=order_total).count(),
             1,
         )
 
@@ -765,9 +778,373 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
 
         # - Email has been sent
         email_content = " ".join(mail.outbox[0].body.split())
-        self.assertIn("Votre commande a été confirmée.", email_content)
-        self.assertIn("Bonjour Dave Bowman", email_content)
-        self.assertNotIn("Your order has been confirmed.", email_content)
+        self.assertIn("Produit 1", email_content)
 
-        # - Check it's the right object
-        self.assertEqual(mail.outbox[0].subject, "Commande confirmée !")
+    def test_payment_backend_base_payment_success_installment_payment_mail_in_english(
+        self,
+    ):
+        """
+        Check language used in the email according to the user's language preference.
+        """
+        backend = TestBasePaymentBackend()
+        owner = UserFactory(
+            email="sam@fun-test.fr",
+            language="en-us",
+            first_name="John",
+            last_name="Doe",
+        )
+        product = ProductFactory(
+            title="Product 1",
+            description="Product 1 description",
+            price=Decimal("1000.00"),
+        )
+        product.translations.create(
+            language_code="fr-fr",
+            title="Produit 1",
+        )
+        order = OrderFactory(
+            state=enums.ORDER_STATE_PENDING_PAYMENT,
+            owner=owner,
+            product=product,
+            payment_schedule=[
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": enums.PAYMENT_STATE_PAID,
+                },
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41499a",
+                    "amount": "300.00",
+                    "due_date": "2024-02-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41477a",
+                    "amount": "300.00",
+                    "due_date": "2024-03-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41488a",
+                    "amount": "200.00",
+                    "due_date": "2024-04-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+        billing_address = BillingAddressDictFactory()
+        InvoiceFactory(order=order)
+        payment = {
+            "id": "pay_0",
+            "amount": 30000,
+            "billing_address": billing_address,
+            "installment_id": order.payment_schedule[1]["id"],
+        }
+
+        backend.call_do_on_payment_success(order, payment)
+
+        # - Order must be pending payment for other installments to pay
+        self.assertEqual(order.state, enums.ORDER_STATE_PENDING_PAYMENT)
+
+        self.assertEqual(
+            mail.outbox[0].subject,
+            "Test Catalog - Product 1 - An installment has been successfully paid of 300.00 EUR",
+        )
+        # - Email content is sent in English
+        email_content = " ".join(mail.outbox[0].body.split())
+        self.assertIn("Hello John Doe", email_content)
+        self.assertIn("Product 1", email_content)
+
+    def test_payment_backend_base_payment_success_installment_payment_mail_in_french(
+        self,
+    ):
+        """
+        Check language used in the email according to the user's language preference.
+        """
+        backend = TestBasePaymentBackend()
+        owner = UserFactory(
+            email="sam@fun-test.fr",
+            language="fr-fr",
+            first_name="John",
+            last_name="Doe",
+        )
+        product = ProductFactory(
+            title="Product 1",
+            description="Product 1 description",
+            price=Decimal("1000.00"),
+        )
+        product.translations.create(
+            language_code="fr-fr",
+            title="Produit 1",
+        )
+        product.refresh_from_db()
+        order = OrderFactory(
+            state=enums.ORDER_STATE_PENDING_PAYMENT,
+            owner=owner,
+            product=product,
+            payment_schedule=[
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": enums.PAYMENT_STATE_PAID,
+                },
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41499a",
+                    "amount": "300.00",
+                    "due_date": "2024-02-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41477a",
+                    "amount": "300.00",
+                    "due_date": "2024-03-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41488a",
+                    "amount": "200.00",
+                    "due_date": "2024-04-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+        billing_address = BillingAddressDictFactory()
+        InvoiceFactory(order=order)
+        payment = {
+            "id": "pay_0",
+            "amount": 30000,
+            "billing_address": billing_address,
+            "installment_id": order.payment_schedule[1]["id"],
+        }
+
+        backend.call_do_on_payment_success(order, payment)
+
+        # - Order must be pending payment for other installments to pay
+        self.assertEqual(order.state, enums.ORDER_STATE_PENDING_PAYMENT)
+        # - Check if some content is sent in French
+        email_content = " ".join(mail.outbox[0].body.split())
+        self.assertIn("Produit 1", email_content)
+
+    def test_payment_backend_base_payment_email_full_life_cycle_on_payment_schedule_events(
+        self,
+    ):
+        """
+        The user gets an email for each installment paid. Once the order is validated ("PENDING")
+        he will get another email mentioning that his order is confirmed.
+        """
+        backend = TestBasePaymentBackend()
+        order = OrderFactory(
+            state=enums.ORDER_STATE_PENDING_PAYMENT,
+            owner=UserFactory(
+                email="sam@fun-test.fr",
+                language="en-us",
+                first_name="John",
+                last_name="Doe",
+            ),
+            product=ProductFactory(title="Product 1", price=Decimal("1000.00")),
+            payment_schedule=[
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41499a",
+                    "amount": "300.00",
+                    "due_date": "2024-02-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41477a",
+                    "amount": "300.00",
+                    "due_date": "2024-03-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41488a",
+                    "amount": "200.00",
+                    "due_date": "2024-04-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+        billing_address = BillingAddressDictFactory()
+        InvoiceFactory(order=order)
+        payment_0 = {
+            "id": "pay_0",
+            "amount": 20000,
+            "billing_address": billing_address,
+            "installment_id": order.payment_schedule[0]["id"],
+        }
+
+        backend.call_do_on_payment_success(order, payment_0)
+
+        # - Order must be pending payment for other installments to pay
+        self.assertEqual(order.state, enums.ORDER_STATE_PENDING_PAYMENT)
+        # Check the email sent on first payment to confirm installment payment
+        email_content = " ".join(mail.outbox[0].body.split())
+        self.assertIn("Product 1", email_content)
+        self.assertIn("John Doe", email_content)
+        self.assertIn("200.00", email_content)
+        self.assertNotIn(
+            "you have paid all the installments successfully", email_content
+        )
+
+        mail.outbox.clear()
+
+        payment_1 = {
+            "id": "pay_1",
+            "amount": 30000,
+            "billing_address": billing_address,
+            "installment_id": order.payment_schedule[1]["id"],
+        }
+
+        backend.call_do_on_payment_success(order, payment_1)
+
+        # Check the second email sent on second payment to confirm installment payment
+        email_content = " ".join(mail.outbox[0].body.split())
+        self.assertIn("Product 1", email_content)
+        self.assertIn("300.00", email_content)
+        self.assertNotIn(
+            "you have paid all the installments successfully", email_content
+        )
+
+        mail.outbox.clear()
+
+        payment_2 = {
+            "id": "pay_2",
+            "amount": 30000,
+            "billing_address": billing_address,
+            "installment_id": order.payment_schedule[2]["id"],
+        }
+
+        backend.call_do_on_payment_success(order, payment_2)
+
+        # Check the second email sent on third payment to confirm installment payment
+        email_content = " ".join(mail.outbox[0].body.split())
+        self.assertIn("Product 1", email_content)
+        self.assertIn("300.00", email_content)
+        self.assertNotIn(
+            "you have paid all the installments successfully", email_content
+        )
+
+        mail.outbox.clear()
+
+        payment_3 = {
+            "id": "pay_3",
+            "amount": 20000,
+            "billing_address": billing_address,
+            "installment_id": order.payment_schedule[3]["id"],
+        }
+
+        backend.call_do_on_payment_success(order, payment_3)
+
+        # Check the second email sent on fourth payment to confirm installment payment
+        email_content_2 = " ".join(mail.outbox[0].body.split())
+        self.assertIn("Product 1", email_content_2)
+        self.assertIn("200.00", email_content_2)
+        self.assertIn("we have just debited the last installment", email_content_2)
+
+    @override_settings(
+        LANGUAGES=(
+            ("en-us", ("English")),
+            ("fr-fr", ("French")),
+            ("de-de", ("German")),
+        )
+    )
+    def test_payment_backend_base_payment_fallback_language_in_email(self):
+        """
+        The email must be sent into the user's preferred language. If the translation
+        of the product title exists, it should be in the preferred language of the user, else it
+        should use the fallback language that is english.
+        """
+        backend = TestBasePaymentBackend()
+        product = ProductFactory(title="Product 1", price=Decimal("1000.00"))
+        product.translations.create(language_code="fr-fr", title="Produit 1")
+        order = OrderFactory(
+            product=product,
+            state=enums.PAYMENT_STATE_PENDING,
+            owner=UserFactory(
+                email="sam@fun-test.fr",
+                language="fr-fr",
+                first_name="John",
+                last_name="Doe",
+            ),
+            payment_schedule=[
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": enums.PAYMENT_STATE_PAID,
+                },
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41499a",
+                    "amount": "300.00",
+                    "due_date": "2024-02-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41477a",
+                    "amount": "300.00",
+                    "due_date": "2024-03-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41488a",
+                    "amount": "200.00",
+                    "due_date": "2024-04-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+        InvoiceFactory(order=order)
+        billing_address = BillingAddressDictFactory()
+        payment = {
+            "id": "pay_0",
+            "amount": 20000,
+            "billing_address": billing_address,
+            "installment_id": order.payment_schedule[1]["id"],
+        }
+
+        backend.call_do_on_payment_success(order, payment)
+
+        email_content = " ".join(mail.outbox[0].body.split())
+        self.assertIn("Produit 1", email_content)
+        mail.outbox.clear()
+
+        # Change the preferred language of the user to english
+        order.owner.language = "en-us"
+        order.owner.save()
+
+        payment_1 = {
+            "id": "pay_1",
+            "amount": 30000,
+            "billing_address": billing_address,
+            "installment_id": order.payment_schedule[2]["id"],
+        }
+
+        backend.call_do_on_payment_success(order, payment_1)
+
+        email_content = " ".join(mail.outbox[0].body.split())
+        self.assertIn("Product 1", email_content)
+        mail.outbox.clear()
+
+        # Change the preferred language of the user to German (should use the fallback)
+        order.owner.language = "de-de"
+        order.owner.save()
+
+        payment_2 = {
+            "id": "pay_2",
+            "amount": 20000,
+            "billing_address": billing_address,
+            "installment_id": order.payment_schedule[3]["id"],
+        }
+
+        backend.call_do_on_payment_success(order, payment_2)
+        # Check the content uses the fallback language (english)
+        # because there is no translation in german for the product title
+        email_content = " ".join(mail.outbox[0].body.split())
+        self.assertIn("Product 1", email_content)

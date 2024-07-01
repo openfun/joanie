@@ -791,7 +791,8 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
             last_name="Doe",
             language="en-us",
         )
-        product = ProductFactory(price=D("123.45"))
+        product = ProductFactory(price=D("123.45"), title="Product 1")
+        product.translations.create(language_code="fr-fr", title="Produit 1")
         order = OrderGeneratorFactory(
             state=ORDER_STATE_PENDING,
             owner=owner,
@@ -885,9 +886,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         self.assertEqual(order.payment_schedule[0]["state"], PAYMENT_STATE_PAID)
 
         # Mail is sent
-        self._check_order_validated_email_sent(
-            owner.email, owner.get_full_name(), order
-        )
+        self._check_installment_paid_email_sent(owner.email, order)
 
         mail.outbox.clear()
 
@@ -961,11 +960,8 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         self.assertEqual(order.state, ORDER_STATE_COMPLETED)
         # Second installment is paid
         self.assertEqual(order.payment_schedule[1]["state"], PAYMENT_STATE_PAID)
-
-        # Mail is sent
-        self._check_order_validated_email_sent(
-            owner.email, owner.get_full_name(), order
-        )
+        email_content = " ".join(mail.outbox[0].body.split())
+        self.assertIn("Product 1", email_content)
 
     def test_payment_backend_lyra_handle_notification_unknown_resource(self):
         """
@@ -1133,9 +1129,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         backend.handle_notification(request)
 
         # Email has been sent
-        self._check_order_validated_email_sent(
-            order.owner.email, order.owner.get_full_name(), order
-        )
+        self._check_installment_paid_email_sent(order.owner.email, order)
 
     @patch.object(BasePaymentBackend, "_do_on_payment_success")
     def test_payment_backend_lyra_handle_notification_payment_register_card(

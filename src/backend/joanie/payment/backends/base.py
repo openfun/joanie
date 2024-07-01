@@ -11,6 +11,9 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.utils.translation import override
 
+from stockholm import Money
+
+from joanie.core.enums import ORDER_STATE_COMPLETED, PAYMENT_STATE_PAID
 from joanie.payment.enums import INVOICE_STATE_REFUNDED
 from joanie.payment.models import Invoice, Transaction
 
@@ -53,16 +56,49 @@ class BasePaymentBackend:
 
         order.set_installment_paid(payment["installment_id"])
 
-        # send mail
-        cls._send_mail_payment_success(order)
+        upcoming_installment = order.state == ORDER_STATE_COMPLETED
+        # Because with Lyra Payment Provider, we get the value in cents
+        cls._send_mail_payment_installment_success(
+            order=order,
+            amount=payment["amount"]
+            if "." in str(payment["amount"])
+            else payment["amount"] / 100,
+            upcoming_installment=not upcoming_installment,
+        )
 
     @classmethod
-    def _send_mail_payment_success(cls, order):
+    def _send_mail(cls, subject, template_vars, template_name, to_user_email):
         """Send mail with the current language of the user"""
         try:
-            with override(order.owner.language):
-                template_vars = {
-                    "title": _("Purchase order confirmed!"),
+            msg_html = render_to_string(
+                f"mail/html/{template_name}.html", template_vars
+            )
+            msg_plain = render_to_string(
+                f"mail/text/{template_name}.txt", template_vars
+            )
+            send_mail(
+                subject,
+                msg_plain,
+                settings.EMAIL_FROM,
+                [to_user_email],
+                html_message=msg_html,
+                fail_silently=False,
+            )
+        except smtplib.SMTPException as exception:
+            # no exception raised as user can't sometimes change his mail,
+            logger.error("%s purchase order mail %s not send", to_user_email, exception)
+
+    @classmethod
+    def _send_mail_subscription_success(cls, order):
+        """
+        Send mail with the current language of the user when an order subscription is
+        confirmed
+        """
+        with override(order.owner.language):
+            cls._send_mail(
+                subject=_("Subscription confirmed!"),
+                template_vars={
+                    "title": _("Subscription confirmed!"),
                     "email": order.owner.email,
                     "fullname": order.owner.get_full_name() or order.owner.username,
                     "product": order.product,
@@ -70,25 +106,64 @@ class BasePaymentBackend:
                         "name": settings.JOANIE_CATALOG_NAME,
                         "url": settings.JOANIE_CATALOG_BASE_URL,
                     },
-                }
-                msg_html = render_to_string(
-                    "mail/html/order_validated.html", template_vars
+                },
+                template_name="order_validated",
+                to_user_email=order.owner.email,
+            )
+
+    @classmethod
+    def _send_mail_payment_installment_success(
+        cls, order, amount, upcoming_installment
+    ):
+        """
+        Send mail using the current language of the user when an installment is successfully paid
+        and also when all the installments are paid.
+        """
+        with override(order.owner.language):
+            product_title = order.product.safe_translation_getter(
+                "title", language_code=order.owner.language
+            )
+            base_subject = _(f"{settings.JOANIE_CATALOG_NAME} - {product_title} - ")
+            installment_amount = Money(amount)
+            currency = settings.DEFAULT_CURRENCY
+            if upcoming_installment:
+                variable_subject_part = _(
+                    f"An installment has been successfully paid of {installment_amount} {currency}"
                 )
-                msg_plain = render_to_string(
-                    "mail/text/order_validated.txt", template_vars
+            else:
+                variable_subject_part = _(
+                    f"Order completed ! The last installment of {installment_amount} {currency} "
+                    "has been debited"
                 )
-                send_mail(
-                    _("Purchase order confirmed!"),
-                    msg_plain,
-                    settings.EMAIL_FROM,
-                    [order.owner.email],
-                    html_message=msg_html,
-                    fail_silently=False,
-                )
-        except smtplib.SMTPException as exception:
-            # no exception raised as user can't sometimes change his mail,
-            logger.error(
-                "%s purchase order mail %s not send", order.owner.email, exception
+            cls._send_mail(
+                subject=f"{base_subject}{variable_subject_part}",
+                template_vars={
+                    "fullname": order.owner.get_full_name() or order.owner.username,
+                    "email": order.owner.email,
+                    "product_title": product_title,
+                    "installment_amount": installment_amount,
+                    "product_price": Money(order.product.price),
+                    "credit_card_last_numbers": order.credit_card.last_numbers,
+                    "remaining_balance_to_pay": order.get_remaining_balance_to_pay(),
+                    "date_next_installment_to_pay": order.get_date_next_installment_to_pay(),
+                    "targeted_installment_index": order.get_index_of_last_installment(
+                        state=PAYMENT_STATE_PAID
+                    ),
+                    "order_payment_schedule": order.payment_schedule,
+                    "dashboard_order_link": (
+                        settings.JOANIE_DASHBOARD_ORDER_LINK.replace(
+                            ":orderId", str(order.id)
+                        )
+                    ),
+                    "site": {
+                        "name": settings.JOANIE_CATALOG_NAME,
+                        "url": settings.JOANIE_CATALOG_BASE_URL,
+                    },
+                },
+                template_name="installment_paid"
+                if upcoming_installment
+                else "installments_fully_paid",
+                to_user_email=order.owner.email,
             )
 
     @staticmethod

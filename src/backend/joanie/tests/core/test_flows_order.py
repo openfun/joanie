@@ -7,6 +7,7 @@ import json
 from http import HTTPStatus
 from unittest import mock
 
+from django.core import mail
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.test.utils import override_settings
@@ -1464,3 +1465,117 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
 
         self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
         self.assertIsNotNone(order.payment_schedule)
+
+    @override_settings(JOANIE_CATALOG_NAME="Test Catalog")
+    @override_settings(JOANIE_CATALOG_BASE_URL="https://richie.education")
+    def test_flows_order_save_payment_method_to_pending_mail_sent_confirming_subscription(
+        self,
+    ):
+        """
+        Test the post transition success action of an order when the transition
+        goes from TO_SAVE_PAYMENT_METHOD to PENDING is successful, it should trigger the
+        email confirmation the subscription that is sent to the user.
+        """
+        for state in [
+            enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
+        ]:
+            with self.subTest(state=state):
+                user = factories.UserFactory(
+                    email="sam@fun-test.fr",
+                    language="en-us",
+                    first_name="John",
+                    last_name="Doe",
+                )
+                target_courses = factories.CourseFactory.create_batch(
+                    1,
+                    course_runs=CourseRunFactory.create_batch(
+                        1, state=CourseState.ONGOING_OPEN
+                    ),
+                )
+                product = factories.ProductFactory(
+                    price="100.00", target_courses=target_courses
+                )
+                order = factories.OrderFactory(
+                    state=state,
+                    owner=user,
+                    credit_card=CreditCardFactory(),
+                    product=product,
+                )
+                order.flow.pending()
+                self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
+
+        # check email has been sent
+        self.assertEqual(len(mail.outbox), 1)
+
+        # check we send it to the right email
+        self.assertEqual(mail.outbox[0].to[0], user.email)
+
+        email_content = " ".join(mail.outbox[0].body.split())
+        self.assertIn("Your order has been confirmed.", email_content)
+        self.assertIn("Thank you very much for your purchase!", email_content)
+        self.assertIn(order.product.title, email_content)
+        # check it's the right object
+        self.assertEqual(mail.outbox[0].subject, "Subscription confirmed!")
+        self.assertIn("Hello", email_content)
+        self.assertNotIn("None", email_content)
+        # emails are generated from mjml format, test rendering of email doesn't
+        # contain any trans tag, it might happen if \n are generated
+        self.assertNotIn("trans ", email_content)
+        # catalog url is included in the email
+        self.assertIn("https://richie.education", email_content)
+
+    @override_settings(JOANIE_CATALOG_NAME="Test Catalog")
+    @override_settings(JOANIE_CATALOG_BASE_URL="https://richie.education")
+    def test_flows_order_signing_to_pending_mail_sent_confirming_subscription(self):
+        """
+        Test the post transition success action of an order when the transition
+        goes from SIGNING to PENDING is successful, it should trigger the
+        email confirmation the subscription that is sent to the user.
+        """
+        for state in [
+            enums.ORDER_STATE_SIGNING,
+        ]:
+            with self.subTest(state=state):
+                user = factories.UserFactory(
+                    email="sam@fun-test.fr",
+                    language="en-us",
+                    first_name="John",
+                    last_name="Doe",
+                )
+                target_courses = factories.CourseFactory.create_batch(
+                    1,
+                    course_runs=CourseRunFactory.create_batch(
+                        1, state=CourseState.ONGOING_OPEN
+                    ),
+                )
+                product = factories.ProductFactory(
+                    price="100.00", target_courses=target_courses
+                )
+                order = factories.OrderFactory(
+                    state=state,
+                    owner=user,
+                    credit_card=CreditCardFactory(),
+                    product=product,
+                )
+                order.flow.pending()
+                self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
+
+        # check email has been sent
+        self.assertEqual(len(mail.outbox), 1)
+
+        # check we send it to the right email
+        self.assertEqual(mail.outbox[0].to[0], user.email)
+
+        email_content = " ".join(mail.outbox[0].body.split())
+        self.assertIn("Your order has been confirmed.", email_content)
+        self.assertIn("Thank you very much for your purchase!", email_content)
+        self.assertIn(order.product.title, email_content)
+        # check it's the right object
+        self.assertEqual(mail.outbox[0].subject, "Subscription confirmed!")
+        self.assertIn("Hello", email_content)
+        self.assertNotIn("None", email_content)
+        # emails are generated from mjml format, test rendering of email doesn't
+        # contain any trans tag, it might happen if \n are generated
+        self.assertNotIn("trans ", email_content)
+        # catalog url is included in the email
+        self.assertIn("https://richie.education", email_content)
