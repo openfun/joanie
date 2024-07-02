@@ -238,6 +238,7 @@ class Contract(BaseModel):
         self.definition_checksum = None
         self.signature_backend_reference = None
         self.save()
+        self.order.flow.update()
 
     def is_eligible_for_signing(self):
         """

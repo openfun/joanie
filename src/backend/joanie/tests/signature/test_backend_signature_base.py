@@ -150,22 +150,14 @@ class BaseSignatureBackendTestCase(TestCase):
         for the fields : 'context', 'definition_checksum', 'submitted_for_signature_on', and
         'signature_backend_reference'.
         """
-        user = factories.UserFactory()
-        order = factories.OrderFactory(
-            owner=user,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+        order = factories.OrderGeneratorFactory(
+            state=enums.ORDER_STATE_SIGNING,
+            product__price=0,
         )
-        contract = factories.ContractFactory(
-            order=order,
-            definition=order.product.contract_definition,
-            signature_backend_reference="wfl_fake_dummy_id",
-            definition_checksum="fake_test_file_hash",
-            context="content",
-            submitted_for_signature_on=django_timezone.now(),
-        )
+        contract = order.contract
         backend = get_signature_backend()
 
-        backend.reset_contract(reference="wfl_fake_dummy_id")
+        backend.reset_contract(reference=contract.signature_backend_reference)
 
         contract.refresh_from_db()
         self.assertIsNone(contract.student_signed_on)
@@ -173,3 +165,5 @@ class BaseSignatureBackendTestCase(TestCase):
         self.assertIsNone(contract.context)
         self.assertIsNone(contract.definition_checksum)
         self.assertIsNone(contract.signature_backend_reference)
+        order.refresh_from_db()
+        self.assertEqual(order.state, enums.ORDER_STATE_TO_SIGN)
