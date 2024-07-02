@@ -74,7 +74,7 @@ class OrderFlow:
         return self.instance.has_unsigned_contract
 
     @state.transition(
-        source=enums.ORDER_STATE_ASSIGNED,
+        source=[enums.ORDER_STATE_ASSIGNED, enums.ORDER_STATE_SIGNING],
         target=enums.ORDER_STATE_TO_SIGN,
         conditions=[_can_be_state_to_sign],
     )
