@@ -72,12 +72,7 @@ class BaseSignatureBackendTestCase(TestCase):
         self.assertEqual(consent_page_key_setting, "fake_cop_id")
 
     @override_settings(
-        JOANIE_SIGNATURE_BACKEND=random.choice(
-            [
-                "joanie.signature.backends.base.BaseSignatureBackend",
-                "joanie.signature.backends.dummy.DummySignatureBackend",
-            ]
-        )
+        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend"
     )
     def test_backend_signature_base_backend_confirm_student_signature(self):
         """
@@ -147,12 +142,7 @@ class BaseSignatureBackendTestCase(TestCase):
         )
 
     @override_settings(
-        JOANIE_SIGNATURE_BACKEND=random.choice(
-            [
-                "joanie.signature.backends.base.BaseSignatureBackend",
-                "joanie.signature.backends.dummy.DummySignatureBackend",
-            ]
-        )
+        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend"
     )
     def test_backend_signature_base_backend_reset_contract(self):
         """

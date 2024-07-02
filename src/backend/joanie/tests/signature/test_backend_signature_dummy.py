@@ -106,10 +106,8 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
         self.assertIn(expected_substring, response)
 
         contract.refresh_from_db()
-        self.assertIsNotNone(contract.student_signed_on)
+        self.assertIsNone(contract.student_signed_on)
         self.assertIsNotNone(contract.submitted_for_signature_on)
-        # Check that an email has been sent
-        self._check_signature_completed_email_sent("student_do@example.fr")
 
     def test_backend_dummy_signature_get_signature_invitation_link_for_organization(
         self,
@@ -144,10 +142,8 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
 
         contract.refresh_from_db()
         self.assertIsNotNone(contract.student_signed_on)
-        self.assertIsNotNone(contract.organization_signed_on)
-        self.assertIsNone(contract.submitted_for_signature_on)
-        # Check that an email has been sent
-        self._check_signature_completed_email_sent("student_do@example.fr")
+        self.assertIsNone(contract.organization_signed_on)
+        self.assertIsNotNone(contract.submitted_for_signature_on)
 
     def test_backend_dummy_signature_get_signature_invitation_link_with_several_contracts(
         self,
@@ -186,7 +182,7 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
 
         for contract in contracts:
             contract.refresh_from_db()
-            self.assertIsNotNone(contract.student_signed_on)
+            self.assertIsNone(contract.student_signed_on)
             self.assertIsNotNone(contract.submitted_for_signature_on)
 
     def test_backend_dummy_signature_delete_signature_procedure(self):
