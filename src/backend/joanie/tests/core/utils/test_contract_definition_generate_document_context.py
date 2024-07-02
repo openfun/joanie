@@ -11,7 +11,9 @@ from django.utils import timezone as django_timezone
 from pdfminer.high_level import extract_text as pdf_extract_text
 
 from joanie.core import enums, factories
+from joanie.core.models import DocumentImage
 from joanie.core.utils import contract_definition, image_to_base64, issuers
+from joanie.core.utils.contract_definition import ORGANIZATION_FALLBACK_LOGO
 from joanie.payment.factories import InvoiceFactory
 
 PROCESSOR_PATH = "joanie.tests.core.utils.test_contract_definition_generate_document_context._processor_for_test_suite"  # pylint: disable=line-too-long
@@ -115,6 +117,15 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         factories.OrderTargetCourseRelationFactory(
             course=relation.course, order=order, position=1
         )
+
+        context = contract_definition.generate_document_context(
+            contract_definition=order.product.contract_definition,
+            user=user,
+            order=order,
+        )
+
+        organization_logo = DocumentImage.objects.get()
+
         expected_context = {
             "contract": {
                 "body": "<p>Articles de la convention</p>",
@@ -159,7 +170,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                     "title": address_organization.title,
                     "is_main": address_organization.is_main,
                 },
-                "logo": image_to_base64(order.organization.logo),
+                "logo_id": str(organization_logo.id),
                 "name": organization.title,
                 "representative": organization.representative,
                 "representative_profession": organization.representative_profession,
@@ -174,12 +185,6 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                 "dpo_email": organization.dpo_email,
             },
         }
-
-        context = contract_definition.generate_document_context(
-            contract_definition=order.product.contract_definition,
-            user=user,
-            order=order,
-        )
 
         self.assertEqual(context, expected_context)
 
@@ -196,10 +201,6 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         `organization.contact_email` `organization.dpo_email`,
         `organization.representative_profession`.
         """
-        organization_fallback_logo = (
-            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR"
-            "42mO8cPX6fwAIdgN9pHTGJwAAAABJRU5ErkJggg=="
-        )
         user = factories.UserFactory(
             email="student@example.fr",
             first_name="John Doe",
@@ -254,7 +255,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                     "title": "<ORGANIZATION_ADDRESS_TITLE>",
                     "is_main": True,
                 },
-                "logo": organization_fallback_logo,
+                "logo_id": None,
                 "name": "<ORGANIZATION_NAME>",
                 "representative": "<REPRESENTATIVE>",
                 "representative_profession": "<REPRESENTATIVE_PROFESSION>",
@@ -282,10 +283,6 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         and a user, it should return the default placeholder values for different sections
         of the context.
         """
-        organization_fallback_logo = (
-            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR"
-            "42mO8cPX6fwAIdgN9pHTGJwAAAABJRU5ErkJggg=="
-        )
         definition = factories.ContractDefinitionFactory(
             title="CONTRACT DEFINITION 3",
             description="Contract definition description",
@@ -334,7 +331,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                     "title": "<ORGANIZATION_ADDRESS_TITLE>",
                     "is_main": True,
                 },
-                "logo": organization_fallback_logo,
+                "logo_id": None,
                 "name": "<ORGANIZATION_NAME>",
                 "representative": "<REPRESENTATIVE>",
                 "representative_profession": "<REPRESENTATIVE_PROFESSION>",
@@ -670,3 +667,40 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         self.assertRegex(document_text, r"Syllabus Test")
         self.assertRegex(document_text, r"[SignatureField#1]")
         self.assertRegex(document_text, r"[SignatureField#2]")
+
+    def test_embed_images_in_context(self):
+        """
+        It should embed the images in the context.
+        """
+        organization = factories.OrganizationFactory()
+        logo = DocumentImage.objects.create(file=organization.logo, checksum="123abc")
+        context = {"organization": {"logo_id": str(logo.id)}}
+
+        context_with_images = contract_definition.embed_images_in_context(context)
+
+        self.assertEqual(
+            context_with_images["organization"]["logo"],
+            image_to_base64(organization.logo),
+        )
+        self.assertNotIn("logo_id", context_with_images["organization"])
+
+        # Initial context should not be modified
+        self.assertNotIn("logo", context["organization"])
+        self.assertEqual(context["organization"]["logo_id"], str(logo.id))
+
+    def test_embed_images_in_context_no_document_image(self):
+        """
+        It should embed default image in the context when the document image is not found.
+        """
+        context = {"organization": {"logo_id": None}}
+
+        context_with_images = contract_definition.embed_images_in_context(context)
+
+        self.assertEqual(
+            context_with_images["organization"]["logo"], ORGANIZATION_FALLBACK_LOGO
+        )
+        self.assertNotIn("logo_id", context_with_images["organization"])
+
+        # Initial context should not be modified
+        self.assertNotIn("logo", context["organization"])
+        self.assertIsNone(context["organization"]["logo_id"])
