@@ -16,7 +16,7 @@ from django.utils.translation import gettext_lazy as _
 import markdown
 
 from joanie.core import enums
-from joanie.core.models.base import BaseModel
+from joanie.core.models.base import BaseModel, DocumentImage
 
 logger = logging.getLogger(__name__)
 
@@ -35,12 +35,18 @@ class ContractDefinition(BaseModel):
         verbose_name=_("language"),
         help_text=_("Language of the contract definition"),
     )
-
     name = models.CharField(
         _("template name"),
         max_length=255,
         choices=enums.CONTRACT_NAME_CHOICES,
         default=enums.CONTRACT_DEFINITION,
+    )
+    images = models.ManyToManyField(
+        to=DocumentImage,
+        verbose_name=_("images"),
+        related_name="contract_definitions",
+        editable=False,
+        blank=True,
     )
 
     class Meta:
