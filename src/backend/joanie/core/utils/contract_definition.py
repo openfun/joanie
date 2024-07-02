@@ -1,5 +1,6 @@
 """Utility to `generate document context` data"""
 
+from copy import deepcopy
 from datetime import date, timedelta
 
 from django.conf import settings
@@ -9,7 +10,8 @@ from django.utils.translation import gettext as _
 
 from babel.numbers import get_currency_symbol
 
-from joanie.core.utils import image_to_base64
+from joanie.core.models import DocumentImage
+from joanie.core.utils import file_checksum, image_to_base64
 
 # Organization section for generating contract definition
 ORGANIZATION_FALLBACK_ADDRESS = {
@@ -22,6 +24,11 @@ ORGANIZATION_FALLBACK_ADDRESS = {
     "title": _("<ORGANIZATION_ADDRESS_TITLE>"),
     "is_main": True,
 }
+
+ORGANIZATION_FALLBACK_LOGO = (
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR"
+    "42mO8cPX6fwAIdgN9pHTGJwAAAABJRU5ErkJggg=="
+)
 
 # Student section for generating contract definition
 USER_FALLBACK_ADDRESS = {
@@ -70,16 +77,11 @@ def generate_document_context(contract_definition=None, user=None, order=None):
     from joanie.core.models import Address
     from joanie.core.serializers.client import AddressSerializer
 
-    organization_fallback_logo = (
-        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR"
-        "42mO8cPX6fwAIdgN9pHTGJwAAAABJRU5ErkJggg=="
-    )
-
     contract_language = (
         contract_definition.language if contract_definition else settings.LANGUAGE_CODE
     )
 
-    organization_logo = organization_fallback_logo
+    organization_logo_id = None
     organization_name = _("<ORGANIZATION_NAME>")
     organization_representative = _("<REPRESENTATIVE>")
     organization_representative_profession = _("<REPRESENTATIVE_PROFESSION>")
@@ -119,7 +121,15 @@ def generate_document_context(contract_definition=None, user=None, order=None):
         user_phone_number = user.phone_number
 
     if order:
-        organization_logo = image_to_base64(order.organization.logo)
+        logo_checksum = file_checksum(order.organization.logo)
+        logo_image, created = DocumentImage.objects.get_or_create(
+            checksum=logo_checksum,
+            defaults={"file": order.organization.logo},
+        )
+        if created:
+            contract_definition.images.set([logo_image])
+        organization_logo_id = str(logo_image.id)
+
         organization_name = order.organization.safe_translation_getter(
             "title", language_code=contract_language
         )
@@ -195,7 +205,7 @@ def generate_document_context(contract_definition=None, user=None, order=None):
         },
         "organization": {
             "address": organization_address,
-            "logo": organization_logo,
+            "logo_id": organization_logo_id,
             "name": organization_name,
             "representative": organization_representative,
             "representative_profession": organization_representative_profession,
@@ -210,3 +220,16 @@ def generate_document_context(contract_definition=None, user=None, order=None):
     }
 
     return apply_contract_definition_context_processors(context)
+
+
+def embed_images_in_context(context):
+    """Embed images in the context."""
+    edited_context = deepcopy(context)
+    try:
+        logo = DocumentImage.objects.get(id=edited_context["organization"]["logo_id"])
+        edited_context["organization"]["logo"] = image_to_base64(logo.file)
+    except DocumentImage.DoesNotExist:
+        edited_context["organization"]["logo"] = ORGANIZATION_FALLBACK_LOGO
+
+    del edited_context["organization"]["logo_id"]
+    return edited_context

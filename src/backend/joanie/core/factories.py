@@ -24,11 +24,12 @@ from timedelta_isoformat import timedelta as timedelta_isoformat
 from joanie.core import enums, models
 from joanie.core.models import (
     CourseState,
+    DocumentImage,
     OrderTargetCourseRelation,
     ProductTargetCourseRelation,
 )
 from joanie.core.serializers import AddressSerializer
-from joanie.core.utils import contract_definition, image_to_base64
+from joanie.core.utils import contract_definition, file_checksum
 
 
 def generate_thumbnails_for_field(field, include_global=False):
@@ -1024,6 +1025,16 @@ class ContractFactory(factory.django.DjangoModelFactory):
                 is_main=True
             ).first()
             course_dates = self.order.get_equivalent_course_run_dates()
+
+            logo_checksum = file_checksum(self.order.organization.logo)
+            logo_image, created = DocumentImage.objects.get_or_create(
+                checksum=logo_checksum,
+                defaults={"file": self.order.organization.logo},
+            )
+            if created:
+                self.definition.images.set([logo_image])
+            organization_logo_id = str(logo_image.id)
+
             return {
                 "contract": {
                     "body": self.definition.get_body_in_html(),
@@ -1061,12 +1072,11 @@ class ContractFactory(factory.django.DjangoModelFactory):
                     "phone_number": self.order.owner.phone_number,
                 },
                 "organization": {
-                    "logo": image_to_base64(self.order.organization.logo),
+                    "logo_id": organization_logo_id,
                     "name": self.order.organization.safe_translation_getter(
                         "title", language_code=self.definition.language
                     ),
                     "address": AddressSerializer(organization_address).data,
-                    "signature": image_to_base64(self.order.organization.signature),
                     "representative": self.order.organization.representative,
                     "representative_profession": self.order.organization.representative_profession,
                     "enterprise_code": self.order.organization.enterprise_code,
