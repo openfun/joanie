@@ -567,8 +567,9 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
                         logger.records, [("ERROR", error_message, error_context)]
                     )
 
+    @mock.patch("joanie.core.utils.issuers.generate_document")
     def test_models_order_submit_for_signature_with_a_brand_new_contract(
-        self,
+        self, mock_generate_document
     ):
         """
         When the order's product has a contract definition, and the order doesn't have yet
@@ -594,6 +595,10 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         self.assertIn(
             "https://dummysignaturebackend.fr/?requestToken=", raw_invitation_link
         )
+        context_with_images = mock_generate_document.call_args.kwargs["context"]
+        organization_logo = context_with_images["organization"]["logo"]
+        self.assertIn("data:image/png;base64,", organization_logo)
+        self.assertNotIn("logo_id", context_with_images["organization"])
 
     def test_models_order_submit_for_signature_existing_contract_with_same_context_and_still_valid(
         self,
