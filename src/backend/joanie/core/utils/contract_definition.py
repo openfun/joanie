@@ -3,7 +3,6 @@
 from datetime import date, timedelta
 
 from django.conf import settings
-from django.contrib.sites.models import Site
 from django.utils.duration import duration_iso_string
 from django.utils.module_loading import import_string
 from django.utils.translation import gettext as _
@@ -79,15 +78,6 @@ def generate_document_context(contract_definition=None, user=None, order=None):
     contract_language = (
         contract_definition.language if contract_definition else settings.LANGUAGE_CODE
     )
-
-    try:
-        site_config = Site.objects.get_current().site_config
-    except Site.site_config.RelatedObjectDoesNotExist:  # pylint: disable=no-member
-        terms_and_conditions = ""
-    else:
-        terms_and_conditions = site_config.get_terms_and_conditions_in_html(
-            contract_language
-        )
 
     organization_logo = organization_fallback_logo
     organization_name = _("<ORGANIZATION_NAME>")
@@ -186,7 +176,6 @@ def generate_document_context(contract_definition=None, user=None, order=None):
             "title": contract_title,
             "description": contract_description,
             "body": contract_body,
-            "terms_and_conditions": terms_and_conditions,
             "language": contract_language,
         },
         "course": {

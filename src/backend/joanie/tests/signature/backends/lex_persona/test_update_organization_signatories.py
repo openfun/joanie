@@ -38,7 +38,7 @@ class LexPersonaBackendUpdateSignatoriesTestCase(TestCase):
         user = factories.UserFactory(email="johndoe@example.fr")
         order = factories.OrderFactory(
             owner=user,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
         factories.ContractFactory(
@@ -260,7 +260,7 @@ class LexPersonaBackendUpdateSignatoriesTestCase(TestCase):
         )
         order = factories.OrderFactory(
             owner=user,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
         factories.ContractFactory(
@@ -491,7 +491,7 @@ class LexPersonaBackendUpdateSignatoriesTestCase(TestCase):
         user = factories.UserFactory(email="johndoe@example.fr")
         order = factories.OrderFactory(
             owner=user,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
         factories.ContractFactory(

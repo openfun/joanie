@@ -3,6 +3,7 @@
 import random
 
 import factory
+from factory import lazy_attribute
 from faker import Faker
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, registry
@@ -205,7 +206,6 @@ class EdxUserFactory(factory.alchemy.SQLAlchemyModelFactory):
     id = factory.Sequence(lambda n: n)
     username = factory.Sequence(lambda n: f"{faker.user_name()}{n}")
     password = factory.Faker("password")
-    email = factory.Faker("email")
     first_name = ""
     last_name = ""
     is_active = True
@@ -219,6 +219,11 @@ class EdxUserFactory(factory.alchemy.SQLAlchemyModelFactory):
     user_api_userpreference = factory.RelatedFactoryList(
         EdxUserPreferenceFactory, "user", size=3, user_id=factory.SelfAttribute("..id")
     )
+
+    @lazy_attribute
+    def email(self):
+        """Generate a fake email address for the user."""
+        return f"{self.username}@example.com"
 
 
 class EdxEnrollmentFactory(factory.alchemy.SQLAlchemyModelFactory):

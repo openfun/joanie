@@ -11,7 +11,6 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.utils.translation import override
 
-from joanie.core.models import ActivityLog, Address
 from joanie.payment.enums import INVOICE_STATE_REFUNDED
 from joanie.payment.models import Invoice, Transaction
 
@@ -36,29 +35,13 @@ class BasePaymentBackend:
         Generic actions triggered when a succeeded payment has been received.
         It creates an invoice and registers the debit transaction,
         then mark invoice as paid if transaction amount is equal to the invoice amount
-        then mark the order as validated
+        then mark the order as completed
         """
-        # - Create an invoice
-        address, _ = Address.objects.get_or_create(
-            **payment["billing_address"],
-            owner=order.owner,
-            defaults={
-                "is_reusable": False,
-                "title": f"Billing address of order {order.id}",
-            },
-        )
-
-        main_invoice, _ = Invoice.objects.get_or_create(
-            order=order,
-            total=order.total,
-            recipient_address=address,
-        )
-
         invoice = Invoice.objects.create(
             order=order,
-            parent=main_invoice,
+            parent=order.main_invoice,
             total=0,
-            recipient_address=address,
+            recipient_address=order.main_invoice.recipient_address,
         )
 
         # - Store the payment transaction
@@ -68,12 +51,7 @@ class BasePaymentBackend:
             reference=payment["id"],
         )
 
-        if payment.get("installment_id"):
-            order.set_installment_paid(payment["installment_id"])
-        else:
-            # - Mark order as validated
-            order.flow.validate()
-            ActivityLog.create_payment_succeeded_activity_log(order)
+        order.set_installment_paid(payment["installment_id"])
 
         # send mail
         cls._send_mail_payment_success(order)
@@ -114,17 +92,12 @@ class BasePaymentBackend:
             )
 
     @staticmethod
-    def _do_on_payment_failure(order, installment_id=None):
+    def _do_on_payment_failure(order, installment_id):
         """
         Generic actions triggered when a failed payment has been received.
         Mark the invoice as pending.
         """
-        if installment_id:
-            order.set_installment_refused(installment_id)
-        else:
-            # - Unvalidate order
-            order.flow.pending()
-            ActivityLog.create_payment_failed_activity_log(order)
+        order.set_installment_refused(installment_id)
 
     @staticmethod
     def _do_on_refund(amount, invoice, refund_reference):
@@ -161,7 +134,7 @@ class BasePaymentBackend:
         path = reverse("payment_webhook")
         return f"https://{site.domain}{path}"
 
-    def create_payment(self, order, billing_address, installment=None):
+    def create_payment(self, order, installment, billing_address):
         """
         Method used to create a payment from the payment provider.
         """
@@ -170,7 +143,7 @@ class BasePaymentBackend:
         )
 
     def create_one_click_payment(
-        self, order, billing_address, credit_card_token, installment=None
+        self, order, installment, credit_card_token, billing_address
     ):
         """
         Method used to create a one click payment from the payment provider.
@@ -179,7 +152,7 @@ class BasePaymentBackend:
             "subclasses of BasePaymentBackend must provide a create_one_click_payment() method."
         )
 
-    def create_zero_click_payment(self, order, credit_card_token, installment=None):
+    def create_zero_click_payment(self, order, installment, credit_card_token):
         """
         Method used to create a zero click payment from the payment provider.
         """

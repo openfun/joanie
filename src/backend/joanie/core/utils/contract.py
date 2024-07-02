@@ -31,12 +31,15 @@ def _get_base_signature_backend_references(
     if not extra_filters:
         extra_filters = {}
 
-    base_query = Contract.objects.filter(
-        order__state=enums.ORDER_STATE_VALIDATED,
-        student_signed_on__isnull=False,
-        organization_signed_on__isnull=False,
-        **extra_filters,
-    ).select_related("order")
+    base_query = (
+        Contract.objects.filter(
+            student_signed_on__isnull=False,
+            organization_signed_on__isnull=False,
+            **extra_filters,
+        )
+        .exclude(order__state=enums.ORDER_STATE_CANCELED)
+        .select_related("order")
+    )
 
     if course_product_relation:
         base_query = base_query.filter(
@@ -175,11 +178,11 @@ def get_signature_references(organization_id: str, student_has_not_signed: bool)
     return (
         Contract.objects.filter(
             submitted_for_signature_on__isnull=False,
-            order__state=enums.ORDER_STATE_VALIDATED,
             order__organization_id=organization_id,
             organization_signed_on__isnull=True,
             student_signed_on__isnull=student_has_not_signed,
         )
+        .exclude(order__state=enums.ORDER_STATE_CANCELED)
         .values_list("signature_backend_reference", flat=True)
         .distinct()
         .iterator()

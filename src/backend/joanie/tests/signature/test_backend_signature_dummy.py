@@ -387,7 +387,7 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
         """
         backend = DummySignatureBackend()
         order = factories.OrderFactory(
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(
@@ -417,7 +417,7 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
         """
         backend = DummySignatureBackend()
         order = factories.OrderFactory(
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(

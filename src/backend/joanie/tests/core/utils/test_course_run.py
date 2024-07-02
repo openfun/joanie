@@ -84,7 +84,7 @@ class UtilsCourseRunTestCase(TestCase):
             course=None,
             product__type=enums.PRODUCT_TYPE_CERTIFICATE,
             product__courses=[enrollment.course_run.course],
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
         # Close the course run enrollments and set the end date to have "archived" state
         closing_date = django_timezone.now() - timedelta(days=1)

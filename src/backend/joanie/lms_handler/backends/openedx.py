@@ -131,7 +131,7 @@ class OpenEdXLMSBackend(BaseLMSBackend):
             if Order.objects.filter(
                 Q(target_courses=enrollment.course_run.course)
                 | Q(enrollment=enrollment),
-                state=enums.ORDER_STATE_VALIDATED,
+                state__in=enums.ORDER_STATE_ALLOW_ENROLLMENT,
                 owner=enrollment.user,
             ).exists()
             else OPENEDX_MODE_HONOR

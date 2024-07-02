@@ -1,6 +1,5 @@
 """Test suite for the admin orders API endpoints."""
 
-import random
 import uuid
 from datetime import timedelta
 from decimal import Decimal as D
@@ -528,24 +527,17 @@ class OrdersAdminApiTestCase(TestCase):
             product__certificate_definition=factories.CertificateDefinitionFactory(),
         )
         order_group = factories.OrderGroupFactory(course_product_relation=relation)
-        order = factories.OrderFactory(
+        order = factories.OrderGeneratorFactory(
             course=relation.course,
             product=relation.product,
             order_group=order_group,
             organization=relation.organizations.first(),
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
 
         # Create certificate
         factories.OrderCertificateFactory(
             order=order, certificate_definition=order.product.certificate_definition
-        )
-
-        # Create signed contract
-        factories.ContractFactory(
-            order=order,
-            student_signed_on=order.created_on,
-            organization_signed_on=order.created_on,
         )
 
         # Create a credit note
@@ -554,7 +546,7 @@ class OrdersAdminApiTestCase(TestCase):
             total=D("1.00"),
         )
 
-        with self.assertNumQueries(29):
+        with self.assertNumQueries(27):
             response = self.client.get(f"/api/v1.0/admin/orders/{order.id}/")
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -564,7 +556,6 @@ class OrdersAdminApiTestCase(TestCase):
                 "id": str(order.id),
                 "created_on": format_date(order.created_on),
                 "state": order.state,
-                "has_consent_to_terms": False,
                 "owner": {
                     "id": str(order.owner.id),
                     "username": order.owner.username,
@@ -581,7 +572,7 @@ class OrdersAdminApiTestCase(TestCase):
                     "id": str(relation.product.id),
                     "price": float(relation.product.price),
                     "price_currency": "EUR",
-                    "target_courses": [],
+                    "target_courses": [str(order.course.id)],
                     "title": relation.product.title,
                     "type": "credential",
                 },
@@ -618,7 +609,7 @@ class OrdersAdminApiTestCase(TestCase):
                     "definition_title": order.contract.definition.title,
                     "student_signed_on": format_date(order.contract.student_signed_on),
                     "organization_signed_on": format_date(
-                        order.contract.student_signed_on
+                        order.contract.organization_signed_on
                     ),
                     "submitted_for_signature_on": None,
                 },
@@ -627,6 +618,16 @@ class OrdersAdminApiTestCase(TestCase):
                     "definition_title": order.certificate.certificate_definition.title,
                     "issued_on": format_date(order.certificate.issued_on),
                 },
+                "payment_schedule": [
+                    {
+                        "id": str(installment["id"]),
+                        "amount": float(installment["amount"]),
+                        "currency": "EUR",
+                        "due_date": format_date(installment["due_date"]),
+                        "state": installment["state"],
+                    }
+                    for installment in order.payment_schedule
+                ],
                 "main_invoice": {
                     "id": str(order.main_invoice.id),
                     "balance": float(order.main_invoice.balance),
@@ -692,7 +693,7 @@ class OrdersAdminApiTestCase(TestCase):
             course=None,
             product=relation.product,
             organization=relation.organizations.first(),
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
 
         # Create certificate
@@ -710,7 +711,6 @@ class OrdersAdminApiTestCase(TestCase):
                 "id": str(order.id),
                 "created_on": format_date(order.created_on),
                 "state": order.state,
-                "has_consent_to_terms": False,
                 "owner": {
                     "id": str(order.owner.id),
                     "username": order.owner.username,
@@ -781,6 +781,7 @@ class OrdersAdminApiTestCase(TestCase):
                     "definition_title": order.certificate.certificate_definition.title,
                     "issued_on": format_date(order.certificate.issued_on),
                 },
+                "payment_schedule": None,
                 "main_invoice": {
                     "id": str(order.main_invoice.id),
                     "balance": float(order.main_invoice.balance),
@@ -852,21 +853,11 @@ class OrdersAdminApiTestCase(TestCase):
 
     def test_api_admin_orders_cancel_anonymous(self):
         """An anonymous user cannot cancel an order."""
-        order = factories.OrderFactory(
-            state=random.choice(
-                [
-                    enums.ORDER_STATE_CANCELED,
-                    enums.ORDER_STATE_SUBMITTED,
-                    enums.ORDER_STATE_DRAFT,
-                    enums.ORDER_STATE_PENDING,
-                    enums.ORDER_STATE_VALIDATED,
-                ]
-            )
-        )
-
-        response = self.client.delete(f"/api/v1.0/admin/orders/{order.id}/")
-
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        for state, _ in enums.ORDER_STATE_CHOICES:
+            with self.subTest(state=state):
+                order = factories.OrderFactory(state=state)
+                response = self.client.delete(f"/api/v1.0/admin/orders/{order.id}/")
+                self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
     def test_api_admin_orders_cancel_authenticated_with_lambda_user(self):
         """
@@ -874,7 +865,7 @@ class OrdersAdminApiTestCase(TestCase):
         """
         admin = factories.UserFactory(is_staff=False, is_superuser=False)
         self.client.login(username=admin.username, password="password")
-        order = factories.OrderFactory(state=enums.ORDER_STATE_SUBMITTED)
+        order = factories.OrderFactory(state=enums.ORDER_STATE_PENDING)
 
         response = self.client.delete(f"/api/v1.0/admin/orders/{order.id}/")
 
@@ -898,42 +889,13 @@ class OrdersAdminApiTestCase(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        order_is_draft = factories.OrderFactory(state=enums.ORDER_STATE_DRAFT)
-        order_is_pending = factories.OrderFactory(state=enums.ORDER_STATE_PENDING)
-        order_is_submitted = factories.OrderFactory(state=enums.ORDER_STATE_SUBMITTED)
-        order_is_validated = factories.OrderFactory(state=enums.ORDER_STATE_VALIDATED)
-
-        # Canceling draft order
-        response = self.client.delete(
-            f"/api/v1.0/admin/orders/{order_is_draft.id}/",
-        )
-        order_is_draft.refresh_from_db()
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
-        self.assertEqual(order_is_draft.state, enums.ORDER_STATE_CANCELED)
-
-        # Canceling pending order
-        response = self.client.delete(
-            f"/api/v1.0/admin/orders/{order_is_pending.id}/",
-        )
-        order_is_pending.refresh_from_db()
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
-        self.assertEqual(order_is_pending.state, enums.ORDER_STATE_CANCELED)
-
-        # Canceling submitted order
-        response = self.client.delete(
-            f"/api/v1.0/admin/orders/{order_is_submitted.id}/",
-        )
-        order_is_submitted.refresh_from_db()
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
-        self.assertEqual(order_is_submitted.state, enums.ORDER_STATE_CANCELED)
-
-        # Canceling validated order
-        response = self.client.delete(
-            f"/api/v1.0/admin/orders/{order_is_validated.id}/",
-        )
-        order_is_validated.refresh_from_db()
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
-        self.assertEqual(order_is_validated.state, enums.ORDER_STATE_CANCELED)
+        for state, _ in enums.ORDER_STATE_CHOICES:
+            with self.subTest(state=state):
+                order = factories.OrderFactory(state=state)
+                response = self.client.delete(f"/api/v1.0/admin/orders/{order.id}/")
+                order.refresh_from_db()
+                self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+                self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
 
     def test_api_admin_orders_generate_certificate_anonymous_user(self):
         """
@@ -1102,7 +1064,7 @@ class OrdersAdminApiTestCase(TestCase):
                 type=enums.PRODUCT_TYPE_ENROLLMENT,
                 target_courses=[course_run.course],
             ),
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
 
         response = self.client.post(
@@ -1157,7 +1119,7 @@ class OrdersAdminApiTestCase(TestCase):
             product=product,
             course=None,
             enrollment=enrollment,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
 
         # Simulate that enrollment is not passed
@@ -1252,7 +1214,7 @@ class OrdersAdminApiTestCase(TestCase):
         order = factories.OrderFactory(
             product=product,
         )
-        order.submit()
+        order.init_flow()
         enrollment = Enrollment.objects.get(course_run=course_run_1)
 
         # Simulate that all enrollments for graded courses made by the order are not passed
@@ -1334,7 +1296,7 @@ class OrdersAdminApiTestCase(TestCase):
             product=product,
             course=None,
             enrollment=enrollment,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
 
         # Simulate that enrollment is passed
@@ -1404,7 +1366,7 @@ class OrdersAdminApiTestCase(TestCase):
             is_graded=True,
         )
         order = factories.OrderFactory(product=product)
-        order.submit()
+        order.init_flow()
 
         self.assertFalse(Certificate.objects.exists())
 
@@ -1474,7 +1436,6 @@ class OrdersAdminApiTestCase(TestCase):
             is_graded=False,  # grades are not yet enabled on this course
         )
         order = factories.OrderFactory(product=product)
-        order.submit()
 
         response = self.client.post(
             f"/api/v1.0/admin/orders/{order.id}/generate_certificate/",

@@ -2883,6 +2883,7 @@
                         "schema": {
                             "type": "string",
                             "enum": [
+                                "assigned",
                                 "canceled",
                                 "completed",
                                 "draft",
@@ -2890,11 +2891,11 @@
                                 "no_payment",
                                 "pending",
                                 "pending_payment",
-                                "submitted",
-                                "validated"
+                                "to_save_payment_method",
+                                "to_sign"
                             ]
                         },
-                        "description": "* `draft` - Draft\n* `submitted` - Submitted\n* `pending` - Pending\n* `canceled` - Canceled\n* `validated` - Validated\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed"
+                        "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed"
                     }
                 ],
                 "tags": [
@@ -5506,10 +5507,12 @@
                     "main_invoice": {
                         "$ref": "#/components/schemas/AdminInvoice"
                     },
-                    "has_consent_to_terms": {
-                        "type": "boolean",
-                        "readOnly": true,
-                        "description": "User has consented to the platform terms and conditions."
+                    "payment_schedule": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AdminOrderPayment"
+                        },
+                        "readOnly": true
                     }
                 },
                 "required": [
@@ -5518,12 +5521,12 @@
                     "course",
                     "created_on",
                     "enrollment",
-                    "has_consent_to_terms",
                     "id",
                     "main_invoice",
                     "order_group",
                     "organization",
                     "owner",
+                    "payment_schedule",
                     "product",
                     "state",
                     "total",
@@ -5787,6 +5790,51 @@
                     "total",
                     "total_currency"
                 ]
+            },
+            "AdminOrderPayment": {
+                "type": "object",
+                "description": "Serializer for the order payment",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "amount": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000000,
+                        "minimum": 0.0,
+                        "exclusiveMaximum": true
+                    },
+                    "currency": {
+                        "type": "string",
+                        "description": "Return the code of currency used by the instance",
+                        "readOnly": true
+                    },
+                    "due_date": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "state": {
+                        "$ref": "#/components/schemas/AdminOrderPaymentStateEnum"
+                    }
+                },
+                "required": [
+                    "amount",
+                    "currency",
+                    "due_date",
+                    "id",
+                    "state"
+                ]
+            },
+            "AdminOrderPaymentStateEnum": {
+                "enum": [
+                    "pending",
+                    "paid",
+                    "refused"
+                ],
+                "type": "string",
+                "description": "* `pending` - Pending\n* `paid` - Paid\n* `refused` - Refused"
             },
             "AdminOrganization": {
                 "type": "object",
@@ -6913,17 +6961,18 @@
             "OrderStateEnum": {
                 "enum": [
                     "draft",
-                    "submitted",
+                    "assigned",
+                    "to_save_payment_method",
+                    "to_sign",
                     "pending",
                     "canceled",
-                    "validated",
                     "pending_payment",
                     "failed_payment",
                     "no_payment",
                     "completed"
                 ],
                 "type": "string",
-                "description": "* `draft` - Draft\n* `submitted` - Submitted\n* `pending` - Pending\n* `canceled` - Canceled\n* `validated` - Validated\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed"
+                "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed"
             },
             "OrganizationAccessRoleChoiceEnum": {
                 "enum": [

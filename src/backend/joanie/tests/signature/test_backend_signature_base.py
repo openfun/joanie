@@ -2,7 +2,6 @@
 
 import random
 from datetime import timedelta
-from unittest import mock
 
 from django.core.exceptions import ValidationError
 from django.test import TestCase
@@ -80,24 +79,19 @@ class BaseSignatureBackendTestCase(TestCase):
             ]
         )
     )
-    @mock.patch("joanie.core.models.Order.enroll_user_to_course_run")
-    def test_backend_signature_base_backend_confirm_student_signature(
-        self, _mock_enroll_user
-    ):
+    def test_backend_signature_base_backend_confirm_student_signature(self):
         """
         This test verifies that the `confirm_student_signature` method updates the contract with a
         timestamps for the field 'student_signed_on', and it should not set 'None' to the field
         'submitted_for_signature_on'.
 
-        Furthermore, it should call the method
-        `enroll_user_to_course_run` on the contract's order. In this way, when user has signed
-        its contract, it should be enrolled to courses with only one course run.
+        Furthermore, it should update the order state.
         """
         user = factories.UserFactory()
         order = factories.OrderFactory(
             owner=user,
             product__contract_definition=factories.ContractDefinitionFactory(),
-            state=enums.ORDER_STATE_VALIDATED,
+            product__price=0,
         )
         contract = factories.ContractFactory(
             order=order,
@@ -107,6 +101,7 @@ class BaseSignatureBackendTestCase(TestCase):
             context="content",
             submitted_for_signature_on=django_timezone.now(),
         )
+        order.init_flow()
         backend = get_signature_backend()
 
         backend.confirm_student_signature(reference="wfl_fake_dummy_id")
@@ -115,43 +110,8 @@ class BaseSignatureBackendTestCase(TestCase):
         self.assertIsNotNone(contract.submitted_for_signature_on)
         self.assertIsNotNone(contract.student_signed_on)
 
-        # contract.order.enroll_user_to_course should have been called once
-        _mock_enroll_user.assert_called_once()
-
-    @mock.patch(
-        "joanie.core.models.Order.enroll_user_to_course_run", side_effect=Exception
-    )
-    def test_backend_signature_base_backend_confirm_student_signature_with_auto_enroll_failure(
-        self, mock_enroll_user
-    ):
-        """
-        If the automatic enrollment fails, the `confirm_student_signature` method
-        should log an error and continue the process.
-        """
-        user = factories.UserFactory()
-        order = factories.OrderFactory(
-            owner=user,
-            product__contract_definition=factories.ContractDefinitionFactory(),
-            state=enums.ORDER_STATE_VALIDATED,
-        )
-        contract = factories.ContractFactory(
-            order=order,
-            definition=order.product.contract_definition,
-            signature_backend_reference="wfl_fake_dummy_id",
-            definition_checksum="fake_test_file_hash",
-            context="content",
-            submitted_for_signature_on=django_timezone.now(),
-        )
-        backend = get_signature_backend()
-
-        backend.confirm_student_signature(reference="wfl_fake_dummy_id")
-
-        contract.refresh_from_db()
-        self.assertIsNotNone(contract.submitted_for_signature_on)
-        self.assertIsNotNone(contract.student_signed_on)
-
-        # contract.order.enroll_user_to_course should have been called once
-        mock_enroll_user.assert_called_once()
+        order.refresh_from_db()
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
     @override_settings(
         JOANIE_SIGNATURE_BACKEND=random.choice(

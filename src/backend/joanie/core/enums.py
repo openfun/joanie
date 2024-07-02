@@ -58,10 +58,13 @@ CATALOG_VISIBILITY_CHOICES = (
 )
 
 ORDER_STATE_DRAFT = "draft"  # order has been created
-ORDER_STATE_SUBMITTED = "submitted"  # order information have been validated
+ORDER_STATE_ASSIGNED = "assigned"  # order has been assigned to an organization
+ORDER_STATE_TO_SAVE_PAYMENT_METHOD = (
+    "to_save_payment_method"  # order needs a payment method
+)
+ORDER_STATE_TO_SIGN = "to_sign"  # order needs a contract signature
 ORDER_STATE_PENDING = "pending"  # payment has failed but can be retried
 ORDER_STATE_CANCELED = "canceled"  # has been canceled
-ORDER_STATE_VALIDATED = "validated"  # is free or has an invoice linked
 ORDER_STATE_PENDING_PAYMENT = "pending_payment"  # payment is pending
 ORDER_STATE_FAILED_PAYMENT = "failed_payment"  # last payment has failed
 ORDER_STATE_NO_PAYMENT = "no_payment"  # no payment has been made
@@ -69,13 +72,11 @@ ORDER_STATE_COMPLETED = "completed"  # is completed
 
 ORDER_STATE_CHOICES = (
     (ORDER_STATE_DRAFT, _("Draft")),  # default
-    (ORDER_STATE_SUBMITTED, _("Submitted")),
+    (ORDER_STATE_ASSIGNED, _("Assigned")),
+    (ORDER_STATE_TO_SAVE_PAYMENT_METHOD, _("To save payment method")),
+    (ORDER_STATE_TO_SIGN, _("To sign")),
     (ORDER_STATE_PENDING, _("Pending")),
-    (ORDER_STATE_CANCELED, pgettext_lazy("As in: the order is cancelled.", "Canceled")),
-    (
-        ORDER_STATE_VALIDATED,
-        pgettext_lazy("As in: the order is validated.", "Validated"),
-    ),
+    (ORDER_STATE_CANCELED, pgettext_lazy("As in: the order is canceled.", "Canceled")),
     (
         ORDER_STATE_PENDING_PAYMENT,
         pgettext_lazy("As in: the order payment is pending.", "Pending payment"),
@@ -93,10 +94,14 @@ ORDER_STATE_CHOICES = (
         pgettext_lazy("As in: the order is completed.", "Completed"),
     ),
 )
+ORDER_STATE_ALLOW_ENROLLMENT = (
+    ORDER_STATE_COMPLETED,
+    ORDER_STATE_PENDING_PAYMENT,
+    ORDER_STATE_FAILED_PAYMENT,
+)
 BINDING_ORDER_STATES = (
-    ORDER_STATE_SUBMITTED,
     ORDER_STATE_PENDING,
-    ORDER_STATE_VALIDATED,
+    ORDER_STATE_COMPLETED,
 )
 MIN_ORDER_TOTAL_AMOUNT = 0.0
 

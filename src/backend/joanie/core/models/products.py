@@ -6,6 +6,7 @@ import itertools
 import logging
 from collections import defaultdict
 
+from django.apps import apps
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -19,9 +20,12 @@ from urllib3.util import Retry
 
 from joanie.core import enums
 from joanie.core.exceptions import CertificateGenerationError
-from joanie.core.fields.schedule import OrderPaymentScheduleEncoder
+from joanie.core.fields.schedule import (
+    OrderPaymentScheduleDecoder,
+    OrderPaymentScheduleEncoder,
+)
 from joanie.core.flows.order import OrderFlow
-from joanie.core.models.accounts import User
+from joanie.core.models.accounts import Address, User
 from joanie.core.models.activity_logs import ActivityLog
 from joanie.core.models.base import BaseModel
 from joanie.core.models.certifications import Certificate
@@ -465,11 +469,12 @@ class Order(BaseModel):
         on_delete=models.RESTRICT,
         db_index=True,
     )
-    has_consent_to_terms = models.BooleanField(
+    _has_consent_to_terms = models.BooleanField(
         verbose_name=_("has consent to terms"),
         editable=False,
         default=False,
         help_text=_("User has consented to the platform terms and conditions."),
+        db_column="has_consent_to_terms",
     )
     state = models.CharField(
         default=enums.ORDER_STATE_DRAFT,
@@ -483,6 +488,15 @@ class Order(BaseModel):
         blank=True,
         null=True,
         encoder=OrderPaymentScheduleEncoder,
+        decoder=OrderPaymentScheduleDecoder,
+    )
+    credit_card = models.ForeignKey(
+        to="payment.CreditCard",
+        verbose_name=_("credit card"),
+        related_name="orders",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
     )
 
     class Meta:
@@ -527,31 +541,6 @@ class Order(BaseModel):
     def __str__(self):
         return f"Order {self.product} for user {self.owner}"
 
-    def submit(self, billing_address=None, credit_card_id=None):
-        """
-        Transition order to submitted state and to validate if order is free
-        """
-        if self.total != enums.MIN_ORDER_TOTAL_AMOUNT and billing_address is None:
-            raise ValidationError({"billing_address": ["This field is required."]})
-
-        if self.state == enums.ORDER_STATE_DRAFT:
-            for relation in ProductTargetCourseRelation.objects.filter(
-                product=self.product
-            ):
-                order_relation = OrderTargetCourseRelation.objects.create(
-                    order=self,
-                    course=relation.course,
-                    position=relation.position,
-                    is_graded=relation.is_graded,
-                )
-                order_relation.course_runs.set(relation.course_runs.all())
-
-        if self.total == enums.MIN_ORDER_TOTAL_AMOUNT:
-            self.flow.validate()
-            return None
-
-        return self.flow.submit(billing_address, credit_card_id)
-
     @property
     def target_course_runs(self):
         """
@@ -590,6 +579,43 @@ class Order(BaseModel):
             return self.invoices.get(parent__isnull=True)
         except ObjectDoesNotExist:
             return None
+
+    @property
+    def is_free(self):
+        """
+        Return True if the order is free.
+        """
+        return not self.total
+
+    @property
+    def has_payment_method(self):
+        """
+        Return True if the order has a payment method.
+        """
+        return (
+            self.credit_card is not None
+            and self.credit_card.initial_issuer_transaction_identifier is not None
+        )
+
+    @property
+    def has_contract(self):
+        """
+        Return True if the order has an unsigned contract.
+        """
+        try:
+            return self.contract is not None  # pylint: disable=no-member
+        except Contract.DoesNotExist:
+            return False
+
+    @property
+    def has_unsigned_contract(self):
+        """
+        Return True if the order has an unsigned contract.
+        """
+        try:
+            return self.contract.student_signed_on is None  # pylint: disable=no-member
+        except Contract.DoesNotExist:
+            return self.product.contract_definition is not None
 
     # pylint: disable=too-many-branches
     # ruff: noqa: PLR0912
@@ -709,6 +735,21 @@ class Order(BaseModel):
             filters.update({"is_active": is_active})
 
         return Enrollment.objects.filter(**filters)
+
+    def freeze_target_courses(self):
+        """
+        Freeze target courses of the order.
+        """
+        for relation in ProductTargetCourseRelation.objects.filter(
+            product=self.product
+        ):
+            order_relation = OrderTargetCourseRelation.objects.create(
+                order=self,
+                course=relation.course,
+                position=relation.position,
+                is_graded=relation.is_graded,
+            )
+            order_relation.course_runs.set(relation.course_runs.all())
 
     def enroll_user_to_course_run(self):
         """
@@ -926,45 +967,45 @@ class Order(BaseModel):
             )
             raise ValidationError(message)
 
-        if self.state != enums.ORDER_STATE_VALIDATED:
-            message = "Cannot submit an order that is not yet validated."
+        if self.state != enums.ORDER_STATE_TO_SIGN:
+            message = "Cannot submit an order that is not to sign."
             logger.error(message, extra={"context": {"order": self.to_dict()}})
             raise ValidationError(message)
 
         contract_definition = self.product.contract_definition
 
-        try:
-            contract = self.contract
-        except Contract.DoesNotExist:
-            contract = Contract(order=self, definition=contract_definition)
-
-        if self.contract and self.contract.student_signed_on:
+        if self.contract.student_signed_on:
             message = "Contract is already signed by the student, cannot resubmit."
             logger.error(
                 message, extra={"context": {"contract": self.contract.to_dict()}}
             )
             raise PermissionDenied(message)
 
+        if not self.is_free:
+            self.generate_schedule()
+
         backend_signature = get_signature_backend()
         context = contract_definition_utility.generate_document_context(
             contract_definition=contract_definition,
             user=user,
-            order=contract.order,
+            order=self.contract.order,
         )
         file_bytes = issuers.generate_document(
             name=contract_definition.name, context=context
         )
 
         was_already_submitted = (
-            contract.submitted_for_signature_on and contract.signature_backend_reference
+            self.contract.submitted_for_signature_on
+            and self.contract.signature_backend_reference
         )
         should_be_resubmitted = was_already_submitted and (
-            not contract.is_eligible_for_signing() or contract.context != context
+            not self.contract.is_eligible_for_signing()
+            or self.contract.context != context
         )
 
         if should_be_resubmitted:
             backend_signature.delete_signing_procedure(
-                contract.signature_backend_reference
+                self.contract.signature_backend_reference
             )
 
         # We want to submit or re-submit the contract for signature in three cases:
@@ -984,10 +1025,10 @@ class Order(BaseModel):
                 file_bytes=file_bytes,
                 order=self,
             )
-            contract.tag_submission_for_signature(reference, checksum, context)
+            self.contract.tag_submission_for_signature(reference, checksum, context)
 
         return backend_signature.get_signature_invitation_link(
-            user.email, [contract.signature_backend_reference]
+            user.email, [self.contract.signature_backend_reference]
         )
 
     def get_equivalent_course_run_dates(self):
@@ -1052,13 +1093,12 @@ class Order(BaseModel):
         Returns a set of boolean values to indicate if the installment is the first one, and if it
         is the last one.
         """
-        first_installment_found = True
         for installment in self.payment_schedule:
             if installment["id"] == installment_id:
                 installment["state"] = state
                 self.save(update_fields=["payment_schedule"])
-                return first_installment_found, installment == self.payment_schedule[-1]
-            first_installment_found = False
+                self.flow.update()
+                return
 
         raise ValueError(f"Installment with id {installment_id} not found")
 
@@ -1067,27 +1107,14 @@ class Order(BaseModel):
         Set the state of an installment to paid in the payment schedule.
         """
         ActivityLog.create_payment_succeeded_activity_log(self)
-        _, is_last = self._set_installment_state(
-            installment_id, enums.PAYMENT_STATE_PAID
-        )
-        if is_last:
-            self.flow.complete()
-        else:
-            self.flow.pending_payment()
+        self._set_installment_state(installment_id, enums.PAYMENT_STATE_PAID)
 
     def set_installment_refused(self, installment_id):
         """
         Set the state of an installment to refused in the payment schedule.
         """
         ActivityLog.create_payment_failed_activity_log(self)
-        is_first, _ = self._set_installment_state(
-            installment_id, enums.PAYMENT_STATE_REFUSED
-        )
-
-        if is_first:
-            self.flow.no_payment()
-        else:
-            self.flow.failed_payment()
+        self._set_installment_state(installment_id, enums.PAYMENT_STATE_REFUSED)
 
     def get_first_installment_refused(self):
         """
@@ -1116,6 +1143,58 @@ class Order(BaseModel):
             )
 
         self.flow.cancel()
+
+    @property
+    def has_consent_to_terms(self):
+        """Redefine `has_consent_to_terms` property to raise an exception if used"""
+        raise DeprecationWarning(
+            "Access denied to has_consent_to_terms: deprecated field"
+        )
+
+    def _get_address(self, billing_address):
+        """
+        Returns an Address instance for a billing address.
+        """
+        if not billing_address:
+            raise ValidationError("Billing address is required for non-free orders.")
+
+        address, _ = Address.objects.get_or_create(
+            **billing_address,
+            defaults={
+                "owner": self.owner,
+                "is_reusable": False,
+                "title": f"Billing address of order {self.id}",
+            },
+        )
+        return address
+
+    def _create_main_invoice(self, billing_address):
+        """
+        Create the main invoice for the order.
+        """
+        address = self._get_address(billing_address)
+        Invoice = apps.get_model("payment", "Invoice")  # pylint: disable=invalid-name
+        Invoice.objects.get_or_create(
+            order=self,
+            defaults={"total": self.total, "recipient_address": address},
+        )
+
+    def init_flow(self, billing_address=None):
+        """
+        Transition order to assigned state, creates an invoice if needed and call the flow update.
+        """
+        self.flow.assign()
+        if not self.is_free:
+            self._create_main_invoice(billing_address)
+
+        self.freeze_target_courses()
+
+        if self.product.contract_definition and not self.has_contract:
+            Contract.objects.create(
+                order=self, definition=self.product.contract_definition
+            )
+
+        self.flow.update()
 
 
 class OrderTargetCourseRelation(BaseModel):

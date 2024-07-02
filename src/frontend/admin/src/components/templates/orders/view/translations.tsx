@@ -225,10 +225,20 @@ export const orderStatesMessages = defineMessages<OrderStatesEnum>({
     defaultMessage: "Draft",
     description: "Text for draft order state",
   },
-  submitted: {
-    id: "components.templates.orders.view.orderStatesMessages.submitted",
-    defaultMessage: "Submitted",
-    description: "Text for submitted order state",
+  assigned: {
+    id: "components.templates.orders.view.orderStatesMessages.assigned",
+    defaultMessage: "Assigned",
+    description: "Text for assigned order state",
+  },
+  to_save_payment_method: {
+    id: "components.templates.orders.view.orderStatesMessages.to_save_payment_method",
+    defaultMessage: "To save payment method",
+    description: "Text for to save payment method order state",
+  },
+  to_sign: {
+    id: "components.templates.orders.view.orderStatesMessages.to_sign",
+    defaultMessage: "To sign",
+    description: "Text for to sign order state",
   },
   pending: {
     id: "components.templates.orders.view.orderStatesMessages.pending",
@@ -240,9 +250,24 @@ export const orderStatesMessages = defineMessages<OrderStatesEnum>({
     defaultMessage: "Canceled",
     description: "Text for canceled order state",
   },
-  validated: {
-    id: "components.templates.orders.view.orderStatesMessages.validated",
-    defaultMessage: "Validated",
-    description: "Text for validated order state",
+  pending_payment: {
+    id: "components.templates.orders.view.orderStatesMessages.pending_payment",
+    defaultMessage: "Pending payment",
+    description: "Text for pending payment order state",
+  },
+  failed_payment: {
+    id: "components.templates.orders.view.orderStatesMessages.failed_payment",
+    defaultMessage: "Failed payment",
+    description: "Text for failed payment order state",
+  },
+  no_payment: {
+    id: "components.templates.orders.view.orderStatesMessages.no_payment",
+    defaultMessage: "No payment",
+    description: "Text for no payment order state",
+  },
+  completed: {
+    id: "components.templates.orders.view.orderStatesMessages.completed",
+    defaultMessage: "Completed",
+    description: "Text for completed order state",
   },
 });

@@ -1,0 +1,362 @@
+{
+    "shopId": "79264058",
+    "orderCycle": "CLOSED",
+    "orderStatus": "PAID",
+    "serverDate": "2024-06-27T14:52:47+00:00",
+    "orderDetails": {
+        "orderTotalAmount": 0,
+        "orderEffectiveAmount": 0,
+        "orderCurrency": "EUR",
+        "mode": "TEST",
+        "orderId": null,
+        "metadata": null,
+        "_type": "V4/OrderDetails"
+    },
+    "customer": {
+        "billingDetails": {
+            "address": null,
+            "category": null,
+            "cellPhoneNumber": null,
+            "city": null,
+            "country": null,
+            "district": null,
+            "firstName": null,
+            "identityCode": null,
+            "identityType": null,
+            "language": "EN",
+            "lastName": null,
+            "phoneNumber": null,
+            "state": null,
+            "streetNumber": null,
+            "title": null,
+            "zipCode": null,
+            "legalName": null,
+            "_type": "V4/Customer/BillingDetails"
+        },
+        "email": "john.doe@acme.org",
+        "reference": "0a920c52-7ecc-47b3-83f5-127b846ac79c",
+        "shippingDetails": {
+            "address": null,
+            "address2": null,
+            "category": null,
+            "city": null,
+            "country": null,
+            "deliveryCompanyName": null,
+            "district": null,
+            "firstName": null,
+            "identityCode": null,
+            "lastName": null,
+            "legalName": null,
+            "phoneNumber": null,
+            "shippingMethod": null,
+            "shippingSpeed": null,
+            "state": null,
+            "streetNumber": null,
+            "zipCode": null,
+            "_type": "V4/Customer/ShippingDetails"
+        },
+        "extraDetails": {
+            "browserAccept": null,
+            "fingerPrintId": null,
+            "ipAddress": "51.75.249.201",
+            "browserUserAgent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:127.0) Gecko/20100101 Firefox/127.0",
+            "_type": "V4/Customer/ExtraDetails"
+        },
+        "shoppingCart": {
+            "insuranceAmount": null,
+            "shippingAmount": null,
+            "taxAmount": null,
+            "cartItemInfo": null,
+            "_type": "V4/Customer/ShoppingCart"
+        },
+        "_type": "V4/Customer/Customer"
+    },
+    "transactions": [
+        {
+            "shopId": "79264058",
+            "uuid": "622cf59b8ac5495ea67a937addc3060c",
+            "amount": 0,
+            "currency": "EUR",
+            "paymentMethodType": "CARD",
+            "paymentMethodToken": "cedab61905974afe9794c87085543dba",
+            "status": "PAID",
+            "detailedStatus": "ACCEPTED",
+            "operationType": "VERIFICATION",
+            "effectiveStrongAuthentication": "ENABLED",
+            "creationDate": "2024-06-27T14:52:46+00:00",
+            "errorCode": null,
+            "errorMessage": null,
+            "detailedErrorCode": null,
+            "detailedErrorMessage": null,
+            "metadata": null,
+            "transactionDetails": {
+                "liabilityShift": "NO",
+                "effectiveAmount": 0,
+                "effectiveCurrency": "EUR",
+                "creationContext": "VERIFICATION",
+                "cardDetails": {
+                    "paymentSource": "EC",
+                    "manualValidation": "NO",
+                    "expectedCaptureDate": null,
+                    "effectiveBrand": "VISA",
+                    "pan": "497011XXXXXX1003",
+                    "expiryMonth": 12,
+                    "expiryYear": 2025,
+                    "country": "FR",
+                    "issuerCode": 17807,
+                    "issuerName": "Banque Populaire Occitane",
+                    "effectiveProductCode": null,
+                    "legacyTransId": "9g1h4e",
+                    "legacyTransDate": "2024-06-27T14:52:46+00:00",
+                    "paymentMethodSource": "TOKEN",
+                    "authorizationResponse": {
+                        "amount": null,
+                        "currency": null,
+                        "authorizationDate": null,
+                        "authorizationNumber": null,
+                        "authorizationResult": null,
+                        "authorizationMode": "MARK",
+                        "_type": "V4/PaymentMethod/Details/Cards/CardAuthorizationResponse"
+                    },
+                    "captureResponse": {
+                        "refundAmount": null,
+                        "refundCurrency": null,
+                        "captureDate": null,
+                        "captureFileNumber": null,
+                        "effectiveRefundAmount": null,
+                        "effectiveRefundCurrency": null,
+                        "_type": "V4/PaymentMethod/Details/Cards/CardCaptureResponse"
+                    },
+                    "threeDSResponse": {
+                        "authenticationResultData": {
+                            "transactionCondition": null,
+                            "enrolled": null,
+                            "status": null,
+                            "eci": null,
+                            "xid": null,
+                            "cavvAlgorithm": null,
+                            "cavv": null,
+                            "signValid": null,
+                            "brand": null,
+                            "_type": "V4/PaymentMethod/Details/Cards/CardAuthenticationResponse"
+                        },
+                        "_type": "V4/PaymentMethod/Details/Cards/ThreeDSResponse"
+                    },
+                    "authenticationResponse": {
+                        "id": "3f198c4d-de23-49bc-9b9e-35a94cbc89c4",
+                        "operationSessionId": null,
+                        "protocol": {
+                            "name": "THREEDS",
+                            "version": "2.1.0",
+                            "network": "VISA",
+                            "challengePreference": "CHALLENGE_MANDATED",
+                            "simulation": true,
+                            "_type": "V4/Charge/Authenticate/Protocol"
+                        },
+                        "value": {
+                            "authenticationType": "CHALLENGE",
+                            "authenticationId": {
+                                "authenticationIdType": "dsTransId",
+                                "value": "5dab1964-ad95-4715-86c0-32557e6f5b46",
+                                "_type": "V4/Charge/Authenticate/AuthenticationId"
+                            },
+                            "authenticationValue": {
+                                "authenticationValueType": "CAVV",
+                                "value": "t**************************=",
+                                "_type": "V4/Charge/Authenticate/AuthenticationValue"
+                            },
+                            "status": "SUCCESS",
+                            "commerceIndicator": "05",
+                            "extension": {
+                                "authenticationType": "THREEDS_V2",
+                                "challengeCancelationIndicator": null,
+                                "cbScore": null,
+                                "cbAvalgo": null,
+                                "cbExemption": null,
+                                "paymentUseCase": null,
+                                "threeDSServerTransID": "3f198c4d-de23-49bc-9b9e-35a94cbc89c4",
+                                "dsTransID": "5dab1964-ad95-4715-86c0-32557e6f5b46",
+                                "acsTransID": "d72df9dc-893d-4984-98ac-500a842227fd",
+                                "sdkTransID": null,
+                                "transStatusReason": null,
+                                "requestedExemption": null,
+                                "requestorName": "FUN MOOC",
+                                "cardHolderInfo": null,
+                                "dataOnlyStatus": null,
+                                "dataOnlyDecision": null,
+                                "dataOnlyScore": null,
+                                "_type": "V4/Charge/Authenticate/AuthenticationResultExtensionThreedsV2"
+                            },
+                            "reason": {
+                                "code": null,
+                                "message": null,
+                                "_type": "V4/Charge/Authenticate/AuthenticationResultReason"
+                            },
+                            "_type": "V4/Charge/Authenticate/AuthenticationResult"
+                        },
+                        "_type": "V4/AuthenticationResponseData"
+                    },
+                    "installmentNumber": null,
+                    "installmentCode": null,
+                    "markAuthorizationResponse": {
+                        "amount": 0,
+                        "currency": "EUR",
+                        "authorizationDate": "2024-06-27T14:52:46+00:00",
+                        "authorizationNumber": "3fefad",
+                        "authorizationResult": "0",
+                        "_type": "V4/PaymentMethod/Details/Cards/MarkAuthorizationResponse"
+                    },
+                    "cardHolderName": null,
+                    "cardHolderPan": "497011XXXXXX1003",
+                    "cardHolderExpiryMonth": 12,
+                    "cardHolderExpiryYear": 2025,
+                    "identityDocumentNumber": null,
+                    "identityDocumentType": null,
+                    "initialIssuerTransactionIdentifier": "1873524233492261",
+                    "productCategory": "DEBIT",
+                    "nature": "CONSUMER_CARD",
+                    "_type": "V4/PaymentMethod/Details/CardDetails"
+                },
+                "paymentMethodDetails": {
+                    "id": "497011XXXXXX1003",
+                    "paymentSource": "EC",
+                    "manualValidation": "NO",
+                    "expectedCaptureDate": null,
+                    "effectiveBrand": "VISA",
+                    "expiryMonth": 12,
+                    "expiryYear": 2025,
+                    "country": "FR",
+                    "issuerCode": 17807,
+                    "issuerName": "Banque Populaire Occitane",
+                    "effectiveProductCode": null,
+                    "legacyTransId": "9g1h4e",
+                    "legacyTransDate": "2024-06-27T14:52:46+00:00",
+                    "paymentMethodSource": "TOKEN",
+                    "authorizationResponse": {
+                        "amount": null,
+                        "currency": null,
+                        "authorizationDate": null,
+                        "authorizationNumber": null,
+                        "authorizationResult": null,
+                        "authorizationMode": "MARK",
+                        "_type": "V4/PaymentMethod/Details/Cards/CardAuthorizationResponse"
+                    },
+                    "captureResponse": {
+                        "refundAmount": null,
+                        "refundCurrency": null,
+                        "captureDate": null,
+                        "captureFileNumber": null,
+                        "effectiveRefundAmount": null,
+                        "effectiveRefundCurrency": null,
+                        "_type": "V4/PaymentMethod/Details/Cards/CardCaptureResponse"
+                    },
+                    "authenticationResponse": {
+                        "id": "3f198c4d-de23-49bc-9b9e-35a94cbc89c4",
+                        "operationSessionId": null,
+                        "protocol": {
+                            "name": "THREEDS",
+                            "version": "2.1.0",
+                            "network": "VISA",
+                            "challengePreference": "CHALLENGE_MANDATED",
+                            "simulation": true,
+                            "_type": "V4/Charge/Authenticate/Protocol"
+                        },
+                        "value": {
+                            "authenticationType": "CHALLENGE",
+                            "authenticationId": {
+                                "authenticationIdType": "dsTransId",
+                                "value": "5dab1964-ad95-4715-86c0-32557e6f5b46",
+                                "_type": "V4/Charge/Authenticate/AuthenticationId"
+                            },
+                            "authenticationValue": {
+                                "authenticationValueType": "CAVV",
+                                "value": "t**************************=",
+                                "_type": "V4/Charge/Authenticate/AuthenticationValue"
+                            },
+                            "status": "SUCCESS",
+                            "commerceIndicator": "05",
+                            "extension": {
+                                "authenticationType": "THREEDS_V2",
+                                "challengeCancelationIndicator": null,
+                                "cbScore": null,
+                                "cbAvalgo": null,
+                                "cbExemption": null,
+                                "paymentUseCase": null,
+                                "threeDSServerTransID": "3f198c4d-de23-49bc-9b9e-35a94cbc89c4",
+                                "dsTransID": "5dab1964-ad95-4715-86c0-32557e6f5b46",
+                                "acsTransID": "d72df9dc-893d-4984-98ac-500a842227fd",
+                                "sdkTransID": null,
+                                "transStatusReason": null,
+                                "requestedExemption": null,
+                                "requestorName": "FUN MOOC",
+                                "cardHolderInfo": null,
+                                "dataOnlyStatus": null,
+                                "dataOnlyDecision": null,
+                                "dataOnlyScore": null,
+                                "_type": "V4/Charge/Authenticate/AuthenticationResultExtensionThreedsV2"
+                            },
+                            "reason": {
+                                "code": null,
+                                "message": null,
+                                "_type": "V4/Charge/Authenticate/AuthenticationResultReason"
+                            },
+                            "_type": "V4/Charge/Authenticate/AuthenticationResult"
+                        },
+                        "_type": "V4/AuthenticationResponseData"
+                    },
+                    "installmentNumber": null,
+                    "installmentCode": null,
+                    "markAuthorizationResponse": {
+                        "amount": 0,
+                        "currency": "EUR",
+                        "authorizationDate": "2024-06-27T14:52:46+00:00",
+                        "authorizationNumber": "3fefad",
+                        "authorizationResult": "0",
+                        "_type": "V4/PaymentMethod/Details/Cards/MarkAuthorizationResponse"
+                    },
+                    "cardHolderName": null,
+                    "cardHolderPan": "497011XXXXXX1003",
+                    "cardHolderExpiryMonth": 12,
+                    "cardHolderExpiryYear": 2025,
+                    "identityDocumentNumber": null,
+                    "identityDocumentType": null,
+                    "initialIssuerTransactionIdentifier": "1873524233492261",
+                    "_type": "V4/PaymentMethod/Details/PaymentMethodDetails"
+                },
+                "acquirerDetails": null,
+                "fraudManagement": {
+                    "riskControl": [],
+                    "riskAnalysis": [],
+                    "riskAssessments": null,
+                    "_type": "V4/PaymentMethod/Details/FraudManagement"
+                },
+                "subscriptionDetails": {
+                    "subscriptionId": null,
+                    "_type": "V4/PaymentMethod/Details/SubscriptionDetails"
+                },
+                "parentTransactionUuid": null,
+                "mid": "2357367",
+                "sequenceNumber": 1,
+                "taxAmount": null,
+                "preTaxAmount": null,
+                "taxRate": null,
+                "externalTransactionId": null,
+                "dcc": null,
+                "nsu": null,
+                "tid": "001",
+                "acquirerNetwork": "CB",
+                "taxRefundAmount": null,
+                "userInfo": "JS Client",
+                "paymentMethodTokenPreviouslyRegistered": null,
+                "occurrenceType": "RECURRENT_INITIAL",
+                "archivalReferenceId": "L1799g1h4e01",
+                "useCase": null,
+                "wallet": null,
+                "_type": "V4/TransactionDetails"
+            },
+            "_type": "V4/PaymentTransaction"
+        }
+    ],
+    "subMerchantDetails": null,
+    "_type": "V4/Payment"
+}

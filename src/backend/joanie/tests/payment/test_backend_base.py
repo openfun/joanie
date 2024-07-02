@@ -11,7 +11,7 @@ from joanie.core import enums
 from joanie.core.factories import OrderFactory, UserAddressFactory, UserFactory
 from joanie.core.models import Address
 from joanie.payment.backends.base import BasePaymentBackend
-from joanie.payment.factories import BillingAddressDictFactory
+from joanie.payment.factories import BillingAddressDictFactory, CreditCardFactory
 from joanie.payment.models import Transaction
 from joanie.tests.base import ActivityLogMixingTestCase
 from joanie.tests.payment.base_payment import BasePaymentTestCase
@@ -38,14 +38,14 @@ class TestBasePaymentBackend(BasePaymentBackend):
         pass
 
     def create_one_click_payment(
-        self, order, billing_address, credit_card_token, installment=None
+        self, order, installment, credit_card_token, billing_address
     ):
         pass
 
-    def create_payment(self, order, billing_address, installment=None):
+    def create_payment(self, order, installment, billing_address):
         pass
 
-    def create_zero_click_payment(self, order, credit_card_token, installment=None):
+    def create_zero_click_payment(self, order, installment, credit_card_token):
         pass
 
     def delete_credit_card(self, credit_card):
@@ -83,7 +83,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         backend = BasePaymentBackend()
 
         with self.assertRaises(NotImplementedError) as context:
-            backend.create_payment(None, None)
+            backend.create_payment(None, None, None)
 
         self.assertEqual(
             str(context.exception),
@@ -95,7 +95,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         backend = BasePaymentBackend()
 
         with self.assertRaises(NotImplementedError) as context:
-            backend.create_one_click_payment(None, None, None)
+            backend.create_one_click_payment(None, None, None, None)
 
         self.assertEqual(
             str(context.exception),
@@ -172,12 +172,27 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         """
         backend = TestBasePaymentBackend()
         owner = UserFactory(email="sam@fun-test.fr", language="en-us")
-        order = OrderFactory(owner=owner, state=enums.ORDER_STATE_SUBMITTED)
+        order = OrderFactory(
+            owner=owner,
+            payment_schedule=[
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+        CreditCardFactory(
+            owner=owner, is_main=True, initial_issuer_transaction_identifier="1"
+        )
         billing_address = BillingAddressDictFactory()
+        order.init_flow(billing_address=billing_address)
         payment = {
             "id": "pay_0",
             "amount": order.total,
             "billing_address": billing_address,
+            "installment_id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
         }
 
         backend.call_do_on_payment_success(order, payment)
@@ -203,8 +218,8 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         self.assertIsNotNone(order.main_invoice)
         self.assertEqual(order.main_invoice.children.count(), 1)
 
-        # - Order has been validated
-        self.assertEqual(order.state, "validated")
+        # - Order has been completed
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
         # - Email has been sent
         self._check_order_validated_email_sent(
@@ -224,9 +239,11 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         """
         backend = TestBasePaymentBackend()
         owner = UserFactory(email="sam@fun-test.fr", language="en-us")
+        CreditCardFactory(
+            owner=owner, is_main=True, initial_issuer_transaction_identifier="1"
+        )
         order = OrderFactory(
             owner=owner,
-            state=enums.ORDER_STATE_PENDING,
             payment_schedule=[
                 {
                     "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
@@ -261,6 +278,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
             "billing_address": billing_address,
             "installment_id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
         }
+        order.init_flow(billing_address=billing_address)
 
         backend.call_do_on_payment_success(order, payment)
 
@@ -335,7 +353,20 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         """
         backend = TestBasePaymentBackend()
         owner = UserFactory(email="sam@fun-test.fr", language="en-us")
-        order = OrderFactory(owner=owner, state=enums.ORDER_STATE_SUBMITTED)
+        order = OrderFactory(
+            owner=owner,
+            payment_schedule=[
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+        CreditCardFactory(
+            owner=owner, is_main=True, initial_issuer_transaction_identifier="1"
+        )
         billing_address = UserAddressFactory(owner=owner, is_reusable=True)
         payment = {
             "id": "pay_0",
@@ -348,7 +379,9 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
                 "last_name": billing_address.last_name,
                 "postcode": billing_address.postcode,
             },
+            "installment_id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
         }
+        order.init_flow(billing_address=payment.get("billing_address"))
 
         # Only one address should exist
         self.assertEqual(Address.objects.count(), 1)
@@ -372,8 +405,8 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         invoice = order.main_invoice
         self.assertEqual(invoice.recipient_address, billing_address)
 
-        # - Order has been validated
-        self.assertEqual(order.state, "validated")
+        # - Order has been completed
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
         # - Email has been sent
         self._check_order_validated_email_sent(
@@ -387,12 +420,24 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         order.
         """
         backend = TestBasePaymentBackend()
-        order = OrderFactory(state=enums.ORDER_STATE_SUBMITTED)
+        order = OrderFactory(
+            state=enums.ORDER_STATE_PENDING,
+            payment_schedule=[
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
 
-        backend.call_do_on_payment_failure(order)
+        backend.call_do_on_payment_failure(
+            order, installment_id="d9356dd7-19a6-4695-b18e-ad93af41424a"
+        )
 
-        # - Payment has failed gracefully and changed order state to pending
-        self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
+        # - Payment has failed gracefully and changed order state to no payment
+        self.assertEqual(order.state, enums.ORDER_STATE_NO_PAYMENT)
 
         # - No email has been sent
         self.assertEqual(len(mail.outbox), 0)
@@ -408,7 +453,6 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         """
         backend = TestBasePaymentBackend()
         order = OrderFactory(
-            state=enums.ORDER_STATE_PENDING,
             payment_schedule=[
                 {
                     "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
@@ -436,6 +480,10 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
                 },
             ],
         )
+        CreditCardFactory(
+            owner=order.owner, is_main=True, initial_issuer_transaction_identifier="1"
+        )
+        order.init_flow(billing_address=BillingAddressDictFactory())
 
         backend.call_do_on_payment_failure(
             order, installment_id=order.payment_schedule[0]["id"]
@@ -487,21 +535,35 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         transaction.
         """
         backend = TestBasePaymentBackend()
-        order = OrderFactory(state=enums.ORDER_STATE_SUBMITTED)
+        order = OrderFactory(
+            payment_schedule=[
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ]
+        )
         billing_address = BillingAddressDictFactory()
+        CreditCardFactory(
+            owner=order.owner, is_main=True, initial_issuer_transaction_identifier="1"
+        )
+        order.init_flow(billing_address=billing_address)
 
         # Create payment and register it
         payment = {
             "id": "pay_0",
             "amount": order.total,
             "billing_address": billing_address,
+            "installment_id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
         }
 
         backend.call_do_on_payment_success(order, payment)
-        payment = Transaction.objects.get(reference="pay_0")
+        Transaction.objects.get(reference="pay_0")
 
-        # - Order has been validated
-        self.assertEqual(order.state, "validated")
+        # - Order has been completed
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
         # - Refund entirely the order
         backend.call_do_on_refund(
@@ -542,12 +604,27 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         """Check error is raised if send_mails fails"""
         backend = TestBasePaymentBackend()
         owner = UserFactory(email="sam@fun-test.fr", username="Samantha")
-        order = OrderFactory(owner=owner, state=enums.ORDER_STATE_SUBMITTED)
+        order = OrderFactory(
+            owner=owner,
+            payment_schedule=[
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
         billing_address = BillingAddressDictFactory()
+        CreditCardFactory(
+            owner=order.owner, is_main=True, initial_issuer_transaction_identifier="1"
+        )
+        order.init_flow(billing_address=billing_address)
         payment = {
             "id": "pay_0",
             "amount": order.total,
             "billing_address": billing_address,
+            "installment_id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
         }
 
         backend.call_do_on_payment_success(order, payment)
@@ -563,8 +640,8 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         self.assertIsNotNone(order.main_invoice)
         self.assertEqual(order.main_invoice.children.count(), 1)
 
-        # Order has been validated
-        self.assertEqual(order.state, "validated")
+        # - Order has been completed
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
         # No email has been sent
         self.assertEqual(len(mail.outbox), 0)
@@ -590,12 +667,27 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
             last_name="Smith",
             language="en-us",
         )
-        order = OrderFactory(owner=owner, state=enums.ORDER_STATE_SUBMITTED)
+        order = OrderFactory(
+            owner=owner,
+            payment_schedule=[
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+        CreditCardFactory(
+            owner=owner, is_main=True, initial_issuer_transaction_identifier="1"
+        )
         billing_address = BillingAddressDictFactory()
+        order.init_flow(billing_address=billing_address)
         payment = {
             "id": "pay_0",
             "amount": order.total,
             "billing_address": billing_address,
+            "installment_id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
         }
 
         backend.call_do_on_payment_success(order, payment)
@@ -611,8 +703,8 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         self.assertIsNotNone(order.main_invoice)
         self.assertEqual(order.main_invoice.children.count(), 1)
 
-        # - Order has been validated
-        self.assertEqual(order.state, "validated")
+        # - Order has been completed
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
         # - Email has been sent
         email_content = " ".join(mail.outbox[0].body.split())
@@ -632,12 +724,27 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
             first_name="Dave",
             last_name="Bowman",
         )
-        order = OrderFactory(owner=owner, state=enums.ORDER_STATE_SUBMITTED)
+        CreditCardFactory(
+            owner=owner, is_main=True, initial_issuer_transaction_identifier="1"
+        )
+        order = OrderFactory(
+            owner=owner,
+            payment_schedule=[
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
         billing_address = BillingAddressDictFactory()
+        order.init_flow(billing_address=billing_address)
         payment = {
             "id": "pay_0",
             "amount": order.total,
             "billing_address": billing_address,
+            "installment_id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
         }
 
         backend.call_do_on_payment_success(order, payment)
@@ -653,8 +760,8 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         self.assertIsNotNone(order.main_invoice)
         self.assertEqual(order.main_invoice.children.count(), 1)
 
-        # - Order has been validated
-        self.assertEqual(order.state, "validated")
+        # - Order has been completed
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
         # - Email has been sent
         email_content = " ".join(mail.outbox[0].body.split())

@@ -13,7 +13,7 @@ from django.conf import settings
 import requests
 from rest_framework.parsers import FormParser, JSONParser
 
-from joanie.core.models import ActivityLog, Address, Order
+from joanie.core.models import ActivityLog, Address, Order, User
 from joanie.payment import exceptions
 from joanie.payment.backends.base import BasePaymentBackend
 from joanie.payment.models import CreditCard, Invoice, Transaction
@@ -63,7 +63,7 @@ class LyraBackend(BasePaymentBackend):
         api_base_url = self.configuration["api_base_url"]
         self.api_url = api_base_url + "/api-payment/V4/"
 
-    def _get_common_payload_data(self, order, billing_address=None, installment=None):
+    def _get_common_payload_data(self, order, installment=None, billing_address=None):
         """
         Build post payload data for Lyra API
 
@@ -71,7 +71,7 @@ class LyraBackend(BasePaymentBackend):
         """
         payload = {
             "currency": settings.DEFAULT_CURRENCY,
-            "amount": int(float(installment["amount"]) * 100)
+            "amount": int(installment["amount"].sub_units)
             if installment
             else int(order.total * 100),
             "customer": {
@@ -98,7 +98,7 @@ class LyraBackend(BasePaymentBackend):
 
         if installment:
             payload["metadata"] = {
-                "installment_id": installment["id"],
+                "installment_id": str(installment["id"]),
             }
 
         return payload
@@ -214,7 +214,7 @@ class LyraBackend(BasePaymentBackend):
         """
         url = f"{self.api_url}Charge/CreateToken"
 
-        payload = self._get_common_payload_data(order, billing_address)
+        payload = self._get_common_payload_data(order, billing_address=billing_address)
         payload["formAction"] = "REGISTER"
         payload["strongAuthentication"] = "CHALLENGE_REQUESTED"
         del payload["amount"]
@@ -232,7 +232,7 @@ class LyraBackend(BasePaymentBackend):
             return self._tokenize_card_for_user(user)
         return self._tokenize_card_for_order(order, billing_address)
 
-    def create_payment(self, order, billing_address, installment=None):
+    def create_payment(self, order, installment, billing_address):
         """
         Create a payment object for a given order
 
@@ -240,15 +240,13 @@ class LyraBackend(BasePaymentBackend):
         https://docs.lyra.com/fr/rest/V4.0/api/playground/Charge/CreatePayment
         """
         url = f"{self.api_url}Charge/CreatePayment"
-        payload = self._get_common_payload_data(
-            order, billing_address, installment=installment
-        )
-        payload["formAction"] = "ASK_REGISTER_PAY"
+        payload = self._get_common_payload_data(order, installment, billing_address)
+        payload["formAction"] = "REGISTER_PAY"
 
         return self._get_payment_info(url, payload)
 
     def create_one_click_payment(
-        self, order, billing_address, credit_card_token, installment=None
+        self, order, installment, credit_card_token, billing_address
     ):
         """
         Create a one click payment object for a given order
@@ -257,15 +255,13 @@ class LyraBackend(BasePaymentBackend):
         https://docs.lyra.com/fr/rest/V4.0/api/playground/Charge/CreatePayment
         """
         url = f"{self.api_url}Charge/CreatePayment"
-        payload = self._get_common_payload_data(
-            order, billing_address, installment=installment
-        )
+        payload = self._get_common_payload_data(order, installment, billing_address)
         payload["formAction"] = "PAYMENT"
         payload["paymentMethodToken"] = credit_card_token
 
         return self._get_payment_info(url, payload)
 
-    def create_zero_click_payment(self, order, credit_card_token, installment=None):
+    def create_zero_click_payment(self, order, installment, credit_card_token):
         """
         Create a zero click payment object for a given order
 
@@ -274,7 +270,7 @@ class LyraBackend(BasePaymentBackend):
         """
 
         url = f"{self.api_url}Charge/CreatePayment"
-        payload = self._get_common_payload_data(order, installment=installment)
+        payload = self._get_common_payload_data(order, installment)
         payload["formAction"] = "SILENT"
         payload["paymentMethodToken"] = credit_card_token
 
@@ -298,6 +294,7 @@ class LyraBackend(BasePaymentBackend):
 
         payment = {
             "id": answer["transactions"][0]["uuid"],
+            "installment_id": installment["id"],
             "amount": D(f"{answer['orderDetails']['orderTotalAmount'] / 100:.2f}"),
             "billing_address": {
                 "address": billing_details["address"],
@@ -308,9 +305,6 @@ class LyraBackend(BasePaymentBackend):
                 "postcode": billing_details["zipCode"],
             },
         }
-
-        if installment:
-            payment["installment_id"] = installment["id"]
 
         self._do_on_payment_success(
             order=order,
@@ -348,6 +342,9 @@ class LyraBackend(BasePaymentBackend):
                 "Received notification for payment %s without order ID.", transaction_id
             )
             raise exceptions.ParseNotificationFailed() from error
+
+        if order_id is None:
+            return self._handle_notification_tokenization_card_for_user(answer)
 
         try:
             order = Order.objects.get(id=order_id)
@@ -422,7 +419,48 @@ class LyraBackend(BasePaymentBackend):
                 payment=payment,
             )
         else:
-            self._do_on_payment_failure(order, installment_id=installment_id)
+            self._do_on_payment_failure(order, installment_id)
+
+        return None
+
+    def _handle_notification_tokenization_card_for_user(self, answer):
+        """
+        When the user has tokenized a card outside an order process, we have to handle it
+        separately as we have no order information.
+        """
+
+        if answer["orderStatus"] != "PAID":
+            # Tokenization has failed, nothing to do.
+            return
+
+        try:
+            user = User.objects.get(id=answer["customer"]["reference"])
+        except User.DoesNotExist as error:
+            message = (
+                "Received notification to tokenize a card for a non-existing user:"
+                f" {answer['customer']['reference']}"
+            )
+            logger.error(message)
+            raise exceptions.TokenizationCardFailed(message) from error
+
+        card_token = answer["transactions"][0]["paymentMethodToken"]
+        transaction_details = answer["transactions"][0]["transactionDetails"]
+        card_details = transaction_details["cardDetails"]
+        card_pan = card_details["pan"]
+        initial_issuer_transaction_identifier = card_details[
+            "initialIssuerTransactionIdentifier"
+        ]
+
+        CreditCard.objects.create(
+            brand=card_details["effectiveBrand"],
+            expiration_month=card_details["expiryMonth"],
+            expiration_year=card_details["expiryYear"],
+            last_numbers=card_pan[-4:],  # last 4 digits
+            owner=user,
+            token=card_token,
+            initial_issuer_transaction_identifier=initial_issuer_transaction_identifier,
+            payment_provider=self.name,
+        )
 
     def delete_credit_card(self, credit_card):
         """Delete a credit card from Lyra"""
