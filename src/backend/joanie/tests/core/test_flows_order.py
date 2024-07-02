@@ -1371,7 +1371,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         for state in [
             enums.ORDER_STATE_ASSIGNED,
             enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
-            enums.ORDER_STATE_TO_SIGN,
+            enums.ORDER_STATE_SIGNING,
         ]:
             with self.subTest(state=state):
                 order = factories.OrderFactory(state=state)

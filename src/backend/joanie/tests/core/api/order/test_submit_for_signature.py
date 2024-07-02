@@ -11,6 +11,7 @@ from django.utils import timezone as django_timezone
 from joanie.core import enums, factories
 from joanie.core.models import CourseState
 from joanie.payment.factories import BillingAddressDictFactory
+from joanie.signature.backends import get_signature_backend
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -173,7 +174,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         self.assertIsNotNone(order.contract)
         self.assertIsNotNone(order.contract.context)
         self.assertIsNotNone(order.contract.definition_checksum)
-        self.assertIsNotNone(order.contract.student_signed_on)
+        self.assertIsNone(order.contract.student_signed_on)
         self.assertIsNotNone(order.contract.submitted_for_signature_on)
 
         content = response.content.decode("utf-8")
@@ -181,6 +182,13 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         invitation_url = content_json["invitation_link"]
 
         self.assertIn(expected_substring_invite_url, invitation_url)
+
+        backend = get_signature_backend()
+        backend.confirm_student_signature(
+            reference=order.contract.signature_backend_reference
+        )
+        order.refresh_from_db()
+        self.assertIsNotNone(order.contract.student_signed_on)
 
     @override_settings(
         JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS=60 * 60 * 24 * 15,

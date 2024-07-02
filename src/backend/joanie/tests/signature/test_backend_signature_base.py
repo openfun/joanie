@@ -72,12 +72,7 @@ class BaseSignatureBackendTestCase(TestCase):
         self.assertEqual(consent_page_key_setting, "fake_cop_id")
 
     @override_settings(
-        JOANIE_SIGNATURE_BACKEND=random.choice(
-            [
-                "joanie.signature.backends.base.BaseSignatureBackend",
-                "joanie.signature.backends.dummy.DummySignatureBackend",
-            ]
-        )
+        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend"
     )
     def test_backend_signature_base_backend_confirm_student_signature(self):
         """
@@ -87,24 +82,17 @@ class BaseSignatureBackendTestCase(TestCase):
 
         Furthermore, it should update the order state.
         """
-        user = factories.UserFactory()
-        order = factories.OrderFactory(
-            owner=user,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+        order = factories.OrderGeneratorFactory(
+            state=enums.ORDER_STATE_TO_SIGN,
             product__price=0,
         )
-        contract = factories.ContractFactory(
-            order=order,
-            definition=order.product.contract_definition,
-            signature_backend_reference="wfl_fake_dummy_id",
-            definition_checksum="fake_test_file_hash",
-            context="content",
-            submitted_for_signature_on=django_timezone.now(),
-        )
-        order.init_flow()
+        contract = order.contract
         backend = get_signature_backend()
 
-        backend.confirm_student_signature(reference="wfl_fake_dummy_id")
+        order.submit_for_signature(order.owner)
+        backend.confirm_student_signature(
+            reference=contract.signature_backend_reference
+        )
 
         contract.refresh_from_db()
         self.assertIsNotNone(contract.submitted_for_signature_on)
@@ -154,12 +142,7 @@ class BaseSignatureBackendTestCase(TestCase):
         )
 
     @override_settings(
-        JOANIE_SIGNATURE_BACKEND=random.choice(
-            [
-                "joanie.signature.backends.base.BaseSignatureBackend",
-                "joanie.signature.backends.dummy.DummySignatureBackend",
-            ]
-        )
+        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend"
     )
     def test_backend_signature_base_backend_reset_contract(self):
         """
@@ -167,22 +150,14 @@ class BaseSignatureBackendTestCase(TestCase):
         for the fields : 'context', 'definition_checksum', 'submitted_for_signature_on', and
         'signature_backend_reference'.
         """
-        user = factories.UserFactory()
-        order = factories.OrderFactory(
-            owner=user,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+        order = factories.OrderGeneratorFactory(
+            state=enums.ORDER_STATE_SIGNING,
+            product__price=0,
         )
-        contract = factories.ContractFactory(
-            order=order,
-            definition=order.product.contract_definition,
-            signature_backend_reference="wfl_fake_dummy_id",
-            definition_checksum="fake_test_file_hash",
-            context="content",
-            submitted_for_signature_on=django_timezone.now(),
-        )
+        contract = order.contract
         backend = get_signature_backend()
 
-        backend.reset_contract(reference="wfl_fake_dummy_id")
+        backend.reset_contract(reference=contract.signature_backend_reference)
 
         contract.refresh_from_db()
         self.assertIsNone(contract.student_signed_on)
@@ -190,3 +165,5 @@ class BaseSignatureBackendTestCase(TestCase):
         self.assertIsNone(contract.context)
         self.assertIsNone(contract.definition_checksum)
         self.assertIsNone(contract.signature_backend_reference)
+        order.refresh_from_db()
+        self.assertEqual(order.state, enums.ORDER_STATE_TO_SIGN)
