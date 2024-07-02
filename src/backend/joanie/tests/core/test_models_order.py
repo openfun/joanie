@@ -22,6 +22,7 @@ from joanie.payment.factories import (
     CreditCardFactory,
     InvoiceFactory,
 )
+from joanie.signature.backends import get_signature_backend
 from joanie.tests.base import BaseLogMixinTestCase
 
 
@@ -586,7 +587,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
 
         order.contract.refresh_from_db()
         self.assertIsNotNone(order.contract)
-        self.assertIsNotNone(order.contract.student_signed_on)
+        self.assertIsNone(order.contract.student_signed_on)
         self.assertIsNotNone(order.contract.submitted_for_signature_on)
         self.assertIsNotNone(order.contract.context)
         self.assertIsNotNone(order.contract.definition)
@@ -599,6 +600,13 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         organization_logo = context_with_images["organization"]["logo"]
         self.assertIn("data:image/png;base64,", organization_logo)
         self.assertNotIn("logo_id", context_with_images["organization"])
+
+        backend = get_signature_backend()
+        backend.confirm_student_signature(
+            reference=order.contract.signature_backend_reference
+        )
+        order.refresh_from_db()
+        self.assertIsNotNone(order.contract.student_signed_on)
 
     def test_models_order_submit_for_signature_existing_contract_with_same_context_and_still_valid(
         self,
@@ -665,7 +673,14 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         self.assertIn("wfl_fake_dummy_", contract.signature_backend_reference)
         self.assertIn("fake_dummy_file_hash", contract.definition_checksum)
         self.assertIsNotNone(contract.submitted_for_signature_on)
-        self.assertIsNotNone(contract.student_signed_on)
+        self.assertIsNone(contract.student_signed_on)
+
+        backend = get_signature_backend()
+        backend.confirm_student_signature(
+            reference=order.contract.signature_backend_reference
+        )
+        order.refresh_from_db()
+        self.assertIsNotNone(order.contract.student_signed_on)
 
     @override_settings(
         JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS=60 * 60 * 24 * 15,
@@ -720,7 +735,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         self.assertIn("fake_dummy_file_hash", contract.definition_checksum)
         self.assertNotEqual("wfl_fake_dummy_id_1", contract.signature_backend_reference)
         self.assertIsNotNone(contract.submitted_for_signature_on)
-        self.assertIsNotNone(contract.student_signed_on)
+        self.assertIsNone(contract.student_signed_on)
         self.assertLogsEquals(
             logger.records,
             [
@@ -737,12 +752,6 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
                 (
                     "INFO",
                     f"Document signature refused for the contract '{contract.id}'",
-                ),
-                ("INFO", f"Student signed the contract '{contract.id}'"),
-                (
-                    "INFO",
-                    f"Mail for '{contract.signature_backend_reference}' "
-                    f"is sent from Dummy Signature Backend",
                 ),
             ],
         )
