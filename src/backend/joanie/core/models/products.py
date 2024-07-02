@@ -40,6 +40,7 @@ from joanie.core.models.courses import (
 )
 from joanie.core.utils import contract_definition as contract_definition_utility
 from joanie.core.utils import issuers, webhooks
+from joanie.core.utils.contract_definition import embed_images_in_context
 from joanie.core.utils.payment_schedule import generate as generate_payment_schedule
 from joanie.signature.backends import get_signature_backend
 
@@ -992,8 +993,9 @@ class Order(BaseModel):
             user=user,
             order=self.contract.order,
         )
+        context_with_images = embed_images_in_context(context)
         file_bytes = issuers.generate_document(
-            name=contract_definition.name, context=context
+            name=contract_definition.name, context=context_with_images
         )
 
         was_already_submitted = (
