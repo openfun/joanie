@@ -12,6 +12,7 @@ from joanie.core import models
 from joanie.core.utils import contract_definition as contract_definition_utility
 from joanie.core.utils import issuers
 
+from ...core.models import Contract
 from .base import BaseSignatureBackend
 
 logger = getLogger(__name__)
@@ -39,10 +40,20 @@ class DummySignatureBackend(BaseSignatureBackend):
 
     def get_signature_invitation_link(self, recipient_email: str, reference_ids: list):
         """
-        Dummy method that prepares an invitation link.
+        Dummy method that prepares an invitation link. The invitation link contains
+        the contract reference and the targeted event type. Those information can be
+        used by API consumers to manually send the notification event
+        to confirm the signature.
         """
-
-        return f"https://dummysignaturebackend.fr/?requestToken={reference_ids[0]}#requestId=req"
+        reference_id = reference_ids[0]
+        contract = Contract.objects.get(signature_backend_reference=reference_id)
+        event_target = (
+            "finished" if contract.student_signed_on is not None else "signed"
+        )
+        return (
+            f"https://dummysignaturebackend.fr/?reference={reference_id}"
+            f"&eventTarget={event_target}"
+        )
 
     def delete_signing_procedure(self, reference_id: str):
         """
@@ -61,8 +72,8 @@ class DummySignatureBackend(BaseSignatureBackend):
         When the event type is "finished", it updates the field of 'organization_signed_on' of the
         contract with a timestamp.
         """
-        event_type = request.get("event_type")
-        reference_id = request.get("reference")
+        event_type = request.data.get("event_type")
+        reference_id = request.data.get("reference")
 
         if event_type == "signed":
             self.confirm_student_signature(reference_id)
