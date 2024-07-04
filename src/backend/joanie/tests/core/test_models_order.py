@@ -594,7 +594,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         self.assertIsNotNone(order.contract.signature_backend_reference)
         self.assertIsNotNone(order.contract.definition_checksum)
         self.assertIn(
-            "https://dummysignaturebackend.fr/?requestToken=", raw_invitation_link
+            "https://dummysignaturebackend.fr/?reference=", raw_invitation_link
         )
         context_with_images = mock_generate_document.call_args.kwargs["context"]
         organization_logo = context_with_images["organization"]["logo"]
@@ -645,7 +645,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             contract.signature_backend_reference,
             "wfl_fake_dummy_id_1",
         )
-        self.assertIn("https://dummysignaturebackend.fr/?requestToken=", invitation_url)
+        self.assertIn("https://dummysignaturebackend.fr/?reference=", invitation_url)
 
     def test_models_order_submit_for_signature_with_contract_context_has_changed_and_still_valid(
         self,
@@ -669,7 +669,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         invitation_url = order.submit_for_signature(user=order.owner)
 
         contract.refresh_from_db()
-        self.assertIn("https://dummysignaturebackend.fr/?requestToken=", invitation_url)
+        self.assertIn("https://dummysignaturebackend.fr/?reference=", invitation_url)
         self.assertIn("wfl_fake_dummy_", contract.signature_backend_reference)
         self.assertIn("fake_dummy_file_hash", contract.definition_checksum)
         self.assertIsNotNone(contract.submitted_for_signature_on)
@@ -731,7 +731,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         self.assertEqual(
             contract.context, json.loads(DjangoJSONEncoder().encode(context))
         )
-        self.assertIn("https://dummysignaturebackend.fr/?requestToken=", invitation_url)
+        self.assertIn("https://dummysignaturebackend.fr/?reference=", invitation_url)
         self.assertIn("fake_dummy_file_hash", contract.definition_checksum)
         self.assertNotEqual("wfl_fake_dummy_id_1", contract.signature_backend_reference)
         self.assertIsNotNone(contract.submitted_for_signature_on)
