@@ -107,6 +107,7 @@ export enum OrderStatesEnum {
   ORDER_STATE_ASSIGNED = "assigned", // order has been assigned to an organization
   ORDER_STATE_TO_SAVE_PAYMENT_METHOD = "to_save_payment_method", // order needs a payment method
   ORDER_STATE_TO_SIGN = "to_sign", // order needs a contract signature
+  ORDER_STATE_SIGNING = "signing", // order is pending for contract signature validation
   ORDER_STATE_PENDING = "pending", // payment has failed but can be retried
   ORDER_STATE_CANCELED = "canceled", // has been canceled
   ORDER_STATE_PENDING_PAYMENT = "pending_payment", // payment is pending
