@@ -100,7 +100,7 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertIn(
-            "https://dummysignaturebackend.fr/?requestToken=",
+            "https://dummysignaturebackend.fr/?reference=",
             content["invitation_link"],
         )
         self.assertCountEqual(
@@ -154,7 +154,7 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertIn(
-            "https://dummysignaturebackend.fr/?requestToken=",
+            "https://dummysignaturebackend.fr/?reference=",
             content["invitation_link"],
         )
 
@@ -306,7 +306,7 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertIn(
-            "https://dummysignaturebackend.fr/?requestToken=",
+            "https://dummysignaturebackend.fr/?reference=",
             content["invitation_link"],
         )
 
@@ -368,7 +368,7 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertIn(
-            "https://dummysignaturebackend.fr/?requestToken=",
+            "https://dummysignaturebackend.fr/?reference=",
             content["invitation_link"],
         )
 

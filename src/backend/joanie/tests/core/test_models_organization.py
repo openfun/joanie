@@ -418,7 +418,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         (invitation_url, contract_ids) = organization.contracts_signature_link(
             user=user
         )
-        self.assertIn("https://dummysignaturebackend.fr/?requestToken=", invitation_url)
+        self.assertIn("https://dummysignaturebackend.fr/?reference=", invitation_url)
         contracts_to_sign_ids = [contract.id for contract in contracts]
         self.assertCountEqual(contracts_to_sign_ids, contract_ids)
 
@@ -453,7 +453,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         (invitation_url, contract_ids) = organization.contracts_signature_link(
             user=user, contract_ids=contracts_to_sign_ids
         )
-        self.assertIn("https://dummysignaturebackend.fr/?requestToken=", invitation_url)
+        self.assertIn("https://dummysignaturebackend.fr/?reference=", invitation_url)
         self.assertCountEqual(contract_ids, contracts_to_sign_ids)
 
     def test_models_organization_contracts_signature_link_empty(self):
