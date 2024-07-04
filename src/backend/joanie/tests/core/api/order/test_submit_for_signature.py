@@ -160,9 +160,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         )
         order.init_flow(billing_address=BillingAddressDictFactory())
         token = self.get_user_token(user.username)
-        expected_substring_invite_url = (
-            "https://dummysignaturebackend.fr/?requestToken="
-        )
+        expected_substring_invite_url = "https://dummysignaturebackend.fr/?reference="
 
         response = self.client.post(
             f"/api/v1.0/orders/{order.id}/submit_for_signature/",
@@ -214,9 +212,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         )
         contract = order.contract
         token = self.get_user_token(order.owner.username)
-        expected_substring_invite_url = (
-            "https://dummysignaturebackend.fr/?requestToken="
-        )
+        expected_substring_invite_url = "https://dummysignaturebackend.fr/?reference="
 
         response = self.client.post(
             f"/api/v1.0/orders/{order.id}/submit_for_signature/",
@@ -258,9 +254,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         contract = order.contract
         token = self.get_user_token(order.owner.username)
         order.contract.definition.body = "a new content"
-        expected_substring_invite_url = (
-            "https://dummysignaturebackend.fr/?requestToken="
-        )
+        expected_substring_invite_url = "https://dummysignaturebackend.fr/?reference="
 
         response = self.client.post(
             f"/api/v1.0/orders/{order.id}/submit_for_signature/",
