@@ -240,6 +240,11 @@ export const orderStatesMessages = defineMessages<OrderStatesEnum>({
     defaultMessage: "To sign",
     description: "Text for to sign order state",
   },
+  signing: {
+    id: "components.templates.orders.view.orderStatesMessages.signing",
+    defaultMessage: "Signing",
+    description: "Text for signing order state",
+  },
   pending: {
     id: "components.templates.orders.view.orderStatesMessages.pending",
     defaultMessage: "Pending",
