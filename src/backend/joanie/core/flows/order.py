@@ -49,9 +49,13 @@ class OrderFlow:
     def _can_be_state_to_save_payment_method(self):
         """
         An order state can be set to_save_payment_method if the order is not free
-        and has no payment method.
+        has no payment method and no contract to sign.
         """
-        return not self.instance.is_free and not self.instance.has_payment_method
+        return (
+            not self.instance.is_free
+            and not self.instance.has_payment_method
+            and not self.instance.has_unsigned_contract
+        )
 
     @state.transition(
         source=[
@@ -71,7 +75,10 @@ class OrderFlow:
         """
         An order state can be set to to_sign if the order has an unsigned contract.
         """
-        return self.instance.has_unsigned_contract
+        return (
+            self.instance.has_unsigned_contract
+            and not self.instance.has_submitted_contract
+        )
 
     @state.transition(
         source=[enums.ORDER_STATE_ASSIGNED, enums.ORDER_STATE_SIGNING],
