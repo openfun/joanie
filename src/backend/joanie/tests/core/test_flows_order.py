@@ -1048,8 +1048,8 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
 
     def test_flows_order_complete_first_paid(self):
         """
-        Test that the complete transition sets pending_payment state
-        when installments are left to be paid
+        Test that the pending_payment transition failed when the first installment
+        is not paid.
         """
         order = factories.OrderFactory(
             state=enums.ORDER_STATE_PENDING,
@@ -1080,6 +1080,42 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         order.flow.pending_payment()
 
         self.assertEqual(order.state, enums.ORDER_STATE_PENDING_PAYMENT)
+
+    def test_flows_order_pending_payment_failed_with_unpaid_first_installment(self):
+        """
+        Test that the complete transition sets pending_payment state
+        when installments are left to be paid
+        """
+        order = factories.OrderFactory(
+            state=enums.ORDER_STATE_PENDING,
+            payment_schedule=[
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-03-17T00:00:00+00:00",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "199.99",
+                    "due_date": "2024-04-17T00:00:00+00:00",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        with self.assertRaises(TransitionNotAllowed):
+            order.flow.pending_payment()
+
+        self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
 
     def test_flows_order_complete_first_payment_failed(self):
         """
@@ -1377,3 +1413,19 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
                 order = factories.OrderFactory(state=state)
                 order.flow.pending()
                 self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
+
+    def test_flows_order_update(self):
+        """
+        Test that updating flow is transitioning as expected for all states.
+        """
+        for state, _ in enums.ORDER_STATE_CHOICES:
+            with self.subTest(state=state):
+                order = factories.OrderGeneratorFactory(state=state)
+                order.flow.update()
+
+                if state == enums.ORDER_STATE_ASSIGNED:
+                    self.assertEqual(
+                        order.state, enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD
+                    )
+                else:
+                    self.assertEqual(order.state, state)
