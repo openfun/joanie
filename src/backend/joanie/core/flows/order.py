@@ -166,12 +166,16 @@ class OrderFlow:
 
     def _can_be_state_pending_payment(self):
         """
-        An order state can be set to pending_payment if no installment
-        is refused.
+        An order state can be set to pending_payment if the first installment
+        is paid and all others are not refused.
         """
-        return not any(
-            installment.get("state") in [enums.PAYMENT_STATE_REFUSED]
-            for installment in self.instance.payment_schedule
+
+        [first_installment_state, *other_installments_states] = [
+            installment.get("state") for installment in self.instance.payment_schedule
+        ]
+
+        return first_installment_state == enums.PAYMENT_STATE_PAID and not any(
+            state == enums.PAYMENT_STATE_REFUSED for state in other_installments_states
         )
 
     @state.transition(
