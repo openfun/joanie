@@ -601,10 +601,21 @@ class Order(BaseModel):
     @property
     def has_contract(self):
         """
-        Return True if the order has an unsigned contract.
+        Return True if the order has a contract.
         """
         try:
             return self.contract is not None  # pylint: disable=no-member
+        except Contract.DoesNotExist:
+            return False
+
+    @property
+    def has_submitted_contract(self):
+        """
+        Return True if the order has a submitted contract.
+        Which means a contract in the process of being signed
+        """
+        try:
+            return self.contract.submitted_for_signature_on is not None  # pylint: disable=no-member
         except Contract.DoesNotExist:
             return False
 
