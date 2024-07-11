@@ -781,10 +781,13 @@ class OrderGeneratorFactory(factory.django.DjangoModelFactory):
             )
             submitted_for_signature_on = kwargs.get(
                 "submitted_for_signature_on",
-                django_timezone.now() if not organization_signed_on else None,
+                django_timezone.now()
+                if student_signed_on and not organization_signed_on
+                else None,
             )
             definition_checksum = kwargs.get(
-                "definition_checksum", "fake_test_file_hash_1" if is_signed else None
+                "definition_checksum",
+                "fake_test_file_hash_1" if is_signed else None,
             )
             signature_backend_reference = kwargs.get(
                 "signature_backend_reference",
@@ -899,7 +902,7 @@ class OrderGeneratorFactory(factory.django.DjangoModelFactory):
             if target_state == enums.ORDER_STATE_NO_PAYMENT:
                 self.payment_schedule[0]["state"] = enums.PAYMENT_STATE_REFUSED
             if target_state == enums.ORDER_STATE_FAILED_PAYMENT:
-                self.flow.update()
+                self.state = target_state
                 self.payment_schedule[0]["state"] = enums.PAYMENT_STATE_PAID
                 self.payment_schedule[1]["state"] = enums.PAYMENT_STATE_REFUSED
             if target_state == enums.ORDER_STATE_COMPLETED:
