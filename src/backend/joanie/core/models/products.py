@@ -981,7 +981,7 @@ class Order(BaseModel):
             )
             raise ValidationError(message)
 
-        if self.state != enums.ORDER_STATE_TO_SIGN:
+        if self.state not in [enums.ORDER_STATE_TO_SIGN, enums.ORDER_STATE_SIGNING]:
             message = "Cannot submit an order that is not to sign."
             logger.error(message, extra={"context": {"order": self.to_dict()}})
             raise ValidationError(message)
