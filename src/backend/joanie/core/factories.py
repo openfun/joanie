@@ -836,7 +836,8 @@ class OrderGeneratorFactory(factory.django.DjangoModelFactory):
             self.target_courses.set(extracted)
 
     @factory.post_generation
-    # pylint: disable=unused-argument
+    # pylint: disable=unused-argument, too-many-branches
+    # ruff: noqa: PLR0912
     def billing_address(self, create, extracted, **kwargs):
         """
         Create a billing address for the order.
@@ -873,7 +874,11 @@ class OrderGeneratorFactory(factory.django.DjangoModelFactory):
                 self.init_flow(billing_address=BillingAddressDictFactory())
 
         if target_state == enums.ORDER_STATE_SIGNING:
-            self.submit_for_signature(self.owner)
+            if not self.contract.submitted_for_signature_on:
+                self.submit_for_signature(self.owner)
+            else:
+                self.state = target_state
+                self.save()
 
         if (
             not self.is_free
