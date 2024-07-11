@@ -545,7 +545,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             with self.subTest(state=state):
                 order = factories.OrderGeneratorFactory(owner=user, state=state)
 
-                if state == enums.ORDER_STATE_TO_SIGN:
+                if state in [enums.ORDER_STATE_TO_SIGN, enums.ORDER_STATE_SIGNING]:
                     order.submit_for_signature(user=user)
                 else:
                     with (
@@ -619,7 +619,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         'signature_backend_reference' of the contract.
         """
         order = factories.OrderGeneratorFactory(
-            state=enums.ORDER_STATE_TO_SIGN,
+            state=enums.ORDER_STATE_SIGNING,
             contract__signature_backend_reference="wfl_fake_dummy_id_1",
             contract__definition_checksum="fake_dummy_file_hash_1",
             contract__context="content",
@@ -658,7 +658,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         'signature_backend_reference'
         """
         order = factories.OrderGeneratorFactory(
-            state=enums.ORDER_STATE_TO_SIGN,
+            state=enums.ORDER_STATE_SIGNING,
             contract__signature_backend_reference="wfl_fake_dummy_id_123",
             contract__definition_checksum="fake_test_file_hash_1",
             contract__context="content",
@@ -697,7 +697,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         """
         user = factories.UserFactory()
         order = factories.OrderFactory(
-            state=enums.ORDER_STATE_ASSIGNED,
+            state=enums.ORDER_STATE_TO_SIGN,
             owner=user,
             product__contract_definition=factories.ContractDefinitionFactory(),
             product__target_courses=[
