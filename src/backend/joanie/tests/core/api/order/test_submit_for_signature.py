@@ -94,7 +94,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
                 )
                 content = response.json()
 
-                if state == enums.ORDER_STATE_TO_SIGN:
+                if state in [enums.ORDER_STATE_TO_SIGN, enums.ORDER_STATE_SIGNING]:
                     self.assertEqual(response.status_code, HTTPStatus.OK)
                     self.assertIsNotNone(content.get("invitation_link"))
                 elif state in [enums.ORDER_STATE_DRAFT, enums.ORDER_STATE_ASSIGNED]:
@@ -203,7 +203,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         In return we must have in the response the invitation link to sign the file.
         """
         order = factories.OrderGeneratorFactory(
-            state=enums.ORDER_STATE_TO_SIGN,
+            state=enums.ORDER_STATE_SIGNING,
             contract__submitted_for_signature_on=django_timezone.now()
             - timedelta(days=16),
             contract__signature_backend_reference="wfl_fake_dummy_id_will_be_updated",
@@ -244,7 +244,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         response in return.
         """
         order = factories.OrderGeneratorFactory(
-            state=enums.ORDER_STATE_TO_SIGN,
+            state=enums.ORDER_STATE_SIGNING,
             contract__submitted_for_signature_on=django_timezone.now()
             - timedelta(days=2),
             contract__signature_backend_reference="wfl_fake_dummy_id",
