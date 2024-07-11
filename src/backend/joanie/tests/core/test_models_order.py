@@ -1042,6 +1042,39 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         )
         self.assertFalse(order.has_payment_method)
 
+    def test_models_order_has_submitted_contract(self):
+        """
+        Check that the `has_submitted_contract` property returns True if the order has a
+        submitted contract.
+        """
+        order = factories.OrderFactory()
+        factories.ContractFactory(
+            order=order,
+            definition=factories.ContractDefinitionFactory(),
+            submitted_for_signature_on=datetime(2023, 9, 20, 8, 0, tzinfo=timezone.utc),
+        )
+        self.assertTrue(order.has_submitted_contract)
+
+    def test_models_order_has_submitted_contract_not_submitted(self):
+        """
+        Check that the `has_submitted_contract` property returns True if the order has a
+        submitted contract.
+        """
+        order = factories.OrderFactory()
+        factories.ContractFactory(
+            order=order,
+            definition=factories.ContractDefinitionFactory(),
+        )
+        self.assertFalse(order.has_submitted_contract)
+
+    def test_models_order_has_submitted_contract_no_contract(self):
+        """
+        Check that the `has_submitted_contract` property returns True if the order has a
+        submitted contract.
+        """
+        order = factories.OrderFactory()
+        self.assertFalse(order.has_submitted_contract)
+
     def test_models_order_has_unsigned_contract(self):
         """
         Check that the `has_unsigned_contract` property returns True
