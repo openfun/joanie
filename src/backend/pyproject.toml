@@ -66,7 +66,7 @@ dependencies = [
     "stockholm==0.5.7",
     "timedelta-isoformat==0.6.2.11",
     "url-normalize==1.4.3",
-    "WeasyPrint>=60.2,<62",
+    "WeasyPrint==62.3",
     "workalendar==17.0.0",
     "whitenoise==6.7.0",
     # edx_imports
