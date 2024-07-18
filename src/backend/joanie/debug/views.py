@@ -10,11 +10,13 @@ from logging import getLogger
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
+from django.utils import translation
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.base import TemplateView
 
 from factory import random
+from stockholm import Money
 
 from joanie.core import factories
 from joanie.core.enums import (
@@ -22,6 +24,7 @@ from joanie.core.enums import (
     CONTRACT_DEFINITION,
     DEGREE,
     ORDER_STATE_PENDING_PAYMENT,
+    PAYMENT_STATE_PAID,
 )
 from joanie.core.factories import (
     OrderGeneratorFactory,
@@ -33,7 +36,7 @@ from joanie.core.utils import contract_definition, issuers
 from joanie.core.utils.sentry import decrypt_data
 from joanie.payment import get_payment_backend
 from joanie.payment.enums import INVOICE_TYPE_INVOICE
-from joanie.payment.models import CreditCard, Invoice
+from joanie.payment.models import CreditCard, Invoice, Transaction
 
 logger = getLogger(__name__)
 LOGO_FALLBACK = (
@@ -77,6 +80,81 @@ class DebugMailSuccessPaymentViewTxt(DebugMailSuccessPayment):
     in text format"""
 
     template_name = "mail/text/order_validated.txt"
+
+
+class DebugMailSuccessInstallmentPaid(TemplateView):
+    """Debug View to check the layout of the success installment payment by email"""
+
+    def get_context_data(self, **kwargs):
+        """
+        Base method to prepare the document context to render in the email for the debug view.
+        Usage reminder :
+            /__debug__/mail/installment_paid_html
+        """
+        context = super().get_context_data()
+        product = ProductFactory(price=Decimal("1000.00"))
+        product.set_current_language("en-us")
+        product.title = "Test product"
+        product.set_current_language("fr-fr")
+        product.title = "Test produit"
+        product.save()
+        order = OrderGeneratorFactory(
+            product=product,
+            state=ORDER_STATE_PENDING_PAYMENT,
+            owner=UserFactory(first_name="John", last_name="Doe", language="en-us"),
+        )
+        invoice = Invoice.objects.create(
+            order=order,
+            parent=order.main_invoice,
+            total=0,
+            recipient_address=order.main_invoice.recipient_address,
+        )
+        for payment in order.payment_schedule[:2]:
+            payment["state"] = PAYMENT_STATE_PAID
+            Transaction.objects.create(
+                total=Decimal(payment["amount"].amount),
+                invoice=invoice,
+                reference=payment["id"],
+            )
+        current_language = translation.get_language()
+        with translation.override(current_language):
+            product.set_current_language(current_language)
+            context["course_title"] = product.title
+            context["payment_schedule"] = order.payment_schedule
+            context["amount"] = Money(order.payment_schedule[2]["amount"])
+            context["total_price"] = Money(order.product.price)
+            context["nth_installment_paid"] = order.get_count_installments_paid()
+            context["balance_remaining_to_be_paid"] = (
+                order.get_remaining_balance_to_pay()
+            )
+            context["next_installment_date"] = order.get_date_next_installment_to_pay()
+            context["credit_card_last_four_numbers"] = order.credit_card.last_numbers
+            context["installment_concerned_position"] = (
+                order.get_position_last_paid_installment()
+            )
+            context["fullname"] = order.owner.get_full_name() or order.owner.username
+            context["email"] = order.owner.email
+            context["dashboard_order_link"] = settings.JOANIE_DASHBOARD_ORDER_LINK
+            context["site"] = {
+                "name": settings.JOANIE_CATALOG_NAME,
+                "url": settings.JOANIE_CATALOG_BASE_URL,
+            }
+
+        return context
+
+
+class DebugMailSuccessInstallmentPaidViewHtml(DebugMailSuccessInstallmentPaid):
+    """Debug View to check the layout of the success installment payment email
+    in html format."""
+
+    template_name = "mail/html/installment_paid.html"
+
+
+class DebugMailSuccessInstallmentPaidViewTxt(DebugMailSuccessInstallmentPaid):
+    """Debug View to check the layout of the success installment payment email
+    in txt format."""
+
+    template_name = "mail/text/installment_paid.txt"
 
 
 class DebugPdfTemplateView(TemplateView):
