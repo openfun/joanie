@@ -57,7 +57,7 @@ DJANGO_EMAIL_PORT=1025
 # Richie
 JOANIE_CATALOG_BASE_URL=http://richie:8070
 JOANIE_CATALOG_NAME=richie
-JOANIE_CONTRACT_CONTEXT_PROCESSORS = 
+JOANIE_CONTRACT_CONTEXT_PROCESSORS =
 
 # Backoffice
 JOANIE_BACKOFFICE_BASE_URL="http://localhost:8072"
@@ -75,3 +75,6 @@ DEVELOPER_EMAIL="developer@example.com"
 
 # Security for remote endpoints API
 JOANIE_AUTHORIZED_API_TOKENS = "secretTokenForRemoteAPIConsumer"
+
+# Add here the dashboard link of orders for email sent when an installment is paid
+JOANIE_DASHBOARD_ORDER_LINK = "http://localhost:8070/dashboard/courses/orders/:orderId/"

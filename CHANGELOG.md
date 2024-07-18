@@ -10,6 +10,8 @@ and this project adheres to
 
 ### Added
 
+- Send an email to the user when an installment is successfully
+  paid
 - Support of payment_schedule for certificate products
 
 ### Changed

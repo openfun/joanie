@@ -3,11 +3,17 @@
 import math
 
 from django import template
+from django.conf import settings
 from django.contrib.staticfiles import finders
 from django.template.defaultfilters import date
 from django.utils.dateparse import parse_datetime
+from django.utils.translation import get_language
 from django.utils.translation import gettext as _
 
+from babel.core import Locale
+from babel.numbers import format_currency
+from parler.utils import get_language_settings
+from stockholm import Money
 from timedelta_isoformat import timedelta as timedelta_isoformat
 
 from joanie.core.utils import image_to_base64
@@ -96,3 +102,24 @@ def iso8601_to_duration(duration, unit):
         return ""
 
     return math.ceil(course_effort_timedelta.total_seconds() / selected_time_unit[unit])
+
+
+@register.filter
+def format_currency_with_symbol(value: Money):
+    """
+    Formats the given value depending on the country's way to format an amount
+    of money and it adds the appropriate currency symbol.
+    It uses the `DEFAULT_CURRENCY` and the active language (`LANGUAGE_CODE`) setting to render the
+    amount accordingly.
+
+    Example :
+        - If you use `fr-fr` for LANGUAGE_CODE : 200,00 €
+        - If you use `en-us` for LANGUAGE_CODE : €200.00
+    """
+    parts = str(value).split()
+    amount = parts[0]
+    return format_currency(
+        amount,
+        settings.DEFAULT_CURRENCY,
+        locale=Locale.parse(get_language_settings(get_language()).get("code"), sep="-"),
+    )
