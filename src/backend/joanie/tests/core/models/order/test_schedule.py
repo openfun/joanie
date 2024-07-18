@@ -15,7 +15,7 @@ from django.test.utils import override_settings
 
 from stockholm import Money
 
-from joanie.core import enums, factories
+from joanie.core import factories
 from joanie.core.enums import (
     ORDER_STATE_COMPLETED,
     ORDER_STATE_FAILED_PAYMENT,
@@ -85,7 +85,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
             end=course_run_end_date,
         )
         order = factories.OrderFactory(
-            state=enums.ORDER_STATE_COMPLETED,
+            state=ORDER_STATE_COMPLETED,
             product__target_courses=[course_run.course],
         )
 
@@ -1254,3 +1254,130 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
         installment = order.get_first_installment_refused()
 
         self.assertIsNone(installment)
+
+    def test_models_order_get_date_next_installment_to_pay(self):
+        """
+        Should return the date of the next installment to pay for the user on his order's
+        payment schedule.
+        """
+        order = factories.OrderFactory(
+            state=ORDER_STATE_PENDING_PAYMENT,
+            payment_schedule=[
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+                {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
+                    "amount": "300.00",
+                    "due_date": "2024-02-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+                {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
+                    "amount": "300.00",
+                    "due_date": "2024-03-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+                {
+                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
+                    "amount": "199.99",
+                    "due_date": "2024-04-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        date_next_installment = order.get_date_next_installment_to_pay()
+
+        self.assertEqual(date_next_installment, order.payment_schedule[-1]["due_date"])
+
+    def test_models_order_get_remaining_balance_to_pay(self):
+        """
+        Should return the leftover amount still remaining to be paid on an order's
+        payment schedule
+        """
+        order = factories.OrderFactory(
+            state=ORDER_STATE_PENDING_PAYMENT,
+            payment_schedule=[
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+                {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
+                    "amount": "300.00",
+                    "due_date": "2024-02-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+                {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
+                    "amount": "300.00",
+                    "due_date": "2024-03-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
+                    "amount": "199.99",
+                    "due_date": "2024-04-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        remains = order.get_remaining_balance_to_pay()
+
+        self.assertEqual(str(remains), "499.99")
+
+    def test_models_order_get_position_last_paid_installment(self):
+        """Should return the position of the last installment paid from the payment schedule."""
+
+        order = factories.OrderFactory(
+            state=ORDER_STATE_PENDING_PAYMENT,
+            payment_schedule=[
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+                {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
+                    "amount": "300.00",
+                    "due_date": "2024-02-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
+                    "amount": "300.00",
+                    "due_date": "2024-03-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
+                    "amount": "199.99",
+                    "due_date": "2024-04-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        self.assertEqual(
+            0, order.get_index_of_last_installment(state=PAYMENT_STATE_PAID)
+        )
+
+        order.payment_schedule[1]["state"] = PAYMENT_STATE_PAID
+
+        self.assertEqual(
+            1, order.get_index_of_last_installment(state=PAYMENT_STATE_PAID)
+        )
+
+        order.payment_schedule[2]["state"] = PAYMENT_STATE_PAID
+
+        self.assertEqual(
+            2, order.get_index_of_last_installment(state=PAYMENT_STATE_PAID)
+        )
