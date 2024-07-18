@@ -205,6 +205,7 @@ class Base(Configuration):
         "django.contrib.sites",
         "django.contrib.messages",
         "django.contrib.staticfiles",
+        "django.contrib.humanize",
         # Third party apps
         "admin_auto_filters",
         "django_object_actions",
@@ -437,9 +438,15 @@ class Base(Configuration):
         environ_name="JOANIE_WITHDRAWAL_PERIOD_DAYS",
         environ_prefix=None,
     )
+    # Email for installment payment
+    # Add here the dashboard link of orders
+    JOANIE_DASHBOARD_ORDER_LINK = values.Value(
+        "/dashboard/courses/orders/:orderId/",
+        environ_name="JOANIE_DASHBOARD_ORDER_LINK",
+        environ_prefix=None,
+    )
 
     # CORS
-
     CORS_ALLOW_CREDENTIALS = True
     CORS_ALLOW_ALL_ORIGINS = values.BooleanValue(False)
     CORS_ALLOWED_ORIGINS = values.ListValue([])

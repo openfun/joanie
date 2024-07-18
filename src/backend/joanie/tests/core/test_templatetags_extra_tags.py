@@ -4,10 +4,13 @@ Test suite for extra template tags of the joanie core app
 
 import random
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
+
+from stockholm import Money
 
 from joanie.core.templatetags.extra_tags import (
     base64_static,
+    format_currency_with_symbol,
     iso8601_to_date,
     iso8601_to_duration,
     join_and,
@@ -165,3 +168,25 @@ class TemplateTagsExtraTagsTestCase(TestCase):
         result = iso8601_to_date(date_string, "SHORT_DATETIME_FORMAT")
 
         self.assertEqual(result, "02/29/2024 1:37 p.m.")
+
+    def test_templatetags_extra_tags_format_currency_with_symbol(self):
+        """
+        The template tag `format_currency_with_symbol` should return the formatted amount
+        with the currency symbol according to the `settings.DEFAULT_CURRENCY`
+        and the way it should format according with `setting.JOANIE_FORMAT_LOCAL_CURRENCY` value.
+        """
+        amount = Money("200.00")
+        with override_settings(LANGUAGE_CODE="en_us", DEFAULT_CURRENCY="EUR"):
+            formatted_amount_with_currency_1 = format_currency_with_symbol(amount)
+
+        self.assertEqual(formatted_amount_with_currency_1, "€200.00")
+
+        with override_settings(LANGUAGE_CODE="en_us", DEFAULT_CURRENCY="USD"):
+            formatted_amount_with_currency_2 = format_currency_with_symbol(amount)
+
+        self.assertEqual(formatted_amount_with_currency_2, "$200.00")
+
+        with override_settings(LANGUAGE_CODE="fr-fr", DEFAULT_CURRENCY="EUR"):
+            formatted_amount_with_currency_3 = format_currency_with_symbol(amount)
+        # '\xa0' represents a non-breaking space in Unicode.
+        self.assertEqual(formatted_amount_with_currency_3, "200,00\xa0€")

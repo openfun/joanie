@@ -1,0 +1,59 @@
+<mj-section mj-class="bg--blue-100" padding="0 50px 0 50px">
+  <mj-column>
+    <mj-text padding="0" font-size="16px">
+      <strong>{% trans "Payment schedule" %}</strong>
+    </mj-text>
+  </mj-column>
+</mj-section>
+<mj-section mj-class="bg--blue-100">
+  <mj-column>
+    <mj-text padding="0 50px 0 50px">
+      <div style="background-color:#ffffff; border: 1px solid #B8C7E3; border-radius: 8px; overflow: hidden;">
+        <table style="font-size: 14px; width: 100%; border-collapse: collapse; overflow: hidden;">
+          {% for installment in payment_schedule %}
+          {% with amount=installment.amount|format_currency_with_symbol installment_date=installment.due_date|date:"SHORT_DATE_FORMAT" %}
+          <tr style="{% if not forloop.last %}border-bottom: 1px solid #B8C7E3;{% endif %} {% if installment_concerned_position == forloop.counter0 %}background-color: #EDF5FA; {% endif %}">
+            <td style="padding: 10px 10px 10px 20px;">
+              <mj-text>{{ forloop.counter }}</mj-text>
+            </td>
+            <td style="padding:10px;">
+              <mj-text><strong>{{ amount }}</strong></mj-text>
+            </td>
+            <td style="padding:10px;">
+              <p>{%trans "Withdrawn on" %} {{ installment_date }}</p>
+            </td>
+            <td style="padding:10px;">
+              <div style="display: inline-block; width: 100%;">
+                {% if installment.state == "paid" %}
+                <p style="font-size: 14px; background-color: #B9E49E; color: #507838; text-decoration: none; text-align: center; padding: 2px 2px; border-radius: 20px;">
+                  <strong>{% blocktranslate with state=installment.state.capitalize %}{{ state }}{% endblocktranslate %}</strong>
+                </p>
+                {% elif installment.state == "pending" %}
+                <p style="font-size: 14px; background-color: #B8C7E3; color: #4A5A7B; text-decoration: none; text-align: center; padding: 2px 2px; border-radius: 20px;">
+                  <strong>{% blocktranslate with state=installment.state.capitalize %}{{ state }}</strong>{% endblocktranslate %}
+                </p>
+                {% elif installment.state == "refused" %}
+                <p style="font-size: 14px; background-color: #F3D4AF; color: #7C5D3A; text-decoration: none; text-align: center; padding: 2px 2px; border-radius: 20px;">
+                  <strong>{% blocktranslate with state=installment.state.capitalize %}{{ state }}{% endblocktranslate %}</strong>
+                </p>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endwith %}
+          {% endfor %}
+        </table>
+      </div>
+    </mj-text>
+    <mj-text>
+      <div style="padding:5px 50px 5px 38px;">
+        <mj-text mj-class="bg--blue-100">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <strong>Total</strong>
+            <strong>{{ total_price|format_currency_with_symbol }}</strong>
+          </div>
+        </mj-text>
+      </div>
+    </mj-text>
+  </mj-column>
+</mj-section>

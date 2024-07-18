@@ -1,0 +1,62 @@
+<mjml>
+  <mj-include path="./partial/header.mjml" />
+  <mj-body mj-class="bg--blue-100">
+    <mj-wrapper css-class="wrapper" padding="20px 40px 40px 40px">
+      <mj-section>
+        <mj-column>
+          <mj-image src="{% base64_static 'joanie/images/logo_fun.png' %}" width="200px" align="left" alt="{%trans 'Company logo' %}" />
+        </mj-column>
+      </mj-section>
+      <mj-section mj-class="bg--blue-100" border-radius="6px 6px 0 0" padding="30px 50px 10px 50px">
+        <mj-column>
+          <mj-text padding="0">
+            {% if fullname %}
+            {% blocktranslate with name=fullname%}
+            <p>Hello {{ name }},</p>
+            {% endblocktranslate %}
+            {% else %}
+            {% trans "Hello," %}
+            {% endif %}<br />
+          </mj-text>
+        </mj-column>
+      </mj-section>
+      <mj-section mj-class="bg--blue-100" border-radius="6px 6px 0 0" padding="0 50px 20px 50px">
+        <mj-column>
+          <mj-text padding="0">
+            {% blocktranslate with nth_installment=nth_installment_paid|ordinal title=course_title %}
+            For the course <strong>{{ title }}</strong>, the {{ nth_installment }}
+            installment has been successfully paid.
+            <br />
+            {% endblocktranslate %}
+          </mj-text>
+        </mj-column>
+      </mj-section>
+      <mj-section mj-class="bg--blue-100" padding="0 50px 20px 50px">
+        <mj-column>
+          <mj-text padding="0">
+            {% with amount=amount|format_currency_with_symbol balance_remaining_to_be_paid=balance_remaining_to_be_paid|format_currency_with_symbol next_installment_date=next_installment_date|date:"SHORT_DATE_FORMAT" %}
+            {% blocktranslate %}
+            An amount of <strong>{{ amount }}</strong> has been debited on
+            the credit card •••• •••• •••• {{ credit_card_last_four_numbers }}.
+            <br />
+            Currently, it remains <strong>{{ balance_remaining_to_be_paid }}</strong> to be paid.
+            The next installment will be debited on <strong>{{ next_installment_date }}</strong>.
+            {% endblocktranslate %}
+            {% endwith %}
+          </mj-text>
+        </mj-column>
+      </mj-section>
+      <mj-include path="./partial/installment_table.mjml" />
+      <mj-section mj-class="bg--blue-100" padding="0 50px 20px 50px">
+        <mj-column>
+          <mj-text padding="0">
+            {% blocktranslate %}
+            See order details on your <a href="{{ dashboard_order_link }}">dashboard</a>
+            {% endblocktranslate %}
+          </mj-text>
+        </mj-column>
+      </mj-section>
+    </mj-wrapper>
+    <mj-include path="./partial/footer.mjml" />
+  </mj-body>
+</mjml>
