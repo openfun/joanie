@@ -1,7 +1,9 @@
 """Utility functions for the Open edX import tasks"""
+
+import re
+
 # pylint: disable=too-many-statements,not-callable,too-many-locals
 # ruff: noqa: PLR0915,SLF001
-
 from datetime import datetime
 from http import HTTPStatus
 from logging import getLogger
@@ -84,6 +86,16 @@ def extract_language_code(edx_user):
     except StopIteration:
         language = settings.LANGUAGE_CODE
     return get_language_settings(language).get("code")
+
+
+def extract_course_id(resource_link):
+    """Extract the course id from a resource link"""
+    matches = re.match("^.*/courses/(?P<course_id>.*)/(course|info)/?$", resource_link)
+
+    if not matches:
+        return None
+
+    return matches.group("course_id")
 
 
 def format_percent(current, total):
