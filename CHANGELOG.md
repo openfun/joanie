@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix signatories retrieval logic in edx certificate import
+
 ## [2.5.1] - 2024-06-25
 
 ### Fixed
