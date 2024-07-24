@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [2.6.1] - 2024-07-25
+
 ### Fixed
 
 - Improve error catching in the `populate_certificate_signatory` command
@@ -393,7 +395,8 @@ and this project adheres to
 - First working version serving sellable micro-credentials for multiple
   organizations synchronized to a remote catalog
 
-[unreleased]: https://github.com/openfun/joanie/compare/v2.6.0...main
+[unreleased]: https://github.com/openfun/joanie/compare/v2.6.1...main
+[2.6.1]: https://github.com/openfun/joanie/compare/v2.6.0...v2.6.1
 [2.6.0]: https://github.com/openfun/joanie/compare/v2.5.1...v2.6.0
 [2.5.0]: https://github.com/openfun/joanie/compare/v2.4.0...v2.5.0
 [2.4.0]: https://github.com/openfun/joanie/compare/v2.3.0...v2.4.0
