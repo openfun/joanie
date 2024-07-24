@@ -13,10 +13,10 @@ from django.test import TestCase, override_settings
 import responses
 
 from joanie.core import factories
-from joanie.core.models import DocumentImage
 from joanie.core.utils import file_checksum
 from joanie.edx_imports import edx_factories
 from joanie.edx_imports.tasks import populate_signatory_certificates_task
+from joanie.tests.base import BaseLogMixinTestCase
 
 SIGNATURE_NAME = "creative_common.jpeg"
 SIGNATURE_PATH = join(dirname(realpath(__file__)), f"images/{SIGNATURE_NAME}")
@@ -40,7 +40,7 @@ with open(SIGNATURE_PATH, "rb") as signature_image:
         }
     },
 )
-class PopulateSignatoryCertificatesTestCase(TestCase):
+class PopulateSignatoryCertificatesTestCase(TestCase, BaseLogMixinTestCase):
     """Test case for the populate_signatory_certificates task"""
 
     def test_populate_signatory_certificates_task_empty_queryset(self):
@@ -51,6 +51,61 @@ class PopulateSignatoryCertificatesTestCase(TestCase):
         self.assertEqual(
             report, "0 certificates processed, 0 populated, 0 skipped, 0 errors"
         )
+
+    @patch("joanie.core.models.Enrollment.set")
+    def test_populate_signatory_certificates_task_unknown_resource_link(self, _):
+        """
+        If no course_id is passed and the related course run resource_link can't be
+        parsed, an error should be reported
+        """
+        factories.EnrollmentCertificateFactory(
+            certificate_definition__template="degree",
+            enrollment__course_run__resource_link="https://openedx.com/unknown",
+        )
+        report = populate_signatory_certificates_task()
+
+        self.assertEqual(
+            report, "1 certificates processed, 0 populated, 0 skipped, 1 errors"
+        )
+
+    @patch("joanie.edx_imports.edx_mongodb.get_signatory_from_course_id")
+    @patch("joanie.core.models.Enrollment.set")
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_populate_signatory_certificates_task_manage_exception(
+        self, _, mock_get_signatory_from_course_id
+    ):
+        """
+        If an exception is raised during a certificate processing, it should be reported
+        and the process should not be stopped.
+        """
+        organization = factories.OrganizationFactory(signature=None)
+        factories.EnrollmentCertificateFactory.create_batch(
+            3,
+            certificate_definition__template="degree",
+            organization=organization,
+            enrollment__course_run__course__organizations=[organization],
+        )
+
+        edx_mongo_signatory = edx_factories.EdxMongoSignatoryFactory()
+        mock_get_signatory_from_course_id.side_effect = [
+            Exception("Error during MongoDB signatory retrieval"),
+            edx_mongo_signatory,
+            edx_mongo_signatory,
+        ]
+        responses.add(
+            responses.GET,
+            f"https://{settings.EDX_DOMAIN}"
+            f"{edx_mongo_signatory.get('signature_image_path')}",
+            body=SIGNATURE_CONTENT,
+        )
+
+        with self.assertLogs() as logger:
+            report = populate_signatory_certificates_task()
+
+        self.assertEqual(
+            report, "3 certificates processed, 2 populated, 0 skipped, 1 errors"
+        )
+        self.assertLogsContains(logger, ["Error during MongoDB signatory retrieval"])
 
     @patch("joanie.edx_imports.edx_mongodb.get_signatory_from_course_id")
     @patch("joanie.core.models.Enrollment.set")
@@ -83,7 +138,7 @@ class PopulateSignatoryCertificatesTestCase(TestCase):
 
         cert.refresh_from_db()
         organization_context = cert.localized_context["en-us"]["organizations"][0]
-        signature = DocumentImage.objects.get(checksum=SIGNATURE_CHECKSUM)
+        signature = cert.images.get(checksum=SIGNATURE_CHECKSUM)
         self.assertEqual(
             organization_context["representative"], edx_mongo_signatory["name"]
         )
@@ -124,9 +179,7 @@ class PopulateSignatoryCertificatesTestCase(TestCase):
 
         cert.refresh_from_db()
         organization_context = cert.localized_context["en-us"]["organizations"][0]
-        signature = DocumentImage.objects.get(
-            checksum=file_checksum(organization.signature)
-        )
+        signature = cert.images.get(checksum=file_checksum(organization.signature))
         self.assertEqual(
             organization_context["representative"], organization.representative
         )
@@ -170,9 +223,7 @@ class PopulateSignatoryCertificatesTestCase(TestCase):
 
         cert.refresh_from_db()
         organization_context = cert.localized_context["en-us"]["organizations"][0]
-        signature = DocumentImage.objects.get(
-            checksum=file_checksum(organization.signature)
-        )
+        signature = cert.images.get(checksum=file_checksum(organization.signature))
         self.assertEqual(
             organization_context["representative"],
             organization.signatory_representative,

@@ -1,5 +1,4 @@
 """Celery tasks for importing Open edX certificates to Joanie organizations."""
-
 import re
 
 # pylint: disable=too-many-locals,too-many-statements,too-many-branches,broad-exception-caught
@@ -28,6 +27,11 @@ from joanie.edx_imports.utils import (
 from joanie.lms_handler.backends.openedx import OPENEDX_MODE_VERIFIED
 
 logger = getLogger(__name__)
+
+_STATE_CREATED = "created"
+_STATE_ERRORS = "errors"
+_STATE_SKIPPED = "skipped"
+_STATE_POPULATED = "populated"
 
 
 def import_certificates(
@@ -69,13 +73,13 @@ def import_certificates_batch_task(self, **kwargs):
 def import_certificates_batch(
     batch_offset, batch_size, total, course_id, dry_run=False
 ):
-    """Batch import certificates from Open edX certificates_generatedcertificate"""
+    """Batch import certificates from Open edX certificates_generated certificate"""
     db = OpenEdxDB()
     report = {
         "certificates": {
-            "created": 0,
-            "skipped": 0,
-            "errors": 0,
+            _STATE_CREATED: 0,
+            _STATE_SKIPPED: 0,
+            _STATE_ERRORS: 0,
         }
     }
     hashids = Hashids(salt=settings.EDX_SECRET)
@@ -90,7 +94,7 @@ def import_certificates_batch(
                     course_run__resource_link__icontains=edx_certificate.course_id,
                 )
             except models.Enrollment.DoesNotExist:
-                report["certificates"]["errors"] += 1
+                report["certificates"][_STATE_ERRORS] += 1
                 logger.error(
                     "No Enrollment found for %s %s",
                     edx_certificate.user.username,
@@ -105,7 +109,7 @@ def import_certificates_batch(
                 continue
 
             if models.Certificate.objects.filter(enrollment=enrollment).exists():
-                report["certificates"]["skipped"] += 1
+                report["certificates"][_STATE_SKIPPED] += 1
                 continue
 
             verification_hash = hashids.encode(edx_certificate.id)
@@ -123,7 +127,7 @@ def import_certificates_batch(
                     code__iexact=organization_code
                 )
             except models.Organization.DoesNotExist:
-                report["certificates"]["errors"] += 1
+                report["certificates"][_STATE_ERRORS] += 1
                 logger.error(
                     "No organization found for %s",
                     organization_code,
@@ -198,7 +202,7 @@ def import_certificates_batch(
                 )
             )
         except Exception as e:
-            report["certificates"]["errors"] += 1
+            report["certificates"][_STATE_ERRORS] += 1
             logger.error(
                 "Error creating Certificate: %s",
                 e,
@@ -224,19 +228,19 @@ def import_certificates_batch(
         for certificate in certificates_created:
             set_certificate_images(certificate)
 
-        report["certificates"]["created"] += len(certificates_created)
+        report["certificates"][_STATE_CREATED] += len(certificates_created)
 
         certificate_issued_on_field.auto_now = True
         certificate_issued_on_field.editable = False
     else:
         import_string = "Dry run: " + import_string
-        report["certificates"]["created"] += len(certificates_to_create)
+        report["certificates"][_STATE_CREATED] += len(certificates_to_create)
 
     total_processed = (
         batch_offset
-        + report["certificates"]["created"]
-        + report["certificates"]["skipped"]
-        + report["certificates"]["errors"]
+        + report["certificates"][_STATE_CREATED]
+        + report["certificates"][_STATE_SKIPPED]
+        + report["certificates"][_STATE_ERRORS]
     )
     percent = format_percent(total_processed, total)
     logger.info(
@@ -244,18 +248,18 @@ def import_certificates_batch(
         percent,
         total_processed,
         total,
-        report["certificates"]["created"],
-        report["certificates"]["skipped"],
-        report["certificates"]["errors"],
+        report["certificates"][_STATE_CREATED],
+        report["certificates"][_STATE_SKIPPED],
+        report["certificates"][_STATE_ERRORS],
     )
 
     return import_string % (
         percent,
         total_processed,
         total,
-        report["certificates"]["created"],
-        report["certificates"]["skipped"],
-        report["certificates"]["errors"],
+        report["certificates"][_STATE_CREATED],
+        report["certificates"][_STATE_SKIPPED],
+        report["certificates"][_STATE_ERRORS],
     )
 
 
@@ -278,9 +282,9 @@ def populate_signatory_certificates(certificate_id=None, course_id=None):
     """
     report = {
         "total": 0,
-        "populated": 0,
-        "errors": 0,
-        "skipped": 0,
+        _STATE_POPULATED: 0,
+        _STATE_ERRORS: 0,
+        _STATE_SKIPPED: 0,
     }
 
     queryset = {
@@ -297,76 +301,94 @@ def populate_signatory_certificates(certificate_id=None, course_id=None):
     report["total"] = certificates.count()
 
     for certificate in certificates.iterator():
-        localized_context = certificate.localized_context.copy()
-        resource_link = certificate.enrollment.course_run.resource_link
-        key = course_id or (
-            re.match("^.*/courses/(?P<course_id>.*)/course/?$", resource_link).group(
-                "course_id"
-            )
-        )
-
-        if not key:
-            report["errors"] += 1
-            continue
-
         try:
-            organization = certificate.localized_context.get(
-                settings.LANGUAGE_CODE
-            ).get("organizations")[0]
-        except (AttributeError, TypeError, IndexError):
-            report["errors"] += 1
-            continue
-
-        if organization.get("signature_id") is not None and organization.get(
-            "representative"
-        ):
-            report["skipped"] += 1
-            continue
-
-        if signatory := edx_mongodb.get_signatory_from_course_id(key):
-            signature_image_path = signatory.get("signature_image_path")
-            signature, _ = download_signature_image(signature_image_path)
-            if signature:
-                signatory["signature_id"] = str(signature.id)
-            localized_context["signatory"] = signatory
-        else:
-            organization = certificate.organization
-            signature_checksum = file_checksum(organization.signature)
-            signature, _ = DocumentImage.objects.get_or_create(
-                checksum=signature_checksum,
-                defaults={"file": organization.signature},
+            state = _populate_signatory_certificate(certificate, course_id=course_id)
+            report[state] += 1
+        except Exception as e:
+            report[_STATE_ERRORS] += 1
+            logger.error(
+                "Error populating Certificate: %s",
+                e,
+                extra={
+                    "context": {
+                        "exception": e,
+                        "certificate": certificate.id,
+                    }
+                },
             )
-            signatory = {
-                "name": organization.signatory_representative
-                or organization.representative,
-                "title": organization.signatory_representative_profession
-                if organization.signatory_representative
-                else organization.representative_profession,
-                "signature_id": str(signature.id) if signature else None,
-            }
-
-        if not signatory.get("name") or not signatory.get("signature_id"):
-            report["errors"] += 1
             continue
-
-        certificate.localized_context = update_context_signatory(
-            localized_context, signatory
-        )
-        certificate.save()
-        report["populated"] += 1
 
     report_string = "%s certificates processed, %s populated, %s skipped, %s errors"
     logger.info(
         report_string,
         report["total"],
-        report["populated"],
-        report["skipped"],
-        report["errors"],
+        report[_STATE_POPULATED],
+        report[_STATE_SKIPPED],
+        report[_STATE_ERRORS],
     )
 
     return report_string % (
         report["total"],
-        report["populated"],
-        report["skipped"],
-        report["errors"],
+        report[_STATE_POPULATED],
+        report[_STATE_SKIPPED],
+        report[_STATE_ERRORS],
     )
+
+
+def _populate_signatory_certificate(certificate, **kwargs):
+    localized_context = certificate.localized_context.copy()
+    resource_link = certificate.enrollment.course_run.resource_link
+    key = kwargs.get("course_id") or (
+        re.match("^.*/courses/(?P<course_id>.*)/course/?$", resource_link).group(
+            "course_id"
+        )
+    )
+
+    if not key:
+        return _STATE_ERRORS
+
+    try:
+        organization = certificate.localized_context.get(settings.LANGUAGE_CODE).get(
+            "organizations"
+        )[0]
+    except (AttributeError, TypeError, IndexError):
+        return _STATE_ERRORS
+
+    if organization.get("signature_id") is not None and organization.get(
+        "representative"
+    ):
+        return _STATE_SKIPPED
+
+    if signatory := edx_mongodb.get_signatory_from_course_id(key):
+        signature_image_path = signatory.get("signature_image_path")
+        signature, _ = download_signature_image(signature_image_path)
+        if signature:
+            signatory["signature_id"] = str(signature.id)
+        localized_context["signatory"] = signatory
+    else:
+        organization = certificate.organization
+        signature_checksum = file_checksum(organization.signature)
+        signature, _ = DocumentImage.objects.get_or_create(
+            checksum=signature_checksum,
+            defaults={"file": organization.signature},
+        )
+        signatory = {
+            "name": organization.signatory_representative
+            or organization.representative,
+            "title": organization.signatory_representative_profession
+            if organization.signatory_representative
+            else organization.representative_profession,
+            "signature_id": str(signature.id) if signature else None,
+        }
+
+    if not signatory.get("name") or not signatory.get("signature_id"):
+        return _STATE_ERRORS
+
+    certificate.localized_context = update_context_signatory(
+        localized_context, signatory
+    )
+    certificate.save()
+    # Set relation between the certificate and the new images
+    set_certificate_images(certificate)
+
+    return _STATE_POPULATED
