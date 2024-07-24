@@ -1,28 +1,29 @@
 """Celery tasks for importing Open edX certificates to Joanie organizations."""
 
+import re
+
 # pylint: disable=too-many-locals,too-many-statements,too-many-branches,broad-exception-caught
 # ruff: noqa: SLF001,PLR0915,PLR0912,BLE001
-
 from logging import getLogger
 
 from django.conf import settings
-from django.core.files.storage import default_storage
 
 from hashids import Hashids
 
 from joanie.celery_app import app
-from joanie.core import models
+from joanie.core import enums, models
 from joanie.core.enums import CERTIFICATE, DEGREE
-from joanie.core.models import DocumentImage
+from joanie.core.models import Certificate, DocumentImage
 from joanie.core.utils import file_checksum
 from joanie.edx_imports import edx_mongodb
 from joanie.edx_imports.edx_database import OpenEdxDB
 from joanie.edx_imports.utils import (
-    download_and_store,
+    download_signature_image,
     extract_organization_code,
     format_percent,
     make_date_aware,
     set_certificate_images,
+    update_context_signatory,
 )
 from joanie.lms_handler.backends.openedx import OPENEDX_MODE_VERIFIED
 
@@ -172,34 +173,16 @@ def import_certificates_batch(
                     edx_certificate.course_id
                 )
 
-                signature = None
                 if signatory:
                     signature_image_path = signatory.get("signature_image_path")
-                    if signature_image_path.startswith("/"):
-                        signature_image_path = signature_image_path[1:]
-                    signature_path = download_and_store(signature_image_path)
-                    if signature_path:
-                        signature_file = default_storage.open(signature_path)
-                        signature_checksum = file_checksum(signature_file)
-                        (signature, _created) = DocumentImage.objects.get_or_create(
-                            checksum=signature_checksum,
-                            defaults={"file": signature_path},
-                        )
-
+                    signature, _ = download_signature_image(signature_image_path)
+                    if signature:
+                        signatory["signature_id"] = str(signature.id)
                     certificate_context["signatory"] = signatory
 
-                for language, _ in settings.LANGUAGES:
-                    if signatory:
-                        certificate_context[language]["organizations"][0][
-                            "representative"
-                        ] = signatory.get("name")
-                        certificate_context[language]["organizations"][0][
-                            "representative_profession"
-                        ] = signatory.get("title")
-                    if signature:
-                        certificate_context[language]["organizations"][0][
-                            "signature_id"
-                        ] = signature.id
+                    certificate_context = update_context_signatory(
+                        certificate_context, signatory
+                    )
 
             certificates_to_create.append(
                 models.Certificate(
@@ -273,4 +256,117 @@ def import_certificates_batch(
         report["certificates"]["created"],
         report["certificates"]["skipped"],
         report["certificates"]["errors"],
+    )
+
+
+@app.task(bind=True)
+def populate_signatory_certificates_task(self, **kwargs):
+    """Task to populate signatory certificates for those this information is missing."""
+    try:
+        report = populate_signatory_certificates(**kwargs)
+    except Exception as e:
+        logger.exception(e)
+        raise self.retry(exc=e) from e
+    return report
+
+
+def populate_signatory_certificates(certificate_id=None, course_id=None):
+    """
+    Retrieve existing certificates without signatory and populate them with the signatory
+    First try to retrieve signatory information from OpenEdX instance otherwise
+    use the organization signatory information.
+    """
+    report = {
+        "total": 0,
+        "populated": 0,
+        "errors": 0,
+        "skipped": 0,
+    }
+
+    queryset = {
+        "certificate_definition__template": enums.DEGREE,
+        "enrollment__isnull": False,
+    }
+    if certificate_id:
+        queryset["id"] = certificate_id
+    if course_id:
+        queryset["enrollment__course_run__resource_link__icontains"] = course_id
+
+    certificates = Certificate.objects.filter(**queryset).select_related("organization")
+
+    report["total"] = certificates.count()
+
+    for certificate in certificates.iterator():
+        localized_context = certificate.localized_context.copy()
+        resource_link = certificate.enrollment.course_run.resource_link
+        key = course_id or (
+            re.match("^.*/courses/(?P<course_id>.*)/course/?$", resource_link).group(
+                "course_id"
+            )
+        )
+
+        if not key:
+            report["errors"] += 1
+            continue
+
+        try:
+            organization = certificate.localized_context.get(
+                settings.LANGUAGE_CODE
+            ).get("organizations")[0]
+        except (AttributeError, TypeError, IndexError):
+            report["errors"] += 1
+            continue
+
+        if organization.get("signature_id") is not None and organization.get(
+            "representative"
+        ):
+            report["skipped"] += 1
+            continue
+
+        if signatory := edx_mongodb.get_signatory_from_course_id(key):
+            signature_image_path = signatory.get("signature_image_path")
+            signature, _ = download_signature_image(signature_image_path)
+            if signature:
+                signatory["signature_id"] = str(signature.id)
+            localized_context["signatory"] = signatory
+        else:
+            organization = certificate.organization
+            signature_checksum = file_checksum(organization.signature)
+            signature, _ = DocumentImage.objects.get_or_create(
+                checksum=signature_checksum,
+                defaults={"file": organization.signature},
+            )
+            signatory = {
+                "name": organization.signatory_representative
+                or organization.representative,
+                "title": organization.signatory_representative_profession
+                if organization.signatory_representative
+                else organization.representative_profession,
+                "signature_id": str(signature.id) if signature else None,
+            }
+
+        if not signatory.get("name") or not signatory.get("signature_id"):
+            report["errors"] += 1
+            continue
+
+        certificate.localized_context = update_context_signatory(
+            localized_context, signatory
+        )
+        certificate.save()
+        report["populated"] += 1
+
+    report_string = "%s certificates processed, %s populated, %s skipped, %s errors"
+    logger.info(
+        report_string,
+        report["total"],
+        report["populated"],
+        report["skipped"],
+        report["errors"],
+    )
+
+    return report_string % (
+        report["total"],
+        report["populated"],
+        report["skipped"],
+        report["errors"],
     )

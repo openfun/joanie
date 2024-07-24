@@ -17,6 +17,7 @@ from parler.utils import get_language_settings
 
 from joanie.core import enums, utils
 from joanie.core.models import DocumentImage
+from joanie.core.utils import file_checksum
 from joanie.lms_handler.backends.openedx import split_course_key
 
 logger = getLogger(__name__)
@@ -105,3 +106,39 @@ def set_certificate_images(certificate):
                 images_set.add(image)
 
     certificate.images.set(images_set)
+
+
+def download_signature_image(path):
+    """Download signature image from OpenEdX then store it"""
+    created = False
+    signature = None
+    signature_image_path = path
+
+    if signature_image_path.startswith("/"):
+        signature_image_path = signature_image_path[1:]
+
+    signature_path = download_and_store(signature_image_path)
+
+    if signature_path:
+        signature_file = default_storage.open(signature_path)
+        signature_checksum = file_checksum(signature_file)
+        (signature, created) = DocumentImage.objects.get_or_create(
+            checksum=signature_checksum,
+            defaults={"file": signature_path},
+        )
+
+    return signature, created
+
+
+def update_context_signatory(context, signatory):
+    """Update the certificate context with the signatory information"""
+    for language, _ in settings.LANGUAGES:
+        if name := signatory.get("name"):
+            context[language]["organizations"][0]["representative"] = name
+            context[language]["organizations"][0]["representative_profession"] = (
+                signatory.get("title")
+            )
+        if signature_id := signatory.get("signature_id"):
+            context[language]["organizations"][0]["signature_id"] = signature_id
+
+    return context

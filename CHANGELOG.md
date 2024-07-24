@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Add management command to fix imported certificates without signatory
+
 ### Fixed
 
 - Fix signatories retrieval logic in edx certificate import
