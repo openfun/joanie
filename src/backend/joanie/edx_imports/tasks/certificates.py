@@ -1,5 +1,4 @@
 """Celery tasks for importing Open edX certificates to Joanie organizations."""
-import re
 
 # pylint: disable=too-many-locals,too-many-statements,too-many-branches,broad-exception-caught
 # ruff: noqa: SLF001,PLR0915,PLR0912,BLE001
@@ -18,6 +17,7 @@ from joanie.edx_imports import edx_mongodb
 from joanie.edx_imports.edx_database import OpenEdxDB
 from joanie.edx_imports.utils import (
     download_signature_image,
+    extract_course_id,
     extract_organization_code,
     format_percent,
     make_date_aware,
@@ -338,11 +338,7 @@ def populate_signatory_certificates(certificate_id=None, course_id=None):
 def _populate_signatory_certificate(certificate, **kwargs):
     localized_context = certificate.localized_context.copy()
     resource_link = certificate.enrollment.course_run.resource_link
-    key = kwargs.get("course_id") or (
-        re.match("^.*/courses/(?P<course_id>.*)/course/?$", resource_link).group(
-            "course_id"
-        )
-    )
+    key = kwargs.get("course_id") or extract_course_id(resource_link)
 
     if not key:
         return _STATE_ERRORS
