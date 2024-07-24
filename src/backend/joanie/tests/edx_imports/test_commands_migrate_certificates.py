@@ -53,7 +53,7 @@ class MigrateOpenEdxCertificatesTestCase(MigrateOpenEdxBaseTestCase):
         factories.CertificateDefinitionFactory.create(template=DEGREE)
         factories.CertificateDefinitionFactory.create(template=CERTIFICATE)
 
-    @patch("joanie.edx_imports.edx_mongodb.get_signature_from_enrollment")
+    @patch("joanie.edx_imports.edx_mongodb.get_signatory_from_course_id")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates_count")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates")
     @patch("joanie.core.models.Enrollment.set")
@@ -63,7 +63,7 @@ class MigrateOpenEdxCertificatesTestCase(MigrateOpenEdxBaseTestCase):
         _,
         mock_get_certificates,
         mock_get_certificates_count,
-        mock_get_signature_from_enrollment,
+        mock_get_signatory_from_course_id,
     ):
         """
         Test that certificates are created from the edx certificates.
@@ -105,7 +105,7 @@ class MigrateOpenEdxCertificatesTestCase(MigrateOpenEdxBaseTestCase):
 
         mock_get_certificates.return_value = edx_certificates
         mock_get_certificates_count.return_value = len(edx_certificates)
-        mock_get_signature_from_enrollment.side_effect = [
+        mock_get_signatory_from_course_id.side_effect = [
             mongo_enrollments[edx_certificate.id]
             for edx_certificate in edx_certificates
         ]
@@ -122,7 +122,7 @@ class MigrateOpenEdxCertificatesTestCase(MigrateOpenEdxBaseTestCase):
         ]
         self.assertLogsContains(logger, expected)
 
-    @patch("joanie.edx_imports.edx_mongodb.get_signature_from_enrollment")
+    @patch("joanie.edx_imports.edx_mongodb.get_signatory_from_course_id")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates_count")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates")
     @patch("joanie.core.models.Enrollment.set")
@@ -131,7 +131,7 @@ class MigrateOpenEdxCertificatesTestCase(MigrateOpenEdxBaseTestCase):
         _,
         mock_get_certificates,
         mock_get_certificates_count,
-        mock_get_signature_from_enrollment,
+        mock_get_signatory_from_course_id,
     ):
         """
         Test that certificates are updated from the edx certificates.
@@ -169,7 +169,7 @@ class MigrateOpenEdxCertificatesTestCase(MigrateOpenEdxBaseTestCase):
 
         mock_get_certificates.return_value = edx_certificates
         mock_get_certificates_count.return_value = len(edx_certificates)
-        mock_get_signature_from_enrollment.side_effect = [
+        mock_get_signatory_from_course_id.side_effect = [
             mongo_enrollments[edx_certificate.id]
             for edx_certificate in edx_certificates
         ]
@@ -186,7 +186,7 @@ class MigrateOpenEdxCertificatesTestCase(MigrateOpenEdxBaseTestCase):
         ]
         self.assertLogsContains(logger, expected)
 
-    @patch("joanie.edx_imports.edx_mongodb.get_signature_from_enrollment")
+    @patch("joanie.edx_imports.edx_mongodb.get_signatory_from_course_id")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates_count")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates")
     @patch("joanie.core.models.Enrollment.set")
@@ -196,7 +196,7 @@ class MigrateOpenEdxCertificatesTestCase(MigrateOpenEdxBaseTestCase):
         _,
         mock_get_certificates,
         mock_get_certificates_count,
-        mock_get_signature_from_enrollment,
+        mock_get_signatory_from_course_id,
     ):
         """
         Test that certificates are not created from the edx certificates if the enrollment
@@ -249,7 +249,7 @@ class MigrateOpenEdxCertificatesTestCase(MigrateOpenEdxBaseTestCase):
 
         mock_get_certificates.return_value = edx_certificates
         mock_get_certificates_count.return_value = len(edx_certificates)
-        mock_get_signature_from_enrollment.side_effect = [
+        mock_get_signatory_from_course_id.side_effect = [
             mongo_enrollments[edx_certificate.id]
             for edx_certificate in edx_certificates_with_joanie_enrollments
         ]
@@ -269,7 +269,7 @@ class MigrateOpenEdxCertificatesTestCase(MigrateOpenEdxBaseTestCase):
         ]
         self.assertLogsContains(logger, expected)
 
-    @patch("joanie.edx_imports.edx_mongodb.get_signature_from_enrollment")
+    @patch("joanie.edx_imports.edx_mongodb.get_signatory_from_course_id")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates_count")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates")
     @patch("joanie.core.models.Enrollment.set")
@@ -279,7 +279,7 @@ class MigrateOpenEdxCertificatesTestCase(MigrateOpenEdxBaseTestCase):
         _,
         mock_get_certificates,
         mock_get_certificates_count,
-        mock_get_signature_from_enrollment,
+        mock_get_signatory_from_course_id,
     ):
         """
         Test that certificates are created from the edx certificates.
@@ -329,7 +329,7 @@ class MigrateOpenEdxCertificatesTestCase(MigrateOpenEdxBaseTestCase):
         mock_get_certificates.side_effect = get_edx_certificates
         mock_get_certificates_count.return_value = 10
 
-        mock_get_signature_from_enrollment.side_effect = [
+        mock_get_signatory_from_course_id.side_effect = [
             mongo_enrollments[edx_certificate.id]
             for edx_certificate in edx_certificates
         ]

@@ -168,8 +168,8 @@ def import_certificates_batch(
 
             if edx_certificate.mode == OPENEDX_MODE_VERIFIED:
                 certificate_template = DEGREE
-                signatory = edx_mongodb.get_signature_from_enrollment(
-                    enrollment.course_run.course.code
+                signatory = edx_mongodb.get_signatory_from_course_id(
+                    edx_certificate.course_id
                 )
 
                 signature = None

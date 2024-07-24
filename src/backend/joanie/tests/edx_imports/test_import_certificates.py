@@ -63,7 +63,7 @@ class EdxImportCertificatesTestCase(TestCase):
         """Tear down the test case."""
         edx_factories.session.rollback()
 
-    @patch("joanie.edx_imports.edx_mongodb.get_signature_from_enrollment")
+    @patch("joanie.edx_imports.edx_mongodb.get_signatory_from_course_id")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates_count")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates")
     @responses.activate(assert_all_requests_are_fired=True)
@@ -71,7 +71,7 @@ class EdxImportCertificatesTestCase(TestCase):
         self,
         mock_get_certificates,
         mock_get_certificates_count,
-        mock_get_signature_from_enrollment,
+        mock_get_signatory_from_course_id,
     ):
         """
         Test that certificates are created from the edx certificates.
@@ -114,7 +114,7 @@ class EdxImportCertificatesTestCase(TestCase):
 
         mock_get_certificates.return_value = edx_certificates
         mock_get_certificates_count.return_value = len(edx_certificates)
-        mock_get_signature_from_enrollment.side_effect = [
+        mock_get_signatory_from_course_id.side_effect = [
             mongo_enrollments[edx_certificate.id]
             for edx_certificate in edx_certificates
         ]
@@ -211,14 +211,14 @@ class EdxImportCertificatesTestCase(TestCase):
 
             self.assertEqual(certificate.images.count(), 2 if has_signatory else 1)
 
-    @patch("joanie.edx_imports.edx_mongodb.get_signature_from_enrollment")
+    @patch("joanie.edx_imports.edx_mongodb.get_signatory_from_course_id")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates_count")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates")
     def test_import_certificates_update(
         self,
         mock_get_certificates,
         mock_get_certificates_count,
-        mock_get_signature_from_enrollment,
+        mock_get_signatory_from_course_id,
     ):
         """
         Test that certificates are updated from the edx certificates.
@@ -259,7 +259,7 @@ class EdxImportCertificatesTestCase(TestCase):
 
         mock_get_certificates.return_value = edx_certificates
         mock_get_certificates_count.return_value = len(edx_certificates)
-        mock_get_signature_from_enrollment.side_effect = [
+        mock_get_signatory_from_course_id.side_effect = [
             mongo_enrollments[edx_certificate.id]
             for edx_certificate in edx_certificates
         ]
@@ -288,7 +288,7 @@ class EdxImportCertificatesTestCase(TestCase):
                 certificate.issued_on, make_date_aware(edx_certificate.created_date)
             )
 
-    @patch("joanie.edx_imports.edx_mongodb.get_signature_from_enrollment")
+    @patch("joanie.edx_imports.edx_mongodb.get_signatory_from_course_id")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates_count")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates")
     @responses.activate(assert_all_requests_are_fired=True)
@@ -296,7 +296,7 @@ class EdxImportCertificatesTestCase(TestCase):
         self,
         mock_get_certificates,
         mock_get_certificates_count,
-        mock_get_signature_from_enrollment,
+        mock_get_signatory_from_course_id,
     ):
         """
         Test that certificates are not created from the edx certificates if the enrollment
@@ -346,7 +346,7 @@ class EdxImportCertificatesTestCase(TestCase):
 
         mock_get_certificates.return_value = edx_certificates
         mock_get_certificates_count.return_value = len(edx_certificates)
-        mock_get_signature_from_enrollment.side_effect = [
+        mock_get_signatory_from_course_id.side_effect = [
             mongo_enrollments[edx_certificate.id]
             for edx_certificate in edx_certificates_with_joanie_enrollments
         ]
@@ -367,7 +367,7 @@ class EdxImportCertificatesTestCase(TestCase):
                 ).exists()
             )
 
-    @patch("joanie.edx_imports.edx_mongodb.get_signature_from_enrollment")
+    @patch("joanie.edx_imports.edx_mongodb.get_signatory_from_course_id")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates_count")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates")
     @responses.activate(assert_all_requests_are_fired=True)
@@ -375,7 +375,7 @@ class EdxImportCertificatesTestCase(TestCase):
         self,
         mock_get_certificates,
         mock_get_certificates_count,
-        mock_get_signature_from_enrollment,
+        mock_get_signatory_from_course_id,
     ):
         """
         Test that certificates are created from the edx certificates with missing signatory.
@@ -423,7 +423,7 @@ class EdxImportCertificatesTestCase(TestCase):
 
         mock_get_certificates.return_value = edx_certificates
         mock_get_certificates_count.return_value = len(edx_certificates)
-        mock_get_signature_from_enrollment.side_effect = [
+        mock_get_signatory_from_course_id.side_effect = [
             mongo_enrollments[edx_certificate.id]
             for edx_certificate in edx_certificates
         ]
@@ -515,7 +515,7 @@ class EdxImportCertificatesTestCase(TestCase):
                 },
             )
 
-    @patch("joanie.edx_imports.edx_mongodb.get_signature_from_enrollment")
+    @patch("joanie.edx_imports.edx_mongodb.get_signatory_from_course_id")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates_count")
     @patch("joanie.edx_imports.edx_database.OpenEdxDB.get_certificates")
     @responses.activate(assert_all_requests_are_fired=True)
@@ -523,7 +523,7 @@ class EdxImportCertificatesTestCase(TestCase):
         self,
         mock_get_certificates,
         mock_get_certificates_count,
-        mock_get_signature_from_enrollment,
+        mock_get_signatory_from_course_id,
     ):
         """
         Test that signatures are not stored if the signature is not found.
@@ -562,7 +562,7 @@ class EdxImportCertificatesTestCase(TestCase):
 
         mock_get_certificates.return_value = [edx_certificate]
         mock_get_certificates_count.return_value = 1
-        mock_get_signature_from_enrollment.side_effect = [
+        mock_get_signatory_from_course_id.side_effect = [
             mongo_enrollments[edx_certificate.id]
         ]
 

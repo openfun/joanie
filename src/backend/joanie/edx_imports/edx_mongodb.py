@@ -4,9 +4,11 @@ from django.conf import settings
 
 from pymongo import MongoClient
 
+from joanie.lms_handler.backends.openedx import split_course_key
 
-def get_signature_from_enrollment(course_id):
-    """Get signature from mongodb enrollment"""
+
+def get_signatory_from_course_id(course_id):
+    """Get signatory from course id"""
     client = MongoClient(
         host=settings.EDX_MONGODB_HOST,
         port=settings.EDX_MONGODB_PORT,
@@ -17,14 +19,33 @@ def get_signature_from_enrollment(course_id):
         replicaSet=settings.EDX_MONGODB_REPLICASET,
     )
     db = client.edxapp
-    mongo_enrollment = db.modulestore.find_one(
-        {"_id.course": course_id, "_id.category": "course"},
-        {"metadata.certificates": 1},
+    (org, course, run) = split_course_key(course_id)
+    mongo_course = db.modulestore.active_versions.find_one(
+        {
+            "org": org,
+            "course": course,
+            "run": run,
+        },
+        {"versions.published-branch": 1},
+    )
+
+    try:
+        structure_id = mongo_course.get("versions").get("published-branch")
+    except (AttributeError, IndexError):
+        return None
+
+    structure = db.modulestore.structures.find_one(
+        {"_id": structure_id},
+        {
+            "blocks": {"$elemMatch": {"block_type": "course"}},
+            "blocks.fields.certificates.certificates.signatories": 1,
+        },
     )
 
     try:
         signatory = (
-            mongo_enrollment.get("metadata")
+            structure.get("blocks")[0]
+            .get("fields")
             .get("certificates")
             .get("certificates")[0]
             .get("signatories")[0]
