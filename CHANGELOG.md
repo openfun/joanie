@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Fixed
+
+- Improve error catching in the `populate_certificate_signatory` command
+
 ## [2.6.0] - 2024-07-24
 
 ### Added

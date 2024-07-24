@@ -13,7 +13,6 @@ from django.test import override_settings
 import responses
 
 from joanie.core import factories
-from joanie.core.models import DocumentImage
 from joanie.core.utils import file_checksum
 from joanie.edx_imports import edx_factories
 from joanie.tests.edx_imports.base_test_commands_migrate import (
@@ -189,7 +188,7 @@ class PopulateSignatoryCertificatesCommandTestCase(MigrateOpenEdxBaseTestCase):
             ],
             edx_mongo_signatory["title"],
         )
-        signature = DocumentImage.objects.get(checksum=SIGNATURE_CHECKSUM)
+        signature = cert.images.get(checksum=SIGNATURE_CHECKSUM)
         self.assertEqual(
             cert.localized_context["en-us"]["organizations"][0]["signature_id"],
             str(signature.id),
