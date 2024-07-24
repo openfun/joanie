@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [2.6.0] - 2024-07-24
+
 ### Added
 
 - Add management command to fix imported certificates without signatory
@@ -387,8 +389,8 @@ and this project adheres to
 - First working version serving sellable micro-credentials for multiple
   organizations synchronized to a remote catalog
 
-[unreleased]: https://github.com/openfun/joanie/compare/v2.5.1...main
-[2.5.1]: https://github.com/openfun/joanie/compare/v2.5.0...v2.5.1
+[unreleased]: https://github.com/openfun/joanie/compare/v2.6.0...main
+[2.6.0]: https://github.com/openfun/joanie/compare/v2.5.1...v2.6.0
 [2.5.0]: https://github.com/openfun/joanie/compare/v2.4.0...v2.5.0
 [2.4.0]: https://github.com/openfun/joanie/compare/v2.3.0...v2.4.0
 [2.3.0]: https://github.com/openfun/joanie/compare/v2.2.0...v2.3.0
