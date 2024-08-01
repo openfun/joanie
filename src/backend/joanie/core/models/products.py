@@ -360,7 +360,7 @@ class OrderGroup(BaseModel):
             models.Q(course_id=course_id)
             | models.Q(enrollment__course_run__course_id=course_id),
             product_id=product_id,
-            state__in=enums.BINDING_ORDER_STATES,
+            state__in=enums.ORDER_STATES_BINDING,
         ).count()
 
     @property
