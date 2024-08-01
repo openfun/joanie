@@ -202,9 +202,13 @@ class CourseProductRelationViewSet(
         Return the payment schedule for a course product relation.
         """
         course_product_relation = self.get_object()
-        course_run_dates = (
-            course_product_relation.product.get_equivalent_course_run_dates()
-        )
+
+        if course_product_relation.product.type == enums.PRODUCT_TYPE_CERTIFICATE:
+            instance = course_product_relation.course
+        else:
+            instance = course_product_relation.product
+        course_run_dates = instance.get_equivalent_course_run_dates()
+
         payment_schedule = generate_payment_schedule(
             course_product_relation.product.price,
             timezone.now(),
