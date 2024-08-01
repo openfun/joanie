@@ -1537,7 +1537,7 @@ class NestedOrderCourseViewSet(NestedGenericViewSet, mixins.ListModelMixin):
     ordering = ["-created_on"]
     queryset = (
         models.Order.objects.filter(
-            state__in=enums.ORDER_STATE_ALLOW_ENROLLMENT,
+            state__in=enums.ORDER_STATES_BINDING,
         )
         .select_related(
             "contract",
