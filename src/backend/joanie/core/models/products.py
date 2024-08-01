@@ -557,6 +557,9 @@ class Order(BaseModel):
               courses on which a list of eligible course runs was specified on the
               product/course relation.
         """
+        if self.enrollment:
+            return CourseRun.objects.filter(enrollments=self.enrollment)
+
         course_relations_with_course_runs = self.course_relations.filter(
             course_runs__isnull=False
         ).only("pk")
@@ -741,10 +744,13 @@ class Order(BaseModel):
         """
         Retrieve owner's enrollments related to the ordered target courses.
         """
-        filters = {
-            "course_run__in": self.target_course_runs,
-            "user": self.owner,
-        }
+        if self.enrollment:
+            filters = {"pk": self.enrollment_id}
+        else:
+            filters = {
+                "course_run__in": self.target_course_runs,
+                "user": self.owner,
+            }
         if is_active is not None:
             filters.update({"is_active": is_active})
 

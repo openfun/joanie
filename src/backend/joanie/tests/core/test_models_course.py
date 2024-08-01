@@ -208,8 +208,8 @@ class CourseModelsTestCase(BaseAPITestCase):
 
 class CourseStateModelsTestCase(TestCase):
     """
-    Unit test suite for computing a date to display on the course glimpse depending on the state
-    of its related course runs:
+    Unit test suite for computing a date to display on the course glimpse depending on
+    the state of its related course runs:
         0: a run is ongoing and open for enrollment > "closing on": {enrollment_end}
         1: a run is future and open for enrollment > "starting on": {start}
         2: a run is future and not yet open or already closed for enrollment >
@@ -387,3 +387,56 @@ class CourseStateModelsTestCase(TestCase):
 
         with self.assertNumQueries(1):
             self.assertEqual(organizations.count(), 2)
+
+    def test_models_course_get_equivalent_course_run_dates(self):
+        """
+        Check that course dates are processed
+        by aggregating target course runs dates as expected.
+        """
+        earliest_start_date = timezone.now() - timedelta(days=1)
+        latest_end_date = timezone.now() + timedelta(days=2)
+        latest_enrollment_start_date = timezone.now() - timedelta(days=2)
+        earliest_enrollment_end_date = timezone.now() + timedelta(days=1)
+        course = factories.CourseFactory()
+        factories.CourseRunFactory(
+            course=course,
+            start=earliest_start_date,
+            end=latest_end_date,
+            enrollment_start=latest_enrollment_start_date - timedelta(days=1),
+            enrollment_end=earliest_enrollment_end_date + timedelta(days=1),
+        )
+        factories.CourseRunFactory(
+            course=course,
+            start=earliest_start_date + timedelta(days=1),
+            end=latest_end_date - timedelta(days=1),
+            enrollment_start=latest_enrollment_start_date,
+            enrollment_end=earliest_enrollment_end_date,
+        )
+
+        self.assertEqual(
+            course.get_equivalent_course_run_dates(),
+            {
+                "start": earliest_start_date,
+                "end": latest_end_date,
+                "enrollment_start": latest_enrollment_start_date,
+                "enrollment_end": earliest_enrollment_end_date,
+            },
+        )
+
+    def test_models_course_get_equivalent_course_run_dates_with_no_course_runs(self):
+        """
+        Check that course dates are processed
+        by aggregating target course runs dates as expected. If no course runs are found
+        the method should return None for all dates.
+        """
+        course = factories.CourseFactory()
+
+        self.assertEqual(
+            course.get_equivalent_course_run_dates(),
+            {
+                "start": None,
+                "end": None,
+                "enrollment_start": None,
+                "enrollment_end": None,
+            },
+        )

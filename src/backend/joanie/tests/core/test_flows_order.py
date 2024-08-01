@@ -765,6 +765,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             course_run__is_listed=True,
             course_run__resource_link=resource_link,
             user=user,
+            is_active=True,
         )
         order = factories.OrderFactory(
             course=None,
@@ -957,6 +958,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             course_run__course=course,
             course_run__is_listed=True,
             course_run__state=CourseState.FUTURE_OPEN,
+            is_active=True,
         )
         order = factories.OrderFactory(
             course=None,
@@ -973,7 +975,6 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         ):
             order.flow.cancel()
 
-        self.assertEqual(enrollment.state, "failed")
         enrollment.refresh_from_db()
         self.assertEqual(enrollment.state, "failed")
 
