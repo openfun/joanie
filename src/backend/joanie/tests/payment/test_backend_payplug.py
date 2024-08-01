@@ -64,6 +64,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
 
         self.assertEqual(str(context.exception), "'secret_key'")
 
+    @override_settings(JOANIE_PAYMENT_SCHEDULE_LIMITS={0: (30, 70)})
     def test_payment_backend_payplug_get_payment_data(self):
         """
         Payplug backend has `_get_payment_data` method which should
@@ -124,6 +125,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
             "Bad request. The server gave the following response: `Endpoint unreachable`.",
         )
 
+    @override_settings(JOANIE_PAYMENT_SCHEDULE_LIMITS={0: (30, 70)})
     @mock.patch.object(payplug.Payment, "create")
     def test_payment_backend_payplug_create_payment(self, mock_payplug_create):
         """
@@ -168,6 +170,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         self.assertIsNotNone(re.fullmatch(r"pay_\d{5}", payload["payment_id"]))
         self.assertIsNotNone(payload["url"])
 
+    @override_settings(JOANIE_PAYMENT_SCHEDULE_LIMITS={0: (30, 70)})
     @mock.patch.object(payplug.Payment, "create")
     def test_payment_backend_payplug_create_payment_with_installment(
         self, mock_payplug_create
@@ -215,6 +218,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         self.assertIsNotNone(re.fullmatch(r"pay_\d{5}", payload["payment_id"]))
         self.assertIsNotNone(payload["url"])
 
+    @override_settings(JOANIE_PAYMENT_SCHEDULE_LIMITS={0: (30, 70)})
     @mock.patch.object(PayplugBackend, "create_payment")
     @mock.patch.object(payplug.Payment, "create")
     def test_payment_backend_payplug_create_one_click_payment_request_failed(
@@ -284,6 +288,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
             },
         )
 
+    @override_settings(JOANIE_PAYMENT_SCHEDULE_LIMITS={0: (30, 70)})
     @mock.patch.object(payplug.Payment, "create")
     def test_payment_backend_payplug_create_one_click_payment_not_authorized(
         self, mock_payplug_create
@@ -340,6 +345,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         self.assertIsNotNone(payload["url"])
         self.assertFalse(payload["is_paid"])
 
+    @override_settings(JOANIE_PAYMENT_SCHEDULE_LIMITS={0: (30, 70)})
     @mock.patch.object(payplug.Payment, "create")
     def test_payment_backend_payplug_create_one_click_payment(
         self, mock_payplug_create
@@ -396,6 +402,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         self.assertIsNotNone(payload["url"])
         self.assertTrue(payload["is_paid"])
 
+    @override_settings(JOANIE_PAYMENT_SCHEDULE_LIMITS={0: (30, 70)})
     @mock.patch.object(payplug.Payment, "create")
     def test_payment_backend_payplug_create_one_click_payment_with_installment(
         self, mock_payplug_create
