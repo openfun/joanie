@@ -415,6 +415,30 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         self.assertEqual(len(order.get_target_enrollments(is_active=True)), 0)
         self.assertEqual(len(order.get_target_enrollments(is_active=False)), 2)
 
+    def test_models_order_get_target_enrollments_for_certificate_product(self):
+        """
+        Order model implements a `get_target_enrollments` method to retrieve enrollments
+        related to the order instance.
+        """
+        enrollment = factories.EnrollmentFactory(is_active=True)
+        product = factories.ProductFactory(
+            price="0.00",
+            type=enums.PRODUCT_TYPE_CERTIFICATE,
+            courses=[enrollment.course_run.course],
+            target_courses=[],
+        )
+        order = factories.OrderFactory(
+            product=product, enrollment=enrollment, course=None
+        )
+        order.init_flow()
+
+        # - As the two product's target courses have only one course run, order owner
+        #   should have been automatically enrolled to those course runs.
+        with self.assertNumQueries(1):
+            self.assertEqual(len(order.get_target_enrollments()), 1)
+        self.assertEqual(len(order.get_target_enrollments(is_active=True)), 1)
+        self.assertEqual(len(order.get_target_enrollments(is_active=False)), 0)
+
     def test_models_order_target_course_runs_property(self):
         """
         Order model has a target course runs property to retrieve all course runs
@@ -449,6 +473,32 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             course_runs = order.target_course_runs.order_by("pk")
             self.assertEqual(len(course_runs), 3)
             self.assertCountEqual(list(course_runs), [cr1, cr2, cr3])
+
+    def test_models_order_target_course_runs_property_linked_to_enrollment(self):
+        """
+        Order model has a target course runs property to retrieve all course runs
+        related to the order instance. If the order is included to an enrollment,
+        the target course runs should be the same as the enrollment's course run.
+        """
+        user = factories.UserFactory()
+        enrollment = factories.EnrollmentFactory(user=user)
+        product = factories.ProductFactory(
+            price=0,
+            type=enums.PRODUCT_TYPE_CERTIFICATE,
+            courses=[enrollment.course_run.course],
+        )
+
+        # - Create an order link to the product
+        order = factories.OrderFactory(
+            product=product, enrollment=enrollment, course=None, owner=user
+        )
+        order.init_flow()
+
+        # - DB queries should be optimized
+        with self.assertNumQueries(1):
+            course_runs = order.target_course_runs
+            self.assertEqual(len(course_runs), 1)
+            self.assertEqual(course_runs[0], enrollment.course_run)
 
     def test_models_order_create_target_course_relations_on_submit(self):
         """
