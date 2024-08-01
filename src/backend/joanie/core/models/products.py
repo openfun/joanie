@@ -623,12 +623,14 @@ class Order(BaseModel):
                     )
                 )
             if (
+                not self.created_on or self.state not in [enums.ORDER_STATE_CANCELED]
+            ) and (
                 self.enrollment.course_run.course.state["priority"]
                 >= CourseState.ARCHIVED_CLOSED
             ):
                 error_dict["course"].append(
                     _(
-                        "The order cannot be generated on course run that is in archived state."
+                        "The order cannot be created on course run that is in archived state."
                     )
                 )
 

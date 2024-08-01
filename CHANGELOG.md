@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Fixed
+
+- Allow to cancel an enrollment order linked to an archived course run
+
 ## [2.6.1] - 2024-07-25
 
 ### Fixed

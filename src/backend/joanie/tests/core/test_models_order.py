@@ -1007,3 +1007,64 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         self.assertIsInstance(contract.context["course"]["price"], str)
         self.assertEqual(order.total, Decimal("1202.99"))
         self.assertEqual(contract.context["course"]["price"], "1202.99")
+
+    def test_models_order_avoid_to_create_with_an_archived_course_run(self):
+        """
+        An order cannot be generated if the course run is archived. It should raise a
+        ValidationError.
+        """
+        course_run = factories.CourseRunFactory(
+            is_listed=True, state=CourseState.ONGOING_OPEN
+        )
+        enrollment = factories.EnrollmentFactory(course_run=course_run, is_active=True)
+
+        # Update the course run to archived it
+        closing_date = django_timezone.now() - timedelta(days=1)
+        course_run.enrollment_end = closing_date
+        course_run.end = closing_date
+        course_run.save()
+
+        with self.assertRaises(ValidationError) as context:
+            factories.OrderFactory(
+                owner=enrollment.user,
+                enrollment=enrollment,
+                course=None,
+                product__type=enums.PRODUCT_TYPE_CERTIFICATE,
+                product__courses=[enrollment.course_run.course],
+                state=enums.ORDER_STATE_VALIDATED,
+            )
+
+        self.assertEqual(
+            str(context.exception),
+            (
+                "{'course': ['The order cannot be created on "
+                "course run that is in archived state.']}"
+            ),
+        )
+
+    def test_api_order_allow_to_cancel_with_archived_course_run(self):
+        """
+        An order should be cancelable even if the related course run is archived.
+        """
+        course_run = factories.CourseRunFactory(
+            is_listed=True, state=CourseState.ONGOING_OPEN
+        )
+        enrollment = factories.EnrollmentFactory(course_run=course_run, is_active=True)
+        order = factories.OrderFactory(
+            owner=enrollment.user,
+            enrollment=enrollment,
+            course=None,
+            product__type=enums.PRODUCT_TYPE_CERTIFICATE,
+            product__courses=[enrollment.course_run.course],
+            state=enums.ORDER_STATE_VALIDATED,
+        )
+
+        # Update the course run to archived it
+        closing_date = django_timezone.now() - timedelta(days=1)
+        course_run.enrollment_end = closing_date
+        course_run.end = closing_date
+        course_run.save()
+
+        order.flow.cancel()
+
+        self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
