@@ -535,6 +535,24 @@ class Course(parler_models.TranslatableModel, BaseModel):
         self.full_clean()
         super().save(*args, **kwargs)
 
+    def get_equivalent_course_run_dates(self):
+        """
+        Return a dict of dates equivalent to course run dates
+        by aggregating dates of all target course runs as follows:
+        - start: Pick the earliest start date
+        - end: Pick the latest end date
+        - enrollment_start: Pick the latest enrollment start date
+        - enrollment_end: Pick the earliest enrollment end date
+        """
+        aggregate = self.course_runs.aggregate(
+            models.Min("start"),
+            models.Max("end"),
+            models.Max("enrollment_start"),
+            models.Min("enrollment_end"),
+        )
+
+        return {key.split("__")[0]: value for key, value in aggregate.items()}
+
     def get_selling_organizations(self, product=None):
         """
         Return the list of organizations selling a product for the course.

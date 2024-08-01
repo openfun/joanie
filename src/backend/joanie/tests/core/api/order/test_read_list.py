@@ -638,7 +638,7 @@ class OrderListApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
 
         # Retrieve user's order related to the first course linked to the product 1
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(6):
             response = self.client.get(
                 f"/api/v1.0/orders/?product_type={enums.PRODUCT_TYPE_CERTIFICATE}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -792,7 +792,7 @@ class OrderListApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
 
         # Retrieve user's orders without any filter
-        with self.assertNumQueries(149):
+        with self.assertNumQueries(148):
             response = self.client.get(
                 "/api/v1.0/orders/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -803,7 +803,7 @@ class OrderListApiTest(BaseAPITestCase):
         self.assertEqual(content["count"], 3)
 
         # Retrieve user's orders filtered to limit to 2 product types
-        with self.assertNumQueries(12):
+        with self.assertNumQueries(11):
             response = self.client.get(
                 (
                     f"/api/v1.0/orders/?product_type={enums.PRODUCT_TYPE_CERTIFICATE}"

@@ -1164,8 +1164,12 @@ class OrderSerializer(serializers.ModelSerializer):
 
     def get_target_enrollments(self, order) -> list[dict]:
         """
-        For the current order, retrieve its related enrollments.
+        For the current order, retrieve its related enrollments if the order is linked
+        to a course.
         """
+        if order.enrollment:
+            return []
+
         return EnrollmentSerializer(
             instance=order.get_target_enrollments(),
             many=True,
