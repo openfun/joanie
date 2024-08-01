@@ -691,48 +691,6 @@ class ContractModelTestCase(TestCase):
         with self.assertNumQueries(0):
             assert contract.get_abilities(user) == {"sign": True}
 
-    def test_models_contract_avoid_to_create_an_order_with_an_ended_course_run(self):
-        """
-        An order cannot be generated if the course run is archived. It should raise a
-        ValidationError.
-        """
-        organization = factories.OrganizationFactory()
-        user = factories.UserFactory()
-        course = factories.CourseFactory(
-            organizations=[organization], users=[[user, enums.OWNER]]
-        )
-        course_run = factories.CourseRunFactory(
-            is_listed=True,
-            course=course,
-            state=models.CourseState.ONGOING_OPEN,
-            languages="fr",
-            resource_link="http://openedx.test/courses/course-v1:edx+00000+0/course/",
-        )
-        enrollment = factories.EnrollmentFactory(course_run=course_run, is_active=True)
-        closing_date = django_timezone.now() - timedelta(days=1)
-        # closing enrollments and the course run
-        course_run.enrollment_end = closing_date
-        course_run.end = closing_date
-        course_run.save()
-
-        with self.assertRaises(ValidationError) as context:
-            factories.OrderFactory(
-                owner=enrollment.user,
-                enrollment=enrollment,
-                course=None,
-                product__type=enums.PRODUCT_TYPE_CERTIFICATE,
-                product__courses=[enrollment.course_run.course],
-                state=enums.ORDER_STATE_VALIDATED,
-            )
-
-        self.assertEqual(
-            str(context.exception),
-            (
-                "{'course': ['The order cannot be generated on "
-                "course run that is in archived state.']}"
-            ),
-        )
-
     def test_models_contracts_is_fully_signed_property_should_return_true(self):
         """
         Check that the property `is_fully_signed` returns True when the contract
