@@ -420,7 +420,7 @@ class Base(Configuration):
         ),
     }
     JOANIE_PAYMENT_SCHEDULE_LIMITS = values.DictValue(
-        {200: (30, 70), 500: (30, 35, 35), 1000: (30, 25, 25, 20)},
+        {150: (100,), 200: (30, 70), 500: (30, 35, 35), 1000: (30, 25, 25, 20)},
         environ_name="JOANIE_PAYMENT_SCHEDULE_LIMITS",
         environ_prefix=None,
     )
@@ -737,6 +737,12 @@ class Test(Base):
 
     JOANIE_ENROLLMENT_GRADE_CACHE_TTL = 0
     JOANIE_DOCUMENT_ISSUER_CONTEXT_PROCESSORS = {"contract_definition": []}
+
+    JOANIE_PAYMENT_SCHEDULE_LIMITS = values.DictValue(
+        {0: (30, 70)},
+        environ_name="JOANIE_PAYMENT_SCHEDULE_LIMITS",
+        environ_prefix=None,
+    )
 
     LOGGING = values.DictValue(
         {
