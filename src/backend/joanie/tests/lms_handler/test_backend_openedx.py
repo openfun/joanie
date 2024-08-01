@@ -412,7 +412,7 @@ class OpenEdXLMSBackendTestCase(TestCase):
 
         order.flow.cancel()
 
-        self.assertEqual(len(responses.calls), 4)
+        self.assertEqual(len(responses.calls), 6)
         self.assertEqual(
             json.loads(responses.calls[3].request.body),
             {

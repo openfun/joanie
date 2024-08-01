@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Support of payment_schedule for certificate products
+
 ### Changed
 
 - Sort credit card list by is_main then descending creation date
