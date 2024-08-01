@@ -311,12 +311,6 @@ class OrderFlow:
         if target == enums.ORDER_STATE_CANCELED:
             self.instance.unenroll_user_from_course_runs()
 
-        if order_enrollment := self.instance.enrollment:
-            # Trigger LMS synchronization for source enrollment to update mode
-            # Make sure it is saved in case the state is modified e.g in case of synchronization
-            # failure
-            order_enrollment.set()
-
         # Reset course product relation cache if its representation is impacted by changes
         # on related orders
         # e.g. number of remaining seats when an order group is used
