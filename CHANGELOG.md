@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Changed
 
+- Sort credit card list by is_main then descending creation date
 - Rework order statuses
 - Update the task `process_today_installment` to catch up on late
   payments of installments that are in the past
