@@ -761,19 +761,15 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             course_product_relation=relation, nb_seats=random.randint(10, 100)
         )
         order_group2 = factories.OrderGroupFactory(course_product_relation=relation)
-        binding_states = [
-            enums.ORDER_STATE_PENDING,
-            enums.ORDER_STATE_COMPLETED,
-        ]
         for _ in range(3):
             factories.OrderFactory(
                 course=course,
                 product=product,
                 order_group=order_group1,
-                state=random.choice(binding_states),
+                state=random.choice(enums.ORDER_STATES_BINDING),
             )
         for state, _label in enums.ORDER_STATE_CHOICES:
-            if state in binding_states:
+            if state in enums.ORDER_STATES_BINDING:
                 continue
             factories.OrderFactory(
                 course=course, product=product, order_group=order_group1, state=state
