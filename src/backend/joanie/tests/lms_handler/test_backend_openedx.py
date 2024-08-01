@@ -411,17 +411,20 @@ class OpenEdXLMSBackendTestCase(TestCase):
         )
 
         order.flow.cancel()
-
-        self.assertEqual(len(responses.calls), 6)
-        self.assertEqual(
-            json.loads(responses.calls[3].request.body),
-            {
-                "is_active": is_active,
-                "mode": "honor",
-                "user": user.username,
-                "course_details": {"course_id": "course-v1:edx+000001+Demo_Course"},
-            },
-        )
+        if enrollment.is_active:
+            self.assertEqual(len(responses.calls), 4)
+            self.assertEqual(
+                json.loads(responses.calls[3].request.body),
+                {
+                    "is_active": is_active,
+                    "mode": "honor",
+                    "user": user.username,
+                    "course_details": {"course_id": "course-v1:edx+000001+Demo_Course"},
+                },
+            )
+        else:
+            # If enrollment is inactive, no need to update it
+            self.assertEqual(len(responses.calls), 2)
 
     @responses.activate
     def test_backend_openedx_set_enrollment_states(self):
