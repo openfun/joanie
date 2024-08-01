@@ -218,6 +218,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         ]
         self.assertLogsEquals(logger.records, expected_logs)
 
+    @override_settings(JOANIE_PAYMENT_SCHEDULE_LIMITS={0: (30, 70)})
     @responses.activate(assert_all_requests_are_fired=True)
     def test_payment_backend_lyra_create_payment_failed(self):
         """
@@ -316,6 +317,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
         ]
         self.assertLogsEquals(logger.records, expected_logs)
 
+    @override_settings(JOANIE_PAYMENT_SCHEDULE_LIMITS={0: (30, 70)})
     @responses.activate(assert_all_requests_are_fired=True)
     def test_payment_backend_lyra_create_payment_accepted(self):
         """
@@ -392,6 +394,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
             },
         )
 
+    @override_settings(JOANIE_PAYMENT_SCHEDULE_LIMITS={0: (30, 70)})
     @responses.activate(assert_all_requests_are_fired=True)
     def test_payment_backend_lyra_create_payment_accepted_with_installment(self):
         """
@@ -598,6 +601,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
             },
         )
 
+    @override_settings(JOANIE_PAYMENT_SCHEDULE_LIMITS={0: (30, 70)})
     @responses.activate(assert_all_requests_are_fired=True)
     def test_payment_backend_lyra_create_one_click_payment(self):
         """
@@ -681,6 +685,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
             },
         )
 
+    @override_settings(JOANIE_PAYMENT_SCHEDULE_LIMITS={0: (30, 70)})
     @responses.activate(assert_all_requests_are_fired=True)
     def test_payment_backend_lyra_create_one_click_payment_with_installment(self):
         """
@@ -773,8 +778,9 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
             },
         )
 
+    @override_settings(JOANIE_PAYMENT_SCHEDULE_LIMITS={0: (30, 70)})
     @responses.activate(assert_all_requests_are_fired=True)
-    def test_payment_backend_lyra_create_zero_click_payment1(self):
+    def test_payment_backend_lyra_create_zero_click_payment(self):
         """
         When backend creates a zero click payment, it should return payment information.
         """
