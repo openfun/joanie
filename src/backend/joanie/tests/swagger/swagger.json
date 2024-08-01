@@ -6047,7 +6047,7 @@
                             "type": "object",
                             "additionalProperties": {}
                         },
-                        "description": "For the current order, retrieve its related enrollments.",
+                        "description": "For the current order, retrieve its related enrollments if the order is linked\nto a course.",
                         "readOnly": true
                     },
                     "total": {
