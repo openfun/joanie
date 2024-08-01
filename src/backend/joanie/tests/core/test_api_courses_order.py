@@ -935,7 +935,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
                 )
 
                 self.assertEqual(response.status_code, HTTPStatus.OK)
-                if state in enums.ORDER_STATE_ALLOW_ENROLLMENT:
+                if state in enums.ORDER_STATES_BINDING:
                     self.assertEqual(response.json()["count"], 1)
                     self.assertEqual(
                         response.json().get("results")[0].get("id"), str(order.id)
