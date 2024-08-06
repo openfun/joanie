@@ -158,6 +158,39 @@ class DebugMailSuccessInstallmentPaidViewTxt(DebugMailInstallmentPayment):
     template_name = "mail/text/installment_paid.txt"
 
 
+class DebugMailAllInstallmentPaid(DebugMailInstallmentPayment):
+    """Debug View to check the layout of when all installments are paid by email"""
+
+    def get_context_data(self, **kwargs):
+        """
+        Base method to prepare the document context to render in the email for the debug view.
+        """
+        context = super().get_context_data()
+        order = context.get("order")
+        for payment in order.payment_schedule:
+            payment["state"] = PAYMENT_STATE_PAID
+        context["installment_amount"] = Money(order.payment_schedule[-1]["amount"])
+        context["targeted_installment_index"] = order.get_index_of_last_installment(
+            state=PAYMENT_STATE_PAID
+        )
+
+        return context
+
+
+class DebugMailAllInstallmentPaidViewHtml(DebugMailAllInstallmentPaid):
+    """Debug View to check the layout of when all installments are paid by email
+    in html format."""
+
+    template_name = "mail/html/installments_fully_paid.html"
+
+
+class DebugMailAllInstallmentPaidViewTxt(DebugMailAllInstallmentPaid):
+    """Debug View to check the layout of when all installments are paid by email
+    in txt format."""
+
+    template_name = "mail/text/installments_fully_paid.txt"
+
+
 class DebugPdfTemplateView(TemplateView):
     """
     Simple class to render the PDF template in bytes format of a document to preview.
