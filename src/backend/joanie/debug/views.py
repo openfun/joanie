@@ -119,6 +119,7 @@ class DebugMailSuccessInstallmentPaid(TemplateView):
         current_language = translation.get_language()
         with translation.override(current_language):
             product.set_current_language(current_language)
+            context["order"] = order
             context["course_title"] = product.title
             context["payment_schedule"] = order.payment_schedule
             context["amount"] = Money(order.payment_schedule[2]["amount"])
@@ -155,6 +156,42 @@ class DebugMailSuccessInstallmentPaidViewTxt(DebugMailSuccessInstallmentPaid):
     in txt format."""
 
     template_name = "mail/text/installment_paid.txt"
+
+
+class DebugMailAllInstallmentPaid(DebugMailSuccessInstallmentPaid):
+    """Debug View to check the layout of when all installments are paid by email"""
+
+    def get_context_data(self, **kwargs):
+        """
+        Base method to prepare the document context to render in the email for the debug view.
+        """
+        context = super().get_context_data()
+        order = context.get("order")
+        for payment in order.payment_schedule:
+            payment["state"] = PAYMENT_STATE_PAID
+        context["amount"] = order.payment_schedule[-1]["amount"]
+        context["nth_installment_paid"] = order.get_count_installments_paid()
+        context["balance_remaining_to_be_paid"] = order.get_remaining_balance_to_pay()
+        context["next_installment_date"] = order.get_date_next_installment_to_pay()
+        context["installment_concerned_position"] = (
+            order.get_position_last_paid_installment()
+        )
+
+        return context
+
+
+class DebugMailAllInstallmentPaidViewHtml(DebugMailAllInstallmentPaid):
+    """Debug View to check the layout of when all installments are paid by email
+    in html format."""
+
+    template_name = "mail/html/installments_fully_paid.html"
+
+
+class DebugMailAllInstallmentPaidViewTxt(DebugMailAllInstallmentPaid):
+    """Debug View to check the layout of when all installments are paid by email
+    in txt format."""
+
+    template_name = "mail/text/installments_fully_paid.txt"
 
 
 class DebugPdfTemplateView(TemplateView):
