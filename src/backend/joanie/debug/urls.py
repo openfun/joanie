@@ -10,6 +10,8 @@ from joanie.debug.views import (
     DebugContractTemplateView,
     DebugDegreeTemplateView,
     DebugInvoiceTemplateView,
+    DebugMailAllInstallmentPaidViewHtml,
+    DebugMailAllInstallmentPaidViewTxt,
     DebugMailSuccessInstallmentPaidViewHtml,
     DebugMailSuccessInstallmentPaidViewTxt,
     DebugMailSuccessPaymentViewHtml,
@@ -62,5 +64,15 @@ urlpatterns = [
         "__debug__/mail/installment-paid-txt",
         DebugMailSuccessInstallmentPaidViewTxt.as_view(),
         name="debug.mail.installment_paid_txt",
+    ),
+    path(
+        "__debug__/mail/installments-fully-paid-html",
+        DebugMailAllInstallmentPaidViewHtml.as_view(),
+        name="debug.mail.installments_fully_paid_html",
+    ),
+    path(
+        "__debug__/mail/installments-fully-paid-txt",
+        DebugMailAllInstallmentPaidViewTxt.as_view(),
+        name="debug.mail.installments_fully_paid_txt",
     ),
 ]
