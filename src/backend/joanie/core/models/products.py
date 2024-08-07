@@ -1236,13 +1236,16 @@ class Order(BaseModel):
             for installment in self.payment_schedule
         )
 
-    def get_position_last_paid_installment(self):
-        """Get the position of the last installment paid in the payment schedule."""
-        last_paid_index = None
+    def get_position_of_last_installment(self, state):
+        """
+        Get the position of the last installment in the payment schedule depending on the
+        input parameter payment state.
+        """
+        position = None
         for index, entry in enumerate(self.payment_schedule, start=0):
-            if entry["state"] == enums.PAYMENT_STATE_PAID:
-                last_paid_index = index
-        return last_paid_index
+            if entry["state"] == state:
+                position = index
+        return position
 
     def get_remaining_balance_to_pay(self):
         """Get the amount of installments remaining to pay in the payment schedule."""

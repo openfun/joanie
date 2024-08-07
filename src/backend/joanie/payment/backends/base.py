@@ -13,7 +13,7 @@ from django.utils.translation import override
 
 from stockholm import Money
 
-from joanie.core.enums import ORDER_STATE_COMPLETED
+from joanie.core.enums import ORDER_STATE_COMPLETED, PAYMENT_STATE_PAID
 from joanie.payment.enums import INVOICE_STATE_REFUNDED
 from joanie.payment.models import Invoice, Transaction
 
@@ -152,7 +152,9 @@ class BasePaymentBackend:
                     "nth_installment_paid": order.get_count_installments_paid(),
                     "balance_remaining_to_be_paid": order.get_remaining_balance_to_pay(),
                     "next_installment_date": order.get_date_next_installment_to_pay(),
-                    "installment_concerned_position": order.get_position_last_paid_installment(),
+                    "installment_concerned_position": order.get_position_of_last_installment(
+                        state=PAYMENT_STATE_PAID
+                    ),
                     "payment_schedule": order.payment_schedule,
                     "upcoming_installment": upcoming_installment,
                     "site": {
