@@ -25,6 +25,7 @@ from joanie.core.enums import (
     DEGREE,
     ORDER_STATE_PENDING_PAYMENT,
     PAYMENT_STATE_PAID,
+    PAYMENT_STATE_REFUSED,
 )
 from joanie.core.factories import (
     OrderGeneratorFactory,
@@ -189,6 +190,39 @@ class DebugMailAllInstallmentPaidViewTxt(DebugMailAllInstallmentPaid):
     in txt format."""
 
     template_name = "mail/text/installments_fully_paid.txt"
+
+
+class DebugMailInstallmentRefusedPayment(DebugMailInstallmentPayment):
+    """Debug View to check the layout of when an installment debit is refused by email"""
+
+    def get_context_data(self, **kwargs):
+        """
+        Base method to prepare the document context to render in the email for the debug view.
+        """
+
+        context = super().get_context_data()
+        order = context.get("order")
+        order.payment_schedule[2]["state"] = PAYMENT_STATE_REFUSED
+        context["targeted_installment_index"] = order.get_index_of_last_installment(
+            state=PAYMENT_STATE_REFUSED
+        )
+        context["installment_amount"] = Money(order.payment_schedule[2]["amount"])
+
+        return context
+
+
+class DebugMailInstallmentRefusedPaymentViewHtml(DebugMailInstallmentRefusedPayment):
+    """Debug View to check the layout of when an installment debit is refused by email
+    in html format."""
+
+    template_name = "mail/html/installment_refused.html"
+
+
+class DebugMailInstallmentRefusedPaymentViewTxt(DebugMailInstallmentRefusedPayment):
+    """Debug View to check the layout of when an installment debit is refused by email
+    in txt format."""
+
+    template_name = "mail/text/installment_refused.txt"
 
 
 class DebugPdfTemplateView(TemplateView):
