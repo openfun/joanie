@@ -1333,9 +1333,11 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
 
         self.assertEqual(str(remains), "499.99")
 
-    def test_models_order_get_position_last_paid_installment(self):
-        """Should return the position of the last installment paid from the payment schedule."""
-
+    def test_models_order_get_index_of_last_installment_with_paid_state(self):
+        """
+        Should return the index of the last installment with state 'paid'
+        from the payment schedule.
+        """
         order = factories.OrderFactory(
             state=ORDER_STATE_PENDING_PAYMENT,
             payment_schedule=[
@@ -1380,4 +1382,43 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
 
         self.assertEqual(
             2, order.get_index_of_last_installment(state=PAYMENT_STATE_PAID)
+        )
+
+    def test_models_order_get_index_of_last_installment_state_refused(self):
+        """
+        Should return the index of the last installment with state 'refused'
+        from the payment schedule.
+        """
+        order = factories.OrderFactory(
+            state=ORDER_STATE_PENDING_PAYMENT,
+            payment_schedule=[
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+                {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
+                    "amount": "300.00",
+                    "due_date": "2024-02-17",
+                    "state": PAYMENT_STATE_REFUSED,
+                },
+                {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
+                    "amount": "300.00",
+                    "due_date": "2024-03-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
+                    "amount": "199.99",
+                    "due_date": "2024-04-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        self.assertEqual(
+            1, order.get_index_of_last_installment(state=PAYMENT_STATE_REFUSED)
         )
