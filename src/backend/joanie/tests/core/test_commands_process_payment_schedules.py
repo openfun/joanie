@@ -77,9 +77,9 @@ class ProcessPaymentSchedulesTestCase(TestCase):
         with (
             mock.patch("django.utils.timezone.now", return_value=mocked_now),
             mock.patch(
-                "joanie.core.tasks.payment_schedule.process_today_installment"
-            ) as process_today_installment,
+                "joanie.core.tasks.payment_schedule.debit_pending_installment"
+            ) as debit_pending_installment,
         ):
             call_command("process_payment_schedules")
 
-        process_today_installment.delay.assert_called_once_with(order.id)
+        debit_pending_installment.delay.assert_called_once_with(order.id)
