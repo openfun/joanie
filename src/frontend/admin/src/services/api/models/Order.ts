@@ -47,7 +47,6 @@ export type Order = AbstractOrder & {
   enrollment: Nullable<Enrollment>;
   certificate: Nullable<GeneratedCertificate>;
   main_invoice: OrderMainInvoice;
-  has_consent_to_terms: boolean;
   contract: Nullable<OrderContractDetails>;
   payment_schedule: Nullable<OrderPaymentSchedule[]>;
 };
