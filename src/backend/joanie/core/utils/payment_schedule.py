@@ -86,7 +86,7 @@ def _calculate_installments(total, due_dates, percentages):
     """
     Calculate the installments for the order.
     """
-    total_amount = Money(total, settings.DEFAULT_CURRENCY)
+    total_amount = Money(total)
     installments = []
     for i, due_date in enumerate(due_dates):
         if i < len(due_dates) - 1:
