@@ -7,6 +7,7 @@ import uuid
 from datetime import timedelta
 
 from django.conf import settings
+from django.utils import timezone
 
 from dateutil.relativedelta import relativedelta
 from stockholm import Money, Number
@@ -124,3 +125,25 @@ def generate(total, beginning_contract_date, course_start_date, course_end_date)
     installments = _calculate_installments(total, due_dates, percentages)
 
     return installments
+
+
+def is_installment_to_debit(installment):
+    """
+    Check if the installment is pending and has reached due date.
+    """
+    due_date = timezone.localdate().isoformat()
+
+    return (
+        installment["state"] == enums.PAYMENT_STATE_PENDING
+        and installment["due_date"] <= due_date
+    )
+
+
+def has_installments_to_debit(order):
+    """
+    Check if the order has any pending installments with reached due date.
+    """
+
+    return any(
+        is_installment_to_debit(installment) for installment in order.payment_schedule
+    )
