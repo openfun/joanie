@@ -2,29 +2,24 @@
 
 from logging import getLogger
 
-from django.utils import timezone
-
 from joanie.celery_app import app
-from joanie.core import enums
 from joanie.core.models import Order
+from joanie.core.utils.payment_schedule import is_installment_to_debit
 from joanie.payment import get_payment_backend
 
 logger = getLogger(__name__)
 
 
 @app.task
-def process_today_installment(order_id):
+def debit_pending_installment(order_id):
     """
-    Process the payment schedule for the order.
+    Process the payment schedule for the order. We debit all pending installments
+    with a due date less than or equal to today.
     """
     order = Order.objects.get(id=order_id)
 
-    today = timezone.localdate()
     for installment in order.payment_schedule:
-        if (
-            installment["due_date"] <= today.isoformat()
-            and installment["state"] == enums.PAYMENT_STATE_PENDING
-        ):
+        if is_installment_to_debit(installment):
             payment_backend = get_payment_backend()
             if not order.credit_card or not order.credit_card.token:
                 order.set_installment_refused(installment["id"])

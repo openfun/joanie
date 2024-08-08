@@ -5,7 +5,8 @@ import logging
 from django.core.management import BaseCommand
 
 from joanie.core.models import Order
-from joanie.core.tasks.payment_schedule import process_today_installment
+from joanie.core.tasks.payment_schedule import debit_pending_installment
+from joanie.core.utils.payment_schedule import has_installments_to_debit
 
 logger = logging.getLogger(__name__)
 
@@ -22,12 +23,12 @@ class Command(BaseCommand):
         Retrieve all pending payment schedules and process them.
         """
         logger.info("Starting processing of all pending payment schedules.")
-        found_orders = Order.objects.find_today_installments()
-        if not found_orders:
-            logger.info("No pending payment schedule found.")
-            return
+        found_orders_count = 0
 
-        logger.info("Found %s pending payment schedules.", len(found_orders))
-        for order in found_orders:
-            logger.info("Processing payment schedule for order %s.", order.id)
-            process_today_installment.delay(order.id)
+        for order in Order.objects.find_pending_installments().iterator():
+            if has_installments_to_debit(order):
+                logger.info("Processing payment schedule for order %s.", order.id)
+                debit_pending_installment.delay(order.id)
+                found_orders_count += 1
+
+        logger.info("Found %s pending payment schedules.", found_orders_count)

@@ -13,11 +13,16 @@ from django.test.utils import override_settings
 
 from stockholm import Money
 
-from joanie.core.enums import PAYMENT_STATE_PENDING
+from joanie.core import factories
+from joanie.core.enums import (
+    ORDER_STATE_PENDING_PAYMENT,
+    PAYMENT_STATE_PAID,
+    PAYMENT_STATE_PENDING,
+)
 from joanie.core.utils import payment_schedule
 from joanie.tests.base import BaseLogMixinTestCase
 
-# pylint: disable=protected-access
+# pylint: disable=protected-access, too-many-public-methods
 
 
 @override_settings(
@@ -569,3 +574,102 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
                 },
             ],
         )
+
+    def test_utils_is_installment_to_debit_today(self):
+        """
+        Check that the installment is to debit if the due date is today.
+        """
+        installment = {
+            "state": PAYMENT_STATE_PENDING,
+            "due_date": date(2024, 1, 17).isoformat(),
+        }
+
+        mocked_now = datetime(2024, 1, 17, 0, 0, tzinfo=ZoneInfo("UTC"))
+        with mock.patch("django.utils.timezone.localdate", return_value=mocked_now):
+            self.assertEqual(
+                payment_schedule.is_installment_to_debit(installment), True
+            )
+
+    def test_utils_is_installment_to_debit_past(self):
+        """
+        Check that the installment is to debit if the due date is reached.
+        """
+        installment = {
+            "state": PAYMENT_STATE_PENDING,
+            "due_date": date(2024, 1, 13).isoformat(),
+        }
+
+        mocked_now = datetime(2024, 1, 17, 0, 0, tzinfo=ZoneInfo("UTC"))
+        with mock.patch("django.utils.timezone.localdate", return_value=mocked_now):
+            self.assertEqual(
+                payment_schedule.is_installment_to_debit(installment), True
+            )
+
+    def test_utils_is_installment_to_debit_paid_today(self):
+        """
+        Check that the installment is not to debit if the due date is today but its
+        state is paid
+        """
+        installment = {
+            "state": PAYMENT_STATE_PAID,
+            "due_date": date(2024, 1, 17).isoformat(),
+        }
+
+        mocked_now = datetime(2024, 1, 17, 0, 0, tzinfo=ZoneInfo("UTC"))
+        with mock.patch("django.utils.timezone.localdate", return_value=mocked_now):
+            self.assertEqual(
+                payment_schedule.is_installment_to_debit(installment), False
+            )
+
+    def test_utils_has_installments_to_debit_true(self):
+        """
+        Check that the order has installments to debit if at least one is to debit.
+        """
+        order = factories.OrderFactory(
+            state=ORDER_STATE_PENDING_PAYMENT,
+            payment_schedule=[
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "200.00",
+                    "due_date": "2023-01-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+                {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
+                    "amount": "300.50",
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        mocked_now = datetime(2024, 1, 17, 0, 0, tzinfo=ZoneInfo("UTC"))
+        with mock.patch("django.utils.timezone.localdate", return_value=mocked_now):
+            self.assertEqual(payment_schedule.has_installments_to_debit(order), True)
+
+    def test_utils_has_installments_to_debit_false(self):
+        """
+        Check that the order has not installments to debit if no installment are pending
+        or due date is not reached.
+        """
+        order = factories.OrderFactory(
+            state=ORDER_STATE_PENDING_PAYMENT,
+            payment_schedule=[
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "200.00",
+                    "due_date": "2023-01-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+                {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
+                    "amount": "300.50",
+                    "due_date": "2024-02-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        mocked_now = datetime(2024, 1, 17, 0, 0, tzinfo=ZoneInfo("UTC"))
+        with mock.patch("django.utils.timezone.localdate", return_value=mocked_now):
+            self.assertEqual(payment_schedule.has_installments_to_debit(order), False)

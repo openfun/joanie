@@ -380,9 +380,8 @@ class OrderManager(models.Manager):
             .filter(payment_schedule__contains=[{"due_date": due_date.isoformat()}])
         )
 
-    def find_today_installments(self):
-        """Retrieve orders with a payment due today."""
-        due_date = timezone.now().date().isoformat()
+    def find_pending_installments(self):
+        """Retrieve orders with at least one pending installment."""
         return (
             super()
             .get_queryset()
@@ -391,9 +390,7 @@ class OrderManager(models.Manager):
                     enums.ORDER_STATE_PENDING,
                     enums.ORDER_STATE_PENDING_PAYMENT,
                 ],
-                payment_schedule__contains=[
-                    {"due_date": due_date, "state": enums.PAYMENT_STATE_PENDING}
-                ],
+                payment_schedule__contains=[{"state": enums.PAYMENT_STATE_PENDING}],
             )
         )
 
