@@ -245,7 +245,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
         self.assertEqual(len(found_orders), 1)
         self.assertIn(order, found_orders)
 
-    def test_models_order_schedule_find_today_installments(self):
+    def test_models_order_schedule_find_pending_installments(self):
         """Check that matching orders are found"""
         order = factories.OrderFactory(
             state=ORDER_STATE_PENDING,
@@ -266,6 +266,11 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
             state=ORDER_STATE_PENDING_PAYMENT,
             payment_schedule=[
                 {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+                {
                     "amount": "300.00",
                     "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PENDING,
@@ -277,21 +282,22 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
                 },
             ],
         )
-        factories.OrderFactory(
-            state=ORDER_STATE_PENDING_PAYMENT,
+        order_3 = factories.OrderFactory(
+            state=ORDER_STATE_PENDING,
             payment_schedule=[
                 {
-                    "amount": "200.00",
-                    "due_date": "2024-01-18",
-                    "state": PAYMENT_STATE_PENDING,
+                    "amount": "300.00",
+                    "due_date": "2024-03-18",
+                    "state": PAYMENT_STATE_REFUSED,
                 },
                 {
-                    "amount": "300.00",
-                    "due_date": "2024-02-18",
-                    "state": PAYMENT_STATE_REFUSED,
+                    "amount": "199.99",
+                    "due_date": "2024-04-18",
+                    "state": PAYMENT_STATE_PENDING,
                 },
             ],
         )
+
         factories.OrderFactory(
             state=ORDER_STATE_PENDING_PAYMENT,
             payment_schedule=[
@@ -304,23 +310,27 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
         )
 
         factories.OrderFactory(
-            state=ORDER_STATE_PENDING,
+            state=ORDER_STATE_NO_PAYMENT,
             payment_schedule=[
                 {
-                    "amount": "199.99",
-                    "due_date": "2024-04-18",
+                    "amount": "200.00",
+                    "due_date": "2024-01-18",
+                    "state": PAYMENT_STATE_REFUSED,
+                },
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-18",
                     "state": PAYMENT_STATE_PENDING,
                 },
             ],
         )
 
-        mocked_now = datetime(2024, 2, 17, 1, 10, tzinfo=ZoneInfo("UTC"))
-        with mock.patch("django.utils.timezone.now", return_value=mocked_now):
-            found_orders = Order.objects.find_today_installments()
+        found_orders = Order.objects.find_pending_installments()
 
-        self.assertEqual(len(found_orders), 2)
+        self.assertEqual(len(found_orders), 3)
         self.assertIn(order, found_orders)
         self.assertIn(order_2, found_orders)
+        self.assertIn(order_3, found_orders)
 
     def test_models_order_schedule_set_installment_state(self):
         """Check that the state of an installment can be set."""
