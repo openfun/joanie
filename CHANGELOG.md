@@ -20,6 +20,12 @@ and this project adheres to
   payments of installments that are in the past
 - Deprecated field `has_consent_to_terms` for `Order` model
 
+### Removed
+
+- Remove the `has_consent_to_terms` field from the `Order` edit view
+  in the back office application
+
+
 ## [2.7.1] - 2024-10-02
 
 ### Fixed
