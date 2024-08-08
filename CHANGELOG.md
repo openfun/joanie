@@ -17,7 +17,7 @@ and this project adheres to
 - Generate payment schedule for any kind of product
 - Sort credit card list by is_main then descending creation date
 - Rework order statuses
-- Update the task `process_today_installment` to catch up on late
+- Update the task `debit_pending_installment` to catch up on late
   payments of installments that are in the past
 - Deprecated field `has_consent_to_terms` for `Order` model
 
