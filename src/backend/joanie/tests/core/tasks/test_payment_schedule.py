@@ -21,7 +21,7 @@ from joanie.core.enums import (
     PAYMENT_STATE_REFUSED,
 )
 from joanie.core.factories import OrderFactory, UserAddressFactory, UserFactory
-from joanie.core.tasks.payment_schedule import process_today_installment
+from joanie.core.tasks.payment_schedule import debit_pending_installment
 from joanie.payment import get_payment_backend
 from joanie.payment.backends.dummy import DummyPaymentBackend
 from joanie.payment.factories import InvoiceFactory
@@ -40,7 +40,7 @@ class PaymentScheduleTasksTestCase(TestCase, BaseLogMixinTestCase):
         "create_zero_click_payment",
         side_effect=DummyPaymentBackend().create_zero_click_payment,
     )
-    def test_utils_payment_schedule_process_today_installment_succeeded(
+    def test_utils_payment_schedule_debit_pending_installment_succeeded(
         self, mock_create_zero_click_payment
     ):
         """Check today's installment is processed"""
@@ -86,7 +86,7 @@ class PaymentScheduleTasksTestCase(TestCase, BaseLogMixinTestCase):
 
         mocked_now = datetime(2024, 1, 17, 0, 0, tzinfo=ZoneInfo("UTC"))
         with mock.patch("django.utils.timezone.now", return_value=mocked_now):
-            process_today_installment.run(order.id)
+            debit_pending_installment.run(order.id)
 
         mock_create_zero_click_payment.assert_called_once_with(
             order=order,
@@ -99,7 +99,7 @@ class PaymentScheduleTasksTestCase(TestCase, BaseLogMixinTestCase):
             },
         )
 
-    def test_utils_payment_schedule_process_today_installment_no_card(self):
+    def test_utils_payment_schedule_debit_pending_installment_no_card(self):
         """Check today's installment is processed"""
         order = OrderFactory(
             state=ORDER_STATE_PENDING,
@@ -134,7 +134,7 @@ class PaymentScheduleTasksTestCase(TestCase, BaseLogMixinTestCase):
 
         mocked_now = datetime(2024, 1, 17, 0, 0, tzinfo=ZoneInfo("UTC"))
         with mock.patch("django.utils.timezone.now", return_value=mocked_now):
-            process_today_installment.run(order.id)
+            debit_pending_installment.run(order.id)
 
         order.refresh_from_db()
         self.assertEqual(
@@ -249,7 +249,7 @@ class PaymentScheduleTasksTestCase(TestCase, BaseLogMixinTestCase):
 
         mocked_now = datetime(2024, 3, 17, 0, 0, tzinfo=ZoneInfo("UTC"))
         with mock.patch("django.utils.timezone.now", return_value=mocked_now):
-            process_today_installment.run(order.id)
+            debit_pending_installment.run(order.id)
         mock_create_zero_click_payment.assert_has_calls(expected_calls, any_order=False)
 
         backend = get_payment_backend()
