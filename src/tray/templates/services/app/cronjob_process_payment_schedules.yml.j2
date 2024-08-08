@@ -6,10 +6,10 @@ metadata:
     service: app
     version: "{{ joanie_image_tag }}"
     deployment_stamp: "{{ deployment_stamp }}"
-  name: "process-payment-schedules-{{ deployment_stamp }}"
+  name: "joanie-process-payment-schedules-{{ deployment_stamp }}"
   namespace: "{{ namespace_name }}"
 spec:
-  schedule: "{{ joanie_process_payment_schedule_cronjob_schedule }}"
+  schedule: "{{ joanie_process_payment_schedules_cronjob_schedule }}"
   successfulJobsHistoryLimit: 2
   failedJobsHistoryLimit: 1
   concurrencyPolicy: Forbid
@@ -18,8 +18,8 @@ spec:
     spec:
       template:
         metadata:
-         name: "process-payment-schedules-{{ deployment_stamp }}"
-          labels:
+         name: "joanie-process-payment-schedules-{{ deployment_stamp }}"
+         labels:
             app: joanie
             service: app
             version: "{{ joanie_image_tag }}"
@@ -27,17 +27,17 @@ spec:
         spec:
 {% set image_pull_secret_name = joanie_image_pull_secret_name | default(none) or default_image_pull_secret_name %}
 {% if image_pull_secret_name is not none %}
-        imagePullSecrets:
+          imagePullSecrets:
             - name: "{{ image_pull_secret_name }}"
 {% endif %}
           containers:
-            - name: "{{ dc_name }}"
+            - name: "joanie-process-payment-schedules"
               image: "{{ joanie_image_name }}:{{ joanie_image_tag }}"
               imagePullPolicy: Always
               command:
                 - "/bin/bash"
                 - "-c"
-                - python manage.py process_payment_schedule
+                - python manage.py process_payment_schedules
               env:
                 - name: DB_HOST
                   value: "joanie-{{ joanie_database_host }}-{{ deployment_stamp }}"
@@ -66,7 +66,7 @@ spec:
                     name: "{{ joanie_secret_name }}"
                 - configMapRef:
                     name: "joanie-app-dotenv-{{ deployment_stamp }}"
-              resources: {{ joanie_process_payment_schedule_cronjob_resources }}
+              resources: {{ joanie_process_payment_schedules_cronjob_resources }}
               volumeMounts:
               - name: joanie-configmap
                 mountPath: /app/joanie/configs
