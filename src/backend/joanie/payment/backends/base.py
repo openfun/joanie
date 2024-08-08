@@ -13,7 +13,8 @@ from django.utils.translation import override
 
 from stockholm import Money
 
-from joanie.core.enums import ORDER_STATE_COMPLETED, PAYMENT_STATE_PAID
+from joanie.core.enums import ORDER_STATE_COMPLETED
+from joanie.core.utils import emails
 from joanie.payment.enums import INVOICE_STATE_REFUNDED
 from joanie.payment.models import Invoice, Transaction
 
@@ -137,42 +138,65 @@ class BasePaymentBackend:
                 )
             cls._send_mail(
                 subject=f"{base_subject}{variable_subject_part}",
-                template_vars={
-                    "fullname": order.owner.get_full_name() or order.owner.username,
-                    "email": order.owner.email,
-                    "product_title": product_title,
-                    "installment_amount": installment_amount,
-                    "product_price": Money(order.product.price),
-                    "credit_card_last_numbers": order.credit_card.last_numbers,
-                    "remaining_balance_to_pay": order.get_remaining_balance_to_pay(),
-                    "date_next_installment_to_pay": order.get_date_next_installment_to_pay(),
-                    "targeted_installment_index": order.get_index_of_last_installment(
-                        state=PAYMENT_STATE_PAID
-                    ),
-                    "order_payment_schedule": order.payment_schedule,
-                    "dashboard_order_link": (
-                        settings.JOANIE_DASHBOARD_ORDER_LINK.replace(
-                            ":orderId", str(order.id)
-                        )
-                    ),
-                    "site": {
-                        "name": settings.JOANIE_CATALOG_NAME,
-                        "url": settings.JOANIE_CATALOG_BASE_URL,
-                    },
-                },
+                template_vars=emails.prepare_context_data(
+                    order,
+                    amount,
+                    product_title,
+                    payment_refused=False,
+                ),
                 template_name="installment_paid"
                 if upcoming_installment
                 else "installments_fully_paid",
                 to_user_email=order.owner.email,
             )
 
-    @staticmethod
-    def _do_on_payment_failure(order, installment_id):
+    @classmethod
+    def _send_mail_refused_debit(cls, order, installment_id):
+        """
+        Prepare mail context when debit has been refused for an installment in the
+        the current language of the user.
+        """
+        try:
+            installment_amount = Money(
+                next(
+                    installment["amount"]
+                    for installment in order.payment_schedule
+                    if installment["id"] == installment_id
+                ),
+                currency=settings.DEFAULT_CURRENCY,
+            )
+        except StopIteration as exception:
+            raise ValueError(
+                f"Payment Base Backend: {installment_id} not found!"
+            ) from exception
+
+        with override(order.owner.language):
+            product_title = order.product.safe_translation_getter(
+                "title", language_code=order.owner.language
+            )
+            cls._send_mail(
+                subject=_(
+                    f"{settings.JOANIE_CATALOG_NAME} - {product_title} - An installment debit "
+                    f"has failed {installment_amount} {settings.DEFAULT_CURRENCY}"
+                ),
+                template_vars=emails.prepare_context_data(
+                    order,
+                    installment_amount,
+                    product_title,
+                    payment_refused=True,
+                ),
+                template_name="installment_refused",
+                to_user_email=order.owner.email,
+            )
+
+    @classmethod
+    def _do_on_payment_failure(cls, order, installment_id):
         """
         Generic actions triggered when a failed payment has been received.
         Mark the invoice as pending.
         """
         order.set_installment_refused(installment_id)
+        cls._send_mail_refused_debit(order, installment_id)
 
     @staticmethod
     def _do_on_refund(amount, invoice, refund_reference):
