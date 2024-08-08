@@ -15,7 +15,7 @@ from django.test.utils import override_settings
 
 from stockholm import Money
 
-from joanie.core import factories
+from joanie.core import enums, factories
 from joanie.core.enums import (
     ORDER_STATE_COMPLETED,
     ORDER_STATE_FAILED_PAYMENT,
@@ -31,6 +31,7 @@ from joanie.core.utils import payment_schedule
 from joanie.tests.base import ActivityLogMixingTestCase, BaseLogMixinTestCase
 
 
+# pylint: disable=too-many-public-methods
 @override_settings(
     JOANIE_PAYMENT_SCHEDULE_LIMITS={
         5: (30, 70),
@@ -46,9 +47,9 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
 
     maxDiff = None
 
-    def test_models_order_schedule_get_schedule_dates(self):
+    def test_models_order_schedule_get_schedule_dates_with_contract(self):
         """
-        Check that the schedule dates are correctly calculated
+        Check that the schedule dates are correctly calculated for order with contract
         """
         student_signed_on_date = datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC"))
         course_run_start_date = datetime(2024, 3, 1, 14, tzinfo=ZoneInfo("UTC"))
@@ -64,13 +65,37 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
             order__product__target_courses=[course_run.course],
         )
 
+        signed_contract_date, course_start_date, course_end_date = (
+            contract.order._get_schedule_dates()
+        )
+
+        self.assertEqual(signed_contract_date, student_signed_on_date)
+        self.assertEqual(course_start_date, course_run_start_date)
+        self.assertEqual(course_end_date, course_run_end_date)
+
+    def test_models_order_schedule_get_schedule_dates_without_contract(self):
+        """
+        Check that the schedule dates are correctly calculated for order without contract
+        """
+        course_run_start_date = datetime(2024, 3, 1, 14, tzinfo=ZoneInfo("UTC"))
+        course_run_end_date = datetime(2024, 5, 1, 14, tzinfo=ZoneInfo("UTC"))
+        course_run = factories.CourseRunFactory(
+            enrollment_start=datetime(2024, 1, 1, 8, tzinfo=ZoneInfo("UTC")),
+            start=course_run_start_date,
+            end=course_run_end_date,
+        )
+        order = factories.OrderFactory(
+            state=enums.ORDER_STATE_COMPLETED,
+            product__target_courses=[course_run.course],
+        )
+
         mocked_now = datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC"))
         with mock.patch("django.utils.timezone.now", return_value=mocked_now):
             signed_contract_date, course_start_date, course_end_date = (
-                contract.order._get_schedule_dates()
+                order._get_schedule_dates()
             )
 
-        self.assertEqual(signed_contract_date, student_signed_on_date)
+        self.assertEqual(signed_contract_date, mocked_now)
         self.assertEqual(course_start_date, course_run_start_date)
         self.assertEqual(course_end_date, course_run_end_date)
 
