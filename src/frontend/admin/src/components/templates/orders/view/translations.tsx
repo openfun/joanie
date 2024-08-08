@@ -87,18 +87,6 @@ export const orderViewMessages = defineMessages({
     defaultMessage: "tax included",
     description: "Helper text for the price filed",
   },
-  hasConsentToTerms: {
-    id: "components.templates.orders.view.hasConsentToTerms",
-    defaultMessage:
-      "The user has accepted the terms and conditions when purchasing",
-    description: "Text for the has consent to term label",
-  },
-  hasNotConsentToTerms: {
-    id: "components.templates.orders.view.hasNotConsentToTerms",
-    defaultMessage:
-      "The user has not accepted the terms and conditions when purchasing",
-    description: "Text for the has consent to term label",
-  },
   certificate: {
     id: "components.templates.orders.view.certificate",
     defaultMessage: "Certificate",
