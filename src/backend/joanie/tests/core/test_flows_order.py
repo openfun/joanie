@@ -15,6 +15,7 @@ import responses
 from viewflow.fsm import TransitionNotAllowed
 
 from joanie.core import enums, exceptions, factories
+from joanie.core.factories import CourseRunFactory
 from joanie.core.models import CourseState, Enrollment
 from joanie.lms_handler import LMSHandler
 from joanie.lms_handler.backends.dummy import DummyLMSBackend
@@ -1342,8 +1343,11 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         credit_card = CreditCardFactory(
             initial_issuer_transaction_identifier="4575676657929351"
         )
+        run = factories.CourseRunFactory(state=CourseState.ONGOING_OPEN)
         order = factories.OrderFactory(
-            state=enums.ORDER_STATE_ASSIGNED, owner=credit_card.owner
+            state=enums.ORDER_STATE_ASSIGNED,
+            owner=credit_card.owner,
+            product__target_courses=[run.course],
         )
 
         order.flow.update()
@@ -1411,7 +1415,10 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             enums.ORDER_STATE_SIGNING,
         ]:
             with self.subTest(state=state):
-                order = factories.OrderFactory(state=state)
+                run = factories.CourseRunFactory(state=CourseState.ONGOING_OPEN)
+                order = factories.OrderFactory(
+                    state=state, product__target_courses=[run.course]
+                )
                 order.flow.pending()
                 self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
 
@@ -1430,3 +1437,30 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
                     )
                 else:
                     self.assertEqual(order.state, state)
+
+    def test_flows_order_pending_transition_generate_schedule(self):
+        """
+        Test that a payment schedule is generated when a not free order transitions
+        to `pending` state.
+        """
+        target_courses = factories.CourseFactory.create_batch(
+            1,
+            course_runs=CourseRunFactory.create_batch(
+                1, state=CourseState.ONGOING_OPEN
+            ),
+        )
+        product = factories.ProductFactory(
+            price="100.00", target_courses=target_courses
+        )
+        order = factories.OrderFactory(
+            state=enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
+            credit_card=CreditCardFactory(),
+            product=product,
+        )
+
+        self.assertIsNone(order.payment_schedule)
+
+        order.flow.update()
+
+        self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
+        self.assertIsNotNone(order.payment_schedule)
