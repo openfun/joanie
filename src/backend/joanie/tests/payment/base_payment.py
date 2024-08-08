@@ -3,6 +3,8 @@
 from django.core import mail
 from django.test import TestCase
 
+from parler.utils.context import switch_language
+
 from joanie.core.enums import ORDER_STATE_COMPLETED
 
 
@@ -35,6 +37,31 @@ class BasePaymentTestCase(TestCase):
         self.assertIn("has been debited on the credit card", email_content)
         self.assertIn("See order details on your dashboard", email_content)
         self.assertIn(order.product.title, email_content)
+
+        # emails are generated from mjml format, test rendering of email doesn't
+        # contain any trans tag, it might happen if \n are generated
+        self.assertNotIn("trans ", email_content)
+        # catalog url is included in the email
+        self.assertIn("https://richie.education", email_content)
+
+    def _check_installment_refused_email_sent(self, email, order):
+        """Shortcut to check over installment debit is refused email has been sent"""
+        # Check we send it to the right email
+        self.assertEqual(mail.outbox[0].to[0], email)
+
+        self.assertIn("An installment debit has failed", mail.outbox[0].subject)
+
+        # Check body
+        email_content = " ".join(mail.outbox[0].body.split())
+        fullname = order.owner.get_full_name()
+        self.assertIn(f"Hello {fullname}", email_content)
+        self.assertIn("installment debit has failed.", email_content)
+        self.assertIn(
+            "Please correct the failed payment as soon as possible using", email_content
+        )
+        # Check the product title is in the correct language
+        with switch_language(order.product, order.owner.language):
+            self.assertIn(order.product.title, email_content)
 
         # emails are generated from mjml format, test rendering of email doesn't
         # contain any trans tag, it might happen if \n are generated

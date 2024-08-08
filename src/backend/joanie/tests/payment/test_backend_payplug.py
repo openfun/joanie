@@ -4,6 +4,7 @@ import re
 from decimal import Decimal as D
 from unittest import mock
 
+from django.core import mail
 from django.test import override_settings
 from django.urls import reverse
 
@@ -37,7 +38,7 @@ from joanie.payment.models import CreditCard
 from joanie.tests.payment.base_payment import BasePaymentTestCase
 
 
-# pylint: disable=too-many-public-methods
+# pylint: disable=too-many-public-methods, too-many-lines
 class PayplugBackendTestCase(BasePaymentTestCase):
     """Test case of the Payplug backend"""
 
@@ -889,3 +890,215 @@ class PayplugBackendTestCase(BasePaymentTestCase):
                 "The server gave the following response: `Abort this payment is forbidden.`."
             ),
         )
+
+    @mock.patch.object(BasePaymentBackend, "_send_mail_refused_debit")
+    @mock.patch.object(payplug.notifications, "treat")
+    def test_payment_backend_payplug_payment_failure_on_installment_should_trigger_email_method(
+        self, mock_treat, mock_send_mail_refused_debit
+    ):
+        """
+        When the backend receives a payment notification which mentions that the payment
+        debit has failed, the generic method `_do_on_payment_failure` should be called and
+        also call the method that is responsible to send an email to the user.
+        """
+        backend = PayplugBackend(self.configuration)
+        payment_id = "pay_failure"
+        user = UserFactory(
+            first_name="John",
+            last_name="Doe",
+            language="en-us",
+            email="john.doe@acme.org",
+        )
+        product = ProductFactory(price=D("999.99"), title="Product 1")
+        order = OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
+            id="758c2570-a7af-4335-b091-340d0cc6e694",
+            owner=user,
+            product=product,
+        )
+        # Force the first installment id to match the stored request
+        first_installment = order.payment_schedule[0]
+        first_installment["id"] = "d9356dd7-19a6-4695-b18e-ad93af41424a"
+        order.save()
+
+        mock_treat.return_value = PayplugFactories.PayplugPaymentFactory(
+            id=payment_id,
+            failure=True,
+            metadata={
+                "order_id": str(order.id),
+                "installment_id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+            },
+        )
+
+        request = APIRequestFactory().post(
+            reverse("payment_webhook"), data={"id": payment_id}, format="json"
+        )
+
+        backend.handle_notification(request)
+
+        mock_send_mail_refused_debit.assert_called_once_with(
+            order, "d9356dd7-19a6-4695-b18e-ad93af41424a"
+        )
+
+    @mock.patch.object(payplug.notifications, "treat")
+    def test_payment_backend_payplug_refused_installment_email_should_use_user_language_in_english(
+        self, mock_treat
+    ):
+        """
+        When backend receives a payment notification which failed, the generic method
+        `_do_on_payment_failure` should be called and should send an email mentioning about
+        the refused debit on the installment in the user's preferred language that is English
+        in this case.
+        """
+        backend = PayplugBackend(self.configuration)
+        payment_id = "pay_failure"
+        user = UserFactory(
+            first_name="John",
+            last_name="Doe",
+            language="en-us",
+            email="john.doe@acme.org",
+        )
+        product = ProductFactory(price=D("999.99"), title="Product 1")
+        order = OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
+            id="758c2570-a7af-4335-b091-340d0cc6e694",
+            owner=user,
+            product=product,
+        )
+        # Force the first installment id to match the stored request
+        first_installment = order.payment_schedule[0]
+        first_installment["id"] = "d9356dd7-19a6-4695-b18e-ad93af41424a"
+        order.save()
+
+        mock_treat.return_value = PayplugFactories.PayplugPaymentFactory(
+            id=payment_id,
+            failure=True,
+            metadata={
+                "order_id": str(order.id),
+                "installment_id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+            },
+        )
+
+        request = APIRequestFactory().post(
+            reverse("payment_webhook"), data={"id": payment_id}, format="json"
+        )
+
+        backend.handle_notification(request)
+
+        email_content = " ".join(mail.outbox[0].body.split())
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to[0], "john.doe@acme.org")
+        self.assertIn(
+            "An installment debit has failed",
+            mail.outbox[0].subject,
+        )
+        self.assertIn("Product 1", email_content)
+
+    @mock.patch.object(payplug.notifications, "treat")
+    def test_payment_backend_payplug_refused_installment_email_should_use_user_language_in_french(
+        self, mock_treat
+    ):
+        """
+        When the backend receives a payment notification which failed, the generic method
+        `_do_on_payment_failure` should be called and should send an email mentioning about
+        the refused debit on the installment in the user's preferred language that is
+        the French language in this case.
+        """
+        backend = PayplugBackend(self.configuration)
+        payment_id = "pay_failure"
+        user = UserFactory(
+            first_name="John",
+            last_name="Doe",
+            language="fr-fr",
+            email="john.doe@acme.org",
+        )
+        product = ProductFactory(price=D("999.99"), title="Product 1")
+        product.translations.create(language_code="fr-fr", title="Produit 1")
+        order = OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
+            id="758c2570-a7af-4335-b091-340d0cc6e694",
+            owner=user,
+            product=product,
+        )
+        # Force the first installment id to match the stored request
+        first_installment = order.payment_schedule[0]
+        first_installment["id"] = "d9356dd7-19a6-4695-b18e-ad93af41424a"
+        order.save()
+
+        mock_treat.return_value = PayplugFactories.PayplugPaymentFactory(
+            id=payment_id,
+            failure=True,
+            metadata={
+                "order_id": str(order.id),
+                "installment_id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+            },
+        )
+
+        request = APIRequestFactory().post(
+            reverse("payment_webhook"), data={"id": payment_id}, format="json"
+        )
+
+        backend.handle_notification(request)
+
+        email_content = " ".join(mail.outbox[0].body.split())
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to[0], "john.doe@acme.org")
+        self.assertIn("Produit 1", email_content)
+
+    @override_settings(
+        LANGUAGES=(
+            ("en-us", ("English")),
+            ("fr-fr", ("French")),
+            ("de-de", ("German")),
+        )
+    )
+    @mock.patch.object(payplug.notifications, "treat")
+    def test_payment_backend_payplug_send_email_refused_installment_should_use_fallback_language(
+        self, mock_treat
+    ):
+        """
+        When the backend receives a payment notification which failed, the generic method
+        `_do_on_payment_failure` should be called and should send an email with the fallback
+        language if the translation title does not exist into the user's preferred language.
+        In this case, the fallback language should be in English.
+        """
+        backend = PayplugBackend(self.configuration)
+        payment_id = "pay_failure"
+        user = UserFactory(
+            first_name="John",
+            last_name="Doe",
+            language="de-de",
+            email="john.doe@acme.org",
+        )
+        product = ProductFactory(price=D("1000.00"), title="Test Product 1")
+        product.translations.create(language_code="fr-fr", title="Test Produit 1")
+        order = OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
+            id="758c2570-a7af-4335-b091-340d0cc6e694",
+            owner=user,
+            product=product,
+        )
+        # Force the first installment id to match the stored request
+        first_installment = order.payment_schedule[0]
+        first_installment["id"] = "d9356dd7-19a6-4695-b18e-ad93af41424a"
+        order.save()
+
+        mock_treat.return_value = PayplugFactories.PayplugPaymentFactory(
+            id=payment_id,
+            failure=True,
+            metadata={
+                "order_id": str(order.id),
+                "installment_id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+            },
+        )
+
+        request = APIRequestFactory().post(
+            reverse("payment_webhook"), data={"id": payment_id}, format="json"
+        )
+
+        backend.handle_notification(request)
+
+        email_content = " ".join(mail.outbox[0].body.split())
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to[0], "john.doe@acme.org")
+        self.assertIn("Test Product 1", email_content)
