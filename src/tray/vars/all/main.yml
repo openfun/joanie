@@ -83,7 +83,7 @@ joanie_celery_readynessprobe:
   timeoutSeconds: 5
 
 # Joanie cronjobs
-joanie_process_payment_schedule_cronjob_schedule: "0 3 * * *"
+joanie_process_payment_schedules_cronjob_schedule: "0 3 * * *"
 
 
 # -- resources
@@ -96,7 +96,7 @@ joanie_process_payment_schedule_cronjob_schedule: "0 3 * * *"
 
 joanie_app_resources: "{{ app_resources }}"
 joanie_app_job_db_migrate_resources: "{{ app_resources }}"
-joanie_process_payment_schedule_cronjob_resources: "{{ app_resources }}"
+joanie_process_payment_schedules_cronjob_resources: "{{ app_resources }}"
 
 joanie_nginx_resources:
   requests:
