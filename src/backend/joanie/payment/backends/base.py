@@ -13,10 +13,7 @@ from django.utils.translation import override
 
 from stockholm import Money
 
-from joanie.core.enums import (
-    ORDER_STATE_COMPLETED,
-    ORDER_STATE_PENDING,
-)
+from joanie.core.enums import ORDER_STATE_COMPLETED
 from joanie.payment.enums import INVOICE_STATE_REFUNDED
 from joanie.payment.models import Invoice, Transaction
 
@@ -59,9 +56,6 @@ class BasePaymentBackend:
 
         order.set_installment_paid(payment["installment_id"])
 
-        if order.state == ORDER_STATE_PENDING:
-            cls._send_mail_payment_success(order=order)
-
         upcoming_installment = order.state == ORDER_STATE_COMPLETED
         # Because with Lyra Payment Provider, we get the value in cents
         cls._send_mail_payment_installment_success(
@@ -95,13 +89,16 @@ class BasePaymentBackend:
             logger.error("%s purchase order mail %s not send", to_user_email, exception)
 
     @classmethod
-    def _send_mail_payment_success(cls, order):
-        """Send mail with the current language of the user when an order is confirmed"""
+    def _send_mail_subscription_success(cls, order):
+        """
+        Send mail with the current language of the user when an order subscription is
+        confirmed
+        """
         with override(order.owner.language):
             cls._send_mail(
-                subject=_("Purchase order confirmed!"),
+                subject=_("Subscription confirmed!"),
                 template_vars={
-                    "title": _("Purchase order confirmed!"),
+                    "title": _("Subscription confirmed!"),
                     "email": order.owner.email,
                     "fullname": order.owner.get_full_name() or order.owner.username,
                     "product": order.product,
