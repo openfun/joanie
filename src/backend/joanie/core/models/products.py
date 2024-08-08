@@ -1001,9 +1001,6 @@ class Order(BaseModel):
             )
             raise PermissionDenied(message)
 
-        if not self.is_free:
-            self.generate_schedule()
-
         backend_signature = get_signature_backend()
         context = contract_definition_utility.generate_document_context(
             contract_definition=contract_definition,
@@ -1076,12 +1073,14 @@ class Order(BaseModel):
     def _get_schedule_dates(self):
         """
         Return the schedule dates for the order.
-        The schedules date are based on the time the schedule is generated (right now) and the
-        start and the end of the course run.
+        The schedules date are based on contract sign date or the time the schedule is generated
+        (right now) and the start and the end of the course run.
         """
+        error_message = None
         course_run_dates = self.get_equivalent_course_run_dates()
         start_date = course_run_dates["start"]
         end_date = course_run_dates["end"]
+
         if not end_date or not start_date:
             error_message = "Cannot retrieve start or end date for order"
             logger.error(
@@ -1089,7 +1088,13 @@ class Order(BaseModel):
                 extra={"context": {"order": self.to_dict()}},
             )
             raise ValidationError(error_message)
-        return timezone.now(), start_date, end_date
+
+        if self.has_contract and not self.has_unsigned_contract:
+            signing_date = self.contract.student_signed_on
+        else:
+            signing_date = timezone.now()
+
+        return signing_date, start_date, end_date
 
     def generate_schedule(self):
         """
