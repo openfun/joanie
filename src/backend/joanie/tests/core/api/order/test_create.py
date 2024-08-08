@@ -10,6 +10,7 @@ from django.conf import settings
 
 from joanie.core import enums, factories, models
 from joanie.core.api.client import OrderViewSet
+from joanie.core.models import CourseState
 from joanie.core.serializers import fields
 from joanie.payment.factories import BillingAddressDictFactory, CreditCardFactory
 from joanie.tests.base import BaseAPITestCase
@@ -1317,7 +1318,10 @@ class OrderCreateApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         course = factories.CourseFactory()
-        product = factories.ProductFactory(courses=[course])
+        run = factories.CourseRunFactory(state=CourseState.ONGOING_OPEN)
+        product = factories.ProductFactory(
+            courses=[course], target_courses=[run.course]
+        )
         organization = product.course_relations.first().organizations.first()
         billing_address = BillingAddressDictFactory()
         credit_card = CreditCardFactory(owner=user)

@@ -3,6 +3,7 @@
 from http import HTTPStatus
 
 from joanie.core import enums, factories
+from joanie.core.models import CourseState
 from joanie.payment.factories import CreditCardFactory
 from joanie.tests.base import BaseAPITestCase
 
@@ -120,7 +121,9 @@ class OrderPaymentMethodApiTest(BaseAPITestCase):
         Authenticated users should be able to set a payment method on an order
         by providing a credit card id.
         """
+        run = factories.CourseRunFactory(state=CourseState.ONGOING_OPEN)
         order = factories.OrderFactory(
+            product__target_courses=[run.course],
             state=enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
             credit_card=None,
         )

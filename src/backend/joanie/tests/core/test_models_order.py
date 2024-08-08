@@ -15,6 +15,7 @@ from django.test import TestCase, override_settings
 from django.utils import timezone as django_timezone
 
 from joanie.core import enums, factories
+from joanie.core.factories import CourseRunFactory
 from joanie.core.models import Contract, CourseState
 from joanie.core.utils import contract_definition
 from joanie.payment.factories import (
@@ -505,7 +506,9 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         When an order is submitted, product target courses should be copied to the order
         """
         product = factories.ProductFactory(
-            target_courses=factories.CourseFactory.create_batch(2),
+            target_courses=factories.CourseFactory.create_batch(
+                2, course_runs=[CourseRunFactory()]
+            ),
         )
         order = factories.OrderFactory(product=product)
 
@@ -1042,20 +1045,6 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         self.assertIsInstance(contract.context["course"]["price"], str)
         self.assertEqual(order.total, Decimal("1202.99"))
         self.assertEqual(contract.context["course"]["price"], "1202.99")
-
-    def test_models_order_submit_for_signature_generate_schedule(self):
-        """
-        Order submit_for_signature should generate a schedule for the order.
-        """
-        order = factories.OrderGeneratorFactory(
-            state=enums.ORDER_STATE_TO_SIGN,
-            product__price=Decimal("100.00"),
-        )
-        self.assertIsNone(order.payment_schedule)
-
-        order.submit_for_signature(user=order.owner)
-
-        self.assertIsNotNone(order.payment_schedule)
 
     def test_models_order_is_free(self):
         """

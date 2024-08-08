@@ -14,6 +14,7 @@ and this project adheres to
 
 ### Changed
 
+- Generate payment schedule for any kind of product
 - Sort credit card list by is_main then descending creation date
 - Rework order statuses
 - Update the task `process_today_installment` to catch up on late
