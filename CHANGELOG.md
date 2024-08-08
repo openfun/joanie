@@ -25,6 +25,11 @@ and this project adheres to
 - Improve signature backend `handle_notification` error catching
 - Allow to cancel an enrollment order linked to an archived course run
 
+### Removed
+
+- Remove the `has_consent_to_terms` field from the `Order` edit view 
+  in the back office application
+
 
 ## [2.6.1] - 2024-07-25
 

@@ -11,7 +11,6 @@ import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import Alert from "@mui/material/Alert";
 import Typography from "@mui/material/Typography";
-import FormControlLabel from "@mui/material/FormControlLabel";
 import { HighlightOff, TaskAlt } from "@mui/icons-material";
 import Stack from "@mui/material/Stack";
 import Table from "@mui/material/Table";
@@ -209,17 +208,6 @@ export function OrderView({ order }: Props) {
                 disabled={true}
                 label={intl.formatMessage(orderViewMessages.state)}
                 value={intl.formatMessage(orderStatesMessages[order.state])}
-              />
-            </Grid>
-            <Grid xs={12}>
-              <FormControlLabel
-                sx={{ ml: 0.1 }}
-                control={getSignedIcon(order.has_consent_to_terms, true)}
-                label={intl.formatMessage(
-                  order.has_consent_to_terms
-                    ? orderViewMessages.hasConsentToTerms
-                    : orderViewMessages.hasNotConsentToTerms,
-                )}
               />
             </Grid>
           </Grid>
