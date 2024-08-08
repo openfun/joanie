@@ -7,9 +7,11 @@ from django.conf import settings
 from django.contrib.staticfiles import finders
 from django.template.defaultfilters import date
 from django.utils.dateparse import parse_datetime
+from django.utils.translation import get_language
 from django.utils.translation import gettext as _
 
 from babel.numbers import format_currency
+from parler.utils import get_language_settings
 from stockholm import Money
 from timedelta_isoformat import timedelta as timedelta_isoformat
 
@@ -115,7 +117,8 @@ def format_currency_with_symbol(value: Money):
     """
     parts = str(value).split()
     amount = parts[0]
-    configuration_active_language = settings.LANGUAGE_CODE
-    activate_language = configuration_active_language.replace("-", "_")
-    locale = activate_language[:-2] + activate_language[-2:].upper()
-    return format_currency(amount, settings.DEFAULT_CURRENCY, locale=locale)
+    return format_currency(
+        amount,
+        settings.DEFAULT_CURRENCY,
+        locale=get_language_settings(get_language()).get("code").replace("-", "_"),
+    )
