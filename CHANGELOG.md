@@ -10,6 +10,8 @@ and this project adheres to
 
 ### Added
 
+- Send an email to the user when an installment debit has been
+  refused
 - Send an email to the user when an installment is successfully
   paid
 - Support of payment_schedule for certificate products
